@@ -3,7 +3,7 @@ from ...models import (
     CoordinateSystem,
     Orientation,
     Frame,
-    DataSet)
+    DataSet, BallOwningTeam, AttackingDirection)
 
 
 class VoidPointTransformer(object):
@@ -34,9 +34,30 @@ class Transformer(object):
             x=self._to_coordinate_system.x_scale.from_base(x_base),
             y=self._to_coordinate_system.y_scale.from_base(y_base)
         )
+    
+    def get_clip(self, ball_owning_team: BallOwningTeam, attacking_direction: AttackingDirection) -> bool:
+        if self._from_orientation == self._to_orientation:
+            flip = False
+        else:
+            orientation_factor_from = Orientation.get_orientation_factor(
+                orientation=self._from_orientation,
+                ball_owning_team=ball_owning_team,
+                attacking_direction=attacking_direction
+            )
+            orientation_factor_to = Orientation.get_orientation_factor(
+                orientation=self._to_orientation,
+                ball_owning_team=ball_owning_team,
+                attacking_direction=attacking_direction
+            )
+            flip = orientation_factor_from != orientation_factor_to
+        return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
-        flip = False
+        flip = self.get_clip(
+            ball_owning_team=frame.ball_owning_team,
+            attacking_direction=frame.period.attacking_direction
+        )
+
         return Frame(
             # doesn't change
             frame_id=frame.frame_id,

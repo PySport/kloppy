@@ -61,6 +61,34 @@ class Orientation(Enum):
     FIXED_HOME_AWAY = "fixed-home-away"
     FIXED_AWAY_HOME = "fixed-away-home"
 
+    @staticmethod
+    def get_orientation_factor(orientation: 'Orientation',
+                               attacking_direction: AttackingDirection,
+                               ball_owning_team: BallOwningTeam):
+        if orientation == Orientation.FIXED_HOME_AWAY:
+            return -1
+        elif orientation == Orientation.FIXED_AWAY_HOME:
+            return 1
+        elif orientation == Orientation.HOME_TEAM:
+            if attacking_direction == AttackingDirection.HOME_AWAY:
+                return -1
+            else:
+                return 1
+        elif orientation == Orientation.AWAY_TEAM:
+            if attacking_direction == AttackingDirection.AWAY_HOME:
+                return -1
+            else:
+                return 1
+        elif orientation == Orientation.BALL_OWNING_TEAM:
+            if ((ball_owning_team == BallOwningTeam.HOME
+                 and attacking_direction == AttackingDirection.HOME_AWAY)
+                    or
+                    (ball_owning_team == BallOwningTeam.AWAY
+                     and attacking_direction == AttackingDirection.AWAY_HOME)):
+                return -1
+            else:
+                return 1
+
 
 @dataclass
 class Period(object):

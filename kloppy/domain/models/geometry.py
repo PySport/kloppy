@@ -18,16 +18,14 @@ class Scale(object):
 class CoordinateSystem(object):
     x_scale: Scale
     y_scale: Scale
-    x_to_meter: float = None
-    y_to_meter: float = None
+    x_per_meter: float = None
+    y_per_meter: float = None
 
 
 @dataclass
-class Point2:
+class Point:
     x: float
     y: float
-
-Point = namedtuple("Point", "x y")
 
 
 @dataclass

@@ -2,7 +2,7 @@ from typing import Tuple, List, Dict
 
 from lxml import objectify
 
-
+from kloppy.domain import Transformer
 from ...domain.models import (
     DataSet,
     AttackingDirection,
@@ -79,6 +79,9 @@ class TRACABSerializer(TrackingDataSerializer):
             pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
             pitch_size_height = float(match.attrib['fPitchYSizeMeters'])
 
+            tracking_size_width = float(match.attrib['fTrackingAreaXSizeMeters'])
+            tracking_size_height = float(match.attrib['fTrackingAreaYSizeMeters'])
+
             periods = []
             for period in match.iterchildren(tag='period'):
                 start_frame_id = int(period.attrib['iStartFrame'])
@@ -143,15 +146,14 @@ class TRACABSerializer(TrackingDataSerializer):
             frame_rate=frame_rate,
             orientation=original_orientation,
             coordinate_system=CoordinateSystem(
-                x_scale=Scale(-5500, 5500),
-                y_scale=Scale(-3400, 3400),
-                x_to_meter=0, #x_to_meter,
-                y_to_meter=0 #y_to_meter
+                x_scale=Scale(-1 * tracking_size_width / 2, tracking_size_width / 2),
+                y_scale=Scale(-1 * tracking_size_height / 2, tracking_size_height / 2),
+                x_per_meter=100,
+                y_per_meter=100
             ),
             periods=periods,
             frames=frames
         )
-
 
     def serialize(self, data_set: DataSet) -> Tuple[str, str]:
         raise NotImplementedError

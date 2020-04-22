@@ -18,9 +18,10 @@ def performance_logging(description: str, counter: int = None):
     try:
         yield
     finally:
-        took = (time.time() - start) * 1000
+        took = int((time.time() - start) * 1000)
+        extra = ""
         if counter is not None:
-            description += f" {counter / took}cycles/ms"
-        print(f"Took: {took}ms: {description}")
+            extra = f" ({int(counter / took * 1000)}items/sec)"
+        print(f"{description} took: {took:.2f}ms {extra}")
 
 

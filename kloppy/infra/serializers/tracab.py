@@ -12,8 +12,8 @@ from ...domain.models import (
     BallState,
     Period,
     Orientation,
-    CoordinateSystem
-)
+    CoordinateSystem,
+    Scale)
 from ..utils import Readable, performance_logging
 from . import TrackingDataSerializer
 
@@ -22,9 +22,6 @@ def avg(items: List[float]) -> float:
     return sum(items) / len(items)
 
 
-class VoidPointTransformer(object):
-    def transform(self, point: Point) -> Point:
-        return point
 
 
 def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
@@ -40,7 +37,7 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
 
 class TRACABSerializer(TrackingDataSerializer):
     @classmethod
-    def _frame_from_line(cls, period, line, point_transformator):
+    def _frame_from_line(cls, period, line):
         line = str(line)
         frame_id, players, ball = line.strip().split(":")[:3]
 
@@ -52,15 +49,15 @@ class TRACABSerializer(TrackingDataSerializer):
             team_id = int(team_id)
 
             if team_id == 1:
-                home_team_player_positions[jersey_no] = point_transformator.transform(Point(float(x), float(y)))
+                home_team_player_positions[jersey_no] = Point(float(x), float(y))
             elif team_id == 0:
-                away_team_player_positions[jersey_no] = point_transformator.transform(Point(float(x), float(y)))
+                away_team_player_positions[jersey_no] = Point(float(x), float(y))
 
         ball_x, ball_y, ball_z, ball_speed, ball_owning_team, ball_state = ball.rstrip(";").split(",")[:6]
 
         return Frame(
             frame_id=int(frame_id),
-            ball_position=point_transformator.transform(Point(float(ball_x), float(ball_y))),
+            ball_position=Point(float(ball_x), float(ball_y)),
             ball_state=BallState.from_string(ball_state),
             ball_owning_team=BallOwningTeam.from_string(ball_owning_team),
             home_team_player_positions=home_team_player_positions,
@@ -69,14 +66,12 @@ class TRACABSerializer(TrackingDataSerializer):
             game_statics=None
         )
 
-    def deserialize(self, data: Readable, metadata: Readable, options: Dict = None) -> DataSet:
+    def deserialize(self, data: Readable, metadata, options: Dict = None) -> DataSet:
         if not options:
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
         only_alive = bool(options.get('only_alive', True))
-        point_transformator = options.get('point_transformator', VoidPointTransformer())
-
 
         with performance_logging("Loading metadata"):
             match = objectify.fromstring(metadata.read()).match
@@ -122,8 +117,7 @@ class TRACABSerializer(TrackingDataSerializer):
                     # determine orientation of entire dataset
                     frame = self._frame_from_line(
                         period,
-                        line,
-                        VoidPointTransformer()
+                        line
                     )
 
                     attacking_direction = attacking_direction_from_frame(frame)
@@ -135,8 +129,7 @@ class TRACABSerializer(TrackingDataSerializer):
 
                 frame = self._frame_from_line(
                     period,
-                    line,
-                    point_transformator
+                    line
                 )
 
                 if not period.attacking_direction_set:
@@ -152,8 +145,8 @@ class TRACABSerializer(TrackingDataSerializer):
             coordinate_system=CoordinateSystem(
                 x_scale=Scale(-5500, 5500),
                 y_scale=Scale(-3400, 3400),
-                x_to_meter=x_to_meter,
-                y_to_meter=y_to_meter
+                x_to_meter=0, #x_to_meter,
+                y_to_meter=0 #y_to_meter
             ),
             periods=periods,
             frames=frames

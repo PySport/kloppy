@@ -1,0 +1,1 @@
+from .infra.serializers import TRACABSerializer

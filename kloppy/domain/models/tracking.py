@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Dict
 
-from .geometry import (
+from .pitch import (
     PitchDimensions,
     Point
 )

@@ -25,16 +25,3 @@ class PitchDimensions(object):
 class Point:
     x: float
     y: float
-
-
-@dataclass
-class Line(object):
-    p1: Point
-    p2: Point
-
-
-@dataclass
-class Rectangle(object):
-    p1: Point
-    p2: Point
-

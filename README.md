@@ -8,9 +8,9 @@ a breeze. It aims to be the fundamental building blocks for loading tracking- an
 
 ## Main Features
 Here are just a few of the things that kloppy does well:
-- Out-of-the-box [**Deserializing**][#deserializing] tracking- and event data from different source into a standardized model
-- Flexible [**pitch dimensions**][#pitch-dimensions] transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
-- Intelligent [**orientation][#orientation] transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
+- Out-of-the-box [**Deserializing**](#deserializing) tracking- and event data from different source into a standardized model
+- Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
+- Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
 
 ## Where to get it
 The source code is currently hosted on GitHub at:

@@ -11,8 +11,8 @@ from ...domain.models import (
     BallState,
     Period,
     Orientation,
-    CoordinateSystem,
-    Scale)
+    PitchDimensions,
+    Dimension)
 from ..utils import Readable, performance_logging
 from . import TrackingDataSerializer
 
@@ -59,8 +59,7 @@ class TRACABSerializer(TrackingDataSerializer):
             ball_owning_team=BallOwningTeam.from_string(ball_owning_team),
             home_team_player_positions=home_team_player_positions,
             away_team_player_positions=away_team_player_positions,
-            period=period,
-            game_statics=None
+            period=period
         )
 
     def deserialize(self, data: Readable, metadata, options: Dict = None) -> DataSet:
@@ -139,9 +138,9 @@ class TRACABSerializer(TrackingDataSerializer):
         return DataSet(
             frame_rate=frame_rate,
             orientation=original_orientation,
-            coordinate_system=CoordinateSystem(
-                x_scale=Scale(-1 * pitch_size_width / 2, pitch_size_width / 2),
-                y_scale=Scale(-1 * pitch_size_height / 2, pitch_size_height / 2),
+            pitch_dimensions=PitchDimensions(
+                x_dim=Dimension(-1 * pitch_size_width / 2, pitch_size_width / 2),
+                y_dim=Dimension(-1 * pitch_size_height / 2, pitch_size_height / 2),
                 x_per_meter=100,
                 y_per_meter=100
             ),

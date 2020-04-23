@@ -1,6 +1,6 @@
 from ...models import (
     Point,
-    CoordinateSystem,
+    PitchDimensions,
     Orientation,
     Frame,
     DataSet, BallOwningTeam, AttackingDirection)
@@ -13,26 +13,26 @@ class VoidPointTransformer(object):
 
 class Transformer(object):
     def __init__(self,
-                 from_coordinate_system: CoordinateSystem, from_orientation: Orientation,
-                 to_coordinate_system: CoordinateSystem, to_orientation: Orientation):
-        self._from_coordinate_system = from_coordinate_system
+                 from_pitch_dimensions: PitchDimensions, from_orientation: Orientation,
+                 to_pitch_dimensions: PitchDimensions, to_orientation: Orientation):
+        self._from_pitch_dimensions = from_pitch_dimensions
         self._from_orientation = from_orientation
-        self._to_coordinate_system = to_coordinate_system
+        self._to_pitch_dimensions = to_pitch_dimensions
         self._to_orientation = to_orientation
 
     def transform_point(self, point: Point, flip: bool) -> Point:
         # 1. always apply changes from coordinate system
         # 2. flip coordinates depending on orientation
-        x_base = self._from_coordinate_system.x_scale.to_base(point.x)
-        y_base = self._from_coordinate_system.y_scale.to_base(point.y)
+        x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
+        y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
 
         if flip:
             x_base = 1 - x_base
             y_base = 1 - y_base
 
         return Point(
-            x=self._to_coordinate_system.x_scale.from_base(x_base),
-            y=self._to_coordinate_system.y_scale.from_base(y_base)
+            x=self._to_pitch_dimensions.x_dim.from_base(x_base),
+            y=self._to_pitch_dimensions.y_dim.from_base(y_base)
         )
     
     def get_clip(self, ball_owning_team: BallOwningTeam, attacking_direction: AttackingDirection) -> bool:
@@ -78,19 +78,25 @@ class Transformer(object):
                 jersey_no: self.transform_point(point, flip)
                 for jersey_no, point
                 in frame.away_team_player_positions.items()
-            },
-            game_statics=None
+            }
         )
 
     @classmethod
     def transform_data_set(cls,
                            data_set: DataSet,
-                           to_coordinate_system: CoordinateSystem,
-                           to_orientation: Orientation) -> DataSet:
+                           to_pitch_dimensions: PitchDimensions = None,
+                           to_orientation: Orientation = None) -> DataSet:
+        if not to_pitch_dimensions and not to_orientation:
+            return data_set
+        elif not to_orientation:
+            to_orientation = data_set.orientation
+        elif not to_pitch_dimensions:
+            to_pitch_dimensions = data_set.pitch_dimensions
+
         transformer = cls(
-            from_coordinate_system=data_set.coordinate_system,
+            from_pitch_dimensions=data_set.pitch_dimensions,
             from_orientation=data_set.orientation,
-            to_coordinate_system=to_coordinate_system,
+            to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation
         )
         frames = list(map(transformer.transform_frame, data_set.frames))
@@ -98,7 +104,7 @@ class Transformer(object):
         return DataSet(
             frame_rate=data_set.frame_rate,
             periods=data_set.periods,
-            coordinate_system=to_coordinate_system,
+            pitch_dimensions=to_pitch_dimensions,
             orientation=to_orientation,
             frames=frames
         )

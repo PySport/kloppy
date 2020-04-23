@@ -1,9 +1,8 @@
-from collections import namedtuple
 from dataclasses import dataclass
 
 
 @dataclass
-class Scale(object):
+class Dimension(object):
     min: float
     max: float
 
@@ -15,9 +14,9 @@ class Scale(object):
 
 
 @dataclass
-class CoordinateSystem(object):
-    x_scale: Scale
-    y_scale: Scale
+class PitchDimensions(object):
+    x_dim: Dimension
+    y_dim: Dimension
     x_per_meter: float = None
     y_per_meter: float = None
 

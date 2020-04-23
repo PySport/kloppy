@@ -3,9 +3,7 @@ from enum import Enum
 from typing import List, Optional, Dict
 
 from .geometry import (
-    CoordinateSystem,
-    Rectangle,
-    Line,
+    PitchDimensions,
     Point
 )
 
@@ -113,15 +111,6 @@ class Period(object):
 
 
 @dataclass
-class GameStatics(object):
-    pitch_boundary: Rectangle
-    home_box_boundary: Rectangle
-    away_box_boundary: Rectangle
-    home_goal_line: Line  # actually a segment
-    away_goal_line: Line  # actually a segment
-
-
-@dataclass
 class Frame(object):
     frame_id: int
     ball_owning_team: BallOwningTeam
@@ -133,36 +122,10 @@ class Frame(object):
     away_team_player_positions: Dict[str, Point]
     ball_position: Point
 
-    game_statics: GameStatics
-
-    def get_attacking_defending_coordinates(self):
-        if ((self.ball_owning_team == BallOwningTeam.HOME
-             and self.period.attacking_direction == AttackingDirection.HOME_AWAY)
-                or
-                (self.ball_owning_team == BallOwningTeam.AWAY
-                 and self.period.attacking_direction == AttackingDirection.AWAY_HOME)):
-            coordinate_multiplier = 1
-        else:
-            # flip everything
-            coordinate_multiplier = -1
-
-        if self.ball_owning_team == BallOwningTeam.HOME:
-            attacking_team = self.home_team_players
-            defending_team = self.away_team_players
-        else:
-            attacking_team = self.away_team_players
-            defending_team = self.home_team_players
-
-        return (
-            [(player.x * coordinate_multiplier, player.y * coordinate_multiplier) for player in attacking_team],
-            [(player.x * coordinate_multiplier, player.y * coordinate_multiplier) for player in defending_team],
-            (self.ball_position.x * coordinate_multiplier, self.ball_position.y * coordinate_multiplier)
-        )
-
 
 @dataclass
 class DataSet(object):
-    coordinate_system: CoordinateSystem
+    pitch_dimensions: PitchDimensions
     orientation: Orientation
 
     frame_rate: int

@@ -10,7 +10,8 @@ a breeze. It aims to be the fundamental building blocks for loading tracking- an
 
 ## Main Features
 Here are just a few of the things that kloppy does well:
-- Out-of-the-box [**Deserializing**](#deserializing) tracking- and event data from different source into a standardized model
+- Understandable [**Standardized models**](#models) for tracking- and event datasets
+- Out-of-the-box [**Deserializing**](#deserializing) tracking- and event data from different source into standardized models
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
 
@@ -26,6 +27,10 @@ package index](https://pypi.org/project/kloppy).
 pip install kloppy
 ```
 
+### <a name="models"></a>Standardized models
+Most providers use different names for the same thing. This module tries to model the real world as much as possible.
+Understandable models are important and in some cases this means performance is subordinate to models that are easy to 
+reason about. Please browse to source of `domain.models` to find our the models that are available.
 
 ### <a name="deserializing"></a>Deserializing data
 When working with tracking- or event data we need to deserialize it from the format the provider uses.

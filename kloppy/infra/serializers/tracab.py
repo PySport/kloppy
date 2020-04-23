@@ -2,7 +2,6 @@ from typing import Tuple, List, Dict
 
 from lxml import objectify
 
-from kloppy.domain import Transformer
 from ...domain.models import (
     DataSet,
     AttackingDirection,
@@ -20,8 +19,6 @@ from . import TrackingDataSerializer
 
 def avg(items: List[float]) -> float:
     return sum(items) / len(items)
-
-
 
 
 def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
@@ -78,9 +75,6 @@ class TRACABSerializer(TrackingDataSerializer):
             frame_rate = int(match.attrib['iFrameRateFps'])
             pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
             pitch_size_height = float(match.attrib['fPitchYSizeMeters'])
-
-            tracking_size_width = float(match.attrib['fTrackingAreaXSizeMeters'])
-            tracking_size_height = float(match.attrib['fTrackingAreaYSizeMeters'])
 
             periods = []
             for period in match.iterchildren(tag='period'):
@@ -146,8 +140,8 @@ class TRACABSerializer(TrackingDataSerializer):
             frame_rate=frame_rate,
             orientation=original_orientation,
             coordinate_system=CoordinateSystem(
-                x_scale=Scale(-1 * tracking_size_width / 2, tracking_size_width / 2),
-                y_scale=Scale(-1 * tracking_size_height / 2, tracking_size_height / 2),
+                x_scale=Scale(-1 * pitch_size_width / 2, pitch_size_width / 2),
+                y_scale=Scale(-1 * pitch_size_height / 2, pitch_size_height / 2),
                 x_per_meter=100,
                 y_per_meter=100
             ),

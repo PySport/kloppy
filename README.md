@@ -122,10 +122,12 @@ Event data deserializers
 
 Transformer
 - [ ] Automated tests
+- [X] Transform pitch dimensions
+- [X] Transform orientation of points
 
 Filters
 - [ ] Automated tests
-- [ ] Smoothing filters for tracking data
+- [ ] Smoothing filters for tracking dataset
 
 Exporter
 - [ ] Automated tests

@@ -4,14 +4,15 @@
 --------
 ## What is it?
 
-**kloppy** is a Python package providing deserializers for soccer tracking- and event data, and
-standardized data models designed to make working with different tracking- and event data like
-a breeze. It aims to be the fundamental building blocks for loading tracking- and event data.
+**kloppy** is a Python package providing (de)serializers for soccer tracking- and event data,
+standardized data models, filters, and transformers designed to make working with 
+different tracking- and event data like a breeze. It aims to be the fundamental building blocks for loading, filtering and tranforming
+ tracking- and event data.
 
 ## Main Features
 Here are just a few of the things that kloppy does well:
 - Understandable [**Standardized models**](#models) for tracking- and event datasets
-- Out-of-the-box [**Deserializing**](#deserializing) tracking- and event data from different source into standardized models
+- Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different source into standardized models and visa-versa
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
 
@@ -32,9 +33,11 @@ Most providers use different names for the same thing. This module tries to mode
 Understandable models are important and in some cases this means performance is subordinate to models that are easy to 
 reason about. Please browse to source of `domain.models` to find our the models that are available.
 
-### <a name="deserializing"></a>Deserializing data
-When working with tracking- or event data we need to deserialize it from the format the provider uses.
-The kloppy package provides TRACAB deserializer from now.
+### <a name="deserializing"></a>(De)serializing data
+When working with tracking- or event data we need to deserialize it from the format the provider uses. **kloppy**
+will provide both deserializing as serializing. This will make it possible to read format one, transform and filter and store
+in a different format.
+
 ```python
 from kloppy import TRACABSerializer
 
@@ -108,19 +111,20 @@ Data models
 - [x] Tracking
 - [ ] Event
 
-Tracking data deserializers
+Tracking data (de)serializers
 - [ ] Automated tests
 - [x] TRACAB
 - [ ] MetricaSports
 - [ ] BallJames
+- [ ] FIFA EPTS
 
-Event data deserializers
+Event data (de)serializers
 - [ ] Automated tests
 - [ ] OPTA
 - [ ] StatsBomb
 - [ ] MetricaSports
 
-Transformer
+Transformers
 - [ ] Automated tests
 - [X] Transform pitch dimensions
 - [X] Transform orientation of points
@@ -129,6 +133,10 @@ Filters
 - [ ] Automated tests
 - [ ] Smoothing filters for tracking dataset
 
-Exporter
+Importers
+- [ ] Automated tests
+- [ ] Pandas dataframe
+
+Exporters
 - [ ] Automated tests
 - [ ] Pandas dataframe

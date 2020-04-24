@@ -123,6 +123,10 @@ Event data deserializers
 Transformer
 - [ ] Automated tests
 
+Filters
+- [ ] Automated tests
+- [ ] Smoothing filters for tracking data
+
 Exporter
 - [ ] Automated tests
 - [ ] Pandas dataframe

@@ -142,3 +142,4 @@ Importers
 Exporters
 - [ ] Automated tests
 - [ ] Pandas dataframe
+- [ ] SPADL json

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Dict
 
-from ...utils import Readable
-from ....domain.models import DataSet
+from kloppy.infra.utils import Readable
+from kloppy.domain import DataSet
 
 
 class TrackingDataSerializer(ABC):

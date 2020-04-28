@@ -1,22 +1,18 @@
-from typing import Tuple, List, Dict, Iterator
+from typing import Tuple, Dict, Iterator
 
-import heapq
+from kloppy.domain import (attacking_direction_from_frame,
+                           DataSet,
+                           AttackingDirection,
+                           Frame,
+                           Point,
+                           Period,
+                           Orientation,
+                           PitchDimensions,
+                           Dimension,
+                           DataSetFlag)
+from kloppy.infra.utils import Readable, performance_logging
 
-from ....domain import attacking_direction_from_frame
-from ....domain.models import (
-    DataSet,
-    AttackingDirection,
-    Frame,
-    Point,
-    Period,
-    Orientation,
-    PitchDimensions,
-    Dimension, DataSetFlag)
-from ...utils import Readable, performance_logging
 from . import TrackingDataSerializer
-
-
-# PartialFrame = namedtuple("PartialFrame", "team period frame_id player_positions ball_position")
 
 
 def create_iterator(data: Readable, sample_rate: float) -> Iterator:

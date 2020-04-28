@@ -2,7 +2,7 @@ from typing import Tuple, Dict
 
 from lxml import objectify
 
-from ....domain import (
+from kloppy.domain import (
     DataSet,
     AttackingDirection,
     Frame,
@@ -15,7 +15,8 @@ from ....domain import (
     Dimension,
     attacking_direction_from_frame,
     DataSetFlag)
-from ...utils import Readable, performance_logging
+from kloppy.infra.utils import Readable, performance_logging
+
 from . import TrackingDataSerializer
 
 

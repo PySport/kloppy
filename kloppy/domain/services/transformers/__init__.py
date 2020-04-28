@@ -1,14 +1,9 @@
-from ...models import (
+from kloppy.domain import (
     Point,
     PitchDimensions,
     Orientation,
     Frame,
     DataSet, BallOwningTeam, AttackingDirection)
-
-
-class VoidPointTransformer(object):
-    def transform_point(self, point: Point) -> Point:
-        return point
 
 
 class Transformer(object):
@@ -35,7 +30,7 @@ class Transformer(object):
             y=self._to_pitch_dimensions.y_dim.from_base(y_base)
         )
     
-    def get_clip(self, ball_owning_team: BallOwningTeam, attacking_direction: AttackingDirection) -> bool:
+    def __needs_flip(self, ball_owning_team: BallOwningTeam, attacking_direction: AttackingDirection) -> bool:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
@@ -53,13 +48,14 @@ class Transformer(object):
         return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
-        flip = self.get_clip(
+        flip = self.__needs_flip(
             ball_owning_team=frame.ball_owning_team,
             attacking_direction=frame.period.attacking_direction
         )
 
         return Frame(
             # doesn't change
+            timestamp=frame.timestamp,
             frame_id=frame.frame_id,
             ball_owning_team=frame.ball_owning_team,
             ball_state=frame.ball_state,
@@ -67,8 +63,6 @@ class Transformer(object):
 
             # changes
             ball_position=self.transform_point(frame.ball_position, flip),
-
-            # bla
             home_team_player_positions={
                 jersey_no: self.transform_point(point, flip)
                 for jersey_no, point
@@ -102,6 +96,7 @@ class Transformer(object):
         frames = list(map(transformer.transform_frame, data_set.frames))
 
         return DataSet(
+            flags=data_set.flags,
             frame_rate=data_set.frame_rate,
             periods=data_set.periods,
             pitch_dimensions=to_pitch_dimensions,

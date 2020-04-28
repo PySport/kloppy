@@ -1,6 +1,6 @@
 from typing import List
 
-from .. import AttackingDirection, Frame
+from kloppy.domain import AttackingDirection, Frame
 
 from .transformers import Transformer
 # from .enrichers import TrackingPossessionEnricher

@@ -99,44 +99,44 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
         """
-                Deserialize Metrica tracking data into a `DataSet`.
+        Deserialize Metrica tracking data into a `DataSet`.
 
-                Parameters
-                ----------
-                inputs : dict
-                    input `raw_data_home` should point to a `Readable` object containing
-                    the 'csv' formatted raw data for the home team. input `raw_data_away` should point
-                    to a `Readable` object containing the 'csv' formatted raw data for the away team.
-                options : dict
-                    Options for deserialization of the Metrica file. Possible options are
-                    `sample_rate` (float between 0 and 1) to specify the amount of
-                    frames that should be loaded.
-                Returns
-                -------
-                data_set : DataSet
-                Raises
-                ------
-                ValueError when both input files don't seem to belong to each other
+        Parameters
+        ----------
+        inputs : dict
+            input `raw_data_home` should point to a `Readable` object containing
+            the 'csv' formatted raw data for the home team. input `raw_data_away` should point
+            to a `Readable` object containing the 'csv' formatted raw data for the away team.
+        options : dict
+            Options for deserialization of the Metrica file. Possible options are
+            `sample_rate` (float between 0 and 1) to specify the amount of
+            frames that should be loaded.
+        Returns
+        -------
+        data_set : DataSet
+        Raises
+        ------
+        ValueError when both input files don't seem to belong to each other
 
-                See Also
-                --------
+        See Also
+        --------
 
-                Examples
-                --------
-                >>> serializer = MetricaTrackingSerializer()
-                >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
-                >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
-                >>>
-                >>>     data_set = serializer.deserialize(
-                >>>         inputs={
-                >>>             'raw_data_home': raw_home,
-                >>>             'raw_data_away': raw_away
-                >>>         },
-                >>>         options={
-                >>>             'sample_rate': 1/12
-                >>>         }
-                >>>     )
-                """
+        Examples
+        --------
+        >>> serializer = MetricaTrackingSerializer()
+        >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
+        >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
+        >>>
+        >>>     data_set = serializer.deserialize(
+        >>>         inputs={
+        >>>             'raw_data_home': raw_home,
+        >>>             'raw_data_away': raw_away
+        >>>         },
+        >>>         options={
+        >>>             'sample_rate': 1/12
+        >>>         }
+        >>>     )
+        """
         self.__validate_inputs(inputs)
         if not options:
             options = {}

@@ -133,7 +133,7 @@ class TRACABSerializer(TrackingDataSerializer):
                 n = 0
                 sample = 1. / sample_rate
 
-                for line in inputs['data'].readlines():
+                for line in inputs['raw_data'].readlines():
                     line = line.strip().decode("ascii")
 
                     frame_id = int(line[:10].split(":", 1)[0])
@@ -153,6 +153,8 @@ class TRACABSerializer(TrackingDataSerializer):
                     line,
                     frame_rate
                 )
+
+                frames.append(frame)
 
                 if not period.attacking_direction_set:
                     period.set_attacking_direction(

@@ -61,6 +61,46 @@ class TRACABSerializer(TrackingDataSerializer):
             raise ValueError("Please specify a value for 'raw_data'")
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
+        """
+        Deserialize TRACAB tracking data into a `DataSet`.
+
+        Parameters
+        ----------
+        inputs : dict
+            input `raw_data` should point to a `Readable` object containing
+            the 'csv' formatted raw data. input `meta_data` should point to
+            the xml metadata data.
+        options : dict
+            Options for deserialization of the TRACAB file. Possible options are
+            `only_alive` (boolean) to specify that only frames with alive ball state
+            should be loaded, or `sample_rate` (float between 0 and 1) to specify
+            the amount of frames that should be loaded.
+        Returns
+        -------
+        data_set : DataSet
+        Raises
+        ------
+        -
+
+        See Also
+        --------
+
+        Examples
+        --------
+        >>> serializer = TRACABSerializer()
+        >>> with open("metadata.xml", "rb") as meta, \
+        >>>      open("raw.dat", "rb") as raw:
+        >>>     data_set = serializer.deserialize(
+        >>>         inputs={
+        >>>             'meta_data': meta,
+        >>>             'raw_data': raw
+        >>>         },
+        >>>         options={
+        >>>             'only_alive': True,
+        >>>             'sample_rate': 1/12
+        >>>         }
+        >>>     )
+        """
         self.__validate_inputs(inputs)
 
         if not options:

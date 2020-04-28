@@ -5,7 +5,7 @@ from kloppy.domain import Period, AttackingDirection, Orientation, Point
 
 
 class TestMetricaTracking:
-    def test_deserialization(self):
+    def test_correct_deserialization(self):
         raw_data_home = BytesIO(b""",,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,Home,,,
 ,,,11,,1,,2,,3,,4,,5,,6,,7,,8,,9,,10,,12,,13,,14,,,
 Period,Frame,Time [s],Player11,,Player1,,Player2,,Player3,,Player4,,Player5,,Player6,,Player7,,Player8,,Player9,,Player10,,Player12,,Player13,,Player14,,Ball,

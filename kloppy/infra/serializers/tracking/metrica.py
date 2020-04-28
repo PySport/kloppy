@@ -1,3 +1,4 @@
+from collections import namedtuple
 from typing import Tuple, Dict, Iterator
 
 from kloppy.domain import (attacking_direction_from_frame,
@@ -15,74 +16,9 @@ from kloppy.infra.utils import Readable, performance_logging
 from . import TrackingDataSerializer
 
 
-def create_iterator(data: Readable, sample_rate: float) -> Iterator:
-    """
-    Sample file:
-
-    ,,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,,Away,
-    ,,,25,,15,,16,,17,,18,,19,,20,,21,,22,,23,,24,,26,,27,,28,,,
-    Period,Frame,Time [s],Player25,,Player15,,Player16,,Player17,,Player18,,Player19,,Player20,,Player21,,Player22,,Player23,,Player24,,Player26,,Player27,,Player28,,Ball,
-    1,1,0.04,0.90509,0.47462,0.58393,0.20794,0.67658,0.4671,0.6731,0.76476,0.40783,0.61525,0.45472,0.38709,0.5596,0.67775,0.55243,0.43269,0.50067,0.94322,0.43693,0.05002,0.37833,0.27383,NaN,NaN,NaN,NaN,NaN,NaN,0.45472,0.38709
-
-    Notes:
-        1. the y-axis is flipped because Metrica use (y, -y) instead of (-y, y)
-    """
-    # lines = list(map(lambda x: x.strip().decode("ascii"), data.readlines()))
-
-    team = None
-    frame_idx = 0
-    frame_sample = 1 / sample_rate
-    player_jersey_numbers = []
-    period = None
-
-    for i, line in enumerate(data):
-        line = line.strip().decode('ascii')
-        columns = line.split(',')
-        if i == 0:
-            team = columns[3]
-        elif i == 1:
-            player_jersey_numbers = columns[3:-2:2]
-        elif i == 2:
-            # consider doing some validation on the columns
-            pass
-        else:
-            period_id = int(columns[0])
-            frame_id = int(columns[1])
-
-            if period is None or period.id != period_id:
-                period = Period(
-                    id=period_id,
-                    start_frame_id=frame_id,
-                    end_frame_id=frame_id
-                )
-            else:
-                # consider not update this every frame for performance reasons
-                period.end_frame_id = frame_id
-
-            if frame_idx % frame_sample == 0:
-                yield dict(
-                    team=team,
-                    # Period will be updated during reading the file....
-                    # Might introduce bugs here
-                    period=period,
-                    frame_id=frame_id,
-                    player_positions={
-                        player_no: Point(
-                            x=float(columns[3 + i * 2]),
-                            y=1 - float(columns[3 + i * 2 + 1])
-                        )
-                        for i, player_no in enumerate(player_jersey_numbers)
-                        if columns[3 + i * 2] != 'NaN'
-                    },
-                    ball_position=Point(
-                        x=float(columns[-2]),
-                        y=1 - float(columns[-1])
-                    )
-                )
-            frame_idx += 1
-
-
 class MetricaTrackingSerializer(TrackingDataSerializer):
+    __PartialFrame = namedtuple("PartialFrame", "team period frame_id player_positions ball_position")
+
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "raw_data_home" not in inputs:
@@ -90,7 +26,117 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         if "raw_data_away" not in inputs:
             raise ValueError("Please specify a value for input 'raw_data_away'")
 
+    def __create_iterator(self, data: Readable, sample_rate: float) -> Iterator:
+        """
+        Notes:
+            1. the y-axis is flipped because Metrica use (y, -y) instead of (-y, y)
+        """
+
+        team = None
+        frame_idx = 0
+        frame_sample = 1 / sample_rate
+        player_jersey_numbers = []
+        period = None
+
+        for i, line in enumerate(data):
+            line = line.strip().decode('ascii')
+            columns = line.split(',')
+            if i == 0:
+                team = columns[3]
+            elif i == 1:
+                player_jersey_numbers = columns[3:-2:2]
+            elif i == 2:
+                # consider doing some validation on the columns
+                pass
+            else:
+                period_id = int(columns[0])
+                frame_id = int(columns[1])
+
+                if period is None or period.id != period_id:
+                    period = Period(
+                        id=period_id,
+                        start_frame_id=frame_id,
+                        end_frame_id=frame_id
+                    )
+                else:
+                    # consider not update this every frame for performance reasons
+                    period.end_frame_id = frame_id
+
+                if frame_idx % frame_sample == 0:
+                    yield self.__PartialFrame(
+                        team=team,
+                        period=period,
+                        frame_id=frame_id,
+                        player_positions={
+                            player_no: Point(
+                                x=float(columns[3 + i * 2]),
+                                y=1 - float(columns[3 + i * 2 + 1])
+                            )
+                            for i, player_no in enumerate(player_jersey_numbers)
+                            if columns[3 + i * 2] != 'NaN'
+                        },
+                        ball_position=Point(
+                            x=float(columns[-2]),
+                            y=1 - float(columns[-1])
+                        ) if columns[-2] != 'NaN' else None
+                    )
+                frame_idx += 1
+
+    @staticmethod
+    def __validate_partials(home_partial_frame: __PartialFrame, away_partial_frame: __PartialFrame):
+
+        if home_partial_frame.frame_id != away_partial_frame.frame_id:
+            raise ValueError(f"frame_id mismatch: home {home_partial_frame.frame_id}, "
+                             f"away: {away_partial_frame.frame_id}")
+        if home_partial_frame.ball_position != away_partial_frame.ball_position:
+            raise ValueError(f"ball position mismatch: home {home_partial_frame.ball_position}, "
+                             f"away: {away_partial_frame.ball_position}. Do the files belong to the"
+                             f" same game? frame_id: {home_partial_frame.frame_id}")
+        if home_partial_frame.team != 'Home':
+            raise ValueError("raw_data_home contains away team data")
+        if away_partial_frame.team != 'Away':
+            raise ValueError("raw_data_away contains home team data")
+
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
+        """
+                Deserialize Metrica tracking data into a `DataSet`.
+
+                Parameters
+                ----------
+                inputs : dict
+                    input `raw_data_home` should point to a `Readable` object containing
+                    the 'csv' formatted raw data for the home team. input `raw_data_away` should point
+                    to a `Readable` object containing the 'csv' formatted raw data for the away team.
+                options : dict
+                    Options for deserialization of the Metrica file. Possible options are
+                    `sample_rate` (float between 0 and 1) to specify the amount of
+                    frames that should be loaded.
+                Returns
+                -------
+                data_set : DataSet
+                Raises
+                ------
+                ValueError when both input files don't seem to belong to each other
+
+                See Also
+                --------
+
+                Examples
+                --------
+                >>> serializer = MetricaTrackingSerializer()
+                >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
+                >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
+                >>>
+                >>>     data_set = serializer.deserialize(
+                >>>         inputs={
+                >>>             'raw_data_home': raw_home,
+                >>>             'raw_data_away': raw_away
+                >>>         },
+                >>>         options={
+                >>>             'sample_rate': 1/12
+                >>>         }
+                >>>     )
+                """
         self.__validate_inputs(inputs)
         if not options:
             options = {}
@@ -98,8 +144,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         sample_rate = float(options.get('sample_rate', 1.0))
 
         with performance_logging("prepare"):
-            home_iterator = create_iterator(inputs['raw_data_home'], sample_rate)
-            away_iterator = create_iterator(inputs['raw_data_away'], sample_rate)
+            home_iterator = self.__create_iterator(inputs['raw_data_home'], sample_rate)
+            away_iterator = self.__create_iterator(inputs['raw_data_away'], sample_rate)
 
             partial_frames = zip(home_iterator, away_iterator)
 
@@ -108,21 +154,23 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             periods = []
             # consider reading this from data
             frame_rate = 25
-            for home_partial_frame, away_partial_frame in partial_frames:
-                assert home_partial_frame['frame_id'] == away_partial_frame['frame_id'], "Mismatch"
-                assert home_partial_frame['team'] == 'Home', "Wrong file passed for home data"
-                assert away_partial_frame['team'] == 'Away', "Wrong file passed for away data"
 
-                period: Period = home_partial_frame['period']
-                frame_id: int = home_partial_frame['frame_id']
+            partial_frame_type = self.__PartialFrame
+            home_partial_frame: partial_frame_type
+            away_partial_frame: partial_frame_type
+            for home_partial_frame, away_partial_frame in partial_frames:
+                self.__validate_partials(home_partial_frame, away_partial_frame)
+
+                period: Period = home_partial_frame.period
+                frame_id: int = home_partial_frame.frame_id
 
                 frame = Frame(
-                    frame_id=home_partial_frame['frame_id'],
+                    frame_id=frame_id,
                     # -1 needed because frame_id is 1-based
                     timestamp=(frame_id - (period.start_frame_id - 1)) / frame_rate,
-                    ball_position=home_partial_frame['ball_position'],
-                    home_team_player_positions=home_partial_frame['player_positions'],
-                    away_team_player_positions=away_partial_frame['player_positions'],
+                    ball_position=home_partial_frame.ball_position,
+                    home_team_player_positions=home_partial_frame.player_positions,
+                    away_team_player_positions=away_partial_frame.player_positions,
                     period=period,
                     ball_state=None,
                     ball_owning_team=None

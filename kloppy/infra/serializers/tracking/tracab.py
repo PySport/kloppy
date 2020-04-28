@@ -1,8 +1,8 @@
-from typing import Tuple, List, Dict
+from typing import Tuple, Dict
 
 from lxml import objectify
 
-from ...domain.models import (
+from ....domain import (
     DataSet,
     AttackingDirection,
     Frame,
@@ -12,29 +12,16 @@ from ...domain.models import (
     Period,
     Orientation,
     PitchDimensions,
-    Dimension)
-from ..utils import Readable, performance_logging
+    Dimension,
+    attacking_direction_from_frame,
+    DataSetFlag)
+from ...utils import Readable, performance_logging
 from . import TrackingDataSerializer
-
-
-def avg(items: List[float]) -> float:
-    return sum(items) / len(items)
-
-
-def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
-    """ This method should only be called for the first frame of a """
-    avg_x_home = avg([player.x for player in frame.home_team_player_positions.values()])
-    avg_x_away = avg([player.x for player in frame.away_team_player_positions.values()])
-
-    if avg_x_home < avg_x_away:
-        return AttackingDirection.HOME_AWAY
-    else:
-        return AttackingDirection.AWAY_HOME
 
 
 class TRACABSerializer(TrackingDataSerializer):
     @classmethod
-    def _frame_from_line(cls, period, line):
+    def _frame_from_line(cls, period, line, frame_rate):
         line = str(line)
         frame_id, players, ball = line.strip().split(":")[:3]
 
@@ -52,8 +39,11 @@ class TRACABSerializer(TrackingDataSerializer):
 
         ball_x, ball_y, ball_z, ball_speed, ball_owning_team, ball_state = ball.rstrip(";").split(",")[:6]
 
+        frame_id = int(frame_id)
+
         return Frame(
-            frame_id=int(frame_id),
+            frame_id=frame_id,
+            timestamp=(frame_id - period.start_frame_id) / frame_rate,
             ball_position=Point(float(ball_x), float(ball_y)),
             ball_state=BallState.from_string(ball_state),
             ball_owning_team=BallOwningTeam.from_string(ball_owning_team),
@@ -62,7 +52,16 @@ class TRACABSerializer(TrackingDataSerializer):
             period=period
         )
 
-    def deserialize(self, data: Readable, metadata, options: Dict = None) -> DataSet:
+    @staticmethod
+    def __validate_inputs(inputs: Dict[str, Readable]):
+        if "meta_data" not in inputs:
+            raise ValueError("Please specify a value for 'meta_data'")
+        if "raw_data" not in inputs:
+            raise ValueError("Please specify a value for 'raw_data'")
+
+    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
+        self.__validate_inputs(inputs)
+
         if not options:
             options = {}
 
@@ -70,7 +69,7 @@ class TRACABSerializer(TrackingDataSerializer):
         only_alive = bool(options.get('only_alive', True))
 
         with performance_logging("Loading metadata"):
-            match = objectify.fromstring(metadata.read()).match
+            match = objectify.fromstring(inputs['meta_data'].read()).match
             frame_rate = int(match.attrib['iFrameRateFps'])
             pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
             pitch_size_height = float(match.attrib['fPitchYSizeMeters'])
@@ -88,13 +87,12 @@ class TRACABSerializer(TrackingDataSerializer):
                         )
                     )
 
-        original_orientation = None
         with performance_logging("Loading data"):
             def _iter():
                 n = 0
                 sample = 1. / sample_rate
 
-                for line in data.readlines():
+                for line in inputs['data'].readlines():
                     line = line.strip().decode("ascii")
 
                     frame_id = int(line[:10].split(":", 1)[0])
@@ -109,23 +107,10 @@ class TRACABSerializer(TrackingDataSerializer):
 
             frames = []
             for period, line in _iter():
-                if not original_orientation:
-                    # determine orientation of entire dataset
-                    frame = self._frame_from_line(
-                        period,
-                        line
-                    )
-
-                    attacking_direction = attacking_direction_from_frame(frame)
-                    original_orientation = (
-                        Orientation.FIXED_HOME_AWAY
-                        if attacking_direction == AttackingDirection.HOME_AWAY else
-                        Orientation.FIXED_AWAY_HOME
-                    )
-
                 frame = self._frame_from_line(
                     period,
-                    line
+                    line,
+                    frame_rate
                 )
 
                 if not period.attacking_direction_set:
@@ -133,11 +118,16 @@ class TRACABSerializer(TrackingDataSerializer):
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
 
-                frames.append(frame)
+        orientation = (
+            Orientation.FIXED_HOME_AWAY
+            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY else
+            Orientation.FIXED_AWAY_HOME
+        )
 
         return DataSet(
+            flags=DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE,
             frame_rate=frame_rate,
-            orientation=original_orientation,
+            orientation=orientation,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(-1 * pitch_size_width / 2, pitch_size_width / 2),
                 y_dim=Dimension(-1 * pitch_size_height / 2, pitch_size_height / 2),

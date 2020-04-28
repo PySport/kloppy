@@ -45,12 +45,14 @@ from kloppy import TRACABSerializer
 
 serializer = TRACABSerializer()
 
-with open("tracab_data.dat", "rb") as data, \
+with open("tracab_data.dat", "rb") as raw, \
         open("tracab_metadata.xml", "rb") as meta:
 
     data_set = serializer.deserialize(
-        data=data,
-        metadata=meta,
+        inputs={
+            'raw_data': raw,
+            'meta_data': meta
+        },
         options={
             "sample_rate": 1 / 12
         }

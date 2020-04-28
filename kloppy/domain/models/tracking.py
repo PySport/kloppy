@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, Flag
 from typing import List, Optional, Dict
 
 from .pitch import (
@@ -113,6 +113,7 @@ class Period(object):
 @dataclass
 class Frame(object):
     frame_id: int
+    timestamp: float
     ball_owning_team: BallOwningTeam
     ball_state: BallState
 
@@ -123,8 +124,14 @@ class Frame(object):
     ball_position: Point
 
 
+class DataSetFlag(Flag):
+    BALL_OWNING_TEAM = 1
+    BALL_STATE = 2
+
+
 @dataclass
 class DataSet(object):
+    flags: DataSetFlag
     pitch_dimensions: PitchDimensions
     orientation: Orientation
 

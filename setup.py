@@ -19,7 +19,7 @@ with open('README.md', 'r', encoding='utf8') as f:
 
 setup(
     name='kloppy',
-    version='0.1',
+    version='0.2.0',
     author='Koen Vossen',
     author_email='info@koenvossen.nl',
     url="https://github.com/PySport/kloppy",
@@ -27,4 +27,14 @@ setup(
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
     description="Standardizing soccer tracking- and event data",
     long_description="\n".join(DOCLINES),
+    python_requires='>=3.7',
+    install_requires=[
+        'lxml>=4.5.0'
+    ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'flake8'
+        ]
+    }
 )

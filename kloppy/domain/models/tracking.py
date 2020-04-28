@@ -8,7 +8,7 @@ from .pitch import (
 )
 
 
-class Player(object):
+class Player:
     jersey_no: str
     position: Point
 
@@ -59,25 +59,24 @@ class Orientation(Enum):
     FIXED_HOME_AWAY = "fixed-home-away"
     FIXED_AWAY_HOME = "fixed-away-home"
 
-    @staticmethod
-    def get_orientation_factor(orientation: 'Orientation',
+    def get_orientation_factor(self,
                                attacking_direction: AttackingDirection,
                                ball_owning_team: BallOwningTeam):
-        if orientation == Orientation.FIXED_HOME_AWAY:
+        if self == Orientation.FIXED_HOME_AWAY:
             return -1
-        elif orientation == Orientation.FIXED_AWAY_HOME:
+        elif self == Orientation.FIXED_AWAY_HOME:
             return 1
-        elif orientation == Orientation.HOME_TEAM:
+        elif self == Orientation.HOME_TEAM:
             if attacking_direction == AttackingDirection.HOME_AWAY:
                 return -1
             else:
                 return 1
-        elif orientation == Orientation.AWAY_TEAM:
+        elif self == Orientation.AWAY_TEAM:
             if attacking_direction == AttackingDirection.AWAY_HOME:
                 return -1
             else:
                 return 1
-        elif orientation == Orientation.BALL_OWNING_TEAM:
+        elif self == Orientation.BALL_OWNING_TEAM:
             if ((ball_owning_team == BallOwningTeam.HOME
                  and attacking_direction == AttackingDirection.HOME_AWAY)
                     or
@@ -89,7 +88,7 @@ class Orientation(Enum):
 
 
 @dataclass
-class Period(object):
+class Period:
     id: int
     start_frame_id: int
     end_frame_id: int
@@ -111,7 +110,7 @@ class Period(object):
 
 
 @dataclass
-class Frame(object):
+class Frame:
     frame_id: int
     timestamp: float
     ball_owning_team: BallOwningTeam
@@ -130,7 +129,7 @@ class DataSetFlag(Flag):
 
 
 @dataclass
-class DataSet(object):
+class DataSet:
     flags: DataSetFlag
     pitch_dimensions: PitchDimensions
     orientation: Orientation

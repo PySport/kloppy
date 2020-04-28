@@ -5,12 +5,12 @@
 #
 #
 # @dataclass
-# class GameState(object):
+# class GameState:
 #     ball_state: BallState
 #     ball_owning_team: BallOwningTeam
 #
 #
-# class TrackingPossessionEnricher(object):
+# class TrackingPossessionEnricher:
 #     def _reduce_game_state(self, game_state: GameState, Event: event) -> GameState:
 #         pass
 #

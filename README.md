@@ -61,6 +61,29 @@ with open("tracab_data.dat", "rb") as raw, \
     # start working with data_set
 ```
 
+or Metrica data
+```python
+from kloppy import MetricaTrackingSerializer
+
+serializer = MetricaTrackingSerializer()
+
+with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
+        open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
+
+    data_set = serializer.deserialize(
+        inputs={
+            'raw_data_home': raw_home,
+            'raw_data_away': raw_away
+        },
+        options={
+            "sample_rate": 1 / 12
+        }
+    )
+    
+    # start working with data_set
+```
+
+
 ### <a name="pitch-dimensions"></a>Transform the pitch dimensions
 Data providers use their own pitch dimensions. Some use actual meters while others use 100x100. Use the Transformer to get from one pitch dimensions to another one.
 ```python

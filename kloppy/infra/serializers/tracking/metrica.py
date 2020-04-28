@@ -25,7 +25,7 @@ def create_iterator(data: Readable, sample_rate: float) -> Iterator:
     1,1,0.04,0.90509,0.47462,0.58393,0.20794,0.67658,0.4671,0.6731,0.76476,0.40783,0.61525,0.45472,0.38709,0.5596,0.67775,0.55243,0.43269,0.50067,0.94322,0.43693,0.05002,0.37833,0.27383,NaN,NaN,NaN,NaN,NaN,NaN,0.45472,0.38709
 
     Notes:
-        1. the y-axe is flipped because Metrica use (y, -y) instead of (-y, y)
+        1. the y-axis is flipped because Metrica use (y, -y) instead of (-y, y)
     """
     # lines = list(map(lambda x: x.strip().decode("ascii"), data.readlines()))
 
@@ -39,15 +39,13 @@ def create_iterator(data: Readable, sample_rate: float) -> Iterator:
         line = line.strip().decode('ascii')
         columns = line.split(',')
         if i == 0:
-            # team
-            pass
+            team = columns[3]
         elif i == 1:
             player_jersey_numbers = columns[3:-2:2]
         elif i == 2:
             # consider doing some validation on the columns
             pass
         else:
-
             period_id = int(columns[0])
             frame_id = int(columns[1])
 
@@ -63,6 +61,7 @@ def create_iterator(data: Readable, sample_rate: float) -> Iterator:
 
             if frame_idx % frame_sample == 0:
                 yield dict(
+                    team=team,
                     # Period will be updated during reading the file....
                     # Might introduce bugs here
                     period=period,
@@ -70,14 +69,14 @@ def create_iterator(data: Readable, sample_rate: float) -> Iterator:
                     player_positions={
                         player_no: Point(
                             x=float(columns[3 + i * 2]),
-                            y=-1 * float(columns[3 + i * 2 + 1])
+                            y=1 - float(columns[3 + i * 2 + 1])
                         )
                         for i, player_no in enumerate(player_jersey_numbers)
                         if columns[3 + i * 2] != 'NaN'
                     },
                     ball_position=Point(
                         x=float(columns[-2]),
-                        y=-1 * float(columns[-1])
+                        y=1 - float(columns[-1])
                     )
                 )
             frame_idx += 1
@@ -86,10 +85,10 @@ def create_iterator(data: Readable, sample_rate: float) -> Iterator:
 class MetricaTrackingSerializer(TrackingDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
-        if "home_raw_data" not in inputs:
-            raise ValueError("Please specify a value for 'home_raw_data'")
-        if "away_raw_data" not in inputs:
-            raise ValueError("Please specify a value for 'away_raw_data'")
+        if "raw_data_home" not in inputs:
+            raise ValueError("Please specify a value for input 'raw_data_home'")
+        if "raw_data_away" not in inputs:
+            raise ValueError("Please specify a value for input 'raw_data_away'")
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
         self.__validate_inputs(inputs)
@@ -99,8 +98,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         sample_rate = float(options.get('sample_rate', 1.0))
 
         with performance_logging("prepare"):
-            home_iterator = create_iterator(inputs['home_raw_data'], sample_rate)
-            away_iterator = create_iterator(inputs['away_raw_data'], sample_rate)
+            home_iterator = create_iterator(inputs['raw_data_home'], sample_rate)
+            away_iterator = create_iterator(inputs['raw_data_away'], sample_rate)
 
             partial_frames = zip(home_iterator, away_iterator)
 
@@ -111,6 +110,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             frame_rate = 25
             for home_partial_frame, away_partial_frame in partial_frames:
                 assert home_partial_frame['frame_id'] == away_partial_frame['frame_id'], "Mismatch"
+                assert home_partial_frame['team'] == 'Home', "Wrong file passed for home data"
+                assert away_partial_frame['team'] == 'Away', "Wrong file passed for away data"
 
                 period: Period = home_partial_frame['period']
                 frame_id: int = home_partial_frame['frame_id']

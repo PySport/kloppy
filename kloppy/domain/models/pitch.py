@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Dimension(object):
+class Dimension:
     min: float
     max: float
 
@@ -14,7 +14,7 @@ class Dimension(object):
 
 
 @dataclass
-class PitchDimensions(object):
+class PitchDimensions:
     x_dim: Dimension
     y_dim: Dimension
     x_per_meter: float = None

@@ -3,10 +3,10 @@ from kloppy.domain import (
     PitchDimensions,
     Orientation,
     Frame,
-    DataSet, BallOwningTeam, AttackingDirection)
+    DataSet, BallOwningTeam, AttackingDirection, DataSetFlag)
 
 
-class Transformer(object):
+class Transformer:
     def __init__(self,
                  from_pitch_dimensions: PitchDimensions, from_orientation: Orientation,
                  to_pitch_dimensions: PitchDimensions, to_orientation: Orientation):
@@ -34,13 +34,11 @@ class Transformer(object):
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
-            orientation_factor_from = Orientation.get_orientation_factor(
-                orientation=self._from_orientation,
+            orientation_factor_from = self._from_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction
             )
-            orientation_factor_to = Orientation.get_orientation_factor(
-                orientation=self._to_orientation,
+            orientation_factor_to = self._to_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction
             )
@@ -86,6 +84,11 @@ class Transformer(object):
             to_orientation = data_set.orientation
         elif not to_pitch_dimensions:
             to_pitch_dimensions = data_set.pitch_dimensions
+
+        if to_orientation == Orientation.BALL_OWNING_TEAM:
+            if not data_set.flags & DataSetFlag.BALL_OWNING_TEAM:
+                raise ValueError("Cannot transform to BALL_OWNING_TEAM orientation when dataset doesn't contain "
+                                 "ball owning team data")
 
         transformer = cls(
             from_pitch_dimensions=data_set.pitch_dimensions,

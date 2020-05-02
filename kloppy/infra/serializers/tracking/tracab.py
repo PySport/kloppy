@@ -149,6 +149,8 @@ class TRACABSerializer(TrackingDataSerializer):
 
                 for line in inputs['raw_data'].readlines():
                     line = line.strip().decode("ascii")
+                    if not line:
+                        continue
 
                     frame_id = int(line[:10].split(":", 1)[0])
                     if only_alive and not line.endswith("Alive;:"):

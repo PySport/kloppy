@@ -31,7 +31,7 @@ class TrackingPossessionEnricher:
         for frame in tracking_data_set.records:
             if next_event_idx < len(event_data_set.records):
                 event = event_data_set.records[next_event_idx]
-                if frame.period == event.period and frame.timestamp >= event.timestamp:
+                if frame.period.id == event.period.id and frame.timestamp >= event.timestamp:
                     current_ball_owning_team = event.ball_owning_team
                     current_ball_state = event.ball_state
                     next_event_idx += 1

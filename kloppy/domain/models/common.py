@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass
 from enum import Enum, Flag
 from typing import Optional, List
@@ -78,9 +79,6 @@ class Period:
     def set_attacking_direction(self, attacking_direction: AttackingDirection):
         self.attacking_direction = attacking_direction
 
-    def __eq__(self, other):
-        return self.id == other.id
-
 
 class DataSetFlag(Flag):
     BALL_OWNING_TEAM = 1
@@ -88,7 +86,7 @@ class DataSetFlag(Flag):
 
 
 @dataclass
-class DataRecord:
+class DataRecord(ABC):
     timestamp: float
     ball_owning_team: Team
     ball_state: BallState
@@ -97,7 +95,7 @@ class DataRecord:
 
 
 @dataclass
-class DataSet:
+class DataSet(ABC):
     flags: DataSetFlag
     pitch_dimensions: PitchDimensions
     orientation: Orientation

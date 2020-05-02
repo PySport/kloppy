@@ -3,7 +3,10 @@ from kloppy.domain import (
     PitchDimensions,
     Orientation,
     Frame,
-    DataSet, BallOwningTeam, AttackingDirection, DataSetFlag)
+    Team, AttackingDirection,
+
+    TrackingDataSet, DataSetFlag
+)
 
 
 class Transformer:
@@ -30,7 +33,7 @@ class Transformer:
             y=self._to_pitch_dimensions.y_dim.from_base(y_base)
         )
     
-    def __needs_flip(self, ball_owning_team: BallOwningTeam, attacking_direction: AttackingDirection) -> bool:
+    def __needs_flip(self, ball_owning_team: Team, attacking_direction: AttackingDirection) -> bool:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
@@ -75,9 +78,9 @@ class Transformer:
 
     @classmethod
     def transform_data_set(cls,
-                           data_set: DataSet,
+                           data_set: TrackingDataSet,
                            to_pitch_dimensions: PitchDimensions = None,
-                           to_orientation: Orientation = None) -> DataSet:
+                           to_orientation: Orientation = None) -> TrackingDataSet:
         if not to_pitch_dimensions and not to_orientation:
             return data_set
         elif not to_orientation:
@@ -98,7 +101,7 @@ class Transformer:
         )
         frames = list(map(transformer.transform_frame, data_set.frames))
 
-        return DataSet(
+        return TrackingDataSet(
             flags=data_set.flags,
             frame_rate=data_set.frame_rate,
             periods=data_set.periods,

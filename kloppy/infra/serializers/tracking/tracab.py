@@ -3,18 +3,18 @@ from typing import Tuple, Dict
 from lxml import objectify
 
 from kloppy.domain import (
-    DataSet,
+    TrackingDataSet, DataSetFlag,
     AttackingDirection,
     Frame,
     Point,
-    BallOwningTeam,
+    Team,
     BallState,
     Period,
     Orientation,
     PitchDimensions,
     Dimension,
     attacking_direction_from_frame,
-    DataSetFlag)
+)
 from kloppy.infra.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
@@ -42,12 +42,26 @@ class TRACABSerializer(TrackingDataSerializer):
 
         frame_id = int(frame_id)
 
+        if ball_owning_team == "H":
+            ball_owning_team = Team.HOME
+        elif ball_owning_team == "A":
+            ball_owning_team = Team.AWAY
+        else:
+            raise Exception(f"Unknown ball owning team: {ball_owning_team}")
+
+        if ball_state == "Alive":
+            ball_state = BallState.ALIVE
+        elif ball_state == "Dead":
+            ball_state = BallState.DEAD
+        else:
+            raise Exception(f"Unknown ball state: {ball_state}")
+
         return Frame(
             frame_id=frame_id,
-            timestamp=(frame_id - period.start_frame_id) / frame_rate,
+            timestamp=frame_id / frame_rate - period.start_timestamp,
             ball_position=Point(float(ball_x), float(ball_y)),
-            ball_state=BallState.from_string(ball_state),
-            ball_owning_team=BallOwningTeam.from_string(ball_owning_team),
+            ball_state=ball_state,
+            ball_owning_team=ball_owning_team,
             home_team_player_positions=home_team_player_positions,
             away_team_player_positions=away_team_player_positions,
             period=period
@@ -60,9 +74,9 @@ class TRACABSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> DataSet:
+    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataSet:
         """
-        Deserialize TRACAB tracking data into a `DataSet`.
+        Deserialize TRACAB tracking data into a `TrackingDataSet`.
 
         Parameters
         ----------
@@ -77,7 +91,7 @@ class TRACABSerializer(TrackingDataSerializer):
             the amount of frames that should be loaded.
         Returns
         -------
-        data_set : DataSet
+        data_set : TrackingDataSet
         Raises
         ------
         -
@@ -123,8 +137,8 @@ class TRACABSerializer(TrackingDataSerializer):
                     periods.append(
                         Period(
                             id=int(period.attrib['iId']),
-                            start_frame_id=start_frame_id,
-                            end_frame_id=end_frame_id
+                            start_timestamp=start_frame_id / frame_rate,
+                            end_timestamp=end_frame_id / frame_rate
                         )
                     )
 
@@ -141,7 +155,7 @@ class TRACABSerializer(TrackingDataSerializer):
                         continue
 
                     for period in periods:
-                        if period.contains(frame_id):
+                        if period.contains(frame_id / frame_rate):
                             if n % sample == 0:
                                 yield period, line
                             n += 1
@@ -167,7 +181,7 @@ class TRACABSerializer(TrackingDataSerializer):
             Orientation.FIXED_AWAY_HOME
         )
 
-        return DataSet(
+        return TrackingDataSet(
             flags=DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE,
             frame_rate=frame_rate,
             orientation=orientation,
@@ -178,9 +192,9 @@ class TRACABSerializer(TrackingDataSerializer):
                 y_per_meter=100
             ),
             periods=periods,
-            frames=frames
+            records=frames
         )
 
-    def serialize(self, data_set: DataSet) -> Tuple[str, str]:
+    def serialize(self, data_set: TrackingDataSet) -> Tuple[str, str]:
         raise NotImplementedError
 

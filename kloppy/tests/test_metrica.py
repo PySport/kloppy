@@ -35,19 +35,19 @@ Period,Frame,Time [s],Player25,,Player15,,Player16,,Player17,,Player18,,Player19
             }
         )
 
-        assert len(data_set.frames) == 6
+        assert len(data_set.records) == 6
         assert len(data_set.periods) == 2
         assert data_set.orientation == Orientation.FIXED_HOME_AWAY
-        assert data_set.periods[0] == Period(id=1, start_frame_id=1, end_frame_id=3,
+        assert data_set.periods[0] == Period(id=1, start_timestamp=0.04, end_timestamp=0.12,
                                              attacking_direction=AttackingDirection.HOME_AWAY)
-        assert data_set.periods[1] == Period(id=2, start_frame_id=145004, end_frame_id=145006,
+        assert data_set.periods[1] == Period(id=2, start_timestamp=5800.16, end_timestamp=5800.24,
                                              attacking_direction=AttackingDirection.AWAY_HOME)
 
         # make sure data is loaded correctly (including flip y-axis)
-        assert data_set.frames[0].home_team_player_positions['11'] == Point(x=0.00082, y=1 - 0.48238)
-        assert data_set.frames[0].away_team_player_positions['25'] == Point(x=0.90509, y=1 - 0.47462)
-        assert data_set.frames[0].ball_position == Point(x=0.45472, y=1 - 0.38709)
+        assert data_set.records[0].home_team_player_positions['11'] == Point(x=0.00082, y=1 - 0.48238)
+        assert data_set.records[0].away_team_player_positions['25'] == Point(x=0.90509, y=1 - 0.47462)
+        assert data_set.records[0].ball_position == Point(x=0.45472, y=1 - 0.38709)
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert '14' not in data_set.frames[0].home_team_player_positions
-        assert '14' in data_set.frames[3].home_team_player_positions
+        assert '14' not in data_set.records[0].home_team_player_positions
+        assert '14' in data_set.records[3].home_team_player_positions

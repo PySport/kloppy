@@ -29,10 +29,10 @@ class TestTracabTracking:
         101:0,1,19,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,A,Alive;:
         102:0,1,19,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Dead;:
 
-        200:0,1,1337,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
-        201:0,1,1337,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
-        202:0,1,1337,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
-        203:0,1,1337,8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
+        200:0,1,1337,-8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
+        201:0,1,1337,-8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
+        202:0,1,1337,-8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
+        203:0,1,1337,-8889,-666,0.55;1,2,19,-1234,-294,0.07;:-27,25,0,27.00,H,Alive;:
         """)
         serializer = TRACABSerializer()
 
@@ -52,9 +52,8 @@ class TestTracabTracking:
         assert data_set.periods[0] == Period(id=1, start_timestamp=4.0, end_timestamp=4.08,
                                              attacking_direction=AttackingDirection.HOME_AWAY)
 
-        # attacking direction is super weird ;-)
         assert data_set.periods[1] == Period(id=2, start_timestamp=8.0, end_timestamp=8.08,
-                                             attacking_direction=AttackingDirection.HOME_AWAY)
+                                             attacking_direction=AttackingDirection.AWAY_HOME)
 
         assert data_set.records[0].home_team_player_positions['19'] == Point(x=-1234.0, y=-294.0)
         assert data_set.records[0].away_team_player_positions['19'] == Point(x=8889, y=-666)

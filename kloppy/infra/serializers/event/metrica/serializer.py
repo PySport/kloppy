@@ -1,13 +1,14 @@
+from collections import namedtuple
 from typing import Tuple
 import csv
 
 from kloppy.domain import (
     EventDataSet, Team, Point, Period, Orientation,
     DataSetFlag, PitchDimensions, Dimension,
-    AttackingDirection
+    AttackingDirection, BallState
 )
 from kloppy.domain.models.event import (
-    EventType,
+    EventType, Event,
     SetPieceEvent, PassEvent, RecoveryEvent,
     BallOutEvent, BallLossEvent,
     ShotEvent, FaultReceivedEvent, ChallengeEvent,
@@ -36,10 +37,48 @@ event_type_map: Dict[str, EventType] = {
 
 
 class MetricaEventSerializer(EventDataSerializer):
+    __GameState = namedtuple("GameState", "ball_owning_team ball_state")
+
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for input 'raw_data'")
+
+    def __reduce_game_state(self, event: Event, game_state: __GameState) -> __GameState:
+        # Dead -> Alive
+        new_state = None
+        if event.event_type == EventType.SET_PIECE:
+            new_state = self.__GameState(
+                ball_state=BallState.ALIVE,
+                ball_owning_team=event.team
+            )
+        elif event.event_type == EventType.RECOVERY:
+            new_state = self.__GameState(
+                ball_state=BallState.ALIVE,
+                ball_owning_team=event.team
+            )
+
+        # Alive -> Dead
+        elif event.event_type == EventType.SHOT:
+            event: ShotEvent
+            if event.shot_result == ShotResult.OUT:
+                new_state = self.__GameState(
+                    ball_state=BallState.DEAD,
+                    ball_owning_team=None
+                )
+            elif event.shot_result == ShotResult.GOAL:
+                new_state = self.__GameState(
+                    ball_state=BallState.DEAD,
+                    ball_owning_team=None
+                )
+        elif event.event_type == EventType.BALL_OUT:
+            # own-goal is part of this event
+            new_state = self.__GameState(
+                ball_state=BallState.DEAD,
+                ball_owning_team=None
+            )
+
+        return new_state if new_state else game_state
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataSet:
         self.__validate_inputs(inputs)
@@ -48,6 +87,11 @@ class MetricaEventSerializer(EventDataSerializer):
         period = None
 
         events = []
+
+        game_state = self.__GameState(
+            ball_state=BallState.DEAD,
+            ball_owning_team=None
+        )
 
         reader = csv.DictReader(map(lambda x: x.decode('utf-8'), inputs['raw_data']))
         for event_id, record in enumerate(reader):
@@ -179,7 +223,17 @@ class MetricaEventSerializer(EventDataSerializer):
             else:
                 raise NotImplementedError(f"EventType {event_type} not implemented")
 
+            # We want to attach the game_state after the event to the event
+            game_state = self.__reduce_game_state(
+                event=event,
+                game_state=game_state
+            )
+
+            event.ball_state = game_state.ball_state
+            event.ball_owning_team = game_state.ball_owning_team
+
             events.append(event)
+
 
         orientation = (
             Orientation.FIXED_HOME_AWAY

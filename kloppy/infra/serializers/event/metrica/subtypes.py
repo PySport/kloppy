@@ -64,7 +64,6 @@ def build_challenge(string: str) -> Challenge:
         raise ValueError(f"Unknown challenge type: {string}")
 
 
-
 def build_shotresult(string: str) -> ShotResult:
     if string == "GOAL":
         return ShotResult.Goal
@@ -183,6 +182,12 @@ def build_challenge_result(string: str) -> ChallengeResult:
         raise ValueError(f"Unknown challenge result: {string}")
 
 
+def build_owngoal(string: str) -> OwnGoal:
+    if string == "GOAL":
+        return OwnGoal.OwnGoal
+    else:
+        raise ValueError(f"Unknown owngoal type: {string}")
+
 factories: Dict[Type[SubType], Callable] = {
     ChallengeType: build_challenge_type,
     Fault: build_fault,
@@ -200,7 +205,8 @@ factories: Dict[Type[SubType], Callable] = {
     Card: build_card,
     SetPiece: build_setpiece,
     FKAttempt: build_fkattempt,
-    Retaken: build_retaken
+    Retaken: build_retaken,
+    OwnGoal: build_owngoal
 }
 
 

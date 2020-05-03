@@ -5,7 +5,8 @@ from kloppy.domain.models.event import (
     ShotResult, ShotDirection, Deflection, BodyPart,
     Offside, Attempt, Intervention, Interference1, Interference2,
     ChallengeType, ChallengeResult, Fault,
-    SubType)
+    SubType, OwnGoal
+)
 
 
 def build_retaken(string: str) -> Retaken:
@@ -86,7 +87,7 @@ def build_shotdirection(string: str) -> ShotDirection:
         raise ValueError(f"Unknown shotdirection type: {string}")
 
 
-def build_Deflection(string: str) -> Deflection:
+def build_deflection(string: str) -> Deflection:
     if string == "WOODWORK":
         return Deflection.Woodwork
     elif string == "REFEREE HIT":
@@ -192,7 +193,7 @@ factories: Dict[Type[SubType], Callable] = {
     Attempt: build_attempt,
     Offside: build_offside,
     BodyPart: build_bodypart,
-    Deflection: build_Deflection,
+    Deflection: build_deflection,
     ShotDirection: build_shotdirection,
     ShotResult: build_shotresult,
     Challenge: build_challenge,
@@ -206,6 +207,9 @@ factories: Dict[Type[SubType], Callable] = {
 def build_subtypes(items: List[str], subtype_types: List[Type[SubType]]) -> List[Union[SubType, None]]:
     result = [None] * len(subtype_types)
     for item in items:
+        if not item:
+            continue
+
         for i, subtype_type in enumerate(subtype_types):
             assert subtype_type in factories, f"Factory missing for {subtype_type}"
 
@@ -215,7 +219,7 @@ def build_subtypes(items: List[str], subtype_types: List[Type[SubType]]) -> List
             except ValueError:
                 continue
         else:
-            raise ValueError(f"Cannot determine subtype type of f{item}")
+            raise ValueError(f"Cannot determine subtype type of {item}")
 
         result[i] = subtype
 

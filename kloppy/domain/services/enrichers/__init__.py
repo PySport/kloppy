@@ -24,9 +24,8 @@ class TrackingPossessionEnricher:
 
         # set some defaults
         next_event_idx = 0
-
-        current_ball_owning_team = Team.HOME
-        current_ball_state = BallState.DEAD
+        current_ball_owning_team = None
+        current_ball_state = None
 
         for frame in tracking_data_set.records:
             if next_event_idx < len(event_data_set.records):

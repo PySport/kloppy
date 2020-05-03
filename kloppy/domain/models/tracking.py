@@ -20,3 +20,7 @@ class Frame(DataRecord):
 class TrackingDataSet(DataSet):
     frame_rate: int
     records: List[Frame]
+
+    @property
+    def frames(self):
+        return self.records

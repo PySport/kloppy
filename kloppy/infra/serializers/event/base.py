@@ -5,7 +5,7 @@ from kloppy.infra.utils import Readable
 from kloppy.domain import EventDataSet
 
 
-class TrackingDataSerializer(ABC):
+class EventDataSerializer(ABC):
     @abstractmethod
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataSet:
         raise NotImplementedError

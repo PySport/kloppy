@@ -1,24 +1,12 @@
 # Metrica Documentation https://github.com/metrica-sports/sample-data/blob/master/documentation/events-definitions.pdf
-
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum, Flag
+from enum import Enum
 from csv import reader
-from typing import List, Type, Dict, Callable, Set, Union
+from typing import List, Union
 
-from .pitch import PitchDimensions, Point
+from .pitch import Point
 from .common import DataRecord, DataSet, Team
-
-
-class EventType(Enum):
-    SET_PIECE = "SET PIECE"
-    RECOVERY = "RECOVERY"
-    PASS = "PASS"
-    BALL_LOST = "BALL LOST"
-    BALL_OUT = "BALL OUT"
-    SHOT = "SHOT"
-    FAULT_RECEIVED = "FAULT RECEIVED"
-    CHALLENGE = "CHALLENGE"
-    CARD = "CARD"
 
 
 class SubType(Enum):
@@ -120,6 +108,10 @@ class Retaken(SubType):
     Retaken = "RETAKEN"
 
 
+class OwnGoal(SubType):
+    OwnGoal = "OWN GOAL"
+
+
 
 """
 @dataclass
@@ -138,25 +130,110 @@ class Frame:
 """
 
 
-@dataclass
-class Event(DataRecord):
-    event_id: str
-    team: Team
-    event_type: EventType
+class EventType(Enum):
+    SET_PIECE = "SET PIECE"
+    RECOVERY = "RECOVERY"
+    PASS = "PASS"
+    BALL_LOST = "BALL LOST"
+    BALL_OUT = "BALL OUT"
+    SHOT = "SHOT"
+    FAULT_RECEIVED = "FAULT RECEIVED"
+    CHALLENGE = "CHALLENGE"
+    CARD = "CARD"
 
+
+@dataclass
+class Event(DataRecord, ABC):
+    event_id: int
+    team: Team
     end_timestamp: float  # allowed to be same as timestamp
 
     player_jersey_no: str
     position: Point
 
-    secondary_player_jersey_no: str
-    secondary_position: Point
+    @property
+    @abstractmethod
+    def event_type(self) -> EventType:
+        raise NotImplementedError
+
+
+@dataclass
+class SetPieceEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.SET_PIECE
+
+
+@dataclass
+class ShotEvent(Event):
+    shot_result: ShotResult
+
+    @property
+    def event_type(self) -> EventType:
+        return EventType.PASS
+
+
+@dataclass
+class FaultReceivedEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.FAULT_RECEIVED
+
+
+@dataclass
+class ChallengeEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.CHALLENGE
+
+
+@dataclass
+class CardEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.CARD
+
+
+@dataclass
+class RecoveryEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.RECOVERY
+
+
+@dataclass
+class BallLossEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.BALL_LOST
+
+
+@dataclass
+class BallOutEvent(Event):
+    @property
+    def event_type(self) -> EventType:
+        return EventType.BALL_OUT
+
+
+@dataclass
+class PassEvent(Event):
+    receiver_player_jersey_no: str
+    receiver_position: Point
+
+    @property
+    def event_type(self) -> EventType:
+        return EventType.PASS
 
 
 @dataclass
 class EventDataSet(DataSet):
-    frame_rate: int
-    records: List[Event]
+    records: List[Union[
+        SetPieceEvent, ShotEvent
+    ]]
+
+    @property
+    def events(self):
+        return self.records
 
 
 if __name__ == '__main__':

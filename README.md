@@ -67,8 +67,8 @@ from kloppy import MetricaTrackingSerializer
 
 serializer = MetricaTrackingSerializer()
 
-with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
-        open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
+with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
+        open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_home:
 
     data_set = serializer.deserialize(
         inputs={

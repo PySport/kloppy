@@ -139,9 +139,9 @@ Data models
 - [ ] Event
 
 Tracking data (de)serializers
-- [ ] Automated tests
+- [x] Automated tests
 - [x] TRACAB
-- [ ] MetricaSports
+- [x] MetricaSports
 - [ ] BallJames
 - [ ] FIFA EPTS
 

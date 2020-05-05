@@ -3,7 +3,7 @@ from typing import List
 from kloppy.domain import AttackingDirection, Frame
 
 from .transformers import Transformer
-from .enrichers import TrackingPossessionEnricher
+# NOT YET: from .enrichers import TrackingPossessionEnricher
 
 
 def avg(items: List[float]) -> float:

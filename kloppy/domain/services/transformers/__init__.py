@@ -5,7 +5,7 @@ from kloppy.domain import (
     Frame,
     Team, AttackingDirection,
 
-    TrackingDataSet, DataSetFlag
+    TrackingDataSet, DataSetFlag, DataSet, # NOT YET: EventDataSet
 )
 
 
@@ -78,9 +78,9 @@ class Transformer:
 
     @classmethod
     def transform_data_set(cls,
-                           data_set: TrackingDataSet,
+                           data_set: DataSet,
                            to_pitch_dimensions: PitchDimensions = None,
-                           to_orientation: Orientation = None) -> TrackingDataSet:
+                           to_orientation: Orientation = None) -> DataSet:
         if not to_pitch_dimensions and not to_orientation:
             return data_set
         elif not to_orientation:
@@ -99,13 +99,18 @@ class Transformer:
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation
         )
-        frames = list(map(transformer.transform_frame, data_set.frames))
+        if isinstance(data_set, TrackingDataSet):
+            frames = list(map(transformer.transform_frame, data_set.records))
 
-        return TrackingDataSet(
-            flags=data_set.flags,
-            frame_rate=data_set.frame_rate,
-            periods=data_set.periods,
-            pitch_dimensions=to_pitch_dimensions,
-            orientation=to_orientation,
-            frames=frames
-        )
+            return TrackingDataSet(
+                flags=data_set.flags,
+                frame_rate=data_set.frame_rate,
+                periods=data_set.periods,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+                records=frames
+            )
+        #elif isinstance(data_set, EventDataSet):
+        #    raise Exception("EventDataSet transformer not implemented yet")
+        else:
+            raise Exception("Unknown DataSet type")

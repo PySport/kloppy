@@ -1,2 +1,2 @@
 from .tracking import TrackingDataSerializer, TRACABSerializer, MetricaTrackingSerializer
-from .event import EventDataSerializer, MetricaEventSerializer
+# NOT YET: from .event import EventDataSerializer, MetricaEventSerializer

@@ -45,12 +45,14 @@ from kloppy import TRACABSerializer
 
 serializer = TRACABSerializer()
 
-with open("tracab_data.dat", "rb") as data, \
+with open("tracab_data.dat", "rb") as raw, \
         open("tracab_metadata.xml", "rb") as meta:
 
     data_set = serializer.deserialize(
-        data=data,
-        metadata=meta,
+        inputs={
+            'raw_data': raw,
+            'meta_data': meta
+        },
         options={
             "sample_rate": 1 / 12
         }
@@ -58,6 +60,29 @@ with open("tracab_data.dat", "rb") as data, \
     
     # start working with data_set
 ```
+
+or Metrica data
+```python
+from kloppy import MetricaTrackingSerializer
+
+serializer = MetricaTrackingSerializer()
+
+with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
+        open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
+
+    data_set = serializer.deserialize(
+        inputs={
+            'raw_data_home': raw_home,
+            'raw_data_away': raw_away
+        },
+        options={
+            "sample_rate": 1 / 12
+        }
+    )
+    
+    # start working with data_set
+```
+
 
 ### <a name="pitch-dimensions"></a>Transform the pitch dimensions
 Data providers use their own pitch dimensions. Some use actual meters while others use 100x100. Use the Transformer to get from one pitch dimensions to another one.
@@ -114,9 +139,9 @@ Data models
 - [ ] Event
 
 Tracking data (de)serializers
-- [ ] Automated tests
+- [x] Automated tests
 - [x] TRACAB
-- [ ] MetricaSports
+- [x] MetricaSports
 - [ ] BallJames
 - [ ] FIFA EPTS
 

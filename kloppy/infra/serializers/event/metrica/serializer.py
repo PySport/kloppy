@@ -234,7 +234,6 @@ class MetricaEventSerializer(EventDataSerializer):
 
             events.append(event)
 
-
         orientation = (
             Orientation.FIXED_HOME_AWAY
             if periods[0].attacking_direction == AttackingDirection.HOME_AWAY else

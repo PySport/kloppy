@@ -44,13 +44,17 @@ class Orientation(Enum):
         elif self == Orientation.HOME_TEAM:
             if attacking_direction == AttackingDirection.HOME_AWAY:
                 return -1
-            else:
+            elif attacking_direction == AttackingDirection.AWAY_HOME:
                 return 1
+            else:
+                raise Exception("AttackingDirection not set")
         elif self == Orientation.AWAY_TEAM:
             if attacking_direction == AttackingDirection.AWAY_HOME:
                 return -1
-            else:
+            elif attacking_direction == AttackingDirection.HOME_AWAY:
                 return 1
+            else:
+                raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
             if ((ball_owning_team == Team.HOME
                  and attacking_direction == AttackingDirection.HOME_AWAY)

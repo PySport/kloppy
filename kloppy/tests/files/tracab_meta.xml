@@ -1,0 +1,15 @@
+<TracabMetaData sVersion="1.0">
+    <match
+        iId="1337"
+        dtDate="2020-01-02 03:04:05"
+        iFrameRateFps="25"
+        fPitchXSizeMeters="100.00"
+        fPitchYSizeMeters="60.00"
+        fTrackingAreaXSizeMeters="105.00"
+        fTrackingAreaYSizeMeters="70.00">
+        <period iId="1" iStartFrame="100" iEndFrame="102"/>
+        <period iId="2" iStartFrame="200" iEndFrame="202"/>
+        <period iId="3" iStartFrame="0" iEndFrame="0"/>
+        <period iId="4" iStartFrame="0" iEndFrame="0"/>
+    </match>
+</TracabMetaData>

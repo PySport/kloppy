@@ -1,0 +1,104 @@
+import os
+from io import BytesIO
+
+from pandas import DataFrame
+from pandas.testing import assert_frame_equal
+
+from kloppy import MetricaTrackingSerializer, to_pandas, load_metrica_tracking_data, load_tracab_tracking_data, \
+    TrackingDataSet, PitchDimensions, Dimension, Orientation, Frame, transform
+from kloppy.domain import Period, DataSetFlag, Point, AttackingDirection
+from kloppy.infra.utils import performance_logging
+
+
+class TestHelpers:
+    def test_load_metrica_tracking_data(self):
+        base_dir = os.path.dirname(__file__)
+        data_set = load_metrica_tracking_data(
+            f'{base_dir}/files/metrica_home.csv',
+            f'{base_dir}/files/metrica_away.csv'
+        )
+        assert len(data_set.records) == 6
+        assert len(data_set.periods) == 2
+
+    def test_load_tracab_tracking_data(self):
+        base_dir = os.path.dirname(__file__)
+        data_set = load_tracab_tracking_data(
+            f'{base_dir}/files/tracab_meta.xml',
+            f'{base_dir}/files/tracab_raw.dat'
+        )
+        assert len(data_set.records) == 5  # only alive=True
+        assert len(data_set.periods) == 2
+
+    def _get_dataset(self):
+        periods = [
+            Period(id=1, start_timestamp=0.0, end_timestamp=10.0, attacking_direction=AttackingDirection.HOME_AWAY),
+            Period(id=2, start_timestamp=15.0, end_timestamp=25.0, attacking_direction=AttackingDirection.AWAY_HOME)
+        ]
+        tracking_data = TrackingDataSet(
+            flags=~(DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE),
+            pitch_dimensions=PitchDimensions(
+                x_dim=Dimension(0, 100),
+                y_dim=Dimension(-50, 50)
+            ),
+            orientation=Orientation.HOME_TEAM,
+            frame_rate=25,
+            records=[
+                Frame(
+                    frame_id=1,
+                    timestamp=0.1,
+                    ball_owning_team=None,
+                    ball_state=None,
+                    period=periods[0],
+
+                    away_team_player_positions={},
+                    home_team_player_positions={},
+                    ball_position=Point(x=100, y=-50)
+                ),
+                Frame(
+                    frame_id=2,
+                    timestamp=0.2,
+                    ball_owning_team=None,
+                    ball_state=None,
+                    period=periods[0],
+
+                    away_team_player_positions={'1': Point(x=10, y=20)},
+                    home_team_player_positions={'1': Point(x=15, y=35)},
+                    ball_position=Point(x=0, y=50)
+                )
+            ],
+            periods=periods
+        )
+        return tracking_data
+
+    def test_transform(self):
+        tracking_data = self._get_dataset()
+
+        # orientation change AND dimension scale
+        transformed_data_set = transform(
+            tracking_data,
+            to_orientation="AWAY_TEAM",
+            to_pitch_dimensions=[[0, 1], [0, 1]]
+        )
+
+        assert transformed_data_set.frames[0].ball_position == Point(x=0, y=1)
+        assert transformed_data_set.frames[1].ball_position == Point(x=1, y=0)
+
+    def test_to_pandas(self):
+        tracking_data = self._get_dataset()
+
+        data_frame = to_pandas(tracking_data)
+
+        expected_data_frame = DataFrame.from_dict({
+            'period_id': {0: 1, 1: 1},
+            'timestamp': {0: 0.1, 1: 0.2},
+            'ball_state': {0: None, 1: None},
+            'ball_owning_team': {0: None, 1: None},
+            'ball_x': {0: 100, 1: 0},
+            'ball_y': {0: -50, 1: 50},
+            'player_home_1_x': {0: None, 1: 15.0},
+            'player_home_1_y': {0: None, 1: 35.0},
+            'player_away_1_x': {0: None, 1: 10.0},
+            'player_away_1_y': {0: None, 1: 20.0}
+        })
+
+        assert_frame_equal(data_frame, expected_data_frame)

@@ -1,3 +1,5 @@
+from typing import TypeVar
+
 from kloppy.domain import (
     Point,
     PitchDimensions,
@@ -76,11 +78,13 @@ class Transformer:
             }
         )
 
+    DataSetType = TypeVar('DataSetType')
+
     @classmethod
     def transform_data_set(cls,
-                           data_set: DataSet,
+                           data_set: DataSetType,
                            to_pitch_dimensions: PitchDimensions = None,
-                           to_orientation: Orientation = None) -> DataSet:
+                           to_orientation: Orientation = None) -> DataSetType:
         if not to_pitch_dimensions and not to_orientation:
             return data_set
         elif not to_orientation:

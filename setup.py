@@ -1,15 +1,3 @@
-""" KlopPy is a Python package providing deserializers for soccer tracking- and event data, and
-standardized data models designed to make working with different tracking- and event data like
-a breeze. It aims to be the fundamental building blocks for loading tracking- and event data.
-
-Here are just a few of the things that kloppy does well:
-- Understandable standardized models for tracking- and event datasets
-- Out-of-the-box deserializing tracking- and event data from different source into standardized models
-- Flexible pitch dimensions transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
-- Intelligent orientation transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
-"""
-
-DOCLINES = (__doc__ or '').split("\n")
 from distutils.core import setup
 
 import setuptools
@@ -19,21 +7,31 @@ with open('README.md', 'r', encoding='utf8') as f:
 
 setup(
     name='kloppy',
-    version='0.2.0',
+    version='0.2.1',
     author='Koen Vossen',
     author_email='info@koenvossen.nl',
     url="https://github.com/PySport/kloppy",
-    packages=setuptools.find_packages(exclude=["test"]),
-    license='Creative Commons Attribution-Noncommercial-Share Alike license',
+    packages=setuptools.find_packages(exclude=["tests"]),
+    license='BSD',
     description="Standardizing soccer tracking- and event data",
-    long_description="\n".join(DOCLINES),
-    python_requires='>=3.7',
+    long_description=readme,
+    long_description_content_type="text/markdown",
+    classifiers=[
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "License :: OSI Approved",
+        "Topic :: Scientific/Engineering"
+    ],
     install_requires=[
         'lxml>=4.5.0'
     ],
     extras_require={
-        'dev': [
-            'pytest'
+        'test': [
+            'pytest',
+            'pandas>=1.0.0'
         ]
     }
 )

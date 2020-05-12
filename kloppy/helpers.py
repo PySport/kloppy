@@ -1,7 +1,7 @@
-from typing import Callable
+from typing import Callable, TypeVar
 
 from . import TRACABSerializer, MetricaTrackingSerializer
-from .domain import DataSet, Frame, TrackingDataSet
+from .domain import DataSet, Frame, TrackingDataSet, Transformer, Orientation, PitchDimensions, Dimension
 
 
 def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
@@ -32,8 +32,22 @@ def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filena
         )
 
 
-def transform(data_set: DataSet, to_orientation=None, pitch_dimensions=None) -> DataSet:
-    pass
+DataSetType = TypeVar('DataSetType')
+
+
+def transform(data_set: DataSetType, to_orientation=None, to_pitch_dimensions=None) -> DataSetType:
+    if to_orientation and isinstance(to_orientation, str):
+        to_orientation = Orientation[to_orientation]
+    if to_pitch_dimensions and (isinstance(to_pitch_dimensions, list) or isinstance(to_pitch_dimensions, tuple)):
+        to_pitch_dimensions = PitchDimensions(
+            x_dim=Dimension(*to_pitch_dimensions[0]),
+            y_dim=Dimension(*to_pitch_dimensions[1])
+        )
+    return Transformer.transform_data_set(
+        data_set=data_set,
+        to_orientation=to_orientation,
+        to_pitch_dimensions=to_pitch_dimensions
+    )
 
 
 def _frame_to_pandas_row_converter(frame: Frame) -> dict:

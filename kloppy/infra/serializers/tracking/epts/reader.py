@@ -30,7 +30,7 @@ def build_regex(data_format_specification: DataFormatSpecification,
 
 def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
                   sensor_ids: List[str] = None,
-                  sample_rate: int = 1,
+                  sample_rate: float = 1.0,
                   limit: int = 0) -> Iterator[dict]:
     sensors = [
         sensor for sensor in meta_data.sensors
@@ -60,8 +60,10 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
     periods = meta_data.periods
     period_idx = 0
     n = 0
+    sample = 1. / sample_rate
+
     for i, line in enumerate(raw_data):
-        if i % sample_rate != 0:
+        if i % sample != 0:
             continue
 
         line = line.strip().decode('ascii')
@@ -84,6 +86,10 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
 
             yield row
 
+            n += 1
+            if limit and n > limit:
+                break
+
         if frame_id >= end_frame_id:
             if current_data_spec_idx == len(data_specs) - 1:
                 # don't know how to parse the rest of the file...
@@ -91,7 +97,3 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
             else:
                 current_data_spec_idx += 1
                 _set_current_data_spec(current_data_spec_idx)
-
-        n += 1
-        if limit and n > limit:
-            break

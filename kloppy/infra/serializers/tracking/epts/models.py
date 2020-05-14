@@ -3,7 +3,9 @@ from typing import List, Dict, Union, Set
 
 from kloppy.domain import Team, Player, MetaData
 
-NUMBER_REGEX = "[^,;:]*"
+
+# TODO: fill this with from SplitRegisters
+NON_SPLIT_CHAR_REGEX = "[^,;:]*"
 
 
 @dataclass
@@ -58,7 +60,7 @@ class StringRegister:
     name: str
 
     def to_regex(self, **kwargs) -> str:
-        return f"(?P<{self.name}>{NUMBER_REGEX})"
+        return f"(?P<{self.name}>{NON_SPLIT_CHAR_REGEX})"
 
     @classmethod
     def from_xml_element(cls, elm) -> 'StringRegister':
@@ -75,9 +77,9 @@ class PlayerChannelRef:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
             team_str = "home" if player_channel.player.team == Team.HOME else "away"
-            return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel.channel_id}>{NUMBER_REGEX})"
+            return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
-            return NUMBER_REGEX
+            return NON_SPLIT_CHAR_REGEX
 
     @classmethod
     def from_xml_element(cls, elm) -> 'PlayerChannelRef':
@@ -92,9 +94,9 @@ class BallChannelRef:
 
     def to_regex(self, ball_channel_map: Dict[str, Channel], **kwargs) -> str:
         if self.channel_id in ball_channel_map:
-            return f"(?P<ball_{self.channel_id}>{NUMBER_REGEX})"
+            return f"(?P<ball_{self.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
-            return NUMBER_REGEX
+            return NON_SPLIT_CHAR_REGEX
 
     @classmethod
     def from_xml_element(cls, elm) -> 'BallChannelRef':

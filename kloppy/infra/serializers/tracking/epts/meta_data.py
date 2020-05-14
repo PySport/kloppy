@@ -1,6 +1,6 @@
 from lxml import objectify
 
-from kloppy.domain import Period
+from kloppy.domain import Period, PitchDimensions, Dimension
 from kloppy.infra.utils import Readable
 
 from .models import *
@@ -81,6 +81,29 @@ def _load_sensors(sensors_elm) -> List[Sensor]:
     ]
 
 
+def _load_pitch_dimensions(meta_data_elm, sensors: List[Sensor]) -> Union[None, PitchDimensions]:
+
+    normalized = False
+    for sensor in sensors:
+        if sensor.sensor_id == 'position':
+            if sensor.channels[0].unit == 'normalized':
+                normalized = True
+                break
+
+    field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
+    field_size_elm = field_size_path.find(meta_data_elm).find('FieldSize')
+
+    if field_size_elm is not None and normalized:
+        return PitchDimensions(
+            x_dim=Dimension(0, 1),
+            y_dim=Dimension(0, 1),
+            x_per_meter=1 / int(field_size_elm.find('Width')),
+            y_per_meter=1 / int(field_size_elm.find('Height'))
+        )
+    else:
+        return None
+
+
 def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     root = objectify.fromstring(meta_data_file.read())
     meta_data = root.find('Metadata')
@@ -125,12 +148,14 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
 
     frame_rate = int(meta_data.find('GlobalConfig').find('FrameRate'))
     periods = _load_periods(meta_data.find('GlobalConfig'), frame_rate)
+    pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
 
     return EPTSMetaData(
         home_team_name=team_name_map[Team.HOME],
         away_team_name=team_name_map[Team.AWAY],
         players=players,
         periods=periods,
+        pitch_dimensions=pitch_dimensions,
 
         data_format_specifications=data_format_specifications,
         player_channels=player_channels,

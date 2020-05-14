@@ -122,6 +122,7 @@ class MetaData:
     away_team_name: str
     players: List[Player]
     periods: List[Period]
+    pitch_dimensions: PitchDimensions
 
 
 

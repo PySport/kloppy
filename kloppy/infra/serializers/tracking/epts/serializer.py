@@ -1,5 +1,4 @@
-import re
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
 
 from kloppy.domain import (
     TrackingDataSet, DataSetFlag,
@@ -7,8 +6,6 @@ from kloppy.domain import (
     Frame,
     Point,
     Team,
-    BallState,
-    Period,
     Orientation,
     PitchDimensions,
     Dimension,
@@ -17,7 +14,7 @@ from kloppy.domain import (
 from kloppy.infra.utils import Readable, performance_logging
 
 from .meta_data import load_meta_data, EPTSMetaData
-from .reader import build_regex, read_raw_data
+from .reader import read_raw_data
 
 from .. import TrackingDataSerializer
 
@@ -126,7 +123,7 @@ class EPTSSerializer(TrackingDataSerializer):
                     raw_data=inputs['raw_data'],
                     meta_data=meta_data,
                     sensor_ids=["position"],  # we don't care about other sensors
-                    sample_rate=int(meta_data.frame_rate * sample_rate),
+                    sample_rate=sample_rate,
                     limit=limit
                 )
             ]
@@ -148,12 +145,7 @@ class EPTSSerializer(TrackingDataSerializer):
             flags=~(DataSetFlag.BALL_STATE | DataSetFlag.BALL_OWNING_TEAM),
             frame_rate=meta_data.frame_rate,
             orientation=orientation,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(-1 * pitch_size_width / 2, pitch_size_width / 2),
-                y_dim=Dimension(-1 * pitch_size_height / 2, pitch_size_height / 2),
-                x_per_meter=100,
-                y_per_meter=100
-            ),
+            pitch_dimensions=meta_data.pitch_dimensions,
             periods=periods,
             records=frames
         )

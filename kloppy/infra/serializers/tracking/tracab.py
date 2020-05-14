@@ -149,19 +149,19 @@ class TRACABSerializer(TrackingDataSerializer):
                 n = 0
                 sample = 1. / sample_rate
 
-                for line in inputs['raw_data'].readlines():
-                    line = line.strip().decode("ascii")
-                    if not line:
+                for line_ in inputs['raw_data'].readlines():
+                    line_ = line_.strip().decode("ascii")
+                    if not line_:
                         continue
 
-                    frame_id = int(line[:10].split(":", 1)[0])
-                    if only_alive and not line.endswith("Alive;:"):
+                    frame_id = int(line_[:10].split(":", 1)[0])
+                    if only_alive and not line_.endswith("Alive;:"):
                         continue
 
-                    for period in periods:
-                        if period.contains(frame_id / frame_rate):
+                    for period_ in periods:
+                        if period_.contains(frame_id / frame_rate):
                             if n % sample == 0:
-                                yield period, line
+                                yield period_, line_
                             n += 1
 
             frames = []

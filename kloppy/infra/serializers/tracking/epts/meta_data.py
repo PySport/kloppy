@@ -35,6 +35,34 @@ def _parse_periods(global_config_elm, frame_rate: int) -> List[Period]:
     return periods
 
 
+def _load_players(players_elm, team_map: Dict[str, Team]) -> List[Player]:
+    return [
+        Player(
+            team=team_map[player_elm.attrib['teamId']],
+            jersey_no=str(player_elm.find('ShirtNumber')),
+            player_id=player_elm.attrib['id'],
+            name=str(player_elm.find('Name'))
+        )
+        for player_elm in players_elm.iterchildren(tag='Player')
+    ]
+
+
+def _load_data_format_specifications(data_format_specifications_elm) -> List[DataFormatSpecification]:
+    return [
+        DataFormatSpecification.from_xml_element(data_format_specification_elm)
+        for data_format_specification_elm
+        in data_format_specifications_elm.iterchildren(tag='DataFormatSpecification')
+    ]
+
+
+def _load_sensors(sensors_elm) -> List[Sensor]:
+    return [
+        Sensor.from_xml_element(sensor_elm)
+        for sensor_elm
+        in sensors_elm.iterchildren(tag="Sensor")
+    ]
+
+
 def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     root = objectify.fromstring(meta_data_file.read())
     meta_data = root.find('Metadata')
@@ -46,21 +74,17 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         score_elm.attrib['idVisitingTeam']: Team.AWAY
     }
 
-    players = [
-        Player(
-            team=_team_map[player_elm.attrib['teamId']],
-            jersey_no=str(player_elm.find('ShirtNumber')),
-            player_id=player_elm.attrib['id'],
-            name=str(player_elm.find('Name'))
-        )
-        for player_elm in meta_data.find('Players').iterchildren(tag='Player')
-    ]
+    players = _load_players(meta_data.find('Players'), _team_map)
+    data_format_specifications = _load_data_format_specifications(root.find('DataFormatSpecifications'))
 
-    data_format_specifications = [
-        DataFormatSpecification.from_xml_element(data_format_specification_elm)
-        for data_format_specification_elm
-        in root.find('DataFormatSpecifications').iterchildren(tag='DataFormatSpecification')
-    ]
+    device_path = objectify.ObjectPath("Metadata.Devices.Device[0].Sensors")
+    sensors = _load_sensors(device_path.find(meta_data))
+
+    _channel_map = {
+        channel.channel_id: channel
+        for sensor in sensors
+        for channel in sensor.channels
+    }
 
     _player_map = {
         player.player_id: player for player in players
@@ -70,7 +94,7 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         PlayerChannel(
             player_channel_id=player_channel_elm.attrib['id'],
             player=_player_map[player_channel_elm.attrib['playerId']],
-            channel_id=player_channel_elm.attrib['channelId']
+            channel=_channel_map[player_channel_elm.attrib['channelId']]
         )
         for player_channel_elm in meta_data.find('PlayerChannels').iterchildren(tag='PlayerChannel')
     ]
@@ -92,5 +116,6 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
 
         data_format_specifications=data_format_specifications,
         player_channels=player_channels,
-        frame_rate=frame_rate
+        frame_rate=frame_rate,
+        sensors=sensors
     )

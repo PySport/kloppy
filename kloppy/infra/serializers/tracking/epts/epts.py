@@ -102,46 +102,8 @@ class EPTSSerializer(TrackingDataSerializer):
 
         with performance_logging("Loading data"):
             # assume they are sorted
-            data_specs = meta_data.data_format_specifications
-            current_data_spec_idx = 0
-            regex_str = build_regex(
-                data_specs[current_data_spec_idx],
-                meta_data.player_channels
-            )
-            end_frame_id = data_specs[current_data_spec_idx].end_frame
-            regex = re.compile(regex_str)
+            pass
 
-            frames = []
-            for line in inputs['raw_data']:
-                line = line.strip().decode('ascii')
-                regex.match(line)
-
-                frame_id, frame = self._frame_from_match(
-                    period,
-                    line,
-                    frame_rate
-                )
-
-                frames.append(frame)
-
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(frame)
-                    )
-
-
-                if frame_id >= end_frame_id:
-                    if current_data_spec_idx == len(data_specs) - 1:
-                        # don't know how to parse the rest of the file...
-                        break
-                    else:
-                        current_data_spec_idx += 1
-                        regex_str = build_regex(
-                            data_specs[current_data_spec_idx],
-                            meta_data.player_channels
-                        )
-                        end_frame_id = data_specs[current_data_spec_idx].end_frame
-                        regex = re.compile(regex_str)
 
 
         orientation = (

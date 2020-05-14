@@ -1,14 +1,56 @@
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Set
 
 from kloppy.domain import Team, Player, MetaData
+
+NUMBER_REGEX = "\\-?\\d*(?:\\.\\d+)?"
+
+
+@dataclass
+class Channel:
+    channel_id: str
+    name: str
+    unit: str
+    sensor: 'Sensor'
+
+    @classmethod
+    def from_xml_element(cls, elm) -> 'Channel':
+        return cls(
+            channel_id=elm.attrib['id'],
+            name=str(elm.find('Name')),
+            unit=str(elm.find('Unit')),
+            sensor=None  # should be set from sensor constructor
+        )
 
 
 @dataclass
 class PlayerChannel:
     player_channel_id: str
-    channel_id: str
+    channel: Channel
     player: Player
+
+
+@dataclass
+class Sensor:
+    sensor_id: str
+    name: str
+    channels: List[Channel]
+
+    @classmethod
+    def from_xml_element(cls, elm) -> 'Sensor':
+        obj = cls(
+            sensor_id=elm.attrib['id'],
+            name=str(elm.find('Name')),
+            channels=[
+                Channel.from_xml_element(channel_elm)
+                for channel_elm
+                in elm.find('Channels').iterchildren(tag='Channel')
+            ]
+        )
+        for channel in obj.channels:
+            channel.sensor = obj
+
+        return obj
 
 
 @dataclass
@@ -16,7 +58,7 @@ class StringRegister:
     name: str
 
     def to_regex(self, **kwargs) -> str:
-        return f"(?P<{self.name}>)"
+        return f"(?P<{self.name}>{NUMBER_REGEX})"
 
     @classmethod
     def from_xml_element(cls, elm) -> 'StringRegister':
@@ -30,9 +72,12 @@ class PlayerChannelRef:
     player_channel_id: str
 
     def to_regex(self, player_channel_map: Dict[str, PlayerChannel], **kwargs) -> str:
-        player_channel = player_channel_map[self.player_channel_id]
-        team_str = "home" if player_channel.player.team == Team.HOME else "away"
-        return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel_id}>)"
+        if self.player_channel_id in player_channel_map:
+            player_channel = player_channel_map[self.player_channel_id]
+            team_str = "home" if player_channel.player.team == Team.HOME else "away"
+            return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel.channel_id}>{NUMBER_REGEX})"
+        else:
+            return NUMBER_REGEX
 
     @classmethod
     def from_xml_element(cls, elm) -> 'PlayerChannelRef':
@@ -45,8 +90,11 @@ class PlayerChannelRef:
 class BallChannelRef:
     channel_id: str
 
-    def to_regex(self, **kwargs) -> str:
-        return f"(?P<ball_{self.channel_id}>)"
+    def to_regex(self, ball_channel_map: Dict[str, Channel], **kwargs) -> str:
+        if self.channel_id in ball_channel_map:
+            return f"(?P<ball_{self.channel_id}>{NUMBER_REGEX})"
+        else:
+            return NUMBER_REGEX
 
     @classmethod
     def from_xml_element(cls, elm) -> 'BallChannelRef':
@@ -110,5 +158,6 @@ class DataFormatSpecification:
 class EPTSMetaData(MetaData):
     player_channels: List[PlayerChannel]
     data_format_specifications: List[DataFormatSpecification]
+    sensors: List[Sensor]
     frame_rate: int
 

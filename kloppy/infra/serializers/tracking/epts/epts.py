@@ -1,6 +1,6 @@
+import re
 from typing import Tuple, Dict
 
-from lxml import objectify
 
 from kloppy.domain import (
     TrackingDataSet, DataSetFlag,
@@ -16,7 +16,9 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.infra.utils import Readable, performance_logging
-from .models import DataFormatSpecification, PlayerChannel, Player
+
+from .meta_data import load_meta_data
+from .reader import build_regex
 
 from .. import TrackingDataSerializer
 
@@ -46,63 +48,6 @@ class EPTSSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def _load_meta_data(self, meta_data: Readable):
-        meta_data = objectify.fromstring(meta_data.read())
-
-        score_path = objectify.ObjectPath("Metadata.Sessions.Session[0].MatchParameters.Score")
-        score_elm = score_path.find(meta_data.find('Metadata'))
-        team_map = {
-            score_elm.attrib['idLocalTeam']: Team.HOME,
-            score_elm.attrib['idVisitingTeam']: Team.AWAY
-        }
-
-        players = list(
-            map(
-                lambda x: Player(
-                    team=team_map[x.attrib['teamId']],
-                    jersey_no=str(x.find('ShirtNumber')),
-                    player_id=x.attrib['id']
-                ),
-                (
-                    meta_data
-                    .find('Metadata').find('Players')
-                    .iterchildren(tag='Player')
-                )
-            )
-        )
-
-        a = 1
-
-        data_specs = list(
-            map(
-                DataFormatSpecification.from_xml_element,
-                (
-                    meta_data
-                    .find('DataFormatSpecifications')
-                    .iterchildren(tag='DataFormatSpecification')
-                )
-            )
-        )
-
-        player_channels = [
-            PlayerChannel(player_channel_id='player1_x', channel_id='x',
-                          player=Player(team=Team.HOME, jersey_no='23', player_id=None)),
-            PlayerChannel(player_channel_id='player1_y', channel_id='y',
-                          player=Player(team=Team.HOME, jersey_no='23', player_id=None)),
-            PlayerChannel(player_channel_id='player1_z', channel_id='z',
-                          player=Player(team=Team.HOME, jersey_no='23', player_id=None))
-
-        ]
-
-        player_channel_map = {
-            player_channel.player_channel_id: player_channel
-            for player_channel in player_channels
-        }
-
-        data_specs[0].split_register.to_regex(
-            player_channel_map=player_channel_map
-        )
-        a = 1
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataSet:
         """
@@ -139,7 +84,6 @@ class EPTSSerializer(TrackingDataSerializer):
         >>>             'raw_data': raw
         >>>         },
         >>>         options={
-        >>>             'only_alive': True,
         >>>             'sample_rate': 1/12
         >>>         }
         >>>     )
@@ -150,54 +94,29 @@ class EPTSSerializer(TrackingDataSerializer):
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
-        only_alive = bool(options.get('only_alive', True))
 
         with performance_logging("Loading metadata"):
-            self._load_meta_data(inputs['meta_data'])
+            meta_data = load_meta_data(inputs['meta_data'])
 
-
-            a = 1
-
-            frame_rate = int(match.attrib['iFrameRateFps'])
-            pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
-            pitch_size_height = float(match.attrib['fPitchYSizeMeters'])
-
-            periods = []
-            for period in match.iterchildren(tag='period'):
-                start_frame_id = int(period.attrib['iStartFrame'])
-                end_frame_id = int(period.attrib['iEndFrame'])
-                if start_frame_id != 0 or end_frame_id != 0:
-                    periods.append(
-                        Period(
-                            id=int(period.attrib['iId']),
-                            start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate
-                        )
-                    )
+        periods = meta_data.periods
 
         with performance_logging("Loading data"):
-            def _iter():
-                n = 0
-                sample = 1. / sample_rate
-
-                for line in inputs['raw_data'].readlines():
-                    line = line.strip().decode("ascii")
-                    if not line:
-                        continue
-
-                    frame_id = int(line[:10].split(":", 1)[0])
-                    if only_alive and not line.endswith("Alive;:"):
-                        continue
-
-                    for period in periods:
-                        if period.contains(frame_id / frame_rate):
-                            if n % sample == 0:
-                                yield period, line
-                            n += 1
+            # assume they are sorted
+            data_specs = meta_data.data_format_specifications
+            current_data_spec_idx = 0
+            regex_str = build_regex(
+                data_specs[current_data_spec_idx],
+                meta_data.player_channels
+            )
+            end_frame_id = data_specs[current_data_spec_idx].end_frame
+            regex = re.compile(regex_str)
 
             frames = []
-            for period, line in _iter():
-                frame = self._frame_from_line(
+            for line in inputs['raw_data']:
+                line = line.strip().decode('ascii')
+                regex.match(line)
+
+                frame_id, frame = self._frame_from_match(
                     period,
                     line,
                     frame_rate
@@ -209,6 +128,21 @@ class EPTSSerializer(TrackingDataSerializer):
                     period.set_attacking_direction(
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
+
+
+                if frame_id >= end_frame_id:
+                    if current_data_spec_idx == len(data_specs) - 1:
+                        # don't know how to parse the rest of the file...
+                        break
+                    else:
+                        current_data_spec_idx += 1
+                        regex_str = build_regex(
+                            data_specs[current_data_spec_idx],
+                            meta_data.player_channels
+                        )
+                        end_frame_id = data_specs[current_data_spec_idx].end_frame
+                        regex = re.compile(regex_str)
+
 
         orientation = (
             Orientation.FIXED_HOME_AWAY

@@ -1,14 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Union
 
-from kloppy.domain import Team
-
-
-@dataclass
-class Player:
-    player_id: str
-    team: Team
-    jersey_no: str
+from kloppy.domain import Team, Player, MetaData
 
 
 @dataclass
@@ -22,7 +15,7 @@ class PlayerChannel:
 class StringRegister:
     name: str
 
-    def to_regex(self, **kwargs):
+    def to_regex(self, **kwargs) -> str:
         return f"(?P<{self.name}>)"
 
     @classmethod
@@ -36,7 +29,7 @@ class StringRegister:
 class PlayerChannelRef:
     player_channel_id: str
 
-    def to_regex(self, player_channel_map: Dict[str, PlayerChannel], **kwargs):
+    def to_regex(self, player_channel_map: Dict[str, PlayerChannel], **kwargs) -> str:
         player_channel = player_channel_map[self.player_channel_id]
         team_str = "home" if player_channel.player.team == Team.HOME else "away"
         return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel_id}>)"
@@ -52,7 +45,7 @@ class PlayerChannelRef:
 class BallChannelRef:
     channel_id: str
 
-    def to_regex(self, **kwargs):
+    def to_regex(self, **kwargs) -> str:
         return f"(?P<ball_{self.channel_id}>)"
 
     @classmethod
@@ -67,7 +60,7 @@ class SplitRegister:
     separator: str
     children: List[Union[BallChannelRef, PlayerChannelRef, StringRegister, 'SplitRegister']]
 
-    def to_regex(self, **kwargs):
+    def to_regex(self, **kwargs) -> str:
         return self.separator.join(
             [child.to_regex(**kwargs) for child in self.children]
         )
@@ -94,6 +87,7 @@ class SplitRegister:
             children=children
         )
 
+
 @dataclass
 class DataFormatSpecification:
     start_frame: int
@@ -108,5 +102,13 @@ class DataFormatSpecification:
             split_register=SplitRegister.from_xml_element(elm),
         )
 
-    def to_regex(self, **kwargs):
+    def to_regex(self, **kwargs) -> str:
         return self.split_register.to_regex(**kwargs)
+
+
+@dataclass
+class EPTSMetaData(MetaData):
+    player_channels: List[PlayerChannel]
+    data_format_specifications: List[DataFormatSpecification]
+    frame_rate: int
+

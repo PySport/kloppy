@@ -11,6 +11,14 @@ class Team(Enum):
     AWAY = "away"
 
 
+@dataclass
+class Player:
+    player_id: str
+    team: Team
+    name: str
+    jersey_no: str
+
+
 class BallState(Enum):
     ALIVE = "alive"
     DEAD = "dead"
@@ -105,5 +113,14 @@ class DataSet(ABC):
     orientation: Orientation
     periods: List[Period]
     records: List[DataRecord]
+
+
+@dataclass
+class MetaData:
+    home_team_name: str
+    away_team_name: str
+    players: List[Player]
+    periods: List[Period]
+
 
 

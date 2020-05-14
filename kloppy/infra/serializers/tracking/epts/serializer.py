@@ -1,6 +1,5 @@
 import re
-from typing import Tuple, Dict
-
+from typing import Tuple, Dict, List
 
 from kloppy.domain import (
     TrackingDataSet, DataSetFlag,
@@ -17,30 +16,13 @@ from kloppy.domain import (
 )
 from kloppy.infra.utils import Readable, performance_logging
 
-from .meta_data import load_meta_data
-from .reader import build_regex
+from .meta_data import load_meta_data, EPTSMetaData
+from .reader import build_regex, read_raw_data
 
 from .. import TrackingDataSerializer
 
-"""
-
-def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
-    serializer = EPTSSerializer()
-    with open(meta_data_filename, "rb") as meta_data, \
-            open(raw_data_filename, "rb") as raw_data:
-
-        return serializer.deserialize(
-            inputs={
-                'meta_data': meta_data,
-                'raw_data': raw_data
-            },
-            options=options
-        )
-"""
-
 
 class EPTSSerializer(TrackingDataSerializer):
-
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "meta_data" not in inputs:
@@ -48,6 +30,39 @@ class EPTSSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
+    @staticmethod
+    def _frame_from_row(row: dict, meta_data: EPTSMetaData) -> Frame:
+        timestamp = row['timestamp']
+        if meta_data.periods:
+            # might want to search for it instead
+            period = meta_data.periods[row['period_id'] - 1]
+        else:
+            period = None
+
+        home_team_player_positions = {}
+        away_team_player_positions = {}
+        for player in meta_data.players:
+            if player.team == Team.HOME:
+                home_team_player_positions[player.jersey_no] = Point(
+                    x=row[f'player_home_{player.jersey_no}_x'],
+                    y=row[f'player_home_{player.jersey_no}_y']
+                )
+            elif player.team == Team.AWAY:
+                home_team_player_positions[player.jersey_no] = Point(
+                    x=row[f'player_away_{player.jersey_no}_x'],
+                    y=row[f'player_away_{player.jersey_no}_y']
+                )
+
+        return Frame(
+            frame_id=row['frame_id'],
+            timestamp=timestamp,
+            ball_owning_team=None,
+            ball_state=None,
+            period=period,
+            home_team_player_positions=home_team_player_positions,
+            away_team_player_positions=away_team_player_positions,
+            ball_position=Point(x=row['ball_x'], y=row['ball_y'])
+        )
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataSet:
         """
@@ -62,7 +77,8 @@ class EPTSSerializer(TrackingDataSerializer):
         options : dict
             Options for deserialization of the EPTS file. Possible options are
             `sample_rate` (float between 0 and 1) to specify the amount of
-            frames that should be loaded.
+            frames that should be loaded, `limit` to specify the max number of
+            frames that will be returned.
         Returns
         -------
         data_set : TrackingDataSet
@@ -94,6 +110,7 @@ class EPTSSerializer(TrackingDataSerializer):
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
+        limit = int(options.get('limit', 0))
 
         with performance_logging("Loading metadata"):
             meta_data = load_meta_data(inputs['meta_data'])
@@ -102,19 +119,34 @@ class EPTSSerializer(TrackingDataSerializer):
 
         with performance_logging("Loading data"):
             # assume they are sorted
-            pass
+            frames = [
+                self._frame_from_row(row, meta_data)
+                for row
+                in read_raw_data(
+                    raw_data=inputs['raw_data'],
+                    meta_data=meta_data,
+                    sensor_ids=["position"],  # we don't care about other sensors
+                    sample_rate=int(meta_data.frame_rate * sample_rate),
+                    limit=limit
+                )
+            ]
 
-
+        if periods:
+            start_attacking_direction = periods[0].attacking_direction
+        elif frames:
+            start_attacking_direction = attacking_direction_from_frame(frames[0])
+        else:
+            start_attacking_direction = None
 
         orientation = (
             Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY else
+            if start_attacking_direction == AttackingDirection.HOME_AWAY else
             Orientation.FIXED_AWAY_HOME
-        )
+        ) if start_attacking_direction else None
 
         return TrackingDataSet(
-            flags=DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE,
-            frame_rate=frame_rate,
+            flags=~(DataSetFlag.BALL_STATE | DataSetFlag.BALL_OWNING_TEAM),
+            frame_rate=meta_data.frame_rate,
             orientation=orientation,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(-1 * pitch_size_width / 2, pitch_size_width / 2),

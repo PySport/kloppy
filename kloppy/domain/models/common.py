@@ -1,7 +1,7 @@
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, Flag
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from .pitch import PitchDimensions
 
@@ -17,6 +17,7 @@ class Player:
     team: Team
     name: str
     jersey_no: str
+    attributes: Optional[Dict] = field(default_factory=dict)
 
 
 class BallState(Enum):

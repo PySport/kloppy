@@ -1,7 +1,10 @@
 from typing import Callable, TypeVar
 
-from . import TRACABSerializer, MetricaTrackingSerializer
+from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer
 from .domain import DataSet, Frame, TrackingDataSet, Transformer, Orientation, PitchDimensions, Dimension
+
+from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data as epts_load_meta_data
+from kloppy.infra.serializers.tracking.epts.reader import read_raw_data as epts_read_raw_data
 
 
 def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
@@ -27,6 +30,20 @@ def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filena
             inputs={
                 'raw_data_home': raw_data_home,
                 'raw_data_away': raw_data_away
+            },
+            options=options
+        )
+
+
+def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
+    serializer = EPTSSerializer()
+    with open(meta_data_filename, "rb") as meta_data, \
+            open(raw_data_filename, "rb") as raw_data:
+
+        return serializer.deserialize(
+            inputs={
+                'meta_data': meta_data,
+                'raw_data': raw_data
             },
             options=options
         )

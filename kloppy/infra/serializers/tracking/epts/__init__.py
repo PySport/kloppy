@@ -1,1 +1,1 @@
-from .epts import EPTSSerializer
+from .serializer import EPTSSerializer

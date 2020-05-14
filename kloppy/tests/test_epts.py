@@ -1,11 +1,13 @@
 import os
 import re
-from io import BytesIO
+
+from pandas import DataFrame
 
 from kloppy import EPTSSerializer
 from kloppy.domain import Period, AttackingDirection, Orientation, Point, BallState, Team
 from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data
-from kloppy.infra.serializers.tracking.epts.reader import build_regex, _read
+from kloppy.infra.serializers.tracking.epts.reader import build_regex, read_raw_data
+from kloppy.infra.utils import performance_logging
 
 
 class TestEPTSTracking:
@@ -22,34 +24,10 @@ class TestEPTSTracking:
 
         regex = re.compile(regex_str)
 
-        print(regex_str)
-
-        regex_str = "(?P<frameCount>\\-?\\d+?(?:\\.\\d+)?):(?P<player_home_22_x>\-?\d*(?:\.\d+)?),(?P<player_home_22_y>\-?\d+?(?:\.\d+)?)"  #,(?P<player_home_22_z>\-?\d+?(?:\.\d+)?),(?P<player_home_22_distance>\-?\d+?(?:\.\d+)?),(?P<player_home_22_avg_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_22_max_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_22_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_22_max_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_22_heartbeat>\-?\d+?(?:\.\d+)?),(?P<player_home_22_max_heartbeat>\-?\d+?(?:\.\d+)?);(?P<player_home_10_x>\-?\d+?(?:\.\d+)?),(?P<player_home_10_y>\-?\d+?(?:\.\d+)?),(?P<player_home_10_z>\-?\d+?(?:\.\d+)?),(?P<player_home_10_distance>\-?\d+?(?:\.\d+)?),(?P<player_home_10_avg_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_10_max_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_10_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_10_max_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_10_heartbeat>\-?\d+?(?:\.\d+)?),(?P<player_home_10_max_heartbeat>\-?\d+?(?:\.\d+)?);(?P<player_home_7_x>\-?\d+?(?:\.\d+)?),(?P<player_home_7_y>\-?\d+?(?:\.\d+)?),(?P<player_home_7_z>\-?\d+?(?:\.\d+)?),(?P<player_home_7_distance>\-?\d+?(?:\.\d+)?),(?P<player_home_7_avg_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_7_max_speed>\-?\d+?(?:\.\d+)?),(?P<player_home_7_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_7_max_acceleration>\-?\d+?(?:\.\d+)?),(?P<player_home_7_heartbeat>\-?\d+?(?:\.\d+)?),(?P<player_home_7_max_heartbeat>\-?\d+?(?:\.\d+)?):(?P<ball_x>\-?\d+?(?:\.\d+)?),(?P<ball_y>\-?\d+?(?:\.\d+)?),(?P<ball_z>\-?\d+?(?:\.\d+)?)"
-        #regex = re.compile(regex_str)
-
-        result = regex.search("1779143:,-2.013,-500,100,9.63,9.80,4,5,177,182;-461,-615,-120,99,900,9.10,4,5,170,179;-2638,3478,120,110,1.15,5.20,3,4,170,175:-2656,367,100:")
-
-        print(result)
+        # NOTE: use broken example of FIFA
+        result = regex.search("1779143:,-2.013,-500,100,9.63,9.80,4,5,177,182;-461,-615,-120,99,900,9.10,4,5,170,179;-2638,3478,120,110,1.15,5.20,3,4,170,175;:-2656,367,100:")
 
         assert result is not None
-        #
-        # assert regex == "(?P<frameCount>):" \
-        #                 "(?P<player_home_22_x>),(?P<player_home_22_y>),(?P<player_home_22_z>)," \
-        #                 "(?P<player_home_22_distance>),(?P<player_home_22_avg_speed>)," \
-        #                 "(?P<player_home_22_max_speed>),(?P<player_home_22_acceleration>)," \
-        #                 "(?P<player_home_22_max_acceleration>),(?P<player_home_22_heartbeat>)," \
-        #                 "(?P<player_home_22_max_heartbeat>);" \
-        #                 "(?P<player_home_10_x>),(?P<player_home_10_y>),(?P<player_home_10_z>)," \
-        #                 "(?P<player_home_10_distance>),(?P<player_home_10_avg_speed>)," \
-        #                 "(?P<player_home_10_max_speed>),(?P<player_home_10_acceleration>)," \
-        #                 "(?P<player_home_10_max_acceleration>),(?P<player_home_10_heartbeat>)," \
-        #                 "(?P<player_home_10_max_heartbeat>);" \
-        #                 "(?P<player_home_7_x>),(?P<player_home_7_y>),(?P<player_home_7_z>)," \
-        #                 "(?P<player_home_7_distance>),(?P<player_home_7_avg_speed>)," \
-        #                 "(?P<player_home_7_max_speed>),(?P<player_home_7_acceleration>)," \
-        #                 "(?P<player_home_7_max_acceleration>),(?P<player_home_7_heartbeat>)," \
-        #                 "(?P<player_home_7_max_heartbeat>):" \
-        #                 "(?P<ball_x>),(?P<ball_y>),(?P<ball_z>)"
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)
@@ -57,9 +35,36 @@ class TestEPTSTracking:
             meta_data = load_meta_data(meta_data_fp)
 
         with open(f'{base_dir}/files/epts_raw.txt', 'rb') as raw_data:
-            iterator = _read(raw_data, meta_data) #, {"position"})
+            iterator = read_raw_data(raw_data, meta_data)
 
-            list(iterator)
+            with performance_logging("load"):
+                assert list(iterator)
+
+    def test_read_to_pandas(self):
+        base_dir = os.path.dirname(__file__)
+
+        with open(f'{base_dir}/files/epts_meta.xml', 'rb') as meta_data_fp, \
+                open(f'{base_dir}/files/epts_raw.txt', 'rb') as raw_data:
+
+            meta_data = load_meta_data(meta_data_fp)
+            records = read_raw_data(raw_data, meta_data, sensor_ids=["heartbeat", "position"])
+            data_frame = DataFrame.from_records(records)
+
+        assert 'player_home_22_max_heartbeat' in data_frame.columns
+        assert 'player_home_22_x' in data_frame.columns
+
+    def test_skip_sensors(self):
+        base_dir = os.path.dirname(__file__)
+
+        with open(f'{base_dir}/files/epts_meta.xml', 'rb') as meta_data_fp, \
+                open(f'{base_dir}/files/epts_raw.txt', 'rb') as raw_data:
+            meta_data = load_meta_data(meta_data_fp)
+            records = read_raw_data(raw_data, meta_data, sensor_ids=["heartbeat"])
+            data_frame = DataFrame.from_records(records)
+
+        assert 'player_home_22_max_heartbeat' in data_frame.columns
+        assert 'player_home_22_x' not in data_frame.columns
+
 
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)

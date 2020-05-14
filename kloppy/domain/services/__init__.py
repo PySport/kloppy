@@ -7,6 +7,8 @@ from .transformers import Transformer
 
 
 def avg(items: List[float]) -> float:
+    if not items:
+        return 0
     return sum(items) / len(items)
 
 

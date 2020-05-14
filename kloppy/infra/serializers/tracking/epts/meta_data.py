@@ -6,12 +6,29 @@ from kloppy.infra.utils import Readable
 from .models import *
 
 
-def _parse_periods(global_config_elm, frame_rate: int) -> List[Period]:
-    provider_params = {
-        str(param.find('Name')): int(param.find('Value'))
-        for param in global_config_elm.iterchildren('ProviderGlobalParameters')
-        if str(param.find('Value')) != ''
+def noop(x):
+    return x
+
+
+def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
+    if parent_elm is None:
+        return {}
+
+    if not value_mapper:
+        value_mapper = noop
+
+    return {
+        str(param.find('Name')): value_mapper(param.find('Value'))
+        for param in parent_elm.iterchildren(tag='ProviderParameter')
+        if param.find('Value') != ''
     }
+
+
+def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
+    provider_params = _load_provider_parameters(
+        global_config_elm.find('ProviderGlobalParameters'),
+        value_mapper=int
+    )
 
     period_names = ['first_half', 'second_half', 'first_extra_half', 'second_extra_half']
 
@@ -41,7 +58,8 @@ def _load_players(players_elm, team_map: Dict[str, Team]) -> List[Player]:
             team=team_map[player_elm.attrib['teamId']],
             jersey_no=str(player_elm.find('ShirtNumber')),
             player_id=player_elm.attrib['id'],
-            name=str(player_elm.find('Name'))
+            name=str(player_elm.find('Name')),
+            attributes=_load_provider_parameters(players_elm.find('ProviderPlayerParameters'))
         )
         for player_elm in players_elm.iterchildren(tag='Player')
     ]
@@ -106,7 +124,7 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     }
 
     frame_rate = int(meta_data.find('GlobalConfig').find('FrameRate'))
-    periods = _parse_periods(meta_data.find('GlobalConfig'), frame_rate)
+    periods = _load_periods(meta_data.find('GlobalConfig'), frame_rate)
 
     return EPTSMetaData(
         home_team_name=team_name_map[Team.HOME],

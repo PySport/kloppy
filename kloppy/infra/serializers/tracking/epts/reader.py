@@ -28,7 +28,10 @@ def build_regex(data_format_specification: DataFormatSpecification,
     )
 
 
-def _read(raw_data: Readable, meta_data: EPTSMetaData, sensor_ids: Set[str] = None, sample_rate: int = 1) -> Iterator[dict]:
+def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
+                  sensor_ids: List[str] = None,
+                  sample_rate: int = 1,
+                  limit: int = 0) -> Iterator[dict]:
     sensors = [
         sensor for sensor in meta_data.sensors
         if sensor_ids is None or sensor.sensor_id in sensor_ids
@@ -54,13 +57,32 @@ def _read(raw_data: Readable, meta_data: EPTSMetaData, sensor_ids: Set[str] = No
 
     _set_current_data_spec(0)
 
+    periods = meta_data.periods
+    period_idx = 0
+    n = 0
     for i, line in enumerate(raw_data):
         if i % sample_rate != 0:
             continue
 
         line = line.strip().decode('ascii')
-        row = regex.match(line)
-        yield row
+        row = {
+            k: float(v)
+            for k, v in regex.search(line).groupdict().items()
+        }
+        frame_id = int(row['frameCount'])
+        if frame_id <= end_frame_id:
+            timestamp = frame_id / meta_data.frame_rate
+
+            del row['frameCount']
+            row['frame_id'] = frame_id
+            row['timestamp'] = timestamp
+
+            if period_idx > len(periods):
+                if timestamp > periods[period_idx].end_timestamp:
+                    period_idx += 1
+                row['period_id'] = periods[period_idx].id
+
+            yield row
 
         if frame_id >= end_frame_id:
             if current_data_spec_idx == len(data_specs) - 1:
@@ -70,7 +92,6 @@ def _read(raw_data: Readable, meta_data: EPTSMetaData, sensor_ids: Set[str] = No
                 current_data_spec_idx += 1
                 _set_current_data_spec(current_data_spec_idx)
 
-
-def read_to_pandas(meta_data: Readable, raw_data: Readable) -> Tuple[EPTSMetaData, 'DataFrame']:
-    from pandas import DataFrame
-
+        n += 1
+        if limit and n > limit:
+            break

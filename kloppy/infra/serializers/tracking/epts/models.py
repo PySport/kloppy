@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Set
 
 from kloppy.domain import Team, Player, MetaData
 
-NUMBER_REGEX = "\\-?\\d*(?:\\.\\d+)?"
+NUMBER_REGEX = "[^,;:]*"
 
 
 @dataclass
@@ -111,7 +111,7 @@ class SplitRegister:
     def to_regex(self, **kwargs) -> str:
         return self.separator.join(
             [child.to_regex(**kwargs) for child in self.children]
-        )
+        ) + f"{self.separator}?"
 
     @classmethod
     def from_xml_element(cls, elm) -> 'SplitRegister':
@@ -151,7 +151,7 @@ class DataFormatSpecification:
         )
 
     def to_regex(self, **kwargs) -> str:
-        return self.split_register.to_regex(**kwargs)
+        return '^' + self.split_register.to_regex(**kwargs) + '$'
 
 
 @dataclass

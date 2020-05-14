@@ -88,7 +88,8 @@ class TRACABSerializer(TrackingDataSerializer):
             Options for deserialization of the TRACAB file. Possible options are
             `only_alive` (boolean) to specify that only frames with alive ball state
             should be loaded, or `sample_rate` (float between 0 and 1) to specify
-            the amount of frames that should be loaded.
+            the amount of frames that should be loaded, `limit` to specify the max number of
+            frames that will be returned.
         Returns
         -------
         data_set : TrackingDataSet
@@ -121,6 +122,7 @@ class TRACABSerializer(TrackingDataSerializer):
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
+        limit = int(options.get('limit', 0))
         only_alive = bool(options.get('only_alive', True))
 
         with performance_logging("Loading metadata"):
@@ -163,7 +165,7 @@ class TRACABSerializer(TrackingDataSerializer):
                             n += 1
 
             frames = []
-            for period, line in _iter():
+            for n, (period, line) in enumerate(_iter()):
                 frame = self._frame_from_line(
                     period,
                     line,
@@ -176,6 +178,10 @@ class TRACABSerializer(TrackingDataSerializer):
                     period.set_attacking_direction(
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
+
+                n += 1
+                if limit and n > limit:
+                    break
 
         orientation = (
             Orientation.FIXED_HOME_AWAY

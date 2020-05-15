@@ -3,9 +3,6 @@ from typing import Callable, TypeVar
 from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer
 from .domain import DataSet, Frame, TrackingDataSet, Transformer, Orientation, PitchDimensions, Dimension
 
-from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data as epts_load_meta_data
-from kloppy.infra.serializers.tracking.epts.reader import read_raw_data as epts_read_raw_data
-
 
 def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
     serializer = TRACABSerializer()

@@ -1,12 +1,13 @@
 from pandas import DataFrame
 
-from kloppy import epts_load_meta_data, epts_read_raw_data
+from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data as epts_load_meta_data
+from kloppy.infra.serializers.tracking.epts.reader import read_raw_data as epts_read_raw_data
 
 
 def main():
     """
-    This example will show how to load data from EPTS files directly into a pandas frame,
-    while bypassing the (internal) structure kloppy uses to represent a dataset.
+    This example will show how to load data from EPTS files directly into a pandas frame using
+    some internals, which allows us to read other sensors than the position sensor.
 
     We include 4 steps in this example:
     1. Loading the meta data from the XML fil

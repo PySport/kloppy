@@ -33,12 +33,20 @@ pip install kloppy
 ## Quickstart
 We added some helper to get started really quickly. The helpers allow eay loading, transforming and converting to pandas of tracking data.
 ```python
-from kloppy import load_metrica_tracking_data, load_tracab_tracking_data, to_pandas, transform
+from kloppy import (
+    load_metrica_tracking_data, 
+    load_tracab_tracking_data,
+    load_epts_tracking_data, 
+    to_pandas, 
+    transform
+)
 
 # metrica data
 data_set = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
 # or tracab
 data_set = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
+# or epts
+data_set = load_epts_tracking_data('meta.xml', 'raw_data.txt')
 
 data_set = transform(data_set, pitch_dimensions=[[0, 108], [-34, 34]])
 pandas_data_frame = to_pandas(data_set)
@@ -89,6 +97,29 @@ with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
         inputs={
             'raw_data_home': raw_home,
             'raw_data_away': raw_away
+        },
+        options={
+            "sample_rate": 1 / 12
+        }
+    )
+    
+    # start working with data_set
+```
+
+
+or EPTS data
+```python
+from kloppy import EPTSSerializer
+
+serializer = EPTSSerializer()
+
+with open("raw_data.txt", "rb") as raw, \
+        open("metadata.xml", "rb") as meta:
+
+    data_set = serializer.deserialize(
+        inputs={
+            'raw_data': raw,
+            'meta_data': meta
         },
         options={
             "sample_rate": 1 / 12
@@ -157,8 +188,8 @@ Tracking data (de)serializers
 - [x] Automated tests
 - [x] TRACAB
 - [x] MetricaSports
+- [x] FIFA EPTS
 - [ ] BallJames
-- [ ] FIFA EPTS
 
 Event data (de)serializers
 - [ ] Automated tests

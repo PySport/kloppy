@@ -1,7 +1,7 @@
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, Flag
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from .pitch import PitchDimensions
 
@@ -9,6 +9,15 @@ from .pitch import PitchDimensions
 class Team(Enum):
     HOME = "home"
     AWAY = "away"
+
+
+@dataclass
+class Player:
+    player_id: str
+    team: Team
+    name: str
+    jersey_no: str
+    attributes: Optional[Dict] = field(default_factory=dict)
 
 
 class BallState(Enum):
@@ -105,5 +114,15 @@ class DataSet(ABC):
     orientation: Orientation
     periods: List[Period]
     records: List[DataRecord]
+
+
+@dataclass
+class MetaData:
+    home_team_name: str
+    away_team_name: str
+    players: List[Player]
+    periods: List[Period]
+    pitch_dimensions: PitchDimensions
+
 
 

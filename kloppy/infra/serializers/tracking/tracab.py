@@ -88,7 +88,8 @@ class TRACABSerializer(TrackingDataSerializer):
             Options for deserialization of the TRACAB file. Possible options are
             `only_alive` (boolean) to specify that only frames with alive ball state
             should be loaded, or `sample_rate` (float between 0 and 1) to specify
-            the amount of frames that should be loaded.
+            the amount of frames that should be loaded, `limit` to specify the max number of
+            frames that will be returned.
         Returns
         -------
         data_set : TrackingDataSet
@@ -121,6 +122,7 @@ class TRACABSerializer(TrackingDataSerializer):
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
+        limit = int(options.get('limit', 0))
         only_alive = bool(options.get('only_alive', True))
 
         with performance_logging("Loading metadata"):
@@ -147,23 +149,23 @@ class TRACABSerializer(TrackingDataSerializer):
                 n = 0
                 sample = 1. / sample_rate
 
-                for line in inputs['raw_data'].readlines():
-                    line = line.strip().decode("ascii")
-                    if not line:
+                for line_ in inputs['raw_data'].readlines():
+                    line_ = line_.strip().decode("ascii")
+                    if not line_:
                         continue
 
-                    frame_id = int(line[:10].split(":", 1)[0])
-                    if only_alive and not line.endswith("Alive;:"):
+                    frame_id = int(line_[:10].split(":", 1)[0])
+                    if only_alive and not line_.endswith("Alive;:"):
                         continue
 
-                    for period in periods:
-                        if period.contains(frame_id / frame_rate):
+                    for period_ in periods:
+                        if period_.contains(frame_id / frame_rate):
                             if n % sample == 0:
-                                yield period, line
+                                yield period_, line_
                             n += 1
 
             frames = []
-            for period, line in _iter():
+            for n, (period, line) in enumerate(_iter()):
                 frame = self._frame_from_line(
                     period,
                     line,
@@ -176,6 +178,10 @@ class TRACABSerializer(TrackingDataSerializer):
                     period.set_attacking_direction(
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
+
+                n += 1
+                if limit and n > limit:
+                    break
 
         orientation = (
             Orientation.FIXED_HOME_AWAY

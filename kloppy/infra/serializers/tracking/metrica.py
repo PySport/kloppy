@@ -110,7 +110,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         options : dict
             Options for deserialization of the Metrica file. Possible options are
             `sample_rate` (float between 0 and 1) to specify the amount of
-            frames that should be loaded.
+            frames that should be loaded, `limit` to specify the max number of
+            frames that will be returned.
         Returns
         -------
         data_set : TrackingDataSet
@@ -142,6 +143,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             options = {}
 
         sample_rate = float(options.get('sample_rate', 1.0))
+        limit = int(options.get('limit', 0))
 
         # consider reading this from data
         frame_rate = 25
@@ -159,7 +161,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             partial_frame_type = self.__PartialFrame
             home_partial_frame: partial_frame_type
             away_partial_frame: partial_frame_type
-            for home_partial_frame, away_partial_frame in partial_frames:
+            for n, (home_partial_frame, away_partial_frame) in enumerate(partial_frames):
                 self.__validate_partials(home_partial_frame, away_partial_frame)
 
                 period: Period = home_partial_frame.period
@@ -185,6 +187,10 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                     period.set_attacking_direction(
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
+
+                n += 1
+                if limit and n > limit:
+                    break
 
         orientation = (
             Orientation.FIXED_HOME_AWAY

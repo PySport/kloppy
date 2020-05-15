@@ -1,13 +1,14 @@
 import os
-from io import BytesIO
 
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from kloppy import MetricaTrackingSerializer, to_pandas, load_metrica_tracking_data, load_tracab_tracking_data, \
-    TrackingDataSet, PitchDimensions, Dimension, Orientation, Frame, transform
-from kloppy.domain import Period, DataSetFlag, Point, AttackingDirection
-from kloppy.infra.utils import performance_logging
+from kloppy import to_pandas, load_metrica_tracking_data, load_tracab_tracking_data, transform
+from kloppy.domain import (
+    Period, DataSetFlag, Point, AttackingDirection,
+    TrackingDataSet, PitchDimensions, Dimension,
+    Orientation, Frame
+)
 
 
 class TestHelpers:

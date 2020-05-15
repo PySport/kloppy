@@ -179,8 +179,7 @@ class TRACABSerializer(TrackingDataSerializer):
                         attacking_direction=attacking_direction_from_frame(frame)
                     )
 
-                n += 1
-                if limit and n > limit:
+                if limit and n >= limit:
                     break
 
         orientation = (

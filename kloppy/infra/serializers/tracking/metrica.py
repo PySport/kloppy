@@ -189,7 +189,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                     )
 
                 n += 1
-                if limit and n > limit:
+                if limit and n >= limit:
                     break
 
         orientation = (

@@ -13,10 +13,12 @@ different tracking- and event data like a breeze. It aims to be the fundamental 
 
 ## Main Features
 Here are just a few of the things that kloppy does well:
+- Directly load [**Public datasets**](#datasets) to get started right away. 
 - Understandable [**Standardized models**](#models) for tracking- and event datasets
 - Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different source into standardized models and visa-versa
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
+
 
 ## Where to get it
 The source code is currently hosted on GitHub at:
@@ -50,7 +52,15 @@ data_set = load_epts_tracking_data('meta.xml', 'raw_data.txt')
 
 data_set = transform(data_set, pitch_dimensions=[[0, 108], [-34, 34]])
 pandas_data_frame = to_pandas(data_set)
+```
 
+### <a name="datasets"></a>Public datasets / Very quick start
+More and more companies are publishing (demo) datasets to get you started. Inspired by the `tensorflow_datasets` package,
+we added a "dataset loader" which does all the heavy lifting for you: find urls, download files, organize and load them.
+```python
+from kloppy import datasets
+
+data_set = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limit': 10})
 ```
 
 ### <a name="models"></a>Standardized models

@@ -87,7 +87,7 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
             yield row
 
             n += 1
-            if limit and n > limit:
+            if limit and n >= limit:
                 break
 
         if frame_id >= end_frame_id:

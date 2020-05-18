@@ -15,7 +15,7 @@ different tracking- and event data like a breeze. It aims to be the fundamental 
 Here are just a few of the things that kloppy does well:
 - Directly load [**Public datasets**](#datasets) to get started right away. 
 - Understandable [**Standardized models**](#models) for tracking- and event datasets
-- Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different sources into standardized models and visa-versa
+- Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different sources into standardized models and vice versa
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
 

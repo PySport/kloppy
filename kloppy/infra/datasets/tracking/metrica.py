@@ -17,7 +17,7 @@ _DATASET_URLS = {
 
 
 class MetricaTracking(DatasetBuilder):
-    def get_data_set_files(self,**kwargs) -> Dict[str, str]:
+    def get_dataset_urls(self, **kwargs) -> Dict[str, str]:
         game = kwargs.get('game', 'game1')
         return _DATASET_URLS[game]
 

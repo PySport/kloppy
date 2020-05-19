@@ -38,15 +38,15 @@ def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]
     return local_files
 
 
-def load(data_set_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataSet]:
-    if data_set_name not in _DATASET_REGISTRY:
-        raise ValueError(f"Dataset {data_set_name} not found")
+def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataSet]:
+    if dataset_name not in _DATASET_REGISTRY:
+        raise ValueError(f"Dataset {dataset_name} not found")
 
-    builder_cls = _DATASET_REGISTRY[data_set_name]
+    builder_cls = _DATASET_REGISTRY[dataset_name]
     builder = builder_cls()
 
-    dataset_remote_files = builder.get_data_set_files(**dataset_kwargs)
-    dataset_local_files = get_local_files(data_set_name, dataset_remote_files)
+    dataset_urls = builder.get_dataset_urls(**dataset_kwargs)
+    dataset_local_files = get_local_files(dataset_name, dataset_urls)
 
     file_handlers = {
         local_file_key: open(local_file_name, 'rb')

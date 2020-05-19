@@ -6,7 +6,7 @@ from csv import reader
 from typing import List, Union
 
 from .pitch import Point
-from .common import DataRecord, DataSet, Team
+from .common import DataRecord, Dataset, Team
 
 
 class SubType(Enum):
@@ -226,7 +226,7 @@ class PassEvent(Event):
 
 
 @dataclass
-class EventDataSet(DataSet):
+class EventDataset(Dataset):
     records: List[Union[
         SetPieceEvent, ShotEvent
     ]]

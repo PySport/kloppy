@@ -9,10 +9,10 @@ def main():
         This example shows how to determine playing time
     """
 
-    data_set = datasets.load("metrica_tracking", options={'sample_rate': 1./25})
+    dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./25})
 
     playing_seconds_per_player = Counter()
-    for frame in data_set.frames:
+    for frame in dataset.frames:
         playing_seconds_per_player.update([int(jersey_no) for jersey_no in frame.home_team_player_positions.keys()])
 
     x = range(len(playing_seconds_per_player))

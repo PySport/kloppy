@@ -44,14 +44,14 @@ from kloppy import (
 )
 
 # metrica data
-data_set = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
+dataset = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
 # or tracab
-data_set = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
+dataset = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
 # or epts
-data_set = load_epts_tracking_data('meta.xml', 'raw_data.txt')
+dataset = load_epts_tracking_data('meta.xml', 'raw_data.txt')
 
-data_set = transform(data_set, pitch_dimensions=[[0, 108], [-34, 34]])
-pandas_data_frame = to_pandas(data_set)
+dataset = transform(dataset, pitch_dimensions=[[0, 108], [-34, 34]])
+pandas_data_frame = to_pandas(dataset)
 ```
 
 ### <a name="datasets"></a>Public datasets / Very quick start
@@ -60,7 +60,7 @@ we added a "dataset loader" which does all the heavy lifting for you: find urls,
 ```python
 from kloppy import datasets
 
-data_set = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limit': 10})
+dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limit': 10})
 ```
 
 ### <a name="models"></a>Standardized models
@@ -81,7 +81,7 @@ serializer = TRACABSerializer()
 with open("tracab_data.dat", "rb") as raw, \
         open("tracab_metadata.xml", "rb") as meta:
 
-    data_set = serializer.deserialize(
+    dataset = serializer.deserialize(
         inputs={
             'raw_data': raw,
             'meta_data': meta
@@ -91,7 +91,7 @@ with open("tracab_data.dat", "rb") as raw, \
         }
     )
     
-    # start working with data_set
+    # start working with dataset
 ```
 
 or Metrica data
@@ -103,7 +103,7 @@ serializer = MetricaTrackingSerializer()
 with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
         open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_home:
 
-    data_set = serializer.deserialize(
+    dataset = serializer.deserialize(
         inputs={
             'raw_data_home': raw_home,
             'raw_data_away': raw_away
@@ -113,7 +113,7 @@ with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
         }
     )
     
-    # start working with data_set
+    # start working with dataset
 ```
 
 
@@ -126,7 +126,7 @@ serializer = EPTSSerializer()
 with open("raw_data.txt", "rb") as raw, \
         open("metadata.xml", "rb") as meta:
 
-    data_set = serializer.deserialize(
+    dataset = serializer.deserialize(
         inputs={
             'raw_data': raw,
             'meta_data': meta
@@ -136,7 +136,7 @@ with open("raw_data.txt", "rb") as raw, \
         }
     )
     
-    # start working with data_set
+    # start working with dataset
 ```
 
 
@@ -145,9 +145,9 @@ Data providers use their own pitch dimensions. Some use actual meters while othe
 ```python
 from kloppy.domain import Transformer, PitchDimensions, Dimension
 
-# use deserialized `data_set`
-new_data_set = Transformer.transform_data_set(
-    data_set,
+# use deserialized `dataset`
+new_dataset = Transformer.transform_dataset(
+    dataset,
     to_pitch_dimensions=PitchDimensions(
         x_dim=Dimension(0, 100),
         y_dim=Dimension(0, 100)
@@ -163,8 +163,8 @@ Data providers can use different orientations. Some use a fixed orientation and 
 ```python
 from kloppy.domain import Transformer, Orientation
 
-new_data_set = Transformer.transform_data_set(
-    data_set,
+new_dataset = Transformer.transform_dataset(
+    dataset,
     to_orientation=Orientation.BALL_OWNING_TEAM
 )
 ```
@@ -173,9 +173,9 @@ new_data_set = Transformer.transform_data_set(
 ```python
 from kloppy.domain import Transformer, PitchDimensions, Dimension, Orientation
 
-# use deserialized `data_set`
-new_data_set = Transformer.transform_data_set(
-    data_set,
+# use deserialized `dataset`
+new_dataset = Transformer.transform_dataset(
+    dataset,
     to_pitch_dimensions=PitchDimensions(
         x_dim=Dimension(0, 100),
         y_dim=Dimension(0, 100)

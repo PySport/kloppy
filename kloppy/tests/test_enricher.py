@@ -1,4 +1,4 @@
-# from kloppy.domain import TrackingDataSet, EventDataSet, PitchDimensions, Dimension, Orientation, DataSetFlag, Period, \
+# from kloppy.domain import TrackingDataset, EventDataset, PitchDimensions, Dimension, Orientation, DatasetFlag, Period, \
 #     Frame, TrackingPossessionEnricher, SetPieceEvent, BallState, Team
 #
 #
@@ -8,8 +8,8 @@
 #             Period(id=1, start_timestamp=0.0, end_timestamp=10.0),
 #             Period(id=2, start_timestamp=15.0, end_timestamp=25.0)
 #         ]
-#         tracking_data = TrackingDataSet(
-#             flags=~(DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE),
+#         tracking_data = TrackingDataset(
+#             flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
 #             pitch_dimensions=PitchDimensions(
 #                 x_dim=Dimension(0, 100),
 #                 y_dim=Dimension(-50, 50)
@@ -32,8 +32,8 @@
 #             periods=periods
 #         )
 #
-#         event_data = EventDataSet(
-#             flags=DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE,
+#         event_data = EventDataset(
+#             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
 #             pitch_dimensions=PitchDimensions(
 #                 x_dim=Dimension(0, 100),
 #                 y_dim=Dimension(-50, 50)
@@ -54,6 +54,6 @@
 #
 #         enricher = TrackingPossessionEnricher()
 #         enricher.enrich_inplace(
-#             tracking_data_set=tracking_data,
-#             event_data_set=event_data
+#             tracking_dataset=tracking_data,
+#             event_dataset=event_data
 #         )

@@ -4,7 +4,7 @@ import requests
 
 from typing import Dict, Union
 
-from kloppy.domain import DataSet, TrackingDataSet
+from kloppy.domain import Dataset, TrackingDataset
 
 from .registered import _DATASET_REGISTRY
 
@@ -17,12 +17,12 @@ def download_file(url, local_filename):
                 f.write(chunk)
 
 
-def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]:
+def get_local_files(dataset_name: str, files: Dict[str, str]) -> Dict[str, str]:
     datasets_base_dir = os.environ.get('KLOPPY_BASE_DIR', None)
     if not datasets_base_dir:
         datasets_base_dir = os.path.expanduser('~/kloppy_datasets')
 
-    dataset_base_dir = f'{datasets_base_dir}/{data_set_name}'
+    dataset_base_dir = f'{datasets_base_dir}/{dataset_name}'
     if not os.path.exists(dataset_base_dir):
         os.makedirs(dataset_base_dir)
 
@@ -38,7 +38,7 @@ def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]
     return local_files
 
 
-def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataSet]:
+def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataset]:
     if dataset_name not in _DATASET_REGISTRY:
         raise ValueError(f"Dataset {dataset_name} not found")
 
@@ -57,11 +57,11 @@ def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDat
     try:
         serializer_cls = builder.get_serializer_cls()
         serializer = serializer_cls()
-        data_set = serializer.deserialize(
+        dataset = serializer.deserialize(
             inputs=file_handlers,
             options=options
         )
     finally:
         for fp in file_handlers.values():
             fp.close()
-    return data_set
+    return dataset

@@ -93,7 +93,7 @@ class Period:
         self.attacking_direction = attacking_direction
 
 
-class DataSetFlag(Flag):
+class DatasetFlag(Flag):
     BALL_OWNING_TEAM = 1
     BALL_STATE = 2
 
@@ -108,8 +108,8 @@ class DataRecord(ABC):
 
 
 @dataclass
-class DataSet(ABC):
-    flags: DataSetFlag
+class Dataset(ABC):
+    flags: DatasetFlag
     pitch_dimensions: PitchDimensions
     orientation: Orientation
     periods: List[Period]

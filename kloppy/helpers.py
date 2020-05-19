@@ -1,10 +1,10 @@
 from typing import Callable, TypeVar
 
 from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer
-from .domain import DataSet, Frame, TrackingDataSet, Transformer, Orientation, PitchDimensions, Dimension
+from .domain import Dataset, Frame, TrackingDataset, Transformer, Orientation, PitchDimensions, Dimension
 
 
-def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
+def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> Dataset:
     serializer = TRACABSerializer()
     with open(meta_data_filename, "rb") as meta_data, \
             open(raw_data_filename, "rb") as raw_data:
@@ -18,7 +18,7 @@ def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, o
         )
 
 
-def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filename: str, options: dict = None) -> DataSet:
+def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filename: str, options: dict = None) -> Dataset:
     serializer = MetricaTrackingSerializer()
     with open(raw_data_home_filename, "rb") as raw_data_home, \
             open(raw_data_away_filename, "rb") as raw_data_away:
@@ -32,7 +32,7 @@ def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filena
         )
 
 
-def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> DataSet:
+def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> Dataset:
     serializer = EPTSSerializer()
     with open(meta_data_filename, "rb") as meta_data, \
             open(raw_data_filename, "rb") as raw_data:
@@ -46,10 +46,10 @@ def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, opt
         )
 
 
-DataSetType = TypeVar('DataSetType')
+DatasetType = TypeVar('DatasetType')
 
 
-def transform(data_set: DataSetType, to_orientation=None, to_pitch_dimensions=None) -> DataSetType:
+def transform(dataset: DatasetType, to_orientation=None, to_pitch_dimensions=None) -> DatasetType:
     if to_orientation and isinstance(to_orientation, str):
         to_orientation = Orientation[to_orientation]
     if to_pitch_dimensions and (isinstance(to_pitch_dimensions, list) or isinstance(to_pitch_dimensions, tuple)):
@@ -57,8 +57,8 @@ def transform(data_set: DataSetType, to_orientation=None, to_pitch_dimensions=No
             x_dim=Dimension(*to_pitch_dimensions[0]),
             y_dim=Dimension(*to_pitch_dimensions[1])
         )
-    return Transformer.transform_data_set(
-        data_set=data_set,
+    return Transformer.transform_dataset(
+        dataset=dataset,
         to_orientation=to_orientation,
         to_pitch_dimensions=to_pitch_dimensions
     )
@@ -83,11 +83,11 @@ def _frame_to_pandas_row_converter(frame: Frame) -> dict:
             f'player_away_{jersey_no}_x': position.x,
             f'player_away_{jersey_no}_y': position.y
         })
-    
+
     return row
 
 
-def to_pandas(data_set: DataSet, _record_converter: Callable = None) -> 'DataFrame':
+def to_pandas(dataset: Dataset, _record_converter: Callable = None) -> 'DataFrame':
     try:
         import pandas as pd
     except ImportError:
@@ -95,13 +95,13 @@ def to_pandas(data_set: DataSet, _record_converter: Callable = None) -> 'DataFra
                         " install it using: pip install pandas")
 
     if not _record_converter:
-        if isinstance(data_set, TrackingDataSet):
+        if isinstance(dataset, TrackingDataset):
             _record_converter = _frame_to_pandas_row_converter
         else:
             raise Exception("Unknown dataset type")
 
     return pd.DataFrame.from_records(
-        map(_record_converter, data_set.records)
+        map(_record_converter, dataset.records)
     )
 
 

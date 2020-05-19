@@ -4,7 +4,7 @@ import requests
 
 from typing import Dict, Union
 
-from kloppy.domain import Dataset, TrackingDataset
+from kloppy.domain import TrackingDataset
 
 from .registered import _DATASET_REGISTRY
 

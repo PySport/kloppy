@@ -2,7 +2,7 @@ from collections import namedtuple
 from typing import Tuple, Dict, Iterator
 
 from kloppy.domain import (attacking_direction_from_frame,
-                           TrackingDataSet,
+                           TrackingDataset,
                            AttackingDirection,
                            Frame,
                            Point,
@@ -10,7 +10,7 @@ from kloppy.domain import (attacking_direction_from_frame,
                            Orientation,
                            PitchDimensions,
                            Dimension,
-                           DataSetFlag)
+                           DatasetFlag)
 from kloppy.infra.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
@@ -97,9 +97,9 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         if away_partial_frame.team != 'Away':
             raise ValueError("raw_data_away contains home team data")
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataSet:
+    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataset:
         """
-        Deserialize Metrica tracking data into a `TrackingDataSet`.
+        Deserialize Metrica tracking data into a `TrackingDataset`.
 
         Parameters
         ----------
@@ -114,7 +114,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             frames that will be returned.
         Returns
         -------
-        data_set : TrackingDataSet
+        dataset : TrackingDataset
         Raises
         ------
         ValueError when both input files don't seem to belong to each other
@@ -128,7 +128,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
         >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
         >>>
-        >>>     data_set = serializer.deserialize(
+        >>>     dataset = serializer.deserialize(
         >>>         inputs={
         >>>             'raw_data_home': raw_home,
         >>>             'raw_data_away': raw_away
@@ -198,8 +198,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             Orientation.FIXED_AWAY_HOME
         )
 
-        return TrackingDataSet(
-            flags=~(DataSetFlag.BALL_STATE | DataSetFlag.BALL_OWNING_TEAM),
+        return TrackingDataset(
+            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             frame_rate=frame_rate,
             orientation=orientation,
             pitch_dimensions=PitchDimensions(
@@ -210,5 +210,5 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             records=frames
         )
 
-    def serialize(self, data_set: TrackingDataSet) -> Tuple[str, str]:
+    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

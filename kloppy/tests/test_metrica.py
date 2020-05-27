@@ -12,29 +12,29 @@ class TestMetricaTracking:
 
         with open(f'{base_dir}/files/metrica_home.csv', 'rb') as raw_data_home, \
                 open(f'{base_dir}/files/metrica_away.csv', 'rb') as raw_data_away:
-            data_set = serializer.deserialize(
+            dataset = serializer.deserialize(
                 inputs={
                     'raw_data_home': raw_data_home,
                     'raw_data_away': raw_data_away
                 }
             )
 
-        assert len(data_set.records) == 6
-        assert len(data_set.periods) == 2
-        assert data_set.orientation == Orientation.FIXED_HOME_AWAY
-        assert data_set.periods[0] == Period(id=1, start_timestamp=0.04, end_timestamp=0.12,
+        assert len(dataset.records) == 6
+        assert len(dataset.periods) == 2
+        assert dataset.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.periods[0] == Period(id=1, start_timestamp=0.04, end_timestamp=0.12,
                                              attacking_direction=AttackingDirection.HOME_AWAY)
-        assert data_set.periods[1] == Period(id=2, start_timestamp=5800.16, end_timestamp=5800.24,
+        assert dataset.periods[1] == Period(id=2, start_timestamp=5800.16, end_timestamp=5800.24,
                                              attacking_direction=AttackingDirection.AWAY_HOME)
 
         # make sure data is loaded correctly (including flip y-axis)
-        assert data_set.records[0].home_team_player_positions['11'] == Point(x=0.00082, y=1 - 0.48238)
-        assert data_set.records[0].away_team_player_positions['25'] == Point(x=0.90509, y=1 - 0.47462)
-        assert data_set.records[0].ball_position == Point(x=0.45472, y=1 - 0.38709)
+        assert dataset.records[0].home_team_player_positions['11'] == Point(x=0.00082, y=1 - 0.48238)
+        assert dataset.records[0].away_team_player_positions['25'] == Point(x=0.90509, y=1 - 0.47462)
+        assert dataset.records[0].ball_position == Point(x=0.45472, y=1 - 0.38709)
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert '14' not in data_set.records[0].home_team_player_positions
-        assert '14' in data_set.records[3].home_team_player_positions
+        assert '14' not in dataset.records[0].home_team_player_positions
+        assert '14' in dataset.records[3].home_team_player_positions
 
 #
 # class TestMetricaEvent:

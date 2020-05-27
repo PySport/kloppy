@@ -7,7 +7,7 @@ from .registered import RegisteredDataset
 
 class DatasetBuilder(metaclass=RegisteredDataset):
     @abstractmethod
-    def get_data_set_files(self, **kwargs) -> Dict[str, Dict[str, str]]:
+    def get_dataset_urls(self, **kwargs) -> Dict[str, Dict[str, str]]:
         raise NotImplementedError
 
     @abstractmethod

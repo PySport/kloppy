@@ -1,7 +1,7 @@
 from typing import Tuple, Dict
 
 from kloppy.domain import (
-    TrackingDataSet, DataSetFlag,
+    TrackingDataset, DatasetFlag,
     AttackingDirection,
     Frame,
     Point,
@@ -61,9 +61,9 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_position=Point(x=row['ball_x'], y=row['ball_y'])
         )
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataSet:
+    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataset:
         """
-        Deserialize EPTS tracking data into a `TrackingDataSet`.
+        Deserialize EPTS tracking data into a `TrackingDataset`.
 
         Parameters
         ----------
@@ -78,7 +78,7 @@ class EPTSSerializer(TrackingDataSerializer):
             frames that will be returned.
         Returns
         -------
-        data_set : TrackingDataSet
+        dataset : TrackingDataset
         Raises
         ------
         -
@@ -91,7 +91,7 @@ class EPTSSerializer(TrackingDataSerializer):
         >>> serializer = EPTSSerializer()
         >>> with open("metadata.xml", "rb") as meta, \
         >>>      open("raw.dat", "rb") as raw:
-        >>>     data_set = serializer.deserialize(
+        >>>     dataset = serializer.deserialize(
         >>>         inputs={
         >>>             'meta_data': meta,
         >>>             'raw_data': raw
@@ -141,8 +141,8 @@ class EPTSSerializer(TrackingDataSerializer):
             Orientation.FIXED_AWAY_HOME
         ) if start_attacking_direction else None
 
-        return TrackingDataSet(
-            flags=~(DataSetFlag.BALL_STATE | DataSetFlag.BALL_OWNING_TEAM),
+        return TrackingDataset(
+            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             frame_rate=meta_data.frame_rate,
             orientation=orientation,
             pitch_dimensions=meta_data.pitch_dimensions,
@@ -150,6 +150,6 @@ class EPTSSerializer(TrackingDataSerializer):
             records=frames
         )
 
-    def serialize(self, data_set: TrackingDataSet) -> Tuple[str, str]:
+    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError
 

@@ -3,8 +3,8 @@ from typing import Tuple
 import csv
 
 from kloppy.domain import (
-    EventDataSet, Team, Point, Period, Orientation,
-    DataSetFlag, PitchDimensions, Dimension,
+    EventDataset, Team, Point, Period, Orientation,
+    DatasetFlag, PitchDimensions, Dimension,
     AttackingDirection, BallState
 )
 from kloppy.domain.models.event import (
@@ -80,7 +80,7 @@ class MetricaEventSerializer(EventDataSerializer):
 
         return new_state if new_state else game_state
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataSet:
+    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataset:
         self.__validate_inputs(inputs)
 
         periods = []
@@ -240,8 +240,8 @@ class MetricaEventSerializer(EventDataSerializer):
             Orientation.FIXED_AWAY_HOME
         )
 
-        return EventDataSet(
-            flags=DataSetFlag.BALL_STATE | DataSetFlag.BALL_OWNING_TEAM,
+        return EventDataset(
+            flags=DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM,
             orientation=orientation,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 1),
@@ -251,5 +251,5 @@ class MetricaEventSerializer(EventDataSerializer):
             records=events
         )
 
-    def serialize(self, data_set: EventDataSet) -> Tuple[str, str]:
+    def serialize(self, dataset: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

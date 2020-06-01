@@ -13,7 +13,7 @@ def to_file_object(s: Readable) -> BinaryIO:
 
 
 @contextmanager
-def performance_logging(description: str, counter: int = None):
+def performance_logging(description: str, counter: int = None, logger=None):
     start = time.time()
     try:
         yield
@@ -27,6 +27,11 @@ def performance_logging(description: str, counter: int = None):
         if took < 0.01:
             took *= 1000
             unit = "us"
-        print(f"{description} took: {took:.2f}{unit} {extra}")
+
+        msg = f"{description} took: {took:.2f}{unit} {extra}"
+        if logger:
+            logger.info(msg)
+        else:
+            print(msg)
 
 

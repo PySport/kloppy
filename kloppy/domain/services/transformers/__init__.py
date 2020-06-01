@@ -1,3 +1,4 @@
+from dataclasses import asdict, replace, fields
 from typing import TypeVar
 
 from kloppy.domain import (
@@ -7,8 +8,9 @@ from kloppy.domain import (
     Frame,
     Team, AttackingDirection,
 
-    TrackingDataSet, DataSetFlag, DataSet, # NOT YET: EventDataSet
+    TrackingDataSet, DataSetFlag, DataSet, EventDataSet,  # NOT YET: EventDataSet
 )
+from kloppy.domain.models.event import Event
 
 
 class Transformer:
@@ -78,6 +80,22 @@ class Transformer:
             }
         )
 
+    EventType = TypeVar('EventType')
+
+    def transform_event(self, event: EventType) -> EventType:
+        flip = self.__needs_flip(
+            ball_owning_team=event.ball_owning_team,
+            attacking_direction=event.period.attacking_direction
+        )
+
+        position_changes = {
+            field.name: self.transform_point(getattr(event, field.name), flip)
+            for field in fields(event)
+            if field.name.endswith('position') and getattr(event, field.name)
+        }
+
+        return replace(event, **position_changes)
+
     DataSetType = TypeVar('DataSetType')
 
     @classmethod
@@ -114,7 +132,15 @@ class Transformer:
                 orientation=to_orientation,
                 records=frames
             )
-        #elif isinstance(data_set, EventDataSet):
-        #    raise Exception("EventDataSet transformer not implemented yet")
+        elif isinstance(data_set, EventDataSet):
+            events = list(map(transformer.transform_event, data_set.records))
+
+            return EventDataSet(
+                flags=data_set.flags,
+                periods=data_set.periods,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+                records=events
+            )
         else:
             raise Exception("Unknown DataSet type")

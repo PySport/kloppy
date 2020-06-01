@@ -65,14 +65,13 @@ class Orientation(Enum):
             else:
                 raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
-            if ((ball_owning_team == Team.HOME
-                 and attacking_direction == AttackingDirection.HOME_AWAY)
-                    or
-                    (ball_owning_team == Team.AWAY
-                     and attacking_direction == AttackingDirection.AWAY_HOME)):
+            if ball_owning_team == Team.HOME:
                 return -1
-            else:
+            elif ball_owning_team == Team.AWAY:
                 return 1
+            else:
+                raise Exception(f"Invalid ball_owning_team: {ball_owning_team}")
+
 
 
 @dataclass

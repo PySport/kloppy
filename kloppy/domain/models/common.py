@@ -100,11 +100,11 @@ class DataSetFlag(Flag):
 
 @dataclass
 class DataRecord(ABC):
+    period: Period
     timestamp: float
     ball_owning_team: Team
     ball_state: BallState
 
-    period: Period
 
 
 @dataclass

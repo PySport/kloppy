@@ -28,12 +28,14 @@ def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]
 
     local_files = {}
     for file_key, file_url in files.items():
-        filename = file_url.split('/')[-1]
+        filename = f"{file_key}={file_url.split('/')[-1]}"
         local_filename = f'{dataset_base_dir}/{filename}'
         if not os.path.exists(local_filename):
             print(f'Downloading {filename}...')
             download_file(file_url, local_filename)
             print('Done')
+        else:
+            print(f'Using local cached file {local_filename}')
         local_files[file_key] = local_filename
     return local_files
 

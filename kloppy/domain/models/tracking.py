@@ -24,3 +24,9 @@ class TrackingDataSet(DataSet):
     @property
     def frames(self):
         return self.records
+
+
+__all__ = [
+    "Frame", "TrackingDataSet"
+]
+

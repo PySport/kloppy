@@ -20,7 +20,12 @@ def main():
     }, match_id=15946)
 
     with performance_logging("transform", logger=logger):
-        dataset = transform(dataset, to_orientation="FIXED_HOME_AWAY")
+        # convert to TRACAB coordinates
+        dataset = transform(
+            dataset,
+            to_orientation="FIXED_HOME_AWAY",
+            to_pitch_dimensions=[(-5500, 5500), (-3300, 3300)]
+        )
 
     with performance_logging("to pandas", logger=logger):
         dataframe = to_pandas(dataset)

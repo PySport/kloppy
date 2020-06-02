@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 from typing import Tuple, Dict, Iterator
 
@@ -14,6 +15,8 @@ from kloppy.domain import (attacking_direction_from_frame,
 from kloppy.infra.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class MetricaTrackingSerializer(TrackingDataSerializer):
@@ -148,13 +151,13 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         # consider reading this from data
         frame_rate = 25
 
-        with performance_logging("prepare"):
+        with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(inputs['raw_data_home'], sample_rate, frame_rate)
             away_iterator = self.__create_iterator(inputs['raw_data_away'], sample_rate, frame_rate)
 
             partial_frames = zip(home_iterator, away_iterator)
 
-        with performance_logging("loading"):
+        with performance_logging("loading", logger=logger):
             frames = []
             periods = []
 

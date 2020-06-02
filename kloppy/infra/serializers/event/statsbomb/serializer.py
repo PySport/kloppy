@@ -12,6 +12,8 @@ from kloppy.domain import (
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
 
+logger = logging.getLogger(__name__)
+
 
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
@@ -156,9 +158,6 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
                 elif event_type in (SB_EVENT_TYPE_CARRY, SB_EVENT_TYPE_DRIBBLE, SB_EVENT_TYPE_PASS):
                     xy_fidelity_version = 2
     return shot_fidelity_version, xy_fidelity_version
-
-
-logger = logging.getLogger(__name__)
 
 
 class StatsbombSerializer(EventDataSerializer):

@@ -27,6 +27,6 @@ class TrackingDataset(Dataset):
 
 
 __all__ = [
-    "Frame", "TrackingDataSet"
+    "Frame", "TrackingDataset"
 ]
 

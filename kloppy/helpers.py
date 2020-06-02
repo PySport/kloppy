@@ -1,10 +1,13 @@
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Dict
 
-from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer
-from .domain import Dataset, Frame, TrackingDataset, Transformer, Orientation, PitchDimensions, Dimension
+from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer, StatsbombSerializer
+from .domain import (
+    Dataset, Frame, Event, TrackingDataset, Transformer, Orientation, PitchDimensions,
+    Dimension, EventDataset
+)
 
 
-def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> Dataset:
+def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> TrackingDataset:
     serializer = TRACABSerializer()
     with open(meta_data_filename, "rb") as meta_data, \
             open(raw_data_filename, "rb") as raw_data:
@@ -18,7 +21,7 @@ def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, o
         )
 
 
-def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filename: str, options: dict = None) -> Dataset:
+def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filename: str, options: dict = None) -> TrackingDataset:
     serializer = MetricaTrackingSerializer()
     with open(raw_data_home_filename, "rb") as raw_data_home, \
             open(raw_data_away_filename, "rb") as raw_data_away:
@@ -32,7 +35,7 @@ def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filena
         )
 
 
-def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> Dataset:
+def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> TrackingDataset:
     serializer = EPTSSerializer()
     with open(meta_data_filename, "rb") as meta_data, \
             open(raw_data_filename, "rb") as raw_data:
@@ -40,6 +43,20 @@ def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, opt
         return serializer.deserialize(
             inputs={
                 'meta_data': meta_data,
+                'raw_data': raw_data
+            },
+            options=options
+        )
+
+
+def load_statsbomb_event_data(lineup_filename: str, raw_data_filename: str, options: dict = None) -> EventDataset:
+    serializer = StatsbombSerializer()
+    with open(lineup_filename, "rb") as lineup_data, \
+            open(raw_data_filename, "rb") as raw_data:
+
+        return serializer.deserialize(
+            inputs={
+                'lineup_data': lineup_data,
                 'raw_data': raw_data
             },
             options=options
@@ -64,12 +81,12 @@ def transform(dataset: DatasetType, to_orientation=None, to_pitch_dimensions=Non
     )
 
 
-def _frame_to_pandas_row_converter(frame: Frame) -> dict:
+def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
     row = dict(
         period_id=frame.period.id,
         timestamp=frame.timestamp,
-        ball_state=frame.ball_state,
-        ball_owning_team=frame.ball_owning_team,
+        ball_state=frame.ball_state.value if frame.ball_state else None,
+        ball_owning_team=frame.ball_owning_team.value if frame.ball_owning_team else None,
         ball_x=frame.ball_position.x if frame.ball_position else None,
         ball_y=frame.ball_position.y if frame.ball_position else None
     )
@@ -87,6 +104,24 @@ def _frame_to_pandas_row_converter(frame: Frame) -> dict:
     return row
 
 
+def _event_to_pandas_row_converter(event: Event) -> Dict:
+    row = dict(
+        period_id=event.period.id,
+        timestamp=event.timestamp,
+        ball_state=event.ball_state.value if event.ball_state else None,
+        ball_owning_team=event.ball_owning_team.value if event.ball_owning_team else None,
+
+        event_id=event.event_id,
+        event_type=event.event_type.value,
+        team=event.team.value,
+        player_jersey_no=event.player_jersey_no,
+        position_x=event.position.x,
+        position_y=event.position.y,
+        result=event.result.value if event.result else None
+    )
+    return row
+
+
 def to_pandas(dataset: Dataset, _record_converter: Callable = None) -> 'DataFrame':
     try:
         import pandas as pd
@@ -97,6 +132,8 @@ def to_pandas(dataset: Dataset, _record_converter: Callable = None) -> 'DataFram
     if not _record_converter:
         if isinstance(dataset, TrackingDataset):
             _record_converter = _frame_to_pandas_row_converter
+        elif isinstance(dataset, EventDataset):
+            _record_converter = _event_to_pandas_row_converter
         else:
             raise Exception("Unknown dataset type")
 

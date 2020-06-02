@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod, abstractproperty, ABCMeta
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Union
+from typing import List, Union, Dict
 
 from .pitch import Point
 from .common import DataRecord, Dataset, Team
@@ -38,7 +38,7 @@ class PassResult(ResultType):
         return self == self.COMPLETE
 
 
-class DribbleCarryResult(ResultType):
+class TakeOnResult(ResultType):
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
     OUT = "OUT"
@@ -48,10 +48,21 @@ class DribbleCarryResult(ResultType):
         return self == self.COMPLETE
 
 
+class CarryResult(ResultType):
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+
+    @property
+    def is_success(self):
+        return self == self.COMPLETE
+
+
 class EventType(Enum):
+    GENERIC = "generic"
+
     PASS = "PASS"
     SHOT = "SHOT"
-    DRIBBLE = "DRIBBLE"
+    TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
 
 
@@ -59,16 +70,22 @@ class EventType(Enum):
 class Event(DataRecord, ABC):
     event_id: str
     team: Team
-
     player_jersey_no: str
     position: Point
 
     result: ResultType
 
+    raw_event: Dict
+
     @property
     @abstractmethod
     def event_type(self) -> EventType:
         raise NotImplementedError
+
+
+@dataclass
+class GenericEvent(Event):
+    event_type: EventType = EventType.GENERIC
 
 
 @dataclass
@@ -90,13 +107,10 @@ class PassEvent(Event):
 
 
 @dataclass
-class DribbleEvent(Event):
-    end_timestamp: float
-    end_position: Point
+class TakeOnEvent(Event):
+    result: TakeOnResult
 
-    result: DribbleCarryResult
-
-    event_type: EventType = EventType.DRIBBLE
+    event_type: EventType = EventType.TAKE_ON
 
 
 @dataclass
@@ -104,7 +118,7 @@ class CarryEvent(Event):
     end_timestamp: float
     end_position: Point
 
-    result: DribbleCarryResult
+    result: CarryResult
 
     event_type: EventType = EventType.CARRY
 
@@ -112,7 +126,7 @@ class CarryEvent(Event):
 @dataclass
 class EventDataset(Dataset):
     records: List[Union[
-        ShotEvent, PassEvent, DribbleEvent, CarryEvent
+        ShotEvent, PassEvent, TakeOnEvent, CarryEvent
     ]]
 
     @property
@@ -122,7 +136,7 @@ class EventDataset(Dataset):
 
 __all__ = [
     "ResultType", "EventType",
-    "ShotResult", "PassResult", "DribbleCarryResult",
-    "ShotEvent", "PassEvent", "DribbleEvent", "CarryEvent",
-    "EventDataSet"
+    "ShotResult", "PassResult", "TakeOnResult", "CarryResult",
+    "Event", "GenericEvent", "ShotEvent", "PassEvent", "TakeOnEvent", "CarryEvent",
+    "EventDataset"
 ]

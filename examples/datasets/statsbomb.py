@@ -17,7 +17,7 @@ def main():
 
     dataset = datasets.load("statsbomb", {
         #"event_types": ["pass", "take_on", "carry", "shot"]
-    }, match_id=15946)
+    })#, match_id=15946)
 
     with performance_logging("transform", logger=logger):
         # convert to TRACAB coordinates

@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar, Dict
 
-from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer, StatsbombSerializer
+from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer, StatsBombSerializer
 from .domain import (
     Dataset, Frame, Event, TrackingDataset, Transformer, Orientation, PitchDimensions,
     Dimension, EventDataset, PassEvent, CarryEvent, PassResult, EventType
@@ -50,7 +50,7 @@ def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, opt
 
 
 def load_statsbomb_event_data(lineup_filename: str, raw_data_filename: str, options: dict = None) -> EventDataset:
-    serializer = StatsbombSerializer()
+    serializer = StatsBombSerializer()
     with open(lineup_filename, "rb") as lineup_data, \
             open(raw_data_filename, "rb") as raw_data:
 

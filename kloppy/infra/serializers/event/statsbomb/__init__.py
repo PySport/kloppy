@@ -1,1 +1,1 @@
-from .serializer import StatsbombSerializer
+from .serializer import StatsBombSerializer

@@ -146,12 +146,16 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
 
 
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
+    """
+    Find out if x and y are integers disguised as floats
+    """
     shot_fidelity_version = 1
     xy_fidelity_version = 1
     for event in events:
         if 'location' in event:
             x, y = event['location']
-            if abs(int(x) - x) + abs(int(y) - y) > 0:
+
+            if not x.is_integer() or not y.is_integer():
                 event_type = event['type']['id']
                 if event_type == SB_EVENT_TYPE_SHOT:
                     shot_fidelity_version = 2
@@ -160,22 +164,65 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     return shot_fidelity_version, xy_fidelity_version
 
 
-class StatsbombSerializer(EventDataSerializer):
+class StatsBombSerializer(EventDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
-        if "raw_data" not in inputs:
-            raise ValueError("Please specify a value for input 'raw_data'")
+        if "event_data" not in inputs:
+            raise ValueError("Please specify a value for input 'event_data'")
         if "lineup_data" not in inputs:
             raise ValueError("Please specify a value for input 'lineup_data'")
 
     def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataset:
+        """
+                Deserialize StatsBomb event data into a `EventDataset`.
+
+                Parameters
+                ----------
+                inputs : dict
+                    input `event_data` should point to a `Readable` object containing
+                    the 'json' formatted event data. input `lineup_data` should point
+                    to a `Readable` object containing the 'json' formatted lineup data.
+                options : dict
+                    Options for deserialization of the StatsBomb file. Possible options are
+                    `event_types` (list of event types) to specify the event types that
+                    should be returned. Valid types: "shot", "pass", "carry", "take_on" and
+                    "generic". Generic is everything other than the first 4. Those events
+                    are barely parsed. This type of event can be used to do the parsing
+                    yourself.
+                    Every event has a 'raw_event' attribute which contains the original
+                    dictionary.
+                Returns
+                -------
+                dataset : EventDataset
+                Raises
+                ------
+
+                See Also
+                --------
+
+                Examples
+                --------
+                >>> serializer = StatsBombSerializer()
+                >>> with open("events/12312312.json", "rb") as event_data, \
+                >>>      open("lineups/123123123.json", "rb") as lineup_data:
+                >>>
+                >>>     dataset = serializer.deserialize(
+                >>>         inputs={
+                >>>             'event_data': event_data,
+                >>>             'lineup_data': lineup_data
+                >>>         },
+                >>>         options={
+                >>>             'event_types': ["pass", "take_on", "carry", "shot"]
+                >>>         }
+                >>>     )
+                """
         self.__validate_inputs(inputs)
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs['raw_data'])
+            raw_events = json.load(inputs['event_data'])
             home_lineup, away_lineup = json.load(inputs['lineup_data'])
             shot_fidelity_version, xy_fidelity_version = _determine_xy_fidelity_versions(raw_events)
-            logger.info(f"Determined Fidelity versions to shot: {shot_fidelity_version} / XY: {xy_fidelity_version}")
+            logger.info(f"Determined Fidelity versions: shot v{shot_fidelity_version} / XY v{xy_fidelity_version}")
 
         with performance_logging("parse data", logger=logger):
             home_player_map = {

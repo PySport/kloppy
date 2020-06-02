@@ -2,7 +2,7 @@ import warnings
 from typing import Dict, Type
 
 from ..core.builder import DatasetBuilder
-from ...serializers.event import EventDataSerializer, StatsbombSerializer
+from ...serializers.event import EventDataSerializer, StatsBombSerializer
 
 
 # 3749133 / 38412
@@ -15,9 +15,9 @@ class Statsbomb(DatasetBuilder):
 
         match_id = kwargs.get('match_id', '15946')
         return {
-            'raw_data': f'https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json',
+            'event_data': f'https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json',
             'lineup_data': f'https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json'
         }
 
     def get_serializer_cls(self) -> Type[EventDataSerializer]:
-        return StatsbombSerializer
+        return StatsBombSerializer

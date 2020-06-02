@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from pandas import DataFrame
 
 from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data as epts_load_meta_data
@@ -17,6 +20,9 @@ def main():
     4. Try to consume items from generator twice
     4. Convert the records into a pandas dataframe for easy data mangling
     """
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
 
     # step 1: load metadata
     with open("epts_meta.xml", "rb") as meta_fp:

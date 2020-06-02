@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from kloppy import datasets, transform, to_pandas
+from kloppy import datasets, transform, to_pandas, load_statsbomb_event_data
 from kloppy.infra.utils import performance_logging
 
 
@@ -31,6 +31,12 @@ def main():
         dataframe = to_pandas(dataset)
 
     print(dataframe[:100].to_string())
+
+    # or load it using the helper from disk
+    dataset = load_statsbomb_event_data(
+        "events/15946.json",
+        "lineups/15946.json"
+    )
 
 
 if __name__ == "__main__":

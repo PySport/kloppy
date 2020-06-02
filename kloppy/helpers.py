@@ -49,15 +49,15 @@ def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, opt
         )
 
 
-def load_statsbomb_event_data(lineup_filename: str, raw_data_filename: str, options: dict = None) -> EventDataset:
+def load_statsbomb_event_data(event_data_filename: str, lineup_data_filename: str, options: dict = None) -> EventDataset:
     serializer = StatsBombSerializer()
-    with open(lineup_filename, "rb") as lineup_data, \
-            open(raw_data_filename, "rb") as raw_data:
+    with open(event_data_filename, "rb") as event_data, \
+            open(lineup_data_filename, "rb") as lineup_data:
 
         return serializer.deserialize(
             inputs={
-                'lineup_data': lineup_data,
-                'raw_data': raw_data
+                'event_data': event_data,
+                'lineup_data': lineup_data
             },
             options=options
         )
@@ -166,6 +166,7 @@ __all__ = [
     'load_tracab_tracking_data',
     'load_metrica_tracking_data',
     'load_epts_tracking_data',
+    'load_statsbomb_event_data',
     'to_pandas',
     'transform'
 ]

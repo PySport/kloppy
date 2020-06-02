@@ -42,6 +42,7 @@ from kloppy import (
     load_metrica_tracking_data, 
     load_tracab_tracking_data,
     load_epts_tracking_data, 
+    load_statsbomb_event_data,
     to_pandas, 
     transform
 )
@@ -52,6 +53,10 @@ dataset = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
 dataset = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
 # or epts
 dataset = load_epts_tracking_data('meta.xml', 'raw_data.txt')
+
+# or event data
+dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
+
 
 dataset = transform(dataset, pitch_dimensions=[[0, 108], [-34, 34]])
 pandas_data_frame = to_pandas(dataset)
@@ -143,6 +148,30 @@ with open("raw_data.txt", "rb") as raw, \
 ```
 
 
+or StatsBomb event data
+```python
+from kloppy import StatsBombSerializer
+
+serializer = StatsBombSerializer()
+
+with open("events/123123.json", "rb") as event_data, \
+        open("lineup/123123.json", "rb") as lineup_data:
+
+    dataset = serializer.deserialize(
+        inputs={
+            'event_data': event_data,
+            'lineup_data': lineup_data
+        },
+        options={
+            "event_types": ["pass", "shot", "carry", "take_on"]
+        }
+    )
+    
+    # start working with dataset
+```
+
+
+
 ### <a name="pitch-dimensions"></a>Transform the pitch dimensions
 Data providers use their own pitch dimensions. Some use actual meters while others use 100x100. Use the Transformer to get from one pitch dimensions to another one.
 ```python
@@ -195,7 +224,7 @@ Data models
 - [ ] Automated tests
 - [x] Pitch
 - [x] Tracking
-- [ ] Event
+- [x] Event
 
 Tracking data (de)serializers
 - [x] Automated tests
@@ -207,7 +236,7 @@ Tracking data (de)serializers
 Event data (de)serializers
 - [ ] Automated tests
 - [ ] OPTA
-- [ ] StatsBomb
+- [x] StatsBomb
 - [ ] MetricaSports
 
 Transformers

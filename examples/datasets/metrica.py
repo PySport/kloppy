@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from kloppy import datasets, to_pandas
 
 
@@ -6,6 +9,9 @@ def main():
         This example shows the use of Metrica datasets, and how we can pass argument
         to the dataset loader.
     """
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
 
     # The metrica dataset loader loads by default the 'game1' dataset
     dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limit': 10})

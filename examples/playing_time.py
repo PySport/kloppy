@@ -1,3 +1,5 @@
+import logging
+import sys
 from collections import Counter
 
 from kloppy import datasets
@@ -8,6 +10,8 @@ def main():
     """
         This example shows how to determine playing time
     """
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./25})
 

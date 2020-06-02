@@ -217,6 +217,8 @@ class StatsBombSerializer(EventDataSerializer):
                 >>>     )
                 """
         self.__validate_inputs(inputs)
+        if not options:
+            options = {}
 
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs['event_data'])

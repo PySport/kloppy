@@ -24,7 +24,7 @@ def performance_logging(description: str, counter: int = None, logger=None):
             extra = f" ({int(counter / took * 1000)}items/sec)"
 
         unit = "ms"
-        if took < 0.01:
+        if took < 0.1:
             took *= 1000
             unit = "us"
 

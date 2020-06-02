@@ -7,3 +7,8 @@ v0.3.0, 2020-05-15 -- Add FIFA EPTS Tracking data loader
                       Add some examples
                       Add datasets loader to directly load dataset from your python code
                       Add limit argument to all loaders
+v0.4.0, 2020-06-02 -- Add StatsBomb event data loader
+                      Some fixes in readme
+                      Refactor some code to get cleaner code
+                      Pass a logger to performance_logging instead of print to stdout
+                      Minor fixes to datasets loader

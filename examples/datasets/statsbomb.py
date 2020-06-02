@@ -16,8 +16,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     dataset = datasets.load("statsbomb", {
-        #"event_types": ["pass", "take_on", "carry", "shot"]
-    })#, match_id=15946)
+        "event_types": ["pass", "take_on", "carry", "shot"]
+    })
 
     with performance_logging("transform", logger=logger):
         # convert to TRACAB coordinates
@@ -31,12 +31,6 @@ def main():
         dataframe = to_pandas(dataset)
 
     print(dataframe[:100].to_string())
-
-    # or load it using the helper from disk
-    dataset = load_statsbomb_event_data(
-        "events/15946.json",
-        "lineups/15946.json"
-    )
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Dict
 
 from lxml import objectify
@@ -18,6 +19,8 @@ from kloppy.domain import (
 from kloppy.infra.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class TRACABSerializer(TrackingDataSerializer):
@@ -125,7 +128,7 @@ class TRACABSerializer(TrackingDataSerializer):
         limit = int(options.get('limit', 0))
         only_alive = bool(options.get('only_alive', True))
 
-        with performance_logging("Loading metadata"):
+        with performance_logging("Loading metadata", logger=logger):
             match = objectify.fromstring(inputs['meta_data'].read()).match
             frame_rate = int(match.attrib['iFrameRateFps'])
             pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
@@ -144,7 +147,7 @@ class TRACABSerializer(TrackingDataSerializer):
                         )
                     )
 
-        with performance_logging("Loading data"):
+        with performance_logging("Loading data", logger=logger):
             def _iter():
                 n = 0
                 sample = 1. / sample_rate

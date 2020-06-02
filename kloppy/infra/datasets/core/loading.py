@@ -1,12 +1,15 @@
-import os
+import os, logging
 
 import requests
 
 from typing import Dict, Union
 
-from kloppy.domain import TrackingDataset
+from kloppy.domain import TrackingDataset, EventDataset
 
 from .registered import _DATASET_REGISTRY
+
+
+logger = logging.getLogger(__name__)
 
 
 def download_file(url, local_filename):
@@ -28,17 +31,19 @@ def get_local_files(dataset_name: str, files: Dict[str, str]) -> Dict[str, str]:
 
     local_files = {}
     for file_key, file_url in files.items():
-        filename = file_url.split('/')[-1]
+        filename = f"{file_key}={file_url.split('/')[-1]}"
         local_filename = f'{dataset_base_dir}/{filename}'
         if not os.path.exists(local_filename):
-            print(f'Downloading {filename}...')
+            logger.info(f'Downloading {filename}')
             download_file(file_url, local_filename)
-            print('Done')
+            logger.info('Download complete')
+        else:
+            logger.info(f'Using local cached file {local_filename}')
         local_files[file_key] = local_filename
     return local_files
 
 
-def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataset]:
+def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataset, EventDataset]:
     if dataset_name not in _DATASET_REGISTRY:
         raise ValueError(f"Dataset {dataset_name} not found")
 

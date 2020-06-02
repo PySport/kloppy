@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Dict
 
 from kloppy.domain import (
@@ -7,8 +8,6 @@ from kloppy.domain import (
     Point,
     Team,
     Orientation,
-    PitchDimensions,
-    Dimension,
     attacking_direction_from_frame,
 )
 from kloppy.infra.utils import Readable, performance_logging
@@ -17,6 +16,8 @@ from .meta_data import load_meta_data, EPTSMetaData
 from .reader import read_raw_data
 
 from .. import TrackingDataSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class EPTSSerializer(TrackingDataSerializer):
@@ -109,12 +110,12 @@ class EPTSSerializer(TrackingDataSerializer):
         sample_rate = float(options.get('sample_rate', 1.0))
         limit = int(options.get('limit', 0))
 
-        with performance_logging("Loading metadata"):
+        with performance_logging("Loading metadata", logger=logger):
             meta_data = load_meta_data(inputs['meta_data'])
 
         periods = meta_data.periods
 
-        with performance_logging("Loading data"):
+        with performance_logging("Loading data", logger=logger):
             # assume they are sorted
             frames = [
                 self._frame_from_row(row, meta_data)

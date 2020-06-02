@@ -1,3 +1,4 @@
+from dataclasses import asdict, replace, fields
 from typing import TypeVar
 
 from kloppy.domain import (
@@ -6,9 +7,9 @@ from kloppy.domain import (
     Orientation,
     Frame,
     Team, AttackingDirection,
-
-    TrackingDataset, DatasetFlag, Dataset, # NOT YET: EventDataset
+    TrackingDataset, DatasetFlag, Dataset, EventDataset
 )
+from kloppy.domain.models.event import Event
 
 
 class Transformer:
@@ -35,17 +36,22 @@ class Transformer:
             y=self._to_pitch_dimensions.y_dim.from_base(y_base)
         )
     
-    def __needs_flip(self, ball_owning_team: Team, attacking_direction: AttackingDirection) -> bool:
+    def __needs_flip(self,
+                     ball_owning_team: Team,
+                     attacking_direction: AttackingDirection,
+                     action_executing_team: Team = None) -> bool:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
             orientation_factor_from = self._from_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction
+                attacking_direction=attacking_direction,
+                action_executing_team=action_executing_team
             )
             orientation_factor_to = self._to_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction
+                attacking_direction=attacking_direction,
+                action_executing_team=action_executing_team
             )
             flip = orientation_factor_from != orientation_factor_to
         return flip
@@ -77,6 +83,23 @@ class Transformer:
                 in frame.away_team_player_positions.items()
             }
         )
+
+    EventType = TypeVar('EventType')
+
+    def transform_event(self, event: EventType) -> EventType:
+        flip = self.__needs_flip(
+            ball_owning_team=event.ball_owning_team,
+            attacking_direction=event.period.attacking_direction,
+            action_executing_team=event.team
+        )
+
+        position_changes = {
+            field.name: self.transform_point(getattr(event, field.name), flip)
+            for field in fields(event)
+            if field.name.endswith('position') and getattr(event, field.name)
+        }
+
+        return replace(event, **position_changes)
 
     DatasetType = TypeVar('DatasetType')
 
@@ -114,7 +137,15 @@ class Transformer:
                 orientation=to_orientation,
                 records=frames
             )
-        #elif isinstance(dataset, EventDataset):
-        #    raise Exception("EventDataset transformer not implemented yet")
+        elif isinstance(dataset, EventDataset):
+            events = list(map(transformer.transform_event, dataset.records))
+
+            return EventDataset(
+                flags=dataset.flags,
+                periods=dataset.periods,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+                records=events
+            )
         else:
             raise Exception("Unknown Dataset type")

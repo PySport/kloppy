@@ -4,7 +4,7 @@ import requests
 
 from typing import Dict, Union
 
-from kloppy.domain import TrackingDataSet
+from kloppy.domain import TrackingDataset, EventDataset
 
 from .registered import _DATASET_REGISTRY
 
@@ -20,12 +20,12 @@ def download_file(url, local_filename):
                 f.write(chunk)
 
 
-def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]:
+def get_local_files(dataset_name: str, files: Dict[str, str]) -> Dict[str, str]:
     datasets_base_dir = os.environ.get('KLOPPY_BASE_DIR', None)
     if not datasets_base_dir:
         datasets_base_dir = os.path.expanduser('~/kloppy_datasets')
 
-    dataset_base_dir = f'{datasets_base_dir}/{data_set_name}'
+    dataset_base_dir = f'{datasets_base_dir}/{dataset_name}'
     if not os.path.exists(dataset_base_dir):
         os.makedirs(dataset_base_dir)
 
@@ -34,24 +34,24 @@ def get_local_files(data_set_name: str, files: Dict[str, str]) -> Dict[str, str]
         filename = f"{file_key}={file_url.split('/')[-1]}"
         local_filename = f'{dataset_base_dir}/{filename}'
         if not os.path.exists(local_filename):
-            print(f'Downloading {filename}...')
+            logger.info(f'Downloading {filename}')
             download_file(file_url, local_filename)
-            print('Done')
+            logger.info('Download complete')
         else:
-            print(f'Using local cached file {local_filename}')
+            logger.info(f'Using local cached file {local_filename}')
         local_files[file_key] = local_filename
     return local_files
 
 
-def load(data_set_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataSet, EventDataSet]:
-    if data_set_name not in _DATASET_REGISTRY:
-        raise ValueError(f"Dataset {data_set_name} not found")
+def load(dataset_name: str, options=None, **dataset_kwargs) -> Union[TrackingDataset, EventDataset]:
+    if dataset_name not in _DATASET_REGISTRY:
+        raise ValueError(f"Dataset {dataset_name} not found")
 
-    builder_cls = _DATASET_REGISTRY[data_set_name]
+    builder_cls = _DATASET_REGISTRY[dataset_name]
     builder = builder_cls()
 
-    dataset_remote_files = builder.get_data_set_files(**dataset_kwargs)
-    dataset_local_files = get_local_files(data_set_name, dataset_remote_files)
+    dataset_urls = builder.get_dataset_urls(**dataset_kwargs)
+    dataset_local_files = get_local_files(dataset_name, dataset_urls)
 
     file_handlers = {
         local_file_key: open(local_file_name, 'rb')
@@ -62,11 +62,11 @@ def load(data_set_name: str, options=None, **dataset_kwargs) -> Union[TrackingDa
     try:
         serializer_cls = builder.get_serializer_cls()
         serializer = serializer_cls()
-        data_set = serializer.deserialize(
+        dataset = serializer.deserialize(
             inputs=file_handlers,
             options=options
         )
     finally:
         for fp in file_handlers.values():
             fp.close()
-    return data_set
+    return dataset

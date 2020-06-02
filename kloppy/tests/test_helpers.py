@@ -5,8 +5,8 @@ from pandas.testing import assert_frame_equal
 
 from kloppy import to_pandas, load_metrica_tracking_data, load_tracab_tracking_data, transform
 from kloppy.domain import (
-    Period, DataSetFlag, Point, AttackingDirection,
-    TrackingDataSet, PitchDimensions, Dimension,
+    Period, DatasetFlag, Point, AttackingDirection,
+    TrackingDataset, PitchDimensions, Dimension,
     Orientation, Frame
 )
 
@@ -14,29 +14,29 @@ from kloppy.domain import (
 class TestHelpers:
     def test_load_metrica_tracking_data(self):
         base_dir = os.path.dirname(__file__)
-        data_set = load_metrica_tracking_data(
+        dataset = load_metrica_tracking_data(
             f'{base_dir}/files/metrica_home.csv',
             f'{base_dir}/files/metrica_away.csv'
         )
-        assert len(data_set.records) == 6
-        assert len(data_set.periods) == 2
+        assert len(dataset.records) == 6
+        assert len(dataset.periods) == 2
 
     def test_load_tracab_tracking_data(self):
         base_dir = os.path.dirname(__file__)
-        data_set = load_tracab_tracking_data(
+        dataset = load_tracab_tracking_data(
             f'{base_dir}/files/tracab_meta.xml',
             f'{base_dir}/files/tracab_raw.dat'
         )
-        assert len(data_set.records) == 5  # only alive=True
-        assert len(data_set.periods) == 2
+        assert len(dataset.records) == 5  # only alive=True
+        assert len(dataset.periods) == 2
 
     def _get_dataset(self):
         periods = [
             Period(id=1, start_timestamp=0.0, end_timestamp=10.0, attacking_direction=AttackingDirection.HOME_AWAY),
             Period(id=2, start_timestamp=15.0, end_timestamp=25.0, attacking_direction=AttackingDirection.AWAY_HOME)
         ]
-        tracking_data = TrackingDataSet(
-            flags=~(DataSetFlag.BALL_OWNING_TEAM | DataSetFlag.BALL_STATE),
+        tracking_data = TrackingDataset(
+            flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100),
                 y_dim=Dimension(-50, 50)
@@ -75,14 +75,14 @@ class TestHelpers:
         tracking_data = self._get_dataset()
 
         # orientation change AND dimension scale
-        transformed_data_set = transform(
+        transformed_dataset = transform(
             tracking_data,
             to_orientation="AWAY_TEAM",
             to_pitch_dimensions=[[0, 1], [0, 1]]
         )
 
-        assert transformed_data_set.frames[0].ball_position == Point(x=0, y=1)
-        assert transformed_data_set.frames[1].ball_position == Point(x=1, y=0)
+        assert transformed_dataset.frames[0].ball_position == Point(x=0, y=1)
+        assert transformed_dataset.frames[1].ball_position == Point(x=1, y=0)
 
     def test_to_pandas(self):
         tracking_data = self._get_dataset()

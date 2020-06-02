@@ -7,8 +7,7 @@ from kloppy.domain import (
     Orientation,
     Frame,
     Team, AttackingDirection,
-
-    TrackingDataSet, DataSetFlag, DataSet, EventDataSet,  # NOT YET: EventDataSet
+    TrackingDataset, DatasetFlag, Dataset, EventDataset
 )
 from kloppy.domain.models.event import Event
 
@@ -96,51 +95,51 @@ class Transformer:
 
         return replace(event, **position_changes)
 
-    DataSetType = TypeVar('DataSetType')
+    DatasetType = TypeVar('DatasetType')
 
     @classmethod
-    def transform_data_set(cls,
-                           data_set: DataSetType,
+    def transform_dataset(cls,
+                           dataset: DatasetType,
                            to_pitch_dimensions: PitchDimensions = None,
-                           to_orientation: Orientation = None) -> DataSetType:
+                           to_orientation: Orientation = None) -> DatasetType:
         if not to_pitch_dimensions and not to_orientation:
-            return data_set
+            return dataset
         elif not to_orientation:
-            to_orientation = data_set.orientation
+            to_orientation = dataset.orientation
         elif not to_pitch_dimensions:
-            to_pitch_dimensions = data_set.pitch_dimensions
+            to_pitch_dimensions = dataset.pitch_dimensions
 
         if to_orientation == Orientation.BALL_OWNING_TEAM:
-            if not data_set.flags & DataSetFlag.BALL_OWNING_TEAM:
+            if not dataset.flags & DatasetFlag.BALL_OWNING_TEAM:
                 raise ValueError("Cannot transform to BALL_OWNING_TEAM orientation when dataset doesn't contain "
                                  "ball owning team data")
 
         transformer = cls(
-            from_pitch_dimensions=data_set.pitch_dimensions,
-            from_orientation=data_set.orientation,
+            from_pitch_dimensions=dataset.pitch_dimensions,
+            from_orientation=dataset.orientation,
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation
         )
-        if isinstance(data_set, TrackingDataSet):
-            frames = list(map(transformer.transform_frame, data_set.records))
+        if isinstance(dataset, TrackingDataset):
+            frames = list(map(transformer.transform_frame, dataset.records))
 
-            return TrackingDataSet(
-                flags=data_set.flags,
-                frame_rate=data_set.frame_rate,
-                periods=data_set.periods,
+            return TrackingDataset(
+                flags=dataset.flags,
+                frame_rate=dataset.frame_rate,
+                periods=dataset.periods,
                 pitch_dimensions=to_pitch_dimensions,
                 orientation=to_orientation,
                 records=frames
             )
-        elif isinstance(data_set, EventDataSet):
-            events = list(map(transformer.transform_event, data_set.records))
+        elif isinstance(dataset, EventDataset):
+            events = list(map(transformer.transform_event, dataset.records))
 
-            return EventDataSet(
-                flags=data_set.flags,
-                periods=data_set.periods,
+            return EventDataset(
+                flags=dataset.flags,
+                periods=dataset.periods,
                 pitch_dimensions=to_pitch_dimensions,
                 orientation=to_orientation,
                 records=events
             )
         else:
-            raise Exception("Unknown DataSet type")
+            raise Exception("Unknown Dataset type")

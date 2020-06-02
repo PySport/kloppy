@@ -74,17 +74,17 @@ class TestEPTSTracking:
         with open(f'{base_dir}/files/epts_meta.xml', 'rb') as meta_data, \
             open(f'{base_dir}/files/epts_raw.txt', 'rb') as raw_data:
 
-            data_set = serializer.deserialize(
+            dataset = serializer.deserialize(
                 inputs={
                     'meta_data': meta_data,
                     'raw_data': raw_data
                 }
             )
 
-        assert len(data_set.records) == 2
-        assert len(data_set.periods) == 0
-        assert data_set.orientation == Orientation.FIXED_HOME_AWAY
+        assert len(dataset.records) == 2
+        assert len(dataset.periods) == 0
+        assert dataset.orientation == Orientation.FIXED_HOME_AWAY
 
-        assert data_set.records[0].home_team_player_positions['22'] == Point(x=-769, y=-2013)
-        assert data_set.records[0].away_team_player_positions == {}
-        assert data_set.records[0].ball_position == Point(x=-2656, y=367)
+        assert dataset.records[0].home_team_player_positions['22'] == Point(x=-769, y=-2013)
+        assert dataset.records[0].away_team_player_positions == {}
+        assert dataset.records[0].ball_position == Point(x=-2656, y=367)

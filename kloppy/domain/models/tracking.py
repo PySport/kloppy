@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 from .common import (
-    DataSet,
+    Dataset,
     DataRecord
 )
 from .pitch import Point
@@ -17,7 +17,7 @@ class Frame(DataRecord):
 
 
 @dataclass
-class TrackingDataSet(DataSet):
+class TrackingDataset(Dataset):
     frame_rate: int
     records: List[Frame]
 

@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List, Union
 
 from .pitch import Point
-from .common import DataRecord, DataSet, Team
+from .common import DataRecord, Dataset, Team
 
 
 class ResultType(Enum):
@@ -110,7 +110,7 @@ class CarryEvent(Event):
 
 
 @dataclass
-class EventDataSet(DataSet):
+class EventDataset(Dataset):
     records: List[Union[
         ShotEvent, PassEvent, DribbleEvent, CarryEvent
     ]]

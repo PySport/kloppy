@@ -35,6 +35,9 @@ class Orientation(Enum):
     # change when possession changes
     BALL_OWNING_TEAM = "ball-owning-team"
 
+    # depends on team which executed the action
+    ACTION_EXECUTING_TEAM = "action-executing-team"
+
     # changes during half-time
     HOME_TEAM = "home-team"
     AWAY_TEAM = "away-team"
@@ -45,7 +48,8 @@ class Orientation(Enum):
 
     def get_orientation_factor(self,
                                attacking_direction: AttackingDirection,
-                               ball_owning_team: Team):
+                               ball_owning_team: Team,
+                               action_executing_team: Team):
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
         elif self == Orientation.FIXED_AWAY_HOME:
@@ -71,6 +75,15 @@ class Orientation(Enum):
                 return 1
             else:
                 raise Exception(f"Invalid ball_owning_team: {ball_owning_team}")
+        elif self == Orientation.ACTION_EXECUTING_TEAM:
+            if action_executing_team == Team.HOME:
+                return -1
+            elif action_executing_team == Team.AWAY:
+                return 1
+            else:
+                raise Exception(f"Invalid action_executing_team: {action_executing_team}")
+        else:
+            raise Exception(f"Unknown orientation: {self}")
 
 
 

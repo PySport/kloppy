@@ -16,8 +16,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     dataset = datasets.load("statsbomb", {
-        "event_types": ["pass", "take_on", "carry", "shot"]
-    }, match_id=3749052) #16079)
+        #"event_types": ["pass", "take_on", "carry", "shot"]
+    }, match_id=15946)
 
     with performance_logging("transform", logger=logger):
         dataset = transform(dataset, to_orientation="FIXED_HOME_AWAY")
@@ -25,7 +25,7 @@ def main():
     with performance_logging("to pandas", logger=logger):
         dataframe = to_pandas(dataset)
 
-    print(dataframe.head())
+    print(dataframe[:100].to_string())
 
 
 if __name__ == "__main__":

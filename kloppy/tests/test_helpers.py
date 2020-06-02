@@ -7,7 +7,7 @@ from kloppy import to_pandas, load_metrica_tracking_data, load_tracab_tracking_d
 from kloppy.domain import (
     Period, DatasetFlag, Point, AttackingDirection,
     TrackingDataset, PitchDimensions, Dimension,
-    Orientation, Frame
+    Orientation, Frame, EventDataset, PassEvent
 )
 
 
@@ -30,7 +30,7 @@ class TestHelpers:
         assert len(dataset.records) == 5  # only alive=True
         assert len(dataset.periods) == 2
 
-    def _get_dataset(self):
+    def _get_tracking_dataset(self):
         periods = [
             Period(id=1, start_timestamp=0.0, end_timestamp=10.0, attacking_direction=AttackingDirection.HOME_AWAY),
             Period(id=2, start_timestamp=15.0, end_timestamp=25.0, attacking_direction=AttackingDirection.AWAY_HOME)
@@ -72,7 +72,7 @@ class TestHelpers:
         return tracking_data
 
     def test_transform(self):
-        tracking_data = self._get_dataset()
+        tracking_data = self._get_tracking_dataset()
 
         # orientation change AND dimension scale
         transformed_dataset = transform(
@@ -85,7 +85,7 @@ class TestHelpers:
         assert transformed_dataset.frames[1].ball_position == Point(x=1, y=0)
 
     def test_to_pandas(self):
-        tracking_data = self._get_dataset()
+        tracking_data = self._get_tracking_dataset()
 
         data_frame = to_pandas(tracking_data)
 

@@ -97,7 +97,7 @@ class ShotEvent(Event):
 
 @dataclass
 class PassEvent(Event):
-    end_timestamp: float
+    receive_timestamp: float
     receiver_player_jersey_no: str
     receiver_position: Point
 
@@ -126,7 +126,7 @@ class CarryEvent(Event):
 @dataclass
 class EventDataset(Dataset):
     records: List[Union[
-        ShotEvent, PassEvent, TakeOnEvent, CarryEvent
+        GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent
     ]]
 
     @property

@@ -36,17 +36,22 @@ class Transformer:
             y=self._to_pitch_dimensions.y_dim.from_base(y_base)
         )
     
-    def __needs_flip(self, ball_owning_team: Team, attacking_direction: AttackingDirection) -> bool:
+    def __needs_flip(self,
+                     ball_owning_team: Team,
+                     attacking_direction: AttackingDirection,
+                     action_executing_team: Team = None) -> bool:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
             orientation_factor_from = self._from_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction
+                attacking_direction=attacking_direction,
+                action_executing_team=action_executing_team
             )
             orientation_factor_to = self._to_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction
+                attacking_direction=attacking_direction,
+                action_executing_team=action_executing_team
             )
             flip = orientation_factor_from != orientation_factor_to
         return flip
@@ -84,7 +89,8 @@ class Transformer:
     def transform_event(self, event: EventType) -> EventType:
         flip = self.__needs_flip(
             ball_owning_team=event.ball_owning_team,
-            attacking_direction=event.period.attacking_direction
+            attacking_direction=event.period.attacking_direction,
+            action_executing_team=event.team
         )
 
         position_changes = {

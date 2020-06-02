@@ -144,11 +144,6 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
 
 
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
-    """
-        match_id=15946, not high fidelty from metadata, high fidelty from data
-        match_id=70303, high fidelty from metadata, high fidelty from data
-
-    """
     shot_fidelity_version = 1
     xy_fidelity_version = 1
     for event in events:
@@ -236,7 +231,10 @@ class StatsbombSerializer(EventDataSerializer):
                 event_type = raw_event['type']['id']
                 if event_type == SB_EVENT_TYPE_SHOT:
                     fidelity_version = shot_fidelity_version
+                elif event_type in (SB_EVENT_TYPE_CARRY, SB_EVENT_TYPE_DRIBBLE, SB_EVENT_TYPE_PASS):
+                    fidelity_version = xy_fidelity_version
                 else:
+                    # TODO: Uh ohhhh.. don't know which one to pick
                     fidelity_version = xy_fidelity_version
 
                 generic_event_kwargs = dict(
@@ -269,7 +267,7 @@ class StatsbombSerializer(EventDataSerializer):
 
                     event = PassEvent(
                         # TODO: Consider moving this to _parse_pass
-                        end_timestamp=timestamp + raw_event['duration'],
+                        receive_timestamp=timestamp + raw_event['duration'],
                         **pass_event_kwargs,
                         **generic_event_kwargs
                     )
@@ -298,6 +296,7 @@ class StatsbombSerializer(EventDataSerializer):
                         fidelity_version=fidelity_version
                     )
                     event = CarryEvent(
+                        # TODO: Consider moving this to _parse_carry
                         end_timestamp=timestamp + raw_event['duration'],
                         **carry_event_kwargs,
                         **generic_event_kwargs
@@ -313,7 +312,7 @@ class StatsbombSerializer(EventDataSerializer):
 
         return EventDataset(
             flags=DatasetFlag.BALL_OWNING_TEAM,
-            orientation=Orientation.BALL_OWNING_TEAM,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 120),
                 y_dim=Dimension(0, 80)

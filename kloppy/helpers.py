@@ -3,7 +3,7 @@ from typing import Callable, TypeVar, Dict
 from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer, StatsbombSerializer
 from .domain import (
     Dataset, Frame, Event, TrackingDataset, Transformer, Orientation, PitchDimensions,
-    Dimension, EventDataset
+    Dimension, EventDataset, PassEvent, CarryEvent, PassResult, EventType
 )
 
 
@@ -106,19 +106,39 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
 
 def _event_to_pandas_row_converter(event: Event) -> Dict:
     row = dict(
+        event_id=event.event_id,
+        event_type=(
+            event.event_type.value
+            if event.event_type != EventType.GENERIC else
+            f"GENERIC:{event.raw_event['type']['name']}"
+        ),
+        result=event.result.value if event.result else None,
+        success=event.result.is_success if event.result else None,
+
         period_id=event.period.id,
         timestamp=event.timestamp,
+        end_timestamp=None,
         ball_state=event.ball_state.value if event.ball_state else None,
         ball_owning_team=event.ball_owning_team.value if event.ball_owning_team else None,
 
-        event_id=event.event_id,
-        event_type=event.event_type.value,
         team=event.team.value,
         player_jersey_no=event.player_jersey_no,
-        position_x=event.position.x,
-        position_y=event.position.y,
-        result=event.result.value if event.result else None
+        position_x=event.position.x if event.position else None,
+        position_y=event.position.y if event.position else None
     )
+    if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
+        row.update({
+            'end_timestamp': event.receive_timestamp,
+            'end_position_x': event.receiver_position.x,
+            'end_position_y': event.receiver_position.y,
+            'receiver_jersey_no': event.receiver_player_jersey_no
+        })
+    elif isinstance(event, CarryEvent):
+        row.update({
+            'end_timestamp': event.end_timestamp,
+            'end_position_x': event.end_position.x,
+            'end_position_y': event.end_position.y
+        })
     return row
 
 

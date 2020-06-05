@@ -43,7 +43,7 @@ def parse_str_ts(timestamp: str) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
-def _parse_position(position: Dict, fidelity_version: int) -> Point:
+def _parse_position(position: List[float], fidelity_version: int) -> Point:
     # location is cell based
     # [1, 120] x [1, 80]
     # +-----+------+
@@ -153,7 +153,7 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     xy_fidelity_version = 1
     for event in events:
         if 'location' in event:
-            x, y = event['location']
+            x, y, *_ = event['location']
 
             if not x.is_integer() or not y.is_integer():
                 event_type = event['type']['id']

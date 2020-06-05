@@ -30,7 +30,7 @@ def main():
     with performance_logging("to pandas", logger=logger):
         dataframe = to_pandas(dataset)
 
-    print(dataframe[:100].to_string())
+    print(dataframe[:50].to_string())
 
 
 if __name__ == "__main__":

@@ -3,12 +3,13 @@ v0.2.0, 2020-05-05 -- Change interface of TrackingDataSerializer
                       Add Metrica Tracking Serializer including automated tests
                       Cleanup some import statements
 v0.2.1, 2020-05-12 -- Add some helpers functions to directly load a dataset by filenames
-v0.3.0, 2020-05-15 -- Add FIFA EPTS Tracking data loader
+v0.3.0, 2020-05-15 -- Add FIFA EPTS Tracking Serializer
                       Add some examples
                       Add datasets loader to directly load dataset from your python code
                       Add limit argument to all loaders
-v0.4.0, 2020-06-02 -- Add StatsBomb event data loader
+v0.4.0, 2020-06-02 -- Add StatsBomb event Serializer
                       Some fixes in readme
                       Refactor some code to get cleaner code
                       Pass a logger to performance_logging instead of print to stdout
                       Minor fixes to datasets loader
+v0.4.1, 2020-06-05 -- Fix for StatsBomb Serializer when location contains z coordinate

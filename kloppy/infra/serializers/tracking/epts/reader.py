@@ -58,7 +58,6 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
     _set_current_data_spec(0)
 
     periods = meta_data.periods
-    period_idx = 0
     n = 0
     sample = 1. / sample_rate
 
@@ -79,10 +78,10 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
             row['frame_id'] = frame_id
             row['timestamp'] = timestamp
 
-            if period_idx > len(periods):
-                if timestamp > periods[period_idx].end_timestamp:
-                    period_idx += 1
-                row['period_id'] = periods[period_idx].id
+            row['period_id'] = None
+            for i, p in enumerate(periods):
+                if timestamp >= p.start_timestamp and timestamp <= p.end_timestamp:
+                    row['period_id'] = i+1
 
             yield row
 

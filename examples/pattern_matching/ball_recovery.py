@@ -71,19 +71,25 @@ def main():
     counter = Counter()
     for match in matches:
         team = match.captures["last_pass_of_team_a"].team
+        success = 'success' in match.captures
+
+        if success:
+            print(match)
 
         counter.update({
             f"{team}_total": 1,
-            f"{team}_success": 1 if "success" in match.captures else 0
+            f"{team}_success": 1 if success else 0
         })
 
     print("Barcelona:")
-    print(f"\ttotal: {counter['home_total']}")
-    print(f"\trecovery within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)")
+    print(f"\tball loss count: {counter['home_total']}")
+    print(f"\t\trecovered within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)")
+    print(f"\t\tnot recovered within 10 sec: {counter['home_total'] - counter['home_success']} ({(counter['home_total'] - counter['home_success']) / counter['home_total'] * 100:.0f}%)")
     print("")
     print("Deportivo Alavés:")
-    print(f"\ttotal: {counter['away_total']}")
-    print(f"\trecovery within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)")
+    print(f"\tball loss count: {counter['away_total']}")
+    print(f"\t\trecovered within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)")
+    print(f"\t\tnot recovered within 10 sec: {counter['away_total'] - counter['away_success']} ({(counter['away_total'] - counter['away_success']) / counter['away_total'] * 100:.0f}%)")
 
 
 if __name__ == "__main__":

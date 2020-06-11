@@ -17,9 +17,7 @@ def main():
     logger = logging.getLogger(__name__)
 
     # let's grab Barcelona - Deportivo Alavés from statsbomb, and load only shots and passes
-    dataset = datasets.load("statsbomb", options={
-        "event_types": ["shot", "pass"]
-    }, match_id=15946)
+    dataset = datasets.load("statsbomb", options={"event_types": ["shot", "pass"]}, match_id=15946)
 
     # ok, this is where the magic starts
     # we'll go through this step by step
@@ -41,11 +39,15 @@ def main():
             #    The pattern within the group matches when there is a successful pass of
             #    team A within 10 seconds after "last_pass_of_team_a" and it's followed by
             #    a successful pass OR a shot
+            #
+            #    The 'slice(0, 1)' means the subpattern should match zero or once times.
+            #    When the subpattern is not found there is not capture. We use this
+            #    further on the calculate percentage.
             pm.group(
                 pm.match_pass(
                     success=True,
                     team=pm.same_as("last_pass_of_team_a.team"),
-                    timestamp=pm.simple_match(
+                    timestamp=pm.function(
                         lambda timestamp, last_pass_of_team_a_timestamp:
                         timestamp - last_pass_of_team_a_timestamp < 10
                     )
@@ -62,13 +64,13 @@ def main():
             ) * slice(0, 1)
     )
 
-    # lets search for it
+    # Search for it
     with performance_logging("recover_ball_within_10_seconds", logger=logger):
         matches = pm.search(dataset, pattern=recover_ball_within_10_seconds)
 
     counter = Counter()
     for match in matches:
-        team = match.captures["last_pass_of_team_a"].team.value
+        team = match.captures["last_pass_of_team_a"].team
 
         counter.update({
             f"{team}_total": 1,
@@ -77,11 +79,11 @@ def main():
 
     print("Barcelona:")
     print(f"\ttotal: {counter['home_total']}")
-    print(f"\trecovery within 10 sec: {counter['home_success']}")
+    print(f"\trecovery within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)")
     print("")
     print("Deportivo Alavés:")
     print(f"\ttotal: {counter['away_total']}")
-    print(f"\trecovery within 10 sec: {counter['away_success']}")
+    print(f"\trecovery within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)")
 
 
 if __name__ == "__main__":

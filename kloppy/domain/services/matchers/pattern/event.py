@@ -82,7 +82,7 @@ def group(node, capture=None):
     return node
 
 
-def simple_match(fn):
+def function(fn):
     def wrapper(attr_name, value, captures):
         capture_values = {
             f"{capture_name}_{attr_name}": getattr(capture_value, attr_name)

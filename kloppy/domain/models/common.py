@@ -10,6 +10,9 @@ class Team(Enum):
     HOME = "home"
     AWAY = "away"
 
+    def __str__(self):
+        return self.value
+
 
 @dataclass
 class Player:

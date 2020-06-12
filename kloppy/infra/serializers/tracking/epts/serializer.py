@@ -31,7 +31,7 @@ class EPTSSerializer(TrackingDataSerializer):
     @staticmethod
     def _frame_from_row(row: dict, meta_data: EPTSMetaData) -> Frame:
         timestamp = row['timestamp']
-        if meta_data.periods and row['period_id'] != None:
+        if meta_data.periods and row['period_id']:
             # might want to search for it instead
             period = meta_data.periods[row['period_id'] - 1]
         else:
@@ -46,21 +46,11 @@ class EPTSSerializer(TrackingDataSerializer):
                         x=row[f'player_home_{player.jersey_no}_x'],
                         y=row[f'player_home_{player.jersey_no}_y']
                     )
-                else:
-                    home_team_player_positions[player.jersey_no] = Point(
-                        x=float('nan'),
-                        y=float('nan')
-                    )
             elif player.team == Team.AWAY:
                 if f'player_away_{player.jersey_no}_x' in row:
                     away_team_player_positions[player.jersey_no] = Point(
                         x=row[f'player_away_{player.jersey_no}_x'],
                         y=row[f'player_away_{player.jersey_no}_y']
-                    )
-                else:
-                    away_team_player_positions[player.jersey_no] = Point(
-                        x=float('nan'),
-                        y=float('nan')
                     )
 
         return Frame(

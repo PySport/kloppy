@@ -79,9 +79,10 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
             row['timestamp'] = timestamp
 
             row['period_id'] = None
-            for i, p in enumerate(periods):
-                if timestamp >= p.start_timestamp and timestamp <= p.end_timestamp:
-                    row['period_id'] = i+1
+            for period in periods:
+                if period.start_timestamp <= timestamp <= period.end_timestamp:
+                    row['period_id'] = period.id
+                    break
 
             yield row
 

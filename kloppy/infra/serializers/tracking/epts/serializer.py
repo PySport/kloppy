@@ -142,7 +142,7 @@ class EPTSSerializer(TrackingDataSerializer):
             Orientation.FIXED_HOME_AWAY
             if start_attacking_direction == AttackingDirection.HOME_AWAY else
             Orientation.FIXED_AWAY_HOME
-        ) if start_attacking_direction else None
+        ) if start_attacking_direction != AttackingDirection.NOT_SET else None
 
         return TrackingDataset(
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

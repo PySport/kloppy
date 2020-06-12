@@ -82,8 +82,8 @@ class TestEPTSTracking:
             )
 
         assert len(dataset.records) == 2
-        assert len(dataset.periods) == 0
-        assert dataset.orientation == Orientation.FIXED_HOME_AWAY
+        assert len(dataset.periods) == 1
+        assert dataset.orientation is None
 
         assert dataset.records[0].home_team_player_positions['22'] == Point(x=-769, y=-2013)
         assert dataset.records[0].away_team_player_positions == {}

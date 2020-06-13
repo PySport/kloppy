@@ -7,7 +7,9 @@ from kloppy.domain import Dataset
 
 class TrackingDataSerializer(ABC):
     @abstractmethod
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> Dataset:
+    def deserialize(
+        self, inputs: Dict[str, Readable], options: Dict = None
+    ) -> Dataset:
         raise NotImplementedError
 
     @abstractmethod

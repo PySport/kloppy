@@ -11,57 +11,60 @@ def main():
         This example shows the use of regular expressions to do
         pattern matching.
     """
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     logger = logging.getLogger(__name__)
 
     # let's grab Barcelona - Deportivo Alavés from statsbomb, and load only shots and passes
-    dataset = datasets.load("statsbomb", options={"event_types": ["shot", "pass"]}, match_id=15946)
+    dataset = datasets.load(
+        "statsbomb", options={"event_types": ["shot", "pass"]}, match_id=15946
+    )
 
     # ok, this is where the magic starts
     # we'll go through this step by step
     recover_ball_within_10_seconds = (
-            # 1. Search for a pass. When we found one, lets capture it for later usage.
+        # 1. Search for a pass. When we found one, lets capture it for later usage.
+        pm.match_pass(capture="last_pass_of_team_a")
+        +
+        # 2. We want to find ball losses. This means the team changes. In this case we
+        #    want to match 1 or more passes from team B ("not same as team A"). The
+        #    'slice(1, None)' means "1 or more"
+        pm.match_pass(team=pm.not_same_as("last_pass_of_team_a.team"))
+        * slice(1, None)
+        +
+        # 3. We create a group of events. The groups makes it possible to: i) match all
+        #    of its children, or none and ii) capture it.
+        #
+        #    The pattern within the group matches when there is a successful pass of
+        #    team A within 10 seconds after "last_pass_of_team_a" and it's followed by
+        #    a successful pass OR a shot
+        #
+        #    The 'slice(0, 1)' means the subpattern should match zero or once times.
+        #    When the subpattern is not found there is not capture. We use this
+        #    further on the calculate percentage.
+        pm.group(
             pm.match_pass(
-                capture="last_pass_of_team_a"
-            ) +
-            # 2. We want to find ball losses. This means the team changes. In this case we
-            #    want to match 1 or more passes from team B ("not same as team A"). The
-            #    'slice(1, None)' means "1 or more"
-            pm.match_pass(
-                team=pm.not_same_as("last_pass_of_team_a.team")
-            ) * slice(1, None) +
-
-            # 3. We create a group of events. The groups makes it possible to: i) match all
-            #    of its children, or none and ii) capture it.
-            #
-            #    The pattern within the group matches when there is a successful pass of
-            #    team A within 10 seconds after "last_pass_of_team_a" and it's followed by
-            #    a successful pass OR a shot
-            #
-            #    The 'slice(0, 1)' means the subpattern should match zero or once times.
-            #    When the subpattern is not found there is not capture. We use this
-            #    further on the calculate percentage.
-            pm.group(
-                pm.match_pass(
-                    success=True,
-                    team=pm.same_as("last_pass_of_team_a.team"),
-                    timestamp=pm.function(
-                        lambda timestamp, last_pass_of_team_a_timestamp:
-                        timestamp - last_pass_of_team_a_timestamp < 10
-                    )
-                ) + (
-                    pm.match_pass(
-                        success=True,
-                        team=pm.same_as("last_pass_of_team_a.team")
-                    ) |
-                    pm.match_shot(
-                        team=pm.same_as("last_pass_of_team_a.team")
-                    )
+                success=True,
+                team=pm.same_as("last_pass_of_team_a.team"),
+                timestamp=pm.function(
+                    lambda timestamp, last_pass_of_team_a_timestamp: timestamp
+                    - last_pass_of_team_a_timestamp
+                    < 10
                 ),
-                capture="success"
-            ) * slice(0, 1)
+            )
+            + (
+                pm.match_pass(
+                    success=True, team=pm.same_as("last_pass_of_team_a.team")
+                )
+                | pm.match_shot(team=pm.same_as("last_pass_of_team_a.team"))
+            ),
+            capture="success",
+        )
+        * slice(0, 1)
     )
 
     # Search for it
@@ -71,25 +74,32 @@ def main():
     counter = Counter()
     for match in matches:
         team = match.captures["last_pass_of_team_a"].team
-        success = 'success' in match.captures
+        success = "success" in match.captures
 
         if success:
             print(match)
 
-        counter.update({
-            f"{team}_total": 1,
-            f"{team}_success": 1 if success else 0
-        })
+        counter.update(
+            {f"{team}_total": 1, f"{team}_success": 1 if success else 0}
+        )
 
     print("Barcelona:")
     print(f"\tball loss count: {counter['home_total']}")
-    print(f"\t\trecovered within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)")
-    print(f"\t\tnot recovered within 10 sec: {counter['home_total'] - counter['home_success']} ({(counter['home_total'] - counter['home_success']) / counter['home_total'] * 100:.0f}%)")
+    print(
+        f"\t\trecovered within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)"
+    )
+    print(
+        f"\t\tnot recovered within 10 sec: {counter['home_total'] - counter['home_success']} ({(counter['home_total'] - counter['home_success']) / counter['home_total'] * 100:.0f}%)"
+    )
     print("")
     print("Deportivo Alavés:")
     print(f"\tball loss count: {counter['away_total']}")
-    print(f"\t\trecovered within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)")
-    print(f"\t\tnot recovered within 10 sec: {counter['away_total'] - counter['away_success']} ({(counter['away_total'] - counter['away_success']) / counter['away_total'] * 100:.0f}%)")
+    print(
+        f"\t\trecovered within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)"
+    )
+    print(
+        f"\t\tnot recovered within 10 sec: {counter['away_total'] - counter['away_success']} ({(counter['away_total'] - counter['away_success']) / counter['away_total'] * 100:.0f}%)"
+    )
 
 
 if __name__ == "__main__":

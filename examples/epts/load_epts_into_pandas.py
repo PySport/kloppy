@@ -3,8 +3,12 @@ import sys
 
 from pandas import DataFrame
 
-from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data as epts_load_meta_data
-from kloppy.infra.serializers.tracking.epts.reader import read_raw_data as epts_read_raw_data
+from kloppy.infra.serializers.tracking.epts.meta_data import (
+    load_meta_data as epts_load_meta_data,
+)
+from kloppy.infra.serializers.tracking.epts.reader import (
+    read_raw_data as epts_read_raw_data,
+)
 
 
 def main():
@@ -20,9 +24,11 @@ def main():
     4. Try to consume items from generator twice
     4. Convert the records into a pandas dataframe for easy data mangling
     """
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     # step 1: load metadata
     with open("epts_meta.xml", "rb") as meta_fp:
@@ -31,7 +37,9 @@ def main():
     # step 2: try to load the raw data
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(raw_fp, meta_data, sensor_ids=["heartbeat"])
+        records = epts_read_raw_data(
+            raw_fp, meta_data, sensor_ids=["heartbeat"]
+        )
     # raw_fp is closed here
 
     try:
@@ -50,7 +58,9 @@ def main():
     # step 3: this works
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(raw_fp, meta_data, sensor_ids=["heartbeat"])
+        records = epts_read_raw_data(
+            raw_fp, meta_data, sensor_ids=["heartbeat"]
+        )
         # consume all records before we close `raw_fp`
         for record in records:
             print(record)
@@ -64,7 +74,9 @@ def main():
     # step 5: put the records in a pandas dataframe
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(raw_fp, meta_data, sensor_ids=["heartbeat"])
+        records = epts_read_raw_data(
+            raw_fp, meta_data, sensor_ids=["heartbeat"]
+        )
         data_frame = DataFrame.from_records(records)
 
     # Pfieh.. data. That's better :-)

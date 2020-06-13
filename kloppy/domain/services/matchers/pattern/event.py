@@ -4,7 +4,11 @@ from typing import Callable, Tuple, Dict, List, Iterator
 
 from kloppy.domain import (
     EventDataset,
-    PassEvent, ShotEvent, CarryEvent, TakeOnEvent, Event
+    PassEvent,
+    ShotEvent,
+    CarryEvent,
+    TakeOnEvent,
+    Event,
 )
 from .regexp import *
 from .regexp import _make_match, _TrailItem
@@ -14,11 +18,12 @@ class WithCaptureMatcher(Matcher):
     def __init__(self, matcher: Callable[[Tok, Dict[str, List[Tok]]], bool]):
         self.matcher = matcher
 
-    def match(self, token: Tok, trail: Tuple[_TrailItem[Out], ...]) -> Iterator[Out]:
+    def match(
+        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+    ) -> Iterator[Out]:
         match = _make_match(trail)
         captures = {
-            name: capture[0].trail
-            for name, capture in match.children.items()
+            name: capture[0].trail for name, capture in match.children.items()
         }
         if self.matcher(token, captures):
             yield token
@@ -30,9 +35,7 @@ def match_generic(event_cls, capture=None, **kwargs):
             return False
 
         # TODO: v[0] points to first record
-        captures = {
-            k: v[0] for k, v in captures.items()
-        }
+        captures = {k: v[0] for k, v in captures.items()}
         for attr_name, attr_value in kwargs.items():
             if callable(attr_value):
                 attr_real_value = getattr(event, attr_name)
@@ -65,6 +68,7 @@ def same_as(capture: str):
 
     def fn(attr_name, value, captures):
         return value == getattr(captures[capture_name], attribute_name)
+
     return fn
 
 
@@ -73,6 +77,7 @@ def not_same_as(capture: str):
 
     def fn(attr_name, value, captures):
         return value != getattr(captures[capture_name], capture_attribute_name)
+
     return fn
 
 
@@ -90,6 +95,7 @@ def function(fn):
             if capture_value
         }
         return fn(value, **capture_values)
+
     return wrapper
 
 
@@ -116,9 +122,10 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
                     #       all of them
                     captures={
                         capture_name: capture_value[0].trail[0]
-                        for capture_name, capture_value
-                        in matches[0].children.items()
-                    }
+                        for capture_name, capture_value in matches[
+                            0
+                        ].children.items()
+                    },
                 )
             )
         i += 1
@@ -134,6 +141,12 @@ class Query:
 
 __all__ = [
     "search",
-    "match_pass", "match_carry", "match_take_on", "match_shot",
-    "same_as", "not_same_as", "function", "Query"
+    "match_pass",
+    "match_carry",
+    "match_take_on",
+    "match_shot",
+    "same_as",
+    "not_same_as",
+    "function",
+    "Query",
 ]

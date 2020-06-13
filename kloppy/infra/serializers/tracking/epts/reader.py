@@ -3,12 +3,20 @@ from typing import List, Tuple, Set, Iterator
 
 from kloppy.infra.utils import Readable
 
-from .models import PlayerChannel, DataFormatSpecification, EPTSMetaData, Channel, Sensor
+from .models import (
+    PlayerChannel,
+    DataFormatSpecification,
+    EPTSMetaData,
+    Channel,
+    Sensor,
+)
 
 
-def build_regex(data_format_specification: DataFormatSpecification,
-                player_channels: List[PlayerChannel],
-                sensors: List[Sensor]) -> str:
+def build_regex(
+    data_format_specification: DataFormatSpecification,
+    player_channels: List[PlayerChannel],
+    sensors: List[Sensor],
+) -> str:
     player_channel_map = {
         player_channel.player_channel_id: player_channel
         for player_channel in player_channels
@@ -17,23 +25,29 @@ def build_regex(data_format_specification: DataFormatSpecification,
 
     position_sensor = None
     for sensor in sensors:
-        if sensor.sensor_id == 'position':
+        if sensor.sensor_id == "position":
             position_sensor = sensor
 
     return data_format_specification.to_regex(
         player_channel_map=player_channel_map,
         ball_channel_map={
             channel.channel_id: channel for channel in position_sensor.channels
-        } if position_sensor else {}
+        }
+        if position_sensor
+        else {},
     )
 
 
-def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
-                  sensor_ids: List[str] = None,
-                  sample_rate: float = 1.0,
-                  limit: int = 0) -> Iterator[dict]:
+def read_raw_data(
+    raw_data: Readable,
+    meta_data: EPTSMetaData,
+    sensor_ids: List[str] = None,
+    sample_rate: float = 1.0,
+    limit: int = 0,
+) -> Iterator[dict]:
     sensors = [
-        sensor for sensor in meta_data.sensors
+        sensor
+        for sensor in meta_data.sensors
         if sensor_ids is None or sensor.sensor_id in sensor_ids
     ]
 
@@ -49,7 +63,7 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
         regex_str = build_regex(
             data_specs[current_data_spec_idx],
             meta_data.player_channels,
-            sensors
+            sensors,
         )
 
         end_frame_id = data_specs[current_data_spec_idx].end_frame
@@ -59,29 +73,26 @@ def read_raw_data(raw_data: Readable, meta_data: EPTSMetaData,
 
     periods = meta_data.periods
     n = 0
-    sample = 1. / sample_rate
+    sample = 1.0 / sample_rate
 
     for i, line in enumerate(raw_data):
         if i % sample != 0:
             continue
 
-        line = line.strip().decode('ascii')
-        row = {
-            k: float(v)
-            for k, v in regex.search(line).groupdict().items()
-        }
-        frame_id = int(row['frameCount'])
+        line = line.strip().decode("ascii")
+        row = {k: float(v) for k, v in regex.search(line).groupdict().items()}
+        frame_id = int(row["frameCount"])
         if frame_id <= end_frame_id:
             timestamp = frame_id / meta_data.frame_rate
 
-            del row['frameCount']
-            row['frame_id'] = frame_id
-            row['timestamp'] = timestamp
+            del row["frameCount"]
+            row["frame_id"] = frame_id
+            row["timestamp"] = timestamp
 
-            row['period_id'] = None
+            row["period_id"] = None
             for period in periods:
                 if period.start_timestamp <= timestamp <= period.end_timestamp:
-                    row['period_id'] = period.id
+                    row["period_id"] = period.id
                     break
 
             yield row

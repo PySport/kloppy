@@ -1,7 +1,16 @@
 from dataclasses import dataclass
 from itertools import product
 from types import MappingProxyType
-from typing import Dict, Generic, Iterator, List, Mapping, Sequence, Text, Tuple
+from typing import (
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Mapping,
+    Sequence,
+    Text,
+    Tuple,
+)
 
 import networkx as nx
 
@@ -206,10 +215,14 @@ def _cross_connect(g, node):
         merged.update(**data2)
 
         if "start_captures" in data1 and "start_captures" in data2:
-            merged["start_captures"] = data1["start_captures"] + data2["start_captures"]
+            merged["start_captures"] = (
+                data1["start_captures"] + data2["start_captures"]
+            )
 
         if "stop_captures" in data1 and "stop_captures" in data2:
-            merged["stop_captures"] = data1["stop_captures"] + data2["stop_captures"]
+            merged["stop_captures"] = (
+                data1["stop_captures"] + data2["stop_captures"]
+            )
 
         cancel = 0
         start_captures = merged.get("start_captures", [])
@@ -553,7 +566,10 @@ class RegExp(Generic[Tok, Out]):
         return cls(graph=ast_to_graph(root.copy()))
 
     def match(
-        self, seq: Sequence[Tok], join_trails: bool = False, consume_all: bool = True
+        self,
+        seq: Sequence[Tok],
+        join_trails: bool = False,
+        consume_all: bool = True,
     ) -> MatchList[Match[Out]]:
         """
         For a given sequence of tokens, generates all the matches that were
@@ -588,7 +604,9 @@ class RegExp(Generic[Tok, Out]):
         prev_stack = None
         for token in seq:
             stack = list(
-                self._de_duplicate(ne for oe in stack for ne in oe.advance(token))
+                self._de_duplicate(
+                    ne for oe in stack for ne in oe.advance(token)
+                )
             )
 
             # if not consume_all:
@@ -604,11 +622,14 @@ class RegExp(Generic[Tok, Out]):
             stack = [s for s in prev_stack if s.can_terminate()]
 
         terminal = list(
-            self._de_duplicate((s for s in stack if s.can_terminate()), key="trail")
+            self._de_duplicate(
+                (s for s in stack if s.can_terminate()), key="trail"
+            )
         )
 
         return MatchList(
-            _make_match(s.trail).as_match(join_trails=join_trails) for s in terminal
+            _make_match(s.trail).as_match(join_trails=join_trails)
+            for s in terminal
         )
 
     def _de_duplicate(

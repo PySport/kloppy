@@ -13,15 +13,15 @@ class Channel:
     channel_id: str
     name: str
     unit: str
-    sensor: 'Sensor'
+    sensor: "Sensor"
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'Channel':
+    def from_xml_element(cls, elm) -> "Channel":
         return cls(
-            channel_id=elm.attrib['id'],
-            name=str(elm.find('Name')),
-            unit=str(elm.find('Unit')),
-            sensor=None  # should be set from sensor constructor
+            channel_id=elm.attrib["id"],
+            name=str(elm.find("Name")),
+            unit=str(elm.find("Unit")),
+            sensor=None,  # should be set from sensor constructor
         )
 
 
@@ -39,15 +39,16 @@ class Sensor:
     channels: List[Channel]
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'Sensor':
+    def from_xml_element(cls, elm) -> "Sensor":
         obj = cls(
-            sensor_id=elm.attrib['id'],
-            name=str(elm.find('Name')),
+            sensor_id=elm.attrib["id"],
+            name=str(elm.find("Name")),
             channels=[
                 Channel.from_xml_element(channel_elm)
-                for channel_elm
-                in elm.find('Channels').iterchildren(tag='Channel')
-            ]
+                for channel_elm in elm.find("Channels").iterchildren(
+                    tag="Channel"
+                )
+            ],
         )
         for channel in obj.channels:
             channel.sensor = obj
@@ -63,29 +64,29 @@ class StringRegister:
         return f"(?P<{self.name}>{NON_SPLIT_CHAR_REGEX})"
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'StringRegister':
-        return cls(
-            name=elm.attrib['name']
-        )
+    def from_xml_element(cls, elm) -> "StringRegister":
+        return cls(name=elm.attrib["name"])
 
 
 @dataclass
 class PlayerChannelRef:
     player_channel_id: str
 
-    def to_regex(self, player_channel_map: Dict[str, PlayerChannel], **kwargs) -> str:
+    def to_regex(
+        self, player_channel_map: Dict[str, PlayerChannel], **kwargs
+    ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
-            team_str = "home" if player_channel.player.team == Team.HOME else "away"
+            team_str = (
+                "home" if player_channel.player.team == Team.HOME else "away"
+            )
             return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
             return NON_SPLIT_CHAR_REGEX
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'PlayerChannelRef':
-        return cls(
-            player_channel_id=elm.attrib['playerChannelId']
-        )
+    def from_xml_element(cls, elm) -> "PlayerChannelRef":
+        return cls(player_channel_id=elm.attrib["playerChannelId"])
 
 
 @dataclass
@@ -99,43 +100,45 @@ class BallChannelRef:
             return NON_SPLIT_CHAR_REGEX
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'BallChannelRef':
-        return cls(
-            channel_id=elm.attrib['channelId']
-        )
+    def from_xml_element(cls, elm) -> "BallChannelRef":
+        return cls(channel_id=elm.attrib["channelId"])
 
 
 @dataclass
 class SplitRegister:
     separator: str
-    children: List[Union[BallChannelRef, PlayerChannelRef, StringRegister, 'SplitRegister']]
+    children: List[
+        Union[
+            BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"
+        ]
+    ]
 
     def to_regex(self, **kwargs) -> str:
-        return self.separator.join(
-            [child.to_regex(**kwargs) for child in self.children]
-        ) + f"{self.separator}?"
+        return (
+            self.separator.join(
+                [child.to_regex(**kwargs) for child in self.children]
+            )
+            + f"{self.separator}?"
+        )
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'SplitRegister':
+    def from_xml_element(cls, elm) -> "SplitRegister":
         children = []
         for child_elm in elm.iterchildren():
-            if child_elm.tag == 'StringRegister':
+            if child_elm.tag == "StringRegister":
                 child = StringRegister.from_xml_element(child_elm)
-            elif child_elm.tag == 'PlayerChannelRef':
+            elif child_elm.tag == "PlayerChannelRef":
                 child = PlayerChannelRef.from_xml_element(child_elm)
-            elif child_elm.tag == 'BallChannelRef':
+            elif child_elm.tag == "BallChannelRef":
                 child = BallChannelRef.from_xml_element(child_elm)
-            elif child_elm.tag == 'SplitRegister':
+            elif child_elm.tag == "SplitRegister":
                 child = SplitRegister.from_xml_element(child_elm)
             else:
                 raise Exception(f"Unknown tag {child_elm.tag}")
 
             children.append(child)
 
-        return cls(
-            separator=elm.attrib['separator'],
-            children=children
-        )
+        return cls(separator=elm.attrib["separator"], children=children)
 
 
 @dataclass
@@ -145,15 +148,15 @@ class DataFormatSpecification:
     split_register: SplitRegister
 
     @classmethod
-    def from_xml_element(cls, elm) -> 'DataFormatSpecification':
+    def from_xml_element(cls, elm) -> "DataFormatSpecification":
         return cls(
-            start_frame=int(elm.attrib['startFrame']),
-            end_frame=int(elm.attrib['endFrame']),
+            start_frame=int(elm.attrib["startFrame"]),
+            end_frame=int(elm.attrib["endFrame"]),
             split_register=SplitRegister.from_xml_element(elm),
         )
 
     def to_regex(self, **kwargs) -> str:
-        return '^' + self.split_register.to_regex(**kwargs) + '$'
+        return "^" + self.split_register.to_regex(**kwargs) + "$"
 
 
 @dataclass
@@ -162,4 +165,3 @@ class EPTSMetaData(MetaData):
     data_format_specifications: List[DataFormatSpecification]
     sensors: List[Sensor]
     frame_rate: int
-

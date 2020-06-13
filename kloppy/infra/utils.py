@@ -33,5 +33,3 @@ def performance_logging(description: str, counter: int = None, logger=None):
             logger.info(msg)
         else:
             print(msg)
-
-

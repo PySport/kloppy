@@ -1,83 +1,109 @@
 from typing import Callable, TypeVar, Dict
 
-from . import TRACABSerializer, MetricaTrackingSerializer, EPTSSerializer, StatsBombSerializer
+from . import (
+    TRACABSerializer,
+    MetricaTrackingSerializer,
+    EPTSSerializer,
+    StatsBombSerializer,
+)
 from .domain import (
-    Dataset, Frame, Event, TrackingDataset, Transformer, Orientation, PitchDimensions,
-    Dimension, EventDataset, PassEvent, CarryEvent, PassResult, EventType
+    Dataset,
+    Frame,
+    Event,
+    TrackingDataset,
+    Transformer,
+    Orientation,
+    PitchDimensions,
+    Dimension,
+    EventDataset,
+    PassEvent,
+    CarryEvent,
+    PassResult,
+    EventType,
 )
 
 
-def load_tracab_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> TrackingDataset:
+def load_tracab_tracking_data(
+    meta_data_filename: str, raw_data_filename: str, options: dict = None
+) -> TrackingDataset:
     serializer = TRACABSerializer()
-    with open(meta_data_filename, "rb") as meta_data, \
-            open(raw_data_filename, "rb") as raw_data:
+    with open(meta_data_filename, "rb") as meta_data, open(
+        raw_data_filename, "rb"
+    ) as raw_data:
 
         return serializer.deserialize(
-            inputs={
-                'meta_data': meta_data,
-                'raw_data': raw_data
-            },
-            options=options
+            inputs={"meta_data": meta_data, "raw_data": raw_data},
+            options=options,
         )
 
 
-def load_metrica_tracking_data(raw_data_home_filename: str, raw_data_away_filename: str, options: dict = None) -> TrackingDataset:
+def load_metrica_tracking_data(
+    raw_data_home_filename: str,
+    raw_data_away_filename: str,
+    options: dict = None,
+) -> TrackingDataset:
     serializer = MetricaTrackingSerializer()
-    with open(raw_data_home_filename, "rb") as raw_data_home, \
-            open(raw_data_away_filename, "rb") as raw_data_away:
+    with open(raw_data_home_filename, "rb") as raw_data_home, open(
+        raw_data_away_filename, "rb"
+    ) as raw_data_away:
 
         return serializer.deserialize(
             inputs={
-                'raw_data_home': raw_data_home,
-                'raw_data_away': raw_data_away
+                "raw_data_home": raw_data_home,
+                "raw_data_away": raw_data_away,
             },
-            options=options
+            options=options,
         )
 
 
-def load_epts_tracking_data(meta_data_filename: str, raw_data_filename: str, options: dict = None) -> TrackingDataset:
+def load_epts_tracking_data(
+    meta_data_filename: str, raw_data_filename: str, options: dict = None
+) -> TrackingDataset:
     serializer = EPTSSerializer()
-    with open(meta_data_filename, "rb") as meta_data, \
-            open(raw_data_filename, "rb") as raw_data:
+    with open(meta_data_filename, "rb") as meta_data, open(
+        raw_data_filename, "rb"
+    ) as raw_data:
 
         return serializer.deserialize(
-            inputs={
-                'meta_data': meta_data,
-                'raw_data': raw_data
-            },
-            options=options
+            inputs={"meta_data": meta_data, "raw_data": raw_data},
+            options=options,
         )
 
 
-def load_statsbomb_event_data(event_data_filename: str, lineup_data_filename: str, options: dict = None) -> EventDataset:
+def load_statsbomb_event_data(
+    event_data_filename: str, lineup_data_filename: str, options: dict = None
+) -> EventDataset:
     serializer = StatsBombSerializer()
-    with open(event_data_filename, "rb") as event_data, \
-            open(lineup_data_filename, "rb") as lineup_data:
+    with open(event_data_filename, "rb") as event_data, open(
+        lineup_data_filename, "rb"
+    ) as lineup_data:
 
         return serializer.deserialize(
-            inputs={
-                'event_data': event_data,
-                'lineup_data': lineup_data
-            },
-            options=options
+            inputs={"event_data": event_data, "lineup_data": lineup_data},
+            options=options,
         )
 
 
-DatasetType = TypeVar('DatasetType')
+DatasetType = TypeVar("DatasetType")
 
 
-def transform(dataset: DatasetType, to_orientation=None, to_pitch_dimensions=None) -> DatasetType:
+def transform(
+    dataset: DatasetType, to_orientation=None, to_pitch_dimensions=None
+) -> DatasetType:
     if to_orientation and isinstance(to_orientation, str):
         to_orientation = Orientation[to_orientation]
-    if to_pitch_dimensions and (isinstance(to_pitch_dimensions, list) or isinstance(to_pitch_dimensions, tuple)):
+    if to_pitch_dimensions and (
+        isinstance(to_pitch_dimensions, list)
+        or isinstance(to_pitch_dimensions, tuple)
+    ):
         to_pitch_dimensions = PitchDimensions(
             x_dim=Dimension(*to_pitch_dimensions[0]),
-            y_dim=Dimension(*to_pitch_dimensions[1])
+            y_dim=Dimension(*to_pitch_dimensions[1]),
         )
     return Transformer.transform_dataset(
         dataset=dataset,
         to_orientation=to_orientation,
-        to_pitch_dimensions=to_pitch_dimensions
+        to_pitch_dimensions=to_pitch_dimensions,
     )
 
 
@@ -86,20 +112,26 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         period_id=frame.period.id if frame.period else None,
         timestamp=frame.timestamp,
         ball_state=frame.ball_state.value if frame.ball_state else None,
-        ball_owning_team=frame.ball_owning_team.value if frame.ball_owning_team else None,
+        ball_owning_team=frame.ball_owning_team.value
+        if frame.ball_owning_team
+        else None,
         ball_x=frame.ball_position.x if frame.ball_position else None,
-        ball_y=frame.ball_position.y if frame.ball_position else None
+        ball_y=frame.ball_position.y if frame.ball_position else None,
     )
     for jersey_no, position in frame.home_team_player_positions.items():
-        row.update({
-            f'player_home_{jersey_no}_x': position.x,
-            f'player_home_{jersey_no}_y': position.y
-        })
+        row.update(
+            {
+                f"player_home_{jersey_no}_x": position.x,
+                f"player_home_{jersey_no}_y": position.y,
+            }
+        )
     for jersey_no, position in frame.away_team_player_positions.items():
-        row.update({
-            f'player_away_{jersey_no}_x': position.x,
-            f'player_away_{jersey_no}_y': position.y
-        })
+        row.update(
+            {
+                f"player_away_{jersey_no}_x": position.x,
+                f"player_away_{jersey_no}_y": position.y,
+            }
+        )
 
     return row
 
@@ -109,45 +141,53 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         event_id=event.event_id,
         event_type=(
             event.event_type.value
-            if event.event_type != EventType.GENERIC else
-            f"GENERIC:{event.raw_event['type']['name']}"
+            if event.event_type != EventType.GENERIC
+            else f"GENERIC:{event.raw_event['type']['name']}"
         ),
         result=event.result.value if event.result else None,
         success=event.result.is_success if event.result else None,
-
         period_id=event.period.id,
         timestamp=event.timestamp,
         end_timestamp=None,
         ball_state=event.ball_state.value if event.ball_state else None,
-        ball_owning_team=event.ball_owning_team.value if event.ball_owning_team else None,
-
+        ball_owning_team=event.ball_owning_team.value
+        if event.ball_owning_team
+        else None,
         team=event.team.value,
         player_jersey_no=event.player_jersey_no,
         position_x=event.position.x if event.position else None,
-        position_y=event.position.y if event.position else None
+        position_y=event.position.y if event.position else None,
     )
     if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
-        row.update({
-            'end_timestamp': event.receive_timestamp,
-            'end_position_x': event.receiver_position.x,
-            'end_position_y': event.receiver_position.y,
-            'receiver_jersey_no': event.receiver_player_jersey_no
-        })
+        row.update(
+            {
+                "end_timestamp": event.receive_timestamp,
+                "end_position_x": event.receiver_position.x,
+                "end_position_y": event.receiver_position.y,
+                "receiver_jersey_no": event.receiver_player_jersey_no,
+            }
+        )
     elif isinstance(event, CarryEvent):
-        row.update({
-            'end_timestamp': event.end_timestamp,
-            'end_position_x': event.end_position.x,
-            'end_position_y': event.end_position.y
-        })
+        row.update(
+            {
+                "end_timestamp": event.end_timestamp,
+                "end_position_x": event.end_position.x,
+                "end_position_y": event.end_position.y,
+            }
+        )
     return row
 
 
-def to_pandas(dataset: Dataset, _record_converter: Callable = None) -> 'DataFrame':
+def to_pandas(
+    dataset: Dataset, _record_converter: Callable = None
+) -> "DataFrame":
     try:
         import pandas as pd
     except ImportError:
-        raise Exception("Seems like you don't have pandas installed. Please"
-                        " install it using: pip install pandas")
+        raise Exception(
+            "Seems like you don't have pandas installed. Please"
+            " install it using: pip install pandas"
+        )
 
     if not _record_converter:
         if isinstance(dataset, TrackingDataset):
@@ -157,16 +197,14 @@ def to_pandas(dataset: Dataset, _record_converter: Callable = None) -> 'DataFram
         else:
             raise Exception("Unknown dataset type")
 
-    return pd.DataFrame.from_records(
-        map(_record_converter, dataset.records)
-    )
+    return pd.DataFrame.from_records(map(_record_converter, dataset.records))
 
 
 __all__ = [
-    'load_tracab_tracking_data',
-    'load_metrica_tracking_data',
-    'load_epts_tracking_data',
-    'load_statsbomb_event_data',
-    'to_pandas',
-    'transform'
+    "load_tracab_tracking_data",
+    "load_metrica_tracking_data",
+    "load_epts_tracking_data",
+    "load_statsbomb_event_data",
+    "to_pandas",
+    "transform",
 ]

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from kloppy import datasets, transform, to_pandas, load_statsbomb_event_data
+from kloppy import datasets, transform, to_pandas
 from kloppy.infra.utils import performance_logging
 
 

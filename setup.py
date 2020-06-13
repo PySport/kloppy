@@ -25,6 +25,11 @@ setup(
         "License :: OSI Approved",
         "Topic :: Scientific/Engineering"
     ],
+    entry_points={
+        'console_scripts': [
+            'kloppy-query = kloppy.cmdline:run_query'
+        ]
+    },
     install_requires=[
         'lxml>=4.5.0',
         'requests>=2.0.0',

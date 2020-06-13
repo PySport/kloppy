@@ -126,8 +126,14 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
     return results
 
 
+@dataclass
+class Query:
+    event_types: List[str]
+    pattern: Node[Tok, Out]
+
+
 __all__ = [
     "search",
     "match_pass", "match_carry", "match_take_on", "match_shot",
-    "same_as", "not_same_as", "simple_match"
+    "same_as", "not_same_as", "function", "Query"
 ]

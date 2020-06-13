@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf8') as f:
 
 setup(
     name='kloppy',
-    version='0.4.1',
+    version='0.5.0',
     author='Koen Vossen',
     author_email='info@koenvossen.nl',
     url="https://github.com/PySport/kloppy",
@@ -25,9 +25,15 @@ setup(
         "License :: OSI Approved",
         "Topic :: Scientific/Engineering"
     ],
+    entry_points={
+        'console_scripts': [
+            'kloppy-query = kloppy.cmdline:run_query'
+        ]
+    },
     install_requires=[
         'lxml>=4.5.0',
-        'requests>=2.0.0'
+        'requests>=2.0.0',
+        'networkx>=2.2'
     ],
     extras_require={
         'test': [

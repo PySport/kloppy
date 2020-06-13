@@ -33,7 +33,7 @@ setup(
     install_requires=[
         'lxml>=4.5.0',
         'requests>=2.0.0',
-        'networkx>=2.2'
+        'networkx>=2.4'
     ],
     extras_require={
         'test': [

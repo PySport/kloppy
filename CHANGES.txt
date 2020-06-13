@@ -18,3 +18,5 @@ v0.5.0, 2020-06-13 -- Add pattern matching based on regular expressions
 v0.5.1, 2020-06-13 -- Add stats in json/text format to kloppy-query
                       Add show-events to kloppy-query to print all events in the matches
                       Change kloppy-query to make it possible to run without an output file
+v0.5.2, 2020-06-13 -- Fix Transformer when ball position is not set (@benoitblanc)
+                      Fix for working with periods in EPTS Serializer (@bdagnino)

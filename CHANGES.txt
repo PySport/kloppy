@@ -15,3 +15,6 @@ v0.4.0, 2020-06-02 -- Add StatsBomb event Serializer
 v0.4.1, 2020-06-05 -- Fix for StatsBomb Serializer when location contains z coordinate
 v0.5.0, 2020-06-13 -- Add pattern matching based on regular expressions
                       Add kloppy-query: command line tool to search for patterns
+v0.5.1, 2020-06-13 -- Add stats in json/text format to kloppy-query
+                      Add show-events to kloppy-query to print all events in the matches
+                      Change kloppy-query to make it possible to run without an output file

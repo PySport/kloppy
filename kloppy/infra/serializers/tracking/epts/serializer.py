@@ -31,7 +31,7 @@ class EPTSSerializer(TrackingDataSerializer):
     @staticmethod
     def _frame_from_row(row: dict, meta_data: EPTSMetaData) -> Frame:
         timestamp = row['timestamp']
-        if meta_data.periods:
+        if meta_data.periods and row['period_id']:
             # might want to search for it instead
             period = meta_data.periods[row['period_id'] - 1]
         else:
@@ -41,15 +41,17 @@ class EPTSSerializer(TrackingDataSerializer):
         away_team_player_positions = {}
         for player in meta_data.players:
             if player.team == Team.HOME:
-                home_team_player_positions[player.jersey_no] = Point(
-                    x=row[f'player_home_{player.jersey_no}_x'],
-                    y=row[f'player_home_{player.jersey_no}_y']
-                )
+                if f'player_home_{player.jersey_no}_x' in row:
+                    home_team_player_positions[player.jersey_no] = Point(
+                        x=row[f'player_home_{player.jersey_no}_x'],
+                        y=row[f'player_home_{player.jersey_no}_y']
+                    )
             elif player.team == Team.AWAY:
-                home_team_player_positions[player.jersey_no] = Point(
-                    x=row[f'player_away_{player.jersey_no}_x'],
-                    y=row[f'player_away_{player.jersey_no}_y']
-                )
+                if f'player_away_{player.jersey_no}_x' in row:
+                    away_team_player_positions[player.jersey_no] = Point(
+                        x=row[f'player_away_{player.jersey_no}_x'],
+                        y=row[f'player_away_{player.jersey_no}_y']
+                    )
 
         return Frame(
             frame_id=row['frame_id'],
@@ -140,7 +142,7 @@ class EPTSSerializer(TrackingDataSerializer):
             Orientation.FIXED_HOME_AWAY
             if start_attacking_direction == AttackingDirection.HOME_AWAY else
             Orientation.FIXED_AWAY_HOME
-        ) if start_attacking_direction else None
+        ) if start_attacking_direction != AttackingDirection.NOT_SET else None
 
         return TrackingDataset(
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

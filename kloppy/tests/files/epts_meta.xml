@@ -11,6 +11,16 @@
 			<TrackingType>GPS</TrackingType>
 			<ProviderName>Example</ProviderName>
 			<FrameRate>25</FrameRate>
+			<ProviderGlobalParameters>
+				<ProviderParameter>
+					<Name>first_half_start</Name>
+					<Value>100</Value>
+				</ProviderParameter>
+				<ProviderParameter>
+					<Name>first_half_end</Name>
+					<Value>14900</Value>
+				</ProviderParameter>
+        	</ProviderGlobalParameters>
 		</GlobalConfig>
 		
 		<Sessions>
@@ -66,6 +76,16 @@
 					<ProviderParameter>
 						<Name>position</Name>
 						<Value>Forward</Value>
+					</ProviderParameter>
+				</ProviderPlayerParameters>
+			</Player>
+			<Player id="4" teamId="1">
+				<Name>Juan Perez</Name>
+				<ShirtNumber>14</ShirtNumber>
+				<ProviderPlayerParameters>
+					<ProviderParameter>
+						<Name>position</Name>
+						<Value>Goalkeeper</Value>
 					</ProviderParameter>
 				</ProviderPlayerParameters>
 			</Player>
@@ -175,6 +195,16 @@
 			<PlayerChannel id="player3_max_acceleration" playerId="3" channelId="max_acceleration"></PlayerChannel>
 			<PlayerChannel id="player3_heartbeat" playerId="3" channelId="heartbeat"></PlayerChannel>
 			<PlayerChannel id="player3_max_heartbeat" playerId="3" channelId="max_heartbeat"></PlayerChannel>
+			<PlayerChannel id="player4_x" playerId="4" channelId="x"></PlayerChannel>
+			<PlayerChannel id="player4_y" playerId="4" channelId="y"></PlayerChannel>
+			<PlayerChannel id="player4_z" playerId="4" channelId="z"></PlayerChannel>
+			<PlayerChannel id="player4_distance" playerId="4" channelId="distance"></PlayerChannel>
+			<PlayerChannel id="player4_avg_speed" playerId="4" channelId="avg_speed"></PlayerChannel>
+			<PlayerChannel id="player4_max_speed" playerId="4" channelId="max_speed"></PlayerChannel>
+			<PlayerChannel id="player4_acceleration" playerId="4" channelId="acceleration"></PlayerChannel>
+			<PlayerChannel id="player4_max_acceleration" playerId="4" channelId="max_acceleration"></PlayerChannel>
+			<PlayerChannel id="player4_heartbeat" playerId="4" channelId="heartbeat"></PlayerChannel>
+			<PlayerChannel id="player4_max_heartbeat" playerId="4" channelId="max_heartbeat"></PlayerChannel>
 		</PlayerChannels>
 	</Metadata>
 	<DataFormatSpecifications>

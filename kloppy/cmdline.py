@@ -1,7 +1,5 @@
 import argparse
 import sys
-import os
-import importlib
 import logging
 from dataclasses import dataclass
 from typing import List
@@ -49,14 +47,18 @@ def write_to_xml(video_fragments: List[VideoFragment], filename):
 
 
 def load_query(query_file: str) -> pm.Query:
-    file_name, _ = os.path.splitext(query_file)
-    module = importlib.import_module(file_name, ".")
-    return module.query
+    locals_dict = {}
+    with open(query_file, "rb") as fp:
+        exec(fp.read(), {}, locals_dict)
+
+    if 'query' not in locals_dict:
+        raise Exception("File does not contain query")
+    return locals_dict['query']
 
 
 def run_query(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Run query on event data")
-    parser.add_argument('--statsbomb', help="StatsBomb event input files (events.json,lineup.json)")
+    parser.add_argument('--input-statsbomb', help="StatsBomb event input files (events.json,lineup.json)")
     parser.add_argument('--output-xml', help="Output file", required=True)
     parser.add_argument('--with-success', default=True, help="Input existence of success capture in output")
     parser.add_argument('--prepend-time', default=7, help="Seconds to prepend to match")
@@ -72,9 +74,9 @@ def run_query(argv=sys.argv[1:]):
     query = load_query(opts.query_file)
 
     dataset = None
-    if opts.statsbomb:
+    if opts.input_statsbomb:
         with performance_logging("load dataset", logger=logger):
-            events_filename, lineup_filename = opts.statsbomb.split(",")
+            events_filename, lineup_filename = opts.input_statsbomb.split(",")
             dataset = load_statsbomb_event_data(
                 events_filename.strip(),
                 lineup_filename.strip(),
@@ -119,7 +121,3 @@ def run_query(argv=sys.argv[1:]):
     if opts.output_xml:
         write_to_xml(video_fragments, opts.output_xml)
         logger.info(f"Wrote {len(video_fragments)} video fragments to file")
-
-
-if __name__ == "__main__":
-    run_query()

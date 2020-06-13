@@ -1,5 +1,9 @@
 from kloppy import event_pattern_matching as pm
 
+# This file can be consumed by kloppy-query command line like this:
+
+
+# kloppy-query --input-statsbomb=events.json,lineup.json --query-file=ball_recovery.py --output-xml=test.xml
 query = pm.Query(
     event_types=["pass", "shot"],
     pattern=(

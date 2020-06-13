@@ -265,12 +265,12 @@ class StatsBombSerializer(EventDataSerializer):
                 if not period or period.id != period_id:
                     period = Period(
                         id=period_id,
-                        start_timestamp=timestamp,
-                        end_timestamp=timestamp
+                        start_timestamp=timestamp if not period else timestamp + period.end_timestamp,
+                        end_timestamp=None
                     )
                     periods.append(period)
                 else:
-                    period.end_timestamp = timestamp
+                    period.end_timestamp = period.start_timestamp + timestamp
 
                 player_jersey_no = None
                 if 'player' in raw_event:

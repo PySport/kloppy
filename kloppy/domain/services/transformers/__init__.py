@@ -24,6 +24,8 @@ class Transformer:
     def transform_point(self, point: Point, flip: bool) -> Point:
         # 1. always apply changes from coordinate system
         # 2. flip coordinates depending on orientation
+        if point is None:
+            return None
         x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
         y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
 

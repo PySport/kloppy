@@ -1,11 +1,25 @@
 from typing import List, Type, Union, Dict, Callable
 
 from kloppy.domain.models.event import (
-    Retaken, FKAttempt, SetPiece, Card, Challenge,
-    ShotResult, ShotDirection, Deflection, BodyPart,
-    Offside, Attempt, Intervention, Interference1, Interference2,
-    ChallengeType, ChallengeResult, Fault,
-    SubType, OwnGoal
+    Retaken,
+    FKAttempt,
+    SetPiece,
+    Card,
+    Challenge,
+    ShotResult,
+    ShotDirection,
+    Deflection,
+    BodyPart,
+    Offside,
+    Attempt,
+    Intervention,
+    Interference1,
+    Interference2,
+    ChallengeType,
+    ChallengeResult,
+    Fault,
+    SubType,
+    OwnGoal,
 )
 
 
@@ -188,6 +202,7 @@ def build_owngoal(string: str) -> OwnGoal:
     else:
         raise ValueError(f"Unknown owngoal type: {string}")
 
+
 factories: Dict[Type[SubType], Callable] = {
     ChallengeType: build_challenge_type,
     Fault: build_fault,
@@ -206,18 +221,22 @@ factories: Dict[Type[SubType], Callable] = {
     SetPiece: build_setpiece,
     FKAttempt: build_fkattempt,
     Retaken: build_retaken,
-    OwnGoal: build_owngoal
+    OwnGoal: build_owngoal,
 }
 
 
-def build_subtypes(items: List[str], subtype_types: List[Type[SubType]]) -> List[Union[SubType, None]]:
+def build_subtypes(
+    items: List[str], subtype_types: List[Type[SubType]]
+) -> List[Union[SubType, None]]:
     result = [None] * len(subtype_types)
     for item in items:
         if not item:
             continue
 
         for i, subtype_type in enumerate(subtype_types):
-            assert subtype_type in factories, f"Factory missing for {subtype_type}"
+            assert (
+                subtype_type in factories
+            ), f"Factory missing for {subtype_type}"
 
             try:
                 subtype = factories[subtype_type](item)

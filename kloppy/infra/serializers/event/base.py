@@ -7,7 +7,9 @@ from kloppy.domain import EventDataset
 
 class EventDataSerializer(ABC):
     @abstractmethod
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> EventDataset:
+    def deserialize(
+        self, inputs: Dict[str, Readable], options: Dict = None
+    ) -> EventDataset:
         raise NotImplementedError
 
     @abstractmethod

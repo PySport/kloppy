@@ -2,7 +2,8 @@ import logging
 from typing import Tuple, Dict
 
 from kloppy.domain import (
-    TrackingDataset, DatasetFlag,
+    TrackingDataset,
+    DatasetFlag,
     AttackingDirection,
     Frame,
     Point,
@@ -30,10 +31,10 @@ class EPTSSerializer(TrackingDataSerializer):
 
     @staticmethod
     def _frame_from_row(row: dict, meta_data: EPTSMetaData) -> Frame:
-        timestamp = row['timestamp']
-        if meta_data.periods and row['period_id']:
+        timestamp = row["timestamp"]
+        if meta_data.periods and row["period_id"]:
             # might want to search for it instead
-            period = meta_data.periods[row['period_id'] - 1]
+            period = meta_data.periods[row["period_id"] - 1]
         else:
             period = None
 
@@ -41,30 +42,32 @@ class EPTSSerializer(TrackingDataSerializer):
         away_team_player_positions = {}
         for player in meta_data.players:
             if player.team == Team.HOME:
-                if f'player_home_{player.jersey_no}_x' in row:
+                if f"player_home_{player.jersey_no}_x" in row:
                     home_team_player_positions[player.jersey_no] = Point(
-                        x=row[f'player_home_{player.jersey_no}_x'],
-                        y=row[f'player_home_{player.jersey_no}_y']
+                        x=row[f"player_home_{player.jersey_no}_x"],
+                        y=row[f"player_home_{player.jersey_no}_y"],
                     )
             elif player.team == Team.AWAY:
-                if f'player_away_{player.jersey_no}_x' in row:
+                if f"player_away_{player.jersey_no}_x" in row:
                     away_team_player_positions[player.jersey_no] = Point(
-                        x=row[f'player_away_{player.jersey_no}_x'],
-                        y=row[f'player_away_{player.jersey_no}_y']
+                        x=row[f"player_away_{player.jersey_no}_x"],
+                        y=row[f"player_away_{player.jersey_no}_y"],
                     )
 
         return Frame(
-            frame_id=row['frame_id'],
+            frame_id=row["frame_id"],
             timestamp=timestamp,
             ball_owning_team=None,
             ball_state=None,
             period=period,
             home_team_player_positions=home_team_player_positions,
             away_team_player_positions=away_team_player_positions,
-            ball_position=Point(x=row['ball_x'], y=row['ball_y'])
+            ball_position=Point(x=row["ball_x"], y=row["ball_y"]),
         )
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataset:
+    def deserialize(
+        self, inputs: Dict[str, Readable], options: Dict = None
+    ) -> TrackingDataset:
         """
         Deserialize EPTS tracking data into a `TrackingDataset`.
 
@@ -109,11 +112,11 @@ class EPTSSerializer(TrackingDataSerializer):
         if not options:
             options = {}
 
-        sample_rate = float(options.get('sample_rate', 1.0))
-        limit = int(options.get('limit', 0))
+        sample_rate = float(options.get("sample_rate", 1.0))
+        limit = int(options.get("limit", 0))
 
         with performance_logging("Loading metadata", logger=logger):
-            meta_data = load_meta_data(inputs['meta_data'])
+            meta_data = load_meta_data(inputs["meta_data"])
 
         periods = meta_data.periods
 
@@ -121,28 +124,35 @@ class EPTSSerializer(TrackingDataSerializer):
             # assume they are sorted
             frames = [
                 self._frame_from_row(row, meta_data)
-                for row
-                in read_raw_data(
-                    raw_data=inputs['raw_data'],
+                for row in read_raw_data(
+                    raw_data=inputs["raw_data"],
                     meta_data=meta_data,
-                    sensor_ids=["position"],  # we don't care about other sensors
+                    sensor_ids=[
+                        "position"
+                    ],  # we don't care about other sensors
                     sample_rate=sample_rate,
-                    limit=limit
+                    limit=limit,
                 )
             ]
 
         if periods:
             start_attacking_direction = periods[0].attacking_direction
         elif frames:
-            start_attacking_direction = attacking_direction_from_frame(frames[0])
+            start_attacking_direction = attacking_direction_from_frame(
+                frames[0]
+            )
         else:
             start_attacking_direction = None
 
         orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if start_attacking_direction == AttackingDirection.HOME_AWAY else
-            Orientation.FIXED_AWAY_HOME
-        ) if start_attacking_direction != AttackingDirection.NOT_SET else None
+            (
+                Orientation.FIXED_HOME_AWAY
+                if start_attacking_direction == AttackingDirection.HOME_AWAY
+                else Orientation.FIXED_AWAY_HOME
+            )
+            if start_attacking_direction != AttackingDirection.NOT_SET
+            else None
+        )
 
         return TrackingDataset(
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
@@ -150,9 +160,8 @@ class EPTSSerializer(TrackingDataSerializer):
             orientation=orientation,
             pitch_dimensions=meta_data.pitch_dimensions,
             periods=periods,
-            records=frames
+            records=frames,
         )
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError
-

@@ -125,9 +125,9 @@ class CarryEvent(Event):
 
 @dataclass
 class EventDataset(Dataset):
-    records: List[Union[
-        GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent
-    ]]
+    records: List[
+        Union[GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent]
+    ]
 
     @property
     def events(self):
@@ -135,8 +135,17 @@ class EventDataset(Dataset):
 
 
 __all__ = [
-    "ResultType", "EventType",
-    "ShotResult", "PassResult", "TakeOnResult", "CarryResult",
-    "Event", "GenericEvent", "ShotEvent", "PassEvent", "TakeOnEvent", "CarryEvent",
-    "EventDataset"
+    "ResultType",
+    "EventType",
+    "ShotResult",
+    "PassResult",
+    "TakeOnResult",
+    "CarryResult",
+    "Event",
+    "GenericEvent",
+    "ShotEvent",
+    "PassEvent",
+    "TakeOnEvent",
+    "CarryEvent",
+    "EventDataset",
 ]

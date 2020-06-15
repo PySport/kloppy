@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from .common import (
-    Dataset,
-    DataRecord
-)
+from .common import Dataset, DataRecord
 from .pitch import Point
 
 
@@ -26,7 +23,4 @@ class TrackingDataset(Dataset):
         return self.records
 
 
-__all__ = [
-    "Frame", "TrackingDataset"
-]
-
+__all__ = ["Frame", "TrackingDataset"]

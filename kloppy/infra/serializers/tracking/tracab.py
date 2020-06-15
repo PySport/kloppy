@@ -4,7 +4,8 @@ from typing import Tuple, Dict
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset, DatasetFlag,
+    TrackingDataset,
+    DatasetFlag,
     AttackingDirection,
     Frame,
     Point,
@@ -37,11 +38,22 @@ class TRACABSerializer(TrackingDataSerializer):
             team_id = int(team_id)
 
             if team_id == 1:
-                home_team_player_positions[jersey_no] = Point(float(x), float(y))
+                home_team_player_positions[jersey_no] = Point(
+                    float(x), float(y)
+                )
             elif team_id == 0:
-                away_team_player_positions[jersey_no] = Point(float(x), float(y))
+                away_team_player_positions[jersey_no] = Point(
+                    float(x), float(y)
+                )
 
-        ball_x, ball_y, ball_z, ball_speed, ball_owning_team, ball_state = ball.rstrip(";").split(",")[:6]
+        (
+            ball_x,
+            ball_y,
+            ball_z,
+            ball_speed,
+            ball_owning_team,
+            ball_state,
+        ) = ball.rstrip(";").split(",")[:6]
 
         frame_id = int(frame_id)
 
@@ -67,7 +79,7 @@ class TRACABSerializer(TrackingDataSerializer):
             ball_owning_team=ball_owning_team,
             home_team_player_positions=home_team_player_positions,
             away_team_player_positions=away_team_player_positions,
-            period=period
+            period=period,
         )
 
     @staticmethod
@@ -77,7 +89,9 @@ class TRACABSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def deserialize(self, inputs: Dict[str, Readable], options: Dict = None) -> TrackingDataset:
+    def deserialize(
+        self, inputs: Dict[str, Readable], options: Dict = None
+    ) -> TrackingDataset:
         """
         Deserialize TRACAB tracking data into a `TrackingDataset`.
 
@@ -124,35 +138,36 @@ class TRACABSerializer(TrackingDataSerializer):
         if not options:
             options = {}
 
-        sample_rate = float(options.get('sample_rate', 1.0))
-        limit = int(options.get('limit', 0))
-        only_alive = bool(options.get('only_alive', True))
+        sample_rate = float(options.get("sample_rate", 1.0))
+        limit = int(options.get("limit", 0))
+        only_alive = bool(options.get("only_alive", True))
 
         with performance_logging("Loading metadata", logger=logger):
-            match = objectify.fromstring(inputs['meta_data'].read()).match
-            frame_rate = int(match.attrib['iFrameRateFps'])
-            pitch_size_width = float(match.attrib['fPitchXSizeMeters'])
-            pitch_size_height = float(match.attrib['fPitchYSizeMeters'])
+            match = objectify.fromstring(inputs["meta_data"].read()).match
+            frame_rate = int(match.attrib["iFrameRateFps"])
+            pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
+            pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
 
             periods = []
-            for period in match.iterchildren(tag='period'):
-                start_frame_id = int(period.attrib['iStartFrame'])
-                end_frame_id = int(period.attrib['iEndFrame'])
+            for period in match.iterchildren(tag="period"):
+                start_frame_id = int(period.attrib["iStartFrame"])
+                end_frame_id = int(period.attrib["iEndFrame"])
                 if start_frame_id != 0 or end_frame_id != 0:
                     periods.append(
                         Period(
-                            id=int(period.attrib['iId']),
+                            id=int(period.attrib["iId"]),
                             start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate
+                            end_timestamp=end_frame_id / frame_rate,
                         )
                     )
 
         with performance_logging("Loading data", logger=logger):
+
             def _iter():
                 n = 0
-                sample = 1. / sample_rate
+                sample = 1.0 / sample_rate
 
-                for line_ in inputs['raw_data'].readlines():
+                for line_ in inputs["raw_data"].readlines():
                     line_ = line_.strip().decode("ascii")
                     if not line_:
                         continue
@@ -169,17 +184,15 @@ class TRACABSerializer(TrackingDataSerializer):
 
             frames = []
             for n, (period, line) in enumerate(_iter()):
-                frame = self._frame_from_line(
-                    period,
-                    line,
-                    frame_rate
-                )
+                frame = self._frame_from_line(period, line, frame_rate)
 
                 frames.append(frame)
 
                 if not period.attacking_direction_set:
                     period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(frame)
+                        attacking_direction=attacking_direction_from_frame(
+                            frame
+                        )
                     )
 
                 if limit and n >= limit:
@@ -187,8 +200,8 @@ class TRACABSerializer(TrackingDataSerializer):
 
         orientation = (
             Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY else
-            Orientation.FIXED_AWAY_HOME
+            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
+            else Orientation.FIXED_AWAY_HOME
         )
 
         return TrackingDataset(
@@ -196,15 +209,18 @@ class TRACABSerializer(TrackingDataSerializer):
             frame_rate=frame_rate,
             orientation=orientation,
             pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(-1 * pitch_size_width / 2, pitch_size_width / 2),
-                y_dim=Dimension(-1 * pitch_size_height / 2, pitch_size_height / 2),
+                x_dim=Dimension(
+                    -1 * pitch_size_width / 2, pitch_size_width / 2
+                ),
+                y_dim=Dimension(
+                    -1 * pitch_size_height / 2, pitch_size_height / 2
+                ),
                 x_per_meter=100,
-                y_per_meter=100
+                y_per_meter=100,
             ),
             periods=periods,
-            records=frames
+            records=frames,
         )
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError
-

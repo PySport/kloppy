@@ -49,10 +49,12 @@ class Orientation(Enum):
     FIXED_HOME_AWAY = "fixed-home-away"
     FIXED_AWAY_HOME = "fixed-away-home"
 
-    def get_orientation_factor(self,
-                               attacking_direction: AttackingDirection,
-                               ball_owning_team: Team,
-                               action_executing_team: Team):
+    def get_orientation_factor(
+        self,
+        attacking_direction: AttackingDirection,
+        ball_owning_team: Team,
+        action_executing_team: Team,
+    ):
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
         elif self == Orientation.FIXED_AWAY_HOME:
@@ -77,17 +79,20 @@ class Orientation(Enum):
             elif ball_owning_team == Team.AWAY:
                 return 1
             else:
-                raise Exception(f"Invalid ball_owning_team: {ball_owning_team}")
+                raise Exception(
+                    f"Invalid ball_owning_team: {ball_owning_team}"
+                )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team == Team.HOME:
                 return -1
             elif action_executing_team == Team.AWAY:
                 return 1
             else:
-                raise Exception(f"Invalid action_executing_team: {action_executing_team}")
+                raise Exception(
+                    f"Invalid action_executing_team: {action_executing_team}"
+                )
         else:
             raise Exception(f"Unknown orientation: {self}")
-
 
 
 @dataclass
@@ -95,7 +100,9 @@ class Period:
     id: int
     start_timestamp: float
     end_timestamp: float
-    attacking_direction: Optional[AttackingDirection] = AttackingDirection.NOT_SET
+    attacking_direction: Optional[
+        AttackingDirection
+    ] = AttackingDirection.NOT_SET
 
     def contains(self, timestamp: float):
         return self.start_timestamp <= timestamp <= self.end_timestamp
@@ -121,7 +128,6 @@ class DataRecord(ABC):
     ball_state: BallState
 
 
-
 @dataclass
 class Dataset(ABC):
     flags: DatasetFlag
@@ -138,6 +144,3 @@ class MetaData:
     players: List[Player]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
-
-
-

@@ -216,48 +216,11 @@ new_dataset = Transformer.transform_dataset(
 )
 ```
 
+# Contributing to kloppy
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
+
+A overview on how to contribute can be found in the **[contributing guide](CONTRIBUTING.md)**.
+
+If you are simply looking to start working with the kloppy codebase, navigate to the GitHub "issues" tab and start looking through interesting issues.
 
 
-
-### TODO List
-Data models
-- [ ] Automated tests
-- [x] Pitch
-- [x] Tracking
-- [x] Event
-
-Tracking data (de)serializers
-- [x] Automated tests
-- [x] TRACAB
-- [x] MetricaSports
-- [x] FIFA EPTS
-- [ ] BallJames
-
-Event data (de)serializers
-- [ ] Automated tests
-- [ ] OPTA
-- [x] StatsBomb
-- [ ] MetricaSports
-
-Transformers
-- [x] Automated tests
-- [x] Transform pitch dimensions
-- [x] Transform orientation of points
-
-Filters
-- [ ] Automated tests
-- [ ] Smoothing filters for tracking dataset
-
-Helpers
-- [x] Load tracking data
-- [x] Transform pitch dimensions and orientation
-- [x] Export to pandas dataframe
-
-Importers
-- [ ] Automated tests
-- [ ] Pandas dataframe
-
-Exporters
-- [x] Automated tests
-- [x] Pandas dataframe
-- [ ] SPADL json

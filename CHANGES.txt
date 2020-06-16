@@ -20,3 +20,5 @@ v0.5.1, 2020-06-13 -- Add stats in json/text format to kloppy-query
                       Change kloppy-query to make it possible to run without an output file
 v0.5.2, 2020-06-13 -- Fix Transformer when ball position is not set (@benoitblanc)
                       Fix for working with periods in EPTS Serializer (@bdagnino)
+v0.5.3, 2020-06-16 -- Add code formatting and contributing guide (@dmallory42)
+                      Add support for python 3.6

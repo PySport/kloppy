@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="kloppy",
-    version="0.5.2",
+    version="0.5.3",
     author="Koen Vossen",
     author_email="info@koenvossen.nl",
     url="https://github.com/PySport/kloppy",

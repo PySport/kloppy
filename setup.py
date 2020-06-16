@@ -28,7 +28,12 @@ setup(
     entry_points={
         "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
     },
-    install_requires=["lxml>=4.5.0", "requests>=2.0.0", "networkx>=2.4"],
+    install_requires=[
+        "lxml>=4.5.0",
+        "requests>=2.0.0",
+        "networkx>=2.4",
+        'dataclasses;python_version<"3.7"',
+    ],
     extras_require={
         "test": ["pytest", "pandas>=1.0.0"],
         "development": ["pre-commit"],

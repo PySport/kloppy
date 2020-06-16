@@ -299,9 +299,12 @@ class StatsBombSerializer(EventDataSerializer):
                 if not period or period.id != period_id:
                     period = Period(
                         id=period_id,
-                        start_timestamp=timestamp
-                        if not period
-                        else timestamp + period.end_timestamp,
+                        start_timestamp=(
+                            timestamp
+                            if not period
+                            # period = [start, end], add millisecond to prevent overlapping
+                            else timestamp + period.end_timestamp + 0.001
+                        ),
                         end_timestamp=None,
                     )
                     periods.append(period)

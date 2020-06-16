@@ -49,7 +49,9 @@ def load(
     dataset_name: str, options=None, **dataset_kwargs
 ) -> Union[TrackingDataset, EventDataset]:
     if dataset_name not in _DATASET_REGISTRY:
-        raise ValueError(f"Dataset {dataset_name} not found")
+        raise ValueError(
+            f"Dataset {dataset_name} not found. Known datasets: {', '.join(_DATASET_REGISTRY.keys())}"
+        )
 
     builder_cls = _DATASET_REGISTRY[dataset_name]
     builder = builder_cls()

@@ -5,7 +5,7 @@ from kloppy import load_opta_event_data
 
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 

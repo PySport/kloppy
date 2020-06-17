@@ -34,11 +34,56 @@ def _parse_f24_datetime(dt_str: str) -> float:
     return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").timestamp()
 
 
+def _parse_pass(qualifiers: Dict[int, str], outcome: int) -> Dict:
+    if outcome:
+        receiver_position = Point(
+            x=float(qualifiers[140]), y=float(qualifiers[141])
+        )
+        result = PassResult.COMPLETE
+    else:
+        result = PassResult.INCOMPLETE
+        receiver_position = None
+
+    return dict(
+        result=result,
+        receiver_position=receiver_position,
+        receiver_player_jersey_no=None,
+        receive_timestamp=None,
+    )
+
+
+def _parse_offside_pass() -> Dict:
+    return dict(
+        result=PassResult.OFFSIDE,
+        receiver_position=None,
+        receiver_player_jersey_no=None,
+        receive_timestamp=None,
+    )
+
+def _parse_shot(qualifiers: Dict[int, str], type_id: int, position:Point) -> Dict:
+    if type_id == EVENT_TYPE_SHOT_GOAL:
+        if 28 in qualifiers:
+            position = Point(x=100 - position.x, y=100 - position.y)
+        result = ShotResult.GOAL
+    else:
+        result = None
+
+    return dict(
+        position=position,
+        result=result
+    )
+
+
 EVENT_TYPE_START_PERIOD = 32
 EVENT_TYPE_END_PERIOD = 30
 
 EVENT_TYPE_PASS = 1
+EVENT_TYPE_OFFSIDE_PASS = 1
 EVENT_TYPE_TAKE_ON = 3
+EVENT_TYPE_SHOT_MISS = 13
+EVENT_TYPE_SHOT_POST = 14
+EVENT_TYPE_SHOT_SAVED = 15
+EVENT_TYPE_SHOT_GOAL = 16
 
 
 class OptaSerializer(EventDataSerializer):
@@ -103,6 +148,11 @@ class OptaSerializer(EventDataSerializer):
             f7_root = objectify.fromstring(inputs["f7_data"].read())
             f24_root = objectify.fromstring(inputs["f24_data"].read())
 
+            wanted_event_types = [
+                EventType[event_type.upper()]
+                for event_type in options.get("event_types", [])
+            ]
+
         with performance_logging("parse data", logger=logger):
             matchdata_path = objectify.ObjectPath(
                 "SoccerFeed.SoccerDocument.MatchData"
@@ -113,20 +163,25 @@ class OptaSerializer(EventDataSerializer):
 
             away_player_map = {}
             home_player_map = {}
+            home_team_id = None
+            away_team_id = None
             for team_elm in team_elms:
                 player_map = {
-                    player_elm.attrib["PlayerRef"]: player_elm.attrib[
-                        "ShirtNumber"
-                    ]
+                    player_elm.attrib["PlayerRef"].lstrip(
+                        "p"
+                    ): player_elm.attrib["ShirtNumber"]
                     for player_elm in team_elm.find(
                         "PlayerLineUp"
                     ).iterchildren("MatchPlayer")
                 }
+                team_id = team_elm.attrib["TeamRef"].lstrip("t")
 
                 if team_elm.attrib["Side"] == "Home":
                     home_player_map = player_map
+                    home_team_id = team_id
                 elif team_elm.attrib["Side"] == "Away":
                     away_player_map = player_map
+                    away_team_id = team_id
                 else:
                     raise Exception(f"Unknown side: {team_elm.attrib['Side']}")
 
@@ -140,6 +195,7 @@ class OptaSerializer(EventDataSerializer):
             ]
             events = []
             for event_elm in game_elm.iterchildren("Event"):
+                event_id = event_elm.attrib["event_id"]
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
                 period_id = int(event_elm.attrib["period_id"])
@@ -147,16 +203,98 @@ class OptaSerializer(EventDataSerializer):
                     if period.id == period_id:
                         break
                 else:
+                    logger.debug(
+                        f"Skipping event {event_id} because period doesn't match {period_id}"
+                    )
                     continue
 
                 if type_id == EVENT_TYPE_START_PERIOD:
+                    logger.debug(
+                        f"Set start of period {period.id} to {timestamp}"
+                    )
                     period.start_timestamp = timestamp
                 elif type_id == EVENT_TYPE_END_PERIOD:
+                    logger.debug(
+                        f"Set end of period {period.id} to {timestamp}"
+                    )
                     period.end_timestamp = timestamp
-                elif type_id == EVENT_TYPE_PASS:
-                    pass
-                elif type_id == EVENT_TYPE_TAKE_ON:
-                    pass
+                else:
+                    if not period.start_timestamp:
+                        # not started yet
+                        continue
+
+                    if event_elm.attrib["team_id"] == home_team_id:
+                        team = Team.HOME
+                        current_team_map = home_player_map
+                    elif event_elm.attrib["team_id"] == away_team_id:
+                        team = Team.AWAY
+                        current_team_map = away_player_map
+                    else:
+                        raise Exception(
+                            f"Unknown team_id {event_elm.attrib['team_id']}"
+                        )
+
+                    x = float(event_elm.attrib["x"])
+                    y = float(event_elm.attrib["y"])
+                    outcome = int(event_elm.attrib["outcome"])
+                    qualifiers = {
+                        int(
+                            qualifier_elm.attrib["qualifier_id"]
+                        ): qualifier_elm.attrib.get("value")
+                        for qualifier_elm in event_elm.iterchildren("Q")
+                    }
+                    player_jersey_no = None
+                    if "player_id" in event_elm.attrib:
+                        player_jersey_no = current_team_map[
+                            event_elm.attrib["player_id"]
+                        ]
+
+                    generic_event_kwargs = dict(
+                        # from DataRecord
+                        period=period,
+                        timestamp=timestamp - period.start_timestamp,
+                        ball_owning_team=None,
+                        ball_state=BallState.ALIVE,
+                        # from Event
+                        event_id=event_id,
+                        team=team,
+                        player_jersey_no=player_jersey_no,
+                        position=Point(x=x, y=y),
+                        raw_event=event_elm,
+                    )
+
+                    if type_id == EVENT_TYPE_PASS:
+                        pass_event_kwargs = _parse_pass(qualifiers, outcome)
+                        event = PassEvent(
+                            **pass_event_kwargs, **generic_event_kwargs,
+                        )
+                    elif type_id == EVENT_TYPE_OFFSIDE_PASS:
+                        pass_event_kwargs = _parse_offside_pass()
+                        event = PassEvent(
+                            **pass_event_kwargs, **generic_event_kwargs,
+                        )
+                    elif type_id == EVENT_TYPE_TAKE_ON:
+                        pass
+                    elif type_id in (
+                        EVENT_TYPE_SHOT_MISS,
+                        EVENT_TYPE_SHOT_POST,
+                        EVENT_TYPE_SHOT_SAVED,
+                        EVENT_TYPE_SHOT_GOAL,
+                    ):
+                        shot_event_kwargs = _parse_shot(
+                            qualifiers,
+                            type_id,
+                            position=generic_event_kwargs['position']
+                        )
+                        kwargs = {}
+                        kwargs.update(generic_event_kwargs)
+                        kwargs.update(shot_event_kwargs)
+                        event = ShotEvent(**kwargs)
+                    if (
+                        not wanted_event_types
+                        or event.event_type in wanted_event_types
+                    ):
+                        events.append(event)
 
         return EventDataset(
             flags=DatasetFlag.BALL_OWNING_TEAM,

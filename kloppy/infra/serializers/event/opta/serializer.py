@@ -60,7 +60,10 @@ def _parse_offside_pass() -> Dict:
         receive_timestamp=None,
     )
 
-def _parse_shot(qualifiers: Dict[int, str], type_id: int, position:Point) -> Dict:
+
+def _parse_shot(
+    qualifiers: Dict[int, str], type_id: int, position: Point
+) -> Dict:
     if type_id == EVENT_TYPE_SHOT_GOAL:
         if 28 in qualifiers:
             position = Point(x=100 - position.x, y=100 - position.y)
@@ -68,10 +71,7 @@ def _parse_shot(qualifiers: Dict[int, str], type_id: int, position:Point) -> Dic
     else:
         result = None
 
-    return dict(
-        position=position,
-        result=result
-    )
+    return dict(position=position, result=result)
 
 
 EVENT_TYPE_START_PERIOD = 32
@@ -195,7 +195,7 @@ class OptaSerializer(EventDataSerializer):
             ]
             events = []
             for event_elm in game_elm.iterchildren("Event"):
-                event_id = event_elm.attrib["event_id"]
+                event_id = event_elm.attrib["id"]
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
                 period_id = int(event_elm.attrib["period_id"])
@@ -273,8 +273,8 @@ class OptaSerializer(EventDataSerializer):
                         event = PassEvent(
                             **pass_event_kwargs, **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_TAKE_ON:
-                        pass
+                    # elif type_id == EVENT_TYPE_TAKE_ON:
+                    #    pass
                     elif type_id in (
                         EVENT_TYPE_SHOT_MISS,
                         EVENT_TYPE_SHOT_POST,
@@ -284,12 +284,17 @@ class OptaSerializer(EventDataSerializer):
                         shot_event_kwargs = _parse_shot(
                             qualifiers,
                             type_id,
-                            position=generic_event_kwargs['position']
+                            position=generic_event_kwargs["position"],
                         )
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
                         event = ShotEvent(**kwargs)
+                    else:
+                        event = GenericEvent(
+                            **generic_event_kwargs, result=None
+                        )
+
                     if (
                         not wanted_event_types
                         or event.event_type in wanted_event_types

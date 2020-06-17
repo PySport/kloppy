@@ -7,7 +7,11 @@ from typing import List
 
 from xml.etree import ElementTree as ET
 
-from kloppy import load_statsbomb_event_data, event_pattern_matching as pm
+from kloppy import (
+    load_statsbomb_event_data,
+    load_opta_event_data,
+    event_pattern_matching as pm,
+)
 from kloppy.infra.utils import performance_logging
 
 sys.path.append(".")
@@ -69,6 +73,9 @@ def run_query(argv=sys.argv[1:]):
         "--input-statsbomb",
         help="StatsBomb event input files (events.json,lineup.json)",
     )
+    parser.add_argument(
+        "--input-opta", help="Opta event input files (f24.xml,f7.xml)",
+    )
     parser.add_argument("--output-xml", help="Output file")
     parser.add_argument(
         "--with-success",
@@ -115,6 +122,14 @@ def run_query(argv=sys.argv[1:]):
             dataset = load_statsbomb_event_data(
                 events_filename.strip(),
                 lineup_filename.strip(),
+                options={"event_types": query.event_types},
+            )
+    if opts.input_opta:
+        with performance_logging("load dataset", logger=logger):
+            f24_filename, f7_filename = opts.input_opta.split(",")
+            dataset = load_opta_event_data(
+                f24_filename.strip(),
+                f7_filename.strip(),
                 options={"event_types": query.event_types},
             )
 

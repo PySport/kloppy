@@ -105,7 +105,7 @@ class Match:
     captures: Dict[str, List[Event]]
 
 
-def search(dataset: EventDataset, pattern: Node[Tok, Out]):
+def search(dataset: EventDataset, pattern: Node[Tok, Out], max_window_size=50):
     events = dataset.events
     re = RegExp.from_ast(pattern)
 
@@ -113,7 +113,15 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
     i = 0
     c = len(events)
     while i < c:
-        matches = re.match(events[i:], consume_all=False)
+        search_scope = list(
+            filter(
+                # make sure events are in same period
+                lambda e: e.period == events[i].period,
+                events[i : i + max_window_size],
+            )
+        )
+
+        matches = re.match(search_scope, consume_all=False)
         if matches:
             results.append(
                 Match(

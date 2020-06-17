@@ -10,4 +10,3 @@ logging.basicConfig(
 )
 
 dataset = load_opta_event_data("1_f24.xml", "1_f7.xml")
-

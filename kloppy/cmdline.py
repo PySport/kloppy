@@ -138,18 +138,25 @@ def run_query(argv=sys.argv[1:]):
             print_match(i, match, success, str(team))
 
         if opts.output_xml:
+            relative_period_start = 0
+            for period in dataset.periods:
+                if period == match.events[0].period:
+                    break
+                else:
+                    relative_period_start += period.duration
+
             label = str(team)
             if opts.with_success and success:
                 label += " success"
 
             start_timestamp = (
-                match.events[0].timestamp
-                + match.events[0].period.start_timestamp
+                relative_period_start
+                + match.events[0].timestamp
                 - opts.prepend_time
             )
             end_timestamp = (
-                match.events[-1].timestamp
-                + match.events[-1].period.start_timestamp
+                relative_period_start
+                + match.events[-1].timestamp
                 + opts.append_time
             )
 

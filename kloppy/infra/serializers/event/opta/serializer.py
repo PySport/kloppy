@@ -61,6 +61,16 @@ def _parse_offside_pass() -> Dict:
     )
 
 
+def _parse_take_on(outcome: int) -> Dict:
+    if outcome:
+        result = TakeOnResult.COMPLETE
+    else:
+        result = TakeOnResult.INCOMPLETE
+    return dict(
+        result=result
+    )
+
+
 def _parse_shot(
     qualifiers: Dict[int, str], type_id: int, position: Point
 ) -> Dict:
@@ -273,8 +283,11 @@ class OptaSerializer(EventDataSerializer):
                         event = PassEvent(
                             **pass_event_kwargs, **generic_event_kwargs,
                         )
-                    # elif type_id == EVENT_TYPE_TAKE_ON:
-                    #    pass
+                    elif type_id == EVENT_TYPE_TAKE_ON:
+                        take_on_event_kwargs = _parse_take_on(outcome)
+                        event = TakeOnEvent(
+                            **take_on_event_kwargs, **generic_event_kwargs,
+                        )
                     elif type_id in (
                         EVENT_TYPE_SHOT_MISS,
                         EVENT_TYPE_SHOT_POST,

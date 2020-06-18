@@ -48,11 +48,17 @@ def write_to_xml(video_fragments: List[VideoFragment], filename):
     tree.write(filename, xml_declaration=True, encoding="utf-8", method="xml")
 
 
+def _format_time(seconds: float) -> str:
+    minutes, seconds = divmod(seconds, 60)
+    return f"{minutes:02.0f}:{seconds:02.0f}"
+
+
 def print_match(id_: int, match, success: bool, label):
     print(f"Match {id_}: {label} {'SUCCESS' if success else 'no-success'}")
     for event in match.events:
+        time = _format_time(event.timestamp)
         print(
-            f"{event.event_id} {event.event_type} {str(event.result).ljust(10)} / {event.period.id}: {event.timestamp:.3f} / {event.team} {str(event.player_jersey_no).rjust(2)} / {event.position.x}x{event.position.y}"
+            f"{event.event_id} {event.event_type} {str(event.result).ljust(10)} / P{event.period.id} {time} / {event.team} {str(event.player_jersey_no).rjust(2)} / {event.position.x}x{event.position.y}"
         )
     print("")
 
@@ -103,6 +109,12 @@ def run_query(argv=sys.argv[1:]):
         help="Show events for each match",
         action="store_true",
     )
+    parser.add_argument(
+        "--only-success",
+        default=False,
+        help="Only show/output success cases",
+        action="store_true"
+    )
 
     logger = logging.getLogger("run_query")
     logging.basicConfig(
@@ -149,10 +161,11 @@ def run_query(argv=sys.argv[1:]):
             {f"{team}_total": 1, f"{team}_success": 1 if success else 0}
         )
 
-        if opts.show_events:
+        should_process = not opts.only_success or success
+        if opts.show_events and should_process:
             print_match(i, match, success, str(team))
 
-        if opts.output_xml:
+        if opts.output_xml and should_process:
             relative_period_start = 0
             for period in dataset.periods:
                 if period == match.events[0].period:

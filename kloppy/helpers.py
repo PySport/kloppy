@@ -5,6 +5,7 @@ from . import (
     MetricaTrackingSerializer,
     EPTSSerializer,
     StatsBombSerializer,
+    OptaSerializer,
 )
 from .domain import (
     Dataset,
@@ -81,6 +82,19 @@ def load_statsbomb_event_data(
         return serializer.deserialize(
             inputs={"event_data": event_data, "lineup_data": lineup_data},
             options=options,
+        )
+
+
+def load_opta_event_data(
+    f24_data_filename: str, f7_data_filename: str, options: dict = None
+) -> EventDataset:
+    serializer = OptaSerializer()
+    with open(f24_data_filename, "rb") as f24_data, open(
+        f7_data_filename, "rb"
+    ) as f7_data:
+
+        return serializer.deserialize(
+            inputs={"f24_data": f24_data, "f7_data": f7_data}, options=options,
         )
 
 
@@ -205,6 +219,7 @@ __all__ = [
     "load_metrica_tracking_data",
     "load_epts_tracking_data",
     "load_statsbomb_event_data",
+    "load_opta_event_data",
     "to_pandas",
     "transform",
 ]

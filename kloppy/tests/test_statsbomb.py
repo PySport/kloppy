@@ -34,7 +34,7 @@ class TestStatsbomb:
         )
         assert dataset.periods[1] == Period(
             id=2,
-            start_timestamp=2705.267,
-            end_timestamp=5557.32,
+            start_timestamp=2705.268,
+            end_timestamp=5557.321,
             attacking_direction=AttackingDirection.NOT_SET,
         )

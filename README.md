@@ -21,6 +21,7 @@ Here are just a few of the things that kloppy does well:
 - Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different sources into standardized models and vice versa
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
+- Search for [**complexe patterns**](examples/pattern_matching/repository/README.md) in event data.
 
 
 ## Where to get it

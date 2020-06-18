@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><SoccerFeed>
+  <SoccerDocument>
+    <MatchData>
+      <Stat Type="match_time">96</Stat>
+      <Stat Type="first_half_start">20180923T150213+0100</Stat>
+      <Stat Type="first_half_time">47</Stat>
+      <Stat Type="first_half_stop">20180923T154821+0100</Stat>
+      <Stat Type="second_half_start">20180923T160528+0100</Stat>
+      <Stat Type="second_half_time">51</Stat>
+      <Stat Type="second_half_stop">20180923T165537+0100</Stat>
+      <TeamData Formation="442" Score="2" Side="Home" TeamRef="t569">
+        <PlayerLineUp>
+          <MatchPlayer Formation_Place="1" PlayerRef="p111319" Position="Goalkeeper" ShirtNumber="21" Status="Start" />
+          <MatchPlayer Formation_Place="3" PlayerRef="p80398" Position="Defender" ShirtNumber="20" Status="Start" />
+          <MatchPlayer Formation_Place="5" PlayerRef="p164266" Position="Defender" ShirtNumber="19" Status="Start" />
+          <MatchPlayer Formation_Place="2" PlayerRef="p82830" Position="Defender" ShirtNumber="22" Status="Start" />
+          <MatchPlayer Formation_Place="6" PlayerRef="p77384" Position="Defender" ShirtNumber="5" Status="Start" />
+          <MatchPlayer Formation_Place="8" PlayerRef="p76001" Position="Midfielder" ShirtNumber="33" Status="Start" />
+          <MatchPlayer Captain="1" Formation_Place="4" PlayerRef="p84359" Position="Midfielder" ShirtNumber="10" Status="Start" />
+          <MatchPlayer Formation_Place="7" PlayerRef="p162037" Position="Midfielder" ShirtNumber="29" Status="Start" />
+          <MatchPlayer Formation_Place="11" PlayerRef="p76507" Position="Midfielder" ShirtNumber="8" Status="Start" />
+          <MatchPlayer Formation_Place="10" PlayerRef="p48337" Position="Striker" ShirtNumber="14" Status="Start" />
+          <MatchPlayer Formation_Place="9" PlayerRef="p123125" Position="Striker" ShirtNumber="7" Status="Start" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p88022" Position="Substitute" ShirtNumber="28" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p48469" Position="Substitute" ShirtNumber="3" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p202456" Position="Substitute" ShirtNumber="4" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p27261" Position="Substitute" ShirtNumber="6" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p226967" Position="Substitute" ShirtNumber="26" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p14190" Position="Substitute" ShirtNumber="1" Status="Sub" SubPosition="Goalkeeper" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p81185" Position="Substitute" ShirtNumber="16" Status="Sub" SubPosition="Midfielder" />
+        </PlayerLineUp>
+        </TeamData>
+      <TeamData Formation="433" Score="1" Side="Away" TeamRef="t2592">
+        <PlayerLineUp>
+          <MatchPlayer Formation_Place="1" PlayerRef="p84490" Position="Goalkeeper" ShirtNumber="18" Status="Start" />
+          <MatchPlayer Captain="1" Formation_Place="5" PlayerRef="p232018" Position="Defender" ShirtNumber="4" Status="Start" />
+          <MatchPlayer Formation_Place="6" PlayerRef="p223842" Position="Defender" ShirtNumber="17" Status="Start" />
+          <MatchPlayer Formation_Place="2" PlayerRef="p208695" Position="Defender" ShirtNumber="2" Status="Start" />
+          <MatchPlayer Formation_Place="3" PlayerRef="p213398" Position="Defender" ShirtNumber="3" Status="Start" />
+          <MatchPlayer Formation_Place="7" PlayerRef="p449897" Position="Midfielder" ShirtNumber="22" Status="Start" />
+          <MatchPlayer Formation_Place="8" PlayerRef="p445731" Position="Midfielder" ShirtNumber="19" Status="Start" />
+          <MatchPlayer Formation_Place="4" PlayerRef="p248479" Position="Midfielder" ShirtNumber="8" Status="Start" />
+          <MatchPlayer Formation_Place="10" PlayerRef="p116187" Position="Striker" ShirtNumber="11" Status="Start" />
+          <MatchPlayer Formation_Place="9" PlayerRef="p430368" Position="Striker" ShirtNumber="21" Status="Start" />
+          <MatchPlayer Formation_Place="11" PlayerRef="p440088" Position="Striker" ShirtNumber="24" Status="Start" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p184269" Position="Substitute" ShirtNumber="14" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p216557" Position="Substitute" ShirtNumber="28" Status="Sub" SubPosition="Goalkeeper" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p433463" Position="Substitute" ShirtNumber="16" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p232016" Position="Substitute" ShirtNumber="30" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p460842" Position="Substitute" ShirtNumber="39" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p249864" Position="Substitute" ShirtNumber="34" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p45097" Position="Substitute" ShirtNumber="7" Status="Sub" SubPosition="Forward" />
+        </PlayerLineUp>
+        </TeamData>
+    </MatchData>
+  </SoccerDocument>
+</SoccerFeed>

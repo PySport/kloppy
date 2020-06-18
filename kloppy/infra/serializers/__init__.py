@@ -4,6 +4,6 @@ from .tracking import (
     MetricaTrackingSerializer,
     EPTSSerializer,
 )
-from .event import StatsBombSerializer
+from .event import StatsBombSerializer, OptaSerializer
 
 # NOT YET: from .event import EventDataSerializer, MetricaEventSerializer

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Tuple, Dict, List, Iterator
@@ -12,19 +13,24 @@ from kloppy.domain import (
 )
 from .regexp import *
 from .regexp import _make_match, _TrailItem
+from .regexp.regexp import _Match
 
 
 class WithCaptureMatcher(Matcher):
     def __init__(self, matcher: Callable[[Tok, Dict[str, List[Tok]]], bool]):
         self.matcher = matcher
 
+    def _add_captures(self, captures: Dict[str, List[Tok]], match: _Match):
+        for name, capture in match.children.items():
+            captures[name] = capture[0].trail
+            self._add_captures(captures, capture[0])
+
     def match(
         self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         match = _make_match(trail)
-        captures = {
-            name: capture[0].trail for name, capture in match.children.items()
-        }
+        captures = {}
+        self._add_captures(captures, match)
         if self.matcher(token, captures):
             yield token
 
@@ -61,6 +67,7 @@ match_pass = partial(match_generic, PassEvent)
 match_shot = partial(match_generic, ShotEvent)
 match_carry = partial(match_generic, CarryEvent)
 match_take_on = partial(match_generic, TakeOnEvent)
+match_any = partial(match_generic, Event)
 
 
 def same_as(capture: str):
@@ -110,9 +117,20 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
     re = RegExp.from_ast(pattern)
 
     results = []
+    events_per_period = defaultdict(list)
+    for event in events:
+        events_per_period[event.period.id].append(event)
+
+    for period, events_ in sorted(events_per_period.items()):
+        # Search per period. Patterns should never match over periods
+        results.extend(_search(events_, re))
+    return results
+
+
+def _search(events: List[Event], re: RegExp[Tok, Out]):
     i = 0
-    c = len(events)
-    while i < c:
+    results = []
+    for i in range(len(events)):
         matches = re.match(events[i:], consume_all=False)
         if matches:
             results.append(
@@ -128,7 +146,6 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
                     },
                 )
             )
-        i += 1
 
     return results
 
@@ -145,6 +162,7 @@ __all__ = [
     "match_carry",
     "match_take_on",
     "match_shot",
+    "match_any",
     "same_as",
     "not_same_as",
     "function",

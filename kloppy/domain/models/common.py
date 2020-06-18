@@ -114,6 +114,10 @@ class Period:
     def set_attacking_direction(self, attacking_direction: AttackingDirection):
         self.attacking_direction = attacking_direction
 
+    @property
+    def duration(self):
+        return self.end_timestamp - self.start_timestamp
+
 
 class DatasetFlag(Flag):
     BALL_OWNING_TEAM = 1

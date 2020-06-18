@@ -601,7 +601,7 @@ class RegExp(Generic[Tok, Out]):
 
         stack: List[Explorer[Tok, Out]] = [Explorer(self, _Initial(), tuple())]
 
-        prev_stack = None
+        stacks = []
         for token in seq:
             stack = list(
                 self._de_duplicate(
@@ -616,10 +616,14 @@ class RegExp(Generic[Tok, Out]):
             if not stack:
                 break
 
-            prev_stack = stack
+            stacks.append(stack)
 
-        if not consume_all and prev_stack:
-            stack = [s for s in prev_stack if s.can_terminate()]
+        if not consume_all and stacks:
+            stacks.reverse()
+            for stack in stacks:
+                stack = [s for s in stack if s.can_terminate()]
+                if stack:
+                    break
 
         terminal = list(
             self._de_duplicate(

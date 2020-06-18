@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Tuple, Dict, List, Iterator
@@ -111,24 +112,28 @@ class Match:
     captures: Dict[str, List[Event]]
 
 
-def search(dataset: EventDataset, pattern: Node[Tok, Out], max_window_size=50):
+def search(dataset: EventDataset, pattern: Node[Tok, Out]):
     events = dataset.events
     re = RegExp.from_ast(pattern)
 
     results = []
-    i = 0
-    c = len(events)
-    while i < c:
-        # search_scope = list(
-        #     filter(
-        #         # make sure events are in same period
-        #         lambda e: e.period == events[i].period,
-        #         events[i : i + max_window_size],
-        #     )
-        # )
-        search_scope = events[i:]
+    events_per_period = defaultdict(list)
+    for event in events:
+        events_per_period[event.period.id].append(event)
 
-        matches = re.match(search_scope, consume_all=False)
+    for period, events_ in sorted(events_per_period.items()):
+        # Search per period. Patterns should never match over periods
+        results.extend(
+            _search(events_, re)
+        )
+    return results
+
+
+def _search(events: List[Event], re: RegExp[Tok, Out]):
+    i = 0
+    results = []
+    for i in range(len(events)):
+        matches = re.match(events[i:], consume_all=False)
         if matches:
             results.append(
                 Match(
@@ -143,7 +148,6 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out], max_window_size=50):
                     },
                 )
             )
-        i += 1
 
     return results
 

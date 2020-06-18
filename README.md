@@ -16,12 +16,16 @@ different tracking- and event data like a breeze. It aims to be the fundamental 
 
 ## Main Features
 Here are just a few of the things that kloppy does well:
+#### Loading data
 - Directly load [**Public datasets**](#datasets) to get started right away. 
 - Understandable [**Standardized models**](#models) for tracking- and event datasets
 - Out-of-the-box [**(De)serializing**](#serializing) tracking- and event data from different sources into standardized models and vice versa
+#### Processing data
 - Flexible [**pitch dimensions**](#pitch-dimensions) transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent [**orientation**](#orientation) transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
+#### Pattern matching
 - Search for [**complexe patterns**](examples/pattern_matching/repository/README.md) in event data.
+- Use `kloppy-query` to export fragments to XML file
 
 
 ## Where to get it
@@ -44,6 +48,7 @@ from kloppy import (
     load_tracab_tracking_data,
     load_epts_tracking_data, 
     load_statsbomb_event_data,
+    load_opta_event_data,
     to_pandas, 
     transform
 )
@@ -55,8 +60,10 @@ dataset = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
 # or epts
 dataset = load_epts_tracking_data('meta.xml', 'raw_data.txt')
 
-# or event data
+# or event data: statsbomb
 dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
+# opta
+dataset = load_opta_event_data('f24_data.xml', 'f7_data.xml')
 
 
 dataset = transform(dataset, pitch_dimensions=[[0, 108], [-34, 34]])
@@ -165,6 +172,29 @@ with open("events/123123.json", "rb") as event_data, \
         },
         options={
             "event_types": ["pass", "shot", "carry", "take_on"]
+        }
+    )
+    
+    # start working with dataset
+```
+
+
+or Opta event data
+```python
+from kloppy import OptaSerializer
+
+serializer = OptaSerializer()
+
+with open("f24_data.xml", "rb") as f24_data, \
+        open("f7_data.xml", "rb") as f7_data:
+
+    dataset = serializer.deserialize(
+        inputs={
+            'f24_data': f24_data,
+            'f7_data': f7_data
+        },
+        options={
+            "event_types": ["pass", "shot"]
         }
     )
     

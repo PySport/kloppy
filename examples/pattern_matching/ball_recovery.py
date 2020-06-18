@@ -53,15 +53,28 @@ def main():
                 timestamp=pm.function(
                     lambda timestamp, last_pass_of_team_a_timestamp: timestamp
                     - last_pass_of_team_a_timestamp
-                    < 10
+                    < 15
                 ),
-            )
-            + (
-                pm.match_pass(
-                    success=True, team=pm.same_as("last_pass_of_team_a.team")
+                capture="recover"
+            ) +
+            (
+                # resulted in possession after 5 seconds
+                pm.group(
+                    pm.match_pass(
+                        success=True,
+                        team=pm.same_as("recover.team"),
+                        timestamp=pm.function(
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp - recover_timestamp < 5
+                        )
+                    ) * slice(None, None) +
+                    pm.match_pass(
+                        success=True,
+                        team=pm.same_as("recover.team"),
+                        timestamp=pm.function(
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp - recover_timestamp > 5
+                        )
+                    )
                 )
-                * 2
-                | pm.match_shot(team=pm.same_as("last_pass_of_team_a.team"))
             ),
             capture="success",
         )

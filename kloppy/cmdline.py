@@ -113,7 +113,7 @@ def run_query(argv=sys.argv[1:]):
         "--only-success",
         default=False,
         help="Only show/output success cases",
-        action="store_true"
+        action="store_true",
     )
 
     logger = logging.getLogger("run_query")

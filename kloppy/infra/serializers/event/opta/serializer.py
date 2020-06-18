@@ -66,9 +66,7 @@ def _parse_take_on(outcome: int) -> Dict:
         result = TakeOnResult.COMPLETE
     else:
         result = TakeOnResult.INCOMPLETE
-    return dict(
-        result=result
-    )
+    return dict(result=result)
 
 
 def _parse_shot(

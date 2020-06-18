@@ -123,9 +123,7 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
 
     for period, events_ in sorted(events_per_period.items()):
         # Search per period. Patterns should never match over periods
-        results.extend(
-            _search(events_, re)
-        )
+        results.extend(_search(events_, re))
     return results
 
 

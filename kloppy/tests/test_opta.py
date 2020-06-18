@@ -10,9 +10,7 @@ class TestOpta:
 
         serializer = OptaSerializer()
 
-        with open(
-            f"{base_dir}/files/opta_f24.xml", "rb"
-        ) as f24_data, open(
+        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
             f"{base_dir}/files/opta_f7.xml", "rb"
         ) as f7_data:
 

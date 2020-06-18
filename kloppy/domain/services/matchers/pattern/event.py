@@ -12,19 +12,24 @@ from kloppy.domain import (
 )
 from .regexp import *
 from .regexp import _make_match, _TrailItem
+from .regexp.regexp import _Match
 
 
 class WithCaptureMatcher(Matcher):
     def __init__(self, matcher: Callable[[Tok, Dict[str, List[Tok]]], bool]):
         self.matcher = matcher
 
+    def _add_captures(self, captures: Dict[str, List[Tok]], match: _Match):
+        for name, capture in match.children.items():
+            captures[name] = capture[0].trail
+            self._add_captures(captures, capture[0])
+
     def match(
         self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         match = _make_match(trail)
-        captures = {
-            name: capture[0].trail for name, capture in match.children.items()
-        }
+        captures = {}
+        self._add_captures(captures, match)
         if self.matcher(token, captures):
             yield token
 
@@ -61,6 +66,7 @@ match_pass = partial(match_generic, PassEvent)
 match_shot = partial(match_generic, ShotEvent)
 match_carry = partial(match_generic, CarryEvent)
 match_take_on = partial(match_generic, TakeOnEvent)
+match_any = partial(match_generic, Event)
 
 
 def same_as(capture: str):
@@ -113,13 +119,14 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out], max_window_size=50):
     i = 0
     c = len(events)
     while i < c:
-        search_scope = list(
-            filter(
-                # make sure events are in same period
-                lambda e: e.period == events[i].period,
-                events[i : i + max_window_size],
-            )
-        )
+        # search_scope = list(
+        #     filter(
+        #         # make sure events are in same period
+        #         lambda e: e.period == events[i].period,
+        #         events[i : i + max_window_size],
+        #     )
+        # )
+        search_scope = events[i:]
 
         matches = re.match(search_scope, consume_all=False)
         if matches:
@@ -153,6 +160,7 @@ __all__ = [
     "match_carry",
     "match_take_on",
     "match_shot",
+    "match_any",
     "same_as",
     "not_same_as",
     "function",

@@ -53,15 +53,40 @@ def main():
                 timestamp=pm.function(
                     lambda timestamp, last_pass_of_team_a_timestamp: timestamp
                     - last_pass_of_team_a_timestamp
-                    < 10
+                    < 15
                 ),
+                capture="recover",
             )
             + (
-                pm.match_pass(
-                    success=True, team=pm.same_as("last_pass_of_team_a.team")
+                # resulted in possession after 5 seconds
+                pm.group(
+                    pm.match_pass(
+                        success=True,
+                        team=pm.same_as("recover.team"),
+                        timestamp=pm.function(
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp
+                            - recover_timestamp
+                            < 5
+                        ),
+                    )
+                    * slice(None, None)
+                    + pm.match_pass(
+                        success=True,
+                        team=pm.same_as("recover.team"),
+                        timestamp=pm.function(
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp
+                            - recover_timestamp
+                            > 5
+                        ),
+                    )
                 )
-                * 2
-                | pm.match_shot(team=pm.same_as("last_pass_of_team_a.team"))
+                | pm.group(
+                    pm.match_pass(
+                        success=True, team=pm.same_as("recover.team")
+                    )
+                    * slice(None, None)
+                    + pm.match_shot(team=pm.same_as("recover.team"))
+                )
             ),
             capture="success",
         )
@@ -78,7 +103,7 @@ def main():
         success = "success" in match.captures
 
         if success:
-            print(match)
+            print(team, match.events[0].timestamp)
 
         counter.update(
             {f"{team}_total": 1, f"{team}_success": 1 if success else 0}

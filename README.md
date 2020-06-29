@@ -66,7 +66,7 @@ dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
 dataset = load_opta_event_data('f24_data.xml', 'f7_data.xml')
 
 
-dataset = transform(dataset, pitch_dimensions=[[0, 108], [-34, 34]])
+dataset = transform(dataset, to_pitch_dimensions=[[0, 108], [-34, 34]])
 pandas_data_frame = to_pandas(dataset)
 ```
 

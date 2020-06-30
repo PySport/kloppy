@@ -121,7 +121,7 @@ def transform(
     )
 
 
-def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
+def _frame_to_pandas_row_converter(frame: Frame, additional_columns: Dict = None) -> Dict:
     row = dict(
         period_id=frame.period.id if frame.period else None,
         timestamp=frame.timestamp,
@@ -132,6 +132,13 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         ball_x=frame.ball_position.x if frame.ball_position else None,
         ball_y=frame.ball_position.y if frame.ball_position else None,
     )
+    if additional_columns is not None:
+        for k, v in additional_columns.items():
+            if callable(v):
+                value = v(frame)
+            else:
+                value = v
+            row.update({k: value})    
     for jersey_no, position in frame.home_team_player_positions.items():
         row.update(
             {
@@ -150,7 +157,7 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
     return row
 
 
-def _event_to_pandas_row_converter(event: Event) -> Dict:
+def _event_to_pandas_row_converter(event: Event, additional_columns: Dict = None) -> Dict:
     row = dict(
         event_id=event.event_id,
         event_type=(
@@ -172,6 +179,13 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         position_x=event.position.x if event.position else None,
         position_y=event.position.y if event.position else None,
     )
+    if additional_columns is not None:
+        for k, v in additional_columns.items():
+            if callable(v):
+                value = v(event)
+            else:
+                value = v
+            row.update({k: value})
     if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
         row.update(
             {
@@ -193,7 +207,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 
 def to_pandas(
-    dataset: Dataset, _record_converter: Callable = None
+    dataset: Dataset, additional_columns: Dict = None, _record_converter: Callable = None
 ) -> "DataFrame":
     try:
         import pandas as pd
@@ -205,9 +219,9 @@ def to_pandas(
 
     if not _record_converter:
         if isinstance(dataset, TrackingDataset):
-            _record_converter = _frame_to_pandas_row_converter
+            _record_converter = lambda x: _frame_to_pandas_row_converter(x, additional_columns)
         elif isinstance(dataset, EventDataset):
-            _record_converter = _event_to_pandas_row_converter
+            _record_converter = lambda x: _event_to_pandas_row_converter(x, additional_columns)
         else:
             raise Exception("Unknown dataset type")
 

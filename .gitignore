@@ -1,3 +1,7 @@
 .idea/
 __pycache__/
 .vscode
+*.pyc
+kloppy.egg-info
+pip-wheel-metadata
+env

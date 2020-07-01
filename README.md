@@ -249,9 +249,9 @@ new_dataset = Transformer.transform_dataset(
 
 ### Adding additional columns to DataFrame
 
-You can add more information to the DataFrame returned by `to_pandas` by passing a Dictionary in the format `{'column_name': function or scalar}`. Function should take a frame (for tracking data) or an event (for event data) as argument and return 
+You can add more information to the DataFrame returned by `to_pandas` by passing a Dictionary in the format `{'column_name': function or scalar}`. Function should take a frame (for tracking data) or an event (for event data) as argument and return a valid input for a DataFrame.
 
-```
+```python
 from kloppy import datasets, to_pandas
 dataset = datasets.load("statsbomb")
 

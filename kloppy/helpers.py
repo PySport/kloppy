@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, Dict
+from typing import Callable, TypeVar, Dict, Union
 
 from . import (
     TRACABSerializer,
@@ -193,7 +193,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 
 def to_pandas(
-    dataset: Dataset, _record_converter: Callable = None
+    dataset: Dataset, _record_converter: Callable = None, additional_columns: Dict = None
 ) -> "DataFrame":
     try:
         import pandas as pd
@@ -211,7 +211,19 @@ def to_pandas(
         else:
             raise Exception("Unknown dataset type")
 
-    return pd.DataFrame.from_records(map(_record_converter, dataset.records))
+    def generic_record_converter(record: Union[Frame, Event]):
+        row = _record_converter(record)
+        if additional_columns:
+            for k, v in additional_columns.items():
+                if callable(v):
+                    value = v(record)
+                else:
+                    value = v
+                row.update({k: value})
+
+        return row
+
+    return pd.DataFrame.from_records(map(generic_record_converter, dataset.records))
 
 
 __all__ = [

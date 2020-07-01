@@ -247,6 +247,21 @@ new_dataset = Transformer.transform_dataset(
 )
 ```
 
+### Adding additional columns to DataFrame
+
+You can add more information to the DataFrame returned by `to_pandas` by passing a Dictionary in the format `{'column_name': function or scalar}`. Function should take a frame (for tracking data) or an event (for event data) as argument and return 
+
+```
+from kloppy import datasets, to_pandas
+dataset = datasets.load("statsbomb")
+
+# Statsbomb events may include a list of related events.
+# This function returns the first event from that list, if it exists.
+get_first_related_event = lambda x: x.raw_event['related_events'][0] if 'related_events' in x.raw_event else None
+to_pandas(dataset, additional_columns={'related_event': get_first_related_event, 'match': 'test1'})
+```
+
+
 # Contributing to kloppy
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 

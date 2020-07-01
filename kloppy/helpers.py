@@ -191,18 +191,6 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         )
     return row
 
-def generic_record_converter(record: Union[Frame, Event], _record_converter: Callable = None, additional_columns: Dict = None):
-    row = _record_converter(record)
-    if additional_columns:
-        for k, v in additional_columns.items():
-            if callable(v):
-                value = v(record)
-            else:
-                value = v
-            row.update({k: value})  
-
-    return row
-
 
 def to_pandas(
     dataset: Dataset, _record_converter: Callable = None, additional_columns: Dict = None
@@ -223,9 +211,19 @@ def to_pandas(
         else:
             raise Exception("Unknown dataset type")
 
-    converter = lambda record: generic_record_converter(record, _record_converter, additional_columns)
+    def generic_record_converter(record: Union[Frame, Event]):
+        row = _record_converter(record)
+        if additional_columns:
+            for k, v in additional_columns.items():
+                if callable(v):
+                    value = v(record)
+                else:
+                    value = v
+                row.update({k: value})
 
-    return pd.DataFrame.from_records(map(converter, dataset.records))
+        return row
+
+    return pd.DataFrame.from_records(map(generic_record_converter, dataset.records))
 
 
 __all__ = [

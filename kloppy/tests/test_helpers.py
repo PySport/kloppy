@@ -125,3 +125,33 @@ class TestHelpers:
         )
 
         assert_frame_equal(data_frame, expected_data_frame)
+
+    def test_to_pandas_additional_columns(self):
+        tracking_data = self._get_tracking_dataset()
+
+        data_frame = to_pandas(
+            tracking_data,
+            additional_columns={
+                "match": "test",
+                "bonus_column": lambda frame: frame.frame_id + 10,
+            },
+        )
+
+        expected_data_frame = DataFrame.from_dict(
+            {
+                "period_id": [1, 1],
+                "timestamp": [0.1, 0.2],
+                "ball_state": [None, None],
+                "ball_owning_team": [None, None],
+                "ball_x": [100, 0],
+                "ball_y": [-50, 50],
+                "match": ["test", "test"],
+                "bonus_column": [11, 12],
+                "player_home_1_x": [None, 15],
+                "player_home_1_y": [None, 35],
+                "player_away_1_x": [None, 10],
+                "player_away_1_y": [None, 20],
+            }
+        )
+
+        assert_frame_equal(data_frame, expected_data_frame)

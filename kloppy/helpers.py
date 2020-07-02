@@ -193,7 +193,9 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 
 def to_pandas(
-    dataset: Dataset, _record_converter: Callable = None, additional_columns: Dict = None
+    dataset: Dataset,
+    _record_converter: Callable = None,
+    additional_columns: Dict = None,
 ) -> "DataFrame":
     try:
         import pandas as pd
@@ -223,7 +225,9 @@ def to_pandas(
 
         return row
 
-    return pd.DataFrame.from_records(map(generic_record_converter, dataset.records))
+    return pd.DataFrame.from_records(
+        map(generic_record_converter, dataset.records)
+    )
 
 
 __all__ = [

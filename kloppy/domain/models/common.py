@@ -6,21 +6,32 @@ from typing import Optional, List, Dict
 from .pitch import PitchDimensions
 
 
-class Team(Enum):
-    HOME = "home"
-    AWAY = "away"
-
-    def __str__(self):
-        return self.value
+@dataclass
+class Position:
+    position_id: str
+    name: str
+    coordinates: List
 
 
 @dataclass
 class Player:
     player_id: str
-    team: Team
     name: str
+    first_name: str
+    last_name: str
     jersey_no: str
-    attributes: Optional[Dict] = field(default_factory=dict)
+    position: Position
+    # attributes: Optional[Dict] = field(default_factory=dict)
+
+
+@dataclass
+class Team:
+    team_id: str
+    name: str
+    players: List[Player]
+
+    def __str__(self):
+        return self.team_id
 
 
 class BallState(Enum):
@@ -54,6 +65,7 @@ class Orientation(Enum):
         attacking_direction: AttackingDirection,
         ball_owning_team: Team,
         action_executing_team: Team,
+        meta_data: "MetaData",  # TODO is the using before assignment a problem?
     ):
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
@@ -74,18 +86,18 @@ class Orientation(Enum):
             else:
                 raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team == Team.HOME:
+            if ball_owning_team.team_id == MetaData.home_team.team_id:
                 return -1
-            elif ball_owning_team == Team.AWAY:
+            elif ball_owning_team.team_id == MetaData.away_team.team_id:
                 return 1
             else:
                 raise Exception(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
-            if action_executing_team == Team.HOME:
+            if action_executing_team.team_id == MetaData.home_team.team_id:
                 return -1
-            elif action_executing_team == Team.AWAY:
+            elif action_executing_team.team_id == MetaData.away_team.team_id:
                 return 1
             else:
                 raise Exception(
@@ -133,18 +145,18 @@ class DataRecord(ABC):
 
 
 @dataclass
-class Dataset(ABC):
-    flags: DatasetFlag
-    pitch_dimensions: PitchDimensions
-    orientation: Orientation
+class MetaData:
+    home_team: Team
+    away_team: Team
     periods: List[Period]
-    records: List[DataRecord]
+    pitch_dimensions: PitchDimensions
+    score: List  # first home, second away [0,0]
+    frame_rate: float
+    orientation: Orientation
+    flags: DatasetFlag
 
 
 @dataclass
-class MetaData:
-    home_team_name: str
-    away_team_name: str
-    players: List[Player]
-    periods: List[Period]
-    pitch_dimensions: PitchDimensions
+class Dataset(ABC):
+    records: List[DataRecord]
+    meta_data: MetaData

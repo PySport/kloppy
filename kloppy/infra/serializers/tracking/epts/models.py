@@ -164,4 +164,3 @@ class EPTSMetaData(MetaData):
     player_channels: List[PlayerChannel]
     data_format_specifications: List[DataFormatSpecification]
     sensors: List[Sensor]
-    frame_rate: int

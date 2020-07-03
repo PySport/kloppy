@@ -124,8 +124,8 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     )
     score_elm = score_path.find(meta_data)
     _team_map = {
-        score_elm.attrib["idLocalTeam"]: Team.HOME,
-        score_elm.attrib["idVisitingTeam"]: Team.AWAY,
+        "HOME": score_elm.attrib["idLocalTeam"],
+        "AWAY": score_elm.attrib["idVisitingTeam"],
     }
 
     players = _load_players(meta_data.find("Players"), _team_map)

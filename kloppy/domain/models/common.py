@@ -21,7 +21,7 @@ class Player:
     last_name: str
     jersey_no: str
     position: Position
-    # attributes: Optional[Dict] = field(default_factory=dict)
+    attributes: Optional[Dict] = field(default_factory=dict)
 
 
 @dataclass

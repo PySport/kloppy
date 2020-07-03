@@ -57,18 +57,21 @@ def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
     return periods
 
 
-def _load_players(players_elm, team_map: Dict[str, Team]) -> List[Player]:
+def _load_players(players_elm, team_id: str) -> List[Player]:
     return [
         Player(
-            team=team_map[player_elm.attrib["teamId"]],
             jersey_no=str(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
+            first_name="",
+            last_name="",
+            position=[],
             attributes=_load_provider_parameters(
                 players_elm.find("ProviderPlayerParameters")
             ),
         )
         for player_elm in players_elm.iterchildren(tag="Player")
+        if player_elm.attrib["teamId"] == team_id
     ]
 
 
@@ -123,12 +126,27 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )
     score_elm = score_path.find(meta_data)
+    score = [score_elm.LocalTeamScore, score_elm.VisitingTeamScore]
+
     _team_map = {
-        "HOME": score_elm.attrib["idLocalTeam"],
-        "AWAY": score_elm.attrib["idVisitingTeam"],
+        "home": score_elm.attrib["idLocalTeam"],
+        "away": score_elm.attrib["idVisitingTeam"],
     }
 
-    players = _load_players(meta_data.find("Players"), _team_map)
+    _team_name_map = {
+        team_elm.attrib["id"]: str(team_elm.find("Name"))
+        for team_elm in meta_data.find("Teams").iterchildren(tag="Team")
+    }
+
+    teams_meta_data = {
+        key: Team(
+            team_id=value,
+            name=_team_name_map[value],
+            players=_load_players(meta_data.find("Players"), value),
+        )
+        for key, value in _team_map.items()
+    }
+
     data_format_specifications = _load_data_format_specifications(
         root.find("DataFormatSpecifications")
     )
@@ -142,7 +160,11 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         for channel in sensor.channels
     }
 
-    _player_map = {player.player_id: player for player in players}
+    _all_players = []
+    for key, value in teams_meta_data.items():
+        _all_players = _all_players + value.players
+
+    _player_map = {player.player_id: player for player in _all_players}
 
     player_channels = [
         PlayerChannel(
@@ -155,23 +177,20 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         ).iterchildren(tag="PlayerChannel")
     ]
 
-    team_name_map = {
-        _team_map[team_elm.attrib["id"]]: str(team_elm.find("Name"))
-        for team_elm in meta_data.find("Teams").iterchildren(tag="Team")
-    }
-
     frame_rate = int(meta_data.find("GlobalConfig").find("FrameRate"))
     periods = _load_periods(meta_data.find("GlobalConfig"), frame_rate)
     pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
 
     return EPTSMetaData(
-        home_team_name=team_name_map[Team.HOME],
-        away_team_name=team_name_map[Team.AWAY],
-        players=players,
+        home_team=teams_meta_data["home"],
+        away_team=teams_meta_data["away"],
         periods=periods,
         pitch_dimensions=pitch_dimensions,
         data_format_specifications=data_format_specifications,
         player_channels=player_channels,
         frame_rate=frame_rate,
         sensors=sensors,
+        score=score,
+        orientation=[],
+        flags=[],
     )

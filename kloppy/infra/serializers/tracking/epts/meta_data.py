@@ -139,12 +139,12 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     }
 
     teams_meta_data = {
-        key: Team(
-            team_id=value,
-            name=_team_name_map[value],
-            players=_load_players(meta_data.find("Players"), value),
+        ground: Team(
+            team_id=team_id,
+            name=_team_name_map[team_id],
+            players=_load_players(meta_data.find("Players"), team_id),
         )
-        for key, value in _team_map.items()
+        for ground, team_id in _team_map.items()
     }
 
     data_format_specifications = _load_data_format_specifications(
@@ -160,7 +160,7 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         for channel in sensor.channels
     }
 
-    _all_players = []
+    _all_players = []  # TODO improve this loop
     for key, value in teams_meta_data.items():
         _all_players = _all_players + value.players
 
@@ -182,8 +182,7 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
 
     return EPTSMetaData(
-        home_team=teams_meta_data["home"],
-        away_team=teams_meta_data["away"],
+        teams=[teams_meta_data["home"], teams_meta_data["away"]],
         periods=periods,
         pitch_dimensions=pitch_dimensions,
         data_format_specifications=data_format_specifications,

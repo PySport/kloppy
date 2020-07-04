@@ -146,8 +146,7 @@ class DataRecord(ABC):
 
 @dataclass
 class MetaData:
-    home_team: Team
-    away_team: Team
+    teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
     score: List  # first home, second away [0,0]

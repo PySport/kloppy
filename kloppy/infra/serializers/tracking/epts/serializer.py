@@ -38,20 +38,13 @@ class EPTSSerializer(TrackingDataSerializer):
         else:
             period = None
 
-        home_team_player_positions = {}
-        away_team_player_positions = {}
-        for player in meta_data.players:
-            if player.team == Team.HOME:
-                if f"player_home_{player.jersey_no}_x" in row:
-                    home_team_player_positions[player.jersey_no] = Point(
-                        x=row[f"player_home_{player.jersey_no}_x"],
-                        y=row[f"player_home_{player.jersey_no}_y"],
-                    )
-            elif player.team == Team.AWAY:
-                if f"player_away_{player.jersey_no}_x" in row:
-                    away_team_player_positions[player.jersey_no] = Point(
-                        x=row[f"player_away_{player.jersey_no}_x"],
-                        y=row[f"player_away_{player.jersey_no}_y"],
+        players_positions = {}
+        for team in meta_data.teams:
+            for player in team.players:
+                if f"{player.player_id}_x" in row:
+                    players_positions[player.player_id] = Point(
+                        x=row[f"{player.player_id}_x"],
+                        y=row[f"{player.player_id}_y"],
                     )
 
         return Frame(
@@ -60,8 +53,7 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_owning_team=None,
             ball_state=None,
             period=period,
-            home_team_player_positions=home_team_player_positions,
-            away_team_player_positions=away_team_player_positions,
+            players_positions=players_positions,
             ball_position=Point(x=row["ball_x"], y=row["ball_y"]),
         )
 
@@ -154,14 +146,13 @@ class EPTSSerializer(TrackingDataSerializer):
             else None
         )
 
-        return TrackingDataset(
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
-            frame_rate=meta_data.frame_rate,
-            orientation=orientation,
-            pitch_dimensions=meta_data.pitch_dimensions,
-            periods=periods,
-            records=frames,
+        meta_data.flags = ~(
+            DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM
         )
+
+        meta_data.orientation = orientation
+
+        return TrackingDataset(records=frames, meta_data=meta_data)
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

@@ -132,19 +132,9 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         ball_x=frame.ball_position.x if frame.ball_position else None,
         ball_y=frame.ball_position.y if frame.ball_position else None,
     )
-    for jersey_no, position in frame.home_team_player_positions.items():
+    for player_id, position in frame.players_positions.items():
         row.update(
-            {
-                f"player_home_{jersey_no}_x": position.x,
-                f"player_home_{jersey_no}_y": position.y,
-            }
-        )
-    for jersey_no, position in frame.away_team_player_positions.items():
-        row.update(
-            {
-                f"player_away_{jersey_no}_x": position.x,
-                f"player_away_{jersey_no}_y": position.y,
-            }
+            {f"{player_id}_x": position.x, f"{player_id}_y": position.y,}
         )
 
     return row

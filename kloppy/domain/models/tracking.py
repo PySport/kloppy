@@ -8,14 +8,12 @@ from .pitch import Point
 @dataclass
 class Frame(DataRecord):
     frame_id: int
-    home_team_player_positions: Dict[str, Point]
-    away_team_player_positions: Dict[str, Point]
+    players_positions: Dict[str, Point]
     ball_position: Point
 
 
 @dataclass
 class TrackingDataset(Dataset):
-    frame_rate: int
     records: List[Frame]
 
     @property

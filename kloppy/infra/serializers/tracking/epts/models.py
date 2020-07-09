@@ -77,7 +77,7 @@ class PlayerChannelRef:
     ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
-            return f"(?P<{player_channel.player.player_id}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
+            return f"(?P<player_{player_channel.player.player_id}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
             return NON_SPLIT_CHAR_REGEX
 

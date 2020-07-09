@@ -3,19 +3,32 @@ from dataclasses import dataclass, field
 from enum import Enum, Flag
 from typing import Optional, List, Dict
 
-from .pitch import PitchDimensions
+from .pitch import PitchDimensions, Point
+
+
+@dataclass
+class Score:
+    home: int
+    away: int
+
+
+class Ground(Enum):
+    HOME = "home"
+    AWAY = "away"
+    REFEREE = "referee"
 
 
 @dataclass
 class Position:
     position_id: str
     name: str
-    coordinates: List
+    coordinates: Point
 
 
 @dataclass
 class Player:
     player_id: str
+    team: "Team"
     name: str
     first_name: str
     last_name: str
@@ -28,7 +41,8 @@ class Player:
 class Team:
     team_id: str
     name: str
-    players: List[Player]
+    ground: Ground
+    players: List[Player] = field(default_factory=dict)
 
     def __str__(self):
         return self.team_id
@@ -65,7 +79,7 @@ class Orientation(Enum):
         attacking_direction: AttackingDirection,
         ball_owning_team: Team,
         action_executing_team: Team,
-        meta_data: "MetaData",  # TODO is the using before assignment a problem?
+        meta_data: "MetaData",
     ):
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
@@ -86,18 +100,18 @@ class Orientation(Enum):
             else:
                 raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team.team_id == MetaData.home_team.team_id:
+            if ball_owning_team.team_id == MetaData.teams[0].team_id:
                 return -1
-            elif ball_owning_team.team_id == MetaData.away_team.team_id:
+            elif ball_owning_team.team_id == MetaData.teams[1].team_id:
                 return 1
             else:
                 raise Exception(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
-            if action_executing_team.team_id == MetaData.home_team.team_id:
+            if action_executing_team.team_id == MetaData.teams[0].team_id:
                 return -1
-            elif action_executing_team.team_id == MetaData.away_team.team_id:
+            elif action_executing_team.team_id == MetaData.teams[1].team_id:
                 return 1
             else:
                 raise Exception(
@@ -149,7 +163,7 @@ class MetaData:
     teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
-    score: List  # first home, second away [0,0]
+    score: Score
     frame_rate: float
     orientation: Orientation
     flags: DatasetFlag

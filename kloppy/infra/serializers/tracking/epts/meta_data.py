@@ -1,6 +1,16 @@
 from lxml import objectify
 
-from kloppy.domain import Period, PitchDimensions, Dimension
+from kloppy.domain import (
+    Period,
+    PitchDimensions,
+    Dimension,
+    Team,
+    Score,
+    Ground,
+    DatasetFlag,
+    AttackingDirection,
+    Orientation,
+)
 from kloppy.infra.utils import Readable
 
 from .models import *
@@ -57,9 +67,10 @@ def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
     return periods
 
 
-def _load_players(players_elm, team_id: str) -> List[Player]:
+def _load_players(players_elm, team: Team) -> List[Player]:
     return [
         Player(
+            team=team,
             jersey_no=str(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
@@ -71,7 +82,7 @@ def _load_players(players_elm, team_id: str) -> List[Player]:
             ),
         )
         for player_elm in players_elm.iterchildren(tag="Player")
-        if player_elm.attrib["teamId"] == team_id
+        if player_elm.attrib["teamId"] == team.team_id
     ]
 
 
@@ -126,11 +137,13 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )
     score_elm = score_path.find(meta_data)
-    score = [score_elm.LocalTeamScore, score_elm.VisitingTeamScore]
+    score = Score(
+        home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
+    )
 
     _team_map = {
-        "home": score_elm.attrib["idLocalTeam"],
-        "away": score_elm.attrib["idVisitingTeam"],
+        Ground.HOME: score_elm.attrib["idLocalTeam"],
+        Ground.AWAY: score_elm.attrib["idVisitingTeam"],
     }
 
     _team_name_map = {
@@ -138,14 +151,13 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         for team_elm in meta_data.find("Teams").iterchildren(tag="Team")
     }
 
-    teams_meta_data = {
-        ground: Team(
-            team_id=team_id,
-            name=_team_name_map[team_id],
-            players=_load_players(meta_data.find("Players"), team_id),
+    teams_meta_data = {}
+    for ground, team_id in _team_map.items():
+        team = Team(
+            team_id=team_id, name=_team_name_map[team_id], ground=ground
         )
-        for ground, team_id in _team_map.items()
-    }
+        team.players = _load_players(meta_data.find("Players"), team)
+        teams_meta_data.update({ground: team})
 
     data_format_specifications = _load_data_format_specifications(
         root.find("DataFormatSpecifications")
@@ -160,9 +172,11 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         for channel in sensor.channels
     }
 
-    _all_players = []  # TODO improve this loop
-    for key, value in teams_meta_data.items():
-        _all_players = _all_players + value.players
+    _all_players = [
+        player
+        for key, value in teams_meta_data.items()
+        for player in value.players
+    ]
 
     _player_map = {player.player_id: player for player in _all_players}
 
@@ -178,11 +192,11 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     ]
 
     frame_rate = int(meta_data.find("GlobalConfig").find("FrameRate"))
-    periods = _load_periods(meta_data.find("GlobalConfig"), frame_rate)
     pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
+    periods = _load_periods(meta_data.find("GlobalConfig"), frame_rate)
 
     return EPTSMetaData(
-        teams=[teams_meta_data["home"], teams_meta_data["away"]],
+        teams=[team for team in teams_meta_data.values()],
         periods=periods,
         pitch_dimensions=pitch_dimensions,
         data_format_specifications=data_format_specifications,
@@ -190,6 +204,6 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         frame_rate=frame_rate,
         sensors=sensors,
         score=score,
-        orientation=[],
-        flags=[],
+        orientation=None,
+        flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
     )

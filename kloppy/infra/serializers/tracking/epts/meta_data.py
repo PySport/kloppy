@@ -10,6 +10,8 @@ from kloppy.domain import (
     DatasetFlag,
     AttackingDirection,
     Orientation,
+    Position,
+    Point,
 )
 from kloppy.infra.utils import Readable
 
@@ -76,14 +78,28 @@ def _load_players(players_elm, team: Team) -> List[Player]:
             name=str(player_elm.find("Name")),
             first_name="",
             last_name="",
-            position=[],
+            position=_load_position_data(
+                player_elm.find("ProviderPlayerParameters")
+            ),
             attributes=_load_provider_parameters(
-                players_elm.find("ProviderPlayerParameters")
+                player_elm.find("ProviderPlayerParameters")
             ),
         )
         for player_elm in players_elm.iterchildren(tag="Player")
         if player_elm.attrib["teamId"] == team.team_id
     ]
+
+
+def _load_position_data(parent_elm) -> Position:
+    player_provider_parameters = _load_provider_parameters(parent_elm)
+    return Position(
+        position_id=player_provider_parameters["position_index"],
+        name=player_provider_parameters["position_type"],
+        coordinates=Point(
+            player_provider_parameters["position_x"],
+            player_provider_parameters["position_y"],
+        ),
+    )
 
 
 def _load_data_format_specifications(

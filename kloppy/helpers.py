@@ -132,9 +132,12 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         ball_x=frame.ball_position.x if frame.ball_position else None,
         ball_y=frame.ball_position.y if frame.ball_position else None,
     )
-    for player_id, position in frame.players_coordinates.items():
+    for player, position in frame.players_coordinates.items():
         row.update(
-            {f"{player_id}_x": position.x, f"{player_id}_y": position.y,}
+            {
+                f"{player.player_id}_x": position.x,
+                f"{player.player_id}_y": position.y,
+            }
         )
 
     return row

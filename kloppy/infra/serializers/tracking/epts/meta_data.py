@@ -211,8 +211,25 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
     pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
     periods = _load_periods(meta_data.find("GlobalConfig"), frame_rate)
 
+    if periods:
+        start_attacking_direction = periods[0].attacking_direction
+    else:
+        start_attacking_direction = None
+
+    orientation = (
+        (
+            Orientation.FIXED_HOME_AWAY
+            if start_attacking_direction == AttackingDirection.HOME_AWAY
+            else Orientation.FIXED_AWAY_HOME
+        )
+        if start_attacking_direction != AttackingDirection.NOT_SET
+        else None
+    )
+
+    meta_data.orientation = orientation
+
     return EPTSMetaData(
-        teams=[team for team in teams_meta_data.values()],
+        teams=list(teams_meta_data.values()),
         periods=periods,
         pitch_dimensions=pitch_dimensions,
         data_format_specifications=data_format_specifications,

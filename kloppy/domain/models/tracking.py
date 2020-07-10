@@ -1,32 +1,15 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from .common import Dataset, DataRecord, Ground
+from .common import Dataset, DataRecord, Ground, Player
 from .pitch import Point
 
 
 @dataclass
 class Frame(DataRecord):
     frame_id: int
-    players_coordinates: Dict[str, Point]
-    players_ground: Dict[str, Ground]
+    players_coordinates: Dict[Player, Point]
     ball_position: Point
-
-    @property
-    def home_team_players_coordinates(self):
-        return {
-            player_id: coordinates
-            for (player_id, coordinates) in self.players_coordinates.items()
-            if self.players_ground[player_id] == Ground.HOME
-        }
-
-    @property
-    def away_team_players_coordinates(self):
-        return {
-            player_id: coordinates
-            for (player_id, coordinates) in self.players_coordinates.items()
-            if self.players_ground[player_id] == Ground.AWAY
-        }
 
 
 @dataclass

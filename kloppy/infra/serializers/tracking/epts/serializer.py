@@ -39,15 +39,13 @@ class EPTSSerializer(TrackingDataSerializer):
             period = None
 
         players_coordinates = {}
-        players_ground = {}
         for team in meta_data.teams:
             for player in team.players:
                 if f"player_{player.player_id}_x" in row:
-                    players_coordinates[player.player_id] = Point(
+                    players_coordinates[player] = Point(
                         x=row[f"player_{player.player_id}_x"],
                         y=row[f"player_{player.player_id}_y"],
                     )
-                    players_ground[player.player_id] = player.team.ground
 
         return Frame(
             frame_id=row["frame_id"],
@@ -56,7 +54,6 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_coordinates=players_coordinates,
-            players_ground=players_ground,
             ball_position=Point(x=row["ball_x"], y=row["ball_y"]),
         )
 
@@ -127,29 +124,6 @@ class EPTSSerializer(TrackingDataSerializer):
                     limit=limit,
                 )
             ]
-
-        periods = meta_data.periods
-
-        if periods:
-            start_attacking_direction = periods[0].attacking_direction
-        elif frames:
-            start_attacking_direction = attacking_direction_from_frame(
-                frames[0]
-            )
-        else:
-            start_attacking_direction = None
-
-        orientation = (
-            (
-                Orientation.FIXED_HOME_AWAY
-                if start_attacking_direction == AttackingDirection.HOME_AWAY
-                else Orientation.FIXED_AWAY_HOME
-            )
-            if start_attacking_direction != AttackingDirection.NOT_SET
-            else None
-        )
-
-        meta_data.orientation = orientation
 
         return TrackingDataset(records=frames, meta_data=meta_data)
 

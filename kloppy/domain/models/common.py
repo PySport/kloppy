@@ -18,14 +18,14 @@ class Ground(Enum):
     REFEREE = "referee"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Position:
     position_id: str
     name: str
     coordinates: Point
 
 
-@dataclass
+@dataclass(frozen=True)
 class Player:
     player_id: str
     team: "Team"
@@ -34,7 +34,7 @@ class Player:
     last_name: str
     jersey_no: str
     position: Position
-    attributes: Optional[Dict] = field(default_factory=dict)
+    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
 
 @dataclass
@@ -46,6 +46,14 @@ class Team:
 
     def __str__(self):
         return self.team_id
+
+    def __hash__(self):
+        return hash(self.team_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Team):
+            return False
+        return self.team_id == other.team_id
 
 
 class BallState(Enum):

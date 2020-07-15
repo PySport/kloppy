@@ -91,6 +91,9 @@ def _load_players(players_elm, team: Team) -> List[Player]:
 
 
 def _load_position_data(parent_elm) -> Position:
+    # TODO: _load_provider_parameters is called twice to set position data
+    # and then again to set the attributes. Also, data in position should not
+    # be duplicated in attributes either.
     player_provider_parameters = _load_provider_parameters(parent_elm)
     return Position(
         position_id=player_provider_parameters["position_index"],

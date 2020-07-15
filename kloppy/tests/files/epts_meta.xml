@@ -54,8 +54,20 @@
 				<ShirtNumber>22</ShirtNumber>
 				<ProviderPlayerParameters>
 					<ProviderParameter>
-						<Name>position</Name>
+						<Name>position_type</Name>
 						<Value>Defender</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_index</Name>
+						<Value>1</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_x</Name>
+						<Value>0.11</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_y</Name>
+						<Value>0.65</Value>
 					</ProviderParameter>
 				</ProviderPlayerParameters>
 			</Player>
@@ -64,8 +76,20 @@
 				<ShirtNumber>10</ShirtNumber>
 				<ProviderPlayerParameters>
 					<ProviderParameter>
-						<Name>position</Name>
+						<Name>position_type</Name>
 						<Value>Midfielder</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_index</Name>
+						<Value>2</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_x</Name>
+						<Value>0.25</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_y</Name>
+						<Value>0.9</Value>
 					</ProviderParameter>
 				</ProviderPlayerParameters>
 			</Player>
@@ -74,8 +98,20 @@
 				<ShirtNumber>7</ShirtNumber>
 				<ProviderPlayerParameters>
 					<ProviderParameter>
-						<Name>position</Name>
-						<Value>Forward</Value>
+						<Name>position_type</Name>
+						<Value>Stricker</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_index</Name>
+						<Value>3</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_x</Name>
+						<Value>0.39</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_y</Name>
+						<Value>0.5</Value>
 					</ProviderParameter>
 				</ProviderPlayerParameters>
 			</Player>
@@ -84,8 +120,20 @@
 				<ShirtNumber>14</ShirtNumber>
 				<ProviderPlayerParameters>
 					<ProviderParameter>
-						<Name>position</Name>
+						<Name>position_type</Name>
 						<Value>Goalkeeper</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_index</Name>
+						<Value>0</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_x</Name>
+						<Value>0.02</Value>
+					</ProviderParameter>
+					<ProviderParameter>
+						<Name>position_y</Name>
+						<Value>0.5</Value>
 					</ProviderParameter>
 				</ProviderPlayerParameters>
 			</Player>

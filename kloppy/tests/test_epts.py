@@ -67,8 +67,8 @@ class TestEPTSTracking:
             )
             data_frame = DataFrame.from_records(records)
 
-        assert "player_home_22_max_heartbeat" in data_frame.columns
-        assert "player_home_22_x" in data_frame.columns
+        assert "player_1_max_heartbeat" in data_frame.columns
+        assert "player_1_x" in data_frame.columns
 
     def test_skip_sensors(self):
         base_dir = os.path.dirname(__file__)
@@ -84,8 +84,8 @@ class TestEPTSTracking:
             )
             data_frame = DataFrame.from_records(records)
 
-        assert "player_home_22_max_heartbeat" in data_frame.columns
-        assert "player_home_22_x" not in data_frame.columns
+        assert "player_1_max_heartbeat" in data_frame.columns
+        assert "player_1_x" not in data_frame.columns
 
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
@@ -100,12 +100,14 @@ class TestEPTSTracking:
                 inputs={"meta_data": meta_data, "raw_data": raw_data}
             )
 
-        assert len(dataset.records) == 2
-        assert len(dataset.periods) == 1
-        assert dataset.orientation is None
+        first_player = next(iter(dataset.records[0].players_coordinates))
 
-        assert dataset.records[0].home_team_player_positions["22"] == Point(
+        assert len(dataset.records) == 2
+        assert len(dataset.meta_data.periods) == 1
+        assert dataset.meta_data.orientation is None
+
+        assert dataset.records[0].players_coordinates[first_player] == Point(
             x=-769, y=-2013
         )
-        assert dataset.records[0].away_team_player_positions == {}
+
         assert dataset.records[0].ball_position == Point(x=-2656, y=367)

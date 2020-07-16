@@ -17,6 +17,9 @@ class Ground(Enum):
     AWAY = "away"
     REFEREE = "referee"
 
+    def __str__(self):
+        return self.value
+
 
 @dataclass(frozen=True)
 class Position:

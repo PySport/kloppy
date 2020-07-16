@@ -13,6 +13,9 @@ from kloppy.domain import (
     PitchDimensions,
     Dimension,
     DatasetFlag,
+    MetaData,
+    Team,
+    Ground,
 )
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -23,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 class MetricaTrackingSerializer(TrackingDataSerializer):
     __PartialFrame = namedtuple(
-        "PartialFrame", "team period frame_id player_positions ball_position"
+        "PartialFrame",
+        "team period frame_id players_coordinates ball_coordinates",
     )
 
     @staticmethod
@@ -80,8 +84,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                         team=team,
                         period=period,
                         frame_id=frame_id,
-                        player_positions={
-                            player_no: Point(
+                        players_coordinates={
+                            f"{team.lower()}_{player_no}": Point(
                                 x=float(columns[3 + i * 2]),
                                 y=1 - float(columns[3 + i * 2 + 1]),
                             )
@@ -90,7 +94,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                             )
                             if columns[3 + i * 2] != "NaN"
                         },
-                        ball_position=Point(
+                        ball_coordinates=Point(
                             x=float(columns[-2]), y=1 - float(columns[-1])
                         )
                         if columns[-2] != "NaN"
@@ -109,12 +113,12 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 f"away: {away_partial_frame.frame_id}"
             )
         if (
-            home_partial_frame.ball_position
-            != away_partial_frame.ball_position
+            home_partial_frame.ball_coordinates
+            != away_partial_frame.ball_coordinates
         ):
             raise ValueError(
-                f"ball position mismatch: home {home_partial_frame.ball_position}, "
-                f"away: {away_partial_frame.ball_position}. Do the files belong to the"
+                f"ball position mismatch: home {home_partial_frame.ball_coordinates}, "
+                f"away: {away_partial_frame.ball_coordinates}. Do the files belong to the"
                 f" same game? frame_id: {home_partial_frame.frame_id}"
             )
         if home_partial_frame.team != "Home":
@@ -175,6 +179,9 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         # consider reading this from data
         frame_rate = 25
 
+        home_team = Team(team_id="home", name="home", ground=Ground.HOME)
+        away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
+
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
                 inputs["raw_data_home"], sample_rate, frame_rate
@@ -202,12 +209,16 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
 
+                players_coordinates = {
+                    **home_partial_frame.players_coordinates,
+                    **away_partial_frame.players_coordinates,
+                }
+
                 frame = Frame(
                     frame_id=frame_id,
                     timestamp=frame_id / frame_rate - period.start_timestamp,
-                    ball_position=home_partial_frame.ball_position,
-                    home_team_player_positions=home_partial_frame.player_positions,
-                    away_team_player_positions=away_partial_frame.player_positions,
+                    ball_coordinates=home_partial_frame.ball_coordinates,
+                    players_coordinates=players_coordinates,
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,
@@ -235,16 +246,19 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             else Orientation.FIXED_AWAY_HOME
         )
 
-        return TrackingDataset(
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
-            frame_rate=frame_rate,
-            orientation=orientation,
+        meta_data = MetaData(
+            teams=[home_team, away_team],
+            periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 1), y_dim=Dimension(0, 1)
             ),
-            periods=periods,
-            records=frames,
+            score=None,
+            frame_rate=frame_rate,
+            orientation=orientation,
+            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )
+
+        return TrackingDataset(records=frames, meta_data=meta_data)
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

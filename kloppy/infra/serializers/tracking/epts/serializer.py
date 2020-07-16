@@ -9,7 +9,6 @@ from kloppy.domain import (
     Point,
     Team,
     Orientation,
-    attacking_direction_from_frame,
 )
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -54,7 +53,7 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_coordinates=players_coordinates,
-            ball_position=Point(x=row["ball_x"], y=row["ball_y"]),
+            ball_coordinates=Point(x=row["ball_x"], y=row["ball_y"]),
         )
 
     def deserialize(

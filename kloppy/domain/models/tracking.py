@@ -9,7 +9,7 @@ from .pitch import Point
 class Frame(DataRecord):
     frame_id: int
     players_coordinates: Dict[Player, Point]
-    ball_position: Point
+    ball_coordinates: Point
 
 
 @dataclass

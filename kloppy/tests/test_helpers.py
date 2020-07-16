@@ -21,6 +21,9 @@ from kloppy.domain import (
     Frame,
     EventDataset,
     PassEvent,
+    MetaData,
+    Team,
+    Ground,
 )
 
 
@@ -32,7 +35,7 @@ class TestHelpers:
             f"{base_dir}/files/metrica_away.csv",
         )
         assert len(dataset.records) == 6
-        assert len(dataset.periods) == 2
+        assert len(dataset.meta_data.periods) == 2
 
     def test_load_tracab_tracking_data(self):
         base_dir = os.path.dirname(__file__)
@@ -41,9 +44,13 @@ class TestHelpers:
             f"{base_dir}/files/tracab_raw.dat",
         )
         assert len(dataset.records) == 5  # only alive=True
-        assert len(dataset.periods) == 2
+        assert len(dataset.meta_data.periods) == 2
 
     def _get_tracking_dataset(self):
+        home_team = Team(team_id="home", name="home", ground=Ground.HOME)
+        away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
+        teams = [home_team, away_team]
+
         periods = [
             Period(
                 id=1,
@@ -58,13 +65,20 @@ class TestHelpers:
                 attacking_direction=AttackingDirection.AWAY_HOME,
             ),
         ]
-        tracking_data = TrackingDataset(
+        meta_data = MetaData(
             flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(-50, 50)
             ),
             orientation=Orientation.HOME_TEAM,
             frame_rate=25,
+            periods=periods,
+            teams=teams,
+            score=None,
+        )
+
+        tracking_data = TrackingDataset(
+            meta_data=meta_data,
             records=[
                 Frame(
                     frame_id=1,
@@ -72,9 +86,8 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    away_team_player_positions={},
-                    home_team_player_positions={},
-                    ball_position=Point(x=100, y=-50),
+                    players_coordinates={},
+                    ball_coordinates=Point(x=100, y=-50),
                 ),
                 Frame(
                     frame_id=2,
@@ -82,12 +95,10 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    away_team_player_positions={"1": Point(x=10, y=20)},
-                    home_team_player_positions={"1": Point(x=15, y=35)},
-                    ball_position=Point(x=0, y=50),
+                    players_coordinates={"home_1": Point(x=15, y=35)},
+                    ball_coordinates=Point(x=0, y=50),
                 ),
             ],
-            periods=periods,
         )
         return tracking_data
 
@@ -101,8 +112,12 @@ class TestHelpers:
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
 
-        assert transformed_dataset.frames[0].ball_position == Point(x=0, y=1)
-        assert transformed_dataset.frames[1].ball_position == Point(x=1, y=0)
+        assert transformed_dataset.frames[0].ball_coordinates == Point(
+            x=0, y=1
+        )
+        assert transformed_dataset.frames[1].ball_coordinates == Point(
+            x=1, y=0
+        )
 
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
@@ -117,10 +132,8 @@ class TestHelpers:
                 "ball_owning_team": {0: None, 1: None},
                 "ball_x": {0: 100, 1: 0},
                 "ball_y": {0: -50, 1: 50},
-                "player_home_1_x": {0: None, 1: 15.0},
-                "player_home_1_y": {0: None, 1: 35.0},
-                "player_away_1_x": {0: None, 1: 10.0},
-                "player_away_1_y": {0: None, 1: 20.0},
+                "home_1_x": {0: None, 1: 15.0},
+                "home_1_y": {0: None, 1: 35.0},
             }
         )
 

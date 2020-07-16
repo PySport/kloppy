@@ -179,8 +179,10 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         # consider reading this from data
         frame_rate = 25
 
+        # TODO: also used in Tracab, extract to a method
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
+        teams = [home_team, away_team]
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
@@ -247,7 +249,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         )
 
         meta_data = MetaData(
-            teams=[home_team, away_team],
+            teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 1), y_dim=Dimension(0, 1)

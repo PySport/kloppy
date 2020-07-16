@@ -21,6 +21,7 @@ from .domain import (
     CarryEvent,
     PassResult,
     EventType,
+    Player,
 )
 
 
@@ -129,16 +130,22 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         ball_owning_team=frame.ball_owning_team.value
         if frame.ball_owning_team
         else None,
-        ball_x=frame.ball_position.x if frame.ball_position else None,
-        ball_y=frame.ball_position.y if frame.ball_position else None,
+        ball_x=frame.ball_coordinates.x if frame.ball_coordinates else None,
+        ball_y=frame.ball_coordinates.y if frame.ball_coordinates else None,
     )
-    for player, position in frame.players_coordinates.items():
-        row.update(
-            {
-                f"{player.player_id}_x": position.x,
-                f"{player.player_id}_y": position.y,
-            }
-        )
+    for player, coordinates in frame.players_coordinates.items():
+
+        if isinstance(player, Player):
+            row.update(
+                {
+                    f"{player.player_id}_x": coordinates.x,
+                    f"{player.player_id}_y": coordinates.y,
+                }
+            )
+        else:
+            row.update(
+                {f"{player}_x": coordinates.x, f"{player}_y": coordinates.y,}
+            )
 
     return row
 

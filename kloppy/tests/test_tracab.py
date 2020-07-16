@@ -8,6 +8,7 @@ from kloppy.domain import (
     Point,
     BallState,
     Team,
+    Ground,
 )
 
 
@@ -29,36 +30,40 @@ class TestTracabTracking:
             )
 
         assert len(dataset.records) == 6
-        assert len(dataset.periods) == 2
-        assert dataset.orientation == Orientation.FIXED_HOME_AWAY
-        assert dataset.periods[0] == Period(
+        assert len(dataset.meta_data.periods) == 2
+        assert dataset.meta_data.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.meta_data.periods[0] == Period(
             id=1,
             start_timestamp=4.0,
             end_timestamp=4.08,
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
-        assert dataset.periods[1] == Period(
+        assert dataset.meta_data.periods[1] == Period(
             id=2,
             start_timestamp=8.0,
             end_timestamp=8.08,
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
-        assert dataset.records[0].home_team_player_positions["19"] == Point(
+        assert dataset.records[0].players_coordinates["home_19"] == Point(
             x=-1234.0, y=-294.0
         )
-        assert dataset.records[0].away_team_player_positions["19"] == Point(
+        assert dataset.records[0].players_coordinates["away_19"] == Point(
             x=8889, y=-666
         )
-        assert dataset.records[0].ball_position == Point(x=-27, y=25)
+        assert dataset.records[0].ball_coordinates == Point(x=-27, y=25)
         assert dataset.records[0].ball_state == BallState.ALIVE
-        assert dataset.records[0].ball_owning_team == Team.HOME
+        assert dataset.records[0].ball_owning_team == Team(
+            team_id="home", name="home", ground=Ground.HOME
+        )
 
-        assert dataset.records[1].ball_owning_team == Team.AWAY
+        assert dataset.records[1].ball_owning_team == Team(
+            team_id="away", name="away", ground=Ground.AWAY
+        )
 
         assert dataset.records[2].ball_state == BallState.DEAD
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert "1337" not in dataset.records[0].away_team_player_positions
-        assert "1337" in dataset.records[3].away_team_player_positions
+        assert "away_1337" not in dataset.records[0].players_coordinates
+        assert "away_1337" in dataset.records[3].players_coordinates

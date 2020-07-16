@@ -12,6 +12,7 @@ from kloppy.domain import (
     DatasetFlag,
     Dataset,
     EventDataset,
+    MetaData,
 )
 from kloppy.domain.models.event import Event
 
@@ -50,6 +51,7 @@ class Transformer:
         self,
         ball_owning_team: Team,
         attacking_direction: AttackingDirection,
+        meta_data: MetaData,
         action_executing_team: Team = None,
     ) -> bool:
         if self._from_orientation == self._to_orientation:
@@ -59,19 +61,22 @@ class Transformer:
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction,
                 action_executing_team=action_executing_team,
+                meta_data=meta_data,
             )
             orientation_factor_to = self._to_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction,
                 action_executing_team=action_executing_team,
+                meta_data=meta_data,
             )
             flip = orientation_factor_from != orientation_factor_to
         return flip
 
-    def transform_frame(self, frame: Frame) -> Frame:
+    def transform_frame(self, frame: Frame, meta_data: MetaData) -> Frame:
         flip = self.__needs_flip(
             ball_owning_team=frame.ball_owning_team,
             attacking_direction=frame.period.attacking_direction,
+            meta_data=meta_data,
         )
 
         return Frame(
@@ -82,14 +87,12 @@ class Transformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_position=self.transform_point(frame.ball_position, flip),
-            home_team_player_positions={
-                jersey_no: self.transform_point(point, flip)
-                for jersey_no, point in frame.home_team_player_positions.items()
-            },
-            away_team_player_positions={
-                jersey_no: self.transform_point(point, flip)
-                for jersey_no, point in frame.away_team_player_positions.items()
+            ball_coordinates=self.transform_point(
+                frame.ball_coordinates, flip
+            ),
+            players_coordinates={
+                key: self.transform_point(point, flip)
+                for key, point in frame.players_coordinates.items()
             },
         )
 
@@ -122,33 +125,33 @@ class Transformer:
         if not to_pitch_dimensions and not to_orientation:
             return dataset
         elif not to_orientation:
-            to_orientation = dataset.orientation
+            to_orientation = dataset.meta_data.orientation
         elif not to_pitch_dimensions:
-            to_pitch_dimensions = dataset.pitch_dimensions
+            to_pitch_dimensions = dataset.meta_data.pitch_dimensions
 
         if to_orientation == Orientation.BALL_OWNING_TEAM:
-            if not dataset.flags & DatasetFlag.BALL_OWNING_TEAM:
+            if not dataset.meta_data.flags & DatasetFlag.BALL_OWNING_TEAM:
                 raise ValueError(
                     "Cannot transform to BALL_OWNING_TEAM orientation when dataset doesn't contain "
                     "ball owning team data"
                 )
 
         transformer = cls(
-            from_pitch_dimensions=dataset.pitch_dimensions,
-            from_orientation=dataset.orientation,
+            from_pitch_dimensions=dataset.meta_data.pitch_dimensions,
+            from_orientation=dataset.meta_data.orientation,
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation,
         )
         if isinstance(dataset, TrackingDataset):
-            frames = list(map(transformer.transform_frame, dataset.records))
+            frames = [
+                transformer.transform_frame(record, dataset.meta_data)
+                for record in dataset.records
+            ]
+            dataset.meta_data.pitch_dimensions = to_pitch_dimensions
+            dataset.meta_data.to_orientation = to_orientation
 
             return TrackingDataset(
-                flags=dataset.flags,
-                frame_rate=dataset.frame_rate,
-                periods=dataset.periods,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-                records=frames,
+                meta_data=dataset.meta_data, records=frames,
             )
         elif isinstance(dataset, EventDataset):
             events = list(map(transformer.transform_event, dataset.records))

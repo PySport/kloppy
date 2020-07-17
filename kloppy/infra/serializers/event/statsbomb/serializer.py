@@ -22,6 +22,8 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     EventType,
+    MetaData,
+    Ground,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
@@ -264,15 +266,28 @@ class StatsBombSerializer(EventDataSerializer):
                 for event_type in options.get("event_types", [])
             ]
 
+            teams = [
+                Team(
+                    team_id=home_lineup["team_id"],
+                    name=home_lineup["team_name"],
+                    ground=Ground.HOME,
+                ),
+                Team(
+                    team_id=away_lineup["team_id"],
+                    name=away_lineup["team_name"],
+                    ground=Ground.AWAY,
+                ),
+            ]
+
             periods = []
             period = None
             events = []
             for raw_event in raw_events:
                 if raw_event["team"]["id"] == home_lineup["team_id"]:
-                    team = Team.HOME
+                    team = teams[0]
                     current_team_map = home_player_map
                 elif raw_event["team"]["id"] == away_lineup["team_id"]:
-                    team = Team.AWAY
+                    team = teams[1]
                     current_team_map = away_player_map
                 else:
                     raise Exception(
@@ -283,12 +298,12 @@ class StatsBombSerializer(EventDataSerializer):
                     raw_event["possession_team"]["id"]
                     == home_lineup["team_id"]
                 ):
-                    possession_team = Team.HOME
+                    possession_team = teams[0]
                 elif (
                     raw_event["possession_team"]["id"]
                     == away_lineup["team_id"]
                 ):
-                    possession_team = Team.AWAY
+                    possession_team = teams[1]
                 else:
                     raise Exception(
                         f"Unknown possession_team_id: {raw_event['possession_team']}"
@@ -400,15 +415,19 @@ class StatsBombSerializer(EventDataSerializer):
                 ):
                     events.append(event)
 
-        return EventDataset(
-            flags=DatasetFlag.BALL_OWNING_TEAM,
-            orientation=Orientation.ACTION_EXECUTING_TEAM,
+        meta_data = MetaData(
+            teams=teams,
+            periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 120), y_dim=Dimension(0, 80)
             ),
-            periods=periods,
-            records=events,
+            frame_rate=None,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM,
+            score=None,
         )
+
+        return EventDataset(meta_data=meta_data, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

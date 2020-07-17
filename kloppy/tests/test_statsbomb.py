@@ -24,15 +24,17 @@ class TestStatsbomb:
             )
 
         assert len(dataset.events) == 4002
-        assert len(dataset.periods) == 2
-        assert dataset.orientation == Orientation.ACTION_EXECUTING_TEAM
-        assert dataset.periods[0] == Period(
+        assert len(dataset.meta_data.periods) == 2
+        assert (
+            dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
+        assert dataset.meta_data.periods[0] == Period(
             id=1,
             start_timestamp=0.0,
             end_timestamp=2705.267,
             attacking_direction=AttackingDirection.NOT_SET,
         )
-        assert dataset.periods[1] == Period(
+        assert dataset.meta_data.periods[1] == Period(
             id=2,
             start_timestamp=2705.268,
             end_timestamp=5557.321,

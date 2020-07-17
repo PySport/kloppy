@@ -19,17 +19,19 @@ class TestOpta:
             )
 
         assert len(dataset.events) == 17
-        assert len(dataset.periods) == 2
-        assert dataset.orientation == Orientation.ACTION_EXECUTING_TEAM
-        assert dataset.periods[0] == Period(
+        assert len(dataset.meta_data.periods) == 2
+        assert (
+            dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
+        assert dataset.meta_data.periods[0] == Period(
             id=1,
-            start_timestamp=1537707733.608,
-            end_timestamp=1537710501.222,
+            start_timestamp=1537725733.608,
+            end_timestamp=1537728501.222,
             attacking_direction=AttackingDirection.NOT_SET,
         )
-        assert dataset.periods[1] == Period(
+        assert dataset.meta_data.periods[1] == Period(
             id=2,
-            start_timestamp=1537711528.873,
-            end_timestamp=1537714537.788,
+            start_timestamp=1537729528.873,
+            end_timestamp=1537732537.788,
             attacking_direction=AttackingDirection.NOT_SET,
         )

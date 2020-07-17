@@ -23,6 +23,9 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     EventType,
+    Ground,
+    Score,
+    MetaData,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
@@ -173,6 +176,8 @@ class OptaSerializer(EventDataSerializer):
             home_player_map = {}
             home_team_id = None
             away_team_id = None
+            home_score = None
+            away_score = None
             for team_elm in team_elms:
                 player_map = {
                     player_elm.attrib["PlayerRef"].lstrip(
@@ -187,11 +192,19 @@ class OptaSerializer(EventDataSerializer):
                 if team_elm.attrib["Side"] == "Home":
                     home_player_map = player_map
                     home_team_id = team_id
+                    home_score = team_elm.attrib["Score"]
                 elif team_elm.attrib["Side"] == "Away":
                     away_player_map = player_map
                     away_team_id = team_id
+                    away_score = team_elm.attrib["Score"]
                 else:
                     raise Exception(f"Unknown side: {team_elm.attrib['Side']}")
+
+            score = Score(home=home_score, away=away_score)
+            teams = [
+                Team(team_id=home_team_id, name="home", ground=Ground.HOME),
+                Team(team_id=away_team_id, name="away", ground=Ground.AWAY),
+            ]
 
             if not away_player_map or not home_player_map:
                 raise Exception("LineUp incomplete")
@@ -232,10 +245,10 @@ class OptaSerializer(EventDataSerializer):
                         continue
 
                     if event_elm.attrib["team_id"] == home_team_id:
-                        team = Team.HOME
+                        team = teams[0]
                         current_team_map = home_player_map
                     elif event_elm.attrib["team_id"] == away_team_id:
-                        team = Team.AWAY
+                        team = teams[1]
                         current_team_map = away_player_map
                     else:
                         raise Exception(
@@ -312,15 +325,19 @@ class OptaSerializer(EventDataSerializer):
                     ):
                         events.append(event)
 
-        return EventDataset(
-            flags=DatasetFlag.BALL_OWNING_TEAM,
-            orientation=Orientation.ACTION_EXECUTING_TEAM,
+        meta_data = MetaData(
+            teams=teams,
+            periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
             ),
-            periods=periods,
-            records=events,
+            score=score,
+            frame_rate=None,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM,
         )
+
+        return EventDataset(meta_data=meta_data, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

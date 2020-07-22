@@ -1,6 +1,6 @@
 from typing import List
 
-from kloppy.domain import AttackingDirection, Frame, Ground
+from kloppy.domain import AttackingDirection, Frame
 
 from .transformers import Transformer
 
@@ -18,15 +18,15 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
     avg_x_home = avg(
         [
             coordinates.x
-            for player, coordinates in frame.players_coordinates.items()
-            if player.team.ground == Ground.HOME
+            for key, coordinates in frame.players_coordinates.items()
+            if "home" in key
         ]
     )
     avg_x_away = avg(
         [
             coordinates.x
-            for player, coordinates in frame.players_coordinates.items()
-            if player.team.ground == Ground.AWAY
+            for key, coordinates in frame.players_coordinates.items()
+            if "away" in key
         ]
     )
 

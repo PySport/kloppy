@@ -90,7 +90,6 @@ class Orientation(Enum):
         attacking_direction: AttackingDirection,
         ball_owning_team: Team,
         action_executing_team: Team,
-        meta_data: "MetaData",
     ):
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
@@ -111,18 +110,18 @@ class Orientation(Enum):
             else:
                 raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team.team_id == MetaData.teams[0].team_id:
+            if ball_owning_team.ground == Ground.HOME:
                 return -1
-            elif ball_owning_team.team_id == MetaData.teams[1].team_id:
+            elif ball_owning_team.ground == Ground.AWAY:
                 return 1
             else:
                 raise Exception(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
-            if action_executing_team.team_id == MetaData.teams[0].team_id:
+            if action_executing_team.ground == Ground.HOME:
                 return -1
-            elif action_executing_team.team_id == MetaData.teams[1].team_id:
+            elif action_executing_team.ground == Ground.AWAY:
                 return 1
             else:
                 raise Exception(

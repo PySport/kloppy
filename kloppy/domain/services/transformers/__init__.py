@@ -61,13 +61,11 @@ class Transformer:
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction,
                 action_executing_team=action_executing_team,
-                meta_data=meta_data,
             )
             orientation_factor_to = self._to_orientation.get_orientation_factor(
                 ball_owning_team=ball_owning_team,
                 attacking_direction=attacking_direction,
                 action_executing_team=action_executing_team,
-                meta_data=meta_data,
             )
             flip = orientation_factor_from != orientation_factor_to
         return flip

@@ -41,19 +41,29 @@ class TestMetricaTracking:
         )
 
         # make sure data is loaded correctly (including flip y-axis)
-        assert dataset.records[0].players_coordinates["home_11"] == Point(
+        home_player = dataset.meta_data.teams[0].players[0]
+        assert dataset.records[0].players_coordinates[home_player] == Point(
             x=0.00082, y=1 - 0.48238
         )
-        assert dataset.records[0].players_coordinates["away_25"] == Point(
+
+        away_player = dataset.meta_data.teams[1].players[0]
+        assert dataset.records[0].players_coordinates[away_player] == Point(
             x=0.90509, y=1 - 0.47462
         )
+
         assert dataset.records[0].ball_coordinates == Point(
             x=0.45472, y=1 - 0.38709
         )
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert "home_14" not in dataset.records[0].players_coordinates
-        assert "home_14" in dataset.records[3].players_coordinates
+        assert "home_14" not in [
+            player.player_id
+            for player in dataset.records[0].players_coordinates.keys()
+        ]
+        assert "home_14" in [
+            player.player_id
+            for player in dataset.records[3].players_coordinates.keys()
+        ]
 
 
 #

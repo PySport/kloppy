@@ -16,6 +16,7 @@ from kloppy.domain import (
     MetaData,
     Team,
     Ground,
+    Player,
 )
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -42,7 +43,11 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             )
 
     def __create_iterator(
-        self, data: Readable, sample_rate: float, frame_rate: int
+        self,
+        data: Readable,
+        sample_rate: float,
+        frame_rate: int,
+        ground: Ground,
     ) -> Iterator:
         """
         Notes:
@@ -59,9 +64,19 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             line = line.strip().decode("ascii")
             columns = line.split(",")
             if i == 0:
-                team = columns[3]
+                team_name = columns[3]
+                team = Team(team_id=str(ground), name=team_name, ground=ground)
             elif i == 1:
                 player_jersey_numbers = columns[3:-2:2]
+                players = [
+                    Player(
+                        player_id=f"{team}_{jersey_number}",
+                        jersey_no=jersey_number,
+                        team=team,
+                    )
+                    for jersey_number in player_jersey_numbers
+                ]
+                team.players = players
             elif i == 2:
                 # consider doing some validation on the columns
                 pass
@@ -85,13 +100,11 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                         period=period,
                         frame_id=frame_id,
                         players_coordinates={
-                            f"{team.lower()}_{player_no}": Point(
+                            player: Point(
                                 x=float(columns[3 + i * 2]),
                                 y=1 - float(columns[3 + i * 2 + 1]),
                             )
-                            for i, player_no in enumerate(
-                                player_jersey_numbers
-                            )
+                            for i, player in enumerate(players)
                             if columns[3 + i * 2] != "NaN"
                         },
                         ball_coordinates=Point(
@@ -121,9 +134,9 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 f"away: {away_partial_frame.ball_coordinates}. Do the files belong to the"
                 f" same game? frame_id: {home_partial_frame.frame_id}"
             )
-        if home_partial_frame.team != "Home":
+        if home_partial_frame.team.ground != Ground.HOME:
             raise ValueError("raw_data_home contains away team data")
-        if away_partial_frame.team != "Away":
+        if away_partial_frame.team.ground != Ground.AWAY:
             raise ValueError("raw_data_away contains home team data")
 
     def deserialize(
@@ -179,17 +192,12 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         # consider reading this from data
         frame_rate = 25
 
-        # TODO: also used in Tracab, extract to a method
-        home_team = Team(team_id="home", name="home", ground=Ground.HOME)
-        away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
-        teams = [home_team, away_team]
-
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
-                inputs["raw_data_home"], sample_rate, frame_rate
+                inputs["raw_data_home"], sample_rate, frame_rate, Ground.HOME
             )
             away_iterator = self.__create_iterator(
-                inputs["raw_data_away"], sample_rate, frame_rate
+                inputs["raw_data_away"], sample_rate, frame_rate, Ground.AWAY
             )
 
             partial_frames = zip(home_iterator, away_iterator)
@@ -237,6 +245,9 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                             frame
                         )
                     )
+
+                if n == 0:
+                    teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
                 if limit and n >= limit:

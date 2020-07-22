@@ -32,11 +32,11 @@ class Position:
 class Player:
     player_id: str
     team: "Team"
-    name: str
-    first_name: str
-    last_name: str
     jersey_no: str
-    position: Position
+    name: str = None
+    first_name: str = None
+    last_name: str = None
+    position: Position = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
 

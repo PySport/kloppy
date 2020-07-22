@@ -76,8 +76,6 @@ def _load_players(players_elm, team: Team) -> List[Player]:
             jersey_no=str(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
-            first_name="",
-            last_name="",
             position=_load_position_data(
                 player_elm.find("ProviderPlayerParameters")
             ),

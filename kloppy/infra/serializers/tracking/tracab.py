@@ -18,6 +18,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
     MetaData,
     Ground,
+    Player,
 )
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -34,18 +35,34 @@ class TRACABSerializer(TrackingDataSerializer):
 
         players_coordinates = {}
 
-        for player in players.split(";")[:-1]:
-            team_id, target_id, jersey_no, x, y, speed = player.split(",")
+        for player_data in players.split(";")[:-1]:
+            team_id, target_id, jersey_no, x, y, speed = player_data.split(",")
             team_id = int(team_id)
 
             if team_id == 1:
-                players_coordinates[f"home_{jersey_no}"] = Point(
-                    float(x), float(y)
-                )
+                player = teams[0].get_player_by_jersey_number(jersey_no)
+
+                if player is None:
+                    player = Player(
+                        player_id=f"home_{jersey_no}",
+                        team=teams[0],
+                        jersey_no=jersey_no,
+                    )
+                    teams[0].players.append(player)
+
+                players_coordinates[player] = Point(float(x), float(y))
             elif team_id == 0:
-                players_coordinates[f"away_{jersey_no}"] = Point(
-                    float(x), float(y)
-                )
+                player = teams[1].get_player_by_jersey_number(jersey_no)
+
+                if player is None:
+                    player = Player(
+                        player_id=f"away_{jersey_no}",
+                        team=teams[1],
+                        jersey_no=jersey_no,
+                    )
+                    teams[1].players.append(player)
+
+                players_coordinates[player] = Point(float(x), float(y))
 
         (
             ball_x,

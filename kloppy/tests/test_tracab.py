@@ -46,10 +46,17 @@ class TestTracabTracking:
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
-        assert dataset.records[0].players_coordinates["home_19"] == Point(
+        player_home_19 = dataset.meta_data.teams[
+            0
+        ].get_player_by_jersey_number("19")
+        assert dataset.records[0].players_coordinates[player_home_19] == Point(
             x=-1234.0, y=-294.0
         )
-        assert dataset.records[0].players_coordinates["away_19"] == Point(
+
+        player_away_19 = dataset.meta_data.teams[
+            1
+        ].get_player_by_jersey_number("19")
+        assert dataset.records[0].players_coordinates[player_away_19] == Point(
             x=8889, y=-666
         )
         assert dataset.records[0].ball_coordinates == Point(x=-27, y=25)
@@ -65,5 +72,11 @@ class TestTracabTracking:
         assert dataset.records[2].ball_state == BallState.DEAD
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert "away_1337" not in dataset.records[0].players_coordinates
-        assert "away_1337" in dataset.records[3].players_coordinates
+        assert "away_1337" not in [
+            player.player_id
+            for player in dataset.records[0].players_coordinates.keys()
+        ]
+        assert "away_1337" in [
+            player.player_id
+            for player in dataset.records[3].players_coordinates.keys()
+        ]

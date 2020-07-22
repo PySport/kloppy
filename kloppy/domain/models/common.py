@@ -45,7 +45,7 @@ class Team:
     team_id: str
     name: str
     ground: Ground
-    players: List[Player] = field(default_factory=dict)
+    players: List[Player] = field(default_factory=list)
 
     def __str__(self):
         return self.team_id
@@ -57,6 +57,13 @@ class Team:
         if not isinstance(other, Team):
             return False
         return self.team_id == other.team_id
+
+    def get_player_by_jersey_number(self, jersey_no: str):
+        for player in self.players:
+            if player.jersey_no == jersey_no:
+                return player
+
+        return None
 
 
 class BallState(Enum):

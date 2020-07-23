@@ -7,7 +7,8 @@ from kloppy import (
     to_pandas,
     load_metrica_tracking_data,
     load_tracab_tracking_data,
-    transform, OptaSerializer,
+    transform,
+    OptaSerializer,
 )
 from kloppy.domain import (
     Period,
@@ -145,7 +146,7 @@ class TestHelpers:
         serializer = OptaSerializer()
 
         with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
-                f"{base_dir}/files/opta_f7.xml", "rb"
+            f"{base_dir}/files/opta_f7.xml", "rb"
         ) as f7_data:
             dataset = serializer.deserialize(
                 inputs={"f24_data": f24_data, "f7_data": f7_data}

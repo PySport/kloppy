@@ -114,7 +114,6 @@ class PassEvent(Event):
     event_name: str = "pass"
 
 
-
 @dataclass
 class TakeOnEvent(Event):
     result: TakeOnResult

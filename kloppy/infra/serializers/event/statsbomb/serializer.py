@@ -22,7 +22,7 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     EventType,
-    MetaData,
+    Metadata,
     Ground,
     Player,
 )
@@ -425,7 +425,7 @@ class StatsBombSerializer(EventDataSerializer):
                 ):
                     events.append(event)
 
-        meta_data = MetaData(
+        metadata = Metadata(
             teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
@@ -437,7 +437,7 @@ class StatsBombSerializer(EventDataSerializer):
             score=None,
         )
 
-        return EventDataset(meta_data=meta_data, records=events,)
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

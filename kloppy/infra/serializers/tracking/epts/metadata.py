@@ -125,7 +125,7 @@ def _load_sensors(sensors_elm) -> List[Sensor]:
 
 
 def _load_pitch_dimensions(
-    meta_data_elm, sensors: List[Sensor]
+    metadata_elm, sensors: List[Sensor]
 ) -> Union[None, PitchDimensions]:
 
     normalized = False
@@ -136,7 +136,7 @@ def _load_pitch_dimensions(
                 break
 
     field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
-    field_size_elm = field_size_path.find(meta_data_elm).find("FieldSize")
+    field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
     if field_size_elm is not None and normalized:
         return PitchDimensions(
@@ -149,14 +149,14 @@ def _load_pitch_dimensions(
         return None
 
 
-def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
-    root = objectify.fromstring(meta_data_file.read())
-    meta_data = root.find("Metadata")
+def load_metadata(metadata_file: Readable) -> EPTSMetadata:
+    root = objectify.fromstring(metadata_file.read())
+    metadata = root.find("Metadata")
 
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )
-    score_elm = score_path.find(meta_data)
+    score_elm = score_path.find(metadata)
     score = Score(
         home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
     )
@@ -168,23 +168,23 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
 
     _team_name_map = {
         team_elm.attrib["id"]: str(team_elm.find("Name"))
-        for team_elm in meta_data.find("Teams").iterchildren(tag="Team")
+        for team_elm in metadata.find("Teams").iterchildren(tag="Team")
     }
 
-    teams_meta_data = {}
+    teams_metadata = {}
     for ground, team_id in _team_map.items():
         team = Team(
             team_id=team_id, name=_team_name_map[team_id], ground=ground
         )
-        team.players = _load_players(meta_data.find("Players"), team)
-        teams_meta_data.update({ground: team})
+        team.players = _load_players(metadata.find("Players"), team)
+        teams_metadata.update({ground: team})
 
     data_format_specifications = _load_data_format_specifications(
         root.find("DataFormatSpecifications")
     )
 
     device_path = objectify.ObjectPath("Metadata.Devices.Device[0].Sensors")
-    sensors = _load_sensors(device_path.find(meta_data))
+    sensors = _load_sensors(device_path.find(metadata))
 
     _channel_map = {
         channel.channel_id: channel
@@ -194,7 +194,7 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
 
     _all_players = [
         player
-        for key, value in teams_meta_data.items()
+        for key, value in teams_metadata.items()
         for player in value.players
     ]
 
@@ -206,14 +206,14 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
             player=_player_map[player_channel_elm.attrib["playerId"]],
             channel=_channel_map[player_channel_elm.attrib["channelId"]],
         )
-        for player_channel_elm in meta_data.find(
-            "PlayerChannels"
-        ).iterchildren(tag="PlayerChannel")
+        for player_channel_elm in metadata.find("PlayerChannels").iterchildren(
+            tag="PlayerChannel"
+        )
     ]
 
-    frame_rate = int(meta_data.find("GlobalConfig").find("FrameRate"))
-    pitch_dimensions = _load_pitch_dimensions(meta_data, sensors)
-    periods = _load_periods(meta_data.find("GlobalConfig"), frame_rate)
+    frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
+    pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
+    periods = _load_periods(metadata.find("GlobalConfig"), frame_rate)
 
     if periods:
         start_attacking_direction = periods[0].attacking_direction
@@ -230,10 +230,10 @@ def load_meta_data(meta_data_file: Readable) -> EPTSMetaData:
         else None
     )
 
-    meta_data.orientation = orientation
+    metadata.orientation = orientation
 
-    return EPTSMetaData(
-        teams=list(teams_meta_data.values()),
+    return EPTSMetadata(
+        teams=list(teams_metadata.values()),
         periods=periods,
         pitch_dimensions=pitch_dimensions,
         data_format_specifications=data_format_specifications,

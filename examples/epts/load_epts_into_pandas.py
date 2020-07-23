@@ -3,8 +3,8 @@ import sys
 
 from pandas import DataFrame
 
-from kloppy.infra.serializers.tracking.epts.meta_data import (
-    load_meta_data as epts_load_meta_data,
+from kloppy.infra.serializers.tracking.epts.metadata import (
+    load_metadata as epts_load_metadata,
 )
 from kloppy.infra.serializers.tracking.epts.reader import (
     read_raw_data as epts_read_raw_data,
@@ -32,13 +32,13 @@ def main():
 
     # step 1: load metadata
     with open("epts_meta.xml", "rb") as meta_fp:
-        meta_data = epts_load_meta_data(meta_fp)
+        metadata = epts_load_metadata(meta_fp)
 
     # step 2: try to load the raw data
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
         records = epts_read_raw_data(
-            raw_fp, meta_data, sensor_ids=["heartbeat"]
+            raw_fp, metadata, sensor_ids=["heartbeat"]
         )
     # raw_fp is closed here
 
@@ -59,7 +59,7 @@ def main():
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
         records = epts_read_raw_data(
-            raw_fp, meta_data, sensor_ids=["heartbeat"]
+            raw_fp, metadata, sensor_ids=["heartbeat"]
         )
         # consume all records before we close `raw_fp`
         for record in records:
@@ -75,7 +75,7 @@ def main():
     with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'heartbeat' sensor
         records = epts_read_raw_data(
-            raw_fp, meta_data, sensor_ids=["heartbeat"]
+            raw_fp, metadata, sensor_ids=["heartbeat"]
         )
         data_frame = DataFrame.from_records(records)
 

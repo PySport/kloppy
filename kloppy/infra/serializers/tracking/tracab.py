@@ -16,7 +16,7 @@ from kloppy.domain import (
     PitchDimensions,
     Dimension,
     attacking_direction_from_frame,
-    MetaData,
+    Metadata,
     Ground,
     Player,
 )
@@ -95,8 +95,8 @@ class TRACABSerializer(TrackingDataSerializer):
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
-        if "meta_data" not in inputs:
-            raise ValueError("Please specify a value for 'meta_data'")
+        if "metadata" not in inputs:
+            raise ValueError("Please specify a value for 'metadata'")
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
@@ -110,7 +110,7 @@ class TRACABSerializer(TrackingDataSerializer):
         ----------
         inputs : dict
             input `raw_data` should point to a `Readable` object containing
-            the 'csv' formatted raw data. input `meta_data` should point to
+            the 'csv' formatted raw data. input `metadata` should point to
             the xml metadata data.
         options : dict
             Options for deserialization of the TRACAB file. Possible options are
@@ -135,7 +135,7 @@ class TRACABSerializer(TrackingDataSerializer):
         >>>      open("raw.dat", "rb") as raw:
         >>>     dataset = serializer.deserialize(
         >>>         inputs={
-        >>>             'meta_data': meta,
+        >>>             'metadata': meta,
         >>>             'raw_data': raw
         >>>         },
         >>>         options={
@@ -159,7 +159,7 @@ class TRACABSerializer(TrackingDataSerializer):
         teams = [home_team, away_team]
 
         with performance_logging("Loading metadata", logger=logger):
-            match = objectify.fromstring(inputs["meta_data"].read()).match
+            match = objectify.fromstring(inputs["metadata"].read()).match
             frame_rate = int(match.attrib["iFrameRateFps"])
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
@@ -220,7 +220,7 @@ class TRACABSerializer(TrackingDataSerializer):
             else Orientation.FIXED_AWAY_HOME
         )
 
-        meta_data = MetaData(
+        metadata = Metadata(
             teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
@@ -239,7 +239,7 @@ class TRACABSerializer(TrackingDataSerializer):
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
         )
 
-        return TrackingDataset(records=frames, meta_data=meta_data,)
+        return TrackingDataset(records=frames, metadata=metadata,)
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

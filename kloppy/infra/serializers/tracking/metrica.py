@@ -13,7 +13,7 @@ from kloppy.domain import (
     PitchDimensions,
     Dimension,
     DatasetFlag,
-    MetaData,
+    Metadata,
     Team,
     Ground,
     Player,
@@ -259,7 +259,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             else Orientation.FIXED_AWAY_HOME
         )
 
-        meta_data = MetaData(
+        metadata = Metadata(
             teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
@@ -271,7 +271,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )
 
-        return TrackingDataset(records=frames, meta_data=meta_data)
+        return TrackingDataset(records=frames, metadata=metadata)
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

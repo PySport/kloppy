@@ -12,7 +12,7 @@ from kloppy.domain import (
     BallState,
     Team,
 )
-from kloppy.infra.serializers.tracking.epts.meta_data import load_meta_data
+from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
 from kloppy.infra.serializers.tracking.epts.reader import (
     build_regex,
     read_raw_data,
@@ -23,13 +23,13 @@ from kloppy.infra.utils import performance_logging
 class TestEPTSTracking:
     def test_regex(self):
         base_dir = os.path.dirname(__file__)
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as meta_data_fp:
-            meta_data = load_meta_data(meta_data_fp)
+        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+            metadata = load_metadata(metadata_fp)
 
         regex_str = build_regex(
-            meta_data.data_format_specifications[0],
-            meta_data.player_channels,
-            meta_data.sensors,
+            metadata.data_format_specifications[0],
+            metadata.player_channels,
+            metadata.sensors,
         )
 
         regex = re.compile(regex_str)
@@ -43,11 +43,11 @@ class TestEPTSTracking:
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as meta_data_fp:
-            meta_data = load_meta_data(meta_data_fp)
+        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+            metadata = load_metadata(metadata_fp)
 
         with open(f"{base_dir}/files/epts_raw.txt", "rb") as raw_data:
-            iterator = read_raw_data(raw_data, meta_data)
+            iterator = read_raw_data(raw_data, metadata)
 
             with performance_logging("load"):
                 assert list(iterator)
@@ -57,13 +57,13 @@ class TestEPTSTracking:
 
         with open(
             f"{base_dir}/files/epts_meta.xml", "rb"
-        ) as meta_data_fp, open(
+        ) as metadata_fp, open(
             f"{base_dir}/files/epts_raw.txt", "rb"
         ) as raw_data:
 
-            meta_data = load_meta_data(meta_data_fp)
+            metadata = load_metadata(metadata_fp)
             records = read_raw_data(
-                raw_data, meta_data, sensor_ids=["heartbeat", "position"]
+                raw_data, metadata, sensor_ids=["heartbeat", "position"]
             )
             data_frame = DataFrame.from_records(records)
 
@@ -75,12 +75,12 @@ class TestEPTSTracking:
 
         with open(
             f"{base_dir}/files/epts_meta.xml", "rb"
-        ) as meta_data_fp, open(
+        ) as metadata_fp, open(
             f"{base_dir}/files/epts_raw.txt", "rb"
         ) as raw_data:
-            meta_data = load_meta_data(meta_data_fp)
+            metadata = load_metadata(metadata_fp)
             records = read_raw_data(
-                raw_data, meta_data, sensor_ids=["heartbeat"]
+                raw_data, metadata, sensor_ids=["heartbeat"]
             )
             data_frame = DataFrame.from_records(records)
 
@@ -92,19 +92,19 @@ class TestEPTSTracking:
 
         serializer = EPTSSerializer()
 
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as meta_data, open(
+        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata, open(
             f"{base_dir}/files/epts_raw.txt", "rb"
         ) as raw_data:
 
             dataset = serializer.deserialize(
-                inputs={"meta_data": meta_data, "raw_data": raw_data}
+                inputs={"metadata": metadata, "raw_data": raw_data}
             )
 
         first_player = next(iter(dataset.records[0].players_coordinates))
 
         assert len(dataset.records) == 2
-        assert len(dataset.meta_data.periods) == 1
-        assert dataset.meta_data.orientation is None
+        assert len(dataset.metadata.periods) == 1
+        assert dataset.metadata.orientation is None
 
         assert dataset.records[0].players_coordinates[first_player] == Point(
             x=-769, y=-2013

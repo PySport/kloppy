@@ -26,29 +26,29 @@ class TestOpta:
             )
 
         assert len(dataset.events) == 17
-        assert len(dataset.meta_data.periods) == 2
+        assert len(dataset.metadata.periods) == 2
         assert (
-            dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
+            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
-        assert dataset.meta_data.teams[0].name == "FC København"
-        assert dataset.meta_data.teams[0].ground == Ground.HOME
-        assert dataset.meta_data.teams[1].name == "FC Nordsjælland"
-        assert dataset.meta_data.teams[1].ground == Ground.AWAY
+        assert dataset.metadata.teams[0].name == "FC København"
+        assert dataset.metadata.teams[0].ground == Ground.HOME
+        assert dataset.metadata.teams[1].name == "FC Nordsjælland"
+        assert dataset.metadata.teams[1].ground == Ground.AWAY
 
-        player = dataset.meta_data.teams[0].players[0]
+        player = dataset.metadata.teams[0].players[0]
         assert player.player_id == "111319"
         assert player.jersey_no == 21
         assert str(player) == "Jesse Joronen"
         assert player.position.position_id == "1"
         assert player.position.name == "Goalkeeper"
 
-        assert dataset.meta_data.periods[0] == Period(
+        assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=1537714933.608,
             end_timestamp=1537717701.222,
             attacking_direction=AttackingDirection.NOT_SET,
         )
-        assert dataset.meta_data.periods[1] == Period(
+        assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=1537718728.873,
             end_timestamp=1537721737.788,

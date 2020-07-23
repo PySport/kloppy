@@ -22,7 +22,7 @@ from kloppy.domain import (
     Frame,
     EventDataset,
     PassEvent,
-    MetaData,
+    Metadata,
     Team,
     Ground, Player,
 )
@@ -36,7 +36,7 @@ class TestHelpers:
             f"{base_dir}/files/metrica_away.csv",
         )
         assert len(dataset.records) == 6
-        assert len(dataset.meta_data.periods) == 2
+        assert len(dataset.metadata.periods) == 2
 
     def test_load_tracab_tracking_data(self):
         base_dir = os.path.dirname(__file__)
@@ -45,7 +45,7 @@ class TestHelpers:
             f"{base_dir}/files/tracab_raw.dat",
         )
         assert len(dataset.records) == 5  # only alive=True
-        assert len(dataset.meta_data.periods) == 2
+        assert len(dataset.metadata.periods) == 2
 
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
@@ -66,7 +66,7 @@ class TestHelpers:
                 attacking_direction=AttackingDirection.AWAY_HOME,
             ),
         ]
-        meta_data = MetaData(
+        metadata = Metadata(
             flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(-50, 50)
@@ -79,7 +79,7 @@ class TestHelpers:
         )
 
         tracking_data = TrackingDataset(
-            meta_data=meta_data,
+            metadata=metadata,
             records=[
                 Frame(
                     frame_id=1,

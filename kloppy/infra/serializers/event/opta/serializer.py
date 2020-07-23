@@ -26,7 +26,7 @@ from kloppy.domain import (
     EventType,
     Ground,
     Score,
-    MetaData,
+    Metadata,
     Player,
     Position,
 )
@@ -459,7 +459,7 @@ class OptaSerializer(EventDataSerializer):
                     ):
                         events.append(event)
 
-        meta_data = MetaData(
+        metadata = Metadata(
             teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
@@ -471,7 +471,7 @@ class OptaSerializer(EventDataSerializer):
             flags=DatasetFlag.BALL_OWNING_TEAM,
         )
 
-        return EventDataset(meta_data=meta_data, records=events,)
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

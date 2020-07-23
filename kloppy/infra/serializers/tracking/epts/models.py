@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Union, Set
 
-from kloppy.domain import Team, Player, MetaData
+from kloppy.domain import Team, Player, Metadata
 
 
 # TODO: fill this with from SplitRegisters
@@ -157,7 +157,7 @@ class DataFormatSpecification:
 
 
 @dataclass
-class EPTSMetaData(MetaData):
+class EPTSMetadata(Metadata):
     player_channels: List[PlayerChannel]
     data_format_specifications: List[DataFormatSpecification]
     sensors: List[Sensor]

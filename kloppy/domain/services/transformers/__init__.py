@@ -12,7 +12,7 @@ from kloppy.domain import (
     DatasetFlag,
     Dataset,
     EventDataset,
-    MetaData,
+    Metadata,
 )
 from kloppy.domain.models.event import Event
 
@@ -121,25 +121,25 @@ class Transformer:
         if not to_pitch_dimensions and not to_orientation:
             return dataset
         elif not to_orientation:
-            to_orientation = dataset.meta_data.orientation
+            to_orientation = dataset.metadata.orientation
         elif not to_pitch_dimensions:
-            to_pitch_dimensions = dataset.meta_data.pitch_dimensions
+            to_pitch_dimensions = dataset.metadata.pitch_dimensions
 
         if to_orientation == Orientation.BALL_OWNING_TEAM:
-            if not dataset.meta_data.flags & DatasetFlag.BALL_OWNING_TEAM:
+            if not dataset.metadata.flags & DatasetFlag.BALL_OWNING_TEAM:
                 raise ValueError(
                     "Cannot transform to BALL_OWNING_TEAM orientation when dataset doesn't contain "
                     "ball owning team data"
                 )
 
         transformer = cls(
-            from_pitch_dimensions=dataset.meta_data.pitch_dimensions,
-            from_orientation=dataset.meta_data.orientation,
+            from_pitch_dimensions=dataset.metadata.pitch_dimensions,
+            from_orientation=dataset.metadata.orientation,
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation,
         )
-        meta_data = replace(
-            dataset.meta_data,
+        metadata = replace(
+            dataset.metadata,
             pitch_dimensions=to_pitch_dimensions,
             orientation=to_orientation,
         )
@@ -149,10 +149,10 @@ class Transformer:
                 for record in dataset.records
             ]
 
-            return TrackingDataset(meta_data=meta_data, records=frames,)
+            return TrackingDataset(metadata=metadata, records=frames,)
         elif isinstance(dataset, EventDataset):
             events = list(map(transformer.transform_event, dataset.records))
 
-            return EventDataset(meta_data=meta_data, records=events,)
+            return EventDataset(metadata=metadata, records=events,)
         else:
             raise Exception("Unknown Dataset type")

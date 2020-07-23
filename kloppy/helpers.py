@@ -164,29 +164,29 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         timestamp=event.timestamp,
         end_timestamp=None,
         ball_state=event.ball_state.value if event.ball_state else None,
-        ball_owning_team=event.ball_owning_team.value
+        ball_owning_team=event.ball_owning_team.team_id
         if event.ball_owning_team
         else None,
-        team=event.team.value,
-        player_jersey_no=event.player_jersey_no,
-        position_x=event.position.x if event.position else None,
-        position_y=event.position.y if event.position else None,
+        team=event.team.team_id,
+        player=event.player.player_id,
+        coordinates_x=event.coordinates.x if event.coordinates else None,
+        coordinates_y=event.coordinates.y if event.coordinates else None,
     )
     if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
         row.update(
             {
                 "end_timestamp": event.receive_timestamp,
-                "end_position_x": event.receiver_position.x,
-                "end_position_y": event.receiver_position.y,
-                "receiver_jersey_no": event.receiver_player_jersey_no,
+                "end_coordinates_x": event.receiver_coordinates.x,
+                "end_coordinates_y": event.receiver_coordinates.y,
+                "receiver": event.receiver_player.player_id,
             }
         )
     elif isinstance(event, CarryEvent):
         row.update(
             {
                 "end_timestamp": event.end_timestamp,
-                "end_position_x": event.end_position.x,
-                "end_position_y": event.end_position.y,
+                "end_coordinates_x": event.end_coordinates.x,
+                "end_coordinates_y": event.end_coordinates.y,
             }
         )
     return row

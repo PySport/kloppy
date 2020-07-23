@@ -65,6 +65,13 @@ class Team:
 
         return None
 
+    def get_player_by_id(self, id: str):
+        for player in self.players:
+            if player.player_id == id:
+                return player
+
+        return None
+
 
 class BallState(Enum):
     ALIVE = "alive"

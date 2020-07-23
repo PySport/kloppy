@@ -24,6 +24,7 @@ from kloppy.domain import (
     EventType,
     MetaData,
     Ground,
+    Player,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
@@ -59,7 +60,9 @@ def parse_str_ts(timestamp: str) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
-def _parse_position(position: List[float], fidelity_version: int) -> Point:
+def _parse_coordinates(
+    coordinates: List[float], fidelity_version: int
+) -> Point:
     # location is cell based
     # [1, 120] x [1, 80]
     # +-----+------+
@@ -70,14 +73,12 @@ def _parse_position(position: List[float], fidelity_version: int) -> Point:
     cell_side = 0.1 if fidelity_version == 2 else 1.0
     cell_relative_center = cell_side / 2
     return Point(
-        x=position[0] - cell_relative_center,
-        y=position[1] - cell_relative_center,
+        x=coordinates[0] - cell_relative_center,
+        y=coordinates[1] - cell_relative_center,
     )
 
 
-def _parse_pass(
-    pass_dict: Dict, current_team_map: Dict[int, int], fidelity_version: int
-) -> Dict:
+def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     if "outcome" in pass_dict:
         outcome_id = pass_dict["outcome"]["id"]
         if outcome_id == SB_PASS_OUTCOME_OUT:
@@ -93,21 +94,19 @@ def _parse_pass(
         else:
             raise Exception(f"Unknown pass outcome: {outcome_id}")
 
-        receiver_player_jersey_no = None
-        receiver_position = None
+        receiver_player = None
+        receiver_coordinates = None
     else:
         result = PassResult.COMPLETE
-        receiver_player_jersey_no = current_team_map[
-            pass_dict["recipient"]["id"]
-        ]
-        receiver_position = _parse_position(
+        receiver_player = team.get_player_by_id(pass_dict["recipient"]["id"])
+        receiver_coordinates = _parse_coordinates(
             pass_dict["end_location"], fidelity_version
         )
 
     return dict(
         result=result,
-        receiver_position=receiver_position,
-        receiver_player_jersey_no=receiver_player_jersey_no,
+        receiver_coordinates=receiver_coordinates,
+        receiver_player=receiver_player,
     )
 
 
@@ -134,7 +133,7 @@ def _parse_shot(shot_dict: Dict) -> Dict:
 def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
     return dict(
         result=CarryResult.COMPLETE,
-        end_position=_parse_position(
+        end_coordinates=_parse_coordinates(
             carry_dict["end_location"], fidelity_version
         ),
     )
@@ -252,31 +251,42 @@ class StatsBombSerializer(EventDataSerializer):
             )
 
         with performance_logging("parse data", logger=logger):
-            home_player_map = {
-                player["player_id"]: str(player["jersey_number"])
+
+            home_team = Team(
+                team_id=home_lineup["team_id"],
+                name=home_lineup["team_name"],
+                ground=Ground.HOME,
+            )
+            home_team.players = [
+                Player(
+                    player_id=player["player_id"],
+                    team=home_team,
+                    name=player["player_name"],
+                    jersey_no=player["jersey_number"],
+                )
                 for player in home_lineup["lineup"]
-            }
-            away_player_map = {
-                player["player_id"]: str(player["jersey_number"])
+            ]
+
+            away_team = Team(
+                team_id=away_lineup["team_id"],
+                name=away_lineup["team_name"],
+                ground=Ground.AWAY,
+            )
+            away_team.players = [
+                Player(
+                    player_id=player["player_id"],
+                    team=away_team,
+                    name=player["player_name"],
+                    jersey_no=player["jersey_number"],
+                )
                 for player in away_lineup["lineup"]
-            }
+            ]
+
+            teams = [home_team, away_team]
 
             wanted_event_types = [
                 EventType[event_type.upper()]
                 for event_type in options.get("event_types", [])
-            ]
-
-            teams = [
-                Team(
-                    team_id=home_lineup["team_id"],
-                    name=home_lineup["team_name"],
-                    ground=Ground.HOME,
-                ),
-                Team(
-                    team_id=away_lineup["team_id"],
-                    name=away_lineup["team_name"],
-                    ground=Ground.AWAY,
-                ),
             ]
 
             periods = []
@@ -285,10 +295,8 @@ class StatsBombSerializer(EventDataSerializer):
             for raw_event in raw_events:
                 if raw_event["team"]["id"] == home_lineup["team_id"]:
                     team = teams[0]
-                    current_team_map = home_player_map
                 elif raw_event["team"]["id"] == away_lineup["team_id"]:
                     team = teams[1]
-                    current_team_map = away_player_map
                 else:
                     raise Exception(
                         f"Unknown team_id {raw_event['team']['id']}"
@@ -326,11 +334,9 @@ class StatsBombSerializer(EventDataSerializer):
                 else:
                     period.end_timestamp = period.start_timestamp + timestamp
 
-                player_jersey_no = None
+                player = None
                 if "player" in raw_event:
-                    player_jersey_no = current_team_map[
-                        raw_event["player"]["id"]
-                    ]
+                    player = team.get_player_by_id(raw_event["player"]["id"])
 
                 event_type = raw_event["type"]["id"]
                 if event_type == SB_EVENT_TYPE_SHOT:
@@ -354,9 +360,9 @@ class StatsBombSerializer(EventDataSerializer):
                     # from Event
                     event_id=raw_event["id"],
                     team=team,
-                    player_jersey_no=player_jersey_no,
-                    position=(
-                        _parse_position(
+                    player=player,
+                    coordinates=(
+                        _parse_coordinates(
                             raw_event.get("location"), fidelity_version
                         )
                         if "location" in raw_event
@@ -368,7 +374,7 @@ class StatsBombSerializer(EventDataSerializer):
                 if event_type == SB_EVENT_TYPE_PASS:
                     pass_event_kwargs = _parse_pass(
                         pass_dict=raw_event["pass"],
-                        current_team_map=current_team_map,
+                        team=team,
                         fidelity_version=fidelity_version,
                     )
 

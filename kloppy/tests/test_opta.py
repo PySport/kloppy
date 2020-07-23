@@ -7,6 +7,7 @@ from kloppy.domain import (
     Orientation,
     Player,
     Position,
+    Ground,
 )
 
 
@@ -30,7 +31,9 @@ class TestOpta:
             dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
         assert dataset.meta_data.teams[0].name == "FC København"
+        assert dataset.meta_data.teams[0].ground == Ground.HOME
         assert dataset.meta_data.teams[1].name == "FC Nordsjælland"
+        assert dataset.meta_data.teams[1].ground == Ground.AWAY
 
         player = dataset.meta_data.teams[0].players[0]
         assert player.player_id == "111319"

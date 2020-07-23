@@ -123,7 +123,13 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     )
 
     team_id = team_elm.attrib["TeamRef"].lstrip("t")
-    team = Team(team_id=str(team_id), name=team_name, ground=Ground.HOME)
+    team = Team(
+        team_id=str(team_id),
+        name=team_name,
+        ground=Ground.HOME
+        if team_elm.attrib["Side"] == "Home"
+        else Ground.AWAY,
+    )
     team.players = [
         Player(
             player_id=player_elm.attrib["PlayerRef"].lstrip("p"),

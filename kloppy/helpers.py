@@ -172,7 +172,9 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
                 "end_timestamp": event.receive_timestamp,
                 "end_coordinates_x": event.receiver_coordinates.x,
                 "end_coordinates_y": event.receiver_coordinates.y,
-                "receiver": event.receiver_player.player_id,
+                "receiver": event.receiver_player.player_id
+                if event.receiver_player
+                else None,
             }
         )
     elif isinstance(event, CarryEvent):

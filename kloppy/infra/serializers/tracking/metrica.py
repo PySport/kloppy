@@ -13,6 +13,10 @@ from kloppy.domain import (
     PitchDimensions,
     Dimension,
     DatasetFlag,
+    Metadata,
+    Team,
+    Ground,
+    Player,
 )
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -23,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 class MetricaTrackingSerializer(TrackingDataSerializer):
     __PartialFrame = namedtuple(
-        "PartialFrame", "team period frame_id player_positions ball_position"
+        "PartialFrame",
+        "team period frame_id players_coordinates ball_coordinates",
     )
 
     @staticmethod
@@ -38,7 +43,11 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             )
 
     def __create_iterator(
-        self, data: Readable, sample_rate: float, frame_rate: int
+        self,
+        data: Readable,
+        sample_rate: float,
+        frame_rate: int,
+        ground: Ground,
     ) -> Iterator:
         """
         Notes:
@@ -55,9 +64,19 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             line = line.strip().decode("ascii")
             columns = line.split(",")
             if i == 0:
-                team = columns[3]
+                team_name = columns[3]
+                team = Team(team_id=str(ground), name=team_name, ground=ground)
             elif i == 1:
                 player_jersey_numbers = columns[3:-2:2]
+                players = [
+                    Player(
+                        player_id=f"{team.ground}_{jersey_number}",
+                        jersey_no=int(jersey_number),
+                        team=team,
+                    )
+                    for jersey_number in player_jersey_numbers
+                ]
+                team.players = players
             elif i == 2:
                 # consider doing some validation on the columns
                 pass
@@ -80,17 +99,15 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                         team=team,
                         period=period,
                         frame_id=frame_id,
-                        player_positions={
-                            player_no: Point(
+                        players_coordinates={
+                            player: Point(
                                 x=float(columns[3 + i * 2]),
                                 y=1 - float(columns[3 + i * 2 + 1]),
                             )
-                            for i, player_no in enumerate(
-                                player_jersey_numbers
-                            )
+                            for i, player in enumerate(players)
                             if columns[3 + i * 2] != "NaN"
                         },
-                        ball_position=Point(
+                        ball_coordinates=Point(
                             x=float(columns[-2]), y=1 - float(columns[-1])
                         )
                         if columns[-2] != "NaN"
@@ -109,17 +126,17 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 f"away: {away_partial_frame.frame_id}"
             )
         if (
-            home_partial_frame.ball_position
-            != away_partial_frame.ball_position
+            home_partial_frame.ball_coordinates
+            != away_partial_frame.ball_coordinates
         ):
             raise ValueError(
-                f"ball position mismatch: home {home_partial_frame.ball_position}, "
-                f"away: {away_partial_frame.ball_position}. Do the files belong to the"
+                f"ball position mismatch: home {home_partial_frame.ball_coordinates}, "
+                f"away: {away_partial_frame.ball_coordinates}. Do the files belong to the"
                 f" same game? frame_id: {home_partial_frame.frame_id}"
             )
-        if home_partial_frame.team != "Home":
+        if home_partial_frame.team.ground != Ground.HOME:
             raise ValueError("raw_data_home contains away team data")
-        if away_partial_frame.team != "Away":
+        if away_partial_frame.team.ground != Ground.AWAY:
             raise ValueError("raw_data_away contains home team data")
 
     def deserialize(
@@ -177,10 +194,10 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
-                inputs["raw_data_home"], sample_rate, frame_rate
+                inputs["raw_data_home"], sample_rate, frame_rate, Ground.HOME
             )
             away_iterator = self.__create_iterator(
-                inputs["raw_data_away"], sample_rate, frame_rate
+                inputs["raw_data_away"], sample_rate, frame_rate, Ground.AWAY
             )
 
             partial_frames = zip(home_iterator, away_iterator)
@@ -202,12 +219,16 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
 
+                players_coordinates = {
+                    **home_partial_frame.players_coordinates,
+                    **away_partial_frame.players_coordinates,
+                }
+
                 frame = Frame(
                     frame_id=frame_id,
                     timestamp=frame_id / frame_rate - period.start_timestamp,
-                    ball_position=home_partial_frame.ball_position,
-                    home_team_player_positions=home_partial_frame.player_positions,
-                    away_team_player_positions=away_partial_frame.player_positions,
+                    ball_coordinates=home_partial_frame.ball_coordinates,
+                    players_coordinates=players_coordinates,
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,
@@ -225,6 +246,9 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                         )
                     )
 
+                if n == 0:
+                    teams = [home_partial_frame.team, away_partial_frame.team]
+
                 n += 1
                 if limit and n >= limit:
                     break
@@ -235,16 +259,19 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             else Orientation.FIXED_AWAY_HOME
         )
 
-        return TrackingDataset(
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
-            frame_rate=frame_rate,
-            orientation=orientation,
+        metadata = Metadata(
+            teams=teams,
+            periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 1), y_dim=Dimension(0, 1)
             ),
-            periods=periods,
-            records=frames,
+            score=None,
+            frame_rate=frame_rate,
+            orientation=orientation,
+            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )
+
+        return TrackingDataset(records=frames, metadata=metadata)
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

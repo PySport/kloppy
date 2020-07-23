@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Union, Set
 
-from kloppy.domain import Team, Player, MetaData
+from kloppy.domain import Team, Player, Metadata
 
 
 # TODO: fill this with from SplitRegisters
@@ -77,10 +77,7 @@ class PlayerChannelRef:
     ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
-            team_str = (
-                "home" if player_channel.player.team == Team.HOME else "away"
-            )
-            return f"(?P<player_{team_str}_{player_channel.player.jersey_no}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
+            return f"(?P<player_{player_channel.player.player_id}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
             return NON_SPLIT_CHAR_REGEX
 
@@ -160,8 +157,7 @@ class DataFormatSpecification:
 
 
 @dataclass
-class EPTSMetaData(MetaData):
+class EPTSMetadata(Metadata):
     player_channels: List[PlayerChannel]
     data_format_specifications: List[DataFormatSpecification]
     sensors: List[Sensor]
-    frame_rate: int

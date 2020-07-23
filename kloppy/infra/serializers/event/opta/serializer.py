@@ -1,6 +1,7 @@
 from typing import Tuple, Dict, List
 import logging
 from datetime import datetime
+import pytz
 from lxml import objectify
 
 from kloppy.domain import (
@@ -23,6 +24,11 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     EventType,
+    Ground,
+    Score,
+    Metadata,
+    Player,
+    Position,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
@@ -31,23 +37,27 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_f24_datetime(dt_str: str) -> float:
-    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").timestamp()
+    return (
+        datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
+        .replace(tzinfo=pytz.utc)
+        .timestamp()
+    )
 
 
 def _parse_pass(qualifiers: Dict[int, str], outcome: int) -> Dict:
     if outcome:
-        receiver_position = Point(
+        receiver_coordinates = Point(
             x=float(qualifiers[140]), y=float(qualifiers[141])
         )
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-        receiver_position = None
+        receiver_coordinates = None
 
     return dict(
         result=result,
-        receiver_position=receiver_position,
-        receiver_player_jersey_no=None,
+        receiver_coordinates=receiver_coordinates,
+        receiver_player=None,
         receive_timestamp=None,
     )
 
@@ -55,8 +65,8 @@ def _parse_pass(qualifiers: Dict[int, str], outcome: int) -> Dict:
 def _parse_offside_pass() -> Dict:
     return dict(
         result=PassResult.OFFSIDE,
-        receiver_position=None,
-        receiver_player_jersey_no=None,
+        receiver_coordinates=None,
+        receiver_player=None,
         receive_timestamp=None,
     )
 
@@ -70,16 +80,78 @@ def _parse_take_on(outcome: int) -> Dict:
 
 
 def _parse_shot(
-    qualifiers: Dict[int, str], type_id: int, position: Point
+    qualifiers: Dict[int, str], type_id: int, coordinates: Point
 ) -> Dict:
     if type_id == EVENT_TYPE_SHOT_GOAL:
         if 28 in qualifiers:
-            position = Point(x=100 - position.x, y=100 - position.y)
+            coordinates = Point(x=100 - coordinates.x, y=100 - coordinates.y)
         result = ShotResult.GOAL
     else:
         result = None
 
-    return dict(position=position, result=result)
+    return dict(coordinates=coordinates, result=result)
+
+
+def _parse_team_players(
+    f7_root, team_ref: str
+) -> Tuple[str, Dict[str, Dict[str, str]]]:
+    matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
+    team_elms = list(matchdata_path.find(f7_root).iterchildren("Team"))
+    for team_elm in team_elms:
+        if team_elm.attrib["uID"] == team_ref:
+            team_name = str(team_elm.find("Name"))
+            players = {
+                player_elm.attrib["uID"]: dict(
+                    first_name=str(
+                        player_elm.find("PersonName").find("First")
+                    ),
+                    last_name=str(player_elm.find("PersonName").find("Last")),
+                )
+                for player_elm in team_elm.iterchildren("Player")
+            }
+            break
+    else:
+        raise Exception(f"Could not parse players for {team_ref}")
+
+    return team_name, players
+
+
+def _team_from_xml_elm(team_elm, f7_root) -> Team:
+    # This should not happen here
+    team_name, team_players = _parse_team_players(
+        f7_root, team_elm.attrib["TeamRef"]
+    )
+
+    team_id = team_elm.attrib["TeamRef"].lstrip("t")
+    team = Team(
+        team_id=str(team_id),
+        name=team_name,
+        ground=Ground.HOME
+        if team_elm.attrib["Side"] == "Home"
+        else Ground.AWAY,
+    )
+    team.players = [
+        Player(
+            player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
+            team=team,
+            jersey_no=int(player_elm.attrib["ShirtNumber"]),
+            first_name=team_players[player_elm.attrib["PlayerRef"]][
+                "first_name"
+            ],
+            last_name=team_players[player_elm.attrib["PlayerRef"]][
+                "last_name"
+            ],
+            position=Position(
+                position_id=player_elm.attrib["Formation_Place"],
+                name=player_elm.attrib["Position"],
+                coordinates=None,
+            ),
+        )
+        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
+            "MatchPlayer"
+        )
+    ]
+    return team
 
 
 EVENT_TYPE_START_PERIOD = 32
@@ -93,87 +165,89 @@ EVENT_TYPE_SHOT_POST = 14
 EVENT_TYPE_SHOT_SAVED = 15
 EVENT_TYPE_SHOT_GOAL = 16
 
-event_type_names = {1: 'pass',
-                    2: 'offside pass',
-                    3: 'take on',
-                    4: 'foul',
-                    5: 'out',
-                    6: 'corner awarded',
-                    7: 'tackle',
-                    8: 'interception',
-                    9: 'turnover',
-                    10: 'save',
-                    11: 'claim',
-                    12: 'clearance',
-                    13: 'miss',
-                    14: 'post',
-                    15: 'attempt saved',
-                    16: 'goal',
-                    17: 'card',
-                    18: 'player off',
-                    19: 'player on',
-                    20: 'player retired',
-                    21: 'player returns',
-                    22: 'player becomes goalkeeper',
-                    23: 'goalkeeper becomes player',
-                    24: 'condition change',
-                    25: 'official change',
-                    26: 'unknown26',
-                    27: 'start delay',
-                    28: 'end delay',
-                    29: 'unknown29',
-                    30: 'end',
-                    31: 'unknown31',
-                    32: 'start',
-                    33: 'unknown33',
-                    34: 'team set up',
-                    35: 'player changed position',
-                    36: 'player changed jersey number',
-                    37: 'collection end',
-                    38: 'temp_goal',
-                    39: 'temp_attempt',
-                    40: 'formation change',
-                    41: 'punch',
-                    42: 'good skill',
-                    43: 'deleted event',
-                    44: 'aerial',
-                    45: 'challenge',
-                    46: 'unknown46',
-                    47: 'rescinded card',
-                    48: 'unknown46',
-                    49: 'ball recovery',
-                    50: 'dispossessed',
-                    51: 'error',
-                    52: 'keeper pick-up',
-                    53: 'cross not claimed',
-                    54: 'smother',
-                    55: 'offside provoked',
-                    56: 'shield ball opp',
-                    57: 'foul throw in',
-                    58: 'penalty faced',
-                    59: 'keeper sweeper',
-                    60: 'chance missed',
-                    61: 'ball touch',
-                    62: 'unknown62',
-                    63: 'temp_save',
-                    64: 'resume',
-                    65: 'contentious referee decision',
-                    66: 'possession data',
-                    67: '50/50',
-                    68: 'referee drop ball',
-                    69: 'failed to block',
-                    70: 'injury time announcement',
-                    71: 'coach setup',
-                    72: 'caught offside',
-                    73: 'other ball contact',
-                    74: 'blocked pass',
-                    75: 'delayed start',
-                    76: 'early end',
-                    77: 'player off pitch'}
+event_type_names = {
+    1: "pass",
+    2: "offside pass",
+    3: "take on",
+    4: "foul",
+    5: "out",
+    6: "corner awarded",
+    7: "tackle",
+    8: "interception",
+    9: "turnover",
+    10: "save",
+    11: "claim",
+    12: "clearance",
+    13: "miss",
+    14: "post",
+    15: "attempt saved",
+    16: "goal",
+    17: "card",
+    18: "player off",
+    19: "player on",
+    20: "player retired",
+    21: "player returns",
+    22: "player becomes goalkeeper",
+    23: "goalkeeper becomes player",
+    24: "condition change",
+    25: "official change",
+    26: "unknown26",
+    27: "start delay",
+    28: "end delay",
+    29: "unknown29",
+    30: "end",
+    31: "unknown31",
+    32: "start",
+    33: "unknown33",
+    34: "team set up",
+    35: "player changed position",
+    36: "player changed jersey number",
+    37: "collection end",
+    38: "temp_goal",
+    39: "temp_attempt",
+    40: "formation change",
+    41: "punch",
+    42: "good skill",
+    43: "deleted event",
+    44: "aerial",
+    45: "challenge",
+    46: "unknown46",
+    47: "rescinded card",
+    48: "unknown46",
+    49: "ball recovery",
+    50: "dispossessed",
+    51: "error",
+    52: "keeper pick-up",
+    53: "cross not claimed",
+    54: "smother",
+    55: "offside provoked",
+    56: "shield ball opp",
+    57: "foul throw in",
+    58: "penalty faced",
+    59: "keeper sweeper",
+    60: "chance missed",
+    61: "ball touch",
+    62: "unknown62",
+    63: "temp_save",
+    64: "resume",
+    65: "contentious referee decision",
+    66: "possession data",
+    67: "50/50",
+    68: "referee drop ball",
+    69: "failed to block",
+    70: "injury time announcement",
+    71: "coach setup",
+    72: "caught offside",
+    73: "other ball contact",
+    74: "blocked pass",
+    75: "delayed start",
+    76: "early end",
+    77: "player off pitch",
+}
 
 
 def _get_event_type_name(type_id: int) -> str:
-    return event_type_names.get(type_id, 'unknown')
+    return event_type_names.get(type_id, "unknown")
 
 
 class OptaSerializer(EventDataSerializer):
@@ -251,31 +325,22 @@ class OptaSerializer(EventDataSerializer):
                 matchdata_path.find(f7_root).iterchildren("TeamData")
             )
 
-            away_player_map = {}
-            home_player_map = {}
-            home_team_id = None
-            away_team_id = None
+            home_score = None
+            away_score = None
             for team_elm in team_elms:
-                player_map = {
-                    player_elm.attrib["PlayerRef"].lstrip(
-                        "p"
-                    ): player_elm.attrib["ShirtNumber"]
-                    for player_elm in team_elm.find(
-                        "PlayerLineUp"
-                    ).iterchildren("MatchPlayer")
-                }
-                team_id = team_elm.attrib["TeamRef"].lstrip("t")
-
                 if team_elm.attrib["Side"] == "Home":
-                    home_player_map = player_map
-                    home_team_id = team_id
+                    home_score = team_elm.attrib["Score"]
+                    home_team = _team_from_xml_elm(team_elm, f7_root)
                 elif team_elm.attrib["Side"] == "Away":
-                    away_player_map = player_map
-                    away_team_id = team_id
+                    away_score = team_elm.attrib["Score"]
+                    away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise Exception(f"Unknown side: {team_elm.attrib['Side']}")
 
-            if not away_player_map or not home_player_map:
+            score = Score(home=home_score, away=away_score)
+            teams = [home_team, away_team]
+
+            if len(home_team.players) == 0 or len(away_team.players) == 0:
                 raise Exception("LineUp incomplete")
 
             game_elm = f24_root.find("Game")
@@ -313,12 +378,10 @@ class OptaSerializer(EventDataSerializer):
                         # not started yet
                         continue
 
-                    if event_elm.attrib["team_id"] == home_team_id:
-                        team = Team.HOME
-                        current_team_map = home_player_map
-                    elif event_elm.attrib["team_id"] == away_team_id:
-                        team = Team.AWAY
-                        current_team_map = away_player_map
+                    if event_elm.attrib["team_id"] == home_team.team_id:
+                        team = teams[0]
+                    elif event_elm.attrib["team_id"] == away_team.team_id:
+                        team = teams[1]
                     else:
                         raise Exception(
                             f"Unknown team_id {event_elm.attrib['team_id']}"
@@ -333,11 +396,11 @@ class OptaSerializer(EventDataSerializer):
                         ): qualifier_elm.attrib.get("value")
                         for qualifier_elm in event_elm.iterchildren("Q")
                     }
-                    player_jersey_no = None
+                    player = None
                     if "player_id" in event_elm.attrib:
-                        player_jersey_no = current_team_map[
+                        player = team.get_player_by_id(
                             event_elm.attrib["player_id"]
-                        ]
+                        )
 
                     generic_event_kwargs = dict(
                         # from DataRecord
@@ -348,8 +411,8 @@ class OptaSerializer(EventDataSerializer):
                         # from Event
                         event_id=event_id,
                         team=team,
-                        player_jersey_no=player_jersey_no,
-                        position=Point(x=x, y=y),
+                        player=player,
+                        coordinates=Point(x=x, y=y),
                         raw_event=event_elm,
                     )
 
@@ -377,7 +440,7 @@ class OptaSerializer(EventDataSerializer):
                         shot_event_kwargs = _parse_shot(
                             qualifiers,
                             type_id,
-                            position=generic_event_kwargs["position"],
+                            coordinates=generic_event_kwargs["coordinates"],
                         )
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
@@ -385,7 +448,9 @@ class OptaSerializer(EventDataSerializer):
                         event = ShotEvent(**kwargs)
                     else:
                         event = GenericEvent(
-                            **generic_event_kwargs, result=None, event_name=_get_event_type_name(type_id)
+                            **generic_event_kwargs,
+                            result=None,
+                            event_name=_get_event_type_name(type_id),
                         )
 
                     if (
@@ -394,15 +459,19 @@ class OptaSerializer(EventDataSerializer):
                     ):
                         events.append(event)
 
-        return EventDataset(
-            flags=DatasetFlag.BALL_OWNING_TEAM,
-            orientation=Orientation.ACTION_EXECUTING_TEAM,
+        metadata = Metadata(
+            teams=teams,
+            periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
             ),
-            periods=periods,
-            records=events,
+            score=score,
+            frame_rate=None,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM,
         )
+
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

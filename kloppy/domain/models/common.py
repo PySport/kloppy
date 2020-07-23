@@ -3,24 +3,94 @@ from dataclasses import dataclass, field
 from enum import Enum, Flag
 from typing import Optional, List, Dict
 
-from .pitch import PitchDimensions
+from .pitch import PitchDimensions, Point
 
 
-class Team(Enum):
+@dataclass
+class Score:
+    home: int
+    away: int
+
+
+class Ground(Enum):
     HOME = "home"
     AWAY = "away"
+    REFEREE = "referee"
 
     def __str__(self):
         return self.value
 
 
-@dataclass
+@dataclass(frozen=True)
+class Position:
+    position_id: str
+    name: str
+    coordinates: Point
+
+
+@dataclass(frozen=True)
 class Player:
     player_id: str
-    team: Team
+    team: "Team"
+    jersey_no: int
+    name: str = None
+    first_name: str = None
+    last_name: str = None
+    position: Position = None
+    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+
+    @property
+    def full_name(self):
+        if self.name:
+            return self.name
+        return f"{self.first_name} {self.last_name}"
+
+    def __str__(self):
+        return self.full_name
+
+    def __hash__(self):
+        return hash(self.player_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Player):
+            return False
+        return self.player_id == other.player_id
+
+
+@dataclass
+class Team:
+    team_id: str
     name: str
-    jersey_no: str
-    attributes: Optional[Dict] = field(default_factory=dict)
+    ground: Ground
+    players: List[Player] = field(default_factory=list)
+
+    def __str__(self):
+        return f"{self.name} ({self.team_id})"
+
+    def __hash__(self):
+        return hash(self.team_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Team):
+            return False
+        return self.team_id == other.team_id
+
+    def get_player_by_jersey_number(self, jersey_no: int):
+        jersey_no = int(jersey_no)
+        for player in self.players:
+            if player.jersey_no == jersey_no:
+                return player
+
+        return None
+
+    def get_player_by_id(self, player_id: str):
+        player_id = str(player_id)
+
+        for player in self.players:
+            if player.player_id == player_id:
+                return player
+
+        return None
 
 
 class BallState(Enum):
@@ -74,18 +144,18 @@ class Orientation(Enum):
             else:
                 raise Exception("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team == Team.HOME:
+            if ball_owning_team.ground == Ground.HOME:
                 return -1
-            elif ball_owning_team == Team.AWAY:
+            elif ball_owning_team.ground == Ground.AWAY:
                 return 1
             else:
                 raise Exception(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
-            if action_executing_team == Team.HOME:
+            if action_executing_team.ground == Ground.HOME:
                 return -1
-            elif action_executing_team == Team.AWAY:
+            elif action_executing_team.ground == Ground.AWAY:
                 return 1
             else:
                 raise Exception(
@@ -133,18 +203,17 @@ class DataRecord(ABC):
 
 
 @dataclass
-class Dataset(ABC):
-    flags: DatasetFlag
-    pitch_dimensions: PitchDimensions
-    orientation: Orientation
+class Metadata:
+    teams: List[Team]
     periods: List[Period]
-    records: List[DataRecord]
+    pitch_dimensions: PitchDimensions
+    score: Score
+    frame_rate: float
+    orientation: Orientation
+    flags: DatasetFlag
 
 
 @dataclass
-class MetaData:
-    home_team_name: str
-    away_team_name: str
-    players: List[Player]
-    periods: List[Period]
-    pitch_dimensions: PitchDimensions
+class Dataset(ABC):
+    records: List[DataRecord]
+    metadata: Metadata

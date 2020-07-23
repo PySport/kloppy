@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List, Union, Dict
 
 from .pitch import Point
-from .common import DataRecord, Dataset, Team
+from .common import DataRecord, Dataset, Team, Player
 
 
 class ResultType(Enum):
@@ -70,8 +70,8 @@ class EventType(Enum):
 class Event(DataRecord, ABC):
     event_id: str
     team: Team
-    player_jersey_no: str
-    position: Point
+    player: Player
+    coordinates: Point
 
     result: ResultType
 
@@ -105,14 +105,13 @@ class ShotEvent(Event):
 @dataclass
 class PassEvent(Event):
     receive_timestamp: float
-    receiver_player_jersey_no: str
-    receiver_position: Point
+    receiver_player: Player
+    receiver_coordinates: Point
 
     result: PassResult
 
     event_type: EventType = EventType.PASS
     event_name: str = "pass"
-
 
 
 @dataclass
@@ -126,7 +125,7 @@ class TakeOnEvent(Event):
 @dataclass
 class CarryEvent(Event):
     end_timestamp: float
-    end_position: Point
+    end_coordinates: Point
 
     result: CarryResult
 

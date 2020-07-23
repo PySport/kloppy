@@ -106,10 +106,15 @@ def main():
             print(team, match.events[0].timestamp)
 
         counter.update(
-            {f"{team}_total": 1, f"{team}_success": 1 if success else 0}
+            {
+                f"{team.ground}_total": 1,
+                f"{team.ground}_success": 1 if success else 0,
+            }
         )
 
-    print("Barcelona:")
+    home_team, away_team = dataset.metadata.teams
+
+    print(f"{home_team}:")
     print(f"\tball loss count: {counter['home_total']}")
     print(
         f"\t\trecovered within 10 sec: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)"
@@ -118,7 +123,7 @@ def main():
         f"\t\tnot recovered within 10 sec: {counter['home_total'] - counter['home_success']} ({(counter['home_total'] - counter['home_success']) / counter['home_total'] * 100:.0f}%)"
     )
     print("")
-    print("Deportivo Alavés:")
+    print(f"{away_team}:")
     print(f"\tball loss count: {counter['away_total']}")
     print(
         f"\t\trecovered within 10 sec: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)"

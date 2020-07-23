@@ -5,6 +5,8 @@ from collections import Counter
 from kloppy import datasets
 import matplotlib.pyplot as plt
 
+from kloppy.domain import Ground
+
 
 def main():
     """
@@ -24,8 +26,9 @@ def main():
     for frame in dataset.frames:
         playing_seconds_per_player.update(
             [
-                int(jersey_no)
-                for jersey_no in frame.home_team_player_positions.keys()
+                player.jersey_no
+                for player in frame.players_coordinates.keys()
+                if player.team.ground == Ground.HOME
             ]
         )
 

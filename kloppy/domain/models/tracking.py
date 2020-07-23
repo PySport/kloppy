@@ -1,26 +1,28 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from .common import Dataset, DataRecord
+from .common import Dataset, DataRecord, Ground, Player
 from .pitch import Point
 
 
 @dataclass
 class Frame(DataRecord):
     frame_id: int
-    home_team_player_positions: Dict[str, Point]
-    away_team_player_positions: Dict[str, Point]
-    ball_position: Point
+    players_coordinates: Dict[Player, Point]
+    ball_coordinates: Point
 
 
 @dataclass
 class TrackingDataset(Dataset):
-    frame_rate: int
     records: List[Frame]
 
     @property
     def frames(self):
         return self.records
+
+    @property
+    def frame_rate(self):
+        return self.metadata.frame_rate
 
 
 __all__ = ["Frame", "TrackingDataset"]

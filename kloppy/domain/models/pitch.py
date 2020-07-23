@@ -21,7 +21,7 @@ class PitchDimensions:
     y_per_meter: float = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class Point:
     x: float
     y: float

@@ -21,19 +21,20 @@ from .domain import (
     CarryEvent,
     PassResult,
     EventType,
+    Player,
 )
 
 
 def load_tracab_tracking_data(
-    meta_data_filename: str, raw_data_filename: str, options: dict = None
+    metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
     serializer = TRACABSerializer()
-    with open(meta_data_filename, "rb") as meta_data, open(
+    with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:
 
         return serializer.deserialize(
-            inputs={"meta_data": meta_data, "raw_data": raw_data},
+            inputs={"metadata": metadata, "raw_data": raw_data},
             options=options,
         )
 
@@ -58,15 +59,15 @@ def load_metrica_tracking_data(
 
 
 def load_epts_tracking_data(
-    meta_data_filename: str, raw_data_filename: str, options: dict = None
+    metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
     serializer = EPTSSerializer()
-    with open(meta_data_filename, "rb") as meta_data, open(
+    with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:
 
         return serializer.deserialize(
-            inputs={"meta_data": meta_data, "raw_data": raw_data},
+            inputs={"metadata": metadata, "raw_data": raw_data},
             options=options,
         )
 
@@ -126,24 +127,17 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         period_id=frame.period.id if frame.period else None,
         timestamp=frame.timestamp,
         ball_state=frame.ball_state.value if frame.ball_state else None,
-        ball_owning_team=frame.ball_owning_team.value
+        ball_owning_team_id=frame.ball_owning_team.team_id
         if frame.ball_owning_team
         else None,
-        ball_x=frame.ball_position.x if frame.ball_position else None,
-        ball_y=frame.ball_position.y if frame.ball_position else None,
+        ball_x=frame.ball_coordinates.x if frame.ball_coordinates else None,
+        ball_y=frame.ball_coordinates.y if frame.ball_coordinates else None,
     )
-    for jersey_no, position in frame.home_team_player_positions.items():
+    for player, coordinates in frame.players_coordinates.items():
         row.update(
             {
-                f"player_home_{jersey_no}_x": position.x,
-                f"player_home_{jersey_no}_y": position.y,
-            }
-        )
-    for jersey_no, position in frame.away_team_player_positions.items():
-        row.update(
-            {
-                f"player_away_{jersey_no}_x": position.x,
-                f"player_away_{jersey_no}_y": position.y,
+                f"{player.player_id}_x": coordinates.x,
+                f"{player.player_id}_y": coordinates.y,
             }
         )
 
@@ -164,29 +158,31 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         timestamp=event.timestamp,
         end_timestamp=None,
         ball_state=event.ball_state.value if event.ball_state else None,
-        ball_owning_team=event.ball_owning_team.value
+        ball_owning_team=event.ball_owning_team.team_id
         if event.ball_owning_team
         else None,
-        team=event.team.value,
-        player_jersey_no=event.player_jersey_no,
-        position_x=event.position.x if event.position else None,
-        position_y=event.position.y if event.position else None,
+        team_id=event.team.team_id,
+        player_id=event.player.player_id,
+        coordinates_x=event.coordinates.x if event.coordinates else None,
+        coordinates_y=event.coordinates.y if event.coordinates else None,
     )
     if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
         row.update(
             {
                 "end_timestamp": event.receive_timestamp,
-                "end_position_x": event.receiver_position.x,
-                "end_position_y": event.receiver_position.y,
-                "receiver_jersey_no": event.receiver_player_jersey_no,
+                "end_coordinates_x": event.receiver_coordinates.x,
+                "end_coordinates_y": event.receiver_coordinates.y,
+                "receiver_player_id": event.receiver_player.player_id
+                if event.receiver_player
+                else None,
             }
         )
     elif isinstance(event, CarryEvent):
         row.update(
             {
                 "end_timestamp": event.end_timestamp,
-                "end_position_x": event.end_position.x,
-                "end_position_y": event.end_position.y,
+                "end_coordinates_x": event.end_coordinates.x,
+                "end_coordinates_y": event.end_coordinates.y,
             }
         )
     return row

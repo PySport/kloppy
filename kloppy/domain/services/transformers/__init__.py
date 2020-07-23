@@ -12,6 +12,7 @@ from kloppy.domain import (
     DatasetFlag,
     Dataset,
     EventDataset,
+    Metadata,
 )
 from kloppy.domain.models.event import Event
 
@@ -82,14 +83,12 @@ class Transformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_position=self.transform_point(frame.ball_position, flip),
-            home_team_player_positions={
-                jersey_no: self.transform_point(point, flip)
-                for jersey_no, point in frame.home_team_player_positions.items()
-            },
-            away_team_player_positions={
-                jersey_no: self.transform_point(point, flip)
-                for jersey_no, point in frame.away_team_player_positions.items()
+            ball_coordinates=self.transform_point(
+                frame.ball_coordinates, flip
+            ),
+            players_coordinates={
+                key: self.transform_point(point, flip)
+                for key, point in frame.players_coordinates.items()
             },
         )
 
@@ -122,43 +121,38 @@ class Transformer:
         if not to_pitch_dimensions and not to_orientation:
             return dataset
         elif not to_orientation:
-            to_orientation = dataset.orientation
+            to_orientation = dataset.metadata.orientation
         elif not to_pitch_dimensions:
-            to_pitch_dimensions = dataset.pitch_dimensions
+            to_pitch_dimensions = dataset.metadata.pitch_dimensions
 
         if to_orientation == Orientation.BALL_OWNING_TEAM:
-            if not dataset.flags & DatasetFlag.BALL_OWNING_TEAM:
+            if not dataset.metadata.flags & DatasetFlag.BALL_OWNING_TEAM:
                 raise ValueError(
                     "Cannot transform to BALL_OWNING_TEAM orientation when dataset doesn't contain "
                     "ball owning team data"
                 )
 
         transformer = cls(
-            from_pitch_dimensions=dataset.pitch_dimensions,
-            from_orientation=dataset.orientation,
+            from_pitch_dimensions=dataset.metadata.pitch_dimensions,
+            from_orientation=dataset.metadata.orientation,
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation,
         )
+        metadata = replace(
+            dataset.metadata,
+            pitch_dimensions=to_pitch_dimensions,
+            orientation=to_orientation,
+        )
         if isinstance(dataset, TrackingDataset):
-            frames = list(map(transformer.transform_frame, dataset.records))
+            frames = [
+                transformer.transform_frame(record)
+                for record in dataset.records
+            ]
 
-            return TrackingDataset(
-                flags=dataset.flags,
-                frame_rate=dataset.frame_rate,
-                periods=dataset.periods,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-                records=frames,
-            )
+            return TrackingDataset(metadata=metadata, records=frames,)
         elif isinstance(dataset, EventDataset):
             events = list(map(transformer.transform_event, dataset.records))
 
-            return EventDataset(
-                flags=dataset.flags,
-                periods=dataset.periods,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-                records=events,
-            )
+            return EventDataset(metadata=metadata, records=events,)
         else:
             raise Exception("Unknown Dataset type")

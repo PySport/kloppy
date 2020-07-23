@@ -413,7 +413,7 @@ class StatsBombSerializer(EventDataSerializer):
                         **generic_event_kwargs,
                     )
                 else:
-                    event = GenericEvent(result=None, **generic_event_kwargs)
+                    event = GenericEvent(result=None, event_name=raw_event['type']['name'], **generic_event_kwargs)
 
                 if (
                     not wanted_event_types

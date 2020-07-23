@@ -159,6 +159,88 @@ EVENT_TYPE_SHOT_POST = 14
 EVENT_TYPE_SHOT_SAVED = 15
 EVENT_TYPE_SHOT_GOAL = 16
 
+event_type_names = {1: 'pass',
+                    2: 'offside pass',
+                    3: 'take on',
+                    4: 'foul',
+                    5: 'out',
+                    6: 'corner awarded',
+                    7: 'tackle',
+                    8: 'interception',
+                    9: 'turnover',
+                    10: 'save',
+                    11: 'claim',
+                    12: 'clearance',
+                    13: 'miss',
+                    14: 'post',
+                    15: 'attempt saved',
+                    16: 'goal',
+                    17: 'card',
+                    18: 'player off',
+                    19: 'player on',
+                    20: 'player retired',
+                    21: 'player returns',
+                    22: 'player becomes goalkeeper',
+                    23: 'goalkeeper becomes player',
+                    24: 'condition change',
+                    25: 'official change',
+                    26: 'unknown26',
+                    27: 'start delay',
+                    28: 'end delay',
+                    29: 'unknown29',
+                    30: 'end',
+                    31: 'unknown31',
+                    32: 'start',
+                    33: 'unknown33',
+                    34: 'team set up',
+                    35: 'player changed position',
+                    36: 'player changed jersey number',
+                    37: 'collection end',
+                    38: 'temp_goal',
+                    39: 'temp_attempt',
+                    40: 'formation change',
+                    41: 'punch',
+                    42: 'good skill',
+                    43: 'deleted event',
+                    44: 'aerial',
+                    45: 'challenge',
+                    46: 'unknown46',
+                    47: 'rescinded card',
+                    48: 'unknown46',
+                    49: 'ball recovery',
+                    50: 'dispossessed',
+                    51: 'error',
+                    52: 'keeper pick-up',
+                    53: 'cross not claimed',
+                    54: 'smother',
+                    55: 'offside provoked',
+                    56: 'shield ball opp',
+                    57: 'foul throw in',
+                    58: 'penalty faced',
+                    59: 'keeper sweeper',
+                    60: 'chance missed',
+                    61: 'ball touch',
+                    62: 'unknown62',
+                    63: 'temp_save',
+                    64: 'resume',
+                    65: 'contentious referee decision',
+                    66: 'possession data',
+                    67: '50/50',
+                    68: 'referee drop ball',
+                    69: 'failed to block',
+                    70: 'injury time announcement',
+                    71: 'coach setup',
+                    72: 'caught offside',
+                    73: 'other ball contact',
+                    74: 'blocked pass',
+                    75: 'delayed start',
+                    76: 'early end',
+                    77: 'player off pitch'}
+
+
+def _get_event_type_name(type_id: int) -> str:
+    return event_type_names.get(type_id, 'unknown')
+
 
 class OptaSerializer(EventDataSerializer):
     @staticmethod
@@ -358,7 +440,7 @@ class OptaSerializer(EventDataSerializer):
                         event = ShotEvent(**kwargs)
                     else:
                         event = GenericEvent(
-                            **generic_event_kwargs, result=None
+                            **generic_event_kwargs, result=None, event_name=_get_event_type_name(type_id)
                         )
 
                     if (

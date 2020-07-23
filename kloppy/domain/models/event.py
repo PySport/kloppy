@@ -82,9 +82,15 @@ class Event(DataRecord, ABC):
     def event_type(self) -> EventType:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def event_name(self) -> str:
+        raise NotImplementedError
+
 
 @dataclass
 class GenericEvent(Event):
+    event_name: str = "generic"
     event_type: EventType = EventType.GENERIC
 
 
@@ -93,6 +99,7 @@ class ShotEvent(Event):
     result: ShotResult
 
     event_type: EventType = EventType.SHOT
+    event_name: str = "shot"
 
 
 @dataclass
@@ -104,6 +111,8 @@ class PassEvent(Event):
     result: PassResult
 
     event_type: EventType = EventType.PASS
+    event_name: str = "pass"
+
 
 
 @dataclass
@@ -111,6 +120,7 @@ class TakeOnEvent(Event):
     result: TakeOnResult
 
     event_type: EventType = EventType.TAKE_ON
+    event_name: str = "take-on"
 
 
 @dataclass
@@ -121,6 +131,7 @@ class CarryEvent(Event):
     result: CarryResult
 
     event_type: EventType = EventType.CARRY
+    event_name: str = "carry"
 
 
 @dataclass

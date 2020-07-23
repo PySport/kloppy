@@ -22,7 +22,7 @@ class TrackingDataset(Dataset):
 
     @property
     def frame_rate(self):
-        return self.meta_data.frame_rate
+        return self.metadata.frame_rate
 
 
 __all__ = ["Frame", "TrackingDataset"]

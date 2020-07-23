@@ -203,7 +203,7 @@ class DataRecord(ABC):
 
 
 @dataclass
-class MetaData:
+class Metadata:
     teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
@@ -216,4 +216,4 @@ class MetaData:
 @dataclass
 class Dataset(ABC):
     records: List[DataRecord]
-    meta_data: MetaData
+    metadata: Metadata

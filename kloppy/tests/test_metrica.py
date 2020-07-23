@@ -25,15 +25,15 @@ class TestMetricaTracking:
             )
 
         assert len(dataset.records) == 6
-        assert len(dataset.meta_data.periods) == 2
-        assert dataset.meta_data.orientation == Orientation.FIXED_HOME_AWAY
-        assert dataset.meta_data.periods[0] == Period(
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=0.04,
             end_timestamp=0.12,
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
-        assert dataset.meta_data.periods[1] == Period(
+        assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=5800.16,
             end_timestamp=5800.24,
@@ -41,12 +41,12 @@ class TestMetricaTracking:
         )
 
         # make sure data is loaded correctly (including flip y-axis)
-        home_player = dataset.meta_data.teams[0].players[0]
+        home_player = dataset.metadata.teams[0].players[0]
         assert dataset.records[0].players_coordinates[home_player] == Point(
             x=0.00082, y=1 - 0.48238
         )
 
-        away_player = dataset.meta_data.teams[1].players[0]
+        away_player = dataset.metadata.teams[1].players[0]
         assert dataset.records[0].players_coordinates[away_player] == Point(
             x=0.90509, y=1 - 0.47462
         )

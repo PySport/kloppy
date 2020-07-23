@@ -6,7 +6,7 @@ from kloppy.infra.utils import Readable
 from .models import (
     PlayerChannel,
     DataFormatSpecification,
-    EPTSMetaData,
+    EPTSMetadata,
     Channel,
     Sensor,
 )
@@ -40,18 +40,18 @@ def build_regex(
 
 def read_raw_data(
     raw_data: Readable,
-    meta_data: EPTSMetaData,
+    metadata: EPTSMetadata,
     sensor_ids: List[str] = None,
     sample_rate: float = 1.0,
     limit: int = 0,
 ) -> Iterator[dict]:
     sensors = [
         sensor
-        for sensor in meta_data.sensors
+        for sensor in metadata.sensors
         if sensor_ids is None or sensor.sensor_id in sensor_ids
     ]
 
-    data_specs = meta_data.data_format_specifications
+    data_specs = metadata.data_format_specifications
 
     current_data_spec_idx = 0
     end_frame_id = 0
@@ -62,7 +62,7 @@ def read_raw_data(
         current_data_spec_idx = idx
         regex_str = build_regex(
             data_specs[current_data_spec_idx],
-            meta_data.player_channels,
+            metadata.player_channels,
             sensors,
         )
 
@@ -71,7 +71,7 @@ def read_raw_data(
 
     _set_current_data_spec(0)
 
-    periods = meta_data.periods
+    periods = metadata.periods
     n = 0
     sample = 1.0 / sample_rate
 
@@ -83,7 +83,7 @@ def read_raw_data(
         row = {k: float(v) for k, v in regex.search(line).groupdict().items()}
         frame_id = int(row["frameCount"])
         if frame_id <= end_frame_id:
-            timestamp = frame_id / meta_data.frame_rate
+            timestamp = frame_id / metadata.frame_rate
 
             del row["frameCount"]
             row["frame_id"] = frame_id

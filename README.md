@@ -100,7 +100,7 @@ with open("tracab_data.dat", "rb") as raw, \
     dataset = serializer.deserialize(
         inputs={
             'raw_data': raw,
-            'meta_data': meta
+            'metadata': meta
         },
         options={
             "sample_rate": 1 / 12
@@ -145,7 +145,7 @@ with open("raw_data.txt", "rb") as raw, \
     dataset = serializer.deserialize(
         inputs={
             'raw_data': raw,
-            'meta_data': meta
+            'metadata': meta
         },
         options={
             "sample_rate": 1 / 12

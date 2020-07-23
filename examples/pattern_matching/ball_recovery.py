@@ -112,7 +112,7 @@ def main():
             }
         )
 
-    home_team, away_team = dataset.meta_data.teams
+    home_team, away_team = dataset.metadata.teams
 
     print(f"{home_team}:")
     print(f"\tball loss count: {counter['home_total']}")

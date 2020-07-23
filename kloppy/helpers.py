@@ -156,7 +156,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         event_type=(
             event.event_type.value
             if event.event_type != EventType.GENERIC
-            else f"GENERIC:{event.raw_event['type']['name']}"
+            else f"GENERIC:{event.event_name}"
         ),
         result=event.result.value if event.result else None,
         success=event.result.is_success if event.result else None,

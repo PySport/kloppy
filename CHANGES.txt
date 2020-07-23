@@ -28,3 +28,4 @@ v0.6.0, 2020-06-18 -- Add Opta event serializer
                       Improved ball_recovery example
 v0.6.1, 2020-07-02 -- Fix in readme (@rjtavares)
                       Add additional_columns to to_pandas (@rjtavares)
+v0.6.2, 2020-07-23 -- Fix to_pandas for Opta event data

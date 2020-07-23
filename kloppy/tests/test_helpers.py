@@ -7,7 +7,7 @@ from kloppy import (
     to_pandas,
     load_metrica_tracking_data,
     load_tracab_tracking_data,
-    transform,
+    transform, OptaSerializer,
 )
 from kloppy.domain import (
     Period,
@@ -125,6 +125,22 @@ class TestHelpers:
         )
 
         assert_frame_equal(data_frame, expected_data_frame)
+
+    def test_to_pandas_generic_events(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = OptaSerializer()
+
+        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
+                f"{base_dir}/files/opta_f7.xml", "rb"
+        ) as f7_data:
+            dataset = serializer.deserialize(
+                inputs={"f24_data": f24_data, "f7_data": f7_data}
+            )
+
+        dataframe = to_pandas(dataset)
+        dataframe = dataframe[dataframe.event_type == "GENERIC:out"]
+        assert dataframe.shape[0] == 2
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()

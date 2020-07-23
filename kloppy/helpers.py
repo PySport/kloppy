@@ -127,7 +127,7 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         period_id=frame.period.id if frame.period else None,
         timestamp=frame.timestamp,
         ball_state=frame.ball_state.value if frame.ball_state else None,
-        ball_owning_team=frame.ball_owning_team.team_id
+        ball_owning_team_id=frame.ball_owning_team.team_id
         if frame.ball_owning_team
         else None,
         ball_x=frame.ball_coordinates.x if frame.ball_coordinates else None,
@@ -161,8 +161,8 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         ball_owning_team=event.ball_owning_team.team_id
         if event.ball_owning_team
         else None,
-        team=event.team.team_id,
-        player=event.player.player_id,
+        team_id=event.team.team_id,
+        player_id=event.player.player_id,
         coordinates_x=event.coordinates.x if event.coordinates else None,
         coordinates_y=event.coordinates.y if event.coordinates else None,
     )
@@ -172,7 +172,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
                 "end_timestamp": event.receive_timestamp,
                 "end_coordinates_x": event.receiver_coordinates.x,
                 "end_coordinates_y": event.receiver_coordinates.y,
-                "receiver": event.receiver_player.player_id
+                "receiver_player_id": event.receiver_player.player_id
                 if event.receiver_player
                 else None,
             }

@@ -1,7 +1,13 @@
 import os
 
 from kloppy import OptaSerializer
-from kloppy.domain import AttackingDirection, Period, Orientation
+from kloppy.domain import (
+    AttackingDirection,
+    Period,
+    Orientation,
+    Player,
+    Position,
+)
 
 
 class TestOpta:
@@ -23,15 +29,25 @@ class TestOpta:
         assert (
             dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
+        assert dataset.meta_data.teams[0].name == "FC København"
+        assert dataset.meta_data.teams[1].name == "FC Nordsjælland"
+
+        player = dataset.meta_data.teams[0].players[0]
+        assert player.player_id == "111319"
+        assert player.jersey_no == 21
+        assert str(player) == "Jesse Joronen"
+        assert player.position.position_id == "1"
+        assert player.position.name == "Goalkeeper"
+
         assert dataset.meta_data.periods[0] == Period(
             id=1,
-            start_timestamp=1537725733.608,
-            end_timestamp=1537728501.222,
+            start_timestamp=1537714933.608,
+            end_timestamp=1537717701.222,
             attacking_direction=AttackingDirection.NOT_SET,
         )
         assert dataset.meta_data.periods[1] == Period(
             id=2,
-            start_timestamp=1537729528.873,
-            end_timestamp=1537732537.788,
+            start_timestamp=1537718728.873,
+            end_timestamp=1537721737.788,
             attacking_direction=AttackingDirection.NOT_SET,
         )

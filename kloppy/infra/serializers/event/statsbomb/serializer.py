@@ -253,31 +253,31 @@ class StatsBombSerializer(EventDataSerializer):
         with performance_logging("parse data", logger=logger):
 
             home_team = Team(
-                team_id=home_lineup["team_id"],
+                team_id=str(home_lineup["team_id"]),
                 name=home_lineup["team_name"],
                 ground=Ground.HOME,
             )
             home_team.players = [
                 Player(
-                    player_id=player["player_id"],
+                    player_id=str(player["player_id"]),
                     team=home_team,
                     name=player["player_name"],
-                    jersey_no=player["jersey_number"],
+                    jersey_no=int(player["jersey_number"]),
                 )
                 for player in home_lineup["lineup"]
             ]
 
             away_team = Team(
-                team_id=away_lineup["team_id"],
+                team_id=str(away_lineup["team_id"]),
                 name=away_lineup["team_name"],
                 ground=Ground.AWAY,
             )
             away_team.players = [
                 Player(
-                    player_id=player["player_id"],
+                    player_id=str(player["player_id"]),
                     team=away_team,
                     name=player["player_name"],
-                    jersey_no=player["jersey_number"],
+                    jersey_no=int(player["jersey_number"]),
                 )
                 for player in away_lineup["lineup"]
             ]

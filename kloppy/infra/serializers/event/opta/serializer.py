@@ -1,6 +1,7 @@
 from typing import Tuple, Dict, List
 import logging
 from datetime import datetime
+import pytz
 from lxml import objectify
 
 from kloppy.domain import (
@@ -27,6 +28,7 @@ from kloppy.domain import (
     Score,
     MetaData,
     Player,
+    Position,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
@@ -35,7 +37,11 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_f24_datetime(dt_str: str) -> float:
-    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").timestamp()
+    return (
+        datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
+        .replace(tzinfo=pytz.utc)
+        .timestamp()
+    )
 
 
 def _parse_pass(qualifiers: Dict[int, str], outcome: int) -> Dict:
@@ -84,6 +90,62 @@ def _parse_shot(
         result = None
 
     return dict(coordinates=coordinates, result=result)
+
+
+def _parse_team_players(
+    f7_root, team_ref: str
+) -> Tuple[str, Dict[str, Dict[str, str]]]:
+    matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
+    team_elms = list(matchdata_path.find(f7_root).iterchildren("Team"))
+    for team_elm in team_elms:
+        if team_elm.attrib["uID"] == team_ref:
+            team_name = str(team_elm.find("Name"))
+            players = {
+                player_elm.attrib["uID"]: dict(
+                    first_name=str(
+                        player_elm.find("PersonName").find("First")
+                    ),
+                    last_name=str(player_elm.find("PersonName").find("Last")),
+                )
+                for player_elm in team_elm.iterchildren("Player")
+            }
+            break
+    else:
+        raise Exception(f"Could not parse players for {team_ref}")
+
+    return team_name, players
+
+
+def _team_from_xml_elm(team_elm, f7_root) -> Team:
+    # This should not happen here
+    team_name, team_players = _parse_team_players(
+        f7_root, team_elm.attrib["TeamRef"]
+    )
+
+    team_id = team_elm.attrib["TeamRef"].lstrip("t")
+    team = Team(team_id=str(team_id), name=team_name, ground=Ground.HOME)
+    team.players = [
+        Player(
+            player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
+            team=team,
+            jersey_no=int(player_elm.attrib["ShirtNumber"]),
+            first_name=team_players[player_elm.attrib["PlayerRef"]][
+                "first_name"
+            ],
+            last_name=team_players[player_elm.attrib["PlayerRef"]][
+                "last_name"
+            ],
+            position=Position(
+                position_id=player_elm.attrib["Formation_Place"],
+                name=player_elm.attrib["Position"],
+                coordinates=None,
+            ),
+        )
+        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
+            "MatchPlayer"
+        )
+    ]
+    return team
 
 
 EVENT_TYPE_START_PERIOD = 32
@@ -176,43 +238,12 @@ class OptaSerializer(EventDataSerializer):
             home_score = None
             away_score = None
             for team_elm in team_elms:
-
-                team_id = team_elm.attrib["TeamRef"].lstrip("t")
-
                 if team_elm.attrib["Side"] == "Home":
                     home_score = team_elm.attrib["Score"]
-                    home_team = Team(
-                        team_id=team_id, name="home", ground=Ground.HOME
-                    )
-                    home_team.players = [
-                        Player(
-                            player_id=player_elm.attrib["PlayerRef"].lstrip(
-                                "p"
-                            ),
-                            team=home_team,
-                            jersey_no=player_elm.attrib["ShirtNumber"],
-                        )
-                        for player_elm in team_elm.find(
-                            "PlayerLineUp"
-                        ).iterchildren("MatchPlayer")
-                    ]
+                    home_team = _team_from_xml_elm(team_elm, f7_root)
                 elif team_elm.attrib["Side"] == "Away":
                     away_score = team_elm.attrib["Score"]
-                    away_team = Team(
-                        team_id=team_id, name="away", ground=Ground.AWAY
-                    )
-                    away_team.players = [
-                        Player(
-                            player_id=player_elm.attrib["PlayerRef"].lstrip(
-                                "p"
-                            ),
-                            team=away_team,
-                            jersey_no=player_elm.attrib["ShirtNumber"],
-                        )
-                        for player_elm in team_elm.find(
-                            "PlayerLineUp"
-                        ).iterchildren("MatchPlayer")
-                    ]
+                    away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise Exception(f"Unknown side: {team_elm.attrib['Side']}")
 

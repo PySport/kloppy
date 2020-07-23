@@ -73,7 +73,7 @@ def _load_players(players_elm, team: Team) -> List[Player]:
     return [
         Player(
             team=team,
-            jersey_no=str(player_elm.find("ShirtNumber")),
+            jersey_no=int(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
             position=_load_position_data(
@@ -93,6 +93,9 @@ def _load_position_data(parent_elm) -> Position:
     # and then again to set the attributes. Also, data in position should not
     # be duplicated in attributes either.
     player_provider_parameters = _load_provider_parameters(parent_elm)
+    if "position_index" not in player_provider_parameters:
+        return None
+
     return Position(
         position_id=player_provider_parameters["position_index"],
         name=player_provider_parameters["position_type"],

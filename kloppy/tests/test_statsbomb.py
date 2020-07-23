@@ -1,7 +1,13 @@
 import os
 
 from kloppy import StatsBombSerializer
-from kloppy.domain import AttackingDirection, Period, Orientation
+from kloppy.domain import (
+    AttackingDirection,
+    Period,
+    Orientation,
+    Player,
+    Position,
+)
 
 
 class TestStatsbomb:
@@ -28,6 +34,15 @@ class TestStatsbomb:
         assert (
             dataset.meta_data.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
+        assert dataset.meta_data.teams[0].name == "Barcelona"
+        assert dataset.meta_data.teams[1].name == "Deportivo Alavés"
+
+        player = dataset.meta_data.teams[0].players[0]
+        assert player.player_id == "3109"
+        assert player.jersey_no == 14
+        assert str(player) == "Malcom Filipe Silva de Oliveira"
+        assert player.position is None  # not set
+
         assert dataset.meta_data.periods[0] == Period(
             id=1,
             start_timestamp=0.0,

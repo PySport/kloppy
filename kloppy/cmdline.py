@@ -158,7 +158,10 @@ def run_query(argv=sys.argv[1:]):
         success = "success" in match.captures
 
         counter.update(
-            {f"{team}_total": 1, f"{team}_success": 1 if success else 0}
+            {
+                f"{team.ground}_total": 1,
+                f"{team.ground}_success": 1 if success else 0,
+            }
         )
 
         should_process = not opts.only_success or success

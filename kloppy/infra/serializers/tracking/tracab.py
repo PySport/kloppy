@@ -40,29 +40,23 @@ class TRACABSerializer(TrackingDataSerializer):
             team_id = int(team_id)
 
             if team_id == 1:
-                player = teams[0].get_player_by_jersey_number(jersey_no)
-
-                if player is None:
-                    player = Player(
-                        player_id=f"home_{jersey_no}",
-                        team=teams[0],
-                        jersey_no=jersey_no,
-                    )
-                    teams[0].players.append(player)
-
-                players_coordinates[player] = Point(float(x), float(y))
+                team = teams[0]
             elif team_id == 0:
-                player = teams[1].get_player_by_jersey_number(jersey_no)
+                team = teams[1]
+            else:
+                raise Exception(f"Unknown team {team_id}")
 
-                if player is None:
-                    player = Player(
-                        player_id=f"away_{jersey_no}",
-                        team=teams[1],
-                        jersey_no=jersey_no,
-                    )
-                    teams[1].players.append(player)
+            player = team.get_player_by_jersey_number(jersey_no)
 
-                players_coordinates[player] = Point(float(x), float(y))
+            if not player:
+                player = Player(
+                    player_id=f"{team.ground}_{jersey_no}",
+                    team=team,
+                    jersey_no=int(jersey_no),
+                )
+                team.players.append(player)
+
+            players_coordinates[player] = Point(float(x), float(y))
 
         (
             ball_x,

@@ -70,8 +70,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 player_jersey_numbers = columns[3:-2:2]
                 players = [
                     Player(
-                        player_id=f"{team}_{jersey_number}",
-                        jersey_no=jersey_number,
+                        player_id=f"{team.ground}_{jersey_number}",
+                        jersey_no=int(jersey_number),
                         team=team,
                     )
                     for jersey_number in player_jersey_numbers

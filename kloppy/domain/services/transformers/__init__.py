@@ -51,7 +51,6 @@ class Transformer:
         self,
         ball_owning_team: Team,
         attacking_direction: AttackingDirection,
-        meta_data: MetaData,
         action_executing_team: Team = None,
     ) -> bool:
         if self._from_orientation == self._to_orientation:
@@ -70,11 +69,10 @@ class Transformer:
             flip = orientation_factor_from != orientation_factor_to
         return flip
 
-    def transform_frame(self, frame: Frame, meta_data: MetaData) -> Frame:
+    def transform_frame(self, frame: Frame) -> Frame:
         flip = self.__needs_flip(
             ball_owning_team=frame.ball_owning_team,
             attacking_direction=frame.period.attacking_direction,
-            meta_data=meta_data,
         )
 
         return Frame(
@@ -140,26 +138,21 @@ class Transformer:
             to_pitch_dimensions=to_pitch_dimensions,
             to_orientation=to_orientation,
         )
+        meta_data = replace(
+            dataset.meta_data,
+            pitch_dimensions=to_pitch_dimensions,
+            orientation=to_orientation,
+        )
         if isinstance(dataset, TrackingDataset):
             frames = [
-                transformer.transform_frame(record, dataset.meta_data)
+                transformer.transform_frame(record)
                 for record in dataset.records
             ]
-            dataset.meta_data.pitch_dimensions = to_pitch_dimensions
-            dataset.meta_data.to_orientation = to_orientation
 
-            return TrackingDataset(
-                meta_data=dataset.meta_data, records=frames,
-            )
+            return TrackingDataset(meta_data=meta_data, records=frames,)
         elif isinstance(dataset, EventDataset):
             events = list(map(transformer.transform_event, dataset.records))
 
-            return EventDataset(
-                flags=dataset.flags,
-                periods=dataset.periods,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-                records=events,
-            )
+            return EventDataset(meta_data=meta_data, records=events,)
         else:
             raise Exception("Unknown Dataset type")

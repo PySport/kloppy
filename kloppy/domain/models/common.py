@@ -32,12 +32,29 @@ class Position:
 class Player:
     player_id: str
     team: "Team"
-    jersey_no: str
+    jersey_no: int
     name: str = None
     first_name: str = None
     last_name: str = None
     position: Position = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+
+    @property
+    def full_name(self):
+        if self.name:
+            return self.name
+        return f"{self.first_name} {self.last_name}"
+
+    def __str__(self):
+        return self.full_name
+
+    def __hash__(self):
+        return hash(self.player_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Player):
+            return False
+        return self.player_id == other.player_id
 
 
 @dataclass
@@ -48,7 +65,7 @@ class Team:
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
-        return self.team_id
+        return f"{self.name} ({self.team_id})"
 
     def __hash__(self):
         return hash(self.team_id)
@@ -58,16 +75,19 @@ class Team:
             return False
         return self.team_id == other.team_id
 
-    def get_player_by_jersey_number(self, jersey_no: str):
+    def get_player_by_jersey_number(self, jersey_no: int):
+        jersey_no = int(jersey_no)
         for player in self.players:
             if player.jersey_no == jersey_no:
                 return player
 
         return None
 
-    def get_player_by_id(self, id: str):
+    def get_player_by_id(self, player_id: str):
+        player_id = str(player_id)
+
         for player in self.players:
-            if player.player_id == id:
+            if player.player_id == player_id:
                 return player
 
         return None

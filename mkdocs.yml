@@ -1,0 +1,18 @@
+site_name: kloppy 1.0.0
+site_url: https://kloppy.pysport.org
+repo_url: https://github.com/PySport/kloppy
+repo_name: 'GitHub'
+edit_uri: blob/master/docs/
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Quickstart guides:
+      - Event data: quickstart/event_data.ipynb
+      - Tracking data: quickstart/tracking_data.ipynb
+
+plugins:
+  - mkdocs-jupyter:
+      include_source: True
+  - search

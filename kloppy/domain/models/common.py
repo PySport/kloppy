@@ -65,7 +65,7 @@ class Team:
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
-        return f"{self.name} ({self.team_id})"
+        return self.name
 
     def __hash__(self):
         return hash(self.team_id)

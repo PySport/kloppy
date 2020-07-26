@@ -21,6 +21,7 @@ nav:
   - Contributing: 'contributing.md'
   - Sponsors: 'sponsors.md'
   - About: 'about.md'
+  - Changelog: 'changelog.md'
   - License: 'license.md'
 
 plugins:

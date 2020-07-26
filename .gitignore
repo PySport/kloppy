@@ -5,3 +5,4 @@ __pycache__/
 kloppy.egg-info
 pip-wheel-metadata
 env
+.ipynb_checkpoints

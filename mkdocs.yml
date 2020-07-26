@@ -9,6 +9,7 @@ google_analytics: null
 
 theme:
   name: material
+  custom_dir: docs/overrides
 
 nav:
   - Home: index.md

@@ -24,7 +24,8 @@ from kloppy.domain import (
     PassEvent,
     Metadata,
     Team,
-    Ground, Player,
+    Ground,
+    Player,
 )
 
 
@@ -96,7 +97,11 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    players_coordinates={Player(team=home_team, player_id="home_1", jersey_no=1): Point(x=15, y=35)},
+                    players_coordinates={
+                        Player(
+                            team=home_team, player_id="home_1", jersey_no=1
+                        ): Point(x=15, y=35)
+                    },
                     ball_coordinates=Point(x=0, y=50),
                 ),
             ],
@@ -178,7 +183,7 @@ class TestHelpers:
                 "match": ["test", "test"],
                 "bonus_column": [11, 12],
                 "home_1_x": [None, 15],
-                "home_1_y": [None, 35]
+                "home_1_y": [None, 35],
             }
         )
 

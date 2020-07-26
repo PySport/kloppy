@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, Dict, Union
+from typing import Callable, TypeVar, Dict, Union, List
 
 from . import (
     TRACABSerializer,
@@ -21,7 +21,7 @@ from .domain import (
     CarryEvent,
     PassResult,
     EventType,
-    Player,
+    Player, DataRecord,
 )
 
 
@@ -189,7 +189,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 
 def to_pandas(
-    dataset: Dataset,
+    dataset: Union[Dataset, List[DataRecord]],
     _record_converter: Callable = None,
     additional_columns: Dict = None,
 ) -> "DataFrame":
@@ -201,13 +201,21 @@ def to_pandas(
             " install it using: pip install pandas"
         )
 
+    if isinstance(dataset, Dataset):
+        records = dataset.records
+    elif isinstance(dataset, list):
+
+        records = dataset
+    else:
+        raise Exception("Unknown dataset type")
+
     if not _record_converter:
-        if isinstance(dataset, TrackingDataset):
+        if isinstance(dataset, TrackingDataset) or isinstance(records[0], Frame):
             _record_converter = _frame_to_pandas_row_converter
-        elif isinstance(dataset, EventDataset):
+        elif isinstance(dataset, EventDataset) or isinstance(records[0], Event):
             _record_converter = _event_to_pandas_row_converter
         else:
-            raise Exception("Unknown dataset type")
+            raise Exception("Don't know how to convert rows")
 
     def generic_record_converter(record: Union[Frame, Event]):
         row = _record_converter(record)
@@ -222,7 +230,7 @@ def to_pandas(
         return row
 
     return pd.DataFrame.from_records(
-        map(generic_record_converter, dataset.records)
+        map(generic_record_converter, records)
     )
 
 

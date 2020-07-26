@@ -16,6 +16,7 @@ nav:
   - Quickstart Guides:
     - Event Data: quickstart/event_data.ipynb
     - Tracking Data: quickstart/tracking_data.ipynb
+    - Examples: quickstart/examples.ipynb
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'
   - Sponsors: 'sponsors.md'
@@ -26,3 +27,9 @@ plugins:
   - mkdocs-jupyter:
       include_source: True
   - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      use_pygments: true
+      linenums: true
+      linenums_style: table

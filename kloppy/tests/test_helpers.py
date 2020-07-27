@@ -4,11 +4,11 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 from kloppy import (
-    to_pandas,
+    to_pandas, to_windows,
     load_metrica_tracking_data,
     load_tracab_tracking_data,
     transform,
-    OptaSerializer,
+    OptaSerializer, StatsBombSerializer,
 )
 from kloppy.domain import (
     Period,
@@ -188,3 +188,20 @@ class TestHelpers:
         )
 
         assert_frame_equal(data_frame, expected_data_frame)
+
+    def test_to_windows(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = StatsBombSerializer()
+
+        with open(
+                f"{base_dir}/files/statsbomb_lineup.json", "rb"
+        ) as lineup_data, open(
+            f"{base_dir}/files/statsbomb_event.json", "rb"
+        ) as event_data:
+            dataset = serializer.deserialize(
+                inputs={"lineup_data": lineup_data, "event_data": event_data}
+            )
+
+        windows = to_windows(dataset)
+        print(windows)

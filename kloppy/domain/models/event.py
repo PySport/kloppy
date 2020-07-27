@@ -57,6 +57,12 @@ class CarryResult(ResultType):
         return self == self.COMPLETE
 
 
+class CardType(Enum):
+    FIRST_YELLOW = "FIRST_YELLOW"
+    SECOND_YELLOW = "SECOND_YELLOW"
+    RED = "RED"
+
+
 class EventType(Enum):
     GENERIC = "generic"
 
@@ -64,6 +70,10 @@ class EventType(Enum):
     SHOT = "SHOT"
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
+    SUBSTITUTION = "SUBSTITUTION"
+    CARD = "CARD"
+    PLAYER_ON = "PLAYER_ON"
+    PLAYER_OFF = "PLAYER_OFF"
 
 
 @dataclass
@@ -73,7 +83,7 @@ class Event(DataRecord, ABC):
     player: Player
     coordinates: Point
 
-    result: ResultType
+    result: Union[ResultType, None]
 
     raw_event: Dict
 
@@ -134,6 +144,34 @@ class CarryEvent(Event):
 
 
 @dataclass
+class SubstitutionEvent(Event):
+    replacement_player: Player
+
+    event_type: EventType = EventType.SUBSTITUTION
+    event_name: str = "substitution"
+
+
+@dataclass
+class PlayerOffEvent(Event):
+    event_type: EventType = EventType.PLAYER_OFF
+    event_name: str = "player_off"
+
+
+@dataclass
+class PlayerOnEvent(Event):
+    event_type: EventType = EventType.PLAYER_ON
+    event_name: str = "player_on"
+
+
+@dataclass
+class CardEvent(Event):
+    card_type: CardType
+
+    event_type: EventType = EventType.CARD
+    event_name: str = "card"
+
+
+@dataclass
 class EventDataset(Dataset):
     records: List[
         Union[GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent]
@@ -157,5 +195,10 @@ __all__ = [
     "PassEvent",
     "TakeOnEvent",
     "CarryEvent",
+    "SubstitutionEvent",
+    "PlayerOnEvent",
+    "PlayerOffEvent",
+    "CardEvent",
+    "CardType",
     "EventDataset",
 ]

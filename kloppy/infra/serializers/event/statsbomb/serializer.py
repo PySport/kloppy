@@ -26,6 +26,7 @@ from kloppy.domain import (
     Ground,
     Player,
 )
+from kloppy.domain.models.event import SubstitutionEvent, CardEvent, PlayerOnEvent, PlayerOffEvent, CardType
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.utils import Readable, performance_logging
 
@@ -39,6 +40,13 @@ SB_EVENT_TYPE_CARRY = 43
 
 SB_EVENT_TYPE_HALF_START = 18
 SB_EVENT_TYPE_HALF_END = 34
+SB_EVENT_TYPE_STARTING_XI = 35
+
+SB_EVENT_TYPE_SUBSTITUTION = 19
+SB_EVENT_TYPE_FOUL_COMMITTED = 22
+SB_EVENT_TYPE_BAD_BEHAVIOUR = 24
+SB_EVENT_TYPE_PLAYER_ON = 26
+SB_EVENT_TYPE_PLAYER_OFF = 27
 
 SB_PASS_OUTCOME_COMPLETE = 8
 SB_PASS_OUTCOME_INCOMPLETE = 9
@@ -158,6 +166,39 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
     return dict(result=result)
 
 
+def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
+    replacement_player = None
+    for player in team.players:
+        if player.player_id == str(substitution_dict["replacement"]["id"]):
+            replacement_player = player
+            break
+    else:
+        raise Exception(f'Could not find replacement player {substitution_dict["replacement"]["id"]}')
+
+    return dict(
+        replacement_player=replacement_player
+    )
+
+
+def _parse_card(card_containing_dict: Dict) -> Dict:
+    if "card" in card_containing_dict:
+        card_id = card_containing_dict['card']['id']
+        if card_id in (5, 65):
+            card_type = CardType.FIRST_YELLOW
+        elif card_id in (6, 66):
+            card_type = CardType.SECOND_YELLOW
+        elif card_id in (7, 67):
+            card_type = CardType.RED
+        else:
+            raise Exception(f"Unknown card id {card_id}")
+    else:
+        card_type = None
+
+    return dict(
+        card_type=card_type
+    )
+
+
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     """
     Find out if x and y are integers disguised as floats
@@ -251,6 +292,12 @@ class StatsBombSerializer(EventDataSerializer):
             )
 
         with performance_logging("parse data", logger=logger):
+            starting_player_ids = {
+                str(player["player"]["id"])
+                for raw_event in raw_events
+                    if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI
+                for player in raw_event["tactics"]["lineup"]
+            }
 
             home_team = Team(
                 team_id=str(home_lineup["team_id"]),
@@ -263,6 +310,7 @@ class StatsBombSerializer(EventDataSerializer):
                     team=home_team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
+                    starting=str(player["player_id"]) in starting_player_ids
                 )
                 for player in home_lineup["lineup"]
             ]
@@ -278,6 +326,7 @@ class StatsBombSerializer(EventDataSerializer):
                     team=away_team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
+                    starting=str(player["player_id"]) in starting_player_ids
                 )
                 for player in away_lineup["lineup"]
             ]
@@ -412,13 +461,56 @@ class StatsBombSerializer(EventDataSerializer):
                         **carry_event_kwargs,
                         **generic_event_kwargs,
                     )
+
+                # lineup affecting events
+                elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
+                    substitution_event_kwargs = _parse_substitution(
+                        substitution_dict=raw_event["substitution"],
+                        team=team
+                    )
+                    event = SubstitutionEvent(
+                        result=None,
+                        **substitution_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+                elif event_type == SB_EVENT_TYPE_BAD_BEHAVIOUR:
+                    card_kwargs = _parse_card(
+                        card_containing_dict=raw_event.get("bad_behaviour", {})
+                    )
+                    if card_kwargs["card_type"]:
+                        event = CardEvent(
+                            result=None,
+                            card_type=card_kwargs['card_type'],
+                            **generic_event_kwargs
+                        )
+                elif event_type == SB_EVENT_TYPE_FOUL_COMMITTED:
+                    card_kwargs = _parse_card(
+                        card_containing_dict=raw_event.get("foul_committed", {})
+                    )
+                    if card_kwargs["card_type"]:
+                        event = CardEvent(
+                            result=None,
+                            card_type=card_kwargs['card_type'],
+                            **generic_event_kwargs
+                        )
+                elif event_type == SB_EVENT_TYPE_PLAYER_ON:
+                    event = PlayerOnEvent(
+                        result=None,
+                        **generic_event_kwargs
+                    )
+                elif event_type == SB_EVENT_TYPE_PLAYER_OFF:
+                    event = PlayerOffEvent(
+                        result=None,
+                        **generic_event_kwargs
+                    )
+
+                # rest: generic
                 else:
                     event = GenericEvent(
                         result=None,
                         event_name=raw_event["type"]["name"],
                         **generic_event_kwargs,
                     )
-
                 if (
                     not wanted_event_types
                     or event.event_type in wanted_event_types

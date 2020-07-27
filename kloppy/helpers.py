@@ -21,8 +21,9 @@ from .domain import (
     CarryEvent,
     PassResult,
     EventType,
-    Player, DataRecord,
+    Player, DataRecord, Window,
 )
+from .domain.services.windowers import Windower
 
 
 def load_tracab_tracking_data(
@@ -188,6 +189,12 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
     return row
 
 
+def to_windows(
+        dataset: EventDataset
+) -> List[Window]:
+    windower = Windower()
+    return windower.create_windows(dataset)
+
 def to_pandas(
     dataset: Union[Dataset, List[DataRecord]],
     _record_converter: Callable = None,
@@ -241,5 +248,6 @@ __all__ = [
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "to_pandas",
+    "to_windows",
     "transform",
 ]

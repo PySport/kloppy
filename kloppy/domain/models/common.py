@@ -36,7 +36,11 @@ class Player:
     name: str = None
     first_name: str = None
     last_name: str = None
+
+    # match specific
     position: Position = None
+    starting: bool = None
+
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     @property

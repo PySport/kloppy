@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from kloppy.domain import Score, EventDataset, Event, ShotEvent, ShotResult, State, Window
 from kloppy.domain.models.event import SubstitutionEvent
@@ -33,7 +33,10 @@ class Windower:
 
         current_state = State(
             score=Score(home=0, away=0),
-            players=set(dataset.metadata.teams[0].players) | set(dataset.metadata.teams[1].players)
+            players=(
+                set(player for player in dataset.metadata.teams[0].players if player.starting)
+                | set(player for player in dataset.metadata.teams[1].players if player.starting)
+            )
         )
 
         current_window = Window(
@@ -42,7 +45,15 @@ class Windower:
         )
         windows.append(current_window)
 
+        previous_event: Union[Event, None] = None
         for event in dataset.events:
+            if previous_event and previous_event.period != event.period:
+                current_window = Window(
+                    state=current_state,
+                    events=[]
+                )
+                windows.append(current_window)
+
             current_window.events.append(event)
 
             state_changed, new_state = self._reduce_state(
@@ -57,4 +68,9 @@ class Windower:
                 windows.append(current_window)
                 current_state = new_state
 
-        return windows
+            previous_event = event
+
+        return [
+            window for window in windows
+            if window.duration > 0
+       ]

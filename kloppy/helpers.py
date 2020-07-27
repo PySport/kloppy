@@ -190,10 +190,12 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 
 def to_windows(
-        dataset: EventDataset
+        dataset: EventDataset,
+        **kwargs
 ) -> List[Window]:
     windower = Windower()
-    return windower.create_windows(dataset)
+    return windower.create_windows(dataset, **kwargs)
+
 
 def to_pandas(
     dataset: Union[Dataset, List[DataRecord]],

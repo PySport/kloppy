@@ -25,7 +25,7 @@ from kloppy.domain import (
     Metadata,
     Team,
     Ground,
-    Player,
+    Player, State,
 )
 
 
@@ -203,7 +203,15 @@ class TestHelpers:
                 inputs={"lineup_data": lineup_data, "event_data": event_data}
             )
 
-        windows = to_windows(dataset)
+        def winning_state(state: State):
+            if state.score.home > state.score.away:
+                return "W"
+            elif state.score.home < state.score.away:
+                return "L"
+            else:
+                return "D"
+
+        windows = to_windows(dataset, key=winning_state)
 
         def _format_time(seconds: float) -> str:
             minutes, seconds = divmod(seconds, 60)
@@ -211,13 +219,14 @@ class TestHelpers:
 
         home_team, away_team = dataset.metadata.teams
 
-        print("")
+        print("\n\n")
         for window in windows:
             home_players = ",".join(map(str, sorted(p.jersey_no for p in window.state.players if p.team == home_team)))
             away_players = ",".join(map(str, sorted(p.jersey_no for p in window.state.players if p.team == away_team)))
             pass_count = len(list(e for e in window.events if e.event_name == 'pass'))
             print(f"{window.period.id} "
                   f"- {_format_time(window.start_timestamp)} - {_format_time(window.end_timestamp)} "
-                  f"- {window.state.score} "
-                  f"- H: {home_players} W: {away_players} "
+                  f" - winning_state: {window.key} "
+                  #f"- {window.state.score} "
+                  #f"- H: {home_players} W: {away_players} "
                   f"- {pass_count} passes")

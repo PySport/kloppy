@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Set, List
+from typing import Set, List, Any
 
 from kloppy.domain.models.common import Score, Player, Ground, Team
 from kloppy.domain.models.event import Event
@@ -45,6 +45,7 @@ class State:
 @dataclass(frozen=True)
 class Window:
     state: State
+    key: Any
     events: List[Event]
 
     @property

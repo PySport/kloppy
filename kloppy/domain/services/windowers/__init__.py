@@ -1,15 +1,14 @@
-from typing import List, Union
+from abc import abstractmethod, ABCMeta
+from typing import List, Union, Callable, Any
 
 from kloppy.domain import Score, EventDataset, Event, ShotEvent, ShotResult, State, Window
 from kloppy.domain.models.event import SubstitutionEvent
 
-#
-#
-# class Comparable(metaclass=ABCMeta):
-#     @abstractmethod
-#     def __gt__(self, other: Any) -> bool: pass
-#     ... # __lt__ etc. as well
-# # state_view_fn: Callable[[State], Comparable]
+
+class Comparable(metaclass=ABCMeta):
+    @abstractmethod
+    def __gt__(self, other: Any) -> bool: pass
+    ... # __lt__ etc. as well
 
 
 class Windower:
@@ -28,8 +27,12 @@ class Windower:
         else:
             return True, new_state
 
-    def create_windows(self, dataset: EventDataset) -> List[Window]:
+    def create_windows(self, dataset: EventDataset, key: Callable[[State], Comparable] = None) -> List[Window]:
         windows = []
+
+        if not key:
+            def key(state: State):
+                return state
 
         current_state = State(
             score=Score(home=0, away=0),
@@ -41,16 +44,21 @@ class Windower:
 
         current_window = Window(
             state=current_state,
-            events=[]
+            events=[],
+            key=key(current_state)
         )
         windows.append(current_window)
 
         previous_event: Union[Event, None] = None
+        previous_key = object()
+
         for event in dataset.events:
             if previous_event and previous_event.period != event.period:
+                # On period change always state a new window
                 current_window = Window(
                     state=current_state,
-                    events=[]
+                    events=[],
+                    key=key(current_state)
                 )
                 windows.append(current_window)
 
@@ -61,11 +69,15 @@ class Windower:
                 event
             )
             if state_changed:
-                current_window = Window(
-                    state=new_state,
-                    events=[]
-                )
-                windows.append(current_window)
+                new_key = key(new_state)
+                if new_key != previous_key:
+                    current_window = Window(
+                        state=new_state,
+                        key=new_key,
+                        events=[]
+                    )
+                    windows.append(current_window)
+                    previous_key = new_key
                 current_state = new_state
 
             previous_event = event

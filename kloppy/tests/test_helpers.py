@@ -1,4 +1,5 @@
 import os
+from functools import partial
 
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
@@ -203,30 +204,58 @@ class TestHelpers:
                 inputs={"lineup_data": lineup_data, "event_data": event_data}
             )
 
-        def winning_state(state: State):
+        def key_fn1(state: State):
             if state.score.home > state.score.away:
-                return "W"
+                return dict(winning_state="W")
             elif state.score.home < state.score.away:
-                return "L"
+                return dict(winning_state="L")
             else:
-                return "D"
+                return dict(winning_state="D")
 
-        windows = to_windows(dataset, key=winning_state)
+        windows = to_windows(dataset, key=key_fn1)
 
-        def _format_time(seconds: float) -> str:
-            minutes, seconds = divmod(seconds, 60)
-            return f"{minutes:02.0f}:{seconds:02.0f}"
+        assert len(windows) == 3
+        assert windows[0].start_timestamp == 0
+        assert windows[0].end_timestamp == dataset.metadata.periods[0].duration
+        assert windows[0].period.id == 1
+        assert windows[0].key == dict(winning_state="D")
+
+        assert windows[1].start_timestamp == 0
+        assert windows[1].end_timestamp == 1091.954
+        assert windows[1].period.id == 2
+        assert windows[1].key == dict(winning_state="D")
+
+        assert windows[2].start_timestamp == 1092.905
+        assert windows[2].end_timestamp == dataset.metadata.periods[1].duration
+        assert windows[2].period.id == 2
+        assert windows[2].key == dict(winning_state="W")
+
+        def key_fn2(player: Player, state: State):
+            if player in state.players:
+                return True
+            else:
+                return False
 
         home_team, away_team = dataset.metadata.teams
 
-        print("\n\n")
-        for window in windows:
-            home_players = ",".join(map(str, sorted(p.jersey_no for p in window.state.players if p.team == home_team)))
-            away_players = ",".join(map(str, sorted(p.jersey_no for p in window.state.players if p.team == away_team)))
-            pass_count = len(list(e for e in window.events if e.event_name == 'pass'))
-            print(f"{window.period.id} "
-                  f"- {_format_time(window.start_timestamp)} - {_format_time(window.end_timestamp)} "
-                  f" - winning_state: {window.key} "
-                  #f"- {window.state.score} "
-                  #f"- H: {home_players} W: {away_players} "
-                  f"- {pass_count} passes")
+        # half time substitution
+        coutinho = home_team.get_player_by_id(3501)
+        windows = to_windows(dataset, key=partial(key_fn2, coutinho))
+        assert len(windows) == 2
+        assert windows[0].period.id == 1
+        assert coutinho not in windows[0].state.players
+        assert windows[1].period.id == 2
+        assert coutinho in windows[1].state.players
+
+        # somewhere 2nd half substitution
+        marin = away_team.get_player_by_id(6935)
+        windows = to_windows(dataset, key=partial(key_fn2, marin))
+        assert len(windows) == 3
+        assert windows[0].period.id == 1
+        assert marin not in windows[0].state.players
+        assert windows[1].period.id == 2
+        assert marin not in windows[1].state.players
+        assert windows[2].period.id == 2
+        assert marin in windows[2].state.players
+
+

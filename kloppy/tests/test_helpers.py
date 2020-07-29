@@ -146,8 +146,7 @@ class TestHelpers:
                 "home_1_y": {0: None, 1: 35.0},
             }
         )
-
-        assert_frame_equal(data_frame, expected_data_frame)
+        assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
     def test_to_pandas_generic_events(self):
         base_dir = os.path.dirname(__file__)
@@ -191,4 +190,4 @@ class TestHelpers:
             }
         )
 
-        assert_frame_equal(data_frame, expected_data_frame)
+        assert_frame_equal(data_frame, expected_data_frame, check_like=True)

@@ -8,6 +8,7 @@ is nobody already working on the same issue and to ensure your time as a contrib
 
 All code changes happen through Pull Requests. If you would like to contribute, follow the steps below to set up 
 the project and make changes:
+
 1. Fork the repo and create your branch from `master`.
 2. Make code changes to fix a bug/add features
 3. If you have added new code, add test(s) which cover the changes you have made. If you have updated existing code, 

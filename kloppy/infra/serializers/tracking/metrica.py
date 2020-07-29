@@ -10,6 +10,7 @@ from kloppy.domain import (
     Point,
     Period,
     Orientation,
+    Provider,
     PitchDimensions,
     Dimension,
     DatasetFlag,
@@ -268,7 +269,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
-            provider=Provider.METRICA
+            provider=Provider.METRICA,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )
 

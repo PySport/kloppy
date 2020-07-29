@@ -12,6 +12,7 @@ from kloppy.domain import (
     Team,
     BallState,
     Period,
+    Provider,
     Orientation,
     PitchDimensions,
     Dimension,
@@ -236,7 +237,7 @@ class TRACABSerializer(TrackingDataSerializer):
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
-            provider=Provider.TRACAB
+            provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
         )
 

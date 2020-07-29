@@ -26,6 +26,7 @@ from kloppy.domain import (
     EventType,
     Ground,
     Score,
+    Provider,
     Metadata,
     Player,
     Position,

@@ -14,6 +14,7 @@ from .domain import (
     TrackingDataset,
     Transformer,
     Orientation,
+    Provider,
     PitchDimensions,
     Dimension,
     EventDataset,

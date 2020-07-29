@@ -5,6 +5,7 @@ from kloppy.domain import (
     AttackingDirection,
     Period,
     Orientation,
+    Provider,
     Player,
     Position,
     Ground,
@@ -24,7 +25,7 @@ class TestOpta:
             dataset = serializer.deserialize(
                 inputs={"f24_data": f24_data, "f7_data": f7_data}
             )
-        assert len(dataset.metadata.provider) == Provider.OPTA
+        assert dataset.metadata.provider == Provider.OPTA
         assert len(dataset.events) == 17
         assert len(dataset.metadata.periods) == 2
         assert (

@@ -242,5 +242,6 @@ def load_metadata(metadata_file: Readable) -> EPTSMetadata:
         sensors=sensors,
         score=score,
         orientation=None,
+        provider=None,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
     )

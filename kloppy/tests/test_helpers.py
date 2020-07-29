@@ -19,6 +19,7 @@ from kloppy.domain import (
     PitchDimensions,
     Dimension,
     Orientation,
+    Provider,
     Frame,
     EventDataset,
     PassEvent,
@@ -38,7 +39,7 @@ class TestHelpers:
         )
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
-        assert len(dataset.metadata.provider) == Provider.METRICA
+        assert dataset.metadata.provider == Provider.METRICA
 
     def test_load_tracab_tracking_data(self):
         base_dir = os.path.dirname(__file__)
@@ -48,7 +49,7 @@ class TestHelpers:
         )
         assert len(dataset.records) == 5  # only alive=True
         assert len(dataset.metadata.periods) == 2
-        assert len(dataset.metadata.provider) == Provider.TRACAB
+        assert dataset.metadata.provider == Provider.TRACAB
 
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
@@ -79,6 +80,7 @@ class TestHelpers:
             periods=periods,
             teams=teams,
             score=None,
+            provider = None
         )
 
         tracking_data = TrackingDataset(

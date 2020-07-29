@@ -10,6 +10,7 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
+    Provider,
     PitchDimensions,
     Dimension,
     PassEvent,

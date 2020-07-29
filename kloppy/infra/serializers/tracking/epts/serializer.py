@@ -9,6 +9,7 @@ from kloppy.domain import (
     Point,
     Team,
     Orientation,
+    Provider,
 )
 from kloppy.infra.utils import Readable, performance_logging
 

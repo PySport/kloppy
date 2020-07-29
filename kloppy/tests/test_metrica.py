@@ -23,7 +23,7 @@ class TestMetricaTracking:
                     "raw_data_away": raw_data_away,
                 }
             )
-
+        assert len(dataset.metadata.provider) == Provider.METRICA
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY

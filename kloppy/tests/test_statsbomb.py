@@ -29,6 +29,7 @@ class TestStatsbomb:
                 inputs={"lineup_data": lineup_data, "event_data": event_data}
             )
 
+        assert len(dataset.metadata.provider) == Provider.STATSBOMB
         assert len(dataset.events) == 4002
         assert len(dataset.metadata.periods) == 2
         assert (

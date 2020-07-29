@@ -268,6 +268,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
+            provider=Provider.METRICA
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )
 

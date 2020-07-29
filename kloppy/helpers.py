@@ -21,7 +21,8 @@ from .domain import (
     CarryEvent,
     PassResult,
     EventType,
-    Player, DataRecord,
+    Player,
+    DataRecord,
 )
 
 
@@ -210,9 +211,13 @@ def to_pandas(
         raise Exception("Unknown dataset type")
 
     if not _record_converter:
-        if isinstance(dataset, TrackingDataset) or isinstance(records[0], Frame):
+        if isinstance(dataset, TrackingDataset) or isinstance(
+            records[0], Frame
+        ):
             _record_converter = _frame_to_pandas_row_converter
-        elif isinstance(dataset, EventDataset) or isinstance(records[0], Event):
+        elif isinstance(dataset, EventDataset) or isinstance(
+            records[0], Event
+        ):
             _record_converter = _event_to_pandas_row_converter
         else:
             raise Exception("Don't know how to convert rows")
@@ -229,9 +234,7 @@ def to_pandas(
 
         return row
 
-    return pd.DataFrame.from_records(
-        map(generic_record_converter, records)
-    )
+    return pd.DataFrame.from_records(map(generic_record_converter, records))
 
 
 __all__ = [

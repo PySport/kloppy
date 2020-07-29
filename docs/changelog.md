@@ -8,11 +8,11 @@ There are a couple of breaking changes:
 
 1. All attributes except `records` / `frames` are moved from `Dataset` to `Metadata` class. 
 2. All `position` properties are renamed to `coordinates`. 
-3. The the `players_coordinates` property is indexed by `Player` instances instead of by `jersey_number` strings.
-4. On the `Event` class the `player_jersey_number` is replaced by `player` which is `Player` instance. 
+3. The `players_coordinates` property is indexed by `Player` instances instead of by `jersey_number` strings.
+4. On the `Event` class the `player_jersey_number` is replaced by `player` which is a `Player` instance.
 5. `to_pandas` changes:
     - `player_jersey_number` is replaced by `player_id`
-    - `team` is replaced by `team_id
+    - `team` is replaced by `team_id`
     - `position_*` is renamed to `coordinates_*`
     - `player_<home/away>_<jersey_no>_x` is renamed to `<player_id>_x`
 

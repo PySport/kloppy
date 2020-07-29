@@ -51,7 +51,7 @@ pip install kloppy
 ```
 
 
-## <a name="datasets"></a>(Very) Qickstart
+## <a name="datasets"></a>(Very) Quickstart
 More and more companies are publishing (demo) datasets to get you started. Inspired by the `tensorflow_datasets` package,
 we added a "dataset loader" which does all the heavy lifting for you: find urls, download files, organize and load them.
 ```python
@@ -63,7 +63,7 @@ dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limi
 
 ## Quickstart
 
-We added some helper functions to get started really quickly. The helpers allow eay loading, transforming and converting to pandas of tracking data.
+We added some helper functions to get started really quickly. The helpers allow easy loading, transforming and converting to pandas of tracking data.
 ```python
 from kloppy import (
     load_metrica_tracking_data, 
@@ -100,7 +100,7 @@ reason about. Please browse to source of `domain.models` to find the available m
 
 ### <a name="deserializing"></a>(De)serializing data
 When working with tracking- or event data we need to deserialize it from the format the provider uses. **kloppy**
-will provide both deserializing as serializing. This will make it possible to read format one, transform and filter and store
+will provide both deserializing and serializing. This will make it possible to read format one, transform and filter and store
 in a different format.
 
 ```python

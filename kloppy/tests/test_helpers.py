@@ -149,7 +149,6 @@ class TestHelpers:
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
     def test_to_pandas_generic_events(self):
-        1 / 0
         base_dir = os.path.dirname(__file__)
 
         serializer = OptaSerializer()

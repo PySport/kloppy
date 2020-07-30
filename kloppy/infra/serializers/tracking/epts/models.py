@@ -158,6 +158,7 @@ class DataFormatSpecification:
 
 @dataclass
 class EPTSMetadata(Metadata):
-    player_channels: List[PlayerChannel]
+    player_channels: List[
+        PlayerChannel]
     data_format_specifications: List[DataFormatSpecification]
     sensors: List[Sensor]

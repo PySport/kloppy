@@ -3,7 +3,13 @@ import os
 from kloppy import (
     MetricaTrackingSerializer,
 )  # NOT YET: , MetricaEventSerializer
-from kloppy.domain import Period, Provider, AttackingDirection, Orientation, Point
+from kloppy.domain import (
+    Period,
+    Provider,
+    AttackingDirection,
+    Orientation,
+    Point,
+)
 
 
 class TestMetricaTracking:

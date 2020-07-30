@@ -80,7 +80,7 @@ class TestHelpers:
             periods=periods,
             teams=teams,
             score=None,
-            provider = None
+            provider=None,
         )
 
         tracking_data = TrackingDataset(

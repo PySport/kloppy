@@ -20,14 +20,16 @@ class Ground(Enum):
     def __str__(self):
         return self.value
 
+
 class Provider(Enum):
-    METRICA= "metrica"
+    METRICA = "metrica"
     TRACAB = "tracab"
-    OPTA= "opta"
+    OPTA = "opta"
     STATSBOMB = "statsbomb"
 
     def __str__(self):
         return self.value
+
 
 @dataclass(frozen=True)
 class Position:

@@ -12,6 +12,7 @@ from kloppy.domain import (
     Orientation,
     Position,
     Point,
+    Provider,
 )
 from kloppy.infra.utils import Readable
 
@@ -149,7 +150,9 @@ def _load_pitch_dimensions(
         return None
 
 
-def load_metadata(metadata_file: Readable, provider: Provider = None) -> EPTSMetadata:
+def load_metadata(
+    metadata_file: Readable, provider: Provider = None
+) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
 

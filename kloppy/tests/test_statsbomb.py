@@ -7,7 +7,7 @@ from kloppy.domain import (
     Orientation,
     Player,
     Position,
-    Provider
+    Provider,
 )
 
 

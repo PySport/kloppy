@@ -3,7 +3,7 @@ import os
 from kloppy import (
     MetricaTrackingSerializer,
 )  # NOT YET: , MetricaEventSerializer
-from kloppy.domain import Period, AttackingDirection, Orientation, Point
+from kloppy.domain import Period, Provider, AttackingDirection, Orientation, Point
 
 
 class TestMetricaTracking:
@@ -23,7 +23,7 @@ class TestMetricaTracking:
                     "raw_data_away": raw_data_away,
                 }
             )
-
+        assert dataset.metadata.provider == Provider.METRICA
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY

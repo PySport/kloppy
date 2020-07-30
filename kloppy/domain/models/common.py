@@ -20,6 +20,14 @@ class Ground(Enum):
     def __str__(self):
         return self.value
 
+class Provider(Enum):
+    METRICA= "metrica"
+    TRACAB = "tracab"
+    OPTA= "opta"
+    STATSBOMB = "statsbomb"
+
+    def __str__(self):
+        return self.value
 
 @dataclass(frozen=True)
 class Position:
@@ -211,6 +219,7 @@ class Metadata:
     frame_rate: float
     orientation: Orientation
     flags: DatasetFlag
+    provider: Provider
 
 
 @dataclass

@@ -26,6 +26,7 @@ from kloppy.domain import (
     EventType,
     Ground,
     Score,
+    Provider,
     Metadata,
     Player,
     Position,
@@ -469,6 +470,7 @@ class OptaSerializer(EventDataSerializer):
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
+            provider=Provider.OPTA
         )
 
         return EventDataset(metadata=metadata, records=events,)

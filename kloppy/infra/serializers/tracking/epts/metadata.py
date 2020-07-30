@@ -149,7 +149,7 @@ def _load_pitch_dimensions(
         return None
 
 
-def load_metadata(metadata_file: Readable) -> EPTSMetadata:
+def load_metadata(metadata_file: Readable, provider: Provider = None) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
 
@@ -242,5 +242,6 @@ def load_metadata(metadata_file: Readable) -> EPTSMetadata:
         sensors=sensors,
         score=score,
         orientation=None,
+        provider=provider,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
     )

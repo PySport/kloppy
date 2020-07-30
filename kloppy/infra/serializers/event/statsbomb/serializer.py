@@ -10,6 +10,7 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
+    Provider,
     PitchDimensions,
     Dimension,
     PassEvent,
@@ -435,6 +436,7 @@ class StatsBombSerializer(EventDataSerializer):
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=None,
+            provider=Provider.STATSBOMB
         )
 
         return EventDataset(metadata=metadata, records=events,)

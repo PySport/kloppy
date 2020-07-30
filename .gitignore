@@ -6,3 +6,5 @@ kloppy.egg-info
 pip-wheel-metadata
 env
 .ipynb_checkpoints
+.DS_Store
+kloppy/.DS_Store

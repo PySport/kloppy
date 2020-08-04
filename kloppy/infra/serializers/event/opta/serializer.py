@@ -406,7 +406,7 @@ class OptaSerializer(EventDataSerializer):
                             event_elm.attrib["player_id"]
                         )
 
-                    if event.type_id in BALL_OWNING_EVENTS:
+                    if type_id in BALL_OWNING_EVENTS:
                         possession_team = team
 
                     generic_event_kwargs = dict(

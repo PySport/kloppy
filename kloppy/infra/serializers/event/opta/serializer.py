@@ -349,6 +349,7 @@ class OptaSerializer(EventDataSerializer):
                 Period(id=1, start_timestamp=None, end_timestamp=None,),
                 Period(id=2, start_timestamp=None, end_timestamp=None,),
             ]
+            possession_team = None
             events = []
             for event_elm in game_elm.iterchildren("Event"):
                 event_id = event_elm.attrib["id"]
@@ -407,7 +408,7 @@ class OptaSerializer(EventDataSerializer):
                         # from DataRecord
                         period=period,
                         timestamp=timestamp - period.start_timestamp,
-                        ball_owning_team=None,
+                        ball_owning_team=possession_team,
                         ball_state=BallState.ALIVE,
                         # from Event
                         event_id=event_id,
@@ -453,6 +454,10 @@ class OptaSerializer(EventDataSerializer):
                             result=None,
                             event_name=_get_event_type_name(type_id),
                         )
+                    
+                    if event.event_type in [EventType.CARRY, EventType.PASS, EventType.SHOT, EventType.TAKE_ON]:
+                        possession_team = team
+                        event.ball_owning_team=possession_team
 
                     if (
                         not wanted_event_types

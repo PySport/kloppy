@@ -246,7 +246,8 @@ event_type_names = {
     77: "player off pitch",
 }
 
-BALL_OWNING_EVENTS = (1,2,3,13,14,15,16,49)
+BALL_OWNING_EVENTS = (1, 2, 3, 13, 14, 15, 16, 49)
+
 
 def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
@@ -458,7 +459,7 @@ class OptaSerializer(EventDataSerializer):
                             result=None,
                             event_name=_get_event_type_name(type_id),
                         )
-                    
+
                     if (
                         not wanted_event_types
                         or event.event_type in wanted_event_types

@@ -28,6 +28,7 @@ class TestOpta:
         assert dataset.metadata.provider == Provider.OPTA
         assert len(dataset.events) == 17
         assert len(dataset.metadata.periods) == 2
+        assert dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
         assert dataset.events[15].ball_owning_team == dataset.metadata.teams[0]
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM

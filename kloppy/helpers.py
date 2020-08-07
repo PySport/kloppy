@@ -102,7 +102,7 @@ def load_opta_event_data(
 
 
 def load_metrica_json_event_data(
-    metadata_filename: str, raw_data_filename: str, options: dict = None
+    raw_data_filename: str, metadata_filename: str, options: dict = None
 ) -> EventDataset:
     serializer = MetricaEventsJsonSerializer()
     with open(metadata_filename, "rb") as metadata, open(

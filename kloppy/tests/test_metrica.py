@@ -81,10 +81,10 @@ class TestMetricaEvent:
             f"{base_dir}/files/metrica_metadata.xml", "rb"
         ) as metadata, open(
             f"{base_dir}/files/metrica_events.json", "rb"
-        ) as raw_data:
+        ) as event_data:
 
             dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data}
+                inputs={"metadata": metadata, "event_data": event_data}
             )
 
         assert dataset.metadata.provider == Provider.METRICA

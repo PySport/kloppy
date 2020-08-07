@@ -164,8 +164,8 @@ def _parse_ball_owning_team(event_type: int, team: Team) -> Team:
 class MetricaEventsJsonSerializer(EventDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
-        if "raw_data" not in inputs:
-            raise ValueError("Please specify a value for input 'raw_data'")
+        if "event_data" not in inputs:
+            raise ValueError("Please specify a value for input 'event_data'")
         if "metadata" not in inputs:
             raise ValueError("Please specify a value for input 'metadata'")
 
@@ -178,7 +178,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                 Parameters
                 ----------
                 inputs : dict
-                    input `raw_data` should point to a `Readable` object containing
+                    input `event_data` should point to a `Readable` object containing
                     the 'json' formatted event data. input `metadata` should point
                     to a `Readable` object containing the `xml` metadata file.
                 options : dict
@@ -202,12 +202,12 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                 Examples
                 --------
                 >>> serializer = MetricaEventsJsonSerializer()
-                >>> with open("events.json", "rb") as raw_data, \
+                >>> with open("events.json", "rb") as event_data, \
                 >>>      open("metadata.xml", "rb") as metadata:
                 >>>
                 >>>     dataset = serializer.deserialize(
                 >>>         inputs={
-                >>>             'raw_data': raw_data,
+                >>>             'event_data': event_data,
                 >>>             'metadata': metadata
                 >>>         },
                 >>>         options={
@@ -220,7 +220,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
             options = {}
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs["raw_data"])
+            raw_events = json.load(inputs["event_data"])
             metadata = load_metadata(
                 inputs["metadata"], provider=Provider.METRICA
             )

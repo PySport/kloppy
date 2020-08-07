@@ -67,6 +67,7 @@ We added some helper functions to get started really quickly. The helpers allow 
 ```python
 from kloppy import (
     load_metrica_tracking_data, 
+    load_metrica_json_event_data,
     load_tracab_tracking_data,
     load_epts_tracking_data, 
     load_statsbomb_event_data,
@@ -86,6 +87,8 @@ dataset = load_epts_tracking_data('meta.xml', 'raw_data.txt')
 dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
 # opta
 dataset = load_opta_event_data('f24_data.xml', 'f7_data.xml')
+# metrica json
+dataset = load_metrica_json_event_data('raw_data.json', 'meta.xml')
 
 
 dataset = transform(dataset, to_pitch_dimensions=[[0, 108], [-34, 34]])
@@ -205,6 +208,29 @@ with open("f24_data.xml", "rb") as f24_data, \
     dataset = serializer.deserialize(
         inputs={
             'f24_data': f24_data,
+            'f7_data': f7_data
+        },
+        options={
+            "event_types": ["pass", "shot"]
+        }
+    )
+    
+    # start working with dataset
+```
+
+
+or Metrica Json event data
+```python
+from kloppy import MetricaEventsJsonSerializer
+
+serializer = MetricaEventsJsonSerializer()
+
+with open("eventdata.json", "rb") as event_data, \
+        open("metadata.xml", "rb") as metadata:
+
+    dataset = serializer.deserialize(
+        inputs={
+            'event_data': event_data,
             'f7_data': f7_data
         },
         options={

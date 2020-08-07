@@ -1,11 +1,13 @@
 # Metrica Documentation https://github.com/metrica-sports/sample-data/blob/master/documentation/events-definitions.pdf
-from abc import ABC, abstractmethod, abstractproperty, ABCMeta
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Union, Dict
 
-from .pitch import Point
+from kloppy.domain.models.common import DatasetType
+
 from .common import DataRecord, Dataset, Team, Player
+from .pitch import Point
 
 
 class ResultType(Enum):
@@ -138,6 +140,8 @@ class EventDataset(Dataset):
     records: List[
         Union[GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent]
     ]
+
+    dataset_type: DatasetType = DatasetType.EVENT
 
     @property
     def events(self):

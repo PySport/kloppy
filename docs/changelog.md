@@ -2,11 +2,14 @@
 
 Find out all changes between different kloppy versions
 
-## 1.1.0 (2020-09-XX To be released)
+## 1.1.0 (2020-08-07)
 Github issues closed:
+
 - Add provider to dataset ([#36](https://github.com/PySport/kloppy/issues/36))
+- Adding a data type type to the datasets ([#45](https://github.com/PySport/kloppy/issues/45))
 
 Other pull requests merged:
+
 - Add Metrics Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
 - Code formatting & typos in docs ([#39](https://github.com/PySport/kloppy/pull/39), [#40](https://github.com/PySport/kloppy/pull/40))
                       

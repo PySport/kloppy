@@ -9,6 +9,7 @@ from kloppy.domain import (
     Position,
     Provider,
 )
+from kloppy.domain.models.common import DatasetType
 
 
 class TestStatsbomb:
@@ -31,6 +32,7 @@ class TestStatsbomb:
             )
 
         assert dataset.metadata.provider == Provider.STATSBOMB
+        assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 4002
         assert len(dataset.metadata.periods) == 2
         assert (

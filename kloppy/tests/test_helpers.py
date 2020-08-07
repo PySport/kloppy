@@ -28,6 +28,7 @@ from kloppy.domain import (
     Ground,
     Player,
 )
+from kloppy.domain.models.common import DatasetType
 
 
 class TestHelpers:
@@ -40,6 +41,7 @@ class TestHelpers:
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.provider == Provider.METRICA
+        assert dataset.dataset_type == DatasetType.TRACKING
 
     def test_load_tracab_tracking_data(self):
         base_dir = os.path.dirname(__file__)
@@ -50,6 +52,7 @@ class TestHelpers:
         assert len(dataset.records) == 5  # only alive=True
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.provider == Provider.TRACAB
+        assert dataset.dataset_type == DatasetType.TRACKING
 
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)

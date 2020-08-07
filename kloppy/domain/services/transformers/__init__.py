@@ -109,15 +109,15 @@ class Transformer:
 
         return replace(event, **position_changes)
 
-    DatasetType = TypeVar("DatasetType")
+    DatasetT = TypeVar("DatasetT")
 
     @classmethod
     def transform_dataset(
         cls,
-        dataset: DatasetType,
+        dataset: DatasetT,
         to_pitch_dimensions: PitchDimensions = None,
         to_orientation: Orientation = None,
-    ) -> DatasetType:
+    ) -> DatasetT:
         if not to_pitch_dimensions and not to_orientation:
             return dataset
         elif not to_orientation:

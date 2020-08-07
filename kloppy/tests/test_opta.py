@@ -10,6 +10,7 @@ from kloppy.domain import (
     Position,
     Ground,
 )
+from kloppy.domain.models.common import DatasetType
 
 
 class TestOpta:
@@ -26,6 +27,7 @@ class TestOpta:
                 inputs={"f24_data": f24_data, "f7_data": f7_data}
             )
         assert dataset.metadata.provider == Provider.OPTA
+        assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 17
         assert len(dataset.metadata.periods) == 2
         assert dataset.events[10].ball_owning_team == dataset.metadata.teams[1]

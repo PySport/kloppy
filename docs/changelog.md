@@ -10,9 +10,9 @@ Github issues closed:
 
 Other pull requests merged:
 
-- Add Metrics Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
 - Code formatting & typos in docs ([#39](https://github.com/PySport/kloppy/pull/39), [#40](https://github.com/PySport/kloppy/pull/40))
-                      
+- Add Metrics Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
+- Infer ball_owning_team from Opta events ([#49](https://github.com/PySport/kloppy/pull/49)                      
 
 ## 1.0.0 (2020-07-26)
 In this major release we introduce metadata. The metadata is part of a dataset and can be accessed via `Dataset.metadata`.

@@ -2,7 +2,16 @@
 
 Find out all changes between different kloppy versions
 
-## 1.0.0
+## 1.1.0 (2020-09-XX To be released)
+Github issues closed:
+- Add provider to dataset ([#36](https://github.com/PySport/kloppy/issues/36))
+
+Other pull requests merged:
+- Add Metrics Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
+- Code formatting & typos in docs ([#39](https://github.com/PySport/kloppy/pull/39), [#40](https://github.com/PySport/kloppy/pull/40))
+                      
+
+## 1.0.0 (2020-07-26)
 In this major release we introduce metadata. The metadata is part of a dataset and can be accessed via `Dataset.metadata`.
 There are a couple of breaking changes:
 
@@ -17,11 +26,66 @@ There are a couple of breaking changes:
     - `player_<home/away>_<jersey_no>_x` is renamed to `<player_id>_x`
 
 Github issues closed:
-
 - Website for project ([#27](https://github.com/PySport/kloppy/issues/27), [#30](https://github.com/PySport/kloppy/issues/30))
 - Metadata model ([#3](https://github.com/PySport/kloppy/issues/3))
 - IDs instead of [home, away, shirt_number] ([#17](https://github.com/PySport/kloppy/issues/17))
 
+Other pull requests merged:
+- Fix docs ([#35](https://github.com/PySport/kloppy/pull/35))
 
-## 0.6.2
+## 0.6.2 (2020-07-23)
 - Fix to_pandas for Opta event data
+
+## 0.6.1 (2020-07-02)
+- Fix in readme (@rjtavares)
+- Add additional_columns to to_pandas (@rjtavares)
+
+## 0.6.0 (2020-06-18)
+- Add Opta event serializer
+- Fix for event pattern matching for nested captures
+- Fix for event pattern matching when multiple paths can match
+- Improved ball_recovery example
+
+## 0.5.3 (2020-06-16)
+- Add code formatting and contributing guide (@dmallory42)
+- Add support for python 3.6
+
+## 0.5.2 (2020-06-13)
+- Fix Transformer when ball position is not set (@benoitblanc)
+- Fix for working with periods in EPTS Serializer (@bdagnino)
+
+## 0.5.1 (2020-06-13)
+- Add stats in json/text format to kloppy-query
+- Add show-events to kloppy-query to print all events in the matches
+- Change kloppy-query to make it possible to run without an output file
+
+## 0.5.0 (2020-06-13)
+- Add pattern matching based on regular expressions
+- Add kloppy-query: command line tool to search for patterns
+  
+## 0.4.1 (2020-06-05)
+- Fix for StatsBomb Serializer when location contains z coordinate
+
+## 0.4.0 (2020-06-02)
+- Add StatsBomb event Serializer
+- Some fixes in readme
+- Refactor some code to get cleaner code
+- Pass a logger to performance_logging instead of print to stdout
+- Minor fixes to datasets loader
+
+## 0.3.0 (2020-05-15)
+- Add FIFA EPTS Tracking Serializer
+- Add some examples
+- Add datasets loader to directly load dataset from your python code
+- Add limit argument to all loaders               
+
+## 0.2.1 (2020-05-12)
+- Add some helpers functions to directly load a dataset by filenames
+
+## 0.2.0 (2020-05-05)
+- Change interface of TrackingDataSerializer
+- Add Metrica Tracking Serializer including automated tests
+- Cleanup some import statements
+
+## 0.1.0 (2020-04-23)
+- Initial release (TRACAB)

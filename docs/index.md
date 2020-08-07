@@ -231,7 +231,7 @@ with open("eventdata.json", "rb") as event_data, \
     dataset = serializer.deserialize(
         inputs={
             'event_data': event_data,
-            'f7_data': f7_data
+            'metadata': metadata
         },
         options={
             "event_types": ["pass", "shot"]

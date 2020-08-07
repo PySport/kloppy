@@ -246,6 +246,8 @@ event_type_names = {
     77: "player off pitch",
 }
 
+BALL_OWNING_EVENTS = (1, 2, 3, 13, 14, 15, 16, 49)
+
 
 def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
@@ -349,6 +351,7 @@ class OptaSerializer(EventDataSerializer):
                 Period(id=1, start_timestamp=None, end_timestamp=None,),
                 Period(id=2, start_timestamp=None, end_timestamp=None,),
             ]
+            possession_team = None
             events = []
             for event_elm in game_elm.iterchildren("Event"):
                 event_id = event_elm.attrib["id"]
@@ -403,11 +406,14 @@ class OptaSerializer(EventDataSerializer):
                             event_elm.attrib["player_id"]
                         )
 
+                    if type_id in BALL_OWNING_EVENTS:
+                        possession_team = team
+
                     generic_event_kwargs = dict(
                         # from DataRecord
                         period=period,
                         timestamp=timestamp - period.start_timestamp,
-                        ball_owning_team=None,
+                        ball_owning_team=possession_team,
                         ball_state=BallState.ALIVE,
                         # from Event
                         event_id=event_id,

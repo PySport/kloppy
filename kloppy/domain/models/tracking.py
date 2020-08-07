@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from .common import Dataset, DataRecord, Ground, Player
+from kloppy.domain.models.common import DatasetType
+
+from .common import Dataset, DataRecord, Player
 from .pitch import Point
 
 
@@ -15,6 +17,8 @@ class Frame(DataRecord):
 @dataclass
 class TrackingDataset(Dataset):
     records: List[Frame]
+
+    dataset_type: DatasetType = DatasetType.TRACKING
 
     @property
     def frames(self):

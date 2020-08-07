@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, Flag
 from typing import Optional, List, Dict
@@ -224,7 +224,17 @@ class Metadata:
     provider: Provider
 
 
+class DatasetType(Enum):
+    TRACKING = "TRACKING"
+    EVENT = "EVENT"
+
+
 @dataclass
 class Dataset(ABC):
     records: List[DataRecord]
     metadata: Metadata
+
+    @property
+    @abstractmethod
+    def dataset_type(self) -> DatasetType:
+        raise NotImplementedError

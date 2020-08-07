@@ -8,6 +8,7 @@ from kloppy.domain import (
     Orientation,
     Point,
 )
+from kloppy.domain.models.common import DatasetType
 
 
 class TestMetricaTracking:
@@ -28,6 +29,7 @@ class TestMetricaTracking:
                 }
             )
         assert dataset.metadata.provider == Provider.METRICA
+        assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
@@ -88,6 +90,7 @@ class TestMetricaEvent:
             )
 
         assert dataset.metadata.provider == Provider.METRICA
+        assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 3620
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation is None

@@ -3,6 +3,7 @@ from typing import Callable, TypeVar, Dict, Union, List
 from . import (
     TRACABSerializer,
     MetricaTrackingSerializer,
+    MetricaEventsJsonSerializer,
     EPTSSerializer,
     StatsBombSerializer,
     OptaSerializer,
@@ -97,6 +98,20 @@ def load_opta_event_data(
 
         return serializer.deserialize(
             inputs={"f24_data": f24_data, "f7_data": f7_data}, options=options,
+        )
+
+
+def load_metrica_json_event_data(
+    metadata_filename: str, raw_data_filename: str, options: dict = None
+) -> EventDataset:
+    serializer = MetricaEventsJsonSerializer()
+    with open(metadata_filename, "rb") as metadata, open(
+        raw_data_filename, "rb"
+    ) as raw_data:
+
+        return serializer.deserialize(
+            inputs={"metadata": metadata, "raw_data": raw_data},
+            options=options,
         )
 
 
@@ -240,6 +255,7 @@ def to_pandas(
 __all__ = [
     "load_tracab_tracking_data",
     "load_metrica_tracking_data",
+    "load_metrica_json_event_data",
     "load_epts_tracking_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",

@@ -11,7 +11,7 @@ Github issues closed:
 Other pull requests merged:
 
 - Code formatting & typos in docs ([#39](https://github.com/PySport/kloppy/pull/39), [#40](https://github.com/PySport/kloppy/pull/40))
-- Add Metrics Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
+- Add Metrica Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
 - Infer ball_owning_team from Opta events ([#49](https://github.com/PySport/kloppy/pull/49)                      
 
 ## 1.0.0 (2020-07-26)

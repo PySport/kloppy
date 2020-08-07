@@ -115,12 +115,12 @@ def load_metrica_json_event_data(
         )
 
 
-DatasetType = TypeVar("DatasetType")
+DatasetT = TypeVar("DatasetT")
 
 
 def transform(
-    dataset: DatasetType, to_orientation=None, to_pitch_dimensions=None
-) -> DatasetType:
+    dataset: DatasetT, to_orientation=None, to_pitch_dimensions=None
+) -> DatasetT:
     if to_orientation and isinstance(to_orientation, str):
         to_orientation = Orientation[to_orientation]
     if to_pitch_dimensions and (

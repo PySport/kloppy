@@ -166,7 +166,7 @@ def load_metadata(
             Warning,
         )
 
-    if provider_name == "Metrica":
+    if provider_name == "Metrica Sports":
         provider = Provider.METRICA
 
     score_path = objectify.ObjectPath(

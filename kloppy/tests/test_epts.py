@@ -43,10 +43,10 @@ class TestEPTSTracking:
 
     def test_provider_name_recognition(self):
         base_dir = os.path.dirname(__file__)
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+        with open(f"{base_dir}/files/epts_metrica.xml", "rb") as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
-        assert metadata is None
+        assert metadata.provider is "Metrica"
 
 
     def test_read(self):

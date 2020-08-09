@@ -41,6 +41,14 @@ class TestEPTSTracking:
 
         assert result is not None
 
+    def test_provider_name_recognition(self):
+        base_dir = os.path.dirname(__file__)
+        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+            metadata = load_metadata(metadata_fp)
+
+        assert metadata is None
+
+
     def test_read(self):
         base_dir = os.path.dirname(__file__)
         with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:

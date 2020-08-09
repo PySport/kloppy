@@ -156,6 +156,12 @@ def load_metadata(
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
 
+    provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
+    provider_name = providerPath.find(metadata)
+
+    if provider_name == "Metrica":
+        provider = Provider.METRICA
+
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )

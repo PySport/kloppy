@@ -161,7 +161,10 @@ def load_metadata(
     provider_name = providerPath.find(metadata)
 
     if provider != None and provider != provider_name:
-        warnings.warn("Given provider name is different to the name of the Provider in the XML-file", Warning)
+        warnings.warn(
+            "Given provider name is different to the name of the Provider in the XML-file",
+            Warning,
+        )
 
     if provider_name == "Metrica":
         provider = Provider.METRICA

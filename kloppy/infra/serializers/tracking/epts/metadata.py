@@ -158,7 +158,7 @@ def load_metadata(
     metadata = root.find("Metadata")
 
     provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
-    provider_name = providerPath.find(metadata)
+    provider_name = provider_path.find(metadata)
 
     if provider != None and provider != provider_name:
         warnings.warn(

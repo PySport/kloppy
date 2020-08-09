@@ -11,6 +11,7 @@ from kloppy.domain import (
     Point,
     BallState,
     Team,
+    Provider,
 )
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
 from kloppy.infra.serializers.tracking.epts.reader import (
@@ -46,7 +47,7 @@ class TestEPTSTracking:
         with open(f"{base_dir}/files/epts_metrica.xml", "rb") as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
-        assert metadata.provider is "metrica"
+        assert metadata.provider is Provider.METRICA
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)

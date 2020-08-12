@@ -14,6 +14,7 @@ from kloppy.domain import (
     Provider,
 )
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
+from kloppy.infra.serializers.tracking.epts.metadata import _load_provider
 from kloppy.infra.serializers.tracking.epts.reader import (
     build_regex,
     read_raw_data,
@@ -45,9 +46,11 @@ class TestEPTSTracking:
     def test_provider_name_recognition(self):
         base_dir = os.path.dirname(__file__)
         with open(f"{base_dir}/files/epts_metrica.xml", "rb") as metadata_fp:
-            metadata = load_metadata(metadata_fp)
+            root = objectify.fromstring(metadata_fp.read())
+            metadata = root.find("Metadata")
+            provider_from_file = _load_provider
 
-        assert metadata.provider == Provider.METRICA
+        assert provider_from_file == Provider.METRICA
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)

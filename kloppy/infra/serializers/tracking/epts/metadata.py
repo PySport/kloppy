@@ -151,33 +151,25 @@ def _load_pitch_dimensions(
         return None
 
 
-def _load_provider(metadata_elm, provider: Provider) -> Provider:
+def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
     provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
     provider_name = provider_path.find(metadata)
+    provider_from_file = Provider()
+
+    if provider_name == "Metrica Sports":
+        provider_from_file = Provider.METRICA
 
     if provider:
         if provider == Provider.METRICA:
-            if provider_name == "Metrica Sports":
-                return provider
-            else:
+            if provider != provider_from_file:
                 warnings.warn(
-                    "Given provider name is different to the name of the Provider in the XML-file",
+                    f"Given provider name is different to the name of the Provider read from the XML-file",
                     Warning,
                 )
-        else:
-            warnings.warn(
-                "Given provider name is not known to Kloppy yet", Warning,
-            )
             return provider
-    else:
-        if provider_name == "Metrica Sports":
-            return Provider.METRICA
         else:
-            warnings.warn(
-                "The Provider given from the file %s is not know to Kloppy"
-                % provider_name
-            )
-            return None
+            if provider_from_file:
+                return provider_from_file
 
 
 def load_metadata(

@@ -153,7 +153,7 @@ def _load_pitch_dimensions(
 
 def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
     provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
-    provider_name = provider_path.find(metadata)
+    provider_name = provider_path.find(metadata_elm)
     provider_from_file = Provider()
 
     if provider_name == "Metrica Sports":

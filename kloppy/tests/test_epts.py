@@ -2,6 +2,7 @@ import os
 import re
 
 from pandas import DataFrame
+from lxml import objectify
 
 from kloppy import EPTSSerializer
 from kloppy.domain import (

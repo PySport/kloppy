@@ -154,8 +154,7 @@ def _load_pitch_dimensions(
 def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
     provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
     provider_name = provider_path.find(metadata_elm)
-    provider_from_file = None
-
+    provider_from_file: Provider = None
     if provider_name == "Metrica Sports":
         provider_from_file = Provider.METRICA
 
@@ -168,8 +167,25 @@ def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
                 )
             return provider
         else:
-            if provider_from_file:
+            warnings.warn(
+                f"Given provider name {provider} is not yet known to kloppy",
+                Warning,
+            )
+            return provider
+    else:
+        if provider_from_file:
+            if provider_from_file == Provider.METRICA:
                 return provider_from_file
+            else:
+                warnings.warn(
+                    f"Given provider name {provider_from_file} is not yet known to kloppy",
+                    Warning,
+                )
+                return provider_from_file
+        else:
+            warnings.warn(
+                f"No provider given.", Warning,
+            )
 
 
 def load_metadata(

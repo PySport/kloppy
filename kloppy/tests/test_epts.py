@@ -49,7 +49,7 @@ class TestEPTSTracking:
         with open(f"{base_dir}/files/epts_metrica.xml", "rb") as metadata_fp:
             root = objectify.fromstring(metadata_fp.read())
             metadata = root.find("Metadata")
-            provider_from_file = _load_provider
+            provider_from_file = _load_provider(metadata)
 
         assert provider_from_file == Provider.METRICA
 

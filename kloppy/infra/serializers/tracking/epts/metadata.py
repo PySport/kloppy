@@ -1,4 +1,5 @@
 from lxml import objectify
+import warnings
 
 from kloppy.domain import (
     Period,
@@ -150,11 +151,40 @@ def _load_pitch_dimensions(
         return None
 
 
+def _parse_provider(provider_name: Union[str, None]) -> Provider:
+    if provider_name is not None:
+        if provider_name == "Metrica Sports":
+            return Provider.METRICA
+        else:
+            warnings.warn(
+                "The Provider is not known to Kloppy.", Warning,
+            )
+    else:
+        return None
+
+
+def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
+    provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
+    provider_name = provider_path.find(metadata_elm)
+    provider_from_file = _parse_provider(provider_name)
+    if provider:
+        if provider_from_file and provider_from_file != provider:
+            warnings.warn(
+                f"Given provider name is different to the name of the Provider read from the XML-file",
+                Warning,
+            )
+    else:
+        provider = provider_from_file
+    return provider
+
+
 def load_metadata(
     metadata_file: Readable, provider: Provider = None
 ) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
+
+    provider = _load_provider(metadata, provider)
 
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"

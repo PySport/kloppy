@@ -2,6 +2,7 @@ import os
 import re
 
 from pandas import DataFrame
+from lxml import objectify
 
 from kloppy import EPTSSerializer
 from kloppy.domain import (
@@ -11,8 +12,10 @@ from kloppy.domain import (
     Point,
     BallState,
     Team,
+    Provider,
 )
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
+from kloppy.infra.serializers.tracking.epts.metadata import _load_provider
 from kloppy.infra.serializers.tracking.epts.reader import (
     build_regex,
     read_raw_data,
@@ -40,6 +43,15 @@ class TestEPTSTracking:
         )
 
         assert result is not None
+
+    def test_provider_name_recognition(self):
+        base_dir = os.path.dirname(__file__)
+        with open(f"{base_dir}/files/epts_metrica.xml", "rb") as metadata_fp:
+            root = objectify.fromstring(metadata_fp.read())
+            metadata = root.find("Metadata")
+            provider_from_file = _load_provider(metadata)
+
+        assert provider_from_file == Provider.METRICA
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)

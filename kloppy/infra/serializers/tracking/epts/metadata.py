@@ -184,7 +184,7 @@ def load_metadata(
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
 
-    provider = _load_provider(metadata)
+    provider = _load_provider(metadata, provider)
 
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"

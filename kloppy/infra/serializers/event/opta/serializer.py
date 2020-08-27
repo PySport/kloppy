@@ -425,17 +425,17 @@ class OptaSerializer(EventDataSerializer):
 
                     if type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(qualifiers, outcome)
-                        event = PassEvent(
+                        event = PassEvent.create(
                             **pass_event_kwargs, **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass()
-                        event = PassEvent(
+                        event = PassEvent.create(
                             **pass_event_kwargs, **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
-                        event = TakeOnEvent(
+                        event = TakeOnEvent.create(
                             **take_on_event_kwargs, **generic_event_kwargs,
                         )
                     elif type_id in (
@@ -452,9 +452,9 @@ class OptaSerializer(EventDataSerializer):
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
-                        event = ShotEvent(**kwargs)
+                        event = ShotEvent.create(**kwargs)
                     else:
-                        event = GenericEvent(
+                        event = GenericEvent.create(
                             **generic_event_kwargs,
                             result=None,
                             event_name=_get_event_type_name(type_id),

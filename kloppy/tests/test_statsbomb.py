@@ -5,18 +5,13 @@ from kloppy.domain import (
     AttackingDirection,
     Period,
     Orientation,
-    Player,
-    Position,
     Provider,
 )
 from kloppy.domain.models.common import DatasetType
 
 
 class TestStatsbomb:
-    def test_correct_deserialization(self):
-        """
-        This test uses data from the StatsBomb open data project.
-        """
+    def _load_dataset(self, options=None):
         base_dir = os.path.dirname(__file__)
 
         serializer = StatsBombSerializer()
@@ -26,10 +21,17 @@ class TestStatsbomb:
         ) as lineup_data, open(
             f"{base_dir}/files/statsbomb_event.json", "rb"
         ) as event_data:
-
             dataset = serializer.deserialize(
-                inputs={"lineup_data": lineup_data, "event_data": event_data}
+                inputs={"lineup_data": lineup_data, "event_data": event_data},
+                options=options,
             )
+            return dataset
+
+    def test_correct_deserialization(self):
+        """
+        This test uses data from the StatsBomb open data project.
+        """
+        dataset = self._load_dataset()
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
@@ -41,11 +43,16 @@ class TestStatsbomb:
         assert dataset.metadata.teams[0].name == "Barcelona"
         assert dataset.metadata.teams[1].name == "Deportivo Alavés"
 
-        player = dataset.metadata.teams[0].players[0]
-        assert player.player_id == "3109"
-        assert player.jersey_no == 14
-        assert str(player) == "Malcom Filipe Silva de Oliveira"
+        player = dataset.metadata.teams[0].get_player_by_id("5503")
+        assert player.player_id == "5503"
+        assert player.jersey_no == 10
+        assert str(player) == "Lionel Andrés Messi Cuccittini"
         assert player.position is None  # not set
+        assert player.starting
+
+        sub_player = dataset.metadata.teams[0].get_player_by_id("3501")
+        assert str(sub_player) == "Philippe Coutinho Correia"
+        assert not sub_player.starting
 
         assert dataset.metadata.periods[0] == Period(
             id=1,
@@ -58,4 +65,41 @@ class TestStatsbomb:
             start_timestamp=2705.268,
             end_timestamp=5557.321,
             attacking_direction=AttackingDirection.NOT_SET,
+        )
+
+    def test_substitution(self):
+        """
+            Test substitution events
+        """
+
+        dataset = self._load_dataset({"event_types": ["substitution"]})
+
+        assert len(dataset.events) == 6
+
+        subs = [
+            (6374, 3501),
+            (6839, 6935),
+            (6581, 6566),
+            (6613, 6624),
+            (5477, 11392),
+            (5203, 8206),
+        ]
+
+        for event_idx, (player_id, replacement_player_id) in enumerate(subs):
+            event = dataset.events[event_idx]
+            assert event.player == event.team.get_player_by_id(player_id)
+            assert event.replacement_player == event.team.get_player_by_id(
+                replacement_player_id
+            )
+
+    def test_lineup_mutating_events(self):
+        dataset = self._load_dataset(
+            {
+                "event_types": [
+                    "substitution",
+                    "player_off",
+                    "player_on",
+                    "card",
+                ]
+            }
         )

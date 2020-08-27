@@ -24,7 +24,7 @@ class TestStateBuilder:
             return dataset
 
     def test_score_state_builder(self):
-        dataset = self._load_dataset("statsbomb_15986")
+        dataset = self._load_dataset()
 
         with performance_logging("add_state"):
             dataset_with_state = add_state(dataset, ["score", "sequence"])
@@ -64,5 +64,5 @@ class TestStateBuilder:
             (EventType.SUBSTITUTION, 21),
             (EventType.SUBSTITUTION, 21),
             (EventType.SUBSTITUTION, 21),
-            (EventType.GENERIC, 21)
+            (EventType.GENERIC, 21),
         ]

@@ -10,6 +10,7 @@ from kloppy.domain import (
     PlayerOnEvent,
     CardEvent,
     CardType,
+    Provider,
 )
 from . import StateBuilder
 
@@ -21,6 +22,11 @@ class Lineup:
 
 class LineupStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Lineup:
+        if dataset.metadata.provider != Provider.STATSBOMB:
+            raise Exception(
+                "Lineup state can only be applied to statsbomb data"
+            )
+
         return Lineup(
             players=(
                 set(

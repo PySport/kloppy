@@ -110,7 +110,7 @@ def load_metrica_json_event_data(
     ) as raw_data:
 
         return serializer.deserialize(
-            inputs={"metadata": metadata, "raw_data": raw_data},
+            inputs={"metadata": metadata, "event_data": raw_data},
             options=options,
         )
 

@@ -54,6 +54,7 @@ class TestStateBuilder:
             dataset_with_state.events, lambda event: event.state["lineup"]
         ):
             events = list(events)
+            # inspect last event which changed the lineup
             last_events.append((events[-1].event_type, len(lineup.players)))
 
         assert last_events == [

@@ -10,7 +10,7 @@ from kloppy.domain import Ground
 
 def main():
     """
-        This example shows how to determine playing time
+    This example shows how to determine playing time
     """
     logging.basicConfig(
         stream=sys.stdout,

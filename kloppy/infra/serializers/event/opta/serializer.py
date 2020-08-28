@@ -348,8 +348,16 @@ class OptaSerializer(EventDataSerializer):
 
             game_elm = f24_root.find("Game")
             periods = [
-                Period(id=1, start_timestamp=None, end_timestamp=None,),
-                Period(id=2, start_timestamp=None, end_timestamp=None,),
+                Period(
+                    id=1,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+                Period(
+                    id=2,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
             ]
             possession_team = None
             events = []
@@ -426,17 +434,20 @@ class OptaSerializer(EventDataSerializer):
                     if type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(qualifiers, outcome)
                         event = PassEvent.create(
-                            **pass_event_kwargs, **generic_event_kwargs,
+                            **pass_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass()
                         event = PassEvent.create(
-                            **pass_event_kwargs, **generic_event_kwargs,
+                            **pass_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
                         event = TakeOnEvent.create(
-                            **take_on_event_kwargs, **generic_event_kwargs,
+                            **take_on_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     elif type_id in (
                         EVENT_TYPE_SHOT_MISS,
@@ -479,7 +490,10 @@ class OptaSerializer(EventDataSerializer):
             provider=Provider.OPTA,
         )
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

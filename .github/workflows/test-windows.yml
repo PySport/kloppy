@@ -28,7 +28,7 @@ jobs:
         pip install -e ".[test]"
     - name: Code formatting
       run: |
-        pip install black==19.10b0
+        pip install black
         black --check .
     - name: Test with pytest
       run: |

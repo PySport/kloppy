@@ -69,7 +69,7 @@ class TestStatsbomb:
 
     def test_substitution(self):
         """
-            Test substitution events
+        Test substitution events
         """
 
         dataset = self._load_dataset({"event_types": ["substitution"]})

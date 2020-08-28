@@ -190,6 +190,10 @@ class EventDataset(Dataset):
     def events(self):
         return self.records
 
+    def add_state(self, *args, **kwargs):
+        from kloppy import add_state
+        return add_state(self, *args, **kwargs)
+
 
 __all__ = [
     "ResultType",

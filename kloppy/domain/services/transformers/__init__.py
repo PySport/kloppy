@@ -56,15 +56,19 @@ class Transformer:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
-            orientation_factor_from = self._from_orientation.get_orientation_factor(
-                ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction,
-                action_executing_team=action_executing_team,
+            orientation_factor_from = (
+                self._from_orientation.get_orientation_factor(
+                    ball_owning_team=ball_owning_team,
+                    attacking_direction=attacking_direction,
+                    action_executing_team=action_executing_team,
+                )
             )
-            orientation_factor_to = self._to_orientation.get_orientation_factor(
-                ball_owning_team=ball_owning_team,
-                attacking_direction=attacking_direction,
-                action_executing_team=action_executing_team,
+            orientation_factor_to = (
+                self._to_orientation.get_orientation_factor(
+                    ball_owning_team=ball_owning_team,
+                    attacking_direction=attacking_direction,
+                    action_executing_team=action_executing_team,
+                )
             )
             flip = orientation_factor_from != orientation_factor_to
         return flip
@@ -149,10 +153,16 @@ class Transformer:
                 for record in dataset.records
             ]
 
-            return TrackingDataset(metadata=metadata, records=frames,)
+            return TrackingDataset(
+                metadata=metadata,
+                records=frames,
+            )
         elif isinstance(dataset, EventDataset):
             events = list(map(transformer.transform_event, dataset.records))
 
-            return EventDataset(metadata=metadata, records=events,)
+            return EventDataset(
+                metadata=metadata,
+                records=events,
+            )
         else:
             raise Exception("Unknown Dataset type")

@@ -439,7 +439,10 @@ class StatsBombSerializer(EventDataSerializer):
             provider=Provider.STATSBOMB,
         )
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

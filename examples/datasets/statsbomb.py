@@ -7,8 +7,8 @@ from kloppy.infra.utils import performance_logging
 
 def main():
     """
-        This example shows the use of Statsbomb datasets, and how we can pass argument
-        to the dataset loader.
+    This example shows the use of Statsbomb datasets, and how we can pass argument
+    to the dataset loader.
     """
     logging.basicConfig(
         stream=sys.stdout,

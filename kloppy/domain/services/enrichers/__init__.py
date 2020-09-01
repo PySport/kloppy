@@ -10,12 +10,12 @@ class TrackingPossessionEnricher:
         self, tracking_dataset: TrackingDataset, event_dataset: EventDataset
     ) -> None:
         """
-            Return an enriched tracking data set.
+        Return an enriched tracking data set.
 
-            Use the event data to rebuild game state.
+        Use the event data to rebuild game state.
 
-            Iterate through all tracking data events and apply event data to the GameState whenever
-            they happen.
+        Iterate through all tracking data events and apply event data to the GameState whenever
+        they happen.
 
         """
         if tracking_dataset.flags & (

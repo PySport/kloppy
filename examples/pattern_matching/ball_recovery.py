@@ -8,8 +8,8 @@ from kloppy.infra.utils import performance_logging
 
 def main():
     """
-        This example shows the use of regular expressions to do
-        pattern matching.
+    This example shows the use of regular expressions to do
+    pattern matching.
     """
     logging.basicConfig(
         stream=sys.stdout,

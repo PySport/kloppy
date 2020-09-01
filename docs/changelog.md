@@ -2,6 +2,14 @@
 
 Find out all changes between different kloppy versions
 
+
+## 1.1.1 (2020-09-01)
+Github issues closed
+- to_pandas fails for Opta data when trying to read player_id ([#57](https://github.com/PySport/kloppy/issues/57)
+
+Other pull requests merged:
+- Fix error in naming of inputs to metrica json serializer in helper ([#56](https://github.com/PySport/kloppy/pull/56))
+
 ## 1.1.0 (2020-08-07)
 Github issues closed:
 

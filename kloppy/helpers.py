@@ -178,7 +178,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         if event.ball_owning_team
         else None,
         team_id=event.team.team_id,
-        player_id=event.player.player_id,
+        player_id=event.player.player_id if event.player else None,
         coordinates_x=event.coordinates.x if event.coordinates else None,
         coordinates_y=event.coordinates.y if event.coordinates else None,
     )

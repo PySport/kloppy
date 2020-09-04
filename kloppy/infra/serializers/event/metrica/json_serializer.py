@@ -275,6 +275,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         subtypes=subtypes,
                         team=team,
                     )
+
                     event = PassEvent.create(
                         **pass_event_kwargs,
                         **generic_event_kwargs,

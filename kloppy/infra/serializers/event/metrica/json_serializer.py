@@ -22,7 +22,7 @@ from kloppy.domain import (
 
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +275,8 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         subtypes=subtypes,
                         team=team,
                     )
-                    event = PassEvent(
+
+                    event = PassEvent.create(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )
@@ -284,25 +285,25 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     shot_event_kwargs = _parse_shot(
                         event=raw_event, subtypes=subtypes
                     )
-                    event = ShotEvent(
+                    event = ShotEvent.create(
                         **shot_event_kwargs, **generic_event_kwargs
                     )
 
                 elif subtypes and MS_EVENT_TYPE_DRIBBLE in subtypes:
                     take_on_event_kwargs = _parse_take_on(subtypes=subtypes)
-                    event = TakeOnEvent(
+                    event = TakeOnEvent.create(
                         **take_on_event_kwargs, **generic_event_kwargs
                     )
                 elif event_type == MS_EVENT_TYPE_CARRY:
                     carry_event_kwargs = _parse_carry(
                         event=raw_event,
                     )
-                    event = CarryEvent(
+                    event = CarryEvent.create(
                         **carry_event_kwargs,
                         **generic_event_kwargs,
                     )
                 else:
-                    event = GenericEvent(
+                    event = GenericEvent.create(
                         result=None,
                         event_name=raw_event["type"]["name"],
                         **generic_event_kwargs,

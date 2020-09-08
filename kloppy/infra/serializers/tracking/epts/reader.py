@@ -1,7 +1,7 @@
 import re
 from typing import List, Tuple, Set, Iterator
 
-from kloppy.infra.utils import Readable
+from kloppy.utils import Readable
 
 from .models import (
     PlayerChannel,

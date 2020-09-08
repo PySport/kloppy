@@ -12,7 +12,7 @@ from kloppy import (
     load_opta_event_data,
     event_pattern_matching as pm,
 )
-from kloppy.infra.utils import performance_logging
+from kloppy.utils import performance_logging
 
 sys.path.append(".")
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
 from typing import Optional, List, Dict
 
@@ -242,3 +242,19 @@ class Dataset(ABC):
     @abstractmethod
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
+
+    def to_pandas(self, *args, **kwargs):
+        from kloppy import to_pandas
+
+        return to_pandas(self, *args, **kwargs)
+
+    def transform(self, *args, **kwargs):
+        from kloppy import transform
+
+        return transform(self, *args, **kwargs)
+
+    def filter(self, filter_fn):
+        return replace(
+            self,
+            records=[record for record in self.records if filter_fn(record)],
+        )

@@ -1,4 +1,4 @@
-site_name: kloppy 1.1.1
+site_name: kloppy 1.2.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
@@ -16,6 +16,7 @@ nav:
   - Quickstart Guides:
     - Event Data: quickstart/event_data.ipynb
     - Tracking Data: quickstart/tracking_data.ipynb
+    - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'

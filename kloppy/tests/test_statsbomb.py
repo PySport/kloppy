@@ -6,6 +6,7 @@ from kloppy.domain import (
     Period,
     Orientation,
     Provider,
+    EventType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -91,15 +92,3 @@ class TestStatsbomb:
             assert event.replacement_player == event.team.get_player_by_id(
                 replacement_player_id
             )
-
-    def test_lineup_mutating_events(self):
-        dataset = self._load_dataset(
-            {
-                "event_types": [
-                    "substitution",
-                    "player_off",
-                    "player_on",
-                    "card",
-                ]
-            }
-        )

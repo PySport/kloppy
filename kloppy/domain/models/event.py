@@ -181,7 +181,17 @@ class CardEvent(Event):
 @dataclass
 class EventDataset(Dataset):
     records: List[
-        Union[GenericEvent, ShotEvent, PassEvent, TakeOnEvent, CarryEvent]
+        Union[
+            GenericEvent,
+            ShotEvent,
+            PassEvent,
+            TakeOnEvent,
+            CarryEvent,
+            SubstitutionEvent,
+            PlayerOffEvent,
+            PlayerOnEvent,
+            CardEvent,
+        ]
     ]
 
     dataset_type: DatasetType = DatasetType.EVENT
@@ -189,6 +199,11 @@ class EventDataset(Dataset):
     @property
     def events(self):
         return self.records
+
+    def add_state(self, *args, **kwargs):
+        from kloppy import add_state
+
+        return add_state(self, *args, **kwargs)
 
 
 __all__ = [

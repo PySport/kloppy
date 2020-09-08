@@ -245,8 +245,10 @@ class Dataset(ABC):
 
     def to_pandas(self, *args, **kwargs):
         from kloppy import to_pandas
+
         return to_pandas(self, *args, **kwargs)
 
     def transform(self, *args, **kwargs):
         from kloppy import transform
+
         return transform(self, *args, **kwargs)

@@ -20,7 +20,7 @@ class Lineup:
     players: Set[Player]
 
 
-class LineupStateBuilder(StateBuilder):
+class LineupStateBuilder(StateBuilder[Lineup]):
     def initial_state(self, dataset: EventDataset) -> Lineup:
         if dataset.metadata.provider != Provider.STATSBOMB:
             raise Exception(

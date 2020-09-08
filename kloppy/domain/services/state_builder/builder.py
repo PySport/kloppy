@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from kloppy.domain import EventDataset, Event
 from .registered import RegisteredStateBuilder
@@ -7,7 +7,7 @@ from .registered import RegisteredStateBuilder
 T = TypeVar("T")
 
 
-class StateBuilder(metaclass=RegisteredStateBuilder):
+class StateBuilder(Generic[T], metaclass=RegisteredStateBuilder):
     @abstractmethod
     def initial_state(self, dataset: EventDataset) -> T:
         pass

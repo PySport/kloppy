@@ -70,7 +70,7 @@ class TestStateBuilder:
         ]
 
     def test_register_custom_builder(self):
-        class CustomStateBuilder(StateBuilder):
+        class CustomStateBuilder(StateBuilder[int]):
             def initial_state(self, dataset: EventDataset) -> int:
                 return 0
 

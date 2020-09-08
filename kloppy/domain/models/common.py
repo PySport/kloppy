@@ -256,5 +256,5 @@ class Dataset(ABC):
     def filter(self, filter_fn):
         return replace(
             self,
-            records=[record for record in self.records if filter_fn(record)]
+            records=[record for record in self.records if filter_fn(record)],
         )

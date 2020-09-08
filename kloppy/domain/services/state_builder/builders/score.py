@@ -13,7 +13,7 @@ class Score:
         return f"{self.home}-{self.away}"
 
 
-class ScoreStateBuilder(StateBuilder[Score]):
+class ScoreStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Score:
         return Score(home=0, away=0)
 

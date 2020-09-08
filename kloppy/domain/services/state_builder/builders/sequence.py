@@ -10,7 +10,7 @@ class Sequence:
     team: Team
 
 
-class SequenceStateBuilder(StateBuilder[Sequence]):
+class SequenceStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Sequence:
         for event in dataset.events:
             if isinstance(event, PassEvent):

@@ -2,6 +2,14 @@
 
 Find out all changes between different kloppy versions
 
+## 1.2.0 (2020-09-08)
+Github issues closed:
+
+- Enrich events with state ([#48](https://github.com/PySport/kloppy/issues/48))
+
+Other pull requested merged:
+
+- Chaining of methods ([#59](https://github.com/PySport/kloppy/pull/59))
 
 ## 1.1.1 (2020-09-01)
 Github issues closed:

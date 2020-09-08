@@ -3,13 +3,13 @@ import sys
 from collections import Counter
 
 from kloppy import datasets, event_pattern_matching as pm
-from kloppy.infra.utils import performance_logging
+from kloppy.utils import performance_logging
 
 
 def main():
     """
-        This example shows the use of regular expressions to do
-        pattern matching.
+    This example shows the use of regular expressions to do
+    pattern matching.
     """
     logging.basicConfig(
         stream=sys.stdout,

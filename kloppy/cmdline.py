@@ -12,7 +12,7 @@ from kloppy import (
     load_opta_event_data,
     event_pattern_matching as pm,
 )
-from kloppy.infra.utils import performance_logging
+from kloppy.utils import performance_logging
 
 sys.path.append(".")
 
@@ -80,7 +80,8 @@ def run_query(argv=sys.argv[1:]):
         help="StatsBomb event input files (events.json,lineup.json)",
     )
     parser.add_argument(
-        "--input-opta", help="Opta event input files (f24.xml,f7.xml)",
+        "--input-opta",
+        help="Opta event input files (f24.xml,f7.xml)",
     )
     parser.add_argument("--output-xml", help="Output file")
     parser.add_argument(

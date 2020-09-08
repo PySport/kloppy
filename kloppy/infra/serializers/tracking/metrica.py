@@ -19,7 +19,7 @@ from kloppy.domain import (
     Ground,
     Player,
 )
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
 

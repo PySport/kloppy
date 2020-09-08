@@ -12,7 +12,7 @@ from kloppy.domain import (
     CardType,
     Provider,
 )
-from . import StateBuilder
+from ..builder import StateBuilder
 
 
 @dataclass

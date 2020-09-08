@@ -2,8 +2,9 @@ import os
 from itertools import groupby
 
 from kloppy import StatsBombSerializer, add_state, to_pandas
-from kloppy.domain import EventType
-from kloppy.infra.utils import performance_logging
+from kloppy.domain import EventType, Event, EventDataset
+from kloppy.domain.services.state_builder.builder import StateBuilder, T
+from kloppy.utils import performance_logging
 
 
 class TestStateBuilder:
@@ -54,6 +55,7 @@ class TestStateBuilder:
             dataset_with_state.events, lambda event: event.state["lineup"]
         ):
             events = list(events)
+            # inspect last event which changed the lineup
             last_events.append((events[-1].event_type, len(lineup.players)))
 
         assert last_events == [
@@ -66,3 +68,21 @@ class TestStateBuilder:
             (EventType.SUBSTITUTION, 21),
             (EventType.GENERIC, 21),
         ]
+
+    def test_register_custom_builder(self):
+        class CustomStateBuilder(StateBuilder):
+            def initial_state(self, dataset: EventDataset) -> int:
+                return 0
+
+            def reduce(self, state: int, event: Event) -> int:
+                return state + 1
+
+        dataset = self._load_dataset("statsbomb_15986")
+
+        with performance_logging("add_state"):
+            dataset_with_state = add_state(dataset, ["custom"])
+
+        assert dataset_with_state.events[0].state["custom"] == 0
+        assert dataset_with_state.events[1].state["custom"] == 1
+        assert dataset_with_state.events[2].state["custom"] == 2
+        assert dataset_with_state.events[3].state["custom"] == 3

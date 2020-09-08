@@ -6,8 +6,8 @@ from kloppy import datasets, to_pandas
 
 def main():
     """
-        This example shows the use of Metrica datasets, and how we can pass argument
-        to the dataset loader.
+    This example shows the use of Metrica datasets, and how we can pass argument
+    to the dataset loader.
     """
     logging.basicConfig(
         stream=sys.stdout,

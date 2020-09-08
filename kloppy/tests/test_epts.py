@@ -20,7 +20,7 @@ from kloppy.infra.serializers.tracking.epts.reader import (
     build_regex,
     read_raw_data,
 )
-from kloppy.infra.utils import performance_logging
+from kloppy.utils import performance_logging
 
 
 class TestEPTSTracking:

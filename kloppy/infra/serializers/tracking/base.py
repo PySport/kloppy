@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Dict
 
-from kloppy.infra.utils import Readable
+from kloppy.utils import Readable
 from kloppy.domain import Dataset
 
 

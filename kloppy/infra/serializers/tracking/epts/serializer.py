@@ -10,7 +10,7 @@ from kloppy.domain import (
     Team,
     Orientation,
 )
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
 from .reader import read_raw_data

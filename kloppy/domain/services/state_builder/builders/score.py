@@ -1,7 +1,7 @@
 from dataclasses import replace, dataclass
 
 from kloppy.domain import ShotEvent, Event, Ground, ShotResult, EventDataset
-from . import StateBuilder
+from ..builder import StateBuilder
 
 
 @dataclass

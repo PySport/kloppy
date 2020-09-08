@@ -97,7 +97,8 @@ def load_opta_event_data(
     ) as f7_data:
 
         return serializer.deserialize(
-            inputs={"f24_data": f24_data, "f7_data": f7_data}, options=options,
+            inputs={"f24_data": f24_data, "f7_data": f7_data},
+            options=options,
         )
 
 
@@ -110,7 +111,7 @@ def load_metrica_json_event_data(
     ) as raw_data:
 
         return serializer.deserialize(
-            inputs={"metadata": metadata, "raw_data": raw_data},
+            inputs={"metadata": metadata, "event_data": raw_data},
             options=options,
         )
 
@@ -178,7 +179,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         if event.ball_owning_team
         else None,
         team_id=event.team.team_id,
-        player_id=event.player.player_id,
+        player_id=event.player.player_id if event.player else None,
         coordinates_x=event.coordinates.x if event.coordinates else None,
         coordinates_y=event.coordinates.y if event.coordinates else None,
     )

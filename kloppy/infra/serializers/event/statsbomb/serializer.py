@@ -33,7 +33,7 @@ from kloppy.domain import (
     CardType,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -532,7 +532,10 @@ class StatsBombSerializer(EventDataSerializer):
             provider=Provider.STATSBOMB,
         )
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

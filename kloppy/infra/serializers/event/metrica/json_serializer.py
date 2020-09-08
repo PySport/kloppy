@@ -22,7 +22,7 @@ from kloppy.domain import (
 
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,10 @@ def _parse_coordinates(event_start_or_end: dict) -> Point:
     if x is None:
         return None
 
-    return Point(x=x, y=y,)
+    return Point(
+        x=x,
+        y=y,
+    )
 
 
 def _parse_subtypes(event: dict) -> List:
@@ -268,10 +271,14 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
 
                 if event_type in MS_PASS_TYPES:
                     pass_event_kwargs = _parse_pass(
-                        event=raw_event, subtypes=subtypes, team=team,
+                        event=raw_event,
+                        subtypes=subtypes,
+                        team=team,
                     )
+
                     event = PassEvent.create(
-                        **pass_event_kwargs, **generic_event_kwargs,
+                        **pass_event_kwargs,
+                        **generic_event_kwargs,
                     )
 
                 elif event_type == MS_EVENT_TYPE_SHOT:
@@ -288,9 +295,12 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         **take_on_event_kwargs, **generic_event_kwargs
                     )
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(event=raw_event,)
+                    carry_event_kwargs = _parse_carry(
+                        event=raw_event,
+                    )
                     event = CarryEvent.create(
-                        **carry_event_kwargs, **generic_event_kwargs,
+                        **carry_event_kwargs,
+                        **generic_event_kwargs,
                     )
                 else:
                     event = GenericEvent.create(
@@ -305,7 +315,10 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                 ):
                     events.append(event)
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

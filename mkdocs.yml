@@ -16,6 +16,7 @@ nav:
   - Quickstart Guides:
     - Event Data: quickstart/event_data.ipynb
     - Tracking Data: quickstart/tracking_data.ipynb
+    - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'

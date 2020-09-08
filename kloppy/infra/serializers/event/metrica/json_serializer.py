@@ -22,7 +22,7 @@ from kloppy.domain import (
 
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 

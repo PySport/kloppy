@@ -15,7 +15,7 @@ from kloppy.domain import (
     Point,
     Provider,
 )
-from kloppy.infra.utils import Readable
+from kloppy.utils import Readable
 
 from .models import *
 

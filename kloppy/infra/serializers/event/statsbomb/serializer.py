@@ -33,7 +33,7 @@ from kloppy.domain import (
     CardType,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
-from kloppy.infra.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 

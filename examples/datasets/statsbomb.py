@@ -2,7 +2,7 @@ import logging
 import sys
 
 from kloppy import datasets, transform, to_pandas
-from kloppy.infra.utils import performance_logging
+from kloppy.utils import performance_logging
 
 
 def main():

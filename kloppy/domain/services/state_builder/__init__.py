@@ -2,19 +2,10 @@ from dataclasses import replace
 
 from kloppy.domain import List, EventDataset
 
-from .base import StateBuilder
-from .lineup import LineupStateBuilder
-from .score import ScoreStateBuilder
-from .sequence import SequenceStateBuilder
+# register all of them
+from . import builders
 
-
-def create_state_builder(builder_key: str):
-    if builder_key == "score":
-        return ScoreStateBuilder()
-    elif builder_key == "sequence":
-        return SequenceStateBuilder()
-    elif builder_key == "lineup":
-        return LineupStateBuilder()
+from .registered import create_state_builder
 
 
 def add_state(dataset: EventDataset, builder_keys: List[str]) -> EventDataset:

@@ -45,7 +45,8 @@ class TRACABSerializer(TrackingDataSerializer):
             elif team_id == 0:
                 team = teams[1]
             else:
-                raise Exception(f"Unknown team {team_id}")
+                # it's probably -1, but make sure it doesn't crash
+                continue
 
             player = team.get_player_by_jersey_number(jersey_no)
 

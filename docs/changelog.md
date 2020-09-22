@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+
+## 1.2.1 (2020-09-22)
+
+Bugfix:
+
+- Don't crash when TRACAB contains unknown team id
+
 ## 1.2.0 (2020-09-08)
 Github issues closed:
 

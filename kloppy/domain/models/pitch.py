@@ -26,6 +26,9 @@ class Point:
     x: float
     y: float
 
-    def distance_to_point(self, Point) -> int:
+    def distance_to_point(self, Point) -> float:
         # returns the euclidean distance between the point and another provided point
-        return int(round(sqrt(sum([(a - b)**2 for a, b in zip((self.x, self.y), (Point.x, Point.y))])), 0))
+        return sqrt(sum(((self.x, self.y)-(Point.x, Point.y))**2))
+
+
+

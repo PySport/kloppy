@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import sqrt
 
 @dataclass
 class Dimension:
@@ -27,4 +28,4 @@ class Point:
 
     def distance_to_point(self, Point) -> int:
         # returns the euclidean distance between the point and another provided point
-        return int(round(sum([(a - b)**2 for a, b in zip((self.x, self.y), (Point.x, Point.y))])**(1/2), 0))
+        return int(round(sqrt(sum([(a - b)**2 for a, b in zip((self.x, self.y), (Point.x, Point.y))])), 0))

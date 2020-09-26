@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import sqrt
 
 
 @dataclass
@@ -25,3 +26,7 @@ class PitchDimensions:
 class Point:
     x: float
     y: float
+
+    def distance_to(self, other: "Point") -> float:
+        # returns the euclidean distance between the point and another provided point
+        return sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)

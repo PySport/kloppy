@@ -87,6 +87,9 @@ class Event(DataRecord, ABC):
 
     result: Union[ResultType, None]
 
+    reference_frame_guessed: Union[None, Frame]
+    reference_frame: Union[None, Frame]
+
     raw_event: Dict
     state: Dict[str, any]
 
@@ -101,7 +104,7 @@ class Event(DataRecord, ABC):
         raise NotImplementedError
 
     @classmethod
-    def create(cls, **kwargs):
+    def create(cls, reference_frame_guessed=None, reference_frame = None, **kwargs):
         return cls(**kwargs, state={})
 
 

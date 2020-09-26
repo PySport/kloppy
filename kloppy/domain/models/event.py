@@ -106,7 +106,12 @@ class Event(DataRecord, ABC):
 
     @classmethod
     def create(cls, **kwargs):
-        return cls(reference_frame_guessed=None, reference_frame=None, **kwargs, state={})
+        return cls(
+            reference_frame_guessed=None,
+            reference_frame=None,
+            **kwargs,
+            state={}
+        )
 
 
 @dataclass

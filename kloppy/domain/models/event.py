@@ -105,10 +105,8 @@ class Event(DataRecord, ABC):
         raise NotImplementedError
 
     @classmethod
-    def create(
-        cls, reference_frame_guessed=None, reference_frame=None, **kwargs
-    ):
-        return cls(**kwargs, state={})
+    def create(cls, **kwargs):
+        return cls(reference_frame_guessed=None, reference_frame=None, **kwargs, state={})
 
 
 @dataclass

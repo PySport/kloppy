@@ -8,7 +8,7 @@ from kloppy.domain.models.common import DatasetType
 
 from .common import DataRecord, Dataset, Team, Player
 from .pitch import Point
-
+from .tracking import Frame
 
 class ResultType(Enum):
     @property

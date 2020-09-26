@@ -10,6 +10,7 @@ from .common import DataRecord, Dataset, Team, Player
 from .pitch import Point
 from .tracking import Frame
 
+
 class ResultType(Enum):
     @property
     @abstractmethod
@@ -104,7 +105,9 @@ class Event(DataRecord, ABC):
         raise NotImplementedError
 
     @classmethod
-    def create(cls, reference_frame_guessed=None, reference_frame = None, **kwargs):
+    def create(
+        cls, reference_frame_guessed=None, reference_frame=None, **kwargs
+    ):
         return cls(**kwargs, state={})
 
 

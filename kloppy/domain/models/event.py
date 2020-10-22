@@ -76,6 +76,15 @@ class EventType(Enum):
     CARD = "CARD"
     PLAYER_ON = "PLAYER_ON"
     PLAYER_OFF = "PLAYER_OFF"
+    RECOVERY = "RECOVERY"
+    BALL_OUT = "BALL_OUT"
+    FOUL_COMMITTED = "FOUL_COMMITTED"
+    GOAL_KICK = "GOAL_KICK"
+    FREE_KICK = "FREE_KICK"
+    THROW_IN = "THROW_IN"
+    CORNER_KICK = "CORNER_KICK"
+    PENALTY = "PENALTY"
+    KICK_OFF = "KICK_OFF"
 
 
 @dataclass
@@ -179,6 +188,24 @@ class CardEvent(Event):
 
 
 @dataclass
+class RecoveryEvent(Event):
+    event_type: EventType = EventType.RECOVERY
+    event_name: str = "recovery"
+
+
+@dataclass
+class BallOutEvent(Event):
+    event_type: EventType = EventType.BALL_OUT
+    event_name: str = "ball_out"
+
+
+@dataclass
+class FoulCommittedEvent(Event):
+    event_type: EventType = EventType.FOUL_COMMITTED
+    event_name: str = "foul_committed"
+
+
+@dataclass
 class EventDataset(Dataset):
     records: List[
         Union[
@@ -225,4 +252,7 @@ __all__ = [
     "CardEvent",
     "CardType",
     "EventDataset",
+    "RecoveryEvent",
+    "FoulCommittedEvent",
+    "BallOutEvent",
 ]

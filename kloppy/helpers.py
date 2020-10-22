@@ -97,8 +97,7 @@ def load_opta_event_data(
     ) as f7_data:
 
         return serializer.deserialize(
-            inputs={"f24_data": f24_data, "f7_data": f7_data},
-            options=options,
+            inputs={"f24_data": f24_data, "f7_data": f7_data}, options=options,
         )
 
 

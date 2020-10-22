@@ -12,6 +12,9 @@ from kloppy.domain import (
     ShotEvent,
     TakeOnEvent,
     CarryEvent,
+    RecoveryEvent,
+    FoulCommittedEvent,
+    BallOutEvent,
     GenericEvent,
     PassResult,
     ShotResult,
@@ -42,6 +45,16 @@ MS_PASS_TYPES = [
     MS_PASS_OUTCOME_OFFSIDE,
 ]
 
+# Set Pieces
+MS_SET_PIECE = 5
+MS_SET_PIECE_GOAL_KICK = 20
+MS_SET_PIECE_FREE_KICK = 32
+MS_SET_PIECE_THROW_IN = 34
+MS_SET_PIECE_CORNER_KICK = 33
+MS_SET_PIECE_PENALTY = 36
+MS_SET_PIECE_KICK_OFF = 35
+
+
 # Shots
 MS_EVENT_TYPE_SHOT = 2
 MS_SHOT_OUTCOME_BLOCKED = 25
@@ -63,6 +76,8 @@ MS_SHOT_TYPES = [
 MS_EVENT_TYPE_DRIBBLE = 45
 MS_EVENT_TYPE_CARRY = 10
 MS_EVENT_TYPE_CHALLENGE = 9
+MS_EVENT_TYPE_RECOVERY = 3
+MS_EVENT_TYPE_FOUL_COMMITTED = 4
 MS_EVENT_TYPE_CARD = 8
 
 
@@ -72,10 +87,7 @@ def _parse_coordinates(event_start_or_end: dict) -> Point:
     if x is None:
         return None
 
-    return Point(
-        x=x,
-        y=y,
-    )
+    return Point(x=x, y=y,)
 
 
 def _parse_subtypes(event: dict) -> List:
@@ -88,36 +100,64 @@ def _parse_subtypes(event: dict) -> List:
         return None
 
 
-def _parse_pass(event: Dict, subtypes: List, team: Team) -> Dict:
+def _parse_pass(
+    event: Dict, previous_event: Dict, subtypes: List, team: Team
+) -> Dict:
 
-    pass_type_id = event["type"]["id"]
+    event_type_id = event["type"]["id"]
 
-    if pass_type_id == MS_PASS_OUTCOME_COMPLETE:
+    if event_type_id == MS_PASS_OUTCOME_COMPLETE:
         result = PassResult.COMPLETE
         receiver_player = team.get_player_by_id(event["to"]["id"])
         receiver_coordinates = _parse_coordinates(event["end"])
         receive_timestamp = event["end"]["time"]
     else:
-        if pass_type_id == MS_PASS_OUTCOME_OUT:
+        if event_type_id == MS_PASS_OUTCOME_OUT:
             result = PassResult.OUT
-        elif pass_type_id == MS_PASS_OUTCOME_INCOMPLETE:
+        elif event_type_id == MS_PASS_OUTCOME_INCOMPLETE:
             if subtypes and MS_PASS_OUTCOME_OFFSIDE in subtypes:
                 result = PassResult.OFFSIDE
             else:
                 result = PassResult.INCOMPLETE
         else:
-            raise Exception(f"Unknown pass outcome: {pass_type_id}")
+            raise Exception(f"Unknown pass outcome: {event_type_id}")
 
         receiver_player = None
         receiver_coordinates = None
         receive_timestamp = None
+
+    pass_type = _get_pass_type(event, previous_event, subtypes)
 
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
         receiver_player=receiver_player,
         receive_timestamp=receive_timestamp,
+        event_type=pass_type,
     )
+
+
+def _get_pass_type(
+    event: Dict, previous_event: Dict, subtypes: List
+) -> EventType:
+
+    previous_event_type_id = previous_event["type"]["id"]
+    if previous_event_type_id == MS_SET_PIECE:
+        set_piece_subtypes = _parse_subtypes(previous_event)
+        if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
+            return EventType.CORNER_KICK
+        elif MS_SET_PIECE_FREE_KICK in set_piece_subtypes:
+            return EventType.FREE_KICK
+        elif MS_SET_PIECE_PENALTY in set_piece_subtypes:
+            return EventType.PENALTY
+        elif MS_SET_PIECE_THROW_IN in set_piece_subtypes:
+            return EventType.THROW_IN
+        elif MS_SET_PIECE_KICK_OFF in set_piece_subtypes:
+            return EventType.KICK_OFF
+    elif subtypes and MS_SET_PIECE_GOAL_KICK in subtypes:
+        return EventType.GOAL_KICK
+    else:
+        return EventType.PASS
 
 
 def _parse_shot(event: Dict, subtypes: List) -> Dict:
@@ -236,7 +276,8 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
             ]
 
             events = []
-            for raw_event in raw_events["data"]:
+            for i, raw_event in enumerate(raw_events["data"]):
+
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
                 elif raw_event["team"]["id"] == metadata.teams[1].team_id:
@@ -269,56 +310,98 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     raw_event=raw_event,
                 )
 
+                iteration_events = []
+
                 if event_type in MS_PASS_TYPES:
+                    previous_event = raw_events["data"][i - 1]
                     pass_event_kwargs = _parse_pass(
                         event=raw_event,
+                        previous_event=previous_event,
                         subtypes=subtypes,
                         team=team,
                     )
 
-                    event = PassEvent.create(
-                        **pass_event_kwargs,
-                        **generic_event_kwargs,
+                    iteration_events.append(
+                        PassEvent.create(
+                            **pass_event_kwargs, **generic_event_kwargs,
+                        )
                     )
 
                 elif event_type == MS_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
                         event=raw_event, subtypes=subtypes
                     )
-                    event = ShotEvent.create(
-                        **shot_event_kwargs, **generic_event_kwargs
+                    iteration_events.append(
+                        ShotEvent.create(
+                            **shot_event_kwargs, **generic_event_kwargs
+                        )
                     )
 
                 elif subtypes and MS_EVENT_TYPE_DRIBBLE in subtypes:
                     take_on_event_kwargs = _parse_take_on(subtypes=subtypes)
-                    event = TakeOnEvent.create(
-                        **take_on_event_kwargs, **generic_event_kwargs
+                    iteration_events.append(
+                        TakeOnEvent.create(
+                            **take_on_event_kwargs, **generic_event_kwargs
+                        )
                     )
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(
-                        event=raw_event,
+                    carry_event_kwargs = _parse_carry(event=raw_event,)
+                    iteration_events.append(
+                        CarryEvent.create(
+                            **carry_event_kwargs, **generic_event_kwargs,
+                        )
                     )
-                    event = CarryEvent.create(
-                        **carry_event_kwargs,
-                        **generic_event_kwargs,
+                elif event_type == MS_EVENT_TYPE_RECOVERY:
+                    iteration_events.append(
+                        RecoveryEvent.create(
+                            result=None, **generic_event_kwargs
+                        )
                     )
-                else:
-                    event = GenericEvent.create(
-                        result=None,
-                        event_name=raw_event["type"]["name"],
-                        **generic_event_kwargs,
+                elif event_type == MS_EVENT_TYPE_FOUL_COMMITTED:
+                    iteration_events.append(
+                        FoulCommittedEvent.create(
+                            result=None, **generic_event_kwargs
+                        )
+                    )
+                elif event_type != MS_SET_PIECE:
+                    iteration_events.append(
+                        GenericEvent.create(
+                            result=None,
+                            event_name=raw_event["type"]["name"],
+                            **generic_event_kwargs,
+                        )
                     )
 
-                if (
-                    not wanted_event_types
-                    or event.event_type in wanted_event_types
-                ):
-                    events.append(event)
+                # Checks if the event was a pass that ended out of the field to add a
+                # synthetic ball_out event.
+                if event_type == MS_PASS_OUTCOME_OUT:
+                    iteration_events.append(
+                        BallOutEvent.create(
+                            result=None,
+                            # from DataRecord
+                            period=period,
+                            timestamp=raw_event["end"]["time"],
+                            ball_owning_team=_parse_ball_owning_team(
+                                event_type, team
+                            ),
+                            ball_state=BallState.DEAD,
+                            # from Event
+                            event_id=None,
+                            team=team,
+                            player=player,
+                            coordinates=(_parse_coordinates(raw_event["end"])),
+                            raw_event=raw_event,
+                        )
+                    )
 
-        return EventDataset(
-            metadata=metadata,
-            records=events,
-        )
+                for event in iteration_events:
+                    if (
+                        not wanted_event_types
+                        or event.event_type in wanted_event_types
+                    ):
+                        events.append(event)
+
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

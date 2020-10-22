@@ -7,6 +7,7 @@ from kloppy.domain import (
     AttackingDirection,
     Orientation,
     Point,
+    EventType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -91,7 +92,7 @@ class TestMetricaEvent:
 
         assert dataset.metadata.provider == Provider.METRICA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 3620
+        assert len(dataset.events) == 3594
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation is None
         assert dataset.metadata.teams[0].name == "Team A"
@@ -115,3 +116,6 @@ class TestMetricaEvent:
             end_timestamp=5742.12,
             attacking_direction=AttackingDirection.NOT_SET,
         )
+
+        # Make sure we are using the improved event types.
+        dataset.records[0].event_type == EventType.KICK_OFF

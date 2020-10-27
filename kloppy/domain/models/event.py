@@ -79,6 +79,9 @@ class EventType(Enum):
     RECOVERY = "RECOVERY"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+
+
+class SetPieceType(Enum):
     GOAL_KICK = "GOAL_KICK"
     FREE_KICK = "FREE_KICK"
     THROW_IN = "THROW_IN"
@@ -98,6 +101,8 @@ class Event(DataRecord, ABC):
 
     raw_event: Dict
     state: Dict[str, any]
+
+    qualifiers: List[SetPieceType]
 
     @property
     @abstractmethod
@@ -255,4 +260,5 @@ __all__ = [
     "RecoveryEvent",
     "FoulCommittedEvent",
     "BallOutEvent",
+    "SetPieceType",
 ]

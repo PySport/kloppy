@@ -21,6 +21,7 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     EventType,
+    SetPieceType,
 )
 
 from kloppy.infra.serializers.event import EventDataSerializer
@@ -126,38 +127,39 @@ def _parse_pass(
         receiver_coordinates = None
         receive_timestamp = None
 
-    pass_type = _get_pass_type(event, previous_event, subtypes)
+    qualifiers = _get_pass_qualifiers(event, previous_event, subtypes)
 
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
         receiver_player=receiver_player,
         receive_timestamp=receive_timestamp,
-        event_type=pass_type,
+        qualifiers=qualifiers,
     )
 
 
-def _get_pass_type(
+def _get_pass_qualifiers(
     event: Dict, previous_event: Dict, subtypes: List
 ) -> EventType:
 
     previous_event_type_id = previous_event["type"]["id"]
+    qualifiers = []
     if previous_event_type_id == MS_SET_PIECE:
         set_piece_subtypes = _parse_subtypes(previous_event)
         if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
-            return EventType.CORNER_KICK
+            qualifiers.append(SetPieceType.CORNER_KICK)
         elif MS_SET_PIECE_FREE_KICK in set_piece_subtypes:
-            return EventType.FREE_KICK
+            qualifiers.append(SetPieceType.FREE_KICK)
         elif MS_SET_PIECE_PENALTY in set_piece_subtypes:
-            return EventType.PENALTY
+            qualifiers.append(SetPieceType.PENALTY)
         elif MS_SET_PIECE_THROW_IN in set_piece_subtypes:
-            return EventType.THROW_IN
+            qualifiers.append(SetPieceType.THROW_IN)
         elif MS_SET_PIECE_KICK_OFF in set_piece_subtypes:
-            return EventType.KICK_OFF
+            qualifiers.append(SetPieceType.KICK_OFF)
     elif subtypes and MS_SET_PIECE_GOAL_KICK in subtypes:
-        return EventType.GOAL_KICK
-    else:
-        return EventType.PASS
+        qualifiers.append(SetPieceType.GOAL_KICK)
+
+    return qualifiers
 
 
 def _parse_shot(event: Dict, subtypes: List) -> Dict:
@@ -333,7 +335,9 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     )
                     iteration_events.append(
                         ShotEvent.create(
-                            **shot_event_kwargs, **generic_event_kwargs
+                            qualifiers=None,
+                            **shot_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     )
 
@@ -341,32 +345,41 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     take_on_event_kwargs = _parse_take_on(subtypes=subtypes)
                     iteration_events.append(
                         TakeOnEvent.create(
-                            **take_on_event_kwargs, **generic_event_kwargs
+                            qualifiers=None,
+                            **take_on_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     )
                 elif event_type == MS_EVENT_TYPE_CARRY:
                     carry_event_kwargs = _parse_carry(event=raw_event,)
                     iteration_events.append(
                         CarryEvent.create(
-                            **carry_event_kwargs, **generic_event_kwargs,
+                            qualifiers=None,
+                            **carry_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     )
                 elif event_type == MS_EVENT_TYPE_RECOVERY:
                     iteration_events.append(
                         RecoveryEvent.create(
-                            result=None, **generic_event_kwargs
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
                         )
                     )
                 elif event_type == MS_EVENT_TYPE_FOUL_COMMITTED:
                     iteration_events.append(
                         FoulCommittedEvent.create(
-                            result=None, **generic_event_kwargs
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
                         )
                     )
                 elif event_type != MS_SET_PIECE:
                     iteration_events.append(
                         GenericEvent.create(
                             result=None,
+                            qualifiers=None,
                             event_name=raw_event["type"]["name"],
                             **generic_event_kwargs,
                         )
@@ -375,9 +388,16 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                 # Checks if the event was a pass that ended out of the field to add a
                 # synthetic ball_out event.
                 if event_type == MS_PASS_OUTCOME_OUT:
+
+                    if raw_event["end"]["x"]:
+                        coordinates = _parse_coordinates(raw_event["end"])
+                    else:
+                        coordinates = _parse_coordinates(raw_event["start"])
+
                     iteration_events.append(
                         BallOutEvent.create(
                             result=None,
+                            qualifiers=None,
                             # from DataRecord
                             period=period,
                             timestamp=raw_event["end"]["time"],
@@ -389,7 +409,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                             event_id=None,
                             team=team,
                             player=player,
-                            coordinates=(_parse_coordinates(raw_event["end"])),
+                            coordinates=coordinates,
                             raw_event=raw_event,
                         )
                     )

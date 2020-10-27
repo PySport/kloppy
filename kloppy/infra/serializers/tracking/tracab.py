@@ -242,7 +242,10 @@ class TRACABSerializer(TrackingDataSerializer):
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
         )
 
-        return TrackingDataset(records=frames, metadata=metadata,)
+        return TrackingDataset(
+            records=frames,
+            metadata=metadata,
+        )
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
         raise NotImplementedError

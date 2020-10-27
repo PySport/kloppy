@@ -88,7 +88,10 @@ def _parse_coordinates(event_start_or_end: dict) -> Point:
     if x is None:
         return None
 
-    return Point(x=x, y=y,)
+    return Point(
+        x=x,
+        y=y,
+    )
 
 
 def _parse_subtypes(event: dict) -> List:
@@ -325,7 +328,8 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
 
                     iteration_events.append(
                         PassEvent.create(
-                            **pass_event_kwargs, **generic_event_kwargs,
+                            **pass_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     )
 
@@ -351,7 +355,9 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         )
                     )
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(event=raw_event,)
+                    carry_event_kwargs = _parse_carry(
+                        event=raw_event,
+                    )
                     iteration_events.append(
                         CarryEvent.create(
                             qualifiers=None,
@@ -421,7 +427,10 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     ):
                         events.append(event)
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

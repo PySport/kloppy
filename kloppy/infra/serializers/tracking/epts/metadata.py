@@ -157,7 +157,8 @@ def _parse_provider(provider_name: Union[str, None]) -> Provider:
             return Provider.METRICA
         else:
             warnings.warn(
-                "The Provider is not known to Kloppy.", Warning,
+                "The Provider is not known to Kloppy.",
+                Warning,
             )
     else:
         return None

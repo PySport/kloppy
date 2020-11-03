@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List, Union, Dict
 
 from kloppy.domain.models.common import DatasetType
+from kloppy.utils import camelcase_to_snakecase, removes_suffix
 
 from .common import DataRecord, Dataset, Team, Player
 from .pitch import Point
@@ -81,6 +82,34 @@ class EventType(Enum):
     FOUL_COMMITTED = "FOUL_COMMITTED"
 
 
+@dataclass
+class Qualifier(ABC):
+    @abstractmethod
+    def to_dict(self):
+        pass
+
+    @property
+    def name(self):
+        return camelcase_to_snakecase(
+            removes_suffix(type(self).__name__, "Qualifier")
+        )
+
+
+@dataclass
+class BoolQualifier(Qualifier, ABC):
+    value: bool
+
+    def to_dict(self):
+        return {f"is_{self.name}": self.value}
+
+
+class EnumQualifier(Qualifier, ABC):
+    value: Enum
+
+    def to_dict(self):
+        return {f"{self.name}_type": self.value.value}
+
+
 class SetPieceType(Enum):
     GOAL_KICK = "GOAL_KICK"
     FREE_KICK = "FREE_KICK"
@@ -88,6 +117,11 @@ class SetPieceType(Enum):
     CORNER_KICK = "CORNER_KICK"
     PENALTY = "PENALTY"
     KICK_OFF = "KICK_OFF"
+
+
+@dataclass
+class SetPieceQualifier(EnumQualifier):
+    value: SetPieceType
 
 
 @dataclass
@@ -261,4 +295,5 @@ __all__ = [
     "FoulCommittedEvent",
     "BallOutEvent",
     "SetPieceType",
+    "SetPieceQualifier",
 ]

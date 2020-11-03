@@ -206,8 +206,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
     if event.qualifiers:
         for qualifier in event.qualifiers:
-            if isinstance(qualifier, SetPieceType):
-                row.update({f"is_{qualifier.name}": True})
+            row.update(qualifier.to_dict())
 
     return row
 

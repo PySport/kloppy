@@ -44,3 +44,7 @@ def camelcase_to_snakecase(name):
     """Convert camel-case string to snake-case."""
     s1 = _first_cap_re.sub(r"\1_\2", name)
     return _all_cap_re.sub(r"\1_\2", s1).lower()
+
+
+def removes_suffix(string, suffix):
+    return string[: -len(suffix)]

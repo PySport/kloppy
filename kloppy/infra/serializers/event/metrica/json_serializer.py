@@ -22,6 +22,7 @@ from kloppy.domain import (
     CarryResult,
     EventType,
     SetPieceType,
+    SetPieceQualifier,
 )
 
 from kloppy.infra.serializers.event import EventDataSerializer
@@ -150,17 +151,19 @@ def _get_pass_qualifiers(
     if previous_event_type_id == MS_SET_PIECE:
         set_piece_subtypes = _parse_subtypes(previous_event)
         if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
-            qualifiers.append(SetPieceType.CORNER_KICK)
+            qualifiers.append(
+                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
+            )
         elif MS_SET_PIECE_FREE_KICK in set_piece_subtypes:
-            qualifiers.append(SetPieceType.FREE_KICK)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
         elif MS_SET_PIECE_PENALTY in set_piece_subtypes:
-            qualifiers.append(SetPieceType.PENALTY)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
         elif MS_SET_PIECE_THROW_IN in set_piece_subtypes:
-            qualifiers.append(SetPieceType.THROW_IN)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
         elif MS_SET_PIECE_KICK_OFF in set_piece_subtypes:
-            qualifiers.append(SetPieceType.KICK_OFF)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
     elif subtypes and MS_SET_PIECE_GOAL_KICK in subtypes:
-        qualifiers.append(SetPieceType.GOAL_KICK)
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
 
     return qualifiers
 

@@ -119,4 +119,4 @@ class TestMetricaEvent:
         )
 
         # Make sure we are using the improved event types.
-        dataset.records[0].qualifiers[0] == SetPieceType.KICK_OFF
+        dataset.records[0].qualifiers[0].value == SetPieceType.KICK_OFF

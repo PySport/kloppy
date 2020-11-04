@@ -8,6 +8,5 @@ from .event import (
     StatsBombSerializer,
     OptaSerializer,
     MetricaEventsJsonSerializer,
+    SportecEventSerializer
 )
-
-# NOT YET: from .event import EventDataSerializer, MetricaEventSerializer

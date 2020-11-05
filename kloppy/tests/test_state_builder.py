@@ -38,9 +38,9 @@ class TestStateBuilder:
             events_per_score[str(score)] = len(events)
 
         assert events_per_score == {
-            "0-0": 2884,
-            "1-0": 711,
-            "2-0": 404,
+            "0-0": 2897,
+            "1-0": 717,
+            "2-0": 405,
             "3-0": 3,
         }
 

@@ -149,7 +149,7 @@ def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
             qualifiers.append(
                 SetPieceQualifier(value=SetPieceType.CORNER_KICK)
             )
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_CORNER_KICK:
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_FREE_KICK:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
         elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_PENALTY:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))

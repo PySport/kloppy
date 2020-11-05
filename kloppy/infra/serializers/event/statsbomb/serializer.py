@@ -31,13 +31,20 @@ from kloppy.domain import (
     PlayerOnEvent,
     PlayerOffEvent,
     CardType,
+    Qualifier,
+    SetPieceQualifier,
+    SetPieceType,
+    RecoveryEvent,
+    FoulCommittedEvent,
+    BallOutEvent,
+    Event,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
 
-
+SB_EVENT_TYPE_RECOVERY = 2
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
 SB_EVENT_TYPE_PASS = 30
@@ -66,6 +73,15 @@ SB_SHOT_OUTCOME_OFF_TARGET = 98
 SB_SHOT_OUTCOME_POST = 99
 SB_SHOT_OUTCOME_SAVED = 100
 SB_SHOT_OUTCOME_OFF_WAYWARD = 101
+
+SB_EVENT_TYPE_FREE_KICK = 62
+SB_EVENT_TYPE_THROW_IN = 67
+SB_EVENT_TYPE_KICK_OFF = 65
+SB_EVENT_TYPE_CORNER_KICK = 61
+SB_EVENT_TYPE_PENALTY = 88
+SB_EVENT_TYPE_GOAL_KICK = 63
+
+OUT_EVENT_RESULTS = [PassResult.OUT, TakeOnResult.OUT]
 
 
 def parse_str_ts(timestamp: str) -> float:
@@ -108,19 +124,43 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
             raise Exception(f"Unknown pass outcome: {outcome_id}")
 
         receiver_player = None
-        receiver_coordinates = None
     else:
         result = PassResult.COMPLETE
         receiver_player = team.get_player_by_id(pass_dict["recipient"]["id"])
-        receiver_coordinates = _parse_coordinates(
-            pass_dict["end_location"], fidelity_version
-        )
+
+    receiver_coordinates = _parse_coordinates(
+        pass_dict["end_location"], fidelity_version
+    )
+
+    qualifiers = _get_event_qualifiers(pass_dict)
 
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
         receiver_player=receiver_player,
+        qualifiers=qualifiers,
     )
+
+
+def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
+    qualifiers = []
+    if "type" in qualifiers_dict:
+        if qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_CORNER_KICK:
+            qualifiers.append(
+                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
+            )
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_CORNER_KICK:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_PENALTY:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_THROW_IN:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_KICK_OFF:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
+        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_GOAL_KICK:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
+
+    return qualifiers
 
 
 def _parse_shot(shot_dict: Dict) -> Dict:
@@ -140,7 +180,9 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     else:
         raise Exception(f"Unknown shot outcome: {outcome_id}")
 
-    return dict(result=result)
+    qualifiers = _get_event_qualifiers(shot_dict)
+
+    return dict(result=result, qualifiers=qualifiers)
 
 
 def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
@@ -223,6 +265,10 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
                 ):
                     xy_fidelity_version = 2
     return shot_fidelity_version, xy_fidelity_version
+
+
+def _include_event(event: Event, wanted_event_types: List) -> bool:
+    return not wanted_event_types or event.event_type in wanted_event_types
 
 
 class StatsBombSerializer(EventDataSerializer):
@@ -450,7 +496,9 @@ class StatsBombSerializer(EventDataSerializer):
                         take_on_dict=raw_event["dribble"]
                     )
                     event = TakeOnEvent.create(
-                        **take_on_event_kwargs, **generic_event_kwargs
+                        qualifiers=None,
+                        **take_on_event_kwargs,
+                        **generic_event_kwargs,
                     )
                 elif event_type == SB_EVENT_TYPE_CARRY:
                     carry_event_kwargs = _parse_carry(
@@ -458,6 +506,7 @@ class StatsBombSerializer(EventDataSerializer):
                         fidelity_version=fidelity_version,
                     )
                     event = CarryEvent.create(
+                        qualifiers=None,
                         # TODO: Consider moving this to _parse_carry
                         end_timestamp=timestamp + raw_event["duration"],
                         **carry_event_kwargs,
@@ -471,6 +520,7 @@ class StatsBombSerializer(EventDataSerializer):
                     )
                     event = SubstitutionEvent.create(
                         result=None,
+                        qualifiers=None,
                         **substitution_event_kwargs,
                         **generic_event_kwargs,
                     )
@@ -481,6 +531,7 @@ class StatsBombSerializer(EventDataSerializer):
                     if card_kwargs["card_type"]:
                         event = CardEvent.create(
                             result=None,
+                            qualifiers=None,
                             card_type=card_kwargs["card_type"],
                             **generic_event_kwargs,
                         )
@@ -493,31 +544,61 @@ class StatsBombSerializer(EventDataSerializer):
                     if card_kwargs["card_type"]:
                         event = CardEvent.create(
                             result=None,
+                            qualifiers=None,
                             card_type=card_kwargs["card_type"],
                             **generic_event_kwargs,
                         )
                 elif event_type == SB_EVENT_TYPE_PLAYER_ON:
                     event = PlayerOnEvent.create(
-                        result=None, **generic_event_kwargs
+                        result=None, qualifiers=None, **generic_event_kwargs
                     )
                 elif event_type == SB_EVENT_TYPE_PLAYER_OFF:
                     event = PlayerOffEvent.create(
-                        result=None, **generic_event_kwargs
+                        result=None, qualifiers=None, **generic_event_kwargs
+                    )
+
+                elif event_type == SB_EVENT_TYPE_RECOVERY:
+                    event = RecoveryEvent.create(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+
+                elif event_type == SB_EVENT_TYPE_FOUL_COMMITTED:
+                    event = FoulCommittedEvent.create(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
                     )
 
                 # rest: generic
                 else:
                     event = GenericEvent.create(
                         result=None,
+                        qualifiers=None,
                         event_name=raw_event["type"]["name"],
                         **generic_event_kwargs,
                     )
 
-                if (
-                    not wanted_event_types
-                    or event.event_type in wanted_event_types
-                ):
+                if _include_event(event, wanted_event_types):
                     events.append(event)
+
+                # Checks if the event ended out of the field and adds a synthetic out event
+                if event.result in OUT_EVENT_RESULTS:
+                    generic_event_kwargs["ball_state"] = BallState.DEAD
+                    if event.receiver_coordinates:
+                        generic_event_kwargs[
+                            "coordinates"
+                        ] = event.receiver_coordinates
+
+                        event = BallOutEvent.create(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+
+                        if _include_event(event, wanted_event_types):
+                            events.append(event)
 
         metadata = Metadata(
             teams=teams,

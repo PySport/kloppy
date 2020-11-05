@@ -295,5 +295,6 @@ __all__ = [
     "FoulCommittedEvent",
     "BallOutEvent",
     "SetPieceType",
+    "Qualifier",
     "SetPieceQualifier",
 ]

@@ -164,7 +164,7 @@ class TestHelpers:
             )
 
         dataframe = to_pandas(dataset)
-        dataframe = dataframe[dataframe.event_type == "GENERIC:out"]
+        dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
     def test_to_pandas_additional_columns(self):

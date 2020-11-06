@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List, Union, Dict
 
 from kloppy.domain.models.common import DatasetType
+from kloppy.utils import camelcase_to_snakecase, removes_suffix
 
 from .common import DataRecord, Dataset, Team, Player
 from .pitch import Point
@@ -76,6 +77,51 @@ class EventType(Enum):
     CARD = "CARD"
     PLAYER_ON = "PLAYER_ON"
     PLAYER_OFF = "PLAYER_OFF"
+    RECOVERY = "RECOVERY"
+    BALL_OUT = "BALL_OUT"
+    FOUL_COMMITTED = "FOUL_COMMITTED"
+
+
+@dataclass
+class Qualifier(ABC):
+    @abstractmethod
+    def to_dict(self):
+        pass
+
+    @property
+    def name(self):
+        return camelcase_to_snakecase(
+            removes_suffix(type(self).__name__, "Qualifier")
+        )
+
+
+@dataclass
+class BoolQualifier(Qualifier, ABC):
+    value: bool
+
+    def to_dict(self):
+        return {f"is_{self.name}": self.value}
+
+
+class EnumQualifier(Qualifier, ABC):
+    value: Enum
+
+    def to_dict(self):
+        return {f"{self.name}_type": self.value.value}
+
+
+class SetPieceType(Enum):
+    GOAL_KICK = "GOAL_KICK"
+    FREE_KICK = "FREE_KICK"
+    THROW_IN = "THROW_IN"
+    CORNER_KICK = "CORNER_KICK"
+    PENALTY = "PENALTY"
+    KICK_OFF = "KICK_OFF"
+
+
+@dataclass
+class SetPieceQualifier(EnumQualifier):
+    value: SetPieceType
 
 
 @dataclass
@@ -89,6 +135,8 @@ class Event(DataRecord, ABC):
 
     raw_event: Dict
     state: Dict[str, any]
+
+    qualifiers: List[Qualifier]
 
     @property
     @abstractmethod
@@ -179,6 +227,24 @@ class CardEvent(Event):
 
 
 @dataclass
+class RecoveryEvent(Event):
+    event_type: EventType = EventType.RECOVERY
+    event_name: str = "recovery"
+
+
+@dataclass
+class BallOutEvent(Event):
+    event_type: EventType = EventType.BALL_OUT
+    event_name: str = "ball_out"
+
+
+@dataclass
+class FoulCommittedEvent(Event):
+    event_type: EventType = EventType.FOUL_COMMITTED
+    event_name: str = "foul_committed"
+
+
+@dataclass
 class EventDataset(Dataset):
     records: List[
         Union[
@@ -225,4 +291,10 @@ __all__ = [
     "CardEvent",
     "CardType",
     "EventDataset",
+    "RecoveryEvent",
+    "FoulCommittedEvent",
+    "BallOutEvent",
+    "SetPieceType",
+    "Qualifier",
+    "SetPieceQualifier",
 ]

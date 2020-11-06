@@ -47,4 +47,7 @@ def camelcase_to_snakecase(name):
 
 
 def removes_suffix(string, suffix):
-    return string[: -len(suffix)]
+    if string[-len(suffix):] == suffix:
+        return string[: -len(suffix)]
+    else:
+        return string

@@ -136,7 +136,7 @@ class Event(DataRecord, ABC):
     raw_event: Dict
     state: Dict[str, any]
 
-    qualifiers: List[SetPieceType]
+    qualifiers: List[Qualifier]
 
     @property
     @abstractmethod

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Tuple, Dict, List
 import logging
 from datetime import datetime
@@ -65,6 +66,17 @@ def _team_from_xml_elm(team_elm) -> Team:
     return team
 
 
+def _event_chain_from_xml_elm(event_elm):
+    chain = OrderedDict()
+    current_elm = event_elm
+    while True:
+        chain[current_elm.tag] = dict(current_elm.attrib)
+        if not current_elm.countchildren():
+            break
+        current_elm = current_elm.getchildren()[0]
+    return chain
+
+
 class SportecEventSerializer(EventDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
@@ -128,6 +140,17 @@ class SportecEventSerializer(EventDataSerializer):
                 ),
             ]
             events = []
+
+            event_types = set()
+            for event_elm in event_root.iterchildren('Event'):
+                event_chain = _event_chain_from_xml_elm(event_elm)
+                event_name, event_attributes = event_chain.popitem()
+                event_types.add(event_name)
+                #print(event_name, event_attributes)
+                #event_name, event_attributes = event_chain.popitem()
+                #print(event_name, event_attributes)
+                #print("")
+            print(event_types)
 
         metadata = Metadata(
             teams=teams,

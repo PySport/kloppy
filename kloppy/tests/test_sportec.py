@@ -16,7 +16,9 @@ class TestSportecEvent:
         base_dir = os.path.dirname(__file__)
 
         dataset = load_sportec_event_data(
-            )
+            "/Users/koen/Dropbox/PySport/kloppy-dev/Eventdata_DFL-MAT-003BN1.xml",
+            "/Users/koen/Dropbox/PySport/kloppy-dev/Match_Infos_DFL-MAT-003BN1.xml"
+        )
 
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.EVENT

@@ -40,14 +40,14 @@ _first_cap_re = re.compile("(.)([A-Z][a-z0-9]+)")
 _all_cap_re = re.compile("([a-z0-9])([A-Z])")
 
 
-def camelcase_to_snakecase(name):
+def camelcase_to_snakecase(name: str) -> str:
     """Convert camel-case string to snake-case."""
     s1 = _first_cap_re.sub(r"\1_\2", name)
     return _all_cap_re.sub(r"\1_\2", s1).lower()
 
 
-def removes_suffix(string, suffix):
-    if string[-len(suffix) :] == suffix:
+def removes_suffix(string: str, suffix: str) -> str:
+    if string[-len(suffix):] == suffix:
         return string[: -len(suffix)]
     else:
         return string

@@ -25,6 +25,7 @@ from .domain import (
     EventType,
     Player,
     DataRecord,
+    SetPieceType,
 )
 
 
@@ -215,6 +216,11 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
                 "end_coordinates_y": event.end_coordinates.y,
             }
         )
+
+    if event.qualifiers:
+        for qualifier in event.qualifiers:
+            row.update(qualifier.to_dict())
+
     return row
 
 

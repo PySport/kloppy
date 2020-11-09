@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 1.3.0 (2020-10-06)
+
+Pull requests merged:
+
+- Add distance to point ([#63](https://github.com/PySport/kloppy/pull/63))
+- Add additional event types and introduce qualifiers ([#70](https://github.com/PySport/kloppy/pull/70))
 
 ## 1.2.1 (2020-09-22)
 

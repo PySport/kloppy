@@ -1,6 +1,10 @@
 import os
 
-from kloppy import MetricaTrackingSerializer, MetricaEventsJsonSerializer, load_sportec_event_data
+from kloppy import (
+    MetricaTrackingSerializer,
+    MetricaEventsJsonSerializer,
+    load_sportec_event_data,
+)
 from kloppy.domain import (
     Period,
     Provider,
@@ -17,14 +21,16 @@ class TestSportecEvent:
 
         dataset = load_sportec_event_data(
             "/Users/koen/Dropbox/PySport/kloppy-dev/Eventdata_DFL-MAT-003BN1.xml",
-            "/Users/koen/Dropbox/PySport/kloppy-dev/Match_Infos_DFL-MAT-003BN1.xml"
+            "/Users/koen/Dropbox/PySport/kloppy-dev/Match_Infos_DFL-MAT-003BN1.xml",
         )
 
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.metadata.periods) == 2
         assert len(dataset.records) == 6
-        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        assert (
+            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
         assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=0.04,

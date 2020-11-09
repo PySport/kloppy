@@ -31,8 +31,16 @@ from kloppy.domain import (
     Provider,
     Metadata,
     Player,
-    Position, Event, SetPieceQualifier, SetPieceType, Qualifier, BallOutEvent, RecoveryEvent, SubstitutionEvent,
-    CardEvent, CardType,
+    Position,
+    Event,
+    SetPieceQualifier,
+    SetPieceType,
+    Qualifier,
+    BallOutEvent,
+    RecoveryEvent,
+    SubstitutionEvent,
+    CardEvent,
+    CardType,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -43,7 +51,7 @@ logger = logging.getLogger(__name__)
 def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
-        name=team_elm.attrib['TeamName'],
+        name=team_elm.attrib["TeamName"],
         ground=Ground.HOME
         if team_elm.attrib["Role"] == "home"
         else Ground.AWAY,
@@ -53,15 +61,17 @@ def _team_from_xml_elm(team_elm) -> Team:
             player_id=player_elm.attrib["PersonId"],
             team=team,
             jersey_no=int(player_elm.attrib["ShirtNumber"]),
-            name=player_elm.attrib['Shortname'],
-            first_name=player_elm.attrib['FirstName'],
-            last_name=player_elm.attrib['LastName'],
+            name=player_elm.attrib["Shortname"],
+            first_name=player_elm.attrib["FirstName"],
+            last_name=player_elm.attrib["LastName"],
             position=Position(
                 position_id=None,
                 name=player_elm.attrib["PlayingPosition"],
                 coordinates=None,
-            ) if 'PlayingPosition' in player_elm.attrib else None,
-            starting=player_elm.attrib['Starting'] == 'true'
+            )
+            if "PlayingPosition" in player_elm.attrib
+            else None,
+            starting=player_elm.attrib["Starting"] == "true",
         )
         for player_elm in team_elm.Players.iterchildren("Player")
     ]
@@ -133,7 +143,7 @@ SPORTEC_SHOT_EVENT_NAMES = (
     SPORTEC_EVENT_NAME_SHOT_BLOCKED,
     SPORTEC_EVENT_NAME_SHOT_WOODWORK,
     SPORTEC_EVENT_NAME_SHOT_OTHER,
-    SPORTEC_EVENT_NAME_SHOT_GOAL
+    SPORTEC_EVENT_NAME_SHOT_GOAL,
 )
 
 SPORTEC_EVENT_NAME_PASS = "Pass"
@@ -142,10 +152,7 @@ SPORTEC_EVENT_NAME_THROW_IN = "ThrowIn"
 SPORTEC_EVENT_NAME_GOAL_KICK = "GoalKick"
 SPORTEC_EVENT_NAME_PENALTY = "Penalty"
 SPORTEC_EVENT_NAME_CORNER_KICK = "CornerKick"
-SPORTEC_PASS_EVENT_NAMES = (
-    SPORTEC_EVENT_NAME_PASS,
-    SPORTEC_EVENT_NAME_CROSS
-)
+SPORTEC_PASS_EVENT_NAMES = (SPORTEC_EVENT_NAME_PASS, SPORTEC_EVENT_NAME_CROSS)
 
 SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
 SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
@@ -191,7 +198,10 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
 
 
 def _parse_pass(event_chain: OrderedDict) -> Dict:
-    if event_chain['Play']['Evaluation'] in ('successfullyCompleted', 'successful'):
+    if event_chain["Play"]["Evaluation"] in (
+        "successfullyCompleted",
+        "successful",
+    ):
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
@@ -201,24 +211,24 @@ def _parse_pass(event_chain: OrderedDict) -> Dict:
 
 def _parse_substitution(event_attributes: Dict, team: Team) -> Dict:
     return dict(
-        player=team.get_player_by_id(event_attributes['PlayerOut']),
-        replacement_player=team.get_player_by_id(event_attributes['PlayerIn'])
+        player=team.get_player_by_id(event_attributes["PlayerOut"]),
+        replacement_player=team.get_player_by_id(event_attributes["PlayerIn"]),
     )
 
 
 def _parse_caution(event_attributes: Dict) -> Dict:
-    if event_attributes['CardColor'] == 'yellow':
+    if event_attributes["CardColor"] == "yellow":
         card_type = CardType.FIRST_YELLOW
-    elif event_attributes['CardColor'] == 'yellowRed':
+    elif event_attributes["CardColor"] == "yellowRed":
         card_type = CardType.SECOND_YELLOW
-    elif event_attributes['CardColor'] == 'red':
+    elif event_attributes["CardColor"] == "red":
         card_type = CardType.RED
     else:
-        raise ValueError(f"Unknown card color: {event_attributes['CardColor']}")
+        raise ValueError(
+            f"Unknown card color: {event_attributes['CardColor']}"
+        )
 
-    return dict(
-        card_type=card_type
-    )
+    return dict(card_type=card_type)
 
 
 def _include_event(event: Event, wanted_event_types: List) -> bool:
@@ -250,15 +260,17 @@ class SportecEventSerializer(EventDataSerializer):
             ]
 
         with performance_logging("parse data", logger=logger):
-            x_max = float(match_root.MatchInformation.Environment.attrib['PitchX'])
-            y_max = float(match_root.MatchInformation.Environment.attrib['PitchY'])
+            x_max = float(
+                match_root.MatchInformation.Environment.attrib["PitchX"]
+            )
+            y_max = float(
+                match_root.MatchInformation.Environment.attrib["PitchY"]
+            )
 
             team_path = objectify.ObjectPath(
                 "PutDataRequest.MatchInformation.Teams"
             )
-            team_elms = list(
-                team_path.find(match_root).iterchildren("Team")
-            )
+            team_elms = list(team_path.find(match_root).iterchildren("Team"))
 
             for team_elm in team_elms:
                 if team_elm.attrib["Role"] == "home":
@@ -268,7 +280,10 @@ class SportecEventSerializer(EventDataSerializer):
                 else:
                     raise Exception(f"Unknown side: {team_elm.attrib['Role']}")
 
-            home_score, away_score = match_root.MatchInformation.General.attrib['Result'].split(':')
+            (
+                home_score,
+                away_score,
+            ) = match_root.MatchInformation.General.attrib["Result"].split(":")
             score = Score(home=int(home_score), away=int(away_score))
             teams = [home_team, away_team]
 
@@ -279,15 +294,19 @@ class SportecEventSerializer(EventDataSerializer):
             period_id = 0
             events = []
 
-            for event_elm in event_root.iterchildren('Event'):
+            for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
-                timestamp = _parse_datetime(event_chain['Event']['EventTime'])
-                if SPORTEC_EVENT_NAME_KICKOFF in event_chain and 'GameSection' in event_chain[SPORTEC_EVENT_NAME_KICKOFF]:
+                timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
+                if (
+                    SPORTEC_EVENT_NAME_KICKOFF in event_chain
+                    and "GameSection"
+                    in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
+                ):
                     period_id += 1
                     period = Period(
                         id=period_id,
                         start_timestamp=timestamp,
-                        end_timestamp=None
+                        end_timestamp=None,
                     )
                     periods.append(period)
                 elif SPORTEC_EVENT_NAME_FINAL_WHISTLE in event_chain:
@@ -301,44 +320,49 @@ class SportecEventSerializer(EventDataSerializer):
                     ball_owning_team=None,
                     ball_state=BallState.ALIVE,
                     # from Event
-                    event_id=event_chain['Event']['EventId'],
+                    event_id=event_chain["Event"]["EventId"],
                     coordinates=None,
                     raw_event=event_elm,
                     team=None,
-                    player=None
+                    player=None,
                 )
 
                 team = None
                 for event_attributes in event_chain.values():
-                    if 'Team' in event_attributes:
-                        team = home_team if event_attributes['Team'] == home_team.team_id else away_team
-                        generic_event_kwargs['team'] = team
-                    if 'Player' in event_attributes:
+                    if "Team" in event_attributes:
+                        team = (
+                            home_team
+                            if event_attributes["Team"] == home_team.team_id
+                            else away_team
+                        )
+                        generic_event_kwargs["team"] = team
+                    if "Player" in event_attributes:
                         if not team:
-                            raise ValueError("Player set while team is not set")
-                        player = team.get_player_by_id(event_attributes['Player'])
-                        generic_event_kwargs['player'] = player
+                            raise ValueError(
+                                "Player set while team is not set"
+                            )
+                        player = team.get_player_by_id(
+                            event_attributes["Player"]
+                        )
+                        generic_event_kwargs["player"] = player
 
                 event_name, event_attributes = event_chain.popitem()
                 if event_name in SPORTEC_SHOT_EVENT_NAMES:
                     shot_event_kwargs = _parse_shot(
-                        event_name=event_name,
-                        event_chain=event_chain
+                        event_name=event_name, event_chain=event_chain
                     )
                     event = ShotEvent.create(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )
                 elif event_name in SPORTEC_PASS_EVENT_NAMES:
-                    pass_event_kwargs = _parse_pass(
-                        event_chain=event_chain
-                    )
+                    pass_event_kwargs = _parse_pass(event_chain=event_chain)
                     event = PassEvent.create(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                         receive_timestamp=None,
                         receiver_player=None,
-                        receiver_coordinates=None
+                        receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
                     event = RecoveryEvent.create(
@@ -350,8 +374,10 @@ class SportecEventSerializer(EventDataSerializer):
                     substitution_event_kwargs = _parse_substitution(
                         event_attributes=event_attributes, team=team
                     )
-                    generic_event_kwargs['player'] = substitution_event_kwargs['player']
-                    del substitution_event_kwargs['player']
+                    generic_event_kwargs["player"] = substitution_event_kwargs[
+                        "player"
+                    ]
+                    del substitution_event_kwargs["player"]
                     event = SubstitutionEvent.create(
                         result=None,
                         qualifiers=None,
@@ -374,15 +400,20 @@ class SportecEventSerializer(EventDataSerializer):
                         **generic_event_kwargs,
                     )
 
-                if event.event_type == EventType.PASS and \
-                    event.get_qualifier_value(SetPieceQualifier) in (SetPieceType.THROW_IN, SetPieceType.GOAL_KICK):
+                if (
+                    event.event_type == EventType.PASS
+                    and event.get_qualifier_value(SetPieceQualifier)
+                    in (SetPieceType.THROW_IN, SetPieceType.GOAL_KICK)
+                ):
                     # 1. update previous pass
                     if events[-1].event_type == EventType.PASS:
                         events[-1].result = PassResult.OUT
 
                     # 2. add synthetic out event
                     decision_timestamp = _parse_datetime(
-                        event_chain[list(event_chain.keys())[1]]['DecisionTimestamp']
+                        event_chain[list(event_chain.keys())[1]][
+                            "DecisionTimestamp"
+                        ]
                     )
                     out_event = BallOutEvent.create(
                         period=period,
@@ -390,20 +421,23 @@ class SportecEventSerializer(EventDataSerializer):
                         ball_owning_team=None,
                         ball_state=BallState.DEAD,
                         # from Event
-                        event_id=event_chain['Event']['EventId'],
+                        event_id=event_chain["Event"]["EventId"],
                         team=events[-1].team,
                         player=events[-1].player,
                         coordinates=None,
                         raw_event=None,
                         result=None,
-                        qualifiers=None
+                        qualifiers=None,
                     )
                     events.append(out_event)
 
                 events.append(event)
 
         events = list(
-            filter(lambda _event: _include_event(_event, wanted_event_types), events)
+            filter(
+                lambda _event: _include_event(_event, wanted_event_types),
+                events,
+            )
         )
 
         metadata = Metadata(

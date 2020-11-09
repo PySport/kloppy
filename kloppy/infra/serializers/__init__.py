@@ -8,5 +8,5 @@ from .event import (
     StatsBombSerializer,
     OptaSerializer,
     MetricaEventsJsonSerializer,
-    SportecEventSerializer
+    SportecEventSerializer,
 )

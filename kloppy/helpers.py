@@ -117,8 +117,9 @@ def load_metrica_json_event_data(
             options=options,
         )
 
+
 def load_sportec_event_data(
-        event_data_filename: str, match_data_filename: str, options: dict = None
+    event_data_filename: str, match_data_filename: str, options: dict = None
 ) -> EventDataset:
     serializer = SportecEventSerializer()
     with open(event_data_filename, "rb") as event_data, open(
@@ -129,6 +130,7 @@ def load_sportec_event_data(
             inputs={"event_data": event_data, "match_data": match_data},
             options=options,
         )
+
 
 DatasetT = TypeVar("DatasetT")
 

@@ -40,7 +40,7 @@ from kloppy.domain import (
     RecoveryEvent,
     SubstitutionEvent,
     CardEvent,
-    CardType,
+    CardType, FoulCommittedEvent,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -157,6 +157,7 @@ SPORTEC_PASS_EVENT_NAMES = (SPORTEC_EVENT_NAME_PASS, SPORTEC_EVENT_NAME_CROSS)
 SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
 SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
 SPORTEC_EVENT_NAME_CAUTION = "Caution"
+SPORTEC_EVENT_NAME_FOUL = "Foul"
 
 
 def _parse_datetime(dt_str: str) -> float:
@@ -229,6 +230,25 @@ def _parse_caution(event_attributes: Dict) -> Dict:
         )
 
     return dict(card_type=card_type)
+
+
+def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
+    team = teams[0] if event_attributes['TeamFouler'] == teams[0].team_id else teams[1]
+    player = team.get_player_by_id(event_attributes['Fouler'])
+
+    return dict(
+        team=team,
+        player=player
+    )
+
+
+def _parse_coordinates(event_attributes: Dict) -> Point:
+    if 'X-Position' not in event_attributes:
+        return None
+    return Point(
+        x=float(event_attributes['X-Position']),
+        y=float(event_attributes['Y-Position'])
+    )
 
 
 def _include_event(event: Event, wanted_event_types: List) -> bool:
@@ -321,7 +341,7 @@ class SportecEventSerializer(EventDataSerializer):
                     ball_state=BallState.ALIVE,
                     # from Event
                     event_id=event_chain["Event"]["EventId"],
-                    coordinates=None,
+                    coordinates=_parse_coordinates(event_chain['Event']),
                     raw_event=event_elm,
                     team=None,
                     player=None,
@@ -360,6 +380,8 @@ class SportecEventSerializer(EventDataSerializer):
                     event = PassEvent.create(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
+
+                        # TODO: update these if possible
                         receive_timestamp=None,
                         receiver_player=None,
                         receiver_coordinates=None,
@@ -390,6 +412,14 @@ class SportecEventSerializer(EventDataSerializer):
                         result=None,
                         qualifiers=None,
                         **card_kwargs,
+                        **generic_event_kwargs,
+                    )
+                elif event_name == SPORTEC_EVENT_NAME_FOUL:
+                    foul_kwargs = _parse_foul(event_attributes, teams=teams)
+                    generic_event_kwargs.update(foul_kwargs)
+                    event = FoulCommittedEvent.create(
+                        result=None,
+                        qualifiers=None,
                         **generic_event_kwargs,
                     )
                 else:

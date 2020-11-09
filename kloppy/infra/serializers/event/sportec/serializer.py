@@ -1,9 +1,7 @@
 from collections import OrderedDict
 from typing import Tuple, Dict, List
 import logging
-from datetime import datetime
 from dateutil.parser import parse
-import pytz
 from lxml import objectify
 
 from kloppy.domain import (
@@ -18,13 +16,9 @@ from kloppy.domain import (
     Dimension,
     PassEvent,
     ShotEvent,
-    TakeOnEvent,
-    CarryEvent,
     GenericEvent,
     PassResult,
     ShotResult,
-    TakeOnResult,
-    CarryResult,
     EventType,
     Ground,
     Score,
@@ -40,7 +34,8 @@ from kloppy.domain import (
     RecoveryEvent,
     SubstitutionEvent,
     CardEvent,
-    CardType, FoulCommittedEvent,
+    CardType,
+    FoulCommittedEvent,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -87,45 +82,6 @@ def _event_chain_from_xml_elm(event_elm):
             break
         current_elm = current_elm.getchildren()[0]
     return chain
-
-
-"""
-{
-    -'ChanceWithoutShot',
-    'Offside',
-
-    'BallClaiming',
-
-     'TacklingGame',
-
-    'Caution',
-     'Foul',
-
-
-    'ShotWide',
-    'SuccessfulShot',
-    'BlockedShot',
-    'SavedShot',
-    'OtherShot',
-
-    'Cross',
-     'Pass'
-
-    'Substitution',
-
-
-    'GoalDisallowed',
-    'SpectacularPlay',
-    'CautionTeamofficial',
-    'OtherBallAction',
-    'OtherPlayerAction',
-     'Nutmeg',
-     'FairPlay',
-     'FinalWhistle',
-     }
-
-
-"""
 
 
 SPORTEC_EVENT_NAME_KICKOFF = "KickOff"
@@ -198,16 +154,28 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
     return dict(result=result, qualifiers=_get_event_qualifiers(event_chain))
 
 
-def _parse_pass(event_chain: OrderedDict) -> Dict:
+def _parse_pass(event_chain: OrderedDict, team: Team) -> Dict:
     if event_chain["Play"]["Evaluation"] in (
         "successfullyCompleted",
         "successful",
     ):
         result = PassResult.COMPLETE
+        if "Recipient" in event_chain["Play"]:
+            receiver_player = team.get_player_by_id(
+                event_chain["Play"]["Recipient"]
+            )
+        else:
+            # this attribute can be missing according to docs
+            receiver_player = None
     else:
         result = PassResult.INCOMPLETE
+        receiver_player = None
 
-    return dict(result=result, qualifiers=_get_event_qualifiers(event_chain))
+    return dict(
+        result=result,
+        receiver_player=receiver_player,
+        qualifiers=_get_event_qualifiers(event_chain),
+    )
 
 
 def _parse_substitution(event_attributes: Dict, team: Team) -> Dict:
@@ -233,21 +201,22 @@ def _parse_caution(event_attributes: Dict) -> Dict:
 
 
 def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
-    team = teams[0] if event_attributes['TeamFouler'] == teams[0].team_id else teams[1]
-    player = team.get_player_by_id(event_attributes['Fouler'])
-
-    return dict(
-        team=team,
-        player=player
+    team = (
+        teams[0]
+        if event_attributes["TeamFouler"] == teams[0].team_id
+        else teams[1]
     )
+    player = team.get_player_by_id(event_attributes["Fouler"])
+
+    return dict(team=team, player=player)
 
 
 def _parse_coordinates(event_attributes: Dict) -> Point:
-    if 'X-Position' not in event_attributes:
+    if "X-Position" not in event_attributes:
         return None
     return Point(
-        x=float(event_attributes['X-Position']),
-        y=float(event_attributes['Y-Position'])
+        x=float(event_attributes["X-Position"]),
+        y=float(event_attributes["Y-Position"]),
     )
 
 
@@ -341,7 +310,7 @@ class SportecEventSerializer(EventDataSerializer):
                     ball_state=BallState.ALIVE,
                     # from Event
                     event_id=event_chain["Event"]["EventId"],
-                    coordinates=_parse_coordinates(event_chain['Event']),
+                    coordinates=_parse_coordinates(event_chain["Event"]),
                     raw_event=event_elm,
                     team=None,
                     player=None,
@@ -376,14 +345,13 @@ class SportecEventSerializer(EventDataSerializer):
                         **generic_event_kwargs,
                     )
                 elif event_name in SPORTEC_PASS_EVENT_NAMES:
-                    pass_event_kwargs = _parse_pass(event_chain=event_chain)
+                    pass_event_kwargs = _parse_pass(
+                        event_chain=event_chain, team=team
+                    )
                     event = PassEvent.create(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
-
-                        # TODO: update these if possible
                         receive_timestamp=None,
-                        receiver_player=None,
                         receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
@@ -429,6 +397,22 @@ class SportecEventSerializer(EventDataSerializer):
                         event_name=event_name,
                         **generic_event_kwargs,
                     )
+
+                if events:
+                    previous_event = events[-1]
+                    if (
+                        previous_event.event_type == EventType.PASS
+                        and previous_event.result == PassResult.COMPLETE
+                    ):
+                        if "X-Source-Position" in event_chain["Event"]:
+                            previous_event.receiver_coordinates = Point(
+                                x=float(
+                                    event_chain["Event"]["X-Source-Position"]
+                                ),
+                                y=float(
+                                    event_chain["Event"]["Y-Source-Position"]
+                                ),
+                            )
 
                 if (
                     event.event_type == EventType.PASS
@@ -478,7 +462,7 @@ class SportecEventSerializer(EventDataSerializer):
             ),
             score=score,
             frame_rate=None,
-            orientation=Orientation.ACTION_EXECUTING_TEAM,
+            orientation=Orientation.HOME_TEAM,  # TODO: check this
             flags=DatasetFlag.BALL_OWNING_TEAM,
             provider=Provider.SPORTEC,
         )

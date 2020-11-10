@@ -27,6 +27,7 @@ class TestSportecEvent:
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.metadata.periods) == 2
+
         assert len(dataset.records) == 6
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM

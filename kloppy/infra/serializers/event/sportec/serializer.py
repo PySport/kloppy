@@ -108,6 +108,7 @@ SPORTEC_EVENT_NAME_THROW_IN = "ThrowIn"
 SPORTEC_EVENT_NAME_GOAL_KICK = "GoalKick"
 SPORTEC_EVENT_NAME_PENALTY = "Penalty"
 SPORTEC_EVENT_NAME_CORNER_KICK = "CornerKick"
+SPORTEC_EVENT_NAME_FREE_KICK = "FreeKick"
 SPORTEC_PASS_EVENT_NAMES = (SPORTEC_EVENT_NAME_PASS, SPORTEC_EVENT_NAME_CROSS)
 
 SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
@@ -132,6 +133,8 @@ def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
     elif SPORTEC_EVENT_NAME_KICKOFF in event_chain:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
+    elif SPORTEC_EVENT_NAME_FREE_KICK in event_chain:
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
     return qualifiers
 
 

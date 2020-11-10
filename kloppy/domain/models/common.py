@@ -38,6 +38,9 @@ class Position:
     name: str
     coordinates: Point
 
+    def __str__(self):
+        return self.name
+
 
 @dataclass(frozen=True)
 class Player:

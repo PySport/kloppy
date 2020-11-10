@@ -194,7 +194,7 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         ball_owning_team=event.ball_owning_team.team_id
         if event.ball_owning_team
         else None,
-        team_id=event.team.team_id,
+        team_id=event.team.team_id if event.team else None,
         player_id=event.player.player_id if event.player else None,
         coordinates_x=event.coordinates.x if event.coordinates else None,
         coordinates_y=event.coordinates.y if event.coordinates else None,
@@ -203,8 +203,8 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         row.update(
             {
                 "end_timestamp": event.receive_timestamp,
-                "end_coordinates_x": event.receiver_coordinates.x,
-                "end_coordinates_y": event.receiver_coordinates.y,
+                "end_coordinates_x": event.receiver_coordinates.x if event.receiver_coordinates else None,
+                "end_coordinates_y": event.receiver_coordinates.y if event.receiver_coordinates else None,
                 "receiver_player_id": event.receiver_player.player_id
                 if event.receiver_player
                 else None,
@@ -214,8 +214,8 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         row.update(
             {
                 "end_timestamp": event.end_timestamp,
-                "end_coordinates_x": event.end_coordinates.x,
-                "end_coordinates_y": event.end_coordinates.y,
+                "end_coordinates_x": event.end_coordinates.x if event.end_coordinates else None,
+                "end_coordinates_y": event.end_coordinates.y if event.end_coordinates else None,
             }
         )
 
@@ -242,13 +242,15 @@ def to_pandas(
     if isinstance(dataset, Dataset):
         records = dataset.records
     elif isinstance(dataset, list):
-
         records = dataset
     else:
         raise Exception("Unknown dataset type")
 
+    if not records:
+        return pd.DataFrame()
+
     if not _record_converter:
-        if isinstance(dataset, TrackingDataset) or isinstance(
+        if isinstance(dataset, TrackingDataset) and isinstance(
             records[0], Frame
         ):
             _record_converter = _frame_to_pandas_row_converter

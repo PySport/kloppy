@@ -1,30 +1,28 @@
-from typing import Callable, TypeVar, Dict, Union, List
+from typing import Callable, Dict, List, TypeVar, Union
 
 from . import (
-    TRACABSerializer,
-    MetricaTrackingSerializer,
-    MetricaEventsJsonSerializer,
     EPTSSerializer,
-    StatsBombSerializer,
+    MetricaEventsJsonSerializer,
+    MetricaTrackingSerializer,
     OptaSerializer,
+    StatsBombSerializer,
+    TRACABSerializer,
 )
 from .domain import (
+    CarryEvent,
+    DataRecord,
     Dataset,
-    Frame,
+    Dimension,
     Event,
+    EventDataset,
+    EventType,
+    Frame,
+    Orientation,
+    PassEvent,
+    PassResult,
+    PitchDimensions,
     TrackingDataset,
     Transformer,
-    Orientation,
-    PitchDimensions,
-    Dimension,
-    EventDataset,
-    PassEvent,
-    CarryEvent,
-    PassResult,
-    EventType,
-    Player,
-    DataRecord,
-    SetPieceType,
 )
 
 

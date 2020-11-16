@@ -24,26 +24,25 @@ class Sequence:
 
 
 class SequenceStateBuilder(StateBuilder):
-    def __init__(self):
-        self.sequence_open = False
-
     def initial_state(self, dataset: EventDataset) -> Sequence:
         for event in dataset.events:
             if isinstance(event, OPEN_SEQUENCE):
-                self.sequence_open = True
                 return Sequence(sequence_id=0, team=event.team)
         return Sequence(sequence_id=0, team=None)
 
-    def reduce(self, state: Sequence, event: Event) -> Sequence:
-
-        if self.sequence_open and isinstance(event, CLOSE_SEQUENCE):
-            state = replace(
-                state, sequence_id=state.sequence_id + 1, team=None
-            )
-
-        if not self.sequence_open and isinstance(event, OPEN_SEQUENCE):
+    def reduce_before(self, state: Sequence, event: Event) -> Sequence:
+        if isinstance(event, OPEN_SEQUENCE) and state.team != event.team:
             state = replace(
                 state, sequence_id=state.sequence_id + 1, team=event.team
+            )
+
+        return state
+
+    def reduce_after(self, state: Sequence, event: Event) -> Sequence:
+
+        if isinstance(event, CLOSE_SEQUENCE):
+            state = replace(
+                state, sequence_id=state.sequence_id + 1, team=None
             )
 
         return state

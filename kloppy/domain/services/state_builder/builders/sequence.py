@@ -1,7 +1,20 @@
 from dataclasses import replace, dataclass
 
-from kloppy.domain import Event, Team, EventDataset, PassEvent
+from kloppy.domain import (
+    Event,
+    Team,
+    EventDataset,
+    PassEvent,
+    CarryEvent,
+    RecoveryEvent,
+    BallOutEvent,
+    FoulCommittedEvent,
+    ShotEvent,
+)
 from ..builder import StateBuilder
+
+OPEN_SEQUENCE = (PassEvent, CarryEvent, RecoveryEvent)
+CLOSE_SEQUENCE = (BallOutEvent, FoulCommittedEvent, ShotEvent)
 
 
 @dataclass
@@ -13,13 +26,23 @@ class Sequence:
 class SequenceStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Sequence:
         for event in dataset.events:
-            if isinstance(event, PassEvent):
+            if isinstance(event, OPEN_SEQUENCE):
                 return Sequence(sequence_id=0, team=event.team)
         return Sequence(sequence_id=0, team=None)
 
-    def reduce(self, state: Sequence, event: Event) -> Sequence:
-        if state.team != event.team:
+    def reduce_before(self, state: Sequence, event: Event) -> Sequence:
+        if isinstance(event, OPEN_SEQUENCE) and state.team != event.team:
             state = replace(
                 state, sequence_id=state.sequence_id + 1, team=event.team
             )
+
+        return state
+
+    def reduce_after(self, state: Sequence, event: Event) -> Sequence:
+
+        if isinstance(event, CLOSE_SEQUENCE):
+            state = replace(
+                state, sequence_id=state.sequence_id + 1, team=None
+            )
+
         return state

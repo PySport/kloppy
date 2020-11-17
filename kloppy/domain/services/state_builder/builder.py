@@ -13,5 +13,9 @@ class StateBuilder(metaclass=RegisteredStateBuilder):
         pass
 
     @abstractmethod
-    def reduce(self, state: T, event: Event) -> T:
+    def reduce_before(self, state: T, event: Event) -> T:
+        pass
+
+    @abstractmethod
+    def reduce_after(self, state: T, event: Event) -> T:
         pass

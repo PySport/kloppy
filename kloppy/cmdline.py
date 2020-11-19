@@ -1,17 +1,14 @@
 import argparse
-import sys
 import logging
+import sys
+import textwrap
 from collections import Counter
 from dataclasses import dataclass
 from typing import List
-
 from xml.etree import ElementTree as ET
 
-from kloppy import (
-    load_statsbomb_event_data,
-    load_opta_event_data,
-    event_pattern_matching as pm,
-)
+from kloppy import event_pattern_matching as pm
+from kloppy import load_opta_event_data, load_statsbomb_event_data
 from kloppy.utils import performance_logging
 
 sys.path.append(".")
@@ -80,8 +77,7 @@ def run_query(argv=sys.argv[1:]):
         help="StatsBomb event input files (events.json,lineup.json)",
     )
     parser.add_argument(
-        "--input-opta",
-        help="Opta event input files (f24.xml,f7.xml)",
+        "--input-opta", help="Opta event input files (f24.xml,f7.xml)"
     )
     parser.add_argument("--output-xml", help="Output file")
     parser.add_argument(
@@ -206,23 +202,41 @@ def run_query(argv=sys.argv[1:]):
         logger.info(f"Wrote {len(video_fragments)} video fragments to file")
 
     if opts.stats == "text":
-        print("Home:")
-        print(f"  total count: {counter['home_total']}")
-        print(
-            f"    success: {counter['home_success']} ({counter['home_success'] / counter['home_total'] * 100:.0f}%)"
+        text_stats = """\
+        Home:
+          total count: {home_total}
+            success: {home_success} ({home_success_rate:.0f}%)
+            no success: {home_failure} ({home_failure_rate:.0f}%)
+
+        Away:
+          total count: {away_total}
+            success: {away_success} ({away_success_rate:.0f}%)
+            no success: {away_failure} ({away_failure_rate:.0f}%)
+        """.format(
+            home_total=counter["home_total"],
+            home_success=counter["home_success"],
+            home_success_rate=(
+                counter["home_success"] / counter["home_total"] * 100
+            ),
+            home_failure=counter["home_total"] - counter["home_success"],
+            home_failure_rate=(
+                (counter["home_total"] - counter["home_success"])
+                / counter["home_total"]
+                * 100
+            ),
+            away_total=counter["away_total"],
+            away_success=counter["away_success"],
+            away_success_rate=(
+                counter["away_success"] / counter["away_total"] * 100
+            ),
+            away_failure=counter["away_total"] - counter["away_success"],
+            away_failure_rate=(
+                (counter["away_total"] - counter["away_success"])
+                / counter["away_total"]
+                * 100
+            ),
         )
-        print(
-            f"    no success: {counter['home_total'] - counter['home_success']} ({(counter['home_total'] - counter['home_success']) / counter['home_total'] * 100:.0f}%)"
-        )
-        print("")
-        print("Away:")
-        print(f"  total count: {counter['away_total']}")
-        print(
-            f"    success: {counter['away_success']} ({counter['away_success'] / counter['away_total'] * 100:.0f}%)"
-        )
-        print(
-            f"    no success: {counter['away_total'] - counter['away_success']} ({(counter['away_total'] - counter['away_success']) / counter['away_total'] * 100:.0f}%)"
-        )
+        print(textwrap.dedent(text_stats))
     elif opts.stats == "json":
         import json
 

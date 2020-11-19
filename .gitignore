@@ -8,3 +8,6 @@ env
 .ipynb_checkpoints
 .DS_Store
 kloppy/.DS_Store
+
+# Downloaded data files
+examples/pattern_matching/repository/*.json

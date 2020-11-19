@@ -37,7 +37,10 @@ class LineupStateBuilder(StateBuilder):
             )
         )
 
-    def reduce(self, state: Lineup, event: Event) -> Lineup:
+    def reduce_before(self, state: Lineup, event: Event) -> Lineup:
+        return state
+
+    def reduce_after(self, state: Lineup, event: Event) -> Lineup:
         if isinstance(event, SubstitutionEvent):
             state = Lineup(
                 players=state.players - {event.player}

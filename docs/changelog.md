@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 1.4.1 (2020-11-19)
+
+Bugfix:
+
+- Sportec: insert BALL_OUT event before corner kick  
+
 ## 1.4.0 (2020-11-19)
 Pull requests merged:
 

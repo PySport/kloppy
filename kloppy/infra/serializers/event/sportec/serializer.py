@@ -446,7 +446,11 @@ class SportecEventSerializer(EventDataSerializer):
                 if (
                     event.event_type == EventType.PASS
                     and event.get_qualifier_value(SetPieceQualifier)
-                    in (SetPieceType.THROW_IN, SetPieceType.GOAL_KICK, SetPieceType.CORNER_KICK)
+                    in (
+                        SetPieceType.THROW_IN,
+                        SetPieceType.GOAL_KICK,
+                        SetPieceType.CORNER_KICK,
+                    )
                 ):
                     # 1. update previous pass
                     if events[-1].event_type == EventType.PASS:

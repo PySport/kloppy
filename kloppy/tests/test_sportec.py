@@ -32,7 +32,7 @@ class TestSportecEvent:
         # raw_event must be flattened dict
         assert isinstance(dataset.events[0].raw_event, dict)
 
-        assert len(dataset.events) == 27
+        assert len(dataset.events) == 28
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
         assert dataset.metadata.periods[0] == Period(
             id=1,

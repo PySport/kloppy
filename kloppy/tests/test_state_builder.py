@@ -28,7 +28,7 @@ class TestStateBuilder:
         dataset = self._load_dataset()
 
         with performance_logging("add_state"):
-            dataset_with_state = add_state(dataset, ["score", "sequence"])
+            dataset_with_state = add_state(dataset, ["score"])
 
         events_per_score = {}
         for score, events in groupby(
@@ -43,6 +43,23 @@ class TestStateBuilder:
             "2-0": 405,
             "3-0": 3,
         }
+
+    def test_sequence_state_builder(self):
+        dataset = self._load_dataset()
+
+        with performance_logging("add_state"):
+            dataset_with_state = add_state(dataset, ["sequence"])
+
+        events_per_sequence = {}
+        for sequence_id, events in groupby(
+            dataset_with_state.events,
+            lambda event: event.state["sequence"].sequence_id,
+        ):
+            events = list(events)
+            events_per_sequence[sequence_id] = len(events)
+
+        assert events_per_sequence[0] == 9
+        assert events_per_sequence[50] == 2
 
     def test_lineup_state_builder(self):
         dataset = self._load_dataset("statsbomb_15986")
@@ -74,7 +91,10 @@ class TestStateBuilder:
             def initial_state(self, dataset: EventDataset) -> int:
                 return 0
 
-            def reduce(self, state: int, event: Event) -> int:
+            def reduce_before(self, state: int, event: Event) -> int:
+                return state + 1
+
+            def reduce_after(self, state: int, event: Event) -> int:
                 return state + 1
 
         dataset = self._load_dataset("statsbomb_15986")
@@ -82,7 +102,7 @@ class TestStateBuilder:
         with performance_logging("add_state"):
             dataset_with_state = add_state(dataset, ["custom"])
 
-        assert dataset_with_state.events[0].state["custom"] == 0
-        assert dataset_with_state.events[1].state["custom"] == 1
-        assert dataset_with_state.events[2].state["custom"] == 2
-        assert dataset_with_state.events[3].state["custom"] == 3
+        assert dataset_with_state.events[0].state["custom"] == 1
+        assert dataset_with_state.events[1].state["custom"] == 3
+        assert dataset_with_state.events[2].state["custom"] == 5
+        assert dataset_with_state.events[3].state["custom"] == 7

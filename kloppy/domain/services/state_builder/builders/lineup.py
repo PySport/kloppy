@@ -22,11 +22,6 @@ class Lineup:
 
 class LineupStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Lineup:
-        if dataset.metadata.provider != Provider.STATSBOMB:
-            raise Exception(
-                "Lineup state can only be applied to statsbomb data"
-            )
-
         return Lineup(
             players=(
                 set(
@@ -42,7 +37,10 @@ class LineupStateBuilder(StateBuilder):
             )
         )
 
-    def reduce(self, state: Lineup, event: Event) -> Lineup:
+    def reduce_before(self, state: Lineup, event: Event) -> Lineup:
+        return state
+
+    def reduce_after(self, state: Lineup, event: Event) -> Lineup:
         if isinstance(event, SubstitutionEvent):
             state = Lineup(
                 players=state.players - {event.player}

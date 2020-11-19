@@ -2,15 +2,28 @@
 
 Find out all changes between different kloppy versions
 
-## 1.3.0 (2020-10-06)
+## 1.4.1 (2020-11-19)
 
+Bugfix:
+
+- Sportec: insert BALL_OUT event before corner kick  
+
+## 1.4.0 (2020-11-19)
+Pull requests merged:
+
+- Improve sequence definition based on latest added generic events ([#75](https://github.com/PySport/kloppy/pull/75))
+- refactor: improve code readability on kloppy-query cli s([#74](https://github.com/PySport/kloppy/pull/74))
+- refactor: single github workflow ([#73](https://github.com/PySport/kloppy/pull/73))
+- Sportec serializer ([#70](https://github.com/PySport/kloppy/pull/71))
+
+
+## 1.3.0 (2020-10-06)
 Pull requests merged:
 
 - Add distance to point ([#63](https://github.com/PySport/kloppy/pull/63))
 - Add additional event types and introduce qualifiers ([#70](https://github.com/PySport/kloppy/pull/70))
 
 ## 1.2.1 (2020-09-22)
-
 Bugfix:
 
 - Don't crash when TRACAB contains unknown team id
@@ -43,14 +56,14 @@ Other pull requests merged:
 
 - Code formatting & typos in docs ([#39](https://github.com/PySport/kloppy/pull/39), [#40](https://github.com/PySport/kloppy/pull/40))
 - Add Metrica Json event serializer ([#44](https://github.com/PySport/kloppy/pull/44))
-- Infer ball_owning_team from Opta events ([#49](https://github.com/PySport/kloppy/pull/49)                      
+- Infer ball_owning_team from Opta events ([#49](https://github.com/PySport/kloppy/pull/49)
 
 ## 1.0.0 (2020-07-26)
 In this major release we introduce metadata. The metadata is part of a dataset and can be accessed via `Dataset.metadata`.
 There are a couple of breaking changes:
 
-1. All attributes except `records` / `frames` are moved from `Dataset` to `Metadata` class. 
-2. All `position` properties are renamed to `coordinates`. 
+1. All attributes except `records` / `frames` are moved from `Dataset` to `Metadata` class.
+2. All `position` properties are renamed to `coordinates`.
 3. The `players_coordinates` property is indexed by `Player` instances instead of by `jersey_number` strings.
 4. On the `Event` class the `player_jersey_number` is replaced by `player` which is a `Player` instance.
 5. `to_pandas` changes:
@@ -96,7 +109,7 @@ Other pull requests merged:
 ## 0.5.0 (2020-06-13)
 - Add pattern matching based on regular expressions
 - Add kloppy-query: command line tool to search for patterns
-  
+
 ## 0.4.1 (2020-06-05)
 - Fix for StatsBomb Serializer when location contains z coordinate
 
@@ -111,7 +124,7 @@ Other pull requests merged:
 - Add FIFA EPTS Tracking Serializer
 - Add some examples
 - Add datasets loader to directly load dataset from your python code
-- Add limit argument to all loaders               
+- Add limit argument to all loaders
 
 ## 0.2.1 (2020-05-12)
 - Add some helpers functions to directly load a dataset by filenames

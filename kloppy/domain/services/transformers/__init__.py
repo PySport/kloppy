@@ -108,7 +108,8 @@ class Transformer:
         position_changes = {
             field.name: self.transform_point(getattr(event, field.name), flip)
             for field in fields(event)
-            if field.name.endswith("position") and getattr(event, field.name)
+            if field.name.endswith("coordinates")
+            and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)

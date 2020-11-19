@@ -24,9 +24,16 @@ def add_state(dataset: EventDataset, *builder_keys: List[str]) -> EventDataset:
 
     events = []
     for event in dataset.events:
-        events.append(replace(event, state=state))
+
         state = {
-            builder_key: builder.reduce(state[builder_key], event)
+            builder_key: builder.reduce_before(state[builder_key], event)
+            for builder_key, builder in builders.items()
+        }
+
+        events.append(replace(event, state=state))
+
+        state = {
+            builder_key: builder.reduce_after(state[builder_key], event)
             for builder_key, builder in builders.items()
         }
 

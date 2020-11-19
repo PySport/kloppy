@@ -1,0 +1,125 @@
+<PutDataRequest RequestId="7f066a3f-4513-4153-820c-eca25e79337e" MessageTime="2020-06-06T12:34:04.726+02:00" TransmissionComplete="true" TransmissionSuspended="false" DataStatus="postmatch">
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000006" EventTime="2020-06-05T20:30:00.210+02:00" X-Position="56.41" Y-Position="68.00" X-Source-Position="56.41" Y-Source-Position="68.00">
+        <KickOff GameSection="firstHalf" TeamLeft="DFL-CLU-00000A" TeamRight="DFL-CLU-000004">
+            <Play Recipient="DFL-OBJ-0000ZS" FromOpenPlay="false" Evaluation="successfullyCompleted" Height="flat" Distance="medium" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-000004" Player="DFL-OBJ-0000SP" BallPossessionPhase="6">
+                <Pass FreeKickLayup="false"/>
+            </Play>
+        </KickOff>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000007" EventTime="2020-06-05T20:30:03.333+02:00" X-Position="73.94" Y-Position="37.21" X-Source-Position="77.75" Y-Source-Position="38.71">
+        <Play Recipient="DFL-OBJ-002G3I" FromOpenPlay="true" Evaluation="successfullyCompleted" Height="high" Distance="long" PenaltyBox="false" PlayOrigin="ownHalf" PlayAngle="329.23" Team="DFL-CLU-000004" Player="DFL-OBJ-0000ZS" BallPossessionPhase="7">
+            <Pass FreeKickLayup="false" Direction="diagonalBall"/>
+        </Play>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000015" EventTime="2020-06-05T20:30:14.200+02:00" X-Position="27.57" Y-Position="63.81">
+        <TacklingGame Winner="DFL-OBJ-0001E5" WinnerTeam="DFL-CLU-000004" Loser="DFL-OBJ-00017V" LoserTeam="DFL-CLU-00000A" WinnerRole="withoutBallControl" LoserRole="withBallControl" WinnerResult="layoff" Type="ground" GoalKeeperInvolved="false" PossessionChange="false"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000014" EventTime="2020-06-05T20:30:32.007+02:00" X-Position="35.57" Y-Position="68.00" X-Source-Position="35.57" Y-Source-Position="68.00">
+        <ThrowIn Side="left" DecisionTimestamp="2020-06-05T20:30:19.702+02:00" Team="DFL-CLU-00000A">
+            <Play Recipient="DFL-OBJ-0027B9" FromOpenPlay="false" Evaluation="successfullyCompleted" Height="high" Distance="medium" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-00000A" Player="DFL-OBJ-00017V" BallPossessionPhase="14">
+                <Pass FreeKickLayup="false"/>
+            </Play>
+        </ThrowIn>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000031" EventTime="2020-06-05T20:31:19.690+02:00" X-Position="21.24" Y-Position="28.58" X-Source-Position="21.24" Y-Source-Position="28.58" CalculatedFrame="11986" CalculatedTimestamp="2020-06-05T20:31:17.200+02:00" X-PositionFromTracking="23.03" Y-PositionFromTracking="31.25">
+        <ShotAtGoal AssistShotAtGoal="DFL-OBJ-0028QK" AssistTypeShotAtGoal="direct" TypeOfShot="rightLeg" InsideBox="false" ShotOrigin="8" TakerBallControl="direct" TakerSetup="otherPassFromOpenPlay" AfterFreeKick="false" ChanceEvaluation="none" CounterAttack="false" BuildUp="passOpenPlay" SetupOrigin="insideRight" AssistAction="otherPassFromOpenPlay" xG="0.0443" DistanceToGoal="23.19" AngleToGoal="17.82" Pressure="1.06" AmountOfDefenders="3" GoalDistanceGoalkeeper="6.27" Team="DFL-CLU-000004" Player="DFL-OBJ-002706" BallPossessionPhase="31">
+            <BlockedShot Player="DFL-OBJ-0000D9" GoalPrevented="false"/>
+        </ShotAtGoal>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000036" EventTime="2020-06-05T20:31:35.383+02:00" X-Position="8.72" Y-Position="4.21" X-Source-Position="1.40" Y-Source-Position="5.42">
+        <Play Recipient="DFL-OBJ-00001D" FromOpenPlay="true" Evaluation="unsuccessful" Height="high" Distance="medium" PenaltyBox="true" PlayOrigin="oppositionHalf" PlayAngle="76.73" Team="DFL-CLU-000004" Player="DFL-OBJ-002G3I" BallPossessionPhase="36">
+            <Cross Side="left" GoalKeeperInterference="caught" GoalKeeper="DFL-OBJ-00001D"/>
+        </Play>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000043" EventTime="2020-06-05T20:32:04.840+02:00" X-Position="29.76" Y-Position="65.29" X-Source-Position="29.76" Y-Source-Position="65.29">
+        <OtherBallAction Team="DFL-CLU-000004" Player="DFL-OBJ-002G1Q" BallPossessionPhase="43"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000052" EventTime="2020-06-05T20:32:05.720+02:00" X-Position="33.27" Y-Position="64.01">
+        <TacklingGame Winner="DFL-OBJ-002G1Q" WinnerTeam="DFL-CLU-000004" Loser="DFL-OBJ-00017V" LoserTeam="DFL-CLU-00000A" WinnerRole="withoutBallControl" LoserRole="withBallControl" WinnerResult="layoff" Type="ground" GoalKeeperInvolved="false" PossessionChange="false"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000051" EventTime="2020-06-05T20:32:35.430+02:00" X-Position="5.31" Y-Position="33.40" X-Source-Position="5.31" Y-Source-Position="33.40">
+        <GoalKick DecisionTimestamp="2020-06-05T20:32:20.679+02:00" Team="DFL-CLU-00000A">
+            <Play Recipient="DFL-OBJ-0000ZS" FromOpenPlay="false" Evaluation="unsuccessful" Height="high" Distance="long" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-00000A" Player="DFL-OBJ-00001D" BallPossessionPhase="51">
+                <Pass FreeKickLayup="false" Direction="throughBall"/>
+            </Play>
+        </GoalKick>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000083" EventTime="2020-06-05T20:33:36.337+02:00" X-Position="85.76" Y-Position="50.05" X-Source-Position="79.55" Y-Source-Position="65.29" CalculatedFrame="15414" CalculatedTimestamp="2020-06-05T20:33:34.320+02:00" X-PositionFromTracking="83.13" Y-PositionFromTracking="48.20">
+        <ShotAtGoal AssistShotAtGoal="DFL-OBJ-00017V" AssistTypeShotAtGoal="others" TypeOfShot="rightLeg" InsideBox="false" ShotOrigin="7" TakerBallControl="dribblingMore10m" TakerSetup="otherPassFromOpenPlay" AfterFreeKick="false" ChanceEvaluation="none" CounterAttack="false" BuildUp="passOpenPlay" SetupOrigin="left" AssistAction="otherPassFromOpenPlay" xG="0.0260" DistanceToGoal="26.08" AngleToGoal="13.51" Pressure="0.18" AmountOfDefenders="0" GoalDistanceGoalkeeper="4.41" Team="DFL-CLU-00000A" Player="DFL-OBJ-0001E6" BallPossessionPhase="83">
+            <ShotWide Placing="far" PitchMarking="overCrossbarRight"/>
+        </ShotAtGoal>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900001587" EventTime="2020-06-05T20:35:11.720+02:00">
+        <Nutmeg AffectedPlayer="DFL-OBJ-002FVJ" AffectedTeam="DFL-CLU-00000A" Team="DFL-CLU-000004" Player="DFL-OBJ-002G5S"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000115" EventTime="2020-06-05T20:35:44.550+02:00" X-Position="0.00" Y-Position="0.00" X-Source-Position="0.00" Y-Source-Position="0.00">
+        <CornerKick Side="left" Placing="center" TargetArea="center" Rotation="towardsGoal" PostMarking="none" DecisionTimestamp="2020-06-05T20:35:24.510+02:00" Team="DFL-CLU-000004">
+            <Play Recipient="DFL-OBJ-00001D" FromOpenPlay="false" Evaluation="unsuccessful" Height="high" Distance="long" PenaltyBox="true" PlayOrigin="oppositionHalf" Team="DFL-CLU-000004" Player="DFL-OBJ-0001E5" BallPossessionPhase="115">
+                <Cross Side="left" GoalKeeperInterference="caught" GoalKeeper="DFL-OBJ-00001D"/>
+            </Play>
+        </CornerKick>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364903500115" EventTime="2020-06-05T20:35:49.767+02:00" X-Position="5.81" Y-Position="33.90">
+        <BallClaiming Type="InterceptedBall" Team="DFL-CLU-00000A" Player="DFL-OBJ-00001D" BallPossessionPhase="116"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000120" EventTime="2020-06-05T20:36:04.200+02:00" X-Position="7.39" Y-Position="39.94" X-Source-Position="8.02" Y-Source-Position="39.52">
+        <ShotAtGoal AssistShotAtGoal="DFL-OBJ-0028QK" AssistTypeShotAtGoal="direct" TypeOfShot="rightLeg" InsideBox="true" ExtendedTypeOfShot="frontalVolley" ShotOrigin="3" TakerBallControl="volley" TakerSetup="crossFromOpenPlay" AfterFreeKick="false" ChanceEvaluation="chance" CounterAttack="true" BuildUp="crossOpenPlay" SetupOrigin="right" AssistAction="crossFromOpenPlay" Team="DFL-CLU-000004" Player="DFL-OBJ-002G3I" BallPossessionPhase="120">
+            <OtherShot/>
+        </ShotAtGoal>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000142" EventTime="2020-06-05T20:37:27.327+02:00" X-Position="29.16" Y-Position="9.03" X-Source-Position="29.16" Y-Source-Position="9.03">
+        <FreeKick DecisionTimestamp="2020-06-05T20:37:25.238+02:00" ExecutionMode="direct" Team="DFL-CLU-00000A">
+            <Play Recipient="DFL-OBJ-0027WP" FromOpenPlay="false" Evaluation="successfullyCompleted" Height="flat" Distance="medium" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-00000A" Player="DFL-OBJ-0000D9" BallPossessionPhase="142">
+                <Pass FreeKickLayup="false"/>
+            </Play>
+        </FreeKick>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000313" EventTime="2020-06-05T20:45:44.320+02:00">
+        <Foul Fouler="DFL-OBJ-00021Q" TeamFouler="DFL-CLU-00000A" Fouled="DFL-OBJ-002706" TeamFouled="DFL-CLU-000004" FoulType="foul" CommittingPlayerAction="slidingTackle"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000316" EventTime="2020-06-05T20:45:56.040+02:00">
+        <Caution CardColor="yellow" CardRating="yellow" Team="DFL-CLU-00000A" Player="DFL-OBJ-00021Q"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000377" EventTime="2020-06-05T20:51:00.023+02:00">
+        <Foul Fouler="DFL-OBJ-002G3I" TeamFouler="DFL-CLU-000004" Fouled="DFL-OBJ-00012Y" TeamFouled="DFL-CLU-00000A" FoulType="foul"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000798" EventTime="2020-06-05T20:55:43.400+02:00" X-Position="8.59" Y-Position="29.76">
+        <ChanceWithoutShot PreventionGoalkeeper="false" Sitter="true" TakerSetup="otherPassFromOpenPlay" CounterAttack="false" Situation="passOpenPlay" SetupOrigin="insideLeft" ChanceAssist="DFL-OBJ-002G3I" ChanceAssistType="direct" AssistAction="otherPassFromOpenPlay" Team="DFL-CLU-000004" Player="DFL-OBJ-002706"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900001596" EventTime="2020-06-05T20:55:45.280+02:00">
+        <GoalDisallowed Reason="offside" Team="DFL-CLU-000004" Player="DFL-OBJ-002706"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000469" EventTime="2020-06-05T20:55:48.360+02:00">
+        <Offside Team="DFL-CLU-000004" Player="DFL-OBJ-002706"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000499" EventTime="2020-06-05T20:57:39.913+02:00" X-Position="84.12" Y-Position="44.83" X-Source-Position="76.85" Y-Source-Position="49.04" CalculatedFrame="51477" CalculatedTimestamp="2020-06-05T20:57:36.840+02:00" X-PositionFromTracking="82.28" Y-PositionFromTracking="45.35">
+        <ShotAtGoal AssistShotAtGoal="DFL-OBJ-0000D9" AssistTypeShotAtGoal="others" TypeOfShot="leftLeg" InsideBox="false" ShotOrigin="7" TakerBallControl="dribblingLess10m" TakerSetup="otherPassFromOpenPlay" AfterFreeKick="false" ChanceEvaluation="chance" CounterAttack="false" BuildUp="passOpenPlay" SetupOrigin="insideLeft" AssistAction="otherPassFromOpenPlay" xG="0.0285" DistanceToGoal="25.40" AngleToGoal="14.75" Pressure="0.61" AmountOfDefenders="0" GoalDistanceGoalkeeper="4.80" Team="DFL-CLU-00000A" Player="DFL-OBJ-00017V" BallPossessionPhase="499">
+            <BlockedShot Player="DFL-OBJ-002G1Q" GoalPrevented="false"/>
+        </ShotAtGoal>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000789" EventTime="2020-06-05T21:16:24.000+02:00">
+        <FinalWhistle BreakingOff="false" GameSection="firstHalf" FinalResult="0:0"/>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900000800" EventTime="2020-06-05T21:33:27.010+02:00" X-Position="52.50" Y-Position="34.00" X-Source-Position="52.50" Y-Source-Position="34.00">
+        <KickOff GameSection="secondHalf">
+            <Play Recipient="DFL-OBJ-00021Q" FromOpenPlay="false" Evaluation="successfullyCompleted" Height="flat" Distance="short" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-00000A" Player="DFL-OBJ-0000D9" BallPossessionPhase="800">
+                <Pass FreeKickLayup="false"/>
+            </Play>
+        </KickOff>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900001017" EventTime="2020-06-05T21:46:25.360+02:00" X-Position="10.89" Y-Position="28.86" X-Source-Position="11.02" Y-Source-Position="31.19" CalculatedFrame="119426" CalculatedTimestamp="2020-06-05T21:46:21.920+02:00" X-PositionFromTracking="13.25" Y-PositionFromTracking="28.38">
+        <ShotAtGoal AssistShotAtGoal="DFL-OBJ-0001E6" AssistTypeShotAtGoal="direct" TypeOfShot="head" InsideBox="true" ExtendedTypeOfShot="frontalVolley" ShotOrigin="3" TakerBallControl="volley" TakerSetup="freeKick" AfterFreeKick="false" ChanceEvaluation="chance" CounterAttack="false" BuildUp="freeKick" SetupOrigin="right" AssistAction="freeKick" xG="0.2047" DistanceToGoal="14.39" AngleToGoal="26.59" Pressure="0.61" AmountOfDefenders="0" GoalDistanceGoalkeeper="4.47" Team="DFL-CLU-00000A" Player="DFL-OBJ-0000IU" BallPossessionPhase="1017">
+            <SuccessfulShot Assist="DFL-OBJ-0001E6" AssistType="direct" GoalZone="9" Solo="false" CurrentResult="1:0"/>
+        </ShotAtGoal>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900001019" EventTime="2020-06-05T21:47:09.393+02:00" X-Position="52.50" Y-Position="34.00" X-Source-Position="52.50" Y-Source-Position="34.00">
+        <KickOff>
+            <Play Recipient="DFL-OBJ-0000SP" FromOpenPlay="false" Evaluation="successfullyCompleted" Height="flat" Distance="short" PenaltyBox="false" PlayOrigin="ownHalf" Team="DFL-CLU-000004" Player="DFL-OBJ-0028QK" BallPossessionPhase="1019">
+                <Pass FreeKickLayup="false"/>
+            </Play>
+        </KickOff>
+    </Event>
+    <Event MatchId="DFL-MAT-003BN1" EventId="17364900001576" EventTime="2020-06-05T22:23:18.000+02:00">
+        <FinalWhistle BreakingOff="false" GameSection="secondHalf" FinalResult="1:0"/>
+    </Event>
+</PutDataRequest>

@@ -26,6 +26,7 @@ class Provider(Enum):
     TRACAB = "tracab"
     OPTA = "opta"
     STATSBOMB = "statsbomb"
+    SPORTEC = "sportec"
 
     def __str__(self):
         return self.value
@@ -36,6 +37,9 @@ class Position:
     position_id: str
     name: str
     coordinates: Point
+
+    def __str__(self):
+        return self.name
 
 
 @dataclass(frozen=True)

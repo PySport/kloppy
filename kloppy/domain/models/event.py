@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Type
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import camelcase_to_snakecase, removes_suffix
@@ -84,6 +84,8 @@ class EventType(Enum):
 
 @dataclass
 class Qualifier(ABC):
+    value: None
+
     @abstractmethod
     def to_dict(self):
         pass
@@ -151,6 +153,13 @@ class Event(DataRecord, ABC):
     @classmethod
     def create(cls, **kwargs):
         return cls(**kwargs, state={})
+
+    def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
+        if self.qualifiers:
+            for qualifier in self.qualifiers:
+                if isinstance(qualifier, qualifier_type):
+                    return qualifier.value
+        return None
 
 
 @dataclass

@@ -36,6 +36,7 @@ from kloppy.domain import (
     CardEvent,
     CardType,
     FoulCommittedEvent,
+    AttackingDirection,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -300,10 +301,54 @@ class SportecEventSerializer(EventDataSerializer):
                         start_timestamp=timestamp,
                         end_timestamp=None,
                     )
+                    if period_id == 1:
+                        team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
+                            "TeamLeft"
+                        ]
+                        if team_left == home_team.team_id:
+                            # goal of home team is on the left side.
+                            # this means they attack from left to right
+                            orientation = Orientation.FIXED_HOME_AWAY
+                            period.set_attacking_direction(
+                                AttackingDirection.HOME_AWAY
+                            )
+                        else:
+                            orientation = Orientation.FIXED_AWAY_HOME
+                            period.set_attacking_direction(
+                                AttackingDirection.AWAY_HOME
+                            )
+                    else:
+                        last_period = periods[-1]
+                        period.set_attacking_direction(
+                            AttackingDirection.AWAY_HOME
+                            if last_period.attacking_direction
+                            == AttackingDirection.HOME_AWAY
+                            else AttackingDirection.HOME_AWAY
+                        )
+
                     periods.append(period)
                 elif SPORTEC_EVENT_NAME_FINAL_WHISTLE in event_chain:
                     period.end_timestamp = timestamp
                     continue
+
+                team = None
+                player = None
+                flatten_attributes = dict()
+                for event_attributes in event_chain.values():
+                    flatten_attributes.update(event_attributes)
+
+                if "Team" in flatten_attributes:
+                    team = (
+                        home_team
+                        if flatten_attributes["Team"] == home_team.team_id
+                        else away_team
+                    )
+                if "Player" in flatten_attributes:
+                    if not team:
+                        raise ValueError("Player set while team is not set")
+                    player = team.get_player_by_id(
+                        flatten_attributes["Player"]
+                    )
 
                 generic_event_kwargs = dict(
                     # from DataRecord
@@ -314,29 +359,10 @@ class SportecEventSerializer(EventDataSerializer):
                     # from Event
                     event_id=event_chain["Event"]["EventId"],
                     coordinates=_parse_coordinates(event_chain["Event"]),
-                    raw_event=event_elm,
-                    team=None,
-                    player=None,
+                    raw_event=flatten_attributes,
+                    team=team,
+                    player=player,
                 )
-
-                team = None
-                for event_attributes in event_chain.values():
-                    if "Team" in event_attributes:
-                        team = (
-                            home_team
-                            if event_attributes["Team"] == home_team.team_id
-                            else away_team
-                        )
-                        generic_event_kwargs["team"] = team
-                    if "Player" in event_attributes:
-                        if not team:
-                            raise ValueError(
-                                "Player set while team is not set"
-                            )
-                        player = team.get_player_by_id(
-                            event_attributes["Player"]
-                        )
-                        generic_event_kwargs["player"] = player
 
                 event_name, event_attributes = event_chain.popitem()
                 if event_name in SPORTEC_SHOT_EVENT_NAMES:
@@ -438,11 +464,11 @@ class SportecEventSerializer(EventDataSerializer):
                         ball_owning_team=None,
                         ball_state=BallState.DEAD,
                         # from Event
-                        event_id=event_chain["Event"]["EventId"],
+                        event_id=event_chain["Event"]["EventId"] + "-ball-out",
                         team=events[-1].team,
                         player=events[-1].player,
                         coordinates=None,
-                        raw_event=None,
+                        raw_event={},
                         result=None,
                         qualifiers=None,
                     )
@@ -465,8 +491,8 @@ class SportecEventSerializer(EventDataSerializer):
             ),
             score=score,
             frame_rate=None,
-            orientation=Orientation.HOME_TEAM,  # TODO: check this
-            flags=DatasetFlag.BALL_OWNING_TEAM,
+            orientation=orientation,
+            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             provider=Provider.SPORTEC,
         )
 

@@ -203,8 +203,12 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         row.update(
             {
                 "end_timestamp": event.receive_timestamp,
-                "end_coordinates_x": event.receiver_coordinates.x if event.receiver_coordinates else None,
-                "end_coordinates_y": event.receiver_coordinates.y if event.receiver_coordinates else None,
+                "end_coordinates_x": event.receiver_coordinates.x
+                if event.receiver_coordinates
+                else None,
+                "end_coordinates_y": event.receiver_coordinates.y
+                if event.receiver_coordinates
+                else None,
                 "receiver_player_id": event.receiver_player.player_id
                 if event.receiver_player
                 else None,
@@ -214,8 +218,12 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         row.update(
             {
                 "end_timestamp": event.end_timestamp,
-                "end_coordinates_x": event.end_coordinates.x if event.end_coordinates else None,
-                "end_coordinates_y": event.end_coordinates.y if event.end_coordinates else None,
+                "end_coordinates_x": event.end_coordinates.x
+                if event.end_coordinates
+                else None,
+                "end_coordinates_y": event.end_coordinates.y
+                if event.end_coordinates
+                else None,
             }
         )
 

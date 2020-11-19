@@ -72,6 +72,7 @@ from kloppy import (
     load_epts_tracking_data, 
     load_statsbomb_event_data,
     load_opta_event_data,
+    load_sportec_event_data,
     to_pandas, 
     transform
 )
@@ -89,7 +90,8 @@ dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
 dataset = load_opta_event_data('f24_data.xml', 'f7_data.xml')
 # metrica json
 dataset = load_metrica_json_event_data('raw_data.json', 'meta.xml')
-
+# sportec xml
+dataset = load_sportec_event_data('events.xml', 'match_data.xml')
 
 dataset = transform(dataset, to_pitch_dimensions=[[0, 108], [-34, 34]])
 pandas_data_frame = to_pandas(dataset)
@@ -241,6 +243,28 @@ with open("eventdata.json", "rb") as event_data, \
     # start working with dataset
 ```
 
+
+or Sportec XML event data
+```python
+from kloppy import SportecEventSerializer
+
+serializer = SportecEventSerializer()
+
+with open("eventdata.xml", "rb") as event_data, \
+        open("match_data.xml", "rb") as match_data:
+
+    dataset = serializer.deserialize(
+        inputs={
+            'event_data': event_data,
+            'match_data': match_data
+        },
+        options={
+            "event_types": ["pass", "shot"]
+        }
+    )
+    
+    # start working with dataset
+```
 
 
 ### <a name="pitch-dimensions"></a>Transform the pitch dimensions

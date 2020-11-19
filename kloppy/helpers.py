@@ -7,7 +7,7 @@ from . import (
     OptaSerializer,
     SportecEventSerializer,
     StatsBombSerializer,
-    TRACABSerializer
+    TRACABSerializer,
 )
 from .domain import (
     CarryEvent,

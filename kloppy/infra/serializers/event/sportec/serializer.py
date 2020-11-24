@@ -334,7 +334,8 @@ class SportecEventSerializer(EventDataSerializer):
                 team = None
                 player = None
                 flatten_attributes = dict()
-                for event_attributes in event_chain.values():
+                # reverse because top levels are more important
+                for event_attributes in reversed(event_chain.values()):
                     flatten_attributes.update(event_attributes)
 
                 if "Team" in flatten_attributes:

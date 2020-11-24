@@ -58,8 +58,8 @@ class TestStateBuilder:
             events = list(events)
             events_per_sequence[sequence_id] = len(events)
 
-        assert events_per_sequence[0] == 9
-        assert events_per_sequence[50] == 2
+        assert events_per_sequence[0] == 4
+        assert events_per_sequence[50] == 14
 
     def test_lineup_state_builder(self):
         dataset = self._load_dataset("statsbomb_15986")

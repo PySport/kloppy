@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+
+## 1.4.3 (2020-11-24)
+
+Bugfix:
+
+- Fix sequences reset at set pieces ([#76](https://github.com/PySport/kloppy/pull/76))
+
 ## 1.4.2 (2020-11-24)
 
 Bugfix:

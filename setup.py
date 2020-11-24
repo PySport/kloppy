@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="kloppy",
-    version="1.4.1",
+    version="1.4.2",
     author="Koen Vossen",
     author_email="info@koenvossen.nl",
     url="https://kloppy.pysport.org/",
@@ -33,6 +33,7 @@ setup(
         "lxml>=4.5.0",
         "requests>=2.0.0",
         "networkx>=2.4",
+        "pytz>=2020.1",
         'dataclasses;python_version<"3.7"',
     ],
     extras_require={

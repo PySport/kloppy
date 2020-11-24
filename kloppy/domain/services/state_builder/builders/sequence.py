@@ -10,6 +10,7 @@ from kloppy.domain import (
     BallOutEvent,
     FoulCommittedEvent,
     ShotEvent,
+    SetPieceQualifier,
 )
 from ..builder import StateBuilder
 
@@ -32,7 +33,8 @@ class SequenceStateBuilder(StateBuilder):
 
     def reduce_before(self, state: Sequence, event: Event) -> Sequence:
         if isinstance(event, OPEN_SEQUENCE) and (
-            state.team != event.team or event.is_set_piece
+            state.team != event.team
+            or event.get_qualifier_value(SetPieceQualifier)
         ):
             state = replace(
                 state, sequence_id=state.sequence_id + 1, team=event.team

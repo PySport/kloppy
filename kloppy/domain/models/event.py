@@ -161,14 +161,6 @@ class Event(DataRecord, ABC):
                     return qualifier.value
         return None
 
-    @property
-    def is_set_piece(self):
-        if self.qualifiers:
-            for qualifier in self.qualifiers:
-                if isinstance(qualifier, SetPieceQualifier):
-                    return True
-        return False
-
 
 @dataclass
 class GenericEvent(Event):

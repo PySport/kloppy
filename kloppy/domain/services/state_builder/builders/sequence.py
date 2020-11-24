@@ -31,7 +31,9 @@ class SequenceStateBuilder(StateBuilder):
         return Sequence(sequence_id=0, team=None)
 
     def reduce_before(self, state: Sequence, event: Event) -> Sequence:
-        if isinstance(event, OPEN_SEQUENCE) and state.team != event.team:
+        if isinstance(event, OPEN_SEQUENCE) and (
+            state.team != event.team or event.is_set_piece
+        ):
             state = replace(
                 state, sequence_id=state.sequence_id + 1, team=event.team
             )

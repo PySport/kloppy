@@ -3,16 +3,12 @@
 Find out all changes between different kloppy versions
 
 
-## 1.4.3 (2020-11-24)
+## 1.4.2 - 1.4.4 (2020-11-24)
 
 Bugfix:
 
+- Fix for sportec BlockedShot
 - Fix sequences reset at set pieces ([#76](https://github.com/PySport/kloppy/pull/76))
-
-## 1.4.2 (2020-11-24)
-
-Bugfix:
-
 - Add pytz to dependencies
 
 ## 1.4.1 (2020-11-19)

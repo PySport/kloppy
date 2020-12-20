@@ -2,12 +2,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Union, Dict, Type
+from typing import Dict, List, Type, Union
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import camelcase_to_snakecase, removes_suffix
 
-from .common import DataRecord, Dataset, Team, Player
+from .common import DataRecord, Dataset, Player, Team
 from .pitch import Point
 
 
@@ -126,6 +126,42 @@ class SetPieceQualifier(EnumQualifier):
     value: SetPieceType
 
 
+class PassType(Enum):
+    CROSS = "CROSS"
+    HAND_PASS = "HAND_PASS"
+    HEAD_PASS = "HEAD_PASS"
+    HIGH_PASS = "HIGH_PASS"
+    LAUNCH = "LAUNCH"
+    SIMPLE_PASS = "SIMPLE_PASS"
+    SMART_PASS = "SMART_PASS"
+
+
+@dataclass
+class PassQualifier(EnumQualifier):
+    value: PassType
+
+
+class BodyPart(Enum):
+    RIGHT_FOOT = "RIGHT_FOOT"
+    LEFT_FOOT = "LEFT_FOOT"
+    HEAD = "HEAD"
+
+
+@dataclass
+class BodyPartQualifier(EnumQualifier):
+    value: BodyPart
+
+
+class GoalkeeperAction(Enum):
+    REFLEX = "REFLEX"
+    SAVE_ATTEMPT = "SAVE_ATTEMPT"
+
+
+@dataclass
+class GoalkeeperActionQualifier(EnumQualifier):
+    value: GoalkeeperAction
+
+
 @dataclass
 class Event(DataRecord, ABC):
     event_id: str
@@ -171,6 +207,7 @@ class GenericEvent(Event):
 @dataclass
 class ShotEvent(Event):
     result: ShotResult
+    result_coordinates: Point = None
 
     event_type: EventType = EventType.SHOT
     event_name: str = "shot"
@@ -306,4 +343,10 @@ __all__ = [
     "SetPieceType",
     "Qualifier",
     "SetPieceQualifier",
+    "PassQualifier",
+    "PassType",
+    "BodyPart",
+    "BodyPartQualifier",
+    "GoalkeeperAction",
+    "GoalkeeperActionQualifier",
 ]

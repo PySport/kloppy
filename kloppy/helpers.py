@@ -10,6 +10,7 @@ from . import (
     TRACABSerializer,
 )
 from .domain import (
+    CardEvent,
     CarryEvent,
     DataRecord,
     Dataset,
@@ -22,6 +23,7 @@ from .domain import (
     PassEvent,
     PassResult,
     PitchDimensions,
+    ShotEvent,
     TrackingDataset,
     Transformer,
 )
@@ -223,6 +225,21 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
                 if event.end_coordinates
                 else None,
             }
+        )
+    elif isinstance(event, ShotEvent):
+        row.update(
+            {
+                "end_coordinates_x": event.result_coordinates.x
+                if event.result_coordinates
+                else None,
+                "end_coordinates_y": event.result_coordinates.y
+                if event.result_coordinates
+                else None,
+            }
+        )
+    elif isinstance(event, CardEvent):
+        row.update(
+            {"card_type": event.card_type.value if event.card_type else None}
         )
 
     if event.qualifiers:

@@ -16,4 +16,5 @@ class TestWyscout:
 
     def test_correct_deserialization(self):
         dataset = self._load_dataset()
-        print(dataset)
+        print()
+        print(dataset.to_pandas())

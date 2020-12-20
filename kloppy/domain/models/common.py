@@ -27,6 +27,7 @@ class Provider(Enum):
     OPTA = "opta"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
+    WYSCOUT = "wyscout"
 
     def __str__(self):
         return self.value

@@ -1,5 +1,6 @@
 import os
 
+import requests
 from kloppy.infra.serializers.event.wyscout.serializer import WyscoutSerializer
 
 
@@ -8,9 +9,16 @@ class TestWyscout:
         base_dir = os.path.dirname(__file__)
         serializer = WyscoutSerializer()
 
-        with open(
-            os.path.join(base_dir, "files/wyscout_events.json"), "rb"
-        ) as fd:
+        filename = os.path.join(base_dir, "files/_wyscout_events.json")
+
+        if not os.path.exists(filename):
+            resp = requests.get(
+                "https://footballdata.wyscout.com/wp-content/uploads/2018/03/EVENTS-PL-day6-Leicester-Liverpool.json_.txt"
+            )
+            with open(filename, "wb") as fd:
+                fd.write(resp.content)
+
+        with open(os.path.join(base_dir, filename), "rb") as fd:
             dataset = serializer.deserialize(inputs={"event_data": fd})
             return dataset
 

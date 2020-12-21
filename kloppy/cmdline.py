@@ -9,6 +9,7 @@ from xml.etree import ElementTree as ET
 
 from kloppy import event_pattern_matching as pm
 from kloppy import load_opta_event_data, load_statsbomb_event_data
+from kloppy.helpers import load_wyscout_event_data
 from kloppy.utils import performance_logging
 
 sys.path.append(".")
@@ -55,7 +56,7 @@ def print_match(id_: int, match, success: bool, label):
     for event in match.events:
         time = _format_time(event.timestamp)
         print(
-            f"{event.event_id} {event.event_type} {str(event.result).ljust(10)} / P{event.period.id} {time} / {event.team} {str(event.player_jersey_no).rjust(2)} / {event.position.x}x{event.position.y}"
+            f"{event.event_id} {event.event_type} {str(event.result).ljust(10)} / P{event.period.id} {time} / {event.team} {str(event.player.jersey_no).rjust(2)} / {event.coordinates.x}x{event.coordinates.y}"
         )
     print("")
 
@@ -79,6 +80,7 @@ def run_query(argv=sys.argv[1:]):
     parser.add_argument(
         "--input-opta", help="Opta event input files (f24.xml,f7.xml)"
     )
+    parser.add_argument("--input-wyscout", help="Wyscout event input file")
     parser.add_argument("--output-xml", help="Output file")
     parser.add_argument(
         "--with-success",
@@ -139,6 +141,13 @@ def run_query(argv=sys.argv[1:]):
             dataset = load_opta_event_data(
                 f24_filename.strip(),
                 f7_filename.strip(),
+                options={"event_types": query.event_types},
+            )
+    if opts.input_wyscout:
+        with performance_logging("load dataset", logger=logger):
+            events_filename = opts.input_wyscout
+            dataset = load_wyscout_event_data(
+                events_filename,
                 options={"event_types": query.event_types},
             )
 

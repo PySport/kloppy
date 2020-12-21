@@ -1,0 +1,1 @@
+from .serializer import WyscoutSerializer

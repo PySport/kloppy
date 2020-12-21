@@ -1,5 +1,7 @@
 from typing import Callable, Dict, List, TypeVar, Union
 
+from kloppy.infra.serializers.event.statsbomb import serializer
+
 from . import (
     EPTSSerializer,
     MetricaEventsJsonSerializer,
@@ -8,6 +10,7 @@ from . import (
     SportecEventSerializer,
     StatsBombSerializer,
     TRACABSerializer,
+    WyscoutSerializer,
 )
 from .domain import (
     CardEvent,
@@ -129,6 +132,16 @@ def load_sportec_event_data(
         return serializer.deserialize(
             inputs={"event_data": event_data, "match_data": match_data},
             options=options,
+        )
+
+
+def load_wyscout_event_data(
+    event_data_filename: str, options: dict = None
+) -> EventDataset:
+    serializer = WyscoutSerializer()
+    with open(event_data_filename, "rb") as event_data:
+        return serializer.deserialize(
+            inputs={"event_data": event_data}, options=options
         )
 
 

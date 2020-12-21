@@ -163,6 +163,11 @@ class GoalkeeperActionQualifier(EnumQualifier):
 
 
 @dataclass
+class CounterAttackQualifier(BoolQualifier):
+    pass
+
+
+@dataclass
 class Event(DataRecord, ABC):
     event_id: str
     team: Team
@@ -349,4 +354,5 @@ __all__ = [
     "BodyPartQualifier",
     "GoalkeeperAction",
     "GoalkeeperActionQualifier",
+    "CounterAttackQualifier",
 ]

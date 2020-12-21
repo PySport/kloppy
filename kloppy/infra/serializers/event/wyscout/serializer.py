@@ -8,8 +8,10 @@ from kloppy.domain import (
     BodyPartQualifier,
     CardEvent,
     CardType,
+    CounterAttackQualifier,
     EventDataset,
     FoulCommittedEvent,
+    GenericEvent,
     GoalkeeperAction,
     GoalkeeperActionQualifier,
     Ground,
@@ -71,9 +73,20 @@ def _has_tag(raw_event, tag_id) -> bool:
     return False
 
 
+def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
+    qualifiers: List[Qualifier] = []
+
+    if _has_tag(raw_event, wyscout_tags.COUNTER_ATTACK):
+        qualifiers.append(CounterAttackQualifier(True))
+    else:
+        qualifiers.append(CounterAttackQualifier(False))
+
+    return qualifiers
+
+
 def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
     result = None
-    qualifiers = []
+    qualifiers = _generic_qualifiers(raw_event)
     if _has_tag(raw_event, 101):
         result = ShotResult.GOAL
     elif _has_tag(raw_event, 2101):
@@ -105,7 +118,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
 
 def _pass_qualifiers(raw_event) -> List[Qualifier]:
-    qualifiers: List[Qualifier] = []
+    qualifiers = _generic_qualifiers(raw_event)
 
     if raw_event["subEventName"] == wyscout_events.PASS.CROSS:
         qualifiers.append(PassQualifier(PassType.CROSS))
@@ -158,10 +171,15 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
 
 
 def _parse_foul(raw_event: Dict) -> Dict:
-    return {"result": None, "qualifiers": None}
+    qualifiers = _generic_qualifiers(raw_event)
+    return {
+        "result": None,
+        "qualifiers": qualifiers,
+    }
 
 
 def _parse_card(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
     card_type = None
     if _has_tag(raw_event, wyscout_tags.RED_CARD):
         card_type = CardType.RED
@@ -170,22 +188,24 @@ def _parse_card(raw_event: Dict) -> Dict:
     elif _has_tag(raw_event, wyscout_tags.SECOND_YELLOW_CARD):
         card_type = CardType.SECOND_YELLOW
 
-    return {"result": None, "qualifiers": None, "card_type": card_type}
+    return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
 
 def _parse_recovery(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
-        "qualifiers": None,
+        "qualifiers": qualifiers,
     }
 
 
 def _parse_ball_out(raw_event: Dict) -> Dict:
-    return {"result": None, "qualifiers": None}
+    qualifiers = _generic_qualifiers(raw_event)
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
-    qualifiers = []
+    qualifiers = _generic_qualifiers(raw_event)
 
     result = {}
 
@@ -218,13 +238,14 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
 
 
 def _parse_takeon(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
     result = None
     if _has_tag(raw_event, wyscout_tags.LOST):
         result = TakeOnResult.INCOMPLETE
     if _has_tag(raw_event, wyscout_tags.WON):
         result = TakeOnResult.COMPLETE
 
-    return {"result": result, "qualifiers": None}
+    return {"result": result, "qualifiers": qualifiers}
 
 
 def _players_to_dict(players: List[Player]):
@@ -382,6 +403,19 @@ class WyscoutSerializer(EventDataSerializer):
                         events.append(
                             TakeOnEvent.create(
                                 **takeon_event_args, **generic_event_args
+                            )
+                        )
+                    elif raw_event["eventName"] not in [
+                        wyscout_events.SAVE.EVENT,
+                        wyscout_events.OFFSIDE.EVENT,
+                    ]:
+                        # The events SAVE and OFFSIDE are already merged with PASS and SHOT events
+                        qualifiers = _generic_qualifiers(raw_event)
+                        events.append(
+                            GenericEvent.create(
+                                result=None,
+                                qualifiers=qualifiers,
+                                **generic_event_args
                             )
                         )
 

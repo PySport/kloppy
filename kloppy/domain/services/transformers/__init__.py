@@ -1,18 +1,18 @@
-from dataclasses import asdict, replace, fields
+from dataclasses import asdict, fields, replace
 from typing import TypeVar
 
 from kloppy.domain import (
-    Point,
-    PitchDimensions,
-    Orientation,
-    Frame,
-    Team,
     AttackingDirection,
-    TrackingDataset,
-    DatasetFlag,
     Dataset,
+    DatasetFlag,
     EventDataset,
+    Frame,
     Metadata,
+    Orientation,
+    PitchDimensions,
+    Point,
+    Team,
+    TrackingDataset,
 )
 from kloppy.domain.models.event import Event
 
@@ -96,9 +96,7 @@ class Transformer:
             },
         )
 
-    EventType = TypeVar("EventType")
-
-    def transform_event(self, event: EventType) -> EventType:
+    def transform_event(self, event: Event) -> Event:
         flip = self.__needs_flip(
             ball_owning_team=event.ball_owning_team,
             attacking_direction=event.period.attacking_direction,

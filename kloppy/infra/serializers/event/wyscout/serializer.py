@@ -9,6 +9,7 @@ from kloppy.domain import (
     CardEvent,
     CardType,
     CounterAttackQualifier,
+    Dimension,
     EventDataset,
     FoulCommittedEvent,
     GenericEvent,
@@ -112,7 +113,10 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     return {
         "result": result,
-        "result_coordinates": Point(**raw_event["positions"][1]),
+        "result_coordinates": Point(
+            x=float(raw_event["positions"][1]["x"]),
+            y=float(raw_event["positions"][1]["y"]),
+        ),
         "qualifiers": qualifiers,
     }
 
@@ -166,7 +170,10 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": None,
-        "receiver_coordinates": Point(**raw_event["positions"][1]),
+        "receiver_coordinates": Point(
+            x=float(raw_event["positions"][1]["x"]),
+            y=float(raw_event["positions"][1]["y"]),
+        ),
     }
 
 
@@ -304,125 +311,122 @@ class WyscoutSerializer(EventDataSerializer):
                         )
                     )
 
-                if player_id != INVALID_PLAYER:
-                    generic_event_args = {
-                        "event_id": raw_event["id"],
-                        "raw_event": raw_event,
-                        "coordinates": Point(**raw_event["positions"][0]),
-                        "team": teams[team_id],
-                        "player": players[team_id][player_id],
-                        "ball_owning_team": None,
-                        "ball_state": None,
-                        "period": periods[-1],
-                        "timestamp": raw_event["eventSec"],
-                    }
+                generic_event_args = {
+                    "event_id": raw_event["id"],
+                    "raw_event": raw_event,
+                    "coordinates": Point(
+                        x=float(raw_event["positions"][0]["x"]),
+                        y=float(raw_event["positions"][0]["y"]),
+                    ),
+                    "team": teams[team_id],
+                    "player": players[team_id][player_id]
+                    if player_id != INVALID_PLAYER
+                    else None,
+                    "ball_owning_team": None,
+                    "ball_state": None,
+                    "period": periods[-1],
+                    "timestamp": raw_event["eventSec"],
+                }
 
-                    if raw_event["eventName"] == wyscout_events.SHOT.EVENT:
-                        shot_event_args = _parse_shot(raw_event, next_event)
+                if raw_event["eventName"] == wyscout_events.SHOT.EVENT:
+                    shot_event_args = _parse_shot(raw_event, next_event)
+                    events.append(
+                        ShotEvent.create(
+                            **shot_event_args, **generic_event_args
+                        )
+                    )
+                elif raw_event["eventName"] == wyscout_events.PASS.EVENT:
+                    pass_event_args = _parse_pass(raw_event, next_event)
+                    events.append(
+                        PassEvent.create(
+                            **pass_event_args, **generic_event_args
+                        )
+                    )
+                elif raw_event["eventName"] == wyscout_events.FOUL.EVENT:
+                    foul_event_args = _parse_foul(raw_event)
+                    events.append(
+                        FoulCommittedEvent.create(
+                            **foul_event_args, **generic_event_args
+                        )
+                    )
+                    if any(
+                        (_has_tag(raw_event, tag) for tag in wyscout_tags.CARD)
+                    ):
+                        card_event_args = _parse_card(raw_event)
                         events.append(
-                            ShotEvent.create(
-                                **shot_event_args, **generic_event_args
+                            CardEvent.create(
+                                **card_event_args, **generic_event_args
                             )
                         )
-                    elif raw_event["eventName"] == wyscout_events.PASS.EVENT:
-                        pass_event_args = _parse_pass(raw_event, next_event)
+                elif (
+                    raw_event["eventName"] == wyscout_events.INTERRUPTION.EVENT
+                ):
+                    ball_out_event_args = _parse_ball_out(raw_event)
+                    events.append(
+                        BallOutEvent.create(
+                            **ball_out_event_args, **generic_event_args
+                        )
+                    )
+                elif raw_event["eventName"] == wyscout_events.FREE_KICK.EVENT:
+                    set_piece_event_args = _parse_set_piece(
+                        raw_event, next_event
+                    )
+                    if (
+                        raw_event["subEventName"]
+                        in wyscout_events.FREE_KICK.PASS_TYPES
+                    ):
                         events.append(
                             PassEvent.create(
-                                **pass_event_args, **generic_event_args
-                            )
-                        )
-                    elif raw_event["eventName"] == wyscout_events.FOUL.EVENT:
-                        foul_event_args = _parse_foul(raw_event)
-                        events.append(
-                            FoulCommittedEvent.create(
-                                **foul_event_args, **generic_event_args
-                            )
-                        )
-                        if any(
-                            (
-                                _has_tag(raw_event, tag)
-                                for tag in wyscout_tags.CARD
-                            )
-                        ):
-                            card_event_args = _parse_card(raw_event)
-                            events.append(
-                                CardEvent.create(
-                                    **card_event_args, **generic_event_args
-                                )
-                            )
-                    elif (
-                        raw_event["eventName"]
-                        == wyscout_events.INTERRUPTION.EVENT
-                    ):
-                        ball_out_event_args = _parse_ball_out(raw_event)
-                        events.append(
-                            BallOutEvent.create(
-                                **ball_out_event_args, **generic_event_args
+                                **set_piece_event_args, **generic_event_args
                             )
                         )
                     elif (
-                        raw_event["eventName"]
-                        == wyscout_events.FREE_KICK.EVENT
+                        raw_event["subEventName"]
+                        in wyscout_events.FREE_KICK.SHOT_TYPES
                     ):
-                        set_piece_event_args = _parse_set_piece(
-                            raw_event, next_event
+                        events.append(
+                            ShotEvent.create(
+                                **set_piece_event_args, **generic_event_args
+                            )
                         )
-                        if (
-                            raw_event["subEventName"]
-                            in wyscout_events.FREE_KICK.PASS_TYPES
-                        ):
-                            events.append(
-                                PassEvent.create(
-                                    **set_piece_event_args,
-                                    **generic_event_args
-                                )
-                            )
-                        elif (
-                            raw_event["subEventName"]
-                            in wyscout_events.FREE_KICK.SHOT_TYPES
-                        ):
-                            events.append(
-                                ShotEvent.create(
-                                    **set_piece_event_args,
-                                    **generic_event_args
-                                )
-                            )
 
-                    elif (
-                        raw_event["eventName"]
-                        == wyscout_events.OTHERS_ON_BALL.EVENT
-                    ):
-                        recovery_event_args = _parse_recovery(raw_event)
-                        events.append(
-                            RecoveryEvent.create(
-                                **recovery_event_args, **generic_event_args
-                            )
+                elif (
+                    raw_event["eventName"]
+                    == wyscout_events.OTHERS_ON_BALL.EVENT
+                ):
+                    recovery_event_args = _parse_recovery(raw_event)
+                    events.append(
+                        RecoveryEvent.create(
+                            **recovery_event_args, **generic_event_args
                         )
-                    elif raw_event["eventName"] == wyscout_events.DUEL.EVENT:
-                        takeon_event_args = _parse_takeon(raw_event)
-                        events.append(
-                            TakeOnEvent.create(
-                                **takeon_event_args, **generic_event_args
-                            )
+                    )
+                elif raw_event["eventName"] == wyscout_events.DUEL.EVENT:
+                    takeon_event_args = _parse_takeon(raw_event)
+                    events.append(
+                        TakeOnEvent.create(
+                            **takeon_event_args, **generic_event_args
                         )
-                    elif raw_event["eventName"] not in [
-                        wyscout_events.SAVE.EVENT,
-                        wyscout_events.OFFSIDE.EVENT,
-                    ]:
-                        # The events SAVE and OFFSIDE are already merged with PASS and SHOT events
-                        qualifiers = _generic_qualifiers(raw_event)
-                        events.append(
-                            GenericEvent.create(
-                                result=None,
-                                qualifiers=qualifiers,
-                                **generic_event_args
-                            )
+                    )
+                elif raw_event["eventName"] not in [
+                    wyscout_events.SAVE.EVENT,
+                    wyscout_events.OFFSIDE.EVENT,
+                ]:
+                    # The events SAVE and OFFSIDE are already merged with PASS and SHOT events
+                    qualifiers = _generic_qualifiers(raw_event)
+                    events.append(
+                        GenericEvent.create(
+                            result=None,
+                            qualifiers=qualifiers,
+                            **generic_event_args
                         )
+                    )
 
         metadata = Metadata(
             teams=teams.values(),
             periods=periods,
-            pitch_dimensions=PitchDimensions(x_dim=100, y_dim=100),
+            pitch_dimensions=PitchDimensions(
+                x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
+            ),
             score=None,
             frame_rate=None,
             orientation=Orientation.BALL_OWNING_TEAM,

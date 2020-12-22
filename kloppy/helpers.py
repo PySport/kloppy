@@ -1,7 +1,5 @@
 from typing import Callable, Dict, List, TypeVar, Union
 
-from kloppy.infra.serializers.event.statsbomb import serializer
-
 from . import (
     EPTSSerializer,
     MetricaEventsJsonSerializer,

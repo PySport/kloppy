@@ -139,5 +139,4 @@ cython_debug/
 
 # Downloaded data files
 examples/pattern_matching/repository/*.json
-kloppy/tests/files/_*.json
 .DS_Store

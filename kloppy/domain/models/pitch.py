@@ -23,11 +23,19 @@ class PitchDimensions:
 
     @property
     def length(self) -> float:
-        return (self.x_dim.max - self.x_dim.min) / self.x_per_meter
+        return (
+            (self.x_dim.max - self.x_dim.min) / self.x_per_meter
+            if self.x_per_meter
+            else None
+        )
 
     @property
     def width(self) -> float:
-        return (self.y_dim.max - self.y_dim.min) / self.y_per_meter
+        return (
+            (self.y_dim.max - self.y_dim.min) / self.y_per_meter
+            if self.y_per_meter
+            else None
+        )
 
 
 @dataclass(frozen=True)

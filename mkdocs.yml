@@ -3,6 +3,7 @@ site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
 edit_uri: blob/master/docs/
+extra_css: [style.css]
 
 # TODO: set-up Google Analytics project to track
 google_analytics: null 
@@ -18,6 +19,7 @@ nav:
     - Tracking Data: quickstart/tracking_data.ipynb
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
+  - API: 'api.md'
   - Providers: 'providers.md'
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'

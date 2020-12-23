@@ -9,6 +9,7 @@ class Dimension:
         min: Minimal possible value within this dimension
         max: Maximal possible value within this dimension
     """
+
     min: float
     max: float
 
@@ -22,12 +23,13 @@ class Dimension:
 @dataclass
 class PitchDimensions:
     """
-        Attributes:
-            x_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
-            y_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
-            x_per_meter: number of units per meter in the x dimension
-            y_per_meter: number of units per meter in the y dimension
+    Attributes:
+        x_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
+        y_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
+        x_per_meter: number of units per meter in the x dimension
+        y_per_meter: number of units per meter in the y dimension
     """
+
     x_dim: Dimension
     y_dim: Dimension
     x_per_meter: float = None
@@ -35,6 +37,9 @@ class PitchDimensions:
 
     @property
     def length(self) -> float:
+        """
+        Calculates the length of the pitch in meters if possible.
+        """
         return (
             (self.x_dim.max - self.x_dim.min) / self.x_per_meter
             if self.x_per_meter
@@ -43,6 +48,9 @@ class PitchDimensions:
 
     @property
     def width(self) -> float:
+        """
+        Calculates the width of the pitch in meters if possible.
+        """
         return (
             (self.y_dim.max - self.y_dim.min) / self.y_per_meter
             if self.y_per_meter
@@ -53,13 +61,21 @@ class PitchDimensions:
 @dataclass(frozen=True)
 class Point:
     """
+    Point on the pitch.
+
     Attributes:
         x: x coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
         y: y coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
     """
+
     x: float
     y: float
 
     def distance_to(self, other: "Point") -> float:
-        # returns the euclidean distance between the point and another provided point
+        """
+        Calculates the euclidean distance between the point and another provided point
+
+        Arguments:
+            other: See [`Point`][kloppy.domain.models.pitch.Point]
+        """
         return sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)

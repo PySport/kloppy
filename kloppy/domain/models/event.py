@@ -5,7 +5,11 @@ from enum import Enum
 from typing import Dict, List, Type, Union, Any
 
 from kloppy.domain.models.common import DatasetType
-from kloppy.utils import camelcase_to_snakecase, removes_suffix
+from kloppy.utils import (
+    camelcase_to_snakecase,
+    removes_suffix,
+    docstring_inherit_attributes,
+)
 
 from .common import DataRecord, Dataset, Player, Team
 from .pitch import Point
@@ -19,6 +23,17 @@ class ResultType(Enum):
 
 
 class ShotResult(ResultType):
+    """
+    ShotResult
+
+    Attributes:
+        GOAL (ShotResult): Shot resulted in a goal
+        OFF_TARGET (ShotResult): Shot was off target
+        POST (ShotResult): Shot hit the post
+        BLOCKED (ShotResult): Shot was blocked by another player
+        SAVED (ShotResult): Shot was saved by the keeper
+    """
+
     GOAL = "GOAL"
     OFF_TARGET = "OFF_TARGET"
     POST = "POST"
@@ -27,10 +42,23 @@ class ShotResult(ResultType):
 
     @property
     def is_success(self):
+        """
+        Returns if the shot was a goal
+        """
         return self == self.GOAL
 
 
 class PassResult(ResultType):
+    """
+    PassResult
+
+    Attributes:
+        COMPLETE (PassResult): Complete pass
+        INCOMPLETE (PassResult): Incomplete pass (intercepted)
+        OUT (PassResult): Ball went out
+        OFFSIDE (PassResult): Offside
+    """
+
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
     OUT = "OUT"
@@ -38,43 +66,86 @@ class PassResult(ResultType):
 
     @property
     def is_success(self):
+        """
+        Returns if the pass was complete
+        """
         return self == self.COMPLETE
 
 
 class TakeOnResult(ResultType):
+    """
+    TakeOnResult
+
+    Attributes:
+        COMPLETE (TakeOnResult): Complete take-on
+        INCOMPLETE (TakeOnResult): Incomplete take-on
+        OUT (TakeOnResult): Ball went out
+    """
+
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
     OUT = "OUT"
 
     @property
     def is_success(self):
+        """
+        Returns if the take-on was complete
+        """
         return self == self.COMPLETE
 
 
 class CarryResult(ResultType):
+    """
+    CarryResult
+
+    Attributes:
+        COMPLETE (CarryResult): Complete carry
+        INCOMPLETE (CarryResult): Incomplete carry
+    """
+
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
 
     @property
     def is_success(self):
+        """
+        Returns if the carry was complete
+        """
         return self == self.COMPLETE
 
 
 class CardType(Enum):
     """
-        CardType
+    CardType
 
-        Attributes:
-            FIRST_YELLOW: First yellow card
-            SECOND_YELLOW: Second yellow card
-            RED: Red card
+    Attributes:
+        FIRST_YELLOW (CardType): First yellow card
+        SECOND_YELLOW (CardType): Second yellow card
+        RED (CardType): Red card
     """
+
     FIRST_YELLOW = "FIRST_YELLOW"
     SECOND_YELLOW = "SECOND_YELLOW"
     RED = "RED"
 
 
 class EventType(Enum):
+    """
+    Attributes:
+        GENERIC (EventType): Unrecognised event type
+        PASS (EventType):
+        SHOT (EventType):
+        TAKE_ON (EventType):
+        CARRY (EventType):
+        SUBSTITUTION (EventType):
+        CARD (EventType):
+        PLAYER_ON (EventType):
+        PLAYER_OFF (EventType):
+        RECOVERY (EventType):
+        BALL_OUT (EventType):
+        FOUL_COMMITTED (EventType):
+    """
+
     GENERIC = "generic"
 
     PASS = "PASS"
@@ -99,6 +170,9 @@ class Qualifier(ABC):
 
     @abstractmethod
     def to_dict(self):
+        """
+        Return the qualifier as a dict
+        """
         pass
 
     @property
@@ -124,6 +198,18 @@ class EnumQualifier(Qualifier, ABC):
 
 
 class SetPieceType(Enum):
+    """
+    SetPieceType
+
+    Attributes:
+        GOAL_KICK (SetPieceType):
+        FREE_KICK (SetPieceType):
+        THROW_IN (SetPieceType):
+        CORNER_KICK (SetPieceType):
+        PENALTY (SetPieceType):
+        KICK_OFF (SetPieceType):
+    """
+
     GOAL_KICK = "GOAL_KICK"
     FREE_KICK = "FREE_KICK"
     THROW_IN = "THROW_IN"
@@ -134,10 +220,30 @@ class SetPieceType(Enum):
 
 @dataclass
 class SetPieceQualifier(EnumQualifier):
+    """
+    SetPieceQualifier
+
+    Attributes:
+        value: Specifies the type of set piece
+    """
+
     value: SetPieceType
 
 
 class PassType(Enum):
+    """
+    PassType
+
+    Attributes:
+        CROSS (PassType):
+        HAND_PASS (PassType):
+        HEAD_PASS (PassType):
+        HIGH_PASS (PassType):
+        LAUNCH (PassType):
+        SIMPLE_PASS (PassType):
+        SMART_PASS (PassType):
+    """
+
     CROSS = "CROSS"
     HAND_PASS = "HAND_PASS"
     HEAD_PASS = "HEAD_PASS"
@@ -153,6 +259,15 @@ class PassQualifier(EnumQualifier):
 
 
 class BodyPart(Enum):
+    """
+    BodyPart
+
+    Attributes:
+        RIGHT_FOOT (BodyPart):
+        LEFT_FOOT (BodyPart):
+        HEAD (BodyPart):
+    """
+
     RIGHT_FOOT = "RIGHT_FOOT"
     LEFT_FOOT = "LEFT_FOOT"
     HEAD = "HEAD"
@@ -179,7 +294,21 @@ class CounterAttackQualifier(BoolQualifier):
 
 
 @dataclass
+@docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
+    """
+    Event
+
+    Attributes:
+        event_id: str
+        team: Team
+        player: See [`Player`][kloppy.domain.models.common.Player]
+        coordinates: Point
+        raw_event: Dict
+        state: Dict[str, Any]
+        qualifiers: See [`Qualifier`][kloppy.domain.models.event.Qualifier]
+    """
+
     event_id: str
     team: Team
     player: Player
@@ -207,6 +336,18 @@ class Event(DataRecord, ABC):
         return cls(**kwargs, state={})
 
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
+        """
+        Returns the Qualifier of a certain type, or None if qualifier is not present.
+
+        Arguments:
+            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
+                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
+
+        Examples:
+            >>> from kloppy.domain import SetPieceQualifier
+            >>> pass_event.get_qualifier_value(SetPieceQualifier)
+            <SetPieceType.GOAL_KICK: 'GOAL_KICK'>
+        """
         if self.qualifiers:
             for qualifier in self.qualifiers:
                 if isinstance(qualifier, qualifier_type):
@@ -215,13 +356,33 @@ class Event(DataRecord, ABC):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class GenericEvent(Event):
-    event_name: str = "generic"
+    """
+    GenericEvent
+
+    Attributes:
+        event_type (EventType): `EventType.GENERIC` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"generic"`
+    """
+
     event_type: EventType = EventType.GENERIC
+    event_name: str = "generic"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class ShotEvent(Event):
+    """
+    ShotEvent
+
+    Attributes:
+        event_type (EventType): `EventType.SHOT` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"shot"`,
+        result_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
+        result (ShotResult): See [`ShotResult`][kloppy.domain.models.event.ShotResult]
+    """
+
     result: ShotResult
     result_coordinates: Point = None
 
@@ -230,7 +391,20 @@ class ShotEvent(Event):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class PassEvent(Event):
+    """
+    PassEvent
+
+    Attributes:
+        event_type (EventType): `EventType.PASS` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"pass"`
+        receive_timestamp (float):
+        receiver_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
+        receiver_player (Player): See [`Player`][kloppy.domain.models.common.Player]
+        result (PassResult): See [`PassResult`][kloppy.domain.models.event.PassResult]
+    """
+
     receive_timestamp: float
     receiver_player: Player
     receiver_coordinates: Point
@@ -242,15 +416,37 @@ class PassEvent(Event):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
+    """
+    TakeOnEvent
+
+    Attributes:
+        event_type (EventType): `EventType.TAKE_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"take_on"`,
+        result (TakeOnResult): See [`TakeOnResult`][kloppy.domain.models.event.TakeOnResult]
+    """
+
     result: TakeOnResult
 
     event_type: EventType = EventType.TAKE_ON
-    event_name: str = "take-on"
+    event_name: str = "take_on"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class CarryEvent(Event):
+    """
+    CarryEvent
+
+    Attributes:
+        event_type (EventType): `EventType.CARRY` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"carry"`,
+        end_timestamp (float):
+        end_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
+        result (CarryResult): See [`CarryResult`][kloppy.domain.models.event.CarryResult]
+    """
+
     end_timestamp: float
     end_coordinates: Point
 
@@ -261,7 +457,17 @@ class CarryEvent(Event):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
+    """
+    SubstitutionEvent
+
+    Attributes:
+        event_type (EventType): `EventType.SUBSTITUTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"substitution"`,
+        replacement_player (Player): See [`Player`][kloppy.domain.models.common.Player]
+    """
+
     replacement_player: Player
 
     event_type: EventType = EventType.SUBSTITUTION
@@ -269,32 +475,47 @@ class SubstitutionEvent(Event):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class PlayerOffEvent(Event):
+    """
+    PlayerOffEvent
+
+    Attributes:
+        event_type (EventType): `EventType.PLAYER_OFF` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"player_off"`
+    """
+
     event_type: EventType = EventType.PLAYER_OFF
     event_name: str = "player_off"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class PlayerOnEvent(Event):
+    """
+    PlayerOnEvent
+
+    Attributes:
+        event_type (EventType): `EventType.PLAYER_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"player_on"`
+    """
+
     event_type: EventType = EventType.PLAYER_ON
     event_name: str = "player_on"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
+    CardEvent
 
     Attributes:
-        event_id: str
-        team: Team
-        player: Player
-        coordinates: Point
-        result: Union[ResultType, None]
-        raw_event: Dict
-        state: Dict[str, Any]
-        qualifiers: See [`Qualifier`][kloppy.domain.models.event.Qualifier]
-        card_type: See [CardType][kloppy.domain.models.event.CardType]
+        event_type (EventType): `EventType.CARD` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"card"`
+        card_type: See [`CardType`][kloppy.domain.models.event.CardType]
     """
+
     card_type: CardType
 
     event_type: EventType = EventType.CARD
@@ -302,25 +523,62 @@ class CardEvent(Event):
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
+    """
+    RecoveryEvent
+
+    Attributes:
+        event_type (EventType): `EventType.RECOVERY` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "recovery"
+    """
+
     event_type: EventType = EventType.RECOVERY
     event_name: str = "recovery"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class BallOutEvent(Event):
+    """
+    BallOutEvent
+
+    Attributes:
+        event_type (EventType): `EventType.BALL_OUT` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "ball_out"
+    """
+
     event_type: EventType = EventType.BALL_OUT
     event_name: str = "ball_out"
 
 
 @dataclass
+@docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
+    """
+    FoulCommittedEvent
+
+    Attributes:
+        event_type (EventType): `EventType.FOUL_COMMITTED` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "foul_committed"
+    """
+
     event_type: EventType = EventType.FOUL_COMMITTED
     event_name: str = "foul_committed"
 
 
 @dataclass
 class EventDataset(Dataset):
+    """
+    EventDataset
+
+    Attributes:
+        metadata: See [`Metadata`][kloppy.domain.models.common.Metadata]
+        records (List[Event]): See [`Event`][kloppy.domain.models.event.Event]
+        dataset_type: `DatasetType.EVENT` (See [`DatasetType`][kloppy.domain.models.common.DatasetType])
+        events: alias for `records`
+    """
+
     records: List[
         Union[
             GenericEvent,
@@ -342,6 +600,9 @@ class EventDataset(Dataset):
         return self.records
 
     def add_state(self, *args, **kwargs):
+        """
+        See [add_state][kloppy.domain.services.state_builder.add_state]
+        """
         from kloppy import add_state
 
         return add_state(self, *args, **kwargs)

@@ -15,7 +15,7 @@ Please [open a ticket](https://github.com/PySport/kloppy/issues) when you like t
 ||TakeOn|✓|✓||✓|✓|✓|
 ||Carry|✓|||✓||
 ||Substitution|||✓|✓||
-||PlayerOn/PlayerOff||||✓||
+||PlayerOn/Off||||✓||
 ||Card|||✓|✓|✓|
 ||Recovery|✓|✓|✓|✓|✓|
 ||BallOut|✓[^2]|✓|✓[^2]|✓|✓|

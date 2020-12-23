@@ -318,6 +318,7 @@ __all__ = [
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "load_sportec_event_data",
+    "load_wyscout_event_data",
     "to_pandas",
     "transform",
 ]

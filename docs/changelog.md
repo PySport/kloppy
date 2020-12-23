@@ -2,6 +2,11 @@
 
 Find out all changes between different kloppy versions
 
+## 1.5.0 (2020-12-23)
+Pull requests merged:
+
+- Add length and width to PitchDimensions ([#77](https://github.com/PySport/kloppy/pull/77))
+- Wyscout event data serializer ([#79](https://github.com/PySport/kloppy/pull/79))
 
 ## 1.4.2 - 1.4.4 (2020-11-24)
 

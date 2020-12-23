@@ -36,6 +36,8 @@ from kloppy.domain import (
     TakeOnEvent,
     TakeOnResult,
     Team,
+    EventType,
+    Event,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -256,7 +258,11 @@ def _parse_takeon(raw_event: Dict) -> Dict:
 
 
 def _players_to_dict(players: List[Player]):
-    return dict([(p.player_id, p) for p in players])
+    return {player.player_id: player for player in players}
+
+
+def _include_event(event: Event, wanted_event_types: List) -> bool:
+    return not wanted_event_types or event.event_type in wanted_event_types
 
 
 class WyscoutSerializer(EventDataSerializer):
@@ -271,6 +277,11 @@ class WyscoutSerializer(EventDataSerializer):
 
         if not options:
             options = {}
+
+        wanted_event_types = [
+            EventType[event_type.upper()]
+            for event_type in options.get("event_types", [])
+        ]
 
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs["event_data"])
@@ -328,44 +339,35 @@ class WyscoutSerializer(EventDataSerializer):
                     "timestamp": raw_event["eventSec"],
                 }
 
+                event = None
                 if raw_event["eventName"] == wyscout_events.SHOT.EVENT:
                     shot_event_args = _parse_shot(raw_event, next_event)
-                    events.append(
-                        ShotEvent.create(
-                            **shot_event_args, **generic_event_args
-                        )
+                    event = ShotEvent.create(
+                        **shot_event_args, **generic_event_args
                     )
                 elif raw_event["eventName"] == wyscout_events.PASS.EVENT:
                     pass_event_args = _parse_pass(raw_event, next_event)
-                    events.append(
-                        PassEvent.create(
-                            **pass_event_args, **generic_event_args
-                        )
+                    event = PassEvent.create(
+                        **pass_event_args, **generic_event_args
                     )
                 elif raw_event["eventName"] == wyscout_events.FOUL.EVENT:
                     foul_event_args = _parse_foul(raw_event)
-                    events.append(
-                        FoulCommittedEvent.create(
-                            **foul_event_args, **generic_event_args
-                        )
+                    event = FoulCommittedEvent.create(
+                        **foul_event_args, **generic_event_args
                     )
                     if any(
                         (_has_tag(raw_event, tag) for tag in wyscout_tags.CARD)
                     ):
                         card_event_args = _parse_card(raw_event)
-                        events.append(
-                            CardEvent.create(
-                                **card_event_args, **generic_event_args
-                            )
+                        event = CardEvent.create(
+                            **card_event_args, **generic_event_args
                         )
                 elif (
                     raw_event["eventName"] == wyscout_events.INTERRUPTION.EVENT
                 ):
                     ball_out_event_args = _parse_ball_out(raw_event)
-                    events.append(
-                        BallOutEvent.create(
-                            **ball_out_event_args, **generic_event_args
-                        )
+                    event = BallOutEvent.create(
+                        **ball_out_event_args, **generic_event_args
                     )
                 elif raw_event["eventName"] == wyscout_events.FREE_KICK.EVENT:
                     set_piece_event_args = _parse_set_piece(
@@ -375,19 +377,15 @@ class WyscoutSerializer(EventDataSerializer):
                         raw_event["subEventName"]
                         in wyscout_events.FREE_KICK.PASS_TYPES
                     ):
-                        events.append(
-                            PassEvent.create(
-                                **set_piece_event_args, **generic_event_args
-                            )
+                        event = PassEvent.create(
+                            **set_piece_event_args, **generic_event_args
                         )
                     elif (
                         raw_event["subEventName"]
                         in wyscout_events.FREE_KICK.SHOT_TYPES
                     ):
-                        events.append(
-                            ShotEvent.create(
-                                **set_piece_event_args, **generic_event_args
-                            )
+                        event = ShotEvent.create(
+                            **set_piece_event_args, **generic_event_args
                         )
 
                 elif (
@@ -395,17 +393,13 @@ class WyscoutSerializer(EventDataSerializer):
                     == wyscout_events.OTHERS_ON_BALL.EVENT
                 ):
                     recovery_event_args = _parse_recovery(raw_event)
-                    events.append(
-                        RecoveryEvent.create(
-                            **recovery_event_args, **generic_event_args
-                        )
+                    event = RecoveryEvent.create(
+                        **recovery_event_args, **generic_event_args
                     )
                 elif raw_event["eventName"] == wyscout_events.DUEL.EVENT:
                     takeon_event_args = _parse_takeon(raw_event)
-                    events.append(
-                        TakeOnEvent.create(
-                            **takeon_event_args, **generic_event_args
-                        )
+                    event = TakeOnEvent.create(
+                        **takeon_event_args, **generic_event_args
                     )
                 elif raw_event["eventName"] not in [
                     wyscout_events.SAVE.EVENT,
@@ -413,16 +407,17 @@ class WyscoutSerializer(EventDataSerializer):
                 ]:
                     # The events SAVE and OFFSIDE are already merged with PASS and SHOT events
                     qualifiers = _generic_qualifiers(raw_event)
-                    events.append(
-                        GenericEvent.create(
-                            result=None,
-                            qualifiers=qualifiers,
-                            **generic_event_args
-                        )
+                    event = GenericEvent.create(
+                        result=None,
+                        qualifiers=qualifiers,
+                        **generic_event_args
                     )
 
+                if event and _include_event(event, wanted_event_types):
+                    events.append(event)
+
         metadata = Metadata(
-            teams=teams.values(),
+            teams=[home_team, away_team],
             periods=periods,
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)

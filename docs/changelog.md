@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 1.5.1 (2020-12-23):
+
+Pull request merged:
+
+- Fix for setup ([#80](https://github.com/PySport/kloppy/pull/80))
+
 ## 1.5.0 (2020-12-23)
 Pull requests merged:
 

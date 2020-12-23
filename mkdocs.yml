@@ -18,6 +18,7 @@ nav:
     - Tracking Data: quickstart/tracking_data.ipynb
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
+  - Providers: 'providers.md'
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'
   - Sponsors: 'sponsors.md'
@@ -35,3 +36,4 @@ markdown_extensions:
       use_pygments: true
       linenums: true
       linenums_style: table
+  - footnotes

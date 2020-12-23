@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from .pitch import PitchDimensions, Point
 
@@ -27,6 +27,7 @@ class Provider(Enum):
     OPTA = "opta"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
+    WYSCOUT = "wyscout"
 
     def __str__(self):
         return self.value
@@ -142,7 +143,7 @@ class Orientation(Enum):
         attacking_direction: AttackingDirection,
         ball_owning_team: Team,
         action_executing_team: Team,
-    ):
+    ) -> int:
         if self == Orientation.FIXED_HOME_AWAY:
             return -1
         elif self == Orientation.FIXED_AWAY_HOME:

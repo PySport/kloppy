@@ -1,12 +1,13 @@
-from .tracking import (
-    TrackingDataSerializer,
-    TRACABSerializer,
-    MetricaTrackingSerializer,
-    EPTSSerializer,
-)
 from .event import (
-    StatsBombSerializer,
-    OptaSerializer,
     MetricaEventsJsonSerializer,
+    OptaSerializer,
     SportecEventSerializer,
+    StatsBombSerializer,
+    WyscoutSerializer,
+)
+from .tracking import (
+    EPTSSerializer,
+    MetricaTrackingSerializer,
+    TRACABSerializer,
+    TrackingDataSerializer,
 )

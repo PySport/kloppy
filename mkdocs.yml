@@ -19,7 +19,13 @@ nav:
     - Tracking Data: quickstart/tracking_data.ipynb
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
-  - API: 'api.md'
+  - API Reference:
+    - Loaders: api/loading_data.md
+    - Domain:
+      - Common: api/domain/common.md
+      - Pitch: api/domain/pitch.md
+      - Tracking: api/domain/tracking.md
+      - Event: api/domain/event.md
   - Providers: 'providers.md'
   - Issues: 'issues.md'
   - Contributing: 'contributing.md'
@@ -32,6 +38,16 @@ plugins:
   - mkdocs-jupyter:
       include_source: True
   - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_source: true
+            show_root_heading: true
+            heading_level: 4
+      watch:
+        - kloppy
 
 markdown_extensions:
   - pymdownx.highlight:

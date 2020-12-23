@@ -80,6 +80,14 @@ def load_epts_tracking_data(
 def load_statsbomb_event_data(
     event_data_filename: str, lineup_data_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+        Load Statsbomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+        Parameters:
+            event_data_filename: filename
+            lineup_data_filename:
+            options: `{"event_types": ["pass", "shot", etc]}`
+    """
     serializer = StatsBombSerializer()
     with open(event_data_filename, "rb") as event_data, open(
         lineup_data_filename, "rb"

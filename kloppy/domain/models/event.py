@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Type, Union
+from typing import Dict, List, Type, Union, Any
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import camelcase_to_snakecase, removes_suffix
@@ -61,6 +61,14 @@ class CarryResult(ResultType):
 
 
 class CardType(Enum):
+    """
+        CardType
+
+        Attributes:
+            FIRST_YELLOW: First yellow card
+            SECOND_YELLOW: Second yellow card
+            RED: Red card
+    """
     FIRST_YELLOW = "FIRST_YELLOW"
     SECOND_YELLOW = "SECOND_YELLOW"
     RED = "RED"
@@ -80,6 +88,9 @@ class EventType(Enum):
     RECOVERY = "RECOVERY"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+
+    def __repr__(self):
+        return self.value
 
 
 @dataclass
@@ -177,7 +188,7 @@ class Event(DataRecord, ABC):
     result: Union[ResultType, None]
 
     raw_event: Dict
-    state: Dict[str, any]
+    state: Dict[str, Any]
 
     qualifiers: List[Qualifier]
 
@@ -271,6 +282,19 @@ class PlayerOnEvent(Event):
 
 @dataclass
 class CardEvent(Event):
+    """
+
+    Attributes:
+        event_id: str
+        team: Team
+        player: Player
+        coordinates: Point
+        result: Union[ResultType, None]
+        raw_event: Dict
+        state: Dict[str, Any]
+        qualifiers: See [`Qualifier`][kloppy.domain.models.event.Qualifier]
+        card_type: See [CardType][kloppy.domain.models.event.CardType]
+    """
     card_type: CardType
 
     event_type: EventType = EventType.CARD

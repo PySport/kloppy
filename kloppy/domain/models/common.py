@@ -13,6 +13,13 @@ class Score:
 
 
 class Ground(Enum):
+    """
+        Attributes:
+            HOME: home playing team
+            AWAY: away playing team
+            REFEREE: Referee (could be used in tracking data)
+    """
+
     HOME = "home"
     AWAY = "away"
     REFEREE = "referee"
@@ -20,8 +27,20 @@ class Ground(Enum):
     def __str__(self):
         return self.value
 
+    def __repr__(self):
+        return self.value
+
 
 class Provider(Enum):
+    """
+    Attributes:
+        METRICA:
+        TRACAB:
+        OPTA:
+        STATSBOMB:
+        SPORTEC:
+        WYSCOUT:
+    """
     METRICA = "metrica"
     TRACAB = "tracab"
     OPTA = "opta"
@@ -45,6 +64,18 @@ class Position:
 
 @dataclass(frozen=True)
 class Player:
+    """
+    Attributes:
+        player_id: identifier given by the provider
+        team: See [`Team`][kloppy.domain.models.common.Team]
+        jersey_no: Jersey number
+        name: Full name of the player
+        first_name: First name
+        last_name: Last name
+        starting: `True` when player is part of the starting 11
+        position: See [`Position][kloppy.domain.models.common.Position]
+        attributes: attributes given by the provider
+    """
     player_id: str
     team: "Team"
     jersey_no: int
@@ -78,6 +109,14 @@ class Player:
 
 @dataclass
 class Team:
+    """
+
+    Attributes:
+        team_id: id of the team, given by the provider
+        name: readable name of the team
+        ground: See [`Ground`][kloppy.domain.models.common.Ground]
+        players: See [`Player`][kloppy.domain.models.common.Player]
+    """
     team_id: str
     name: str
     ground: Ground
@@ -236,6 +275,9 @@ class Metadata:
 class DatasetType(Enum):
     TRACKING = "TRACKING"
     EVENT = "EVENT"
+
+    def __repr__(self):
+        return self.value
 
 
 @dataclass

@@ -4,6 +4,11 @@ from math import sqrt
 
 @dataclass
 class Dimension:
+    """
+    Attributes:
+        min: Minimal possible value within this dimension
+        max: Maximal possible value within this dimension
+    """
     min: float
     max: float
 
@@ -16,6 +21,13 @@ class Dimension:
 
 @dataclass
 class PitchDimensions:
+    """
+        Attributes:
+            x_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
+            y_dim: See [`Dimension`][kloppy.domain.models.pitch.Dimension]
+            x_per_meter: number of units per meter in the x dimension
+            y_per_meter: number of units per meter in the y dimension
+    """
     x_dim: Dimension
     y_dim: Dimension
     x_per_meter: float = None
@@ -40,6 +52,11 @@ class PitchDimensions:
 
 @dataclass(frozen=True)
 class Point:
+    """
+    Attributes:
+        x: x coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
+        y: y coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
+    """
     x: float
     y: float
 

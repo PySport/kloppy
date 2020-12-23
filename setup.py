@@ -2,14 +2,14 @@ import setuptools
 
 from distutils.core import setup
 
-import kloppy
+import kloppy.version
 
 with open("README.md", "r") as f:
     readme = f.read()
 
 setup(
     name="kloppy",
-    version=kloppy.__version__,
+    version=kloppy.version.__version__,
     author="Koen Vossen",
     author_email="info@koenvossen.nl",
     url="https://kloppy.pysport.org/",

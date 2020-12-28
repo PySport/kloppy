@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, TypeVar, Union
+from typing import Callable, Dict, List, TypeVar, Union, Any
 
 from . import (
     EPTSSerializer,
@@ -80,6 +80,14 @@ def load_epts_tracking_data(
 def load_statsbomb_event_data(
     event_data_filename: str, lineup_data_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+    Load Statsbomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        event_data_filename: filename of json containing the events
+        lineup_data_filename: filename of json containing the lineup information
+        options:
+    """
     serializer = StatsBombSerializer()
     with open(event_data_filename, "rb") as event_data, open(
         lineup_data_filename, "rb"
@@ -94,6 +102,14 @@ def load_statsbomb_event_data(
 def load_opta_event_data(
     f24_data_filename: str, f7_data_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+    Load Opta event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        f24_data_filename: filename of the f24 XML file containing the events
+        f7_data_filename: filename of the f7 XML file containing metadata
+        options:
+    """
     serializer = OptaSerializer()
     with open(f24_data_filename, "rb") as f24_data, open(
         f7_data_filename, "rb"
@@ -108,6 +124,14 @@ def load_opta_event_data(
 def load_metrica_json_event_data(
     raw_data_filename: str, metadata_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+    Load Metrica event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        raw_data_filename: filename of the json file containing the events
+        metadata_filename: filename of the EPTS XML file containing metadata
+        options:
+    """
     serializer = MetricaEventsJsonSerializer()
     with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
@@ -122,6 +146,14 @@ def load_metrica_json_event_data(
 def load_sportec_event_data(
     event_data_filename: str, match_data_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+    Load Sportec event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        event_data_filename: filename of the XML file containing the events
+        match_data_filename: filename of the XML file containing the match information
+        options:
+    """
     serializer = SportecEventSerializer()
     with open(event_data_filename, "rb") as event_data, open(
         match_data_filename, "rb"
@@ -136,6 +168,13 @@ def load_sportec_event_data(
 def load_wyscout_event_data(
     event_data_filename: str, options: dict = None
 ) -> EventDataset:
+    """
+    Load Wyscout event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        event_data_filename: filename of the XML file containing the events and metadata
+        options:
+    """
     serializer = WyscoutSerializer()
     with open(event_data_filename, "rb") as event_data:
         return serializer.deserialize(
@@ -262,9 +301,24 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
 
 def to_pandas(
     dataset: Union[Dataset, List[DataRecord]],
-    _record_converter: Callable = None,
-    additional_columns: Dict = None,
+    _record_converter: Callable[[DataRecord], Dict] = None,
+    additional_columns: Dict[
+        str, Union[Callable[[DataRecord], Any], Any]
+    ] = None,
 ) -> "DataFrame":
+    """
+    Convert Dataset to a pandas dataframe
+
+    Arguments:
+        dataset: Dataset to operate on. Don't pass this argument when you do dataset.to_pandas()
+        _record_converter: Custom converter to go from record to DataRecord to Dict
+        additional_columns: Additional columns to add to the dataframe
+
+    Examples:
+        >>> dataframe = dataset.to_pandas(additional_columns={
+        >>>    'player_name': lambda event: event.player.name
+        >>> })
+    """
     try:
         import pandas as pd
     except ImportError:

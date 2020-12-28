@@ -10,17 +10,17 @@ Please [open a ticket](https://github.com/PySport/kloppy/issues) when you like t
 |-|-|:-:|:-:|:-:|:-:|:-:|
 |**File format**||JSON|XML|XML|JSON|JSON|
 |**Event types**|
-||Pass|✓|✓|✓|✓|✓|
-||Shot|✓|✓|✓|✓|✓|
-||TakeOn|✓|✓||✓|✓|✓|
-||Carry|✓|||✓||
-||Substitution|||✓|✓||
-||PlayerOn/Off||||✓||
-||Card|||✓|✓|✓|
-||Recovery|✓|✓|✓|✓|✓|
-||BallOut|✓[^2]|✓|✓[^2]|✓|✓|
-||FoulCommitted|✓|✓|✓|✓|✓|
-||Generic[^1]|✓|✓|✓|✓|✓|s
+||[Pass][kloppy.domain.models.event.PassEvent]|✓|✓|✓|✓|✓|
+||[Shot][kloppy.domain.models.event.ShotEvent]|✓|✓|✓|✓|✓|
+||[TakeOn][kloppy.domain.models.event.TakeOnEvent]|✓|✓||✓|✓|✓|
+||[Carry][kloppy.domain.models.event.CarryEvent]|✓|||✓||
+||[Substitution][kloppy.domain.models.event.SubstitutionEvent]|||✓|✓||
+||[PlayerOn][kloppy.domain.models.event.PlayerOnEvent]/[Off][kloppy.domain.models.event.PlayerOffEvent]||||✓||
+||[Card][kloppy.domain.models.event.CardEvent]|||✓|✓|✓|
+||[Recovery][kloppy.domain.models.event.RecoveryEvent]|✓|✓|✓|✓|✓|
+||[BallOut][kloppy.domain.models.event.BallOutEvent]|✓|✓|✓[^2]|✓|✓|
+||[FoulCommitted][kloppy.domain.models.event.FoulCommittedEvent]|✓|✓|✓|✓|✓|
+||[Generic][kloppy.domain.models.event.GenericEvent][^1]|✓|✓|✓|✓|✓|s
 |**Qualifiers**|
 ||SetPiece|✓[^3]|✓[^3]|✓[^3]|✓[^3]|✓[^3]
 ||BodyPart|||||`RightFoot` `LeftFoot`

@@ -9,6 +9,18 @@ from .registered import create_state_builder
 
 
 def add_state(dataset: EventDataset, *builder_keys: List[str]) -> EventDataset:
+    """
+    Add state
+
+    Arguments:
+        - builder_keys: `lineup` `score` `sequence`
+
+    Examples:
+        >>> dataset = dataset.add_state('lineup', 'score')
+
+    Returns:
+        [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    """
     if len(builder_keys) == 1 and isinstance(builder_keys[0], list):
         builder_keys = builder_keys[0]
 

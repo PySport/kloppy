@@ -1,18 +1,33 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Callable, Union, Any
 
 from .pitch import PitchDimensions, Point
 
 
 @dataclass
 class Score:
+    """
+    Score
+
+    Attributes:
+        home:
+        away:
+    """
+
     home: int
     away: int
 
 
 class Ground(Enum):
+    """
+    Attributes:
+        HOME: home playing team
+        AWAY: away playing team
+        REFEREE: Referee (could be used in tracking data)
+    """
+
     HOME = "home"
     AWAY = "away"
     REFEREE = "referee"
@@ -20,8 +35,21 @@ class Ground(Enum):
     def __str__(self):
         return self.value
 
+    def __repr__(self):
+        return self.value
+
 
 class Provider(Enum):
+    """
+    Attributes:
+        METRICA:
+        TRACAB:
+        OPTA:
+        STATSBOMB:
+        SPORTEC:
+        WYSCOUT:
+    """
+
     METRICA = "metrica"
     TRACAB = "tracab"
     OPTA = "opta"
@@ -45,6 +73,19 @@ class Position:
 
 @dataclass(frozen=True)
 class Player:
+    """
+    Attributes:
+        player_id: identifier given by the provider
+        team: See [`Team`][kloppy.domain.models.common.Team]
+        jersey_no: Jersey number
+        name: Full name of the player
+        first_name: First name
+        last_name: Last name
+        starting: `True` when player is part of the starting 11
+        position: See [`Position][kloppy.domain.models.common.Position]
+        attributes: attributes given by the provider
+    """
+
     player_id: str
     team: "Team"
     jersey_no: int
@@ -78,6 +119,15 @@ class Player:
 
 @dataclass
 class Team:
+    """
+
+    Attributes:
+        team_id: id of the team, given by the provider
+        name: readable name of the team
+        ground: See [`Ground`][kloppy.domain.models.common.Ground]
+        players: See [`Player`][kloppy.domain.models.common.Player]
+    """
+
     team_id: str
     name: str
     ground: Ground
@@ -113,14 +163,37 @@ class Team:
 
 
 class BallState(Enum):
+    """
+    BallState
+
+    Attributes:
+        ALIVE (BallState): Ball is in play
+        DEAD (BallState): Ball is not in play
+    """
+
     ALIVE = "alive"
     DEAD = "dead"
 
+    def __repr__(self):
+        return self.value
+
 
 class AttackingDirection(Enum):
-    HOME_AWAY = "home-away"  # home L -> R, away R -> L
-    AWAY_HOME = "away-home"  # home R -> L, away L -> R
-    NOT_SET = "not-set"  # not set yet
+    """
+    AttackingDirection
+
+    Attributes:
+        HOME_AWAY (AttackingDirection): Home team is playing from left to right
+        AWAY_HOME (AttackingDirection): Home team is playing from right to left
+        NOT_SET (AttackingDirection): not set yet
+    """
+
+    HOME_AWAY = "home-away"
+    AWAY_HOME = "away-home"
+    NOT_SET = "not-set"
+
+    def __repr__(self):
+        return self.value
 
 
 class Orientation(Enum):
@@ -183,9 +256,22 @@ class Orientation(Enum):
         else:
             raise Exception(f"Unknown orientation: {self}")
 
+    def __repr__(self):
+        return self.value
+
 
 @dataclass
 class Period:
+    """
+    Period
+
+    Attributes:
+        id: `1` for first half, `2` for second half
+        start_timestamp: timestamp given by provider (can be unix timestamp or relative)
+        end_timestamp: timestamp given by provider (can be unix timestamp or relative)
+        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
+    """
+
     id: int
     start_timestamp: float
     end_timestamp: float
@@ -215,6 +301,16 @@ class DatasetFlag(Flag):
 
 @dataclass
 class DataRecord(ABC):
+    """
+    DataRecord
+
+    Attributes:
+        period (Period):
+        timestamp (float):
+        ball_owning_team (Team):
+        ball_state (BallState):
+    """
+
     period: Period
     timestamp: float
     ball_owning_team: Team
@@ -223,6 +319,20 @@ class DataRecord(ABC):
 
 @dataclass
 class Metadata:
+    """
+    Metadata
+
+    Attributes:
+        teams: `[home_team, away_team]`. See [`Team`][kloppy.domain.models.common.Team]
+        periods: See [`Period`][kloppy.domain.models.common.Period]
+        pitch_dimensions: See [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
+        score: See [`Score`][kloppy.domain.models.common.Score]
+        frame_rate:
+        orientation: See [`Orientation`][kloppy.domain.models.common.Orientation]
+        flags:
+        provider: See [`Provider`][kloppy.domain.models.common.Provider]
+    """
+
     teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
@@ -234,12 +344,32 @@ class Metadata:
 
 
 class DatasetType(Enum):
+    """
+    DatasetType
+
+    Attributes:
+        TRACKING (DatasetType):
+        EVENT (DatasetType):
+    """
+
     TRACKING = "TRACKING"
     EVENT = "EVENT"
+
+    def __repr__(self):
+        return self.value
 
 
 @dataclass
 class Dataset(ABC):
+    """
+    Dataset
+
+    Attributes:
+        records:
+        metadata: Metadata for this Dataset
+
+    """
+
     records: List[DataRecord]
     metadata: Metadata
 
@@ -249,16 +379,36 @@ class Dataset(ABC):
         raise NotImplementedError
 
     def to_pandas(self, *args, **kwargs):
+        """
+        See [to_pandas][kloppy.helpers.to_pandas]
+        """
         from kloppy import to_pandas
 
-        return to_pandas(self, *args, **kwargs)
+        return to_pandas(
+            self,
+            *args,
+            **kwargs,
+        )
 
     def transform(self, *args, **kwargs):
+        """
+        See [transform][kloppy.helpers.transform]
+        """
         from kloppy import transform
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_fn):
+    def filter(self, filter_fn: Callable[[DataRecord], bool]):
+        """
+        Filter all records used `filter_fn`
+
+        Arguments:
+            - filter_fn:
+
+        Examples:
+            >>> from kloppy.domain import EventType
+            >>> dataset = dataset.filter(lambda event: event.event_type == EventType.PASS)
+        """
         return replace(
             self,
             records=[record for record in self.records if filter_fn(record)],

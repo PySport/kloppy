@@ -20,7 +20,7 @@ nav:
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
   - API Reference:
-    - Loaders: api/loading_data.md
+    - Helpers: api/helpers.md
     - Domain:
       - Common: api/domain/common.md
       - Pitch: api/domain/pitch.md

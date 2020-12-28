@@ -12,6 +12,7 @@
 ## Events
 
 ### Event base class
+
 ::: kloppy.domain.models.event.Event
 
 ::: kloppy.domain.models.event.ShotEvent

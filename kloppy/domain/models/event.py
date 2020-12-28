@@ -297,13 +297,13 @@ class CounterAttackQualifier(BoolQualifier):
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
     """
-    Event
+    Abstract event baseclass. All other event classes inherit from this class.
 
     Attributes:
-        event_id: str
-        team: Team
+        event_id: identifier given by provider
+        team: See [`Team`][kloppy.domain.models.common.Team]
         player: See [`Player`][kloppy.domain.models.common.Player]
-        coordinates: Point
+        coordinates: Coordinates where event happened. See [`Point`][kloppy.domain.models.pitch.Point]
         raw_event: Dict
         state: Dict[str, Any]
         qualifiers: See [`Qualifier`][kloppy.domain.models.event.Qualifier]

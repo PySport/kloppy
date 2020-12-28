@@ -305,10 +305,10 @@ class DataRecord(ABC):
     DataRecord
 
     Attributes:
-        period (Period):
-        timestamp (float):
-        ball_owning_team (Team):
-        ball_state (BallState):
+        period: See [`Period`][kloppy.domain.models.common.Period]
+        timestamp: Timestamp of occurrence
+        ball_owning_team: See [`Team`][kloppy.domain.models.common.Team]
+        ball_state: See [`Team`][kloppy.domain.models.common.BallState]
     """
 
     period: Period

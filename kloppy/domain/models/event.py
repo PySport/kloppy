@@ -400,15 +400,16 @@ class ShotEvent(Event):
         event_name (str): `"shot"`,
         result_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
         result (ShotResult): See [`ShotResult`][kloppy.domain.models.event.ShotResult]
+        body_part (BodyPartQualifier): body part attributes.
     """
-
-    body_part: BodyPartQualifier
 
     result: ShotResult
     result_coordinates: Point = None
 
     event_type: EventType = EventType.SHOT
     event_name: str = "shot"
+
+    body_part: BodyPartQualifier = None
 
 
 @dataclass
@@ -424,6 +425,7 @@ class PassEvent(Event):
         receiver_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
         receiver_player (Player): See [`Player`][kloppy.domain.models.common.Player]
         result (PassResult): See [`PassResult`][kloppy.domain.models.event.PassResult]
+        body_part (BodyPartQualifier): body part attributes.
     """
 
     receive_timestamp: float
@@ -432,10 +434,10 @@ class PassEvent(Event):
 
     result: PassResult
 
-    body_part: BodyPartQualifier
-
     event_type: EventType = EventType.PASS
     event_name: str = "pass"
+
+    body_part: BodyPartQualifier = None
 
 
 @dataclass

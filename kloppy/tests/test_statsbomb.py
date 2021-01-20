@@ -68,6 +68,10 @@ class TestStatsbomb:
             attacking_direction=AttackingDirection.NOT_SET,
         )
 
+        assert dataset.events[791].body_part.value == "HEAD"
+        assert dataset.events[2231].body_part.value == "RIGHT_FOOT"
+        assert dataset.events[195].body_part is None
+
     def test_substitution(self):
         """
         Test substitution events

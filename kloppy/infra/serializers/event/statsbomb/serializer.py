@@ -38,6 +38,7 @@ from kloppy.domain import (
     FoulCommittedEvent,
     BallOutEvent,
     Event,
+    BodyPart,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -83,6 +84,18 @@ SB_EVENT_TYPE_GOAL_KICK = 63
 
 OUT_EVENT_RESULTS = [PassResult.OUT, TakeOnResult.OUT]
 
+SB_BODYPART_BOTH_HANDS = 35
+SB_BODYPART_CHEST = 36
+SB_BODYPART_HEAD = 37
+SB_BODYPART_LEFT_FOOT = 38
+SB_BODYPART_LEFT_HAND = 39
+SB_BODYPART_RIGHT_FOOT = 40
+SB_BODYPART_RIGHT_HAND = 41
+SB_BODYPART_DROP_KICK = 68
+SB_BODYPART_KEEPER_ARM = 69
+SB_BODYPART_OTHER = 70
+SB_BODYPART_NO_TOUCH = 106
+
 
 def parse_str_ts(timestamp: str) -> float:
     h, m, s = timestamp.split(":")
@@ -105,6 +118,39 @@ def _parse_coordinates(
         x=coordinates[0] - cell_relative_center,
         y=coordinates[1] - cell_relative_center,
     )
+
+
+def _parse_bodypart(event_dict: Dict) -> BodyPart:
+    if "body_part" in event_dict:
+        bodypart_id = event_dict["body_part"]["id"]
+        if bodypart_id == SB_BODYPART_BOTH_HANDS:
+            body_part = BodyPart.BOTH_HANDS
+        elif bodypart_id == SB_BODYPART_CHEST:
+            body_part = BodyPart.CHEST
+        elif bodypart_id == SB_BODYPART_HEAD:
+            body_part = BodyPart.HEAD
+        elif bodypart_id == SB_BODYPART_LEFT_FOOT:
+            body_part = BodyPart.LEFT_FOOT
+        elif bodypart_id == SB_BODYPART_LEFT_HAND:
+            body_part = BodyPart.LEFT_HAND
+        elif bodypart_id == SB_BODYPART_RIGHT_FOOT:
+            body_part = BodyPart.RIGHT_FOOT
+        elif bodypart_id == SB_BODYPART_RIGHT_HAND:
+            body_part = BodyPart.RIGHT_HAND
+        elif bodypart_id == SB_BODYPART_DROP_KICK:
+            body_part = BodyPart.DROP_KICK
+        elif bodypart_id == SB_BODYPART_KEEPER_ARM:
+            body_part = BodyPart.KEEPER_ARM
+        elif bodypart_id == SB_BODYPART_OTHER:
+            body_part = BodyPart.OTHER
+        elif bodypart_id == SB_BODYPART_NO_TOUCH:
+            body_part = BodyPart.NO_TOUCH
+        else:
+            raise Exception(f"Unknown body part: {body_part_id}")
+    else:
+        body_part = None
+
+    return body_part
 
 
 def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
@@ -134,11 +180,14 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
 
     qualifiers = _get_event_qualifiers(pass_dict)
 
+    body_part = _parse_bodypart(pass_dict)
+
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
         receiver_player=receiver_player,
         qualifiers=qualifiers,
+        body_part=body_part,
     )
 
 
@@ -182,7 +231,13 @@ def _parse_shot(shot_dict: Dict) -> Dict:
 
     qualifiers = _get_event_qualifiers(shot_dict)
 
-    return dict(result=result, qualifiers=qualifiers)
+    body_part = _parse_bodypart(shot_dict)
+
+    return dict(
+        result=result,
+        qualifiers=qualifiers,
+        body_part=body_part,
+    )
 
 
 def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:

@@ -260,6 +260,14 @@ class Orientation(Enum):
         return self.value
 
 
+class VerticalOrientation(Enum):
+    # the y axis increases as you go from top to bottom of the pitch
+    TOP_TO_BOTTOM = "top-to-bottom"
+
+    # the y axis decreases as you go from top to bottom of the pitch
+    BOTTOM_TO_TOP = "bottom-to-top"
+
+
 @dataclass
 class Period:
     """
@@ -339,6 +347,7 @@ class Metadata:
     score: Score
     frame_rate: float
     orientation: Orientation
+    vertical_orientation: VerticalOrientation
     flags: DatasetFlag
     provider: Provider
 

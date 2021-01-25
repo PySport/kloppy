@@ -1,5 +1,6 @@
 import logging
 from typing import Tuple, Dict
+from dataclasses import replace
 
 from lxml import objectify
 
@@ -20,6 +21,7 @@ from kloppy.domain import (
     Metadata,
     Ground,
     Player,
+    VerticalOrientation,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class TRACABSerializer(TrackingDataSerializer):
     @classmethod
-    def _frame_from_line(cls, teams, period, line, frame_rate):
+    def _frame_from_line(cls, metadata, period, line, normalize):
         line = str(line)
         frame_id, players, ball = line.strip().split(":")[:3]
 
@@ -41,9 +43,9 @@ class TRACABSerializer(TrackingDataSerializer):
             team_id = int(team_id)
 
             if team_id == 1:
-                team = teams[0]
+                team = metadata.teams[0]
             elif team_id == 0:
-                team = teams[1]
+                team = metadata.teams[1]
             else:
                 # it's probably -1, but make sure it doesn't crash
                 continue
@@ -58,7 +60,21 @@ class TRACABSerializer(TrackingDataSerializer):
                 )
                 team.players.append(player)
 
-            players_coordinates[player] = Point(float(x), float(y))
+            if normalize:
+                x_base = metadata.pitch_dimensions.x_dim.to_base(float(x))
+                y_base = metadata.pitch_dimensions.y_dim.to_base(float(y))
+
+                if (
+                    metadata.vertical_orientation
+                    == VerticalOrientation.BOTTOM_TO_TOP
+                ):
+                    y_base = 1 - y_base
+
+                player_xy = Point(x_base, y_base)
+            else:
+                player_xy = Point(float(x), float(y))
+
+            players_coordinates[player] = player_xy
 
         (
             ball_x,
@@ -72,9 +88,9 @@ class TRACABSerializer(TrackingDataSerializer):
         frame_id = int(frame_id)
 
         if ball_owning_team == "H":
-            ball_owning_team = teams[0]
+            ball_owning_team = metadata.teams[0]
         elif ball_owning_team == "A":
-            ball_owning_team = teams[1]
+            ball_owning_team = metadata.teams[1]
         else:
             raise Exception(f"Unknown ball owning team: {ball_owning_team}")
 
@@ -87,7 +103,7 @@ class TRACABSerializer(TrackingDataSerializer):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_id / frame_rate - period.start_timestamp,
+            timestamp=frame_id / metadata.frame_rate - period.start_timestamp,
             ball_coordinates=Point(float(ball_x), float(ball_y)),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
@@ -154,6 +170,7 @@ class TRACABSerializer(TrackingDataSerializer):
         sample_rate = float(options.get("sample_rate", 1.0))
         limit = int(options.get("limit", 0))
         only_alive = bool(options.get("only_alive", True))
+        normalize = bool(options.get("normalize", True))
 
         # TODO: also used in Metrica, extract to a method
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
@@ -179,6 +196,29 @@ class TRACABSerializer(TrackingDataSerializer):
                         )
                     )
 
+            metadata = Metadata(
+                teams=teams,
+                periods=periods,
+                pitch_dimensions=PitchDimensions(
+                    x_dim=Dimension(
+                        -1 * pitch_size_width / 2, pitch_size_width / 2
+                    ),
+                    y_dim=Dimension(
+                        -1 * pitch_size_height / 2, pitch_size_height / 2
+                    ),
+                    length=pitch_size_width,
+                    width=pitch_size_height,
+                    x_per_meter=100,
+                    y_per_meter=100,
+                ),
+                score=None,
+                frame_rate=frame_rate,
+                orientation=None,
+                vertical_orientation=VerticalOrientation.BOTTOM_TO_TOP,
+                provider=Provider.TRACAB,
+                flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
+            )
+
         with performance_logging("Loading data", logger=logger):
 
             def _iter():
@@ -202,7 +242,9 @@ class TRACABSerializer(TrackingDataSerializer):
 
             frames = []
             for n, (period, line) in enumerate(_iter()):
-                frame = self._frame_from_line(teams, period, line, frame_rate)
+                frame = self._frame_from_line(
+                    metadata, period, line, normalize
+                )
 
                 frames.append(frame)
 
@@ -216,31 +258,25 @@ class TRACABSerializer(TrackingDataSerializer):
                 if limit and n >= limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
+        metadata = replace(
+            metadata,
+            orientation=Orientation.FIXED_HOME_AWAY
             if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
+            else Orientation.FIXED_AWAY_HOME,
         )
 
-        metadata = Metadata(
-            teams=teams,
-            periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(
-                    -1 * pitch_size_width / 2, pitch_size_width / 2
+        if normalize:
+            metadata = replace(
+                metadata,
+                pitch_dimensions=replace(
+                    metadata.pitch_dimensions,
+                    x_dim=Dimension(0, 1),
+                    y_dim=Dimension(0, 1),
+                    x_per_meter=1 / pitch_size_width,
+                    y_per_meter=1 / pitch_size_height,
                 ),
-                y_dim=Dimension(
-                    -1 * pitch_size_height / 2, pitch_size_height / 2
-                ),
-                x_per_meter=100,
-                y_per_meter=100,
-            ),
-            score=None,
-            frame_rate=frame_rate,
-            orientation=orientation,
-            provider=Provider.TRACAB,
-            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-        )
+                vertical_orientation=VerticalOrientation.TOP_TO_BOTTOM,
+            )
 
         return TrackingDataset(
             records=frames,

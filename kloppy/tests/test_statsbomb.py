@@ -8,6 +8,7 @@ from kloppy.domain import (
     Provider,
     EventType,
     BodyPartQualifier,
+    BodyPart,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -70,13 +71,13 @@ class TestStatsbomb:
         )
 
         assert (
-            dataset.events[791].get_qualifier_value(BodyPartQualifier).value
-            == "HEAD"
+            dataset.events[791].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.HEAD
         )
 
         assert (
-            dataset.events[2231].get_qualifier_value(BodyPartQualifier).value
-            == "RIGHT_FOOT"
+            dataset.events[2231].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
         )
 
         assert (

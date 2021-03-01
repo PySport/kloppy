@@ -1,4 +1,4 @@
-# kloppy: standardizing soccer tracking- and event data
+# kloppy: standardizing soccer tracking- and event data <a href='https://kloppy.pysport.org'><img src="docs/logo.png" align="right" height="139"/></a>
 > klop·pen (klopte, heeft geklopt) - juist zijn; overeenkomen, uitkomen met: dat klopt, dat kan kloppen is juist; dat klopt als een zwerende vinger dat is helemaal juist
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/kloppy.svg)](https://pypi.org/project/kloppy/)

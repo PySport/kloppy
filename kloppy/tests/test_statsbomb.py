@@ -7,6 +7,8 @@ from kloppy.domain import (
     Orientation,
     Provider,
     EventType,
+    BodyPartQualifier,
+    BodyPart,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -66,6 +68,20 @@ class TestStatsbomb:
             start_timestamp=2705.268,
             end_timestamp=5557.321,
             attacking_direction=AttackingDirection.NOT_SET,
+        )
+
+        assert (
+            dataset.events[791].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.HEAD
+        )
+
+        assert (
+            dataset.events[2231].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
+        )
+
+        assert (
+            dataset.events[195].get_qualifier_value(BodyPartQualifier) is None
         )
 
     def test_substitution(self):

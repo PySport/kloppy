@@ -2,6 +2,10 @@
 
 Find out all changes between different kloppy versions
 
+## 1.5.2 (2021-03-12)
+
+
+
 ## 1.5.1 (2020-12-23):
 
 Pull request merged:

@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 INVALID_PLAYER = "0"
 
 
-def _parse_team(raw_events: List[Dict], wyId: str, ground: Ground) -> Team:
+def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     team = Team(
         team_id=wyId,
         name=raw_events["teams"][wyId]["officialName"],

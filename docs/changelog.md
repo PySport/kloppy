@@ -4,6 +4,9 @@ Find out all changes between different kloppy versions
 
 ## 1.5.2 (2021-03-12)
 
+Pull request merged:
+
+- Add Wyscout dataset ([#88](https://github.com/PySport/kloppy/pull/88))
 
 
 ## 1.5.1 (2020-12-23):

@@ -6,7 +6,7 @@ from . import (
     MetricaTrackingSerializer,
     OptaSerializer,
     SportecEventSerializer,
-    SkillCornerSerializer,
+    SkillCornerTrackingSerializer,
     StatsBombSerializer,
     TRACABSerializer,
     WyscoutSerializer,
@@ -48,7 +48,7 @@ def load_tracab_tracking_data(
 def load_skillcorner_tracking_data(
     metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
-    serializer = SkillCornerSerializer()
+    serializer = SkillCornerTrackingSerializer()
     with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:

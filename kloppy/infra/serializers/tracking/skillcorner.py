@@ -29,10 +29,8 @@ from . import TrackingDataSerializer
 
 class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
-    def __load_json(self, filename):
-        with open(filename) as json_file:
-            data = json.load(json_file)
-        return data
+    def __load_json(self, file):
+        return json.load(file)
 
     def __get_periods(self, tracking):
         """gets the Periods contained in the tracking data"""
@@ -64,9 +62,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         group_name = frame_record.get('group_name', None)
 
         if group_name == 'home team':
-            team = home_team
+            team = self.home_team
         elif group_name == 'away team':
-            team = away_team
+            team = self.away_team
         else:
             raise ValueError(f"anonymous player with track_id `{track_id}` does not have a specified group_name.")
 
@@ -167,10 +165,14 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                          name=metadata['home_team']['name'],
                          ground=Ground.HOME
                          )
+        self.home_team = home_team
+
         away_team = Team(team_id=away_team_id,
                          name=metadata['away_team']['name'],
                          ground=Ground.AWAY
                          )
+        self.away_team = away_team
+
         teams = [home_team, away_team]
 
         for player_id in player_dict.keys():

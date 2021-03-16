@@ -173,8 +173,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         ball_id = metadata["ball"]["trackable_object"]
 
         # there are different pitch_sizes in SkillCorner
-        pitch_size_width = metadata['pitch_width']
-        pitch_size_length = metadata['pitch_length']
+        pitch_size_width = metadata["pitch_width"]
+        pitch_size_length = metadata["pitch_length"]
 
         home_team_id = metadata["home_team"]["id"]
         away_team_id = metadata["away_team"]["id"]
@@ -342,8 +342,14 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             teams=teams,
             periods=periods,
             pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(-(pitch_size_length/2), (pitch_size_length/2)),
-                y_dim=Dimension(-(pitch_size_width/2), (pitch_size_width/2))
+                x_dim=Dimension(
+                    -(pitch_size_length / 2), (pitch_size_length / 2)
+                ),
+                y_dim=Dimension(
+                    -(pitch_size_width / 2), (pitch_size_width / 2)
+                ),
+                x_per_meter=1,
+                y_per_meter=1,
             ),
             score=Score(
                 home=metadata["home_team_score"],

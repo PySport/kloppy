@@ -381,6 +381,7 @@ def to_pandas(
 
 __all__ = [
     "load_tracab_tracking_data",
+    "load_skillcorner_tracking_data",
     "load_metrica_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",

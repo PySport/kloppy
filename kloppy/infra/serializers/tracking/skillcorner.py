@@ -29,9 +29,22 @@ from . import TrackingDataSerializer
 
 logger = logging.getLogger(__name__)
 
+
 class SkillCornerTrackingSerializer(TrackingDataSerializer):
     @classmethod
-    def _get_frame_data(cls, teams, teamdict, players, player_id_to_team_dict, periods, player_dict, anon_players, ball_id, referee_dict, frame):
+    def _get_frame_data(
+        cls,
+        teams,
+        teamdict,
+        players,
+        player_id_to_team_dict,
+        periods,
+        player_dict,
+        anon_players,
+        ball_id,
+        referee_dict,
+        frame,
+    ):
         frame_period = frame["period"]
 
         frame_id = frame["frame"]
@@ -40,9 +53,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         ball_coordinates = None
         players_coordinates = {}
 
-        ball_owning_player = frame["possession"].get(
-            "trackable_object"
-        )
+        ball_owning_player = frame["possession"].get("trackable_object")
         ball_owning_team = frame["possession"].get("group")
 
         if ball_owning_team == "home team":
@@ -57,9 +68,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             x = frame_record.get("x")
             y = frame_record.get("y")
 
-            trackable_object = frame_record.get(
-                "trackable_object", None
-            )
+            trackable_object = frame_record.get("trackable_object", None)
             player_data = player_dict.get(trackable_object)
 
             track_id = frame_record.get("track_id", None)
@@ -88,36 +97,22 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             if trackable_object is None:
                 player_id = str(track_id)
                 if group_name == "home team":
-                    if (
-                        f"anon_{player_id}"
-                        not in anon_players["HOME"].keys()
-                    ):
-                        player = cls.__create_anon_player(cls, teams, 
-                            frame_record
+                    if f"anon_{player_id}" not in anon_players["HOME"].keys():
+                        player = cls.__create_anon_player(
+                            cls, teams, frame_record
                         )
-                        anon_players["HOME"][
-                            f"anon_home_{player_id}"
-                        ] = player
+                        anon_players["HOME"][f"anon_home_{player_id}"] = player
                     else:
-                        player = anon_players["HOME"][
-                            f"anon_home_{player_id}"
-                        ]
+                        player = anon_players["HOME"][f"anon_home_{player_id}"]
 
                 elif group_name == "away team":
-                    if (
-                        f"anon_{player_id}"
-                        not in anon_players["AWAY"].keys()
-                    ):
-                        player = cls.__create_anon_player(cls, teams, 
-                            frame_record
+                    if f"anon_{player_id}" not in anon_players["AWAY"].keys():
+                        player = cls.__create_anon_player(
+                            cls, teams, frame_record
                         )
-                        anon_players["AWAY"][
-                            f"anon_away_{player_id}"
-                        ] = player
+                        anon_players["AWAY"][f"anon_away_{player_id}"] = player
                     else:
-                        player = anon_players["AWAY"][
-                            f"anon_away_{player_id}"
-                        ]
+                        player = anon_players["AWAY"][f"anon_away_{player_id}"]
 
             point = Point(x, y)
             players_coordinates[player] = point
@@ -273,7 +268,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             }
 
             referee_dict = {
-                ref["trackable_object"]: "referee" for ref in metadata["referees"]
+                ref["trackable_object"]: "referee"
+                for ref in metadata["referees"]
             }
             ball_id = metadata["ball"]["trackable_object"]
 
@@ -337,7 +333,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         with performance_logging("Loading data", logger=logger):
 
             def _iter():
-                n=0
+                n = 0
                 sample = 1.0 / sample_rate
 
                 for frame in raw_data:
@@ -350,11 +346,22 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         frames = []
         for n, _frame in enumerate(_iter()):
-            frame = self._get_frame_data(teams, teamdict, players, player_id_to_team_dict, periods, player_dict, anon_players, ball_id, referee_dict, _frame)
+            frame = self._get_frame_data(
+                teams,
+                teamdict,
+                players,
+                player_id_to_team_dict,
+                periods,
+                player_dict,
+                anon_players,
+                ball_id,
+                referee_dict,
+                _frame,
+            )
 
             frames.append(frame)
 
-            # TODO: Set Attacking Direction 
+            # TODO: Set Attacking Direction
             # if not period.attacking_direction_set:
             #    period.set_attacking_direction(
             #        attacking_direction=attacking_direction_from_frame(

@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)
 
 class SkillCornerTrackingSerializer(TrackingDataSerializer):
     @classmethod
-    def _get_frame_data(cls, teams, frame):
+    def _get_frame_data(cls, teams, teamdict, players, player_id_to_team_dict, periods, player_dict, anon_players, ball_id, referee_dict, frame):
+        frame_period = frame["period"]
+
         frame_id = frame["frame"]
         frame_time = frame["time"]
 
@@ -46,7 +48,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         if ball_owning_team == "home team":
             ball_owning_team = teams[0]
         elif ball_owning_team == "away team":
-            ball_owning_team = team[1]
+            ball_owning_team = teams[1]
         else:
             ball_owning_team = None
 
@@ -90,7 +92,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                         f"anon_{player_id}"
                         not in anon_players["HOME"].keys()
                     ):
-                        player = self.__create_anon_player(
+                        player = cls.__create_anon_player(cls, teams, 
                             frame_record
                         )
                         anon_players["HOME"][
@@ -106,7 +108,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                         f"anon_{player_id}"
                         not in anon_players["AWAY"].keys()
                     ):
-                        player = self.__create_anon_player(
+                        player = cls.__create_anon_player(cls, teams, 
                             frame_record
                         )
                         anon_players["AWAY"][
@@ -156,7 +158,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             )
         return periods
 
-    def __create_anon_player(self, frame_record):
+    def __create_anon_player(self, teams, frame_record):
         """
         creates a Player object for a track_id'ed player with known team membership but unknown identity.
 
@@ -171,9 +173,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         group_name = frame_record.get("group_name", None)
 
         if group_name == "home team":
-            team = self.home_team
+            team = teams[0]
         elif group_name == "away team":
-            team = self.away_team
+            team = teams[1]
         else:
             raise ValueError(
                 f"anonymous player with track_id `{track_id}` does not have a specified group_name."
@@ -348,7 +350,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         frames = []
         for n, _frame in enumerate(_iter()):
-            frame = self._get_frame_data(teams, _frame)
+            frame = self._get_frame_data(teams, teamdict, players, player_id_to_team_dict, periods, player_dict, anon_players, ball_id, referee_dict, _frame)
 
             frames.append(frame)
 

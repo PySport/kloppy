@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict, Tuple
 from enum import Enum, Flag
+from collections import Counter
 import numpy as np
 import json
 
@@ -126,6 +127,32 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             ball_state=None,
             ball_owning_team=ball_owning_team,
         )
+
+    @classmethod
+    def _set_skillcorner_attacking_directions(cls, frames, periods):
+        """
+        with only partial tracking data we cannot rely on a single frame to
+        infer the attacking directions as a simple average of only some players
+        x-coords might not reflect the attacking direction.
+        """
+        attacking_directions = []
+
+        for frame in frames:
+            if len(frame.players_coordinates) > 0:
+                attacking_directions.append(
+                    attacking_direction_from_frame(frame)
+                )
+            else:
+                attacking_directions.append(AttackingDirection.NOT_SET)
+
+        frame_periods = np.array([_frame.period.id for _frame in frames])
+
+        for period in periods.keys():
+            count = Counter(
+                np.array(attacking_directions)[frame_periods == period]
+            )
+            att_direction = count.most_common()[0][0]
+            periods[period].attacking_direction = att_direction
 
     def __load_json(self, file):
         return json.load(file)
@@ -361,16 +388,10 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
             frames.append(frame)
 
-            # TODO: Set Attacking Direction
-            # if not period.attacking_direction_set:
-            #    period.set_attacking_direction(
-            #        attacking_direction=attacking_direction_from_frame(
-            #            frame
-            #        )
-            #    )
-
             if limit and n >= limit:
                 break
+
+        self._set_skillcorner_attacking_directions(frames, periods)
 
         frame_rate = 1
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
 from typing import Dict, List, Optional, Callable, Union, Any
 
-from .pitch import PitchDimensions, Point
+from .pitch import PitchDimensions, Point, CoordinateSystem
 
 
 @dataclass
@@ -347,9 +347,9 @@ class Metadata:
     score: Score
     frame_rate: float
     orientation: Orientation
-    vertical_orientation: VerticalOrientation
     flags: DatasetFlag
     provider: Provider
+    coordinate_system: CoordinateSystem
 
 
 class DatasetType(Enum):

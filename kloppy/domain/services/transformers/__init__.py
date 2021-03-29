@@ -13,6 +13,8 @@ from kloppy.domain import (
     Point,
     Team,
     TrackingDataset,
+    CoordinateSystem,
+    Origin,
 )
 from kloppy.domain.models.event import Event
 
@@ -20,27 +22,43 @@ from kloppy.domain.models.event import Event
 class Transformer:
     def __init__(
         self,
+        from_coordinate_system: CoordinateSystem,
         from_pitch_dimensions: PitchDimensions,
         from_orientation: Orientation,
+        to_coordinate_system: CoordinateSystem,
         to_pitch_dimensions: PitchDimensions,
         to_orientation: Orientation,
     ):
+        self._from_coordinate_system = from_coordinate_system
         self._from_pitch_dimensions = from_pitch_dimensions
         self._from_orientation = from_orientation
+        self._to_coordinate_system = to_coordinate_system
         self._to_pitch_dimensions = to_pitch_dimensions
         self._to_orientation = to_orientation
 
-    def transform_point(self, point: Point, flip: bool) -> Point:
-        # 1. always apply changes from coordinate system
-        # 2. flip coordinates depending on orientation
+    def change_point_dimensions(self, point: Point) -> Point:
+
         if point is None:
             return None
+
         x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
         y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
 
-        if flip:
-            x_base = 1 - x_base
-            y_base = 1 - y_base
+        return Point(
+            x=self._to_pitch_dimensions.x_dim.from_base(x_base),
+            y=self._to_pitch_dimensions.y_dim.from_base(y_base),
+        )
+
+    def flip_point(self, point: Point):
+
+        if point is None:
+            return None
+
+        x_base = self._to_pitch_dimensions.x_dim.to_base(point.x)
+        y_base = self._to_pitch_dimensions.y_dim.to_base(point.y)
+
+        x_base = 1 - x_base
+        y_base = 1 - y_base
 
         return Point(
             x=self._to_pitch_dimensions.x_dim.from_base(x_base),
@@ -74,10 +92,25 @@ class Transformer:
         return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
-        flip = self.__needs_flip(
+
+        # Change coordinate system
+        if self._to_coordinate_system is not None:
+            frame = self.__change_frame_coordinate_system(frame)
+
+        # Change dimensions
+        if self._to_pitch_dimensions is not None:
+            frame = self.__change_frame_dimensions(frame)
+
+        # Flip frame based on orientation
+        if self.__needs_flip(
             ball_owning_team=frame.ball_owning_team,
             attacking_direction=frame.period.attacking_direction,
-        )
+        ):
+            frame = self.__flip_frame(frame)
+
+        return frame
+
+    def __change_frame_coordinate_system(self, frame: Frame):
 
         return Frame(
             # doesn't change
@@ -87,11 +120,77 @@ class Transformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.transform_point(
-                frame.ball_coordinates, flip
+            ball_coordinates=self.__change_point_coordinate_system(
+                frame.ball_coordinates
             ),
             players_coordinates={
-                key: self.transform_point(point, flip)
+                key: self.__change_point_coordinate_system(point)
+                for key, point in frame.players_coordinates.items()
+            },
+        )
+
+    def __change_frame_dimensions(self, frame: Frame):
+
+        return Frame(
+            # doesn't change
+            timestamp=frame.timestamp,
+            frame_id=frame.frame_id,
+            ball_owning_team=frame.ball_owning_team,
+            ball_state=frame.ball_state,
+            period=frame.period,
+            # changes
+            ball_coordinates=self.change_point_dimensions(
+                frame.ball_coordinates
+            ),
+            players_coordinates={
+                key: self.change_point_dimensions(point)
+                for key, point in frame.players_coordinates.items()
+            },
+        )
+
+    def __change_point_coordinate_system(self, point: Point):
+
+        x = self._from_coordinate_system.x_dim.to_base(point.x)
+        y = self._from_coordinate_system.y_dim.to_base(point.y)
+
+        if (
+            self._from_coordinate_system.origin
+            != self._to_coordinate_system.origin
+        ):
+
+            if self._from_coordinate_system.origin == Origin.CENTER:
+                x = x + 0.5
+                y = y + 0.5
+
+            if self._to_coordinate_system.origin == Origin.CENTER:
+                x = x - 0.5
+                y = y - 0.5
+
+        if (
+            self._from_coordinate_system.vertical_orientation
+            != self._to_coordinate_system.vertical_orientation
+        ):
+            x = 1 - x
+
+        if not self._to_coordinate_system.normalized:
+            x = self._to_coordinate_system.x_dim.from_base(x)
+            y = self._to_coordinate_system.y_dim.from_base(y)
+
+        return Point(x=x, y=y)
+
+    def __flip_frame(self, frame: Frame):
+
+        return Frame(
+            # doesn't change
+            timestamp=frame.timestamp,
+            frame_id=frame.frame_id,
+            ball_owning_team=frame.ball_owning_team,
+            ball_state=frame.ball_state,
+            period=frame.period,
+            # changes
+            ball_coordinates=self.flip_point(frame.ball_coordinates),
+            players_coordinates={
+                key: self.flip_point(point)
                 for key, point in frame.players_coordinates.items()
             },
         )
@@ -112,15 +211,13 @@ class Transformer:
 
         return replace(event, **position_changes)
 
-    DatasetT = TypeVar("DatasetT")
-
     @classmethod
     def transform_dataset(
         cls,
-        dataset: DatasetT,
+        dataset: Dataset,
         to_pitch_dimensions: PitchDimensions = None,
         to_orientation: Orientation = None,
-    ) -> DatasetT:
+    ) -> Dataset:
         if not to_pitch_dimensions and not to_orientation:
             return dataset
         elif not to_orientation:

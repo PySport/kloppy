@@ -22,12 +22,12 @@ from kloppy.domain.models.event import Event
 class Transformer:
     def __init__(
         self,
-        from_coordinate_system: CoordinateSystem,
-        from_pitch_dimensions: PitchDimensions,
-        from_orientation: Orientation,
-        to_coordinate_system: CoordinateSystem,
-        to_pitch_dimensions: PitchDimensions,
-        to_orientation: Orientation,
+        from_coordinate_system: CoordinateSystem = None,
+        from_pitch_dimensions: PitchDimensions = None,
+        from_orientation: Orientation = None,
+        to_coordinate_system: CoordinateSystem = None,
+        to_pitch_dimensions: PitchDimensions = None,
+        to_orientation: Orientation = None,
     ):
         self._from_coordinate_system = from_coordinate_system
         self._from_pitch_dimensions = from_pitch_dimensions
@@ -150,31 +150,22 @@ class Transformer:
 
     def __change_point_coordinate_system(self, point: Point):
 
-        x = self._from_coordinate_system.x_dim.to_base(point.x)
-        y = self._from_coordinate_system.y_dim.to_base(point.y)
-
-        if (
-            self._from_coordinate_system.origin
-            != self._to_coordinate_system.origin
-        ):
-
-            if self._from_coordinate_system.origin == Origin.CENTER:
-                x = x + 0.5
-                y = y + 0.5
-
-            if self._to_coordinate_system.origin == Origin.CENTER:
-                x = x - 0.5
-                y = y - 0.5
+        x = self._from_coordinate_system.pitch_dimensions.x_dim.to_base(
+            point.x
+        )
+        y = self._from_coordinate_system.pitch_dimensions.y_dim.to_base(
+            point.y
+        )
 
         if (
             self._from_coordinate_system.vertical_orientation
             != self._to_coordinate_system.vertical_orientation
         ):
-            x = 1 - x
+            y = 1 - y
 
         if not self._to_coordinate_system.normalized:
-            x = self._to_coordinate_system.x_dim.from_base(x)
-            y = self._to_coordinate_system.y_dim.from_base(y)
+            x = self._to_coordinate_system.pitch_dimensions.x_dim.from_base(x)
+            y = self._to_coordinate_system.pitch_dimensions.y_dim.from_base(y)
 
         return Point(x=x, y=y)
 

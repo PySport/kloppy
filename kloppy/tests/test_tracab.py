@@ -26,7 +26,7 @@ class TestTracabTracking:
 
             dataset = serializer.deserialize(
                 inputs={"metadata": metadata, "raw_data": raw_data},
-                options={"only_alive": False, "normalize": False},
+                options={"only_alive": False},
             )
 
         assert dataset.metadata.provider == Provider.TRACAB

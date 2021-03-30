@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
 from typing import Dict, List, Optional, Callable, Union, Any
 
-from .pitch import PitchDimensions, Point, CoordinateSystem
+from .pitch import PitchDimensions, Point, Dimension
 
 
 @dataclass
@@ -300,6 +300,79 @@ class Period:
     @property
     def duration(self):
         return self.end_timestamp - self.start_timestamp
+
+
+class Origin(Enum):
+    """
+    Attributes:
+        TOP_LEFT: Origin at the top left of the field
+        BOTTOM_RIGHT: Origin at the bottom left of the field
+        CENTER: Origin at the center of the field
+    """
+
+    TOP_LEFT = "top-left"
+    BOTTOM_RIGHT = "bottom-right"
+    CENTER = "center"
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass
+class CoordinateSystem(ABC):
+    provider: Provider
+    origin: Origin
+    vertical_orientation: VerticalOrientation
+    normalized: bool
+    length: float = None
+    width: float = None
+
+    @property
+    @abstractmethod
+    def pitch_dimensions(self) -> PitchDimensions:
+        raise NotImplementedError
+
+
+@dataclass
+class KloppyCoordinateSystem(CoordinateSystem):
+    provider: Provider = None
+    origin: Origin = Origin.TOP_LEFT
+    vertical_orientation: VerticalOrientation = (
+        VerticalOrientation.TOP_TO_BOTTOM
+    )
+    normalized: bool = True
+    length: float = None
+    width: float = None
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 1),
+            y_dim=Dimension(0, 1),
+            x_per_meter=1 / self.length,
+            y_per_meter=1 / self.width,
+        )
+
+
+@dataclass
+class TracabCoordinateSystem(CoordinateSystem):
+    provider: Provider = Provider.TRACAB
+    origin: Origin = Origin.CENTER
+    vertical_orientation: VerticalOrientation = (
+        VerticalOrientation.BOTTOM_TO_TOP
+    )
+    normalized: bool = False
+    length: float = None
+    width: float = None
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
+            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
+            x_per_meter=10000,
+            y_per_meter=10000,
+        )
 
 
 class DatasetFlag(Flag):

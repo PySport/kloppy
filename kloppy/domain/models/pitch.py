@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from math import sqrt
 
-from kloppy.domain import Provider, VerticalOrientation
-
 
 @dataclass
 class Dimension:
@@ -82,46 +80,3 @@ class Point:
             other: See [`Point`][kloppy.domain.models.pitch.Point]
         """
         return sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
-
-
-class Origin(Enum):
-    """
-    Attributes:
-        TOP_LEFT: Origin at the top left of the field
-        BOTTOM_RIGHT: Origin at the bottom left of the field
-        CENTER: Origin at the center of the field
-    """
-
-    TOP_LEFT = "top-left"
-    BOTTOM_RIGHT = "bottom-right"
-    CENTER = "center"
-
-    def __str__(self):
-        return self.value
-
-
-@dataclass
-class CoordinateSystem:
-    provider: Provider
-    origin: Origin
-    vertical_orientation: VerticalOrientation
-    normalized: bool
-    pitch_dimensions: PitchDimensions
-
-
-@dataclass(frozen=True)
-class KloppyCoordinateSystem(CoordinateSystem):
-    provider: None
-    origin: Origin.TOP_LEFT
-    vertical_orientation: VerticalOrientation.TOP_TO_BOTTOM
-    normalized: True
-    pitch_dimensions: None
-
-
-@dataclass(frozen=True)
-class TracabCoordinateSystem(CoordinateSystem):
-    provider: Provider.TRACAB
-    origin: Origin.CENTER
-    vertical_orientation: VerticalOrientation.BOTTOM_TO_TOP
-    normalized: False
-    pitch_dimensions: None

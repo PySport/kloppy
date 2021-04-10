@@ -48,6 +48,7 @@ class Provider(Enum):
         STATSBOMB:
         SPORTEC:
         WYSCOUT:
+        KLOPPY:
     """
 
     METRICA = "metrica"
@@ -56,6 +57,7 @@ class Provider(Enum):
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"
+    KLOPPY = "kloppy"
 
     def __str__(self):
         return self.value
@@ -320,12 +322,24 @@ class Origin(Enum):
 
 @dataclass
 class CoordinateSystem(ABC):
-    provider: Provider
-    origin: Origin
-    vertical_orientation: VerticalOrientation
     normalized: bool
     length: float = None
     width: float = None
+
+    @property
+    @abstractmethod
+    def provider(self) -> Provider:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def origin(self) -> Origin:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def vertical_orientation(self) -> VerticalOrientation:
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -335,14 +349,21 @@ class CoordinateSystem(ABC):
 
 @dataclass
 class KloppyCoordinateSystem(CoordinateSystem):
-    provider: Provider = None
-    origin: Origin = Origin.TOP_LEFT
-    vertical_orientation: VerticalOrientation = (
-        VerticalOrientation.TOP_TO_BOTTOM
-    )
     normalized: bool = True
     length: float = None
     width: float = None
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.KLOPPY
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.TOP_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
@@ -356,14 +377,21 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
 @dataclass
 class TracabCoordinateSystem(CoordinateSystem):
-    provider: Provider = Provider.TRACAB
-    origin: Origin = Origin.CENTER
-    vertical_orientation: VerticalOrientation = (
-        VerticalOrientation.BOTTOM_TO_TOP
-    )
     normalized: bool = False
     length: float = None
     width: float = None
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.TRACAB
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
@@ -373,6 +401,14 @@ class TracabCoordinateSystem(CoordinateSystem):
             x_per_meter=10000,
             y_per_meter=10000,
         )
+
+
+def build_coordinate_system(provider: Provider, **kwargs):
+    if provider == Provider.TRACAB:
+        return TracabCoordinateSystem(**kwargs)
+
+    if provider == Provider.KLOPPY:
+        return KloppyCoordinateSystem(**kwargs)
 
 
 class DatasetFlag(Flag):

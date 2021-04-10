@@ -20,8 +20,8 @@ from kloppy.domain import (
     Metadata,
     Ground,
     Player,
-    KloppyCoordinateSystem,
-    TracabCoordinateSystem,
+    build_coordinate_system,
+    Provider,
     Transformer,
 )
 
@@ -158,9 +158,6 @@ class TRACABSerializer(TrackingDataSerializer):
         sample_rate = float(options.get("sample_rate", 1.0))
         limit = int(options.get("limit", 0))
         only_alive = bool(options.get("only_alive", True))
-        to_coordinate_system = options.get(
-            "to_coordinate_system", KloppyCoordinateSystem()
-        )
 
         # TODO: also used in Metrica, extract to a method
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
@@ -173,8 +170,11 @@ class TRACABSerializer(TrackingDataSerializer):
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
 
-            to_coordinate_system.length = pitch_size_width
-            to_coordinate_system.width = pitch_size_height
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=pitch_size_width,
+                width=pitch_size_height,
+            )
 
             periods = []
             for period in match.iterchildren(tag="period"):
@@ -192,7 +192,8 @@ class TRACABSerializer(TrackingDataSerializer):
         with performance_logging("Loading data", logger=logger):
 
             transformer = Transformer(
-                from_coordinate_system=TracabCoordinateSystem(
+                from_coordinate_system=build_coordinate_system(
+                    Provider.TRACAB,
                     length=pitch_size_width * 100,
                     width=pitch_size_height * 100,
                 ),

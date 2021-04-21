@@ -14,6 +14,7 @@ from kloppy.domain import (
     Position,
     Point,
     Provider,
+    build_coordinate_system,
 )
 from kloppy.utils import Readable
 
@@ -266,6 +267,15 @@ def load_metadata(
 
     metadata.orientation = orientation
 
+    if provider is not None and pitch_dimensions is not None:
+        from_coordinate_system = build_coordinate_system(
+            provider,
+            length=pitch_dimensions.length,
+            width=pitch_dimensions.width,
+        )
+    else:
+        from_coordinate_system = None
+
     return EPTSMetadata(
         teams=list(teams_metadata.values()),
         periods=periods,
@@ -278,4 +288,5 @@ def load_metadata(
         orientation=None,
         provider=provider,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+        coordinate_system=from_coordinate_system,
     )

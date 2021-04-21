@@ -84,6 +84,7 @@ class TestHelpers:
             teams=teams,
             score=None,
             provider=None,
+            coordinate_system=None,
         )
 
         tracking_data = TrackingDataset(

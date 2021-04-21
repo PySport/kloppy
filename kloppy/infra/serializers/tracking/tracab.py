@@ -194,8 +194,8 @@ class TRACABSerializer(TrackingDataSerializer):
             transformer = Transformer(
                 from_coordinate_system=build_coordinate_system(
                     Provider.TRACAB,
-                    length=pitch_size_width * 100,
-                    width=pitch_size_height * 100,
+                    length=pitch_size_width,
+                    width=pitch_size_height,
                 ),
                 to_coordinate_system=to_coordinate_system,
             )

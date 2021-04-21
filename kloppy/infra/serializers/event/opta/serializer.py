@@ -36,6 +36,8 @@ from kloppy.domain import (
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
+    build_coordinate_system,
+    Transformer,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -363,6 +365,23 @@ class OptaSerializer(EventDataSerializer):
         if not options:
             options = {}
 
+        from_coordinate_system = build_coordinate_system(
+            Provider.OPTA,
+            length=100,
+            width=100,
+        )
+
+        to_coordinate_system = build_coordinate_system(
+            options.get("coordinate_system", Provider.KLOPPY),
+            length=100,
+            width=100,
+        )
+
+        transformer = Transformer(
+            from_coordinate_system=from_coordinate_system,
+            to_coordinate_system=to_coordinate_system,
+        )
+
         with performance_logging("load data", logger=logger):
             f7_root = objectify.fromstring(inputs["f7_data"].read())
             f24_root = objectify.fromstring(inputs["f24_data"].read())
@@ -554,19 +573,18 @@ class OptaSerializer(EventDataSerializer):
                         not wanted_event_types
                         or event.event_type in wanted_event_types
                     ):
-                        events.append(event)
+                        events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             provider=Provider.OPTA,
+            coordinate_system=to_coordinate_system,
         )
 
         return EventDataset(

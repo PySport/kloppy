@@ -150,6 +150,9 @@ class Transformer:
 
     def __change_point_coordinate_system(self, point: Point):
 
+        if point is None:
+            return None
+
         x = self._from_coordinate_system.pitch_dimensions.x_dim.to_base(
             point.x
         )
@@ -187,14 +190,54 @@ class Transformer:
         )
 
     def transform_event(self, event: Event) -> Event:
-        flip = self.__needs_flip(
+
+        # Change coordinate system
+        if self._to_coordinate_system is not None:
+            event = self.__change_event_coordinate_system(event)
+
+        # Change dimensions
+        if self._to_pitch_dimensions is not None:
+            event = self.__change_event_dimensions(event)
+
+        # Flip event based on orientation
+        if self.__needs_flip(
             ball_owning_team=event.ball_owning_team,
             attacking_direction=event.period.attacking_direction,
-            action_executing_team=event.team,
-        )
+        ):
+            event = self.__flip_event(event)
+
+        return event
+
+    def __change_event_coordinate_system(self, event: Event):
 
         position_changes = {
-            field.name: self.transform_point(getattr(event, field.name), flip)
+            field.name: self.__change_point_coordinate_system(
+                getattr(event, field.name)
+            )
+            for field in fields(event)
+            if field.name.endswith("coordinates")
+            and getattr(event, field.name)
+        }
+
+        return replace(event, **position_changes)
+
+    def __change_event_dimensions(self, event: Event):
+
+        position_changes = {
+            field.name: self.change_point_dimensions(
+                getattr(event, field.name)
+            )
+            for field in fields(event)
+            if field.name.endswith("coordinates")
+            and getattr(event, field.name)
+        }
+
+        return replace(event, **position_changes)
+
+    def __flip_event(self, event: Event):
+
+        position_changes = {
+            field.name: self.flip_point(getattr(event, field.name))
             for field in fields(event)
             if field.name.endswith("coordinates")
             and getattr(event, field.name)

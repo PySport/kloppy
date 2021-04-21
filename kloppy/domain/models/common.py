@@ -313,7 +313,7 @@ class Origin(Enum):
     """
 
     TOP_LEFT = "top-left"
-    BOTTOM_RIGHT = "bottom-right"
+    BOTTOM_LEFT = "bottom-left"
     CENTER = "center"
 
     def __str__(self):
@@ -349,10 +349,6 @@ class CoordinateSystem(ABC):
 
 @dataclass
 class KloppyCoordinateSystem(CoordinateSystem):
-    normalized: bool = True
-    length: float = None
-    width: float = None
-
     @property
     def provider(self) -> Provider:
         return Provider.KLOPPY
@@ -376,11 +372,31 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
-class TracabCoordinateSystem(CoordinateSystem):
-    normalized: bool = False
-    length: float = None
-    width: float = None
+class MetricaCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.METRICA
 
+    @property
+    def origin(self) -> Origin:
+        return Origin.TOP_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 1),
+            y_dim=Dimension(0, 1),
+            x_per_meter=1 / self.length,
+            y_per_meter=1 / self.width,
+        )
+
+
+@dataclass
+class TracabCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.TRACAB
@@ -396,19 +412,130 @@ class TracabCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return PitchDimensions(
-            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
-            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
+            x_dim=Dimension(-1 * self.length * 100 / 2, self.length * 100 / 2),
+            y_dim=Dimension(-1 * self.width * 100 / 2, self.width * 100 / 2),
             x_per_meter=10000,
             y_per_meter=10000,
         )
 
 
+@dataclass
+class OptaCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.OPTA
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
+            x_per_meter=100 / self.length,
+            y_per_meter=100 / self.width,
+        )
+
+
+@dataclass
+class SportecCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SPORTEC
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, self.length),
+            y_dim=Dimension(0, self.width),
+            x_per_meter=1,
+            y_per_meter=1,
+        )
+
+
+@dataclass
+class StatsbombCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.STATSBOMB
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.TOP_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 120),
+            y_dim=Dimension(0, 80),
+            x_per_meter=120 / self.length,
+            y_per_meter=80 / self.width,
+        )
+
+
+class WyscoutCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.WYSCOUT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.TOP_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
+            x_per_meter=100 / self.length,
+            y_per_meter=100 / self.width,
+        )
+
+
 def build_coordinate_system(provider: Provider, **kwargs):
+
     if provider == Provider.TRACAB:
-        return TracabCoordinateSystem(**kwargs)
+        return TracabCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.KLOPPY:
-        return KloppyCoordinateSystem(**kwargs)
+        return KloppyCoordinateSystem(normalized=True, **kwargs)
+
+    if provider == Provider.METRICA:
+        return MetricaCoordinateSystem(normalized=True, **kwargs)
+
+    if provider == Provider.OPTA:
+        return OptaCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.SPORTEC:
+        return SportecCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.STATSBOMB:
+        return StatsbombCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.WYSCOUT:
+        return WyscoutCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

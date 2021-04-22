@@ -340,7 +340,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                     player_id=f"{team.ground}_{player['number']}",
                     team=team,
                     jersey_no=player["number"],
-                    name=" ".join([player["first_name"], player["last_name"]]),
+                    name=f"{player['first_name']} {player['last_name']}",
                     first_name=player["first_name"],
                     last_name=player["last_name"],
                     starting=player["start_time"] == "00:00:00",

@@ -393,7 +393,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         self._set_skillcorner_attacking_directions(frames, periods)
 
-        frame_rate = 1
+        frame_rate = 10
 
         metadata = Metadata(
             teams=teams,

@@ -145,8 +145,8 @@ def _load_pitch_dimensions(
         return PitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
-            x_per_meter=1 / int(field_size_elm.find("Width")),
-            y_per_meter=1 / int(field_size_elm.find("Height")),
+            length=int(field_size_elm.find("Width")),
+            width=int(field_size_elm.find("Height")),
         )
     else:
         return None

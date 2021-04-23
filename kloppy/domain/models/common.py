@@ -363,36 +363,26 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(0, 1),
-            y_dim=Dimension(0, 1),
-            x_per_meter=1 / self.length,
-            y_per_meter=1 / self.width,
-        )
+
+        if self.length is not None and self.width is not None:
+            return PitchDimensions(
+                x_dim=Dimension(0, 1),
+                y_dim=Dimension(0, 1),
+                length=self.length,
+                width=self.width,
+            )
+        else:
+            return PitchDimensions(
+                x_dim=Dimension(0, 1),
+                y_dim=Dimension(0, 1),
+            )
 
 
 @dataclass
-class MetricaCoordinateSystem(CoordinateSystem):
+class MetricaCoordinateSystem(KloppyCoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
-
-    @property
-    def origin(self) -> Origin:
-        return Origin.TOP_LEFT
-
-    @property
-    def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.TOP_TO_BOTTOM
-
-    @property
-    def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(0, 1),
-            y_dim=Dimension(0, 1),
-            x_per_meter=1 / self.length,
-            y_per_meter=1 / self.width,
-        )
 
 
 @dataclass
@@ -414,8 +404,8 @@ class TracabCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(-1 * self.length * 100 / 2, self.length * 100 / 2),
             y_dim=Dimension(-1 * self.width * 100 / 2, self.width * 100 / 2),
-            x_per_meter=10000,
-            y_per_meter=10000,
+            length=self.length,
+            width=self.width,
         )
 
 
@@ -438,8 +428,6 @@ class OptaCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(0, 100),
             y_dim=Dimension(0, 100),
-            x_per_meter=100 / self.length,
-            y_per_meter=100 / self.width,
         )
 
 
@@ -462,8 +450,8 @@ class SportecCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(0, self.length),
             y_dim=Dimension(0, self.width),
-            x_per_meter=1,
-            y_per_meter=1,
+            length=self.length,
+            width=self.width,
         )
 
 
@@ -486,8 +474,6 @@ class StatsbombCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(0, 120),
             y_dim=Dimension(0, 80),
-            x_per_meter=120 / self.length,
-            y_per_meter=80 / self.width,
         )
 
 
@@ -509,8 +495,6 @@ class WyscoutCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(0, 100),
             y_dim=Dimension(0, 100),
-            x_per_meter=100 / self.length,
-            y_per_meter=100 / self.width,
         )
 
 

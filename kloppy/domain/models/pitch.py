@@ -33,30 +33,8 @@ class PitchDimensions:
 
     x_dim: Dimension
     y_dim: Dimension
-    x_per_meter: float = None
-    y_per_meter: float = None
-
-    @property
-    def length(self) -> float:
-        """
-        Calculates the length of the pitch in meters if possible.
-        """
-        return (
-            (self.x_dim.max - self.x_dim.min) / self.x_per_meter
-            if self.x_per_meter
-            else None
-        )
-
-    @property
-    def width(self) -> float:
-        """
-        Calculates the width of the pitch in meters if possible.
-        """
-        return (
-            (self.y_dim.max - self.y_dim.min) / self.y_per_meter
-            if self.y_per_meter
-            else None
-        )
+    length: float = None
+    width: float = None
 
 
 @dataclass(frozen=True)

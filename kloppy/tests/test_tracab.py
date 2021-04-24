@@ -85,3 +85,27 @@ class TestTracabTracking:
             player.player_id
             for player in dataset.records[3].players_coordinates.keys()
         ]
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = TRACABSerializer()
+
+        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
+            f"{base_dir}/files/tracab_raw.dat", "rb"
+        ) as raw_data:
+
+            dataset = serializer.deserialize(
+                inputs={"metadata": metadata, "raw_data": raw_data},
+                options={
+                    "only_alive": False,
+                },
+            )
+
+        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            "19"
+        )
+
+        assert dataset.records[0].players_coordinates[player_home_19] == Point(
+            x=0.3766, y=0.5489999999999999
+        )

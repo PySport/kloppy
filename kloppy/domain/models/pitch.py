@@ -14,6 +14,12 @@ class Dimension:
     min: float
     max: float
 
+    def __eq__(self, other):
+        if isinstance(self, Dimension):
+            return self.min == other.min and self.max == other.max
+
+        return False
+
     def to_base(self, value: float) -> float:
         return (value - self.min) / (self.max - self.min)
 
@@ -35,6 +41,12 @@ class PitchDimensions:
     y_dim: Dimension
     length: float = None
     width: float = None
+
+    def __eq__(self, other):
+        if isinstance(self, PitchDimensions):
+            return self.x_dim == other.x_dim and self.y_dim == other.y_dim
+
+        return False
 
 
 @dataclass(frozen=True)

@@ -23,6 +23,7 @@ class TestSportecEvent:
         dataset = load_sportec_event_data(
             f"{base_dir}/files/sportec_events.xml",
             f"{base_dir}/files/sportec_meta.xml",
+            options={"coordinate_system": Provider.SPORTEC},
         )
 
         assert dataset.metadata.provider == Provider.SPORTEC
@@ -53,3 +54,15 @@ class TestSportecEvent:
         assert str(player) == "A. Schwolow"
         assert player.position.position_id is None
         assert player.position.name == "TW"
+
+        assert dataset.events[0].coordinates == Point(56.41, 68.0)
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        dataset = load_sportec_event_data(
+            f"{base_dir}/files/sportec_events.xml",
+            f"{base_dir}/files/sportec_meta.xml",
+        )
+
+        assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)

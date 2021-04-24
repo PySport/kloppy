@@ -27,6 +27,8 @@ from .domain import (
     ShotEvent,
     TrackingDataset,
     Transformer,
+    Provider,
+    build_coordinate_system,
 )
 
 
@@ -182,14 +184,21 @@ def load_wyscout_event_data(
         )
 
 
-DatasetT = TypeVar("DatasetT")
-
-
 def transform(
-    dataset: DatasetT, to_orientation=None, to_pitch_dimensions=None
-) -> DatasetT:
+    dataset: Dataset,
+    to_orientation=None,
+    to_pitch_dimensions=None,
+    to_coordinate_system=None,
+) -> Dataset:
+
+    if to_pitch_dimensions is not None and to_coordinate_system is not None:
+        raise ValueError(
+            "You can't do both a PitchDimension and CoordinateSysetm on the same dataset transformation"
+        )
+
     if to_orientation and isinstance(to_orientation, str):
         to_orientation = Orientation[to_orientation]
+
     if to_pitch_dimensions and (
         isinstance(to_pitch_dimensions, list)
         or isinstance(to_pitch_dimensions, tuple)
@@ -198,11 +207,24 @@ def transform(
             x_dim=Dimension(*to_pitch_dimensions[0]),
             y_dim=Dimension(*to_pitch_dimensions[1]),
         )
-    return Transformer.transform_dataset(
-        dataset=dataset,
-        to_orientation=to_orientation,
-        to_pitch_dimensions=to_pitch_dimensions,
-    )
+        return Transformer.transform_dataset(
+            dataset=dataset,
+            to_orientation=to_orientation,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+
+    if to_coordinate_system and (isinstance(to_coordinate_system, Provider)):
+        to_coordinate_system = build_coordinate_system(
+            provider=to_coordinate_system,
+            length=dataset.metadata.coordinate_system.length,
+            width=dataset.metadata.coordinate_system.width,
+        )
+
+        return Transformer.transform_dataset(
+            dataset=dataset,
+            to_orientation=to_orientation,
+            to_coordinate_system=to_coordinate_system,
+        )
 
 
 def _frame_to_pandas_row_converter(frame: Frame) -> Dict:

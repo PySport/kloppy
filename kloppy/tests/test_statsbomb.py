@@ -7,6 +7,7 @@ from kloppy.domain import (
     Orientation,
     Provider,
     EventType,
+    Point,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -32,7 +33,9 @@ class TestStatsbomb:
         """
         This test uses data from the StatsBomb open data project.
         """
-        dataset = self._load_dataset()
+        dataset = self._load_dataset(
+            options={"coordinate_system": Provider.STATSBOMB}
+        )
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
@@ -67,6 +70,16 @@ class TestStatsbomb:
             end_timestamp=5557.321,
             attacking_direction=AttackingDirection.NOT_SET,
         )
+
+        assert dataset.events[10].coordinates == Point(34.5, 20.5)
+
+    def test_correct_normalized_deserialization(self):
+        """
+        This test uses data from the StatsBomb open data project.
+        """
+        dataset = self._load_dataset()
+
+        assert dataset.events[10].coordinates == Point(0.2875, 0.25625)
 
     def test_substitution(self):
         """

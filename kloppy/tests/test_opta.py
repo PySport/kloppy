@@ -9,6 +9,7 @@ from kloppy.domain import (
     Player,
     Position,
     Ground,
+    Point,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -24,7 +25,8 @@ class TestOpta:
         ) as f7_data:
 
             dataset = serializer.deserialize(
-                inputs={"f24_data": f24_data, "f7_data": f7_data}
+                inputs={"f24_data": f24_data, "f7_data": f7_data},
+                options={"coordinate_system": Provider.OPTA},
             )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
@@ -59,3 +61,20 @@ class TestOpta:
             end_timestamp=1537721737.788,
             attacking_direction=AttackingDirection.NOT_SET,
         )
+
+        assert dataset.events[0].coordinates == Point(50.1, 49.4)
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = OptaSerializer()
+
+        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
+            f"{base_dir}/files/opta_f7.xml", "rb"
+        ) as f7_data:
+
+            dataset = serializer.deserialize(
+                inputs={"f24_data": f24_data, "f7_data": f7_data}
+            )
+
+        assert dataset.events[0].coordinates == Point(0.501, 0.506)

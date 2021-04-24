@@ -118,5 +118,7 @@ class TestMetricaEvent:
             attacking_direction=AttackingDirection.NOT_SET,
         )
 
+        assert dataset.events[1].coordinates.x == 0.50125
+
         # Make sure we are using the improved event types.
         dataset.records[1].qualifiers[0].value == SetPieceType.KICK_OFF

@@ -326,6 +326,16 @@ class CoordinateSystem(ABC):
     length: float = None
     width: float = None
 
+    def __eq__(self, other):
+        if isinstance(other, CoordinateSystem):
+            return (
+                self.origin == other.origin
+                and self.vertical_orientation == other.vertical_orientation
+                and self.pitch_dimensions == other.pitch_dimensions
+            )
+
+        return False
+
     @property
     @abstractmethod
     def provider(self) -> Provider:

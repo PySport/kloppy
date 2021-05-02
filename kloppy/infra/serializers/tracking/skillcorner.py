@@ -54,7 +54,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         ball_coordinates = None
         players_coordinates = {}
 
-        ball_owning_player = frame["possession"].get("trackable_object")
+        ball_carrier = frame["possession"].get("trackable_object")
         ball_owning_team = frame["possession"].get("group")
 
         if ball_owning_team == "home team":
@@ -125,7 +125,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             players_coordinates=players_coordinates,
             period=periods[frame_period],
             ball_state=None,
-            ball_owning_team=ball_owning_team,
+            ball_owning_team=ball_owning_team
         )
 
     @classmethod
@@ -235,11 +235,11 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             the 'json' formatted raw data. input `metadata` should point to
             the json metadata data.
         options : dict
-            Options for deserialization of the TRACAB file. Possible options are
-            `only_alive` (boolean) to specify that only frames with alive ball state
-            should be loaded, or `sample_rate` (float between 0 and 1) to specify
-            the amount of frames that should be loaded, `limit` to specify the max number of
-            frames that will be returned.
+            Options for deserialization of the TRACAB file. Possible options are:  
+            `include_empty_frames` (boolean): default = False to specify whether frames without
+            any players_coordinates should be loaded  
+            `sample_rate` (float between 0 and 1) to specify the amount of frames that should be loaded  
+            and `limit` (int) to specify the max number of frames that will be returned.
         Returns
         -------
         dataset : TrackingDataset
@@ -274,7 +274,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         sample_rate = float(options.get("sample_rate", 1.0))
         limit = int(options.get("limit", 0))
-        # only_alive = bool(options.get("only_alive", True))
+        include_empty_frames = bool(options.get("include_empty_frames", False))
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
@@ -373,23 +373,24 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         frames = []
         for n, _frame in enumerate(_iter()):
-            frame = self._get_frame_data(
-                teams,
-                teamdict,
-                players,
-                player_id_to_team_dict,
-                periods,
-                player_dict,
-                anon_players,
-                ball_id,
-                referee_dict,
-                _frame,
-            )
+            if include_empty_frames or len(_frame['data']) > 0:
+                frame = self._get_frame_data(
+                    teams,
+                    teamdict,
+                    players,
+                    player_id_to_team_dict,
+                    periods,
+                    player_dict,
+                    anon_players,
+                    ball_id,
+                    referee_dict,
+                    _frame,
+                )
 
-            frames.append(frame)
+                frames.append(frame)
 
-            if limit and n >= limit:
-                break
+                if limit and n >= limit:
+                    break
 
         self._set_skillcorner_attacking_directions(frames, periods)
 

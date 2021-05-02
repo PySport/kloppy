@@ -237,7 +237,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         options : dict
             Options for deserialization of the TRACAB file. Possible options are:  
             `include_empty_frames` (boolean): default = False to specify whether frames without
-            any players_coordinates should be loaded  
+            any players_coordinates or the ball_coordinates should be loaded  
             `sample_rate` (float between 0 and 1) to specify the amount of frames that should be loaded  
             and `limit` (int) to specify the max number of frames that will be returned.
         Returns
@@ -373,6 +373,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         frames = []
         for n, _frame in enumerate(_iter()):
+            # include frame if there is any tracking data, players or ball.
+            # or if include_empty_frames == True
             if include_empty_frames or len(_frame['data']) > 0:
                 frame = self._get_frame_data(
                     teams,

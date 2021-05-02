@@ -125,7 +125,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             players_coordinates=players_coordinates,
             period=periods[frame_period],
             ball_state=None,
-            ball_owning_team=ball_owning_team
+            ball_owning_team=ball_owning_team,
         )
 
     @classmethod
@@ -375,7 +375,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         for n, _frame in enumerate(_iter()):
             # include frame if there is any tracking data, players or ball.
             # or if include_empty_frames == True
-            if include_empty_frames or len(_frame['data']) > 0:
+            if include_empty_frames or len(_frame["data"]) > 0:
                 frame = self._get_frame_data(
                     teams,
                     teamdict,

@@ -37,20 +37,19 @@ class TestSkillCornerTracking:
         assert dataset.metadata.orientation == None
         assert dataset.metadata.periods[1] == Period(
             id=1,
-            start_timestamp='0:00.00',
-            end_timestamp='45:53.30',
+            start_timestamp="0:00.00",
+            end_timestamp="45:53.30",
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
         assert dataset.metadata.periods[2] == Period(
             id=2,
-            start_timestamp='45:00.00',
-            end_timestamp='91:49.70',
+            start_timestamp="45:00.00",
+            end_timestamp="91:49.70",
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
         # is pregame info skipped?
-        assert dataset.records[0].timestamp == '0:11.20'
-
+        assert dataset.records[0].timestamp == "0:11.20"
 
         # make sure data is loaded correctly (including flip y-axis)
         home_player = dataset.metadata.teams[0].players[2]
@@ -68,14 +67,28 @@ class TestSkillCornerTracking:
         )
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert 'home_1' not in [player.player_id for player in dataset.records[0].players_coordinates.keys()]
+        assert "home_1" not in [
+            player.player_id
+            for player in dataset.records[0].players_coordinates.keys()
+        ]
 
-        assert 'away_1' not in [player.player_id for player in dataset.records[0].players_coordinates.keys()]
+        assert "away_1" not in [
+            player.player_id
+            for player in dataset.records[0].players_coordinates.keys()
+        ]
 
         # are anonymous players loaded correctly?
-        home_anon_75 = [player for player in dataset.records[87].players_coordinates if player.player_id == 'home_anon_75']
-        assert home_anon_75 == [player for player in dataset.records[88].players_coordinates if player.player_id == 'home_anon_75']
-        
+        home_anon_75 = [
+            player
+            for player in dataset.records[87].players_coordinates
+            if player.player_id == "home_anon_75"
+        ]
+        assert home_anon_75 == [
+            player
+            for player in dataset.records[88].players_coordinates
+            if player.player_id == "home_anon_75"
+        ]
+
         # is pitch dimension set correctly?
         pitch_dimensions = dataset.metadata.pitch_dimensions
         assert pitch_dimensions.x_dim.min == -52.5

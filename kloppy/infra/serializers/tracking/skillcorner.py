@@ -49,7 +49,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         frame_period = frame["period"]
 
         frame_id = frame["frame"]
-        frame_time = frame["time"]
+        frame_time = cls._timestamp_from_timestring(frame["time"])
 
         ball_coordinates = None
         players_coordinates = {}
@@ -129,6 +129,11 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         )
 
     @classmethod
+    def _timestamp_from_timestring(cls, timestring):
+        m, s = timestring.split(":")
+        return 60 * float(m) + float(s)
+
+    @classmethod
     def _set_skillcorner_attacking_directions(cls, frames, periods):
         """
         with only partial tracking data we cannot rely on a single frame to
@@ -157,7 +162,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
     def __load_json(self, file):
         return json.load(file)
 
-    def __get_periods(self, tracking):
+    @classmethod
+    def __get_periods(cls, tracking):
         """gets the Periods contained in the tracking data"""
         periods = {}
 
@@ -173,10 +179,15 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 for frame in tracking
                 if frame["period"] == period and frame["time"] is not None
             ]
+
             periods[period] = Period(
                 id=period,
-                start_timestamp=_frames[0]["time"],
-                end_timestamp=_frames[-1]["time"],
+                start_timestamp=cls._timestamp_from_timestring(
+                    _frames[0]["time"]
+                ),
+                end_timestamp=cls._timestamp_from_timestring(
+                    _frames[-1]["time"]
+                ),
             )
         return periods
 

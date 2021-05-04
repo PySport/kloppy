@@ -34,22 +34,22 @@ class TestSkillCornerTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 34783
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == None
+        assert dataset.metadata.orientation is None
         assert dataset.metadata.periods[1] == Period(
             id=1,
-            start_timestamp="0:00.00",
-            end_timestamp="45:53.30",
+            start_timestamp=0.0,
+            end_timestamp=2753.3,
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
         assert dataset.metadata.periods[2] == Period(
             id=2,
-            start_timestamp="45:00.00",
-            end_timestamp="91:49.70",
+            start_timestamp=2700.0,
+            end_timestamp=5509.7,
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
         # is pregame info skipped?
-        assert dataset.records[0].timestamp == "0:11.20"
+        assert dataset.records[0].timestamp == 11.2
 
         # make sure data is loaded correctly (including flip y-axis)
         home_player = dataset.metadata.teams[0].players[2]

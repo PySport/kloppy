@@ -409,6 +409,12 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
         frame_rate = 10
 
+        orientation = (
+            Orientation.HOME_TEAM
+            if periods[1].attacking_direction == AttackingDirection.HOME_AWAY
+            else Orientation.AWAY_TEAM
+        )
+
         metadata = Metadata(
             teams=teams,
             periods=periods,
@@ -427,7 +433,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 away=metadata["away_team_score"],
             ),
             frame_rate=frame_rate,
-            orientation=None,
+            orientation=orientation,
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         )

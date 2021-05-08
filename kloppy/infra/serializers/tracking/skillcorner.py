@@ -54,7 +54,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         ball_coordinates = None
         players_coordinates = {}
 
-        ball_carrier = frame["possession"].get("trackable_object")
+        # ball_carrier = frame["possession"].get("trackable_object")
         ball_owning_team = frame["possession"].get("group")
 
         if ball_owning_team == "home team":
@@ -70,7 +70,6 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             y = frame_record.get("y")
 
             trackable_object = frame_record.get("trackable_object", None)
-            player_data = player_dict.get(trackable_object)
 
             track_id = frame_record.get("track_id", None)
             group_name = frame_record.get("group_name", None)

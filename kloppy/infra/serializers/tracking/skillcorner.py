@@ -153,11 +153,16 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         frame_periods = np.array([_frame.period.id for _frame in frames])
 
         for period in periods.keys():
-            count = Counter(
-                np.array(attacking_directions)[frame_periods == period]
-            )
-            att_direction = count.most_common()[0][0]
-            periods[period].attacking_direction = att_direction
+            if period in frame_periods:
+                count = Counter(
+                    np.array(attacking_directions)[frame_periods == period]
+                )
+                att_direction = count.most_common()[0][0]
+                periods[period].attacking_direction = att_direction
+            else:
+                periods[
+                    period
+                ].attacking_direction = AttackingDirection.NOT_SET
 
     def __load_json(self, file):
         return json.load(file)
@@ -383,7 +388,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                         n += 1
 
         frames = []
-        for n, _frame in enumerate(_iter()):
+
+        n_frames = 0
+        for _frame in _iter():
             # include frame if there is any tracking data, players or ball.
             # or if include_empty_frames == True
             if include_empty_frames or len(_frame["data"]) > 0:
@@ -401,8 +408,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 )
 
                 frames.append(frame)
+                n_frames += 1
 
-                if limit and n >= limit:
+                if limit and n_frames >= limit:
                     break
 
         self._set_skillcorner_attacking_directions(frames, periods)

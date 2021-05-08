@@ -48,10 +48,10 @@ class TestSkillCornerTracking:
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
-        # is pregame info skipped?
+        # are frames with wrong camera views and pregame skipped?
         assert dataset.records[0].timestamp == 11.2
 
-        # make sure data is loaded correctly (including flip y-axis)
+        # make sure data is loaded correctly
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_coordinates[home_player] == Point(
             x=33.8697315398, y=-9.55742259253
@@ -66,7 +66,7 @@ class TestSkillCornerTracking:
             x=30.5914728131, y=35.3622277834
         )
 
-        # make sure player data is only in the frame when the player is at the pitch
+        # make sure player data is only in the frame when the player is in view
         assert "home_1" not in [
             player.player_id
             for player in dataset.records[0].players_coordinates.keys()

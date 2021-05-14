@@ -6,6 +6,7 @@ from . import (
     MetricaTrackingSerializer,
     OptaSerializer,
     SportecEventSerializer,
+    SkillCornerTrackingSerializer,
     StatsBombSerializer,
     TRACABSerializer,
     WyscoutSerializer,
@@ -34,6 +35,20 @@ def load_tracab_tracking_data(
     metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
     serializer = TRACABSerializer()
+    with open(metadata_filename, "rb") as metadata, open(
+        raw_data_filename, "rb"
+    ) as raw_data:
+
+        return serializer.deserialize(
+            inputs={"metadata": metadata, "raw_data": raw_data},
+            options=options,
+        )
+
+
+def load_skillcorner_tracking_data(
+    metadata_filename: str, raw_data_filename: str, options: dict = None
+) -> TrackingDataset:
+    serializer = SkillCornerTrackingSerializer()
     with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:
@@ -366,6 +381,7 @@ def to_pandas(
 
 __all__ = [
     "load_tracab_tracking_data",
+    "load_skillcorner_tracking_data",
     "load_metrica_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",

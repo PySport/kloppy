@@ -10,4 +10,5 @@ from .tracking import (
     MetricaTrackingSerializer,
     TRACABSerializer,
     TrackingDataSerializer,
+    SkillCornerTrackingSerializer,
 )

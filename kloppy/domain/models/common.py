@@ -56,6 +56,7 @@ class Provider(Enum):
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"
+    OTHER = "other"
 
     def __str__(self):
         return self.value
@@ -211,6 +212,9 @@ class Orientation(Enum):
     FIXED_HOME_AWAY = "fixed-home-away"
     FIXED_AWAY_HOME = "fixed-away-home"
 
+    # Not set in dataset
+    NOT_SET = "not-set"
+
     def get_orientation_factor(
         self,
         attacking_direction: AttackingDirection,
@@ -293,6 +297,9 @@ class Period:
     def duration(self):
         return self.end_timestamp - self.start_timestamp
 
+    def __eq__(self, other):
+        return isinstance(other, Period) and other.id == self.id
+
 
 class DatasetFlag(Flag):
     BALL_OWNING_TEAM = 1
@@ -313,8 +320,8 @@ class DataRecord(ABC):
 
     period: Period
     timestamp: float
-    ball_owning_team: Team
-    ball_state: BallState
+    ball_owning_team: Optional[Team]
+    ball_state: Optional[BallState]
 
 
 @dataclass
@@ -350,10 +357,12 @@ class DatasetType(Enum):
     Attributes:
         TRACKING (DatasetType):
         EVENT (DatasetType):
+        CODE (DatasetType):
     """
 
     TRACKING = "TRACKING"
     EVENT = "EVENT"
+    CODE = "CODE"
 
     def __repr__(self):
         return self.value
@@ -371,7 +380,7 @@ class Dataset(ABC):
     """
 
     records: List[DataRecord]
-    metadata: Metadata
+    metadata: Optional[Metadata]
 
     @property
     @abstractmethod

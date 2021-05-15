@@ -27,6 +27,7 @@ from .domain import (
     ShotEvent,
     TrackingDataset,
     Transformer,
+    CodeDataset,
 )
 
 
@@ -180,6 +181,23 @@ def load_wyscout_event_data(
         return serializer.deserialize(
             inputs={"event_data": event_data}, options=options
         )
+
+
+def load_xml_code_data(xml_filename: str) -> CodeDataset:
+    """
+
+    :param xml_filename:
+    :return:
+    """
+
+
+def save_xml_code_data(xml_filename: str, dataset: CodeDataset):
+    """
+
+    :param xml_filename:
+    :param dataset:
+    :return:
+    """
 
 
 DatasetT = TypeVar("DatasetT")
@@ -373,6 +391,8 @@ __all__ = [
     "load_opta_event_data",
     "load_sportec_event_data",
     "load_wyscout_event_data",
+    "load_xml_code_data",
+    "save_xml_code_data",
     "to_pandas",
     "transform",
 ]

@@ -5,22 +5,17 @@ import textwrap
 from collections import Counter
 from dataclasses import dataclass
 from typing import List
-from xml.etree import ElementTree as ET
 
 from kloppy import event_pattern_matching as pm
-from kloppy import load_opta_event_data, load_statsbomb_event_data
-from kloppy.helpers import load_wyscout_event_data
+from kloppy import (
+    load_opta_event_data,
+    load_statsbomb_event_data,
+    load_wyscout_event_data,
+)
+from kloppy.domain import CodeDataset, Code
 from kloppy.utils import performance_logging
 
 sys.path.append(".")
-
-
-@dataclass
-class VideoFragment:
-    id_: str
-    label: str
-    start: float
-    end: float
 
 
 def write_to_xml(video_fragments: List[VideoFragment], filename):
@@ -157,7 +152,11 @@ def run_query(argv=sys.argv[1:]):
     with performance_logging("searching", logger=logger):
         matches = pm.search(dataset, query.pattern)
 
-    video_fragments = []
+    # Construct new code dataset with same properties (eg periods)
+    # as original event dataset.
+    # Records will be added later below
+    code_dataset = CodeDataset(metadata=dataset.metadata, records=[])
+
     counter = Counter()
     for i, match in enumerate(matches):
         team = match.events[0].team
@@ -182,9 +181,9 @@ def run_query(argv=sys.argv[1:]):
                 else:
                     relative_period_start += period.duration
 
-            label = str(team)
+            code_ = str(team)
             if opts.with_success and success:
-                label += " success"
+                code_ += " success"
 
             start_timestamp = (
                 relative_period_start
@@ -197,17 +196,20 @@ def run_query(argv=sys.argv[1:]):
                 + opts.append_time
             )
 
-            video_fragments.append(
-                VideoFragment(
-                    id_=str(i),
-                    start=start_timestamp,
-                    end=end_timestamp,
-                    label=label,
-                )
+            code = Code(
+                period=match.events[0].period,
+                code_id=str(i),
+                code=code_,
+                timestamp=match.events[0].timestamp - opts.prepend_time,
+                end_timestamp=match.events[-1].timestamp + opts.append_time,
+                # refactor those two out
+                ball_state=None,
+                ball_owning_team=None,
             )
+            code_dataset.records.append(code)
 
     if opts.output_xml:
-        write_to_xml(video_fragments, opts.output_xml)
+        write_to_xml(code_dataset, opts.output_xml)
         logger.info(f"Wrote {len(video_fragments)} video fragments to file")
 
     if opts.stats == "text":

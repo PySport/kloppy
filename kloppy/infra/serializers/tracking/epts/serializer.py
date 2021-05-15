@@ -7,6 +7,7 @@ from kloppy.domain import (
     AttackingDirection,
     Frame,
     Point,
+    Point3D,
     Team,
     Orientation,
 )
@@ -53,7 +54,9 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_coordinates=players_coordinates,
-            ball_coordinates=Point(x=row["ball_x"], y=row["ball_y"]),
+            ball_coordinates=Point3D(
+                x=row["ball_x"], y=row["ball_y"], z=row["ball_z"]
+            ),
         )
 
     def deserialize(

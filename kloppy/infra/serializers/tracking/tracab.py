@@ -9,6 +9,7 @@ from kloppy.domain import (
     AttackingDirection,
     Frame,
     Point,
+    Point3D,
     Team,
     BallState,
     Period,
@@ -88,7 +89,9 @@ class TRACABSerializer(TrackingDataSerializer):
         return Frame(
             frame_id=frame_id,
             timestamp=frame_id / frame_rate - period.start_timestamp,
-            ball_coordinates=Point(float(ball_x), float(ball_y)),
+            ball_coordinates=Point3D(
+                float(ball_x), float(ball_y), float(ball_z)
+            ),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_coordinates=players_coordinates,

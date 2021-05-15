@@ -45,6 +45,7 @@ class Provider(Enum):
         METRICA:
         TRACAB:
         OPTA:
+        SKILLCORNER:
         STATSBOMB:
         SPORTEC:
         WYSCOUT:
@@ -53,6 +54,7 @@ class Provider(Enum):
     METRICA = "metrica"
     TRACAB = "tracab"
     OPTA = "opta"
+    SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"

@@ -10,6 +10,7 @@ from kloppy.domain import (
     AttackingDirection,
     Orientation,
     Point,
+    Point3D,
     BallState,
     Team,
     Provider,
@@ -122,4 +123,6 @@ class TestEPTSTracking:
             x=-769, y=-2013
         )
 
-        assert dataset.records[0].ball_coordinates == Point(x=-2656, y=367)
+        assert dataset.records[0].ball_coordinates == Point3D(
+            x=-2656, y=367, z=100
+        )

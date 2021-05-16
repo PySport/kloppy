@@ -382,7 +382,7 @@ class Dataset(ABC):
     """
 
     records: List[DataRecord]
-    metadata: Optional[Metadata]
+    metadata: Metadata
 
     @property
     @abstractmethod

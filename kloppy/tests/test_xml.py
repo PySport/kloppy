@@ -1,5 +1,8 @@
 import os
 
+from pandas import DataFrame
+from pandas._testing import assert_frame_equal
+
 from kloppy import XMLCodeSerializer
 from kloppy.domain import Period
 
@@ -31,6 +34,24 @@ class TestXMLCodeTracking:
             "Packing.Value": 1,
             "Receiver": "Klaas Nøme",
         }
+
+        dataframe = dataset.to_pandas()
+
+        expected_data_frame = DataFrame.from_dict(
+            {
+                "code_id": ["P1", "P2", "P3"],
+                "period_id": [1, 1, 1],
+                "timestamp": [3.6, 68.3, 103.6],
+                "end_timestamp": [9.7, 74.5, 109.6],
+                "code": ["PASS", "PASS", "SHOT"],
+                "Team": ["Henkie", "Henkie", "Henkie"],
+                "Packing.Value": [1, 3, None],
+                "Receiver": ["Klaas Nøme", "Piet", None],
+                "Expected.Goal.Value": [None, None, 0.13],
+            }
+        )
+
+        assert_frame_equal(dataframe, expected_data_frame)
 
     def test_correct_serialization(self):
         base_dir = os.path.dirname(__file__)

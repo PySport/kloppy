@@ -13,5 +13,5 @@ class CodeDataSerializer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def serialize(self, dataset: CodeDataset) -> str:
+    def serialize(self, dataset: CodeDataset) -> bytes:
         raise NotImplementedError

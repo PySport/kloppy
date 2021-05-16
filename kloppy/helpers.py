@@ -9,7 +9,7 @@ from . import (
     SkillCornerTrackingSerializer,
     StatsBombSerializer,
     TRACABSerializer,
-    WyscoutSerializer,
+    WyscoutSerializer, XMLCodeSerializer,
 )
 from .domain import (
     CardEvent,
@@ -29,6 +29,7 @@ from .domain import (
     TrackingDataset,
     Transformer,
     CodeDataset,
+    Code,
 )
 
 
@@ -199,20 +200,18 @@ def load_wyscout_event_data(
 
 
 def load_xml_code_data(xml_filename: str) -> CodeDataset:
-    """
+    serializer = XMLCodeSerializer()
+    with open(xml_filename, "rb") as xml_file:
+        return serializer.deserialize(
+            inputs={"xml_file": xml_file}
+        )
 
-    :param xml_filename:
-    :return:
-    """
 
-
-def save_xml_code_data(xml_filename: str, dataset: CodeDataset):
-    """
-
-    :param xml_filename:
-    :param dataset:
-    :return:
-    """
+def write_xml_code_data(dataset: CodeDataset, xml_filename: str):
+    serializer = XMLCodeSerializer()
+    with open(xml_filename, "wb") as xml_file:
+        content = serializer.serialize(dataset)
+        xml_file.write(content)
 
 
 DatasetT = TypeVar("DatasetT")
@@ -332,6 +331,19 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
     return row
 
 
+def _code_to_pandas_row_converter(code: Code) -> Dict:
+    row = dict(
+        code_id=code.code_id,
+        period_id=code.period.id if code.period else None,
+        timestamp=code.timestamp,
+        end_timestamp=code.end_timestamp,
+        code=code.code,
+    )
+    row.update(code.labels)
+
+    return row
+
+
 def to_pandas(
     dataset: Union[Dataset, List[DataRecord]],
     _record_converter: Callable[[DataRecord], Dict] = None,
@@ -371,7 +383,7 @@ def to_pandas(
         return pd.DataFrame()
 
     if not _record_converter:
-        if isinstance(dataset, TrackingDataset) and isinstance(
+        if isinstance(dataset, TrackingDataset) or isinstance(
             records[0], Frame
         ):
             _record_converter = _frame_to_pandas_row_converter
@@ -379,6 +391,8 @@ def to_pandas(
             records[0], Event
         ):
             _record_converter = _event_to_pandas_row_converter
+        elif isinstance(dataset, CodeDataset) or isinstance(records[0], Code):
+            _record_converter = _code_to_pandas_row_converter
         else:
             raise Exception("Don't know how to convert rows")
 
@@ -408,7 +422,7 @@ __all__ = [
     "load_sportec_event_data",
     "load_wyscout_event_data",
     "load_xml_code_data",
-    "save_xml_code_data",
+    "write_xml_code_data",
     "to_pandas",
     "transform",
 ]

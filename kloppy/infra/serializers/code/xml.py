@@ -73,7 +73,7 @@ class XMLCodeSerializer(CodeDataSerializer):
             records=codes,
         )
 
-    def serialize(self, dataset: CodeDataset) -> str:
+    def serialize(self, dataset: CodeDataset) -> bytes:
         root = etree.Element("file")
         all_instances = etree.SubElement(root, "ALL_INSTANCES")
         for code in dataset.codes:

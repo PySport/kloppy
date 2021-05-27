@@ -3,47 +3,18 @@ import logging
 import sys
 import textwrap
 from collections import Counter
-from dataclasses import dataclass
-from typing import List
-from xml.etree import ElementTree as ET
 
-from kloppy import event_pattern_matching as pm
-from kloppy import load_opta_event_data, load_statsbomb_event_data
-from kloppy.helpers import load_wyscout_event_data
+from kloppy import (
+    load_opta_event_data,
+    load_statsbomb_event_data,
+    load_wyscout_event_data,
+    write_xml_code_data,
+    event_pattern_matching as pm,
+)
+from kloppy.domain import CodeDataset, Code
 from kloppy.utils import performance_logging
 
 sys.path.append(".")
-
-
-@dataclass
-class VideoFragment:
-    id_: str
-    label: str
-    start: float
-    end: float
-
-
-def write_to_xml(video_fragments: List[VideoFragment], filename):
-    root = ET.Element("file")
-    instances = ET.SubElement(root, "ALL_INSTANCES")
-    for video_fragment in video_fragments:
-        instance = ET.SubElement(instances, "instance")
-
-        instance_id = ET.SubElement(instance, "ID")
-        instance_id.text = video_fragment.id_
-
-        instance_code = ET.SubElement(instance, "code")
-        instance_code.text = video_fragment.label
-
-        instance_start = ET.SubElement(instance, "start")
-        instance_start.text = str(max(0.0, video_fragment.start))
-
-        instance_end = ET.SubElement(instance, "end")
-        instance_end.text = str(video_fragment.end)
-
-    tree = ET.ElementTree(root)
-
-    tree.write(filename, xml_declaration=True, encoding="utf-8", method="xml")
 
 
 def _format_time(seconds: float) -> str:
@@ -157,7 +128,11 @@ def run_query(argv=sys.argv[1:]):
     with performance_logging("searching", logger=logger):
         matches = pm.search(dataset, query.pattern)
 
-    video_fragments = []
+    # Construct new code dataset with same properties (eg periods)
+    # as original event dataset.
+    # Records will be added later below
+    code_dataset = CodeDataset(metadata=dataset.metadata, records=[])
+
     counter = Counter()
     for i, match in enumerate(matches):
         team = match.events[0].team
@@ -175,40 +150,25 @@ def run_query(argv=sys.argv[1:]):
             print_match(i, match, success, str(team))
 
         if opts.output_xml and should_process:
-            relative_period_start = 0
-            for period in dataset.periods:
-                if period == match.events[0].period:
-                    break
-                else:
-                    relative_period_start += period.duration
-
-            label = str(team)
+            code_ = str(team)
             if opts.with_success and success:
-                label += " success"
+                code_ += " success"
 
-            start_timestamp = (
-                relative_period_start
-                + match.events[0].timestamp
-                - opts.prepend_time
+            code = Code(
+                period=match.events[0].period,
+                code_id=str(i),
+                code=code_,
+                timestamp=match.events[0].timestamp - opts.prepend_time,
+                end_timestamp=match.events[-1].timestamp + opts.append_time,
+                # TODO: refactor those two out
+                ball_state=None,
+                ball_owning_team=None,
             )
-            end_timestamp = (
-                relative_period_start
-                + match.events[-1].timestamp
-                + opts.append_time
-            )
-
-            video_fragments.append(
-                VideoFragment(
-                    id_=str(i),
-                    start=start_timestamp,
-                    end=end_timestamp,
-                    label=label,
-                )
-            )
+            code_dataset.records.append(code)
 
     if opts.output_xml:
-        write_to_xml(video_fragments, opts.output_xml)
-        logger.info(f"Wrote {len(video_fragments)} video fragments to file")
+        write_xml_code_data(code_dataset, opts.output_xml)
+        logger.info(f"Wrote {len(code_dataset.codes)} video fragments to file")
 
     if opts.stats == "text":
         text_stats = """\

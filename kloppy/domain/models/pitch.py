@@ -35,6 +35,10 @@ class PitchDimensions:
     x_per_meter: float = None
     y_per_meter: float = None
 
+    @classmethod
+    def default(cls):
+        return cls(x_dim=Dimension(0, 1), y_dim=Dimension(0, 1))
+
     @property
     def length(self) -> float:
         """

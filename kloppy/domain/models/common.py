@@ -58,6 +58,7 @@ class Provider(Enum):
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"
+    OTHER = "other"
 
     def __str__(self):
         return self.value
@@ -213,6 +214,9 @@ class Orientation(Enum):
     FIXED_HOME_AWAY = "fixed-home-away"
     FIXED_AWAY_HOME = "fixed-away-home"
 
+    # Not set in dataset
+    NOT_SET = "not-set"
+
     def get_orientation_factor(
         self,
         attacking_direction: AttackingDirection,
@@ -295,6 +299,9 @@ class Period:
     def duration(self):
         return self.end_timestamp - self.start_timestamp
 
+    def __eq__(self, other):
+        return isinstance(other, Period) and other.id == self.id
+
 
 class DatasetFlag(Flag):
     BALL_OWNING_TEAM = 1
@@ -315,8 +322,8 @@ class DataRecord(ABC):
 
     period: Period
     timestamp: float
-    ball_owning_team: Team
-    ball_state: BallState
+    ball_owning_team: Optional[Team]
+    ball_state: Optional[BallState]
 
 
 @dataclass
@@ -352,10 +359,12 @@ class DatasetType(Enum):
     Attributes:
         TRACKING (DatasetType):
         EVENT (DatasetType):
+        CODE (DatasetType):
     """
 
     TRACKING = "TRACKING"
     EVENT = "EVENT"
+    CODE = "CODE"
 
     def __repr__(self):
         return self.value
@@ -414,4 +423,40 @@ class Dataset(ABC):
         return replace(
             self,
             records=[record for record in self.records if filter_fn(record)],
+        )
+
+    @classmethod
+    def from_dataset(
+        cls, dataset: "Dataset", mapper_fn: Callable[[DataRecord], DataRecord]
+    ):
+        """
+        Create a new Dataset from other dataset
+
+        Arguments:
+            - mapper_fn:
+
+        Examples:
+            >>> from kloppy.domain import Code,     CodeDataset
+
+            >>> code_dataset = (
+            >>>     CodeDataset
+            >>>     .from_dataset(
+            >>>         dataset,
+            >>>         lambda event: Code(
+            >>>             code_id=event.event_id,
+            >>>             code=event.event_name,
+            >>>             period=event.period,
+            >>>             timestamp=event.timestamp - 7,
+            >>>             end_timestamp=event.timestamp + 5,
+            >>>             labels={
+            >>>                 'Player': str(event.player),
+            >>>                 'Team': str(event.team)
+            >>>             }
+            >>>         )
+            >>>     )
+            >>> )
+        """
+        return cls(
+            metadata=dataset.metadata,
+            records=[mapper_fn(record) for record in dataset.records],
         )

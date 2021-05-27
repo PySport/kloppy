@@ -76,7 +76,7 @@ class XMLCodeSerializer(CodeDataSerializer):
     def serialize(self, dataset: CodeDataset) -> bytes:
         root = etree.Element("file")
         all_instances = etree.SubElement(root, "ALL_INSTANCES")
-        for code in dataset.codes:
+        for i, code in enumerate(dataset.codes):
             relative_period_start = 0
             for period in dataset.metadata.periods:
                 if period == code.period:
@@ -86,7 +86,7 @@ class XMLCodeSerializer(CodeDataSerializer):
 
             instance = etree.SubElement(all_instances, "instance")
             id_ = etree.SubElement(instance, "ID")
-            id_.text = code.code_id
+            id_.text = code.code_id or str(i + 1)
 
             start = etree.SubElement(instance, "start")
             start.text = str(relative_period_start + code.start_timestamp)

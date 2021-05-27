@@ -17,6 +17,8 @@ nav:
   - Quickstart Guides:
     - Event Data: quickstart/event_data.ipynb
     - Tracking Data: quickstart/tracking_data.ipynb
+    - Broadcast Tracking Data: quickstart/broadcast_tracking_data.ipynb
+    - Code data: quickstart/code_data.ipynb
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
   - API Reference:

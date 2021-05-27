@@ -424,3 +424,39 @@ class Dataset(ABC):
             self,
             records=[record for record in self.records if filter_fn(record)],
         )
+
+    @classmethod
+    def from_dataset(
+        cls, dataset: "Dataset", mapper_fn: Callable[[DataRecord], DataRecord]
+    ):
+        """
+        Create a new Dataset from other dataset
+
+        Arguments:
+            - mapper_fn:
+
+        Examples:
+            >>> from kloppy.domain import Code,     CodeDataset
+
+            >>> code_dataset = (
+            >>>     CodeDataset
+            >>>     .from_dataset(
+            >>>         dataset,
+            >>>         lambda event: Code(
+            >>>             code_id=event.event_id,
+            >>>             code=event.event_name,
+            >>>             period=event.period,
+            >>>             timestamp=event.timestamp - 7,
+            >>>             end_timestamp=event.timestamp + 5,
+            >>>             labels={
+            >>>                 'Player': str(event.player),
+            >>>                 'Team': str(event.team)
+            >>>             }
+            >>>         )
+            >>>     )
+            >>> )
+        """
+        return cls(
+            metadata=dataset.metadata,
+            records=[mapper_fn(record) for record in dataset.records],
+        )

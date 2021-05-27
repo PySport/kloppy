@@ -9,7 +9,8 @@ from . import (
     SkillCornerTrackingSerializer,
     StatsBombSerializer,
     TRACABSerializer,
-    WyscoutSerializer, XMLCodeSerializer,
+    WyscoutSerializer,
+    XMLCodeSerializer,
 )
 from .domain import (
     CardEvent,
@@ -202,9 +203,7 @@ def load_wyscout_event_data(
 def load_xml_code_data(xml_filename: str) -> CodeDataset:
     serializer = XMLCodeSerializer()
     with open(xml_filename, "rb") as xml_file:
-        return serializer.deserialize(
-            inputs={"xml_file": xml_file}
-        )
+        return serializer.deserialize(inputs={"xml_file": xml_file})
 
 
 def write_xml_code_data(dataset: CodeDataset, xml_filename: str):

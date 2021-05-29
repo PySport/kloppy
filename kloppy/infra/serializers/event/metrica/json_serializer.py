@@ -23,6 +23,8 @@ from kloppy.domain import (
     EventType,
     SetPieceType,
     SetPieceQualifier,
+    BodyPart,
+    BodyPartQualifier,
     Qualifier,
     Event,
 )
@@ -58,6 +60,8 @@ MS_SET_PIECE_CORNER_KICK = 33
 MS_SET_PIECE_PENALTY = 36
 MS_SET_PIECE_KICK_OFF = 35
 
+# Body Parts
+MS_BODY_PART_HEAD = 11
 
 # Shots
 MS_EVENT_TYPE_SHOT = 2
@@ -150,8 +154,19 @@ def _get_event_qualifiers(
     event: Dict, previous_event: Dict, subtypes: List
 ) -> List[Qualifier]:
 
-    previous_event_type_id = previous_event["type"]["id"]
     qualifiers = []
+
+    qualifiers.extend(_get_event_setpiece_qualifiers(previous_event, subtypes))
+    qualifiers.extend(_get_event_bodypart_qualifiers(subtypes))
+
+    return qualifiers
+
+def _get_event_setpiece_qualifiers(
+    previous_event: Dict, subtypes: List
+) -> List[Qualifier]:
+
+    qualifiers = []
+    previous_event_type_id = previous_event["type"]["id"]
     if previous_event_type_id == MS_SET_PIECE:
         set_piece_subtypes = _parse_subtypes(previous_event)
         if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
@@ -168,6 +183,15 @@ def _get_event_qualifiers(
             qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
     elif subtypes and MS_SET_PIECE_GOAL_KICK in subtypes:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
+
+    return qualifiers
+
+
+def _get_event_bodypart_qualifiers(subtypes: List) -> List[Qualifier]:
+
+    qualifiers = []
+    if subtypes and MS_BODY_PART_HEAD in subtypes:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
 
     return qualifiers
 
@@ -243,11 +267,11 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     the 'json' formatted event data. input `metadata` should point
                     to a `Readable` object containing the `xml` metadata file.
                 options : dict
-                    Options for deserialization of the Metrica Sports event json file. 
-                    Possible options are `event_types` (list of event types) to specify 
-                    the event types that should be returned. Valid types: "shot", "pass", 
-                    "carry", "take_on" and "generic". Generic is everything other than 
-                    the first 4. Those events are barely parsed. This type of event can 
+                    Options for deserialization of the Metrica Sports event json file.
+                    Possible options are `event_types` (list of event types) to specify
+                    the event types that should be returned. Valid types: "shot", "pass",
+                    "carry", "take_on" and "generic". Generic is everything other than
+                    the first 4. Those events are barely parsed. This type of event can
                     be used to do the parsing yourself.
                     Every event has a 'raw_event' attribute which contains the original
                     dictionary.

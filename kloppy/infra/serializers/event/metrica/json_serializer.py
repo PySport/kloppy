@@ -161,6 +161,7 @@ def _get_event_qualifiers(
 
     return qualifiers
 
+
 def _get_event_setpiece_qualifiers(
     previous_event: Dict, subtypes: List
 ) -> List[Qualifier]:

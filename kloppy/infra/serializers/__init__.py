@@ -10,4 +10,6 @@ from .tracking import (
     MetricaTrackingSerializer,
     TRACABSerializer,
     TrackingDataSerializer,
+    SkillCornerTrackingSerializer,
 )
+from .code import XMLCodeSerializer

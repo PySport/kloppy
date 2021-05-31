@@ -7,6 +7,7 @@ from kloppy.domain import (
     Orientation,
     Provider,
     Point,
+    Point3D,
     BallState,
     Team,
     Ground,
@@ -64,7 +65,7 @@ class TestTracabTracking:
         assert dataset.records[0].players_coordinates[player_away_19] == Point(
             x=8889, y=-666
         )
-        assert dataset.records[0].ball_coordinates == Point(x=-27, y=25)
+        assert dataset.records[0].ball_coordinates == Point3D(x=-27, y=25, z=0)
         assert dataset.records[0].ball_state == BallState.ALIVE
         assert dataset.records[0].ball_owning_team == Team(
             team_id="home", name="home", ground=Ground.HOME

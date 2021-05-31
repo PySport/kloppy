@@ -70,3 +70,15 @@ class Point:
             other: See [`Point`][kloppy.domain.models.pitch.Point]
         """
         return sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+
+
+@dataclass(frozen=True)
+class Point3D(Point):
+    """
+    Point on the pitch that includes the z coordinate for height (e.g. of the ball).
+
+    Attributes:
+        z: z coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
+    """
+
+    z: float

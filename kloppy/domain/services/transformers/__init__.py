@@ -1,5 +1,5 @@
 from dataclasses import asdict, fields, replace
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from kloppy.domain import (
     AttackingDirection,
@@ -11,6 +11,7 @@ from kloppy.domain import (
     Orientation,
     PitchDimensions,
     Point,
+    Point3D,
     Team,
     TrackingDataset,
     CoordinateSystem,
@@ -56,7 +57,7 @@ class Transformer:
         )
         self._to_orientation = to_orientation
 
-    def change_point_dimensions(self, point: Point) -> Point:
+    def change_point_dimensions(self, point: Union[Point, Point3D]) -> Point:
 
         if point is None:
             return None
@@ -64,12 +65,15 @@ class Transformer:
         x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
         y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
 
-        return Point(
-            x=self._to_pitch_dimensions.x_dim.from_base(x_base),
-            y=self._to_pitch_dimensions.y_dim.from_base(y_base),
-        )
+        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
+        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
 
-    def flip_point(self, point: Point):
+        if isinstance(point, Point3D):
+            return Point3D(x=x, y=y, z=point.z)
+        else:
+            return Point(x=x, y=y)
+
+    def flip_point(self, point: Union[Point, Point3D]):
 
         if point is None:
             return None
@@ -80,10 +84,13 @@ class Transformer:
         x_base = 1 - x_base
         y_base = 1 - y_base
 
-        return Point(
-            x=self._to_pitch_dimensions.x_dim.from_base(x_base),
-            y=self._to_pitch_dimensions.y_dim.from_base(y_base),
-        )
+        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
+        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
+
+        if isinstance(point, Point3D):
+            return Point3D(x=x, y=y, z=point.z)
+        else:
+            return Point(x=x, y=y)
 
     def __needs_flip(
         self,
@@ -176,7 +183,7 @@ class Transformer:
             },
         )
 
-    def __change_point_coordinate_system(self, point: Point):
+    def __change_point_coordinate_system(self, point: Union[Point, Point3D]):
 
         if point is None:
             return None
@@ -198,7 +205,10 @@ class Transformer:
             x = self._to_coordinate_system.pitch_dimensions.x_dim.from_base(x)
             y = self._to_coordinate_system.pitch_dimensions.y_dim.from_base(y)
 
-        return Point(x=x, y=y)
+        if isinstance(point, Point3D):
+            return Point3D(x=x, y=y, z=point.z)
+        else:
+            return Point(x=x, y=y)
 
     def __flip_frame(self, frame: Frame):
 

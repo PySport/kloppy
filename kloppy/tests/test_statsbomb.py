@@ -6,8 +6,9 @@ from kloppy.domain import (
     Period,
     Orientation,
     Provider,
-    EventType,
     Point,
+    BodyPartQualifier,
+    BodyPart,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -72,6 +73,20 @@ class TestStatsbomb:
         )
 
         assert dataset.events[10].coordinates == Point(34.5, 20.5)
+
+        assert (
+            dataset.events[791].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.HEAD
+        )
+
+        assert (
+            dataset.events[2231].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
+        )
+
+        assert (
+            dataset.events[195].get_qualifier_value(BodyPartQualifier) is None
+        )
 
     def test_correct_normalized_deserialization(self):
         """

@@ -2,6 +2,23 @@
 
 Find out all changes between different kloppy versions
 
+## 1.6.0 (2021-05-27)
+
+Pull request merged:
+
+- SkillCorner Serializer ([#90](https://github.com/PySport/kloppy/pull/90))
+- Include z-coordinate for ball ([#93](https://github.com/PySport/kloppy/pull/93))
+- XML Serializer ([#96](https://github.com/PySport/kloppy/pull/96))
+- Add some presentation files ([#95](https://github.com/PySport/kloppy/pull/95))
+
+
+## 1.5.2 (2021-03-12)
+
+Pull request merged:
+
+- Add Wyscout dataset ([#88](https://github.com/PySport/kloppy/pull/88))
+
+
 ## 1.5.1 (2020-12-23):
 
 Pull request merged:

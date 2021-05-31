@@ -143,3 +143,6 @@ examples/pattern_matching/repository/*.json
 
 # Visual Studio Code workspace settings
 .vscode/
+
+# Visual Studio Code
+*.code-workspace

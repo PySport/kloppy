@@ -28,7 +28,10 @@ class TestSkillCornerTracking:
                 inputs={
                     "raw_data": raw_data,
                     "metadata": metadata,
-                }
+                },
+                options={
+                    "coordinate_system": Provider.SKILLCORNER,
+                },
             )
         assert dataset.metadata.provider == Provider.SKILLCORNER
         assert dataset.dataset_type == DatasetType.TRACKING
@@ -59,11 +62,11 @@ class TestSkillCornerTracking:
 
         away_player = dataset.metadata.teams[1].players[9]
         assert dataset.records[0].players_coordinates[away_player] == Point(
-            x=25.9863082795, y=27.3013598578
+            x=25.986308279500008, y=27.3013598578
         )
 
         assert dataset.records[1].ball_coordinates == Point(
-            x=30.5914728131, y=35.3622277834
+            x=30.591472813099998, y=35.3622277834
         )
 
         # make sure player data is only in the frame when the player is in view
@@ -95,3 +98,25 @@ class TestSkillCornerTracking:
         assert pitch_dimensions.x_dim.max == 52.5
         assert pitch_dimensions.y_dim.min == -34
         assert pitch_dimensions.y_dim.max == 34
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = SkillCornerTrackingSerializer()
+
+        with open(
+            f"{base_dir}/files/skillcorner_structured_data.json", "rb"
+        ) as raw_data, open(
+            f"{base_dir}/files/skillcorner_match_data.json", "rb"
+        ) as metadata:
+            dataset = serializer.deserialize(
+                inputs={
+                    "raw_data": raw_data,
+                    "metadata": metadata,
+                },
+            )
+
+        home_player = dataset.metadata.teams[0].players[2]
+        assert dataset.records[0].players_coordinates[home_player] == Point(
+            x=0.8225688718076191, y=0.6405503322430882
+        )

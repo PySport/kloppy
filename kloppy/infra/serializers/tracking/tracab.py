@@ -173,12 +173,6 @@ class TRACABSerializer(TrackingDataSerializer):
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
 
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
-                length=pitch_size_width,
-                width=pitch_size_height,
-            )
-
             periods = []
             for period in match.iterchildren(tag="period"):
                 start_frame_id = int(period.attrib["iStartFrame"])
@@ -194,12 +188,20 @@ class TRACABSerializer(TrackingDataSerializer):
 
         with performance_logging("Loading data", logger=logger):
 
+            from_coordinate_system = build_coordinate_system(
+                Provider.TRACAB,
+                length=pitch_size_width,
+                width=pitch_size_height,
+            )
+
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=pitch_size_width,
+                width=pitch_size_height,
+            )
+
             transformer = Transformer(
-                from_coordinate_system=build_coordinate_system(
-                    Provider.TRACAB,
-                    length=pitch_size_width,
-                    width=pitch_size_height,
-                ),
+                from_coordinate_system=from_coordinate_system,
                 to_coordinate_system=to_coordinate_system,
             )
 

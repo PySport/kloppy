@@ -23,6 +23,8 @@ from kloppy.domain import (
     Score,
     Team,
     TrackingDataset,
+    Transformer,
+    build_coordinate_system,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -319,6 +321,23 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             pitch_size_width = metadata["pitch_width"]
             pitch_size_length = metadata["pitch_length"]
 
+            from_coordinate_system = build_coordinate_system(
+                Provider.SKILLCORNER,
+                length=pitch_size_length,
+                width=pitch_size_width,
+            )
+
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=pitch_size_length,
+                width=pitch_size_width,
+            )
+
+            transformer = Transformer(
+                from_coordinate_system=from_coordinate_system,
+                to_coordinate_system=to_coordinate_system,
+            )
+
             home_team_id = metadata["home_team"]["id"]
             away_team_id = metadata["away_team"]["id"]
 
@@ -406,6 +425,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                     _frame,
                 )
 
+                frame = transformer.transform_frame(frame)
+
                 frames.append(frame)
                 n_frames += 1
 
@@ -425,16 +446,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(
-                    -(pitch_size_length / 2), (pitch_size_length / 2)
-                ),
-                y_dim=Dimension(
-                    -(pitch_size_width / 2), (pitch_size_width / 2)
-                ),
-                x_per_meter=1,
-                y_per_meter=1,
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=Score(
                 home=metadata["home_team_score"],
                 away=metadata["away_team_score"],
@@ -443,6 +455,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             orientation=orientation,
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            coordinate_system=to_coordinate_system,
         )
 
         return TrackingDataset(

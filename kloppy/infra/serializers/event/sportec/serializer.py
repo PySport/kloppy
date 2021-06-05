@@ -136,6 +136,7 @@ def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
 
     return qualifiers
 
+
 def _get_event_setpiece_qualifiers(event_chain):
     qualifiers = []
 
@@ -154,17 +155,29 @@ def _get_event_setpiece_qualifiers(event_chain):
 
     return qualifiers
 
+
 def _get_event_bodypart_qualifiers(event_chain):
     qualifiers = []
 
-    if SPORTEC_EVENT_BODY_PART_HEAD in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
+    if SPORTEC_EVENT_BODY_PART_HEAD in [
+        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
+    ]:
         qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.HEAD))
-    elif SPORTEC_EVENT_BODY_PART_LEFT_FOOT in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
-        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.LEFT_FOOT))
-    elif SPORTEC_EVENT_BODY_PART_RIGHT_FOOT in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
-        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.RIGHT_FOOT))
+    elif SPORTEC_EVENT_BODY_PART_LEFT_FOOT in [
+        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
+    ]:
+        qualifiers.append(
+            event.BodyPartQualifier(value=event.BodyPart.LEFT_FOOT)
+        )
+    elif SPORTEC_EVENT_BODY_PART_RIGHT_FOOT in [
+        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
+    ]:
+        qualifiers.append(
+            event.BodyPartQualifier(value=event.BodyPart.RIGHT_FOOT)
+        )
 
     return qualifiers
+
 
 def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
     if event_name == SPORTEC_EVENT_NAME_SHOT_WIDE:

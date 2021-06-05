@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from kloppy.domain.models import event
 from typing import Tuple, Dict, List
 import logging
 from dateutil.parser import parse
@@ -117,6 +118,11 @@ SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
 SPORTEC_EVENT_NAME_CAUTION = "Caution"
 SPORTEC_EVENT_NAME_FOUL = "Foul"
 
+SPORTEC_EVENT_TYPE_OF_SHOT = "TypeOfShot"
+SPORTEC_EVENT_BODY_PART_HEAD = "head"
+SPORTEC_EVENT_BODY_PART_LEFT_FOOT = "leftLeg"
+SPORTEC_EVENT_BODY_PART_RIGHT_FOOT = "rightLeg"
+
 
 def _parse_datetime(dt_str: str) -> float:
     return parse(dt_str).timestamp()
@@ -124,6 +130,15 @@ def _parse_datetime(dt_str: str) -> float:
 
 def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
     qualifiers = []
+
+    qualifiers.extend(_get_event_setpiece_qualifiers(event_chain))
+    qualifiers.extend(_get_event_bodypart_qualifiers(event_chain))
+
+    return qualifiers
+
+def _get_event_setpiece_qualifiers(event_chain):
+    qualifiers = []
+
     if SPORTEC_EVENT_NAME_THROW_IN in event_chain:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
     elif SPORTEC_EVENT_NAME_GOAL_KICK in event_chain:
@@ -136,8 +151,20 @@ def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
     elif SPORTEC_EVENT_NAME_FREE_KICK in event_chain:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
+
     return qualifiers
 
+def _get_event_bodypart_qualifiers(event_chain):
+    qualifiers = []
+
+    if SPORTEC_EVENT_BODY_PART_HEAD in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
+        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.HEAD))
+    elif SPORTEC_EVENT_BODY_PART_LEFT_FOOT in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
+        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.LEFT_FOOT))
+    elif SPORTEC_EVENT_BODY_PART_RIGHT_FOOT in [item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()]:
+        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.RIGHT_FOOT))
+
+    return qualifiers
 
 def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
     if event_name == SPORTEC_EVENT_NAME_SHOT_WIDE:

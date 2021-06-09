@@ -1,4 +1,3 @@
-from kloppy.domain.models.event import SetPieceType
 import os
 
 from kloppy import (
@@ -13,6 +12,7 @@ from kloppy.domain import (
     Orientation,
     Point,
     EventType,
+    SetPieceType,
     BodyPart,
 )
 from kloppy.domain.models.common import DatasetType

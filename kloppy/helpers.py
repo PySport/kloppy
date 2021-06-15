@@ -230,7 +230,6 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         else None,
         ball_x=frame.ball_coordinates.x if frame.ball_coordinates else None,
         ball_y=frame.ball_coordinates.y if frame.ball_coordinates else None,
-        ball_z=frame.ball_coordinates.z if frame.ball_coordinates else None,
     )
     for player, coordinates in frame.players_coordinates.items():
         row.update(

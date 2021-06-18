@@ -106,6 +106,13 @@ Most providers use different names for the same thing. This module tries to mode
 Understandable models are important and in some cases this means performance is subordinate to models that are easy to 
 reason about. Please browse to source of `domain.models` to find the available models.
 
+### <a name="models"></a>Standardized coordinate systems
+Every provider has a different coordinate system, which makes it difficult to write code and solutions that can work 
+across data from different providers. When loaded into kloppy, unless specified otherwise when loading it, all data 
+(tracking and event) will be transformed onto kloppy's coordinate system. Kloppy's coordiante system has the origin on the 
+top-left of the field and the axis go from [0, 1]. Please browse to source of `domain.models.provider` to learn more about
+the supported providers.
+
 ### <a name="deserializing"></a>(De)serializing data
 When working with tracking- or event data we need to deserialize it from the format the provider uses. **kloppy**
 will provide both deserializing and serializing. This will make it possible to read format one, transform and filter and store
@@ -331,6 +338,17 @@ new_dataset = Transformer.transform_dataset(
         y_dim=Dimension(0, 100)
     ),
     to_orientation=Orientation.BALL_OWNING_TEAM
+)
+```
+
+### Transforming a dataset to a different provider coordinate system
+```python
+from kloppy.domain import Transformer, Provider
+
+# use deserialized `dataset`
+new_dataset = Transformer.transform_dataset(
+    dataset,
+    to_coordinate_system = Provider.TRACAB,
 )
 ```
 

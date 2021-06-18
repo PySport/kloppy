@@ -278,7 +278,7 @@ class WyscoutSerializer(EventDataSerializer):
             options = {}
 
         from_coordinate_system = build_coordinate_system(
-            Provider.SPORTEC,
+            Provider.WYSCOUT,
             length=100,
             width=100,
         )

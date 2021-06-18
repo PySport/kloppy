@@ -141,7 +141,7 @@ def _load_pitch_dimensions(
     field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
-    if field_size_elm is not None and normalized:
+    if field_size_elm and normalized:
         return PitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
@@ -153,7 +153,7 @@ def _load_pitch_dimensions(
 
 
 def _parse_provider(provider_name: Union[str, None]) -> Provider:
-    if provider_name is not None:
+    if provider_name:
         if provider_name == "Metrica Sports":
             return Provider.METRICA
         else:
@@ -267,7 +267,7 @@ def load_metadata(
 
     metadata.orientation = orientation
 
-    if provider is not None and pitch_dimensions is not None:
+    if provider and pitch_dimensions:
         from_coordinate_system = build_coordinate_system(
             provider,
             length=pitch_dimensions.length,

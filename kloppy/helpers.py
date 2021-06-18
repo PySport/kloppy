@@ -33,6 +33,7 @@ from .domain import (
     build_coordinate_system,
     CodeDataset,
     Code,
+    CoordinateSystem,
 )
 
 
@@ -222,10 +223,10 @@ def transform(
     dataset: Dataset,
     to_orientation=None,
     to_pitch_dimensions=None,
-    to_coordinate_system=None,
+    to_coordinate_system: Union[CoordinateSystem, Provider] = None,
 ) -> Dataset:
 
-    if to_pitch_dimensions is not None and to_coordinate_system is not None:
+    if to_pitch_dimensions and to_coordinate_system:
         raise ValueError(
             "You can't do both a PitchDimension and CoordinateSysetm on the same dataset transformation"
         )
@@ -247,7 +248,7 @@ def transform(
             to_pitch_dimensions=to_pitch_dimensions,
         )
 
-    if to_coordinate_system and (isinstance(to_coordinate_system, Provider)):
+    if to_coordinate_system and isinstance(to_coordinate_system, Provider):
         to_coordinate_system = build_coordinate_system(
             provider=to_coordinate_system,
             length=dataset.metadata.coordinate_system.length,

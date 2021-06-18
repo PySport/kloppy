@@ -62,11 +62,11 @@ class TestSkillCornerTracking:
 
         away_player = dataset.metadata.teams[1].players[9]
         assert dataset.records[0].players_coordinates[away_player] == Point(
-            x=25.986308279500008, y=27.3013598578
+            x=25.9863082795, y=27.3013598578
         )
 
         assert dataset.records[1].ball_coordinates == Point(
-            x=30.591472813099998, y=35.3622277834
+            x=30.5914728131, y=35.3622277834
         )
 
         # make sure player data is only in the frame when the player is in view

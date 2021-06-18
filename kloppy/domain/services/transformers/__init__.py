@@ -31,12 +31,11 @@ class Transformer:
         to_orientation: Orientation = None,
     ):
 
-        print("hello")
         if (
-            from_pitch_dimensions is not None
-            and from_coordinate_system is not None
-            or to_pitch_dimensions is not None
-            and to_coordinate_system is not None
+            from_pitch_dimensions
+            and from_coordinate_system
+            or to_pitch_dimensions
+            and to_coordinate_system
         ):
             raise ValueError(
                 "You can't specify both a PitchDimension and CoordinateSysetm transformation on the same Transformer instance"
@@ -57,6 +56,21 @@ class Transformer:
         )
         self._to_orientation = to_orientation
 
+    @property
+    def _needs_coordinate_system_change(self):
+        return self._from_coordinate_system != self._to_coordinate_system
+
+    @property
+    def _needs_pitch_dimensions_change(self):
+        if self._from_coordinate_system and self._to_coordinate_system:
+            return (
+                self._from_coordinate_system.pitch_dimensions
+                != self._to_coordinate_system.pitch_dimensions
+            )
+
+        if self._from_pitch_dimensions and self._to_pitch_dimensions:
+            return self._from_pitch_dimensions != self._to_pitch_dimensions
+
     def change_point_dimensions(self, point: Union[Point, Point3D]) -> Point:
 
         if point is None:
@@ -75,7 +89,7 @@ class Transformer:
 
     def flip_point(self, point: Union[Point, Point3D]):
 
-        if point is None:
+        if not point:
             return None
 
         x_base = self._to_pitch_dimensions.x_dim.to_base(point.x)
@@ -121,10 +135,10 @@ class Transformer:
     def transform_frame(self, frame: Frame) -> Frame:
 
         # Change coordinate system
-        if self.__needs_coordinate_system_change():
+        if self._needs_coordinate_system_change:
             frame = self.__change_frame_coordinate_system(frame)
         # Change dimensions
-        elif self.__needs_pitch_dimensions_change:
+        elif self._needs_pitch_dimensions_change:
             frame = self.__change_frame_dimensions(frame)
 
         # Flip frame based on orientation
@@ -135,15 +149,6 @@ class Transformer:
             frame = self.__flip_frame(frame)
 
         return frame
-
-    def __needs_coordinate_system_change(self):
-        return self._from_coordinate_system != self._to_coordinate_system
-
-    def __needs_pitch_dimensions_change(self):
-        return (
-            self._from_coordinate_system.pitch_dimensions
-            != self._to_coordinate_system.pitch_dimensions
-        )
 
     def __change_frame_coordinate_system(self, frame: Frame):
 
@@ -185,7 +190,7 @@ class Transformer:
 
     def __change_point_coordinate_system(self, point: Union[Point, Point3D]):
 
-        if point is None:
+        if not point:
             return None
 
         x = self._from_coordinate_system.pitch_dimensions.x_dim.to_base(
@@ -230,10 +235,10 @@ class Transformer:
     def transform_event(self, event: Event) -> Event:
 
         # Change coordinate system
-        if self.__needs_coordinate_system_change():
+        if self._needs_coordinate_system_change:
             event = self.__change_event_coordinate_system(event)
         # Change dimensions
-        elif self.__needs_pitch_dimensions_change():
+        elif self._needs_pitch_dimensions_change:
             event = self.__change_event_dimensions(event)
 
         # Flip event based on orientation
@@ -291,10 +296,7 @@ class Transformer:
         to_coordinate_system: CoordinateSystem = None,
     ) -> Dataset:
 
-        if (
-            to_pitch_dimensions is not None
-            and to_coordinate_system is not None
-        ):
+        if to_pitch_dimensions and to_coordinate_system:
             raise ValueError(
                 "You can't do both a PitchDimension and CoordinateSysetm on the same dataset transformation"
             )
@@ -315,7 +317,7 @@ class Transformer:
                     "ball owning team data"
                 )
 
-        if to_pitch_dimensions is not None:
+        if to_pitch_dimensions:
 
             transformer = cls(
                 from_pitch_dimensions=dataset.metadata.pitch_dimensions,
@@ -324,7 +326,7 @@ class Transformer:
                 to_orientation=to_orientation,
             )
 
-        elif to_coordinate_system is not None:
+        elif to_coordinate_system:
 
             transformer = cls(
                 from_coordinate_system=dataset.metadata.coordinate_system,

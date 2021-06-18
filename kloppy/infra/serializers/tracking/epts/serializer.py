@@ -65,7 +65,7 @@ class EPTSSerializer(TrackingDataSerializer):
             ),
         )
 
-        if transformer is not None:
+        if transformer:
             frame = transformer.transform_frame(frame)
 
         return frame
@@ -123,10 +123,7 @@ class EPTSSerializer(TrackingDataSerializer):
         with performance_logging("Loading metadata", logger=logger):
             metadata = load_metadata(inputs["metadata"])
 
-            if (
-                metadata.provider is not None
-                and metadata.pitch_dimensions is not None
-            ):
+            if metadata.provider and metadata.pitch_dimensions:
                 to_coordinate_system = build_coordinate_system(
                     options.get("coordinate_system", Provider.KLOPPY),
                     length=metadata.pitch_dimensions.length,
@@ -155,7 +152,7 @@ class EPTSSerializer(TrackingDataSerializer):
                 )
             ]
 
-        if transformer is not None:
+        if transformer:
             metadata = replace(
                 metadata,
                 pitch_dimensions=to_coordinate_system.pitch_dimensions,

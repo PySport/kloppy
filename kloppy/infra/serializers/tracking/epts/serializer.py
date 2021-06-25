@@ -47,6 +47,13 @@ class EPTSSerializer(TrackingDataSerializer):
                         y=row[f"player_{player.player_id}_y"],
                     )
 
+        if "ball_z" in row:
+            ball_coordinates = Point3D(
+                x=row["ball_x"], y=row["ball_y"], z=row["ball_z"]
+            )
+        else:
+            ball_coordinates = Point(x=row["ball_x"], y=row["ball_y"])
+
         return Frame(
             frame_id=row["frame_id"],
             timestamp=timestamp,
@@ -54,9 +61,7 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_coordinates=players_coordinates,
-            ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row["ball_z"]
-            ),
+            ball_coordinates=ball_coordinates,
         )
 
     def deserialize(

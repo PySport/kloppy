@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+## 1.6.1 (2021-06-25)
+
+Pull request merged:
+
+- Modify etps serializer so that it accepts files with no ball z ([#100](https://github.com/PySport/kloppy/pull/100))
+- Add ball_z to skillcornertrackingserializer ([#98](https://github.com/PySport/kloppy/pull/98))
+
 ## 1.6.0 (2021-05-27)
 
 Pull request merged:

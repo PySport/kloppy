@@ -7,10 +7,12 @@ from kloppy.domain import (
     AttackingDirection,
     Orientation,
     Point,
+    Point3D,
     EventType,
     SetPieceType,
 )
 from kloppy.domain.models.common import DatasetType
+from kloppy.helpers import _frame_to_pandas_row_converter
 
 
 class TestSkillCornerTracking:
@@ -62,9 +64,18 @@ class TestSkillCornerTracking:
             x=25.9863082795, y=27.3013598578
         )
 
-        assert dataset.records[1].ball_coordinates == Point(
-            x=30.5914728131, y=35.3622277834
+        assert dataset.records[1].ball_coordinates == Point3D(
+            x=30.5914728131, y=35.3622277834, z=2.24371228757
         )
+
+        # check that missing ball-z_coordinate is identified as None
+        assert dataset.records[38].ball_coordinates == Point3D(
+            x=11.6568802848, y=24.7214038909, z=None
+        )
+
+        # check that 'ball_z' column is included in to_pandas dataframe
+        # frame = _frame_to_pandas_row_converter(dataset.records[38])
+        # assert "ball_z" in frame.keys()
 
         # make sure player data is only in the frame when the player is in view
         assert "home_1" not in [

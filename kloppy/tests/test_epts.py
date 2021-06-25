@@ -154,6 +154,6 @@ class TestEPTSTracking:
             x=0.85708, y=0.50652
         )
 
-        assert dataset.records[0].ball_coordinates == Point(
-            x=0.54711, y=0.53978
+        assert dataset.records[0].ball_coordinates == Point3D(
+            x=0.54711, y=0.53978, z=None
         )

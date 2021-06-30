@@ -120,8 +120,8 @@ class EPTSSerializer(TrackingDataSerializer):
                     raw_data=inputs["raw_data"],
                     metadata=metadata,
                     sensor_ids=[
-                        "position"
-                    ],  # we don't care about other sensors
+                        sensor.sensor_id for sensor in metadata.sensors
+                    ],
                     sample_rate=sample_rate,
                     limit=limit,
                 )

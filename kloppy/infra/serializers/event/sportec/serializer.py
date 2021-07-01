@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from kloppy.domain.models import event
 from typing import Tuple, Dict, List
 import logging
 from dateutil.parser import parse
@@ -30,6 +29,8 @@ from kloppy.domain import (
     Event,
     SetPieceQualifier,
     SetPieceType,
+    BodyPartQualifier,
+    BodyPart,
     Qualifier,
     BallOutEvent,
     RecoveryEvent,
@@ -162,19 +163,15 @@ def _get_event_bodypart_qualifiers(event_chain):
     if SPORTEC_EVENT_BODY_PART_HEAD in [
         item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
     ]:
-        qualifiers.append(event.BodyPartQualifier(value=event.BodyPart.HEAD))
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif SPORTEC_EVENT_BODY_PART_LEFT_FOOT in [
         item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
     ]:
-        qualifiers.append(
-            event.BodyPartQualifier(value=event.BodyPart.LEFT_FOOT)
-        )
+        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
     elif SPORTEC_EVENT_BODY_PART_RIGHT_FOOT in [
         item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
     ]:
-        qualifiers.append(
-            event.BodyPartQualifier(value=event.BodyPart.RIGHT_FOOT)
-        )
+        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
     return qualifiers
 

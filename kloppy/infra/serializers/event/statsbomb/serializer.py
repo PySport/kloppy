@@ -146,7 +146,7 @@ def _parse_bodypart(event_dict: Dict) -> BodyPart:
     elif bodypart_id == SB_BODYPART_NO_TOUCH:
         body_part = BodyPart.NO_TOUCH
     else:
-        raise Exception(f"Unknown body part: {body_part_id}")
+        raise Exception(f"Unknown body part: {bodypart_id}")
 
     return body_part
 

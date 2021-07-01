@@ -23,7 +23,7 @@ Please [open a ticket](https://github.com/PySport/kloppy/issues) when you like t
 ||[Generic][kloppy.domain.models.event.GenericEvent][^1]|✓|✓|✓|✓|✓|s
 |**Qualifiers**|
 ||SetPiece|✓[^3]|✓[^3]|✓[^3]|✓[^3]|✓[^3]
-||BodyPart|||||`RightFoot` `LeftFoot`
+||BodyPart|`Head`|`Head` `RightFoot` `LeftFoot` `Other`|`Head` `RightFoot` `LeftFoot`||`RightFoot` `LeftFoot`
 ||PassType|||||`Cross` `Hand` `Head` `High` `Launch` `Simple` `Smart`
 
 [^1]: All other event types

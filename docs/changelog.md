@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+## 1.7.0 (2021-07-01)
+
+Pull request merged:
+
+- Include all event qualifiers ([#99](https://github.com/PySport/kloppy/pull/99))
+- EPTS: Accept non int ProviderParameters ([#101](https://github.com/PySport/kloppy/pull/101))
+
 ## 1.6.1 (2021-06-25)
 
 Pull request merged:

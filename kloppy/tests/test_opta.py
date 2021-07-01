@@ -9,6 +9,8 @@ from kloppy.domain import (
     Player,
     Position,
     Ground,
+    BodyPart,
+    SetPieceType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -59,3 +61,7 @@ class TestOpta:
             end_timestamp=1537721737.788,
             attacking_direction=AttackingDirection.NOT_SET,
         )
+
+        # Check the qualifiers
+        assert dataset.records[0].qualifiers[0].value == SetPieceType.KICK_OFF
+        assert dataset.records[6].qualifiers[0].value == BodyPart.HEAD

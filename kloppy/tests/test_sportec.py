@@ -12,6 +12,8 @@ from kloppy.domain import (
     Orientation,
     Point,
     EventType,
+    SetPieceType,
+    BodyPart,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -53,3 +55,9 @@ class TestSportecEvent:
         assert str(player) == "A. Schwolow"
         assert player.position.position_id is None
         assert player.position.name == "TW"
+
+        # Check the qualifiers
+        assert dataset.events[25].qualifiers[0].value == SetPieceType.KICK_OFF
+        assert dataset.events[16].qualifiers[0].value == BodyPart.RIGHT_FOOT
+        assert dataset.events[24].qualifiers[0].value == BodyPart.LEFT_FOOT
+        assert dataset.events[26].qualifiers[0].value == BodyPart.HEAD

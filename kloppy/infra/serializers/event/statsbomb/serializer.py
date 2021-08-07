@@ -75,6 +75,8 @@ SB_SHOT_OUTCOME_OFF_TARGET = 98
 SB_SHOT_OUTCOME_POST = 99
 SB_SHOT_OUTCOME_SAVED = 100
 SB_SHOT_OUTCOME_OFF_WAYWARD = 101
+SB_SHOT_OUTCOME_SAVED_OFF_TARGET = 115
+SB_SHOT_OUTCOME_SAVED_TO_POST = 116
 
 SB_EVENT_TYPE_FREE_KICK = 62
 SB_EVENT_TYPE_THROW_IN = 67
@@ -215,6 +217,10 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     if outcome_id == SB_SHOT_OUTCOME_OFF_TARGET:
         result = ShotResult.OFF_TARGET
     elif outcome_id == SB_SHOT_OUTCOME_SAVED:
+        result = ShotResult.SAVED
+    elif outcome_id == SB_SHOT_OUTCOME_SAVED_OFF_TARGET:
+        result = ShotResult.SAVED
+    elif outcome_id == SB_SHOT_OUTCOME_SAVED_TO_POST:
         result = ShotResult.SAVED
     elif outcome_id == SB_SHOT_OUTCOME_POST:
         result = ShotResult.POST
@@ -558,7 +564,7 @@ class StatsBombSerializer(EventDataSerializer):
                     event = CarryEvent.create(
                         qualifiers=None,
                         # TODO: Consider moving this to _parse_carry
-                        end_timestamp=timestamp + raw_event["duration"],
+                        end_timestamp=timestamp + raw_event.get("duration", 0),
                         **carry_event_kwargs,
                         **generic_event_kwargs,
                     )

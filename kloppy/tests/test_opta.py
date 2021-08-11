@@ -63,13 +63,12 @@ class TestOpta:
             end_timestamp=1537721737.788,
             attacking_direction=AttackingDirection.NOT_SET,
         )
-        
+
         assert dataset.events[0].coordinates == Point(50.1, 49.4)
-  
+
         # Check the qualifiers
         assert dataset.events[0].qualifiers[0].value == SetPieceType.KICK_OFF
         assert dataset.events[6].qualifiers[0].value == BodyPart.HEAD
-  
 
     def test_correct_normalized_deserialization(self):
         base_dir = os.path.dirname(__file__)

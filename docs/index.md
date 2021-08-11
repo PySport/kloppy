@@ -106,6 +106,51 @@ Most providers use different names for the same thing. This module tries to mode
 Understandable models are important and in some cases this means performance is subordinate to models that are easy to 
 reason about. Please browse to source of `domain.models` to find the available models.
 
+### <a name="models"></a>Standardized coordinate systems
+Every provider has a different coordinate system, which makes it difficult to write code and solutions that can work 
+across data from different providers. When loaded into kloppy, unless specified otherwise when loading it, all data 
+(tracking and event) will be transformed onto kloppy's coordinate system. Kloppy's coordinate system has the origin on the 
+top-left of the field and the axis go from [0, 1]. If you want to know more details about the coordinate systems of each
+supported provider check out the source of `domain.models`.
+
+For example StatsBomb has a coordinate system that as the origin on the bottom left, and a fixed dimensions pitch of [120, 80]. 
+If you want to load the data in that coordinate system you need to do:
+
+```python
+from kloppy import StatsBombSerializer, Provider
+
+with open(
+        f"{base_dir}/files/statsbomb_lineup.json", "rb"
+    ) as lineup_data, open(
+        f"{base_dir}/files/statsbomb_event.json", "rb"
+    ) as event_data:
+        dataset = serializer.deserialize(
+            inputs={"lineup_data": lineup_data, "event_data": event_data},
+            options={"coordinate_system": Provider.STATSBOMB},
+        )
+        return dataset
+
+        # start working with dataset
+```
+
+However if you want to take advantage of kloppy's standardized coordinate system transformation you can just do: 
+
+```python
+from kloppy import StatsBombSerializer
+
+with open(
+        f"{base_dir}/files/statsbomb_lineup.json", "rb"
+    ) as lineup_data, open(
+        f"{base_dir}/files/statsbomb_event.json", "rb"
+    ) as event_data:
+        dataset = serializer.deserialize(
+            inputs={"lineup_data": lineup_data, "event_data": event_data},
+        )
+        return dataset
+
+        # start working with dataset
+```
+
 ### <a name="deserializing"></a>(De)serializing data
 When working with tracking- or event data we need to deserialize it from the format the provider uses. **kloppy**
 will provide both deserializing and serializing. This will make it possible to read format one, transform and filter and store
@@ -331,6 +376,17 @@ new_dataset = Transformer.transform_dataset(
         y_dim=Dimension(0, 100)
     ),
     to_orientation=Orientation.BALL_OWNING_TEAM
+)
+```
+
+### Transforming a dataset to a different provider coordinate system
+```python
+from kloppy.domain import Transformer, Provider
+
+# use deserialized `dataset`
+new_dataset = Transformer.transform_dataset(
+    dataset,
+    to_coordinate_system = Provider.TRACAB,
 )
 ```
 

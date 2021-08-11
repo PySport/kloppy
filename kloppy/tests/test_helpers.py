@@ -9,6 +9,7 @@ from kloppy import (
     load_tracab_tracking_data,
     transform,
     OptaSerializer,
+    TRACABSerializer,
 )
 from kloppy.domain import (
     Period,
@@ -84,6 +85,7 @@ class TestHelpers:
             teams=teams,
             score=None,
             provider=None,
+            coordinate_system=None,
         )
 
         tracking_data = TrackingDataset(
@@ -131,6 +133,40 @@ class TestHelpers:
         assert transformed_dataset.frames[1].ball_coordinates == Point(
             x=1, y=0
         )
+
+    def test_transform_to_coordinate_system(self):
+
+        base_dir = os.path.dirname(__file__)
+
+        serializer = TRACABSerializer()
+
+        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
+            f"{base_dir}/files/tracab_raw.dat", "rb"
+        ) as raw_data:
+
+            dataset = serializer.deserialize(
+                inputs={"metadata": metadata, "raw_data": raw_data},
+                options={
+                    "only_alive": False,
+                    "coordinate_system": Provider.TRACAB,
+                },
+            )
+
+        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            "19"
+        )
+        assert dataset.records[0].players_coordinates[player_home_19] == Point(
+            x=-1234.0, y=-294.0
+        )
+
+        transformed_dataset = transform(
+            dataset,
+            to_coordinate_system=Provider.METRICA,
+        )
+
+        assert transformed_dataset.records[0].players_coordinates[
+            player_home_19
+        ] == Point(x=0.3766, y=0.5489999999999999)
 
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()

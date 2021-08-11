@@ -11,8 +11,6 @@ from kloppy.domain import (
     DatasetFlag,
     Orientation,
     Provider,
-    PitchDimensions,
-    Dimension,
     PassEvent,
     ShotEvent,
     TakeOnEvent,
@@ -38,6 +36,8 @@ from kloppy.domain import (
     FoulCommittedEvent,
     BallOutEvent,
     Event,
+    build_coordinate_system,
+    Transformer,
     BodyPart,
     BodyPartQualifier,
 )
@@ -379,6 +379,23 @@ class StatsBombSerializer(EventDataSerializer):
         if not options:
             options = {}
 
+        from_coordinate_system = build_coordinate_system(
+            Provider.STATSBOMB,
+            length=120,
+            width=80,
+        )
+
+        to_coordinate_system = build_coordinate_system(
+            options.get("coordinate_system", Provider.KLOPPY),
+            length=120,
+            width=80,
+        )
+
+        transformer = Transformer(
+            from_coordinate_system=from_coordinate_system,
+            to_coordinate_system=to_coordinate_system,
+        )
+
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs["event_data"])
             home_lineup, away_lineup = json.load(inputs["lineup_data"])
@@ -631,7 +648,7 @@ class StatsBombSerializer(EventDataSerializer):
                     )
 
                 if _include_event(event, wanted_event_types):
-                    events.append(event)
+                    events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
                 if event.result in OUT_EVENT_RESULTS:
@@ -648,19 +665,18 @@ class StatsBombSerializer(EventDataSerializer):
                         )
 
                         if _include_event(event, wanted_event_types):
-                            events.append(event)
+                            events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 120), y_dim=Dimension(0, 80)
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=None,
             provider=Provider.STATSBOMB,
+            coordinate_system=to_coordinate_system,
         )
 
         return EventDataset(

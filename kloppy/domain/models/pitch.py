@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from math import sqrt
 from typing import Optional
 
@@ -13,6 +14,12 @@ class Dimension:
 
     min: float
     max: float
+
+    def __eq__(self, other):
+        if isinstance(self, Dimension):
+            return self.min == other.min and self.max == other.max
+
+        return False
 
     def to_base(self, value: float) -> float:
         return (value - self.min) / (self.max - self.min)
@@ -33,34 +40,14 @@ class PitchDimensions:
 
     x_dim: Dimension
     y_dim: Dimension
-    x_per_meter: float = None
-    y_per_meter: float = None
+    length: float = None
+    width: float = None
 
-    @classmethod
-    def default(cls):
-        return cls(x_dim=Dimension(0, 1), y_dim=Dimension(0, 1))
+    def __eq__(self, other):
+        if isinstance(self, PitchDimensions):
+            return self.x_dim == other.x_dim and self.y_dim == other.y_dim
 
-    @property
-    def length(self) -> float:
-        """
-        Calculates the length of the pitch in meters if possible.
-        """
-        return (
-            (self.x_dim.max - self.x_dim.min) / self.x_per_meter
-            if self.x_per_meter
-            else None
-        )
-
-    @property
-    def width(self) -> float:
-        """
-        Calculates the width of the pitch in meters if possible.
-        """
-        return (
-            (self.y_dim.max - self.y_dim.min) / self.y_per_meter
-            if self.y_per_meter
-            else None
-        )
+        return False
 
 
 @dataclass(frozen=True)

@@ -141,5 +141,8 @@ cython_debug/
 examples/pattern_matching/repository/*.json
 .DS_Store
 
+# Visual Studio Code workspace settings
+.vscode/
+
 # Visual Studio Code
 *.code-workspace

@@ -30,7 +30,10 @@ class TestSkillCornerTracking:
                 inputs={
                     "raw_data": raw_data,
                     "metadata": metadata,
-                }
+                },
+                options={
+                    "coordinate_system": Provider.SKILLCORNER,
+                },
             )
         assert dataset.metadata.provider == Provider.SKILLCORNER
         assert dataset.dataset_type == DatasetType.TRACKING
@@ -106,3 +109,25 @@ class TestSkillCornerTracking:
         assert pitch_dimensions.x_dim.max == 52.5
         assert pitch_dimensions.y_dim.min == -34
         assert pitch_dimensions.y_dim.max == 34
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = SkillCornerTrackingSerializer()
+
+        with open(
+            f"{base_dir}/files/skillcorner_structured_data.json", "rb"
+        ) as raw_data, open(
+            f"{base_dir}/files/skillcorner_match_data.json", "rb"
+        ) as metadata:
+            dataset = serializer.deserialize(
+                inputs={
+                    "raw_data": raw_data,
+                    "metadata": metadata,
+                },
+            )
+
+        home_player = dataset.metadata.teams[0].players[2]
+        assert dataset.records[0].players_coordinates[home_player] == Point(
+            x=0.8225688718076191, y=0.6405503322430882
+        )

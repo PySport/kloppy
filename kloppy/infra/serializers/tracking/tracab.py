@@ -21,7 +21,11 @@ from kloppy.domain import (
     Metadata,
     Ground,
     Player,
+    build_coordinate_system,
+    Provider,
+    Transformer,
 )
+
 from kloppy.utils import Readable, performance_logging
 
 from . import TrackingDataSerializer
@@ -184,6 +188,23 @@ class TRACABSerializer(TrackingDataSerializer):
 
         with performance_logging("Loading data", logger=logger):
 
+            from_coordinate_system = build_coordinate_system(
+                Provider.TRACAB,
+                length=pitch_size_width,
+                width=pitch_size_height,
+            )
+
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=pitch_size_width,
+                width=pitch_size_height,
+            )
+
+            transformer = Transformer(
+                from_coordinate_system=from_coordinate_system,
+                to_coordinate_system=to_coordinate_system,
+            )
+
             def _iter():
                 n = 0
                 sample = 1.0 / sample_rate
@@ -207,6 +228,8 @@ class TRACABSerializer(TrackingDataSerializer):
             for n, (period, line) in enumerate(_iter()):
                 frame = self._frame_from_line(teams, period, line, frame_rate)
 
+                frame = transformer.transform_frame(frame)
+
                 frames.append(frame)
 
                 if not period.attacking_direction_set:
@@ -228,21 +251,13 @@ class TRACABSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(
-                    -1 * pitch_size_width / 2, pitch_size_width / 2
-                ),
-                y_dim=Dimension(
-                    -1 * pitch_size_height / 2, pitch_size_height / 2
-                ),
-                x_per_meter=100,
-                y_per_meter=100,
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
+            coordinate_system=to_coordinate_system,
         )
 
         return TrackingDataset(

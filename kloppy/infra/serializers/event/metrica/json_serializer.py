@@ -27,6 +27,8 @@ from kloppy.domain import (
     BodyPartQualifier,
     Qualifier,
     Event,
+    build_coordinate_system,
+    Transformer,
 )
 
 from kloppy.infra.serializers.event import EventDataSerializer
@@ -311,6 +313,17 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                 inputs["metadata"], provider=Provider.METRICA
             )
 
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=metadata.pitch_dimensions.length,
+                width=metadata.pitch_dimensions.width,
+            )
+
+            transformer = Transformer(
+                from_coordinate_system=metadata.coordinate_system,
+                to_coordinate_system=to_coordinate_system,
+            )
+
         with performance_logging("parse data", logger=logger):
 
             wanted_event_types = [
@@ -421,7 +434,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     )
 
                 if _include_event(event, wanted_event_types):
-                    events.append(event)
+                    events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
                 if event.result in OUT_EVENT_RESULTS:
@@ -441,7 +454,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         )
 
                         if _include_event(event, wanted_event_types):
-                            events.append(event)
+                            events.append(transformer.transform_event(event))
 
         return EventDataset(
             metadata=metadata,

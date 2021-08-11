@@ -6,7 +6,7 @@ from kloppy.domain import (
     Period,
     Orientation,
     Provider,
-    EventType,
+    Point,
     BodyPartQualifier,
     BodyPart,
 )
@@ -34,7 +34,9 @@ class TestStatsbomb:
         """
         This test uses data from the StatsBomb open data project.
         """
-        dataset = self._load_dataset()
+        dataset = self._load_dataset(
+            options={"coordinate_system": Provider.STATSBOMB}
+        )
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
@@ -70,6 +72,8 @@ class TestStatsbomb:
             attacking_direction=AttackingDirection.NOT_SET,
         )
 
+        assert dataset.events[10].coordinates == Point(34.5, 20.5)
+
         assert (
             dataset.events[791].get_qualifier_value(BodyPartQualifier)
             == BodyPart.HEAD
@@ -83,6 +87,14 @@ class TestStatsbomb:
         assert (
             dataset.events[195].get_qualifier_value(BodyPartQualifier) is None
         )
+
+    def test_correct_normalized_deserialization(self):
+        """
+        This test uses data from the StatsBomb open data project.
+        """
+        dataset = self._load_dataset()
+
+        assert dataset.events[10].coordinates == Point(0.2875, 0.25625)
 
     def test_substitution(self):
         """

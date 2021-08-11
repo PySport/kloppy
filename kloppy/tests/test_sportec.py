@@ -25,6 +25,7 @@ class TestSportecEvent:
         dataset = load_sportec_event_data(
             f"{base_dir}/files/sportec_events.xml",
             f"{base_dir}/files/sportec_meta.xml",
+            options={"coordinate_system": Provider.SPORTEC},
         )
 
         assert dataset.metadata.provider == Provider.SPORTEC
@@ -61,3 +62,15 @@ class TestSportecEvent:
         assert dataset.events[16].qualifiers[0].value == BodyPart.RIGHT_FOOT
         assert dataset.events[24].qualifiers[0].value == BodyPart.LEFT_FOOT
         assert dataset.events[26].qualifiers[0].value == BodyPart.HEAD
+
+        assert dataset.events[0].coordinates == Point(56.41, 68.0)
+
+    def test_correct_normalized_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        dataset = load_sportec_event_data(
+            f"{base_dir}/files/sportec_events.xml",
+            f"{base_dir}/files/sportec_meta.xml",
+        )
+
+        assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)

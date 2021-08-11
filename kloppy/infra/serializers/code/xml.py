@@ -63,12 +63,13 @@ class XMLCodeSerializer(CodeDataSerializer):
             metadata=Metadata(
                 teams=[],
                 periods=[period],
-                pitch_dimensions=PitchDimensions.default(),
+                pitch_dimensions=None,
                 score=Score(0, 0),
                 frame_rate=0.0,
                 orientation=Orientation.NOT_SET,
                 flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
                 provider=Provider.OTHER,
+                coordinate_system=None,
             ),
             records=codes,
         )

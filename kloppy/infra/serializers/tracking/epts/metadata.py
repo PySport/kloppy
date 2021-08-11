@@ -14,6 +14,7 @@ from kloppy.domain import (
     Position,
     Point,
     Provider,
+    build_coordinate_system,
 )
 from kloppy.utils import Readable
 
@@ -140,19 +141,19 @@ def _load_pitch_dimensions(
     field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
-    if field_size_elm is not None and normalized:
+    if field_size_elm and normalized:
         return PitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
-            x_per_meter=1 / int(field_size_elm.find("Width")),
-            y_per_meter=1 / int(field_size_elm.find("Height")),
+            length=int(field_size_elm.find("Width")),
+            width=int(field_size_elm.find("Height")),
         )
     else:
         return None
 
 
 def _parse_provider(provider_name: Union[str, None]) -> Provider:
-    if provider_name is not None:
+    if provider_name:
         if provider_name == "Metrica Sports":
             return Provider.METRICA
         else:
@@ -266,6 +267,15 @@ def load_metadata(
 
     metadata.orientation = orientation
 
+    if provider and pitch_dimensions:
+        from_coordinate_system = build_coordinate_system(
+            provider,
+            length=pitch_dimensions.length,
+            width=pitch_dimensions.width,
+        )
+    else:
+        from_coordinate_system = None
+
     return EPTSMetadata(
         teams=list(teams_metadata.values()),
         periods=periods,
@@ -278,4 +288,5 @@ def load_metadata(
         orientation=None,
         provider=provider,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+        coordinate_system=from_coordinate_system,
     )

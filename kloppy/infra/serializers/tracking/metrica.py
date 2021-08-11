@@ -18,6 +18,8 @@ from kloppy.domain import (
     Team,
     Ground,
     Player,
+    build_coordinate_system,
+    Transformer,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -189,9 +191,28 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
 
         sample_rate = float(options.get("sample_rate", 1.0))
         limit = int(options.get("limit", 0))
+        length = int(options.get("length", 105))
+        width = int(options.get("width", 68))
 
         # consider reading this from data
         frame_rate = 25
+
+        from_coordinate_system = build_coordinate_system(
+            Provider.METRICA,
+            length=length,
+            width=width,
+        )
+
+        to_coordinate_system = build_coordinate_system(
+            options.get("coordinate_system", Provider.KLOPPY),
+            length=length,
+            width=width,
+        )
+
+        transformer = Transformer(
+            from_coordinate_system=from_coordinate_system,
+            to_coordinate_system=to_coordinate_system,
+        )
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
@@ -235,6 +256,8 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                     ball_owning_team=None,
                 )
 
+                frame = transformer.transform_frame(frame)
+
                 frames.append(frame)
 
                 if not periods or period.id != periods[-1].id:
@@ -263,14 +286,13 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 1), y_dim=Dimension(0, 1)
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.METRICA,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            coordinate_system=to_coordinate_system,
         )
 
         return TrackingDataset(records=frames, metadata=metadata)

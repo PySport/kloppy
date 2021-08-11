@@ -39,6 +39,8 @@ from kloppy.domain import (
     CardType,
     FoulCommittedEvent,
     AttackingDirection,
+    build_coordinate_system,
+    Transformer,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -297,6 +299,23 @@ class SportecEventSerializer(EventDataSerializer):
                 match_root.MatchInformation.Environment.attrib["PitchY"]
             )
 
+            from_coordinate_system = build_coordinate_system(
+                Provider.SPORTEC,
+                length=x_max,
+                width=y_max,
+            )
+
+            to_coordinate_system = build_coordinate_system(
+                options.get("coordinate_system", Provider.KLOPPY),
+                length=x_max,
+                width=y_max,
+            )
+
+            transformer = Transformer(
+                from_coordinate_system=from_coordinate_system,
+                to_coordinate_system=to_coordinate_system,
+            )
+
             team_path = objectify.ObjectPath(
                 "PutDataRequest.MatchInformation.Teams"
             )
@@ -514,9 +533,9 @@ class SportecEventSerializer(EventDataSerializer):
                         result=None,
                         qualifiers=None,
                     )
-                    events.append(out_event)
+                    events.append(transformer.transform_event(out_event))
 
-                events.append(event)
+                events.append(transformer.transform_event(event))
 
         events = list(
             filter(
@@ -528,14 +547,13 @@ class SportecEventSerializer(EventDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, x_max), y_dim=Dimension(0, y_max)
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=score,
             frame_rate=None,
             orientation=orientation,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             provider=Provider.SPORTEC,
+            coordinate_system=to_coordinate_system,
         )
 
         return EventDataset(

@@ -1,5 +1,6 @@
 import logging
 from typing import Tuple, Dict
+from dataclasses import replace
 
 from kloppy.domain import (
     TrackingDataset,
@@ -10,6 +11,9 @@ from kloppy.domain import (
     Point3D,
     Team,
     Orientation,
+    Transformer,
+    build_coordinate_system,
+    Provider,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -30,7 +34,9 @@ class EPTSSerializer(TrackingDataSerializer):
             raise ValueError("Please specify a value for 'raw_data'")
 
     @staticmethod
-    def _frame_from_row(row: dict, metadata: EPTSMetadata) -> Frame:
+    def _frame_from_row(
+        row: dict, metadata: EPTSMetadata, transformer: Transformer
+    ) -> Frame:
         timestamp = row["timestamp"]
         if metadata.periods and row["period_id"]:
             # might want to search for it instead
@@ -47,7 +53,7 @@ class EPTSSerializer(TrackingDataSerializer):
                         y=row[f"player_{player.player_id}_y"],
                     )
 
-        return Frame(
+        frame = Frame(
             frame_id=row["frame_id"],
             timestamp=timestamp,
             ball_owning_team=None,
@@ -58,6 +64,11 @@ class EPTSSerializer(TrackingDataSerializer):
                 x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),
         )
+
+        if transformer:
+            frame = transformer.transform_frame(frame)
+
+        return frame
 
     def deserialize(
         self, inputs: Dict[str, Readable], options: Dict = None
@@ -112,10 +123,24 @@ class EPTSSerializer(TrackingDataSerializer):
         with performance_logging("Loading metadata", logger=logger):
             metadata = load_metadata(inputs["metadata"])
 
+            if metadata.provider and metadata.pitch_dimensions:
+                to_coordinate_system = build_coordinate_system(
+                    options.get("coordinate_system", Provider.KLOPPY),
+                    length=metadata.pitch_dimensions.length,
+                    width=metadata.pitch_dimensions.width,
+                )
+
+                transformer = Transformer(
+                    from_coordinate_system=metadata.coordinate_system,
+                    to_coordinate_system=to_coordinate_system,
+                )
+            else:
+                transformer = None
+
         with performance_logging("Loading data", logger=logger):
             # assume they are sorted
             frames = [
-                self._frame_from_row(row, metadata)
+                self._frame_from_row(row, metadata, transformer)
                 for row in read_raw_data(
                     raw_data=inputs["raw_data"],
                     metadata=metadata,
@@ -126,6 +151,13 @@ class EPTSSerializer(TrackingDataSerializer):
                     limit=limit,
                 )
             ]
+
+        if transformer:
+            metadata = replace(
+                metadata,
+                pitch_dimensions=to_coordinate_system.pitch_dimensions,
+                coordinate_system=to_coordinate_system,
+            )
 
         return TrackingDataset(records=frames, metadata=metadata)
 

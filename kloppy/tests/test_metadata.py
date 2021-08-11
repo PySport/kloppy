@@ -13,8 +13,8 @@ class TestPitchdimensions:
         pitch_with_scale = PitchDimensions(
             x_dim=Dimension(-100, 100),
             y_dim=Dimension(-50, 50),
-            x_per_meter=20 / 12,
-            y_per_meter=10 / 8,
+            length=120,
+            width=80,
         )
 
         assert pitch_with_scale.length == 120

@@ -38,6 +38,8 @@ from kloppy.domain import (
     Team,
     EventType,
     Event,
+    build_coordinate_system,
+    Transformer,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -275,6 +277,23 @@ class WyscoutSerializer(EventDataSerializer):
         if not options:
             options = {}
 
+        from_coordinate_system = build_coordinate_system(
+            Provider.WYSCOUT,
+            length=100,
+            width=100,
+        )
+
+        to_coordinate_system = build_coordinate_system(
+            options.get("coordinate_system", Provider.KLOPPY),
+            length=100,
+            width=100,
+        )
+
+        transformer = Transformer(
+            from_coordinate_system=from_coordinate_system,
+            to_coordinate_system=to_coordinate_system,
+        )
+
         wanted_event_types = [
             EventType[event_type.upper()]
             for event_type in options.get("event_types", [])
@@ -411,19 +430,18 @@ class WyscoutSerializer(EventDataSerializer):
                     )
 
                 if event and _include_event(event, wanted_event_types):
-                    events.append(event)
+                    events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=[home_team, away_team],
             periods=periods,
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
-            ),
+            pitch_dimensions=to_coordinate_system.pitch_dimensions,
             score=None,
             frame_rate=None,
             orientation=Orientation.BALL_OWNING_TEAM,
             flags=None,
             provider=Provider.WYSCOUT,
+            coordinate_system=to_coordinate_system,
         )
 
         return EventDataset(metadata=metadata, records=events)

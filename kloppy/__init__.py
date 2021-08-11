@@ -13,4 +13,4 @@ if not __KLOPPY_SETUP__:
     )
     from .domain.services.state_builder import add_state
 
-__version__ = "1.7.0"
+__version__ = "2.0.0"

@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 2.0.0 (2021-08-11)
+
+Pull request merged:
+- Default normalization of coordinates ([#87](https://github.com/PySport/kloppy/pull/87))
+- Add missing statsbomb shot outcome values ([#102](https://github.com/PySport/kloppy/pull/102))
+
 ## 1.7.0 (2021-07-01)
 
 Pull request merged:

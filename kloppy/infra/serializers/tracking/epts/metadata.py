@@ -41,7 +41,7 @@ def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
 
 def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
     provider_params = _load_provider_parameters(
-        global_config_elm.find("ProviderGlobalParameters"), value_mapper=int
+        global_config_elm.find("ProviderGlobalParameters")
     )
 
     period_names = [

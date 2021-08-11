@@ -9,6 +9,7 @@ from kloppy.domain import (
     Point,
     EventType,
     SetPieceType,
+    BodyPart,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -120,5 +121,6 @@ class TestMetricaEvent:
 
         assert dataset.events[1].coordinates.x == 0.50125
 
-        # Make sure we are using the improved event types.
-        dataset.records[1].qualifiers[0].value == SetPieceType.KICK_OFF
+        # Check the qualifiers
+        assert dataset.records[1].qualifiers[0].value == SetPieceType.KICK_OFF
+        assert dataset.records[100].qualifiers[0].value == BodyPart.HEAD

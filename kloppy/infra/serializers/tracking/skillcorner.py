@@ -17,6 +17,7 @@ from kloppy.domain import (
     Period,
     Player,
     Point,
+    Point3D,
     Position,
     Provider,
     PitchDimensions,
@@ -79,7 +80,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             if trackable_object == ball_id:
                 group_name = "ball"
                 z = frame_record.get("z")
-                ball_coordinates = Point(x=float(x), y=float(y))
+                if z is not None:
+                    z = float(z)
+                ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
             elif trackable_object in referee_dict.keys():

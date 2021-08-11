@@ -38,6 +38,8 @@ from kloppy.domain import (
     SetPieceType,
     build_coordinate_system,
     Transformer,
+    BodyPartQualifier,
+    BodyPart,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -78,6 +80,13 @@ EVENT_QUALIFIER_THROW_IN = 107
 EVENT_QUALIFIER_CORNER_KICK = 6
 EVENT_QUALIFIER_PENALTY = 9
 EVENT_QUALIFIER_KICK_OFF = 279
+
+EVENT_QUALIFIER_HEAD_PASS = 3
+EVENT_QUALIFIER_HEAD = 15
+EVENT_QUALIFIER_LEFT_FOOT = 72
+EVENT_QUALIFIER_RIGHT_FOOT = 20
+EVENT_QUALIFIER_OTHER_BODYPART = 21
+
 
 event_type_names = {
     1: "pass",
@@ -287,6 +296,13 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
 
 def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers = []
+    qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
+    qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
+    return qualifiers
+
+
+def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
     elif EVENT_QUALIFIER_FREE_KICK in raw_qualifiers:
@@ -299,7 +315,21 @@ def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
     elif EVENT_QUALIFIER_GOAL_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
+    return qualifiers
 
+
+def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    qualifiers = []
+    if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+    elif EVENT_QUALIFIER_HEAD in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+    elif EVENT_QUALIFIER_LEFT_FOOT in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
+    elif EVENT_QUALIFIER_RIGHT_FOOT in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
+    elif EVENT_QUALIFIER_OTHER_BODYPART in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.OTHER))
     return qualifiers
 
 

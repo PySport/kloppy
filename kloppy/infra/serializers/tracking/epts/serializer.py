@@ -61,7 +61,7 @@ class EPTSSerializer(TrackingDataSerializer):
             period=period,
             players_coordinates=players_coordinates,
             ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row["ball_z"]
+                x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),
         )
 
@@ -145,8 +145,8 @@ class EPTSSerializer(TrackingDataSerializer):
                     raw_data=inputs["raw_data"],
                     metadata=metadata,
                     sensor_ids=[
-                        "position"
-                    ],  # we don't care about other sensors
+                        sensor.sensor_id for sensor in metadata.sensors
+                    ],
                     sample_rate=sample_rate,
                     limit=limit,
                 )

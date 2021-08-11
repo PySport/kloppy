@@ -2,6 +2,20 @@
 
 Find out all changes between different kloppy versions
 
+## 1.7.0 (2021-07-01)
+
+Pull request merged:
+
+- Include all event qualifiers ([#99](https://github.com/PySport/kloppy/pull/99))
+- EPTS: Accept non int ProviderParameters ([#101](https://github.com/PySport/kloppy/pull/101))
+
+## 1.6.1 (2021-06-25)
+
+Pull request merged:
+
+- Modify etps serializer so that it accepts files with no ball z ([#100](https://github.com/PySport/kloppy/pull/100))
+- Add ball_z to skillcornertrackingserializer ([#98](https://github.com/PySport/kloppy/pull/98))
+
 ## 1.6.0 (2021-05-27)
 
 Pull request merged:

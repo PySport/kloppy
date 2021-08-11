@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from math import sqrt
+from typing import Optional
 
 
 @dataclass
@@ -81,4 +82,4 @@ class Point3D(Point):
         z: z coordinate in unit of [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
     """
 
-    z: float
+    z: Optional[float]

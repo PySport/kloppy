@@ -24,7 +24,7 @@ Here are just a few of the things that kloppy does well:
 - Flexible **pitch dimensions** transformer for changing a dataset pitch dimensions from one to another (eg OPTA's 100x100 -> TRACAB meters)
 - Intelligent **orientation** transforming orientation of a dataset (eg from TRACAB fixed orientation to "Home Team" orientation)
 #### Pattern matching
-- Search for **complexe patterns**(examples/pattern_matching/repository/README.md) in event data.
+- Search for **complex patterns** (examples/pattern_matching/repository/README.md) in event data.
 - Use `kloppy-query` to export fragments to XML file
 
 

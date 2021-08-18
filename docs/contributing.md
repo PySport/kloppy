@@ -37,23 +37,3 @@ follow these instructions:
 - When you next run a `git commit` command on the repository, _black_ will run and automatically format any changed
 files. *Note*: if _black_ needs to re-format a file, the commit will fail, meaning you will then need to execute
 `git add .` and `git commit` again to commit the files updated by _black_.
-
-## Contributors (sorted alphabetically)
-
-Many thanks to the following developers for contributing to this project:
-
-- [Benjamin Larrousse](https://github.com/BenjaminLarrousse)
-- [Benoît Blanc](https://github.com/benoitblanc)
-- [Bruno Dagnino](https://github.com/bdagnino)
-- [Cedric Krause](https://github.com/cedrickrause)
-- [Daniel Mallory](https://github.com/dmallory42)
-- [Daniel Z.](https://github.com/znstrider)
-- [Eujern Lim](https://github.com/eujern)
-- [Felix Schmidt](https://github.com/schmidtfx)
-- [Ingmar van Dijk](https://github.com/ivd-git)
-- [Joe Mulberry](https://github.com/joemulberry)
-- [Marcelo Trylesinski](https://github.com/Kludex)
-- [Matias Bordese](https://github.com/matiasb)
-- [Pratik Thanki](https://github.com/pratikthanki)
-- [Ricardo Tavares](https://github.com/rjtavares)
-- [Tim Keller](https://github.com/TK5-Tim)

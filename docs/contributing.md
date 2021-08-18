@@ -42,6 +42,12 @@ files. *Note*: if _black_ needs to re-format a file, the commit will fail, meani
 
 Many thanks to the following developers for contributing to this project:
 
+<style>
+ul {
+  columns: 2
+} 
+</style>
+
 - [Benjamin Larrousse](https://github.com/BenjaminLarrousse)
 - [Benoît Blanc](https://github.com/benoitblanc)
 - [Bruno Dagnino](https://github.com/bdagnino)

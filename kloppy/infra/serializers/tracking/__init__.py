@@ -3,3 +3,4 @@ from .epts import EPTSSerializer
 from .metrica import MetricaTrackingSerializer
 from .tracab import TRACABSerializer
 from .skillcorner import SkillCornerTrackingSerializer
+from .second_spectrum import SecondSpectrumSerializer

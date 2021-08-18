@@ -42,8 +42,8 @@ files. *Note*: if _black_ needs to re-format a file, the commit will fail, meani
 
 Many thanks to the following developers for contributing to this project:
 
-<style>
-style + ul {
+<style id="two-columns-ul">
+style#two-columns-ul + ul {
   columns: 2
 } 
 </style>

@@ -43,7 +43,7 @@ files. *Note*: if _black_ needs to re-format a file, the commit will fail, meani
 Many thanks to the following developers for contributing to this project:
 
 <style>
-ul {
+style + ul {
   columns: 2
 } 
 </style>

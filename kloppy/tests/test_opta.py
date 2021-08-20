@@ -12,6 +12,7 @@ from kloppy.domain import (
     Point,
     BodyPart,
     SetPieceType,
+    PassType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -69,6 +70,7 @@ class TestOpta:
         # Check the qualifiers
         assert dataset.events[0].qualifiers[0].value == SetPieceType.KICK_OFF
         assert dataset.events[6].qualifiers[0].value == BodyPart.HEAD
+        assert dataset.events[5].qualifiers[0].value == PassType.CHIPPED_PASS
 
     def test_correct_normalized_deserialization(self):
         base_dir = os.path.dirname(__file__)

@@ -40,6 +40,8 @@ from kloppy.domain import (
     Transformer,
     BodyPartQualifier,
     BodyPart,
+    PassType,
+    PassQualifier
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -87,6 +89,15 @@ EVENT_QUALIFIER_LEFT_FOOT = 72
 EVENT_QUALIFIER_RIGHT_FOOT = 20
 EVENT_QUALIFIER_OTHER_BODYPART = 21
 
+EVENT_QUALIFIER_LONG_BALL = 1
+EVENT_QUALIFIER_CROSS = 2
+EVENT_QUALIFIER_THROUGH_BALL = 4
+EVENT_QUALIFIER_CHIPPED_BALL = 155
+EVENT_QUALIFIER_LAUNCH = 157
+EVENT_QUALIFIER_FLICK_ON = 168
+EVENT_QUALIFIER_SWITCH_OF_PLAY = 196
+EVENT_QUALIFIER_ASSIST = 210
+EVENT_QUALIFIER_ASSIST_2ND = 218
 
 event_type_names = {
     1: "pass",
@@ -298,6 +309,28 @@ def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers = []
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
+    qualifiers.extend(_get_event_pass_qualifiers(raw_qualifiers))
+    return qualifiers
+
+
+def _get_event_pass_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    qualifiers = []
+    if EVENT_QUALIFIER_CROSS in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.CROSS))
+    elif EVENT_QUALIFIER_LONG_BALL in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.LONG_BALL))
+    elif EVENT_QUALIFIER_CHIPPED_BALL in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.CHIPPED_PASS))
+    elif EVENT_QUALIFIER_THROUGH_BALL in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.THROUGH_BALL))
+    elif EVENT_QUALIFIER_LAUNCH in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.LAUNCH))
+    elif EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.FLICK_ON))
+    elif EVENT_QUALIFIER_ASSIST in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.ASSIST))
+    elif EVENT_QUALIFIER_ASSIST_2ND in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.ASSIST_2ND))
     return qualifiers
 
 

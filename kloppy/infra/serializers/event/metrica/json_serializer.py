@@ -99,10 +99,7 @@ def _parse_coordinates(event_start_or_end: dict) -> Point:
     if x is None:
         return None
 
-    return Point(
-        x=x,
-        y=y,
-    )
+    return Point(x=x, y=y,)
 
 
 def _parse_subtypes(event: dict) -> List:
@@ -378,8 +375,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     )
 
                     event = PassEvent.create(
-                        **pass_event_kwargs,
-                        **generic_event_kwargs,
+                        **pass_event_kwargs, **generic_event_kwargs,
                     )
 
                 elif event_type == MS_EVENT_TYPE_SHOT:
@@ -389,8 +385,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         subtypes=subtypes,
                     )
                     event = ShotEvent.create(
-                        **shot_event_kwargs,
-                        **generic_event_kwargs,
+                        **shot_event_kwargs, **generic_event_kwargs,
                     )
 
                 elif subtypes and MS_EVENT_TYPE_DRIBBLE in subtypes:
@@ -402,9 +397,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                     )
 
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(
-                        event=raw_event,
-                    )
+                    carry_event_kwargs = _parse_carry(event=raw_event,)
                     event = CarryEvent.create(
                         qualifiers=None,
                         **carry_event_kwargs,
@@ -413,16 +406,12 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
 
                 elif event_type == MS_EVENT_TYPE_RECOVERY:
                     event = RecoveryEvent.create(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
+                        result=None, qualifiers=None, **generic_event_kwargs,
                     )
 
                 elif event_type == MS_EVENT_TYPE_FOUL_COMMITTED:
                     event = FoulCommittedEvent.create(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
+                        result=None, qualifiers=None, **generic_event_kwargs,
                     )
 
                 else:
@@ -456,10 +445,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         if _include_event(event, wanted_event_types):
                             events.append(transformer.transform_event(event))
 
-        return EventDataset(
-            metadata=metadata,
-            records=events,
-        )
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

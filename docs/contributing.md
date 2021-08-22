@@ -63,4 +63,5 @@ style#two-columns-ul + ul {
 - [Matias Bordese](https://github.com/matiasb)
 - [Pratik Thanki](https://github.com/pratikthanki)
 - [Ricardo Tavares](https://github.com/rjtavares)
+- [Thomas Seidl](https://github.com/ThomasSeidl)
 - [Tim Keller](https://github.com/TK5-Tim)

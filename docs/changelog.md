@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+
+## 2.1.0 (2021-08-22)
+
+Pull request merged:
+
+- Add pass type qualifier for opta pass events ([#104](https://github.com/PySport/kloppy/pull/104))
+
 ## 2.0.0 (2021-08-11)
 
 Pull request merged:

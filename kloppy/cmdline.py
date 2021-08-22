@@ -118,7 +118,8 @@ def run_query(argv=sys.argv[1:]):
         with performance_logging("load dataset", logger=logger):
             events_filename = opts.input_wyscout
             dataset = load_wyscout_event_data(
-                events_filename, options={"event_types": query.event_types},
+                events_filename,
+                options={"event_types": query.event_types},
             )
 
     if not dataset:

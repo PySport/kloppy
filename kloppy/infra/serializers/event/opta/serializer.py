@@ -41,7 +41,7 @@ from kloppy.domain import (
     BodyPartQualifier,
     BodyPart,
     PassType,
-    PassQualifier
+    PassQualifier,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging

@@ -392,7 +392,8 @@ class KloppyCoordinateSystem(CoordinateSystem):
             )
         else:
             return PitchDimensions(
-                x_dim=Dimension(0, 1), y_dim=Dimension(0, 1),
+                x_dim=Dimension(0, 1),
+                y_dim=Dimension(0, 1),
             )
 
 
@@ -444,7 +445,8 @@ class OptaCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return PitchDimensions(
-            x_dim=Dimension(0, 100), y_dim=Dimension(0, 100),
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
         )
 
 
@@ -489,7 +491,8 @@ class StatsbombCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return PitchDimensions(
-            x_dim=Dimension(0, 120), y_dim=Dimension(0, 80),
+            x_dim=Dimension(0, 120),
+            y_dim=Dimension(0, 80),
         )
 
 
@@ -509,7 +512,8 @@ class WyscoutCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return PitchDimensions(
-            x_dim=Dimension(0, 100), y_dim=Dimension(0, 100),
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
         )
 
 
@@ -657,7 +661,11 @@ class Dataset(ABC):
         """
         from kloppy import to_pandas
 
-        return to_pandas(self, *args, **kwargs,)
+        return to_pandas(
+            self,
+            *args,
+            **kwargs,
+        )
 
     def transform(self, *args, **kwargs):
         """

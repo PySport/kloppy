@@ -41,7 +41,7 @@ from kloppy.domain import (
     BodyPartQualifier,
     BodyPart,
     PassType,
-    PassQualifier
+    PassQualifier,
 )
 from kloppy.infra.serializers.event import EventDataSerializer
 from kloppy.utils import Readable, performance_logging
@@ -292,6 +292,7 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
             last_name=team_players[player_elm.attrib["PlayerRef"]][
                 "last_name"
             ],
+            starting= True if player_elm.attrib["Status"] == "Start" else False,
             position=Position(
                 position_id=player_elm.attrib["Formation_Place"],
                 name=player_elm.attrib["Position"],
@@ -429,9 +430,7 @@ class OptaSerializer(EventDataSerializer):
             options = {}
 
         from_coordinate_system = build_coordinate_system(
-            Provider.OPTA,
-            length=100,
-            width=100,
+            Provider.OPTA, length=100, width=100,
         )
 
         to_coordinate_system = build_coordinate_system(
@@ -482,16 +481,8 @@ class OptaSerializer(EventDataSerializer):
 
             game_elm = f24_root.find("Game")
             periods = [
-                Period(
-                    id=1,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=2,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
+                Period(id=1, start_timestamp=None, end_timestamp=None,),
+                Period(id=2, start_timestamp=None, end_timestamp=None,),
             ]
             possession_team = None
             events = []
@@ -570,14 +561,12 @@ class OptaSerializer(EventDataSerializer):
                             raw_qualifiers, outcome
                         )
                         event = PassEvent.create(
-                            **pass_event_kwargs,
-                            **generic_event_kwargs,
+                            **pass_event_kwargs, **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass(raw_qualifiers)
                         event = PassEvent.create(
-                            **pass_event_kwargs,
-                            **generic_event_kwargs,
+                            **pass_event_kwargs, **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
@@ -650,10 +639,7 @@ class OptaSerializer(EventDataSerializer):
             coordinate_system=to_coordinate_system,
         )
 
-        return EventDataset(
-            metadata=metadata,
-            records=events,
-        )
+        return EventDataset(metadata=metadata, records=events,)
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

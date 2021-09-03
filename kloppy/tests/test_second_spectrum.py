@@ -20,7 +20,7 @@ class TestSecondSpectrumTracking:
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
         serializer = SecondSpectrumSerializer()
-        
+
         xml_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.xml"
         json_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.jsonl"
         rawfloc = f"{base_dir}/files/second_spectrum_fake_data.jsonl"
@@ -36,7 +36,7 @@ class TestSecondSpectrumTracking:
                     "json_metadata": json_metadata,
                 },
                 options={
-                    "only_alive" : False,
+                    "only_alive": False,
                     "coordinate_system": Provider.SECONDSPECTRUM,
                 },
             )
@@ -52,26 +52,32 @@ class TestSecondSpectrumTracking:
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == 0
         assert dataset.metadata.periods[0].end_timestamp == 2982240
-        assert dataset.metadata.periods[0].attacking_direction == AttackingDirection.AWAY_HOME
+        assert (
+            dataset.metadata.periods[0].attacking_direction
+            == AttackingDirection.AWAY_HOME
+        )
 
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == 3907360
         assert dataset.metadata.periods[1].end_timestamp == 6927840
-        assert dataset.metadata.periods[1].attacking_direction == AttackingDirection.HOME_AWAY
+        assert (
+            dataset.metadata.periods[1].attacking_direction
+            == AttackingDirection.HOME_AWAY
+        )
 
         # Check some timestamps
-        assert dataset.records[0].timestamp == 0 #First frame
-        assert dataset.records[20].timestamp == 320.0 #Later frame
+        assert dataset.records[0].timestamp == 0  # First frame
+        assert dataset.records[20].timestamp == 320.0  # Later frame
 
         # Check some players
         home_player = dataset.metadata.teams[0].players[2]
-        assert home_player.player_id == '8xwx2'
+        assert home_player.player_id == "8xwx2"
         assert dataset.records[0].players_coordinates[home_player] == Point(
             x=-8.943903672572427, y=-28.171654132650364
         )
 
         away_player = dataset.metadata.teams[1].players[3]
-        assert away_player.player_id == '2q0uv'
+        assert away_player.player_id == "2q0uv"
         assert dataset.records[0].players_coordinates[away_player] == Point(
             x=-45.11871334915762, y=-20.06459030559596
         )
@@ -88,11 +94,10 @@ class TestSecondSpectrumTracking:
         assert pitch_dimensions.y_dim.min == -33.985
         assert pitch_dimensions.y_dim.max == 33.985
 
-
     def test_correct_normalized_deserialization(self):
         base_dir = os.path.dirname(__file__)
         serializer = SecondSpectrumSerializer()
-        
+
         xml_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.xml"
         json_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.jsonl"
         rawfloc = f"{base_dir}/files/second_spectrum_fake_data.jsonl"
@@ -108,7 +113,7 @@ class TestSecondSpectrumTracking:
                     "json_metadata": json_metadata,
                 },
                 options={
-                    "only_alive" : False,
+                    "only_alive": False,
                 },
             )
 
@@ -119,8 +124,7 @@ class TestSecondSpectrumTracking:
 
         # Check normalised pitch dimensions
         pitch_dimensions = dataset.metadata.pitch_dimensions
-        assert pitch_dimensions.x_dim.min == 0.
-        assert pitch_dimensions.x_dim.max == 1.
-        assert pitch_dimensions.y_dim.min == 0.
-        assert pitch_dimensions.y_dim.max == 1.
-
+        assert pitch_dimensions.x_dim.min == 0.0
+        assert pitch_dimensions.x_dim.max == 1.0
+        assert pitch_dimensions.y_dim.min == 0.0
+        assert pitch_dimensions.y_dim.max == 1.0

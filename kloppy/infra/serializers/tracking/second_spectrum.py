@@ -260,10 +260,10 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         continue
 
                     if n % sample == 0:
-                        print(n, sample, n%sample)
+                        print(n, sample, n % sample)
                         yield frame_data
 
-                    n+=1
+                    n += 1
 
             frames = []
             for n, frame_data in enumerate(_iter()):
@@ -280,7 +280,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         )
                     )
 
-                if limit and n+1 >= limit:
+                if limit and n + 1 >= limit:
                     break
 
         orientation = (

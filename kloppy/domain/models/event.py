@@ -242,6 +242,13 @@ class PassType(Enum):
         LAUNCH (PassType):
         SIMPLE_PASS (PassType):
         SMART_PASS (PassType):
+        LONG_BALL (PassType)
+        THROUGH_BALL (PassType)
+        CHIPPED_PASS (PassType)
+        FLICK_ON (PassType)
+        ASSIST (PassType)
+        ASSIST_2ND (PassType)
+        SWITCH_OF_PLAY (PassType)
     """
 
     CROSS = "CROSS"
@@ -251,6 +258,13 @@ class PassType(Enum):
     LAUNCH = "LAUNCH"
     SIMPLE_PASS = "SIMPLE_PASS"
     SMART_PASS = "SMART_PASS"
+    LONG_BALL = "LONG_BALL"
+    THROUGH_BALL = "THROUGH_BALL"
+    CHIPPED_PASS = "CHIPPED_PASS"
+    FLICK_ON = "FLICK_ON"
+    ASSIST = "ASSIST"
+    ASSIST_2ND = "ASSIST_2ND"
+    SWITCH_OF_PLAY = "SWITCH_OF_PLAY"
 
 
 @dataclass

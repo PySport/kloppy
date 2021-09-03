@@ -86,8 +86,49 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
         self, inputs: Dict[str, Readable], options: Dict = None
     ) -> TrackingDataset:
         """
-        Deserialize Second Spectrium tracking data into a `TrackingDataset`.
-        TODO: Add a docstring
+        Deserialize Second Spectrum tracking data into a `TrackingDataset`.
+
+        Parameters
+        ----------
+        inputs : dict
+            input `raw_data` should point to a `Readable` object containing
+            the 'jsonl' formatted raw data from Second Spectrum. input `xml_metadata` 
+            should point to the xml metadata. input `json_metadata` is optional and should point 
+            to the 'jsonl' metadata file if it's available.
+        options : dict
+            Options for deserialization of the Second Spectrum file. Possible options are
+            `only_alive` (boolean) to specify that only frames with alive ball state
+            should be loaded, or `sample_rate` (float between 0 and 1) to specify
+            the amount of frames that should be loaded, `limit` to specify the maximum number of
+            frames that will be returned.
+        Returns
+        -------
+        dataset : TrackingDataset
+        Raises
+        ------
+        -
+
+        See Also
+        --------
+
+        Examples
+        --------
+        >>> serializer = SecondSpectrumSerializer()
+        >>> with open('metadata.xml', "rb") as metadata, \
+        >>>         open('metadata.jsonl', "rb") as json_metadata, \
+        >>>         open('rawdata.jsonl', "rb") as raw_data:
+        >>>     dataset = serializer.deserialize(
+        >>>         inputs={
+        >>>             "xml_metadata": metadata, 
+        >>>             "raw_data": raw_data, 
+        >>>             "json_metadata" : json_metadata
+        >>>         },
+        >>>         options={
+        >>>             "only_alive": False,
+        >>>             "limit": 4000,
+        >>>             "sample_rate" : 0.1
+        >>>         },
+        >>>     )
         """
         self.__validate_inputs(inputs)
 
@@ -110,12 +151,12 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                 start_frame_id = int(period.attrib["iStartFrame"])
                 end_frame_id = int(period.attrib["iEndFrame"])
                 if start_frame_id != 0 or end_frame_id != 0:
-
+                    # Frame IDs are unix timestamps (in milliseconds)
                     periods.append(
                         Period(
                             id=int(period.attrib["iId"]),
-                            start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate,
+                            start_timestamp=start_frame_id,
+                            end_timestamp=end_frame_id,
                         )
                     )
 
@@ -205,7 +246,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
 
             def _iter():
                 n = 0
-                sample = 1.0 / sample_rate
+                sample = 1 / sample_rate
 
                 for line_ in inputs["raw_data"].readlines():
                     line_ = line_.strip().decode("ascii")
@@ -219,7 +260,10 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         continue
 
                     if n % sample == 0:
+                        print(n, sample, n%sample)
                         yield frame_data
+
+                    n+=1
 
             frames = []
             for n, frame_data in enumerate(_iter()):
@@ -236,7 +280,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         )
                     )
 
-                if limit and n >= limit:
+                if limit and n+1 >= limit:
                     break
 
         orientation = (

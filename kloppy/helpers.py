@@ -59,7 +59,7 @@ def load_second_spectrum_tracking_data(
     options: dict = None,
 ) -> TrackingDataset:
     """
-    Load Second spectrium event data into a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset]
+    Load Second spectrum event data into a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset]
 
     Parameters:
         xml_metadata_filename: filename of xml metadata file for Second Spectrum tracking

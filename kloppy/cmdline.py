@@ -5,6 +5,7 @@ import textwrap
 from collections import Counter
 
 from kloppy import (
+    load_datafactory_event_data,
     load_opta_event_data,
     load_statsbomb_event_data,
     load_wyscout_event_data,
@@ -50,6 +51,9 @@ def run_query(argv=sys.argv[1:]):
     )
     parser.add_argument(
         "--input-opta", help="Opta event input files (f24.xml,f7.xml)"
+    )
+    parser.add_argument(
+        "--input-datafactory", help="Datafactory event input file (.json)"
     )
     parser.add_argument("--input-wyscout", help="Wyscout event input file")
     parser.add_argument("--output-xml", help="Output file")
@@ -112,6 +116,13 @@ def run_query(argv=sys.argv[1:]):
             dataset = load_opta_event_data(
                 f24_filename.strip(),
                 f7_filename.strip(),
+                options={"event_types": query.event_types},
+            )
+    if opts.input_datafactory:
+        with performance_logging("load dataset", logger=logger):
+            events_filename = opts.input_datafactory
+            dataset = load_datafactory_event_data(
+                events_filename.strip(),
                 options={"event_types": query.event_types},
             )
     if opts.input_wyscout:

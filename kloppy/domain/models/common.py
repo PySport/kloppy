@@ -50,6 +50,7 @@ class Provider(Enum):
         SPORTEC:
         WYSCOUT:
         KLOPPY:
+        DATAFACTORY:
     """
 
     METRICA = "metrica"
@@ -60,6 +61,7 @@ class Provider(Enum):
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"
     KLOPPY = "kloppy"
+    DATAFACTORY = "datafactory"
     OTHER = "other"
 
     def __str__(self):
@@ -541,6 +543,28 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class DatafactoryCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.DATAFACTORY
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-1, 1),
+            y_dim=Dimension(-1, 1),
+        )
+
+
 def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.TRACAB:
@@ -566,6 +590,9 @@ def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.SKILLCORNER:
         return SkillCornerCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.DATAFACTORY:
+        return DatafactoryCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

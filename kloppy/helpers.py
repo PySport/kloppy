@@ -1,6 +1,7 @@
 from typing import Callable, Dict, List, TypeVar, Union, Any
 
 from . import (
+    DatafactorySerializer,
     EPTSSerializer,
     MetricaEventsJsonSerializer,
     MetricaTrackingSerializer,
@@ -94,6 +95,24 @@ def load_epts_tracking_data(
 
         return serializer.deserialize(
             inputs={"metadata": metadata, "raw_data": raw_data},
+            options=options,
+        )
+
+
+def load_datafactory_event_data(
+    event_data_filename: str, options: dict = None
+) -> EventDataset:
+    """
+    Load Datafactory event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        event_data_filename: filename of json containing the events
+        options:
+    """
+    serializer = DatafactorySerializer()
+    with open(event_data_filename, "rb") as event_data:
+        return serializer.deserialize(
+            inputs={"event_data": event_data},
             options=options,
         )
 
@@ -442,6 +461,7 @@ __all__ = [
     "load_metrica_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",
+    "load_datafactory_event_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "load_sportec_event_data",

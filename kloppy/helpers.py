@@ -65,7 +65,7 @@ def load_skillcorner_tracking_data(
         )
 
 
-def load_metrica_tracking_data(
+def load_metrica_csv_tracking_data(
     raw_data_home_filename: str,
     raw_data_away_filename: str,
     options: dict = None,
@@ -439,7 +439,7 @@ def to_pandas(
 __all__ = [
     "load_tracab_tracking_data",
     "load_skillcorner_tracking_data",
-    "load_metrica_tracking_data",
+    "load_metrica_csv_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",
     "load_statsbomb_event_data",

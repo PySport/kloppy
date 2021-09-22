@@ -66,7 +66,7 @@ dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limi
 We added some helper functions to get started really quickly. The helpers allow easy loading, transforming and converting to pandas of tracking data.
 ```python
 from kloppy import (
-    load_metrica_tracking_data, 
+    load_metrica_csv_tracking_data, 
     load_metrica_json_event_data,
     load_tracab_tracking_data,
     load_epts_tracking_data, 
@@ -79,7 +79,7 @@ from kloppy import (
 )
 
 # metrica data
-dataset = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
+dataset = load_metrica_csv_tracking_data('home_file.csv', 'away_file.csv')
 # or tracab
 dataset = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
 # or epts

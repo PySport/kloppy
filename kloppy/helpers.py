@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, TypeVar, Union, Any
 from . import (
     EPTSSerializer,
     MetricaEventsJsonSerializer,
-    MetricaTrackingSerializer,
+    MetricaCsvTrackingSerializer,
     OptaSerializer,
     SportecEventSerializer,
     SkillCornerTrackingSerializer,
@@ -70,7 +70,7 @@ def load_metrica_tracking_data(
     raw_data_away_filename: str,
     options: dict = None,
 ) -> TrackingDataset:
-    serializer = MetricaTrackingSerializer()
+    serializer = MetricaCsvTrackingSerializer()
     with open(raw_data_home_filename, "rb") as raw_data_home, open(
         raw_data_away_filename, "rb"
     ) as raw_data_away:

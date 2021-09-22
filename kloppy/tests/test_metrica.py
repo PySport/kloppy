@@ -1,6 +1,6 @@
 import os
 
-from kloppy import MetricaTrackingSerializer, MetricaEventsJsonSerializer
+from kloppy import MetricaCsvTrackingSerializer, MetricaEventsJsonSerializer
 from kloppy.domain import (
     Period,
     Provider,
@@ -18,7 +18,7 @@ class TestMetricaTracking:
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
 
-        serializer = MetricaTrackingSerializer()
+        serializer = MetricaCsvTrackingSerializer()
 
         with open(
             f"{base_dir}/files/metrica_home.csv", "rb"

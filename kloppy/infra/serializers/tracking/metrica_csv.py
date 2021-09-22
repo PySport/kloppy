@@ -28,7 +28,7 @@ from . import TrackingDataSerializer
 logger = logging.getLogger(__name__)
 
 
-class MetricaTrackingSerializer(TrackingDataSerializer):
+class MetricaCsvTrackingSerializer(TrackingDataSerializer):
     __PartialFrame = namedtuple(
         "PartialFrame",
         "team period frame_id players_coordinates ball_coordinates",
@@ -171,7 +171,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
 
         Examples
         --------
-        >>> serializer = MetricaTrackingSerializer()
+        >>> serializer = MetricaCsvTrackingSerializer()
         >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
         >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
         >>>

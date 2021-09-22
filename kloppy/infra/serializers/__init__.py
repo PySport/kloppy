@@ -7,7 +7,7 @@ from .event import (
 )
 from .tracking import (
     EPTSSerializer,
-    MetricaTrackingSerializer,
+    MetricaCsvTrackingSerializer,
     TRACABSerializer,
     TrackingDataSerializer,
     SkillCornerTrackingSerializer,

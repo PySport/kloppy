@@ -3,7 +3,7 @@ from typing import Dict, Type
 from ..core.builder import DatasetBuilder
 from ...serializers.tracking import (
     TrackingDataSerializer,
-    MetricaTrackingSerializer,
+    MetricaCsvTrackingSerializer,
 )
 
 
@@ -25,4 +25,4 @@ class MetricaTracking(DatasetBuilder):
         return _DATASET_URLS[game]
 
     def get_serializer_cls(self) -> Type[TrackingDataSerializer]:
-        return MetricaTrackingSerializer
+        return MetricaCsvTrackingSerializer

@@ -1,7 +1,7 @@
 import os
 
 from kloppy import (
-    MetricaTrackingSerializer,
+    MetricaCsvTrackingSerializer,
     MetricaEventsJsonSerializer,
     load_sportec_event_data,
 )

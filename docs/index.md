@@ -179,9 +179,9 @@ with open("tracab_data.dat", "rb") as raw, \
 
 or Metrica data
 ```python
-from kloppy import MetricaTrackingSerializer
+from kloppy import MetricaCsvTrackingSerializer
 
-serializer = MetricaTrackingSerializer()
+serializer = MetricaCsvTrackingSerializer()
 
 with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
         open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_home:

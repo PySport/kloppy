@@ -5,6 +5,7 @@ from pandas.testing import assert_frame_equal
 
 from kloppy import (
     to_pandas,
+    load_metrica_tracking_data,
     load_metrica_csv_tracking_data,
     load_tracab_tracking_data,
     transform,
@@ -33,6 +34,17 @@ from kloppy.domain.models.common import DatasetType
 
 
 class TestHelpers:
+    def test_load_metrica_tracking_data(self):
+        base_dir = os.path.dirname(__file__)
+        dataset = load_metrica_tracking_data(
+            f"{base_dir}/files/metrica_home.csv",
+            f"{base_dir}/files/metrica_away.csv",
+        )
+        assert len(dataset.records) == 6
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.provider == Provider.METRICA
+        assert dataset.dataset_type == DatasetType.TRACKING
+
     def test_load_metrica_csv_tracking_data(self):
         base_dir = os.path.dirname(__file__)
         dataset = load_metrica_csv_tracking_data(

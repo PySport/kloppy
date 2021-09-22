@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, TypeVar, Union, Any
 
 from . import (
-    EPTSSerializer,
+    MetricaEPTSSerializer,
     MetricaEventsJsonSerializer,
     MetricaCsvTrackingSerializer,
     OptaSerializer,
@@ -65,6 +65,23 @@ def load_skillcorner_tracking_data(
         )
 
 
+def load_metrica_tracking_data(
+    raw_data_home_filename: str,
+    raw_data_away_filename: str,
+    options: dict = None,
+) -> TrackingDataset:
+    from warnings import warn
+
+    warn(
+        "load_metrica_tracking_data is a deprecated method, using load_metrica_csv_tracking_data instead"
+    )
+    return load_metrica_csv_tracking_data(
+        raw_data_home_filename,
+        raw_data_away_filename,
+        options,
+    )
+
+
 def load_metrica_csv_tracking_data(
     raw_data_home_filename: str,
     raw_data_away_filename: str,
@@ -87,7 +104,20 @@ def load_metrica_csv_tracking_data(
 def load_epts_tracking_data(
     metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
-    serializer = EPTSSerializer()
+    from warnings import warn
+
+    warn(
+        "load_epts_tracking_data is a deprecated method, using load_metrica_epts_tracking_data instead"
+    )
+    return load_metrica_epts_tracking_data(
+        metadata_filename, raw_data_filename, options
+    )
+
+
+def load_metrica_epts_tracking_data(
+    metadata_filename: str, raw_data_filename: str, options: dict = None
+) -> TrackingDataset:
+    serializer = MetricaEPTSSerializer()
     with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:
@@ -439,9 +469,11 @@ def to_pandas(
 __all__ = [
     "load_tracab_tracking_data",
     "load_skillcorner_tracking_data",
+    "load_metrica_tracking_data",
     "load_metrica_csv_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",
+    "load_metrica_epts_tracking_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "load_sportec_event_data",

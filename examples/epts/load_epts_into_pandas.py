@@ -3,7 +3,7 @@ import sys
 
 from pandas import DataFrame
 
-from kloppy.infra.serializers.tracking.epts.metadata import (
+from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata as epts_load_metadata,
 )
 from kloppy.infra.serializers.tracking.epts.reader import (

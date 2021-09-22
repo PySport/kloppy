@@ -25,7 +25,7 @@ from .. import TrackingDataSerializer
 logger = logging.getLogger(__name__)
 
 
-class EPTSSerializer(TrackingDataSerializer):
+class MetricaEPTSSerializer(TrackingDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "metadata" not in inputs:
@@ -74,7 +74,7 @@ class EPTSSerializer(TrackingDataSerializer):
         self, inputs: Dict[str, Readable], options: Dict = None
     ) -> TrackingDataset:
         """
-        Deserialize EPTS tracking data into a `TrackingDataset`.
+        Deserialize Metrica EPTS tracking data into a `TrackingDataset`.
 
         Parameters
         ----------
@@ -99,7 +99,7 @@ class EPTSSerializer(TrackingDataSerializer):
 
         Examples
         --------
-        >>> serializer = EPTSSerializer()
+        >>> serializer = MetricaEPTSSerializer()
         >>> with open("metadata.xml", "rb") as meta, \
         >>>      open("raw.dat", "rb") as raw:
         >>>     dataset = serializer.deserialize(

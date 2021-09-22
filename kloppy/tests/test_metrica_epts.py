@@ -4,7 +4,7 @@ import re
 from pandas import DataFrame
 from lxml import objectify
 
-from kloppy import EPTSSerializer
+from kloppy import MetricaEPTSSerializer
 from kloppy.domain import (
     Period,
     AttackingDirection,
@@ -15,16 +15,20 @@ from kloppy.domain import (
     Team,
     Provider,
 )
-from kloppy.infra.serializers.tracking.epts.metadata import load_metadata
-from kloppy.infra.serializers.tracking.epts.metadata import _load_provider
-from kloppy.infra.serializers.tracking.epts.reader import (
+from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
+    load_metadata,
+)
+from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
+    _load_provider,
+)
+from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
 from kloppy.utils import performance_logging
 
 
-class TestEPTSTracking:
+class TestMetricaEPTSTracking:
     def test_regex(self):
         base_dir = os.path.dirname(__file__)
         with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
@@ -105,34 +109,7 @@ class TestEPTSTracking:
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
 
-        serializer = EPTSSerializer()
-
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata, open(
-            f"{base_dir}/files/epts_raw.txt", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data}
-            )
-
-        first_player = next(iter(dataset.records[0].players_coordinates))
-
-        assert len(dataset.records) == 2
-        assert len(dataset.metadata.periods) == 1
-        assert dataset.metadata.orientation is None
-
-        assert dataset.records[0].players_coordinates[first_player] == Point(
-            x=-769, y=-2013
-        )
-
-        assert dataset.records[0].ball_coordinates == Point3D(
-            x=-2656, y=367, z=100
-        )
-
-    def test_deserialize_metrica_epts(self):
-        base_dir = os.path.dirname(__file__)
-
-        serializer = EPTSSerializer()
+        serializer = MetricaEPTSSerializer()
 
         with open(
             f"{base_dir}/files/epts_metrica_metadata.xml", "rb"

@@ -1,4 +1,5 @@
 from dataclasses import asdict, fields, replace
+from kloppy.domain.models.tracking import PlayerData
 from typing import TypeVar, Union
 
 from kloppy.domain import (
@@ -163,10 +164,17 @@ class Transformer:
             ball_coordinates=self.__change_point_coordinate_system(
                 frame.ball_coordinates
             ),
-            players_coordinates={
-                key: self.__change_point_coordinate_system(point)
-                for key, point in frame.players_coordinates.items()
+            players_data={
+                key: PlayerData(
+                    coordinates=self.__change_point_coordinate_system(
+                        player_data.coordinates
+                    ),
+                    distance=player_data.distance,
+                    speed=player_data.speed,
+                )
+                for key, player_data in frame.players_data.items()
             },
+            other_data=frame.other_data,
         )
 
     def __change_frame_dimensions(self, frame: Frame):
@@ -182,10 +190,17 @@ class Transformer:
             ball_coordinates=self.change_point_dimensions(
                 frame.ball_coordinates
             ),
-            players_coordinates={
-                key: self.change_point_dimensions(point)
-                for key, point in frame.players_coordinates.items()
+            players_data={
+                key: PlayerData(
+                    coordinates=self.change_point_dimensions(
+                        player_data.coordinates
+                    ),
+                    distance=player_data.distance,
+                    speed=player_data.speed,
+                )
+                for key, player_data in frame.players_data.items()
             },
+            other_data=frame.other_data,
         )
 
     def __change_point_coordinate_system(self, point: Union[Point, Point3D]):

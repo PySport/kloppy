@@ -4,16 +4,13 @@ from dataclasses import replace
 
 from kloppy.domain import (
     TrackingDataset,
-    DatasetFlag,
-    AttackingDirection,
     Frame,
     Point,
     Point3D,
-    Team,
-    Orientation,
     Transformer,
     build_coordinate_system,
     Provider,
+    PlayerData,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -44,13 +41,15 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
         else:
             period = None
 
-        players_coordinates = {}
+        players_data = {}
         for team in metadata.teams:
             for player in team.players:
                 if f"player_{player.player_id}_x" in row:
-                    players_coordinates[player] = Point(
-                        x=row[f"player_{player.player_id}_x"],
-                        y=row[f"player_{player.player_id}_y"],
+                    players_data[player] = PlayerData(
+                        coordinates=Point(
+                            x=row[f"player_{player.player_id}_x"],
+                            y=row[f"player_{player.player_id}_y"],
+                        )
                     )
 
         frame = Frame(
@@ -59,7 +58,8 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
             ball_owning_team=None,
             ball_state=None,
             period=period,
-            players_coordinates=players_coordinates,
+            players_data=players_data,
+            other_data=None,
             ball_coordinates=Point3D(
                 x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),

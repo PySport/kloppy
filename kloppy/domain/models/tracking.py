@@ -8,9 +8,17 @@ from .pitch import Point
 
 
 @dataclass
+class PlayerData:
+    coordinates: Point
+    distance: float = None
+    speed: float = None
+
+
+@dataclass
 class Frame(DataRecord):
     frame_id: int
-    players_coordinates: Dict[Player, Point]
+    players_data: Dict[Player, PlayerData]
+    other_data: Dict[Player, Dict]
     ball_coordinates: Point
 
 
@@ -29,4 +37,4 @@ class TrackingDataset(Dataset):
         return self.metadata.frame_rate
 
 
-__all__ = ["Frame", "TrackingDataset"]
+__all__ = ["Frame", "TrackingDataset", "PlayerData"]

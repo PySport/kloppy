@@ -121,15 +121,15 @@ class TestMetricaEPTSTracking:
                 inputs={"metadata": metadata, "raw_data": raw_data}
             )
 
-        first_player = next(iter(dataset.records[0].players_coordinates))
+        first_player = next(iter(dataset.records[0].players_data))
 
         assert len(dataset.records) == 11
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation is None
 
-        assert dataset.records[0].players_coordinates[first_player] == Point(
-            x=0.85708, y=0.50652
-        )
+        assert dataset.records[0].players_data[
+            first_player
+        ].coordinates == Point(x=0.85708, y=0.50652)
 
         assert dataset.records[0].ball_coordinates == Point3D(
             x=0.54711, y=0.53978, z=None

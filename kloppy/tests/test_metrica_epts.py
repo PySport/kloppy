@@ -31,7 +31,9 @@ from kloppy.utils import performance_logging
 class TestMetricaEPTSTracking:
     def test_regex(self):
         base_dir = os.path.dirname(__file__)
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+        ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
         regex_str = build_regex(
@@ -42,9 +44,8 @@ class TestMetricaEPTSTracking:
 
         regex = re.compile(regex_str)
 
-        # NOTE: use broken example of FIFA
         result = regex.search(
-            "1779143:,-2.013,-500,100,9.63,9.80,4,5,177,182;-461,-615,-120,99,900,9.10,4,5,170,179;-2638,3478,120,110,1.15,5.20,3,4,170,175;:-2656,367,100:"
+            "450:0.30602,0.97029,5,1.1127902269363403;0.48496,0.73308,1,5.2345757484436035;0.38851,0.97786,2,3.32438325881958;0.48414,0.92730,0,5.878201961517334;0.25661,0.60984,8,4.325275421142578;0.24170,0.49115,7,1.9475973844528198;0.38878,0.47540,4,1.8947187662124634;0.31854,0.89154,3,2.741175413131714;NaN,NaN,-1,NaN;0.25658,0.73095,9,3.418901205062866;NaN,NaN,10,NaN;0.32513,0.89532,19,0.6292267441749573;0.30286,0.98231,17,1.287971019744873;0.39954,0.93079,12,3.8761117458343506;0.23961,0.63742,20,1.6785365343093872;0.38319,0.81908,14,3.611333131790161;0.49984,0.91227,13,5.139825820922852;0.46733,0.49708,16,3.1186790466308594;0.26311,0.48218,18,2.309934139251709;0.53767,0.81373,11,6.402815818786621;0.39631,0.77277,15,3.338606357574463;NaN,NaN,21,NaN:0.52867,0.70690,NaN"
         )
 
         assert result is not None
@@ -62,10 +63,14 @@ class TestMetricaEPTSTracking:
 
     def test_read(self):
         base_dir = os.path.dirname(__file__)
-        with open(f"{base_dir}/files/epts_meta.xml", "rb") as metadata_fp:
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+        ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
-        with open(f"{base_dir}/files/epts_raw.txt", "rb") as raw_data:
+        with open(
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+        ) as raw_data:
             iterator = read_raw_data(raw_data, metadata)
 
             with performance_logging("load"):
@@ -75,36 +80,33 @@ class TestMetricaEPTSTracking:
         base_dir = os.path.dirname(__file__)
 
         with open(
-            f"{base_dir}/files/epts_meta.xml", "rb"
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_raw.txt", "rb"
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
 
             metadata = load_metadata(metadata_fp)
             records = read_raw_data(
-                raw_data, metadata, sensor_ids=["heartbeat", "position"]
+                raw_data, metadata, sensor_ids=["position"]
             )
             data_frame = DataFrame.from_records(records)
 
-        assert "player_1_max_heartbeat" in data_frame.columns
-        assert "player_1_x" in data_frame.columns
+        assert "player_Track_1_x" in data_frame.columns
 
     def test_skip_sensors(self):
         base_dir = os.path.dirname(__file__)
 
         with open(
-            f"{base_dir}/files/epts_meta.xml", "rb"
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_raw.txt", "rb"
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
             metadata = load_metadata(metadata_fp)
-            records = read_raw_data(
-                raw_data, metadata, sensor_ids=["heartbeat"]
-            )
+            records = read_raw_data(raw_data, metadata, sensor_ids=["speed"])
             data_frame = DataFrame.from_records(records)
 
-        assert "player_1_max_heartbeat" in data_frame.columns
-        assert "player_1_x" not in data_frame.columns
+        assert "player_Track_1_s" in data_frame.columns
+        assert "player_Track_1_x" not in data_frame.columns
 
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
@@ -123,14 +125,14 @@ class TestMetricaEPTSTracking:
 
         first_player = next(iter(dataset.records[0].players_data))
 
-        assert len(dataset.records) == 11
-        assert len(dataset.metadata.periods) == 2
+        assert len(dataset.records) == 50
+        assert len(dataset.metadata.periods) == 1
         assert dataset.metadata.orientation is None
 
-        assert dataset.records[0].players_data[
-            first_player
-        ].coordinates == Point(x=0.85708, y=0.50652)
+        assert dataset.records[0].players_coordinates[first_player] == Point(
+            x=0.30602, y=0.97029
+        )
 
         assert dataset.records[0].ball_coordinates == Point3D(
-            x=0.54711, y=0.53978, z=None
+            x=0.52867, y=0.7069, z=None
         )

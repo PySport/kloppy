@@ -19,7 +19,7 @@ class TestMetricaEvents:
         serializer = MetricaEventsJsonSerializer()
 
         with open(
-            f"{base_dir}/files/metrica_metadata.xml", "rb"
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
         ) as metadata, open(
             f"{base_dir}/files/metrica_events.json", "rb"
         ) as event_data:

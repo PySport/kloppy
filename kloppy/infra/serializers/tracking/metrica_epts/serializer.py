@@ -1,5 +1,6 @@
+from kloppy.infra.serializers.tracking.metrica_epts.models import Sensor
 import logging
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from dataclasses import replace
 
 from kloppy.domain import (
@@ -44,13 +45,37 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
         players_data = {}
         for team in metadata.teams:
             for player in team.players:
-                if f"player_{player.player_id}_x" in row:
-                    players_data[player] = PlayerData(
-                        coordinates=Point(
-                            x=row[f"player_{player.player_id}_x"],
-                            y=row[f"player_{player.player_id}_y"],
-                        ),
-                        speed=row[f"player_{player.player_id}_s"],
+                players_data[player] = PlayerData(
+                    coordinates=Point(
+                        x=row[f"player_{player.player_id}_x"],
+                        y=row[f"player_{player.player_id}_y"],
+                    )
+                    if f"player_{player.player_id}_x" in row
+                    else None,
+                    speed=row[f"player_{player.player_id}_s"]
+                    if f"player_{player.player_id}_s" in row
+                    else None,
+                    distance=row[f"player_{player.player_id}_d"]
+                    if f"player_{player.player_id}_d" in row
+                    else None,
+                )
+
+        other_sensors = []
+        for sensor in metadata.sensors:
+            if sensor.sensor_id not in ["position", "distance", "speed"]:
+                other_sensors.append(sensor)
+
+        other_data = {}
+        for team in metadata.teams:
+            for player in team.players:
+                other_data[player] = {}
+                for sensor in other_sensors:
+                    other_data[player].update(
+                        {
+                            sensor.sensor_id: row[
+                                f"player_{player.player_id}_{sensor.channels[0].channel_id}"
+                            ]
+                        }
                     )
 
         frame = Frame(
@@ -60,7 +85,7 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_data=players_data,
-            other_data=None,
+            other_data=other_data,
             ball_coordinates=Point3D(
                 x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),

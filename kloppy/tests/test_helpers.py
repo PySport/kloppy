@@ -129,7 +129,11 @@ class TestHelpers:
                             speed=10.5,
                         )
                     },
-                    other_data=None,
+                    other_data={
+                        Player(
+                            team=home_team, player_id="home_1", jersey_no=1
+                        ): {"extra_data": 1}
+                    },
                     ball_coordinates=Point(x=0, y=50),
                 ),
             ],
@@ -204,6 +208,7 @@ class TestHelpers:
                 "home_1_y": {0: None, 1: 35.0},
                 "home_1_d": {0: None, 1: 0.03},
                 "home_1_s": {0: None, 1: 10.5},
+                "extra_data": {0: None, 1: 1},
             }
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
@@ -249,6 +254,7 @@ class TestHelpers:
                 "home_1_y": [None, 35],
                 "home_1_d": [None, 0.03],
                 "home_1_s": [None, 10.5],
+                "extra_data": [None, 1],
             }
         )
 

@@ -136,3 +136,22 @@ class TestMetricaEPTSTracking:
         assert dataset.records[0].ball_coordinates == Point3D(
             x=0.52867, y=0.7069, z=None
         )
+
+    def test_other_data_deserialization(self):
+        base_dir = os.path.dirname(__file__)
+
+        serializer = MetricaEPTSSerializer()
+
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+        ) as metadata, open(
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+        ) as raw_data:
+
+            dataset = serializer.deserialize(
+                inputs={"metadata": metadata, "raw_data": raw_data}
+            )
+
+        first_player = next(iter(dataset.records[0].players_data))
+
+        assert dataset.records[0].other_data[first_player]["mapping"] == 5.0

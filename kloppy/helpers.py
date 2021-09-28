@@ -313,6 +313,15 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
             }
         )
 
+    if frame.other_data:
+        for player, other_data in frame.other_data.items():
+            for name, value in other_data.items():
+                row.update(
+                    {
+                        name: value,
+                    }
+                )
+
     return row
 
 

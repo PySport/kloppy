@@ -48,14 +48,14 @@ class TestMetricaCsvTracking:
 
         # make sure data is loaded correctly (including flip y-axis)
         home_player = dataset.metadata.teams[0].players[0]
-        assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=0.00082, y=1 - 0.48238
-        )
+        assert dataset.records[0].players_data[
+            home_player
+        ].coordinates == Point(x=0.00082, y=1 - 0.48238)
 
         away_player = dataset.metadata.teams[1].players[0]
-        assert dataset.records[0].players_coordinates[away_player] == Point(
-            x=0.90509, y=1 - 0.47462
-        )
+        assert dataset.records[0].players_data[
+            away_player
+        ].coordinates == Point(x=0.90509, y=1 - 0.47462)
 
         assert dataset.records[0].ball_coordinates == Point(
             x=0.45472, y=1 - 0.38709
@@ -64,9 +64,9 @@ class TestMetricaCsvTracking:
         # make sure player data is only in the frame when the player is at the pitch
         assert "home_14" not in [
             player.player_id
-            for player in dataset.records[0].players_coordinates.keys()
+            for player in dataset.records[0].players_data.keys()
         ]
         assert "home_14" in [
             player.player_id
-            for player in dataset.records[3].players_coordinates.keys()
+            for player in dataset.records[3].players_data.keys()
         ]

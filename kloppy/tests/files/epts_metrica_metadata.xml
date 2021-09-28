@@ -10,19 +10,19 @@
       <ProviderGlobalParameters>
         <ProviderParameter>
           <Name>first_half_start</Name>
-          <Value>0</Value>
+          <Value>450</Value>
         </ProviderParameter>
         <ProviderParameter>
           <Name>first_half_end</Name>
-          <Value>891</Value>
+          <Value>499</Value>
         </ProviderParameter>
         <ProviderParameter>
           <Name>second_half_start</Name>
-          <Value/>
+          <Value>650</Value>
         </ProviderParameter>
         <ProviderParameter>
           <Name>second_half_end</Name>
-          <Value/>
+          <Value>699</Value>
         </ProviderParameter>
         <ProviderParameter>
           <Name>first_extra_half_start</Name>

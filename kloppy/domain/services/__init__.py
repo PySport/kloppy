@@ -17,15 +17,15 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
     """ This method should only be called for the first frame of a """
     avg_x_home = avg(
         [
-            coordinates.x
-            for player, coordinates in frame.players_coordinates.items()
+            player_data.coordinates.x
+            for player, player_data in frame.players_data.items()
             if player.team.ground == Ground.HOME
         ]
     )
     avg_x_away = avg(
         [
-            coordinates.x
-            for player, coordinates in frame.players_coordinates.items()
+            player_data.coordinates.x
+            for player, player_data in frame.players_data.items()
             if player.team.ground == Ground.AWAY
         ]
     )

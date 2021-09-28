@@ -36,10 +36,10 @@ class TestMetricaEvents:
         assert dataset.metadata.teams[0].name == "Team A"
         assert dataset.metadata.teams[1].name == "Team B"
 
-        player = dataset.metadata.teams[0].players[0]
-        assert player.player_id == "P3578"
+        player = dataset.metadata.teams[0].players[10]
+        assert player.player_id == "Track_11"
         assert player.jersey_no == 11
-        assert str(player) == "Player 11"
+        assert str(player) == "Track_11"
         assert player.position.name == "Goalkeeper"
 
         assert dataset.metadata.periods[0] == Period(

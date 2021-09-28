@@ -178,18 +178,18 @@ class TestHelpers:
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
             "19"
         )
-        assert dataset.records[0].players_coordinates[player_home_19] == Point(
-            x=-1234.0, y=-294.0
-        )
+        assert dataset.records[0].players_data[
+            player_home_19
+        ].coordinates == Point(x=-1234.0, y=-294.0)
 
         transformed_dataset = transform(
             dataset,
             to_coordinate_system=Provider.METRICA,
         )
 
-        assert transformed_dataset.records[0].players_coordinates[
+        assert transformed_dataset.records[0].players_data[
             player_home_19
-        ] == Point(x=0.3766, y=0.5489999999999999)
+        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
 
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()

@@ -58,14 +58,14 @@ class TestSkillCornerTracking:
 
         # make sure data is loaded correctly
         home_player = dataset.metadata.teams[0].players[2]
-        assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=33.8697315398, y=-9.55742259253
-        )
+        assert dataset.records[0].players_data[
+            home_player
+        ].coordinates == Point(x=33.8697315398, y=-9.55742259253)
 
         away_player = dataset.metadata.teams[1].players[9]
-        assert dataset.records[0].players_coordinates[away_player] == Point(
-            x=25.9863082795, y=27.3013598578
-        )
+        assert dataset.records[0].players_data[
+            away_player
+        ].coordinates == Point(x=25.9863082795, y=27.3013598578)
 
         assert dataset.records[1].ball_coordinates == Point3D(
             x=30.5914728131, y=35.3622277834, z=2.24371228757
@@ -83,23 +83,23 @@ class TestSkillCornerTracking:
         # make sure player data is only in the frame when the player is in view
         assert "home_1" not in [
             player.player_id
-            for player in dataset.records[0].players_coordinates.keys()
+            for player in dataset.records[0].players_data.keys()
         ]
 
         assert "away_1" not in [
             player.player_id
-            for player in dataset.records[0].players_coordinates.keys()
+            for player in dataset.records[0].players_data.keys()
         ]
 
         # are anonymous players loaded correctly?
         home_anon_75 = [
             player
-            for player in dataset.records[87].players_coordinates
+            for player in dataset.records[87].players_data
             if player.player_id == "home_anon_75"
         ]
         assert home_anon_75 == [
             player
-            for player in dataset.records[88].players_coordinates
+            for player in dataset.records[88].players_data
             if player.player_id == "home_anon_75"
         ]
 
@@ -128,6 +128,6 @@ class TestSkillCornerTracking:
             )
 
         home_player = dataset.metadata.teams[0].players[2]
-        assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=0.8225688718076191, y=0.6405503322430882
-        )
+        assert dataset.records[0].players_data[
+            home_player
+        ].coordinates == Point(x=0.8225688718076191, y=0.6405503322430882)

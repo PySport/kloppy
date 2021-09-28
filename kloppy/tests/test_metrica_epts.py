@@ -125,8 +125,8 @@ class TestMetricaEPTSTracking:
 
         first_player = next(iter(dataset.records[0].players_data))
 
-        assert len(dataset.records) == 50
-        assert len(dataset.metadata.periods) == 1
+        assert len(dataset.records) == 100
+        assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation is None
 
         assert dataset.records[0].players_data[

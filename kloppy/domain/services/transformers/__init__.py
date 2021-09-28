@@ -232,6 +232,14 @@ class Transformer:
 
     def __flip_frame(self, frame: Frame):
 
+        players_data = {}
+        for player, data in frame.players_data.items():
+            players_data[player] = PlayerData(
+                coordinates=self.flip_point(data.coordinates),
+                distance=data.distance,
+                speed=data.speed,
+            )
+
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -241,10 +249,8 @@ class Transformer:
             period=frame.period,
             # changes
             ball_coordinates=self.flip_point(frame.ball_coordinates),
-            players_coordinates={
-                key: self.flip_point(point)
-                for key, point in frame.players_coordinates.items()
-            },
+            players_data=players_data,
+            other_data=frame.other_data,
         )
 
     def transform_event(self, event: Event) -> Event:

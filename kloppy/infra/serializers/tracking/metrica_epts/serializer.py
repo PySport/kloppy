@@ -49,7 +49,8 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
                         coordinates=Point(
                             x=row[f"player_{player.player_id}_x"],
                             y=row[f"player_{player.player_id}_y"],
-                        )
+                        ),
+                        speed=row[f"player_{player.player_id}_s"],
                     )
 
         frame = Frame(

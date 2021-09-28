@@ -29,6 +29,7 @@ from kloppy.domain import (
     Team,
     Ground,
     Player,
+    PlayerData,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -109,7 +110,8 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    players_coordinates={},
+                    players_data={},
+                    other_data=None,
                     ball_coordinates=Point(x=100, y=-50),
                 ),
                 Frame(
@@ -118,11 +120,16 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    players_coordinates={
+                    players_data={
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
-                        ): Point(x=15, y=35)
+                        ): PlayerData(
+                            coordinates=Point(x=15, y=35),
+                            distance=0.03,
+                            speed=10.5,
+                        )
                     },
+                    other_data=None,
                     ball_coordinates=Point(x=0, y=50),
                 ),
             ],
@@ -195,6 +202,8 @@ class TestHelpers:
                 "ball_y": {0: -50, 1: 50},
                 "home_1_x": {0: None, 1: 15.0},
                 "home_1_y": {0: None, 1: 35.0},
+                "home_1_d": {0: None, 1: 0.03},
+                "home_1_s": {0: None, 1: 10.5},
             }
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
@@ -238,6 +247,8 @@ class TestHelpers:
                 "bonus_column": [11, 12],
                 "home_1_x": [None, 15],
                 "home_1_y": [None, 35],
+                "home_1_d": [None, 0.03],
+                "home_1_s": [None, 10.5],
             }
         )
 

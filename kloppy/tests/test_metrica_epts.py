@@ -129,9 +129,9 @@ class TestMetricaEPTSTracking:
         assert len(dataset.metadata.periods) == 1
         assert dataset.metadata.orientation is None
 
-        assert dataset.records[0].players_coordinates[first_player] == Point(
-            x=0.30602, y=0.97029
-        )
+        assert dataset.records[0].players_data[
+            first_player
+        ].coordinates == Point(x=0.30602, y=0.97029)
 
         assert dataset.records[0].ball_coordinates == Point3D(
             x=0.52867, y=0.7069, z=None

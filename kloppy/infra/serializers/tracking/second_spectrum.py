@@ -209,9 +209,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                             player = Player(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
-                                starting=True
-                                if player_data["position"] != "SUB"
-                                else False,
+                                starting=player_data["position"] != "SUB",
                                 position=player_data["position"],
                                 team=team,
                                 jersey_no=int(player_data["number"]),
@@ -260,7 +258,6 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         continue
 
                     if n % sample == 0:
-                        print(n, sample, n % sample)
                         yield frame_data
 
                     n += 1

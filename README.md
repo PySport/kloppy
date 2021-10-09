@@ -9,7 +9,7 @@
 
 ## What is it?
 
-**kloppy** is a Python package providing (de)serializers for soccer tracking and event data, standardized data models, filters, and transformers designed to make working with tracking and event data from different vendors a breeze. It aims to be the fundamental building block for loading, filtering and transforming tracking and event data.
+Each vendor of soccer data uses its own unique format to describe the course of a game. Hence, software written to analyze this data has to be tailored to a specific vendor and cannot be used without modifications to analyze data from other vendors. Kloppy is a Python package that addresses the challenges posed by the variety of data formats and aims to be the fundamental building block for processing soccer tracking and event data. It provides (de)serializers, standardized data models, filters, and transformers which make working with tracking and event data from different vendors a breeze.
 
 ## Main features
 

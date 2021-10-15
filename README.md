@@ -26,7 +26,7 @@ Here are just a few of the things that kloppy does well:
 
 #### Pattern matching
 - Search for **[complexe patterns](examples/pattern_matching/repository/README.md)** in event data
-- Use `kloppy-query` to export fragments to an XML file
+- Use `kloppy-query` to export fragments to XML file
 
 
 ## Where to get it

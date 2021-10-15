@@ -14,7 +14,7 @@ def avg(items: List[float]) -> float:
 
 
 def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
-    """ This method should only be called for the first frame of a """
+    """This method should only be called for the first frame of a"""
     avg_x_home = avg(
         [
             coordinates.x

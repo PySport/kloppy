@@ -7,8 +7,8 @@ from .event import (
     WyscoutSerializer,
 )
 from .tracking import (
-    EPTSSerializer,
-    MetricaTrackingSerializer,
+    MetricaEPTSSerializer,
+    MetricaCsvTrackingSerializer,
     TRACABSerializer,
     TrackingDataSerializer,
     SkillCornerTrackingSerializer,

@@ -6,6 +6,7 @@ from pandas.testing import assert_frame_equal
 from kloppy import (
     to_pandas,
     load_metrica_tracking_data,
+    load_metrica_csv_tracking_data,
     load_tracab_tracking_data,
     transform,
     OptaSerializer,
@@ -28,6 +29,7 @@ from kloppy.domain import (
     Team,
     Ground,
     Player,
+    PlayerData,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -36,6 +38,17 @@ class TestHelpers:
     def test_load_metrica_tracking_data(self):
         base_dir = os.path.dirname(__file__)
         dataset = load_metrica_tracking_data(
+            f"{base_dir}/files/metrica_home.csv",
+            f"{base_dir}/files/metrica_away.csv",
+        )
+        assert len(dataset.records) == 6
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.provider == Provider.METRICA
+        assert dataset.dataset_type == DatasetType.TRACKING
+
+    def test_load_metrica_csv_tracking_data(self):
+        base_dir = os.path.dirname(__file__)
+        dataset = load_metrica_csv_tracking_data(
             f"{base_dir}/files/metrica_home.csv",
             f"{base_dir}/files/metrica_away.csv",
         )
@@ -97,7 +110,8 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    players_coordinates={},
+                    players_data={},
+                    other_data=None,
                     ball_coordinates=Point(x=100, y=-50),
                 ),
                 Frame(
@@ -106,10 +120,19 @@ class TestHelpers:
                     ball_owning_team=None,
                     ball_state=None,
                     period=periods[0],
-                    players_coordinates={
+                    players_data={
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
-                        ): Point(x=15, y=35)
+                        ): PlayerData(
+                            coordinates=Point(x=15, y=35),
+                            distance=0.03,
+                            speed=10.5,
+                        )
+                    },
+                    other_data={
+                        Player(
+                            team=home_team, player_id="home_1", jersey_no=1
+                        ): {"extra_data": 1}
                     },
                     ball_coordinates=Point(x=0, y=50),
                 ),
@@ -155,18 +178,18 @@ class TestHelpers:
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
             "19"
         )
-        assert dataset.records[0].players_coordinates[player_home_19] == Point(
-            x=-1234.0, y=-294.0
-        )
+        assert dataset.records[0].players_data[
+            player_home_19
+        ].coordinates == Point(x=-1234.0, y=-294.0)
 
         transformed_dataset = transform(
             dataset,
             to_coordinate_system=Provider.METRICA,
         )
 
-        assert transformed_dataset.records[0].players_coordinates[
+        assert transformed_dataset.records[0].players_data[
             player_home_19
-        ] == Point(x=0.3766, y=0.5489999999999999)
+        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
 
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
@@ -183,6 +206,9 @@ class TestHelpers:
                 "ball_y": {0: -50, 1: 50},
                 "home_1_x": {0: None, 1: 15.0},
                 "home_1_y": {0: None, 1: 35.0},
+                "home_1_d": {0: None, 1: 0.03},
+                "home_1_s": {0: None, 1: 10.5},
+                "extra_data": {0: None, 1: 1},
             }
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
@@ -226,6 +252,9 @@ class TestHelpers:
                 "bonus_column": [11, 12],
                 "home_1_x": [None, 15],
                 "home_1_y": [None, 35],
+                "home_1_d": [None, 0.03],
+                "home_1_s": [None, 10.5],
+                "extra_data": [None, 1],
             }
         )
 

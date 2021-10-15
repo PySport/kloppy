@@ -20,6 +20,7 @@ from kloppy.domain import (
     Player,
     build_coordinate_system,
     Transformer,
+    PlayerData,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -28,10 +29,10 @@ from . import TrackingDataSerializer
 logger = logging.getLogger(__name__)
 
 
-class MetricaTrackingSerializer(TrackingDataSerializer):
+class MetricaCsvTrackingSerializer(TrackingDataSerializer):
     __PartialFrame = namedtuple(
         "PartialFrame",
-        "team period frame_id players_coordinates ball_coordinates",
+        "team period frame_id players_data ball_coordinates",
     )
 
     @staticmethod
@@ -102,10 +103,12 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                         team=team,
                         period=period,
                         frame_id=frame_id,
-                        players_coordinates={
-                            player: Point(
-                                x=float(columns[3 + i * 2]),
-                                y=1 - float(columns[3 + i * 2 + 1]),
+                        players_data={
+                            player: PlayerData(
+                                coordinates=Point(
+                                    x=float(columns[3 + i * 2]),
+                                    y=1 - float(columns[3 + i * 2 + 1]),
+                                )
                             )
                             for i, player in enumerate(players)
                             if columns[3 + i * 2] != "NaN"
@@ -171,7 +174,7 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
 
         Examples
         --------
-        >>> serializer = MetricaTrackingSerializer()
+        >>> serializer = MetricaCsvTrackingSerializer()
         >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
         >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
         >>>
@@ -241,19 +244,20 @@ class MetricaTrackingSerializer(TrackingDataSerializer):
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
 
-                players_coordinates = {
-                    **home_partial_frame.players_coordinates,
-                    **away_partial_frame.players_coordinates,
+                players_data = {
+                    **home_partial_frame.players_data,
+                    **away_partial_frame.players_data,
                 }
 
                 frame = Frame(
                     frame_id=frame_id,
                     timestamp=frame_id / frame_rate - period.start_timestamp,
                     ball_coordinates=home_partial_frame.ball_coordinates,
-                    players_coordinates=players_coordinates,
+                    players_data=players_data,
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,
+                    other_data=None,
                 )
 
                 frame = transformer.transform_frame(frame)

@@ -1,10 +1,10 @@
 from typing import Callable, Dict, List, Optional, TypeVar, Union, Any
 
 from . import (
+    MetricaEPTSSerializer,
     DatafactorySerializer,
-    EPTSSerializer,
     MetricaEventsJsonSerializer,
-    MetricaTrackingSerializer,
+    MetricaCsvTrackingSerializer,
     OptaSerializer,
     SportecEventSerializer,
     SkillCornerTrackingSerializer,
@@ -112,7 +112,24 @@ def load_metrica_tracking_data(
     raw_data_away_filename: str,
     options: dict = None,
 ) -> TrackingDataset:
-    serializer = MetricaTrackingSerializer()
+    from warnings import warn
+
+    warn(
+        "load_metrica_tracking_data is a deprecated method, using load_metrica_csv_tracking_data instead"
+    )
+    return load_metrica_csv_tracking_data(
+        raw_data_home_filename,
+        raw_data_away_filename,
+        options,
+    )
+
+
+def load_metrica_csv_tracking_data(
+    raw_data_home_filename: str,
+    raw_data_away_filename: str,
+    options: dict = None,
+) -> TrackingDataset:
+    serializer = MetricaCsvTrackingSerializer()
     with open(raw_data_home_filename, "rb") as raw_data_home, open(
         raw_data_away_filename, "rb"
     ) as raw_data_away:
@@ -129,7 +146,20 @@ def load_metrica_tracking_data(
 def load_epts_tracking_data(
     metadata_filename: str, raw_data_filename: str, options: dict = None
 ) -> TrackingDataset:
-    serializer = EPTSSerializer()
+    from warnings import warn
+
+    warn(
+        "load_epts_tracking_data is a deprecated method, using load_metrica_epts_tracking_data instead"
+    )
+    return load_metrica_epts_tracking_data(
+        metadata_filename, raw_data_filename, options
+    )
+
+
+def load_metrica_epts_tracking_data(
+    metadata_filename: str, raw_data_filename: str, options: dict = None
+) -> TrackingDataset:
+    serializer = MetricaEPTSSerializer()
     with open(metadata_filename, "rb") as metadata, open(
         raw_data_filename, "rb"
     ) as raw_data:
@@ -333,13 +363,24 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
         ball_x=frame.ball_coordinates.x if frame.ball_coordinates else None,
         ball_y=frame.ball_coordinates.y if frame.ball_coordinates else None,
     )
-    for player, coordinates in frame.players_coordinates.items():
+    for player, player_data in frame.players_data.items():
         row.update(
             {
-                f"{player.player_id}_x": coordinates.x,
-                f"{player.player_id}_y": coordinates.y,
+                f"{player.player_id}_x": player_data.coordinates.x,
+                f"{player.player_id}_y": player_data.coordinates.y,
+                f"{player.player_id}_d": player_data.distance,
+                f"{player.player_id}_s": player_data.speed,
             }
         )
+
+    if frame.other_data:
+        for player, other_data in frame.other_data.items():
+            for name, value in other_data.items():
+                row.update(
+                    {
+                        name: value,
+                    }
+                )
 
     return row
 
@@ -500,8 +541,10 @@ __all__ = [
     "load_tracab_tracking_data",
     "load_skillcorner_tracking_data",
     "load_metrica_tracking_data",
+    "load_metrica_csv_tracking_data",
     "load_metrica_json_event_data",
     "load_epts_tracking_data",
+    "load_metrica_epts_tracking_data",
     "load_datafactory_event_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",

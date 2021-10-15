@@ -3,18 +3,18 @@ import sys
 
 from pandas import DataFrame
 
-from kloppy.infra.serializers.tracking.epts.metadata import (
+from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata as epts_load_metadata,
 )
-from kloppy.infra.serializers.tracking.epts.reader import (
+from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     read_raw_data as epts_read_raw_data,
 )
 
 
 def main():
     """
-    This example will show how to load data from EPTS files directly into a pandas frame using
-    some internals, which allows us to read other sensors than the position sensor.
+    This example will show how to load data from Metrica's EPTS files directly into a pandas
+    frame using some internals, which allows us to read other sensors than the speed sensor.
 
     We include 4 steps in this example:
     1. Loading the meta data from the XML fil
@@ -31,15 +31,13 @@ def main():
     )
 
     # step 1: load metadata
-    with open("epts_meta.xml", "rb") as meta_fp:
+    with open("epts_metrica_metadata.xml", "rb") as meta_fp:
         metadata = epts_load_metadata(meta_fp)
 
     # step 2: try to load the raw data
-    with open("epts_raw.txt", "rb") as raw_fp:
-        # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(
-            raw_fp, metadata, sensor_ids=["heartbeat"]
-        )
+    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+        # we are only interested in the data from the 'speed' sensor
+        records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
     # raw_fp is closed here
 
     try:
@@ -56,11 +54,9 @@ def main():
         # all items from `records`.
 
     # step 3: this works
-    with open("epts_raw.txt", "rb") as raw_fp:
-        # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(
-            raw_fp, metadata, sensor_ids=["heartbeat"]
-        )
+    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+        # we are only interested in the data from the 'speed' sensor
+        records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
         # consume all records before we close `raw_fp`
         for record in records:
             print(record)
@@ -72,11 +68,9 @@ def main():
     # all the items.
 
     # step 5: put the records in a pandas dataframe
-    with open("epts_raw.txt", "rb") as raw_fp:
-        # we are only interested in the data from the 'heartbeat' sensor
-        records = epts_read_raw_data(
-            raw_fp, metadata, sensor_ids=["heartbeat"]
-        )
+    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+        # we are only interested in the data from the 'speed' sensor
+        records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
         data_frame = DataFrame.from_records(records)
 
     # Pfieh.. data. That's better :-)

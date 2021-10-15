@@ -26,6 +26,7 @@ from kloppy.domain import (
     TrackingDataset,
     Transformer,
     build_coordinate_system,
+    PlayerData,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -55,7 +56,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         frame_time = cls._timestamp_from_timestring(frame["time"])
 
         ball_coordinates = None
-        players_coordinates = {}
+        players_data = {}
 
         # ball_carrier = frame["possession"].get("trackable_object")
         ball_owning_team = frame["possession"].get("group")
@@ -119,17 +120,17 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                     else:
                         player = anon_players["AWAY"][f"anon_away_{player_id}"]
 
-            point = Point(x, y)
-            players_coordinates[player] = point
+            players_data[player] = PlayerData(coordinates=Point(x, y))
 
         return Frame(
             frame_id=frame_id,
             timestamp=frame_time,
             ball_coordinates=ball_coordinates,
-            players_coordinates=players_coordinates,
+            players_data=players_data,
             period=periods[frame_period],
             ball_state=None,
             ball_owning_team=ball_owning_team,
+            other_data=None,
         )
 
     @classmethod
@@ -147,7 +148,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         attacking_directions = []
 
         for frame in frames:
-            if len(frame.players_coordinates) > 0:
+            if len(frame.players_data) > 0:
                 attacking_directions.append(
                     attacking_direction_from_frame(frame)
                 )
@@ -257,7 +258,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         options : dict
             Options for deserialization of the TRACAB file. Possible options are:  
             `include_empty_frames` (boolean): default = False to specify whether frames without
-            any players_coordinates or the ball_coordinates should be loaded  
+            any players_data or the ball_coordinates should be loaded  
             `sample_rate` (float between 0 and 1) to specify the amount of frames that should be loaded  
             and `limit` (int) to specify the max number of frames that will be returned.
         Returns

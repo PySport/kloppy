@@ -1,19 +1,17 @@
+from kloppy.infra.serializers.tracking.metrica_epts.models import Sensor
 import logging
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from dataclasses import replace
 
 from kloppy.domain import (
     TrackingDataset,
-    DatasetFlag,
-    AttackingDirection,
     Frame,
     Point,
     Point3D,
-    Team,
-    Orientation,
     Transformer,
     build_coordinate_system,
     Provider,
+    PlayerData,
 )
 from kloppy.utils import Readable, performance_logging
 
@@ -25,7 +23,7 @@ from .. import TrackingDataSerializer
 logger = logging.getLogger(__name__)
 
 
-class EPTSSerializer(TrackingDataSerializer):
+class MetricaEPTSSerializer(TrackingDataSerializer):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "metadata" not in inputs:
@@ -44,13 +42,40 @@ class EPTSSerializer(TrackingDataSerializer):
         else:
             period = None
 
-        players_coordinates = {}
+        players_data = {}
         for team in metadata.teams:
             for player in team.players:
-                if f"player_{player.player_id}_x" in row:
-                    players_coordinates[player] = Point(
+                players_data[player] = PlayerData(
+                    coordinates=Point(
                         x=row[f"player_{player.player_id}_x"],
                         y=row[f"player_{player.player_id}_y"],
+                    )
+                    if f"player_{player.player_id}_x" in row
+                    else None,
+                    speed=row[f"player_{player.player_id}_s"]
+                    if f"player_{player.player_id}_s" in row
+                    else None,
+                    distance=row[f"player_{player.player_id}_d"]
+                    if f"player_{player.player_id}_d" in row
+                    else None,
+                )
+
+        other_sensors = []
+        for sensor in metadata.sensors:
+            if sensor.sensor_id not in ["position", "distance", "speed"]:
+                other_sensors.append(sensor)
+
+        other_data = {}
+        for team in metadata.teams:
+            for player in team.players:
+                other_data[player] = {}
+                for sensor in other_sensors:
+                    other_data[player].update(
+                        {
+                            sensor.sensor_id: row[
+                                f"player_{player.player_id}_{sensor.channels[0].channel_id}"
+                            ]
+                        }
                     )
 
         frame = Frame(
@@ -59,7 +84,8 @@ class EPTSSerializer(TrackingDataSerializer):
             ball_owning_team=None,
             ball_state=None,
             period=period,
-            players_coordinates=players_coordinates,
+            players_data=players_data,
+            other_data=other_data,
             ball_coordinates=Point3D(
                 x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),
@@ -74,7 +100,7 @@ class EPTSSerializer(TrackingDataSerializer):
         self, inputs: Dict[str, Readable], options: Dict = None
     ) -> TrackingDataset:
         """
-        Deserialize EPTS tracking data into a `TrackingDataset`.
+        Deserialize Metrica EPTS tracking data into a `TrackingDataset`.
 
         Parameters
         ----------
@@ -99,7 +125,7 @@ class EPTSSerializer(TrackingDataSerializer):
 
         Examples
         --------
-        >>> serializer = EPTSSerializer()
+        >>> serializer = MetricaEPTSSerializer()
         >>> with open("metadata.xml", "rb") as meta, \
         >>>      open("raw.dat", "rb") as raw:
         >>>     dataset = serializer.deserialize(

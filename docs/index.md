@@ -66,10 +66,10 @@ dataset = datasets.load("metrica_tracking", options={'sample_rate': 1./12, 'limi
 We added some helper functions to get started really quickly. The helpers allow easy loading, transforming and converting to pandas of tracking data.
 ```python
 from kloppy import (
-    load_metrica_tracking_data, 
+    load_metrica_csv_tracking_data, 
     load_metrica_json_event_data,
     load_tracab_tracking_data,
-    load_epts_tracking_data, 
+    load_metrica_epts_tracking_data, 
     load_statsbomb_event_data,
     load_opta_event_data,
     load_sportec_event_data,
@@ -80,11 +80,11 @@ from kloppy import (
 )
 
 # metrica data
-dataset = load_metrica_tracking_data('home_file.csv', 'away_file.csv')
+dataset = load_metrica_csv_tracking_data('home_file.csv', 'away_file.csv')
 # or tracab
 dataset = load_tracab_tracking_data('meta.xml', 'raw_data.txt')
 # or epts
-dataset = load_epts_tracking_data('meta.xml', 'raw_data.txt')
+dataset = load_metrica_epts_tracking_data('meta.xml', 'raw_data.txt')
 
 # or event data: statsbomb
 dataset = load_statsbomb_event_data('event_data.json', 'lineup.json')
@@ -182,9 +182,9 @@ with open("tracab_data.dat", "rb") as raw, \
 
 or Metrica data
 ```python
-from kloppy import MetricaTrackingSerializer
+from kloppy import MetricaCsvTrackingSerializer
 
-serializer = MetricaTrackingSerializer()
+serializer = MetricaCsvTrackingSerializer()
 
 with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
         open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_home:
@@ -205,9 +205,9 @@ with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_away, \
 
 or EPTS data
 ```python
-from kloppy import EPTSSerializer
+from kloppy import MetricaEPTSSerializer
 
-serializer = EPTSSerializer()
+serializer = MetricaEPTSSerializer()
 
 with open("raw_data.txt", "rb") as raw, \
         open("metadata.xml", "rb") as meta:

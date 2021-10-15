@@ -24,6 +24,7 @@ from kloppy.domain import (
     build_coordinate_system,
     Provider,
     Transformer,
+    PlayerData,
 )
 
 from kloppy.utils import Readable, performance_logging
@@ -39,7 +40,7 @@ class TRACABSerializer(TrackingDataSerializer):
         line = str(line)
         frame_id, players, ball = line.strip().split(":")[:3]
 
-        players_coordinates = {}
+        players_data = {}
 
         for player_data in players.split(";")[:-1]:
             team_id, target_id, jersey_no, x, y, speed = player_data.split(",")
@@ -63,7 +64,9 @@ class TRACABSerializer(TrackingDataSerializer):
                 )
                 team.players.append(player)
 
-            players_coordinates[player] = Point(float(x), float(y))
+            players_data[player] = PlayerData(
+                coordinates=Point(float(x), float(y)), speed=speed
+            )
 
         (
             ball_x,
@@ -98,8 +101,9 @@ class TRACABSerializer(TrackingDataSerializer):
             ),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            players_coordinates=players_coordinates,
+            players_data=players_data,
             period=period,
+            other_data=None,
         )
 
     @staticmethod

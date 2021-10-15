@@ -23,6 +23,7 @@ from kloppy.domain import (
     build_coordinate_system,
     Provider,
     Transformer,
+    PlayerData,
 )
 
 from kloppy.utils import Readable, performance_logging
@@ -45,7 +46,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
             teams[0] if frame_data["lastTouch"] == "home" else teams[1]
         )
 
-        players_coordinates = {}
+        players_data = {}
         for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
             for player_data in frame_data[team_str]:
 
@@ -61,7 +62,9 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                     )
                     team.players.append(player)
 
-                players_coordinates[player] = Point(float(x), float(y))
+                players_data[player] = PlayerData(
+                    coordinates=Point(float(x), float(y))
+                )
 
         return Frame(
             frame_id=frame_id,
@@ -71,8 +74,9 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
             ),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            players_coordinates=players_coordinates,
+            players_data=players_data,
             period=period,
+            other_data={},
         )
 
     @staticmethod

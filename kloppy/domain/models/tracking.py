@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from kloppy.domain.models.common import DatasetType
 
@@ -10,8 +10,8 @@ from .pitch import Point
 @dataclass
 class PlayerData:
     coordinates: Point
-    distance: float = None
-    speed: float = None
+    distance: Optional[float] = None
+    speed: Optional[float] = None
 
 
 @dataclass
@@ -20,6 +20,13 @@ class Frame(DataRecord):
     players_data: Dict[Player, PlayerData]
     other_data: Dict[Player, Dict]
     ball_coordinates: Point
+
+    @property
+    def players_coordinates(self):
+        return {
+            player: player_data.coordinates
+            for player, player_data in self.players_data.items()
+        }
 
 
 @dataclass

@@ -1,4 +1,5 @@
 from .event import (
+    DatafactorySerializer,
     MetricaEventsJsonSerializer,
     OptaSerializer,
     SportecEventSerializer,

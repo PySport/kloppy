@@ -44,6 +44,7 @@ class Provider(Enum):
     Attributes:
         METRICA:
         TRACAB:
+        SECONDSPECTRUM:
         OPTA:
         SKILLCORNER:
         STATSBOMB:
@@ -55,6 +56,7 @@ class Provider(Enum):
 
     METRICA = "metrica"
     TRACAB = "tracab"
+    SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
@@ -431,6 +433,30 @@ class TracabCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
+class SecondSpectrumCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SECONDSPECTRUM
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
+            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
+            length=self.length,
+            width=self.width,
+        )
+
+
+@dataclass
 class OptaCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -593,6 +619,9 @@ def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.DATAFACTORY:
         return DatafactoryCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.SECONDSPECTRUM:
+        return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

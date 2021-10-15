@@ -12,5 +12,6 @@ from .tracking import (
     TRACABSerializer,
     TrackingDataSerializer,
     SkillCornerTrackingSerializer,
+    SecondSpectrumSerializer,
 )
 from .code import XMLCodeSerializer

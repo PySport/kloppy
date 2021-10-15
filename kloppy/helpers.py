@@ -3,7 +3,6 @@ from typing import Callable, Dict, List, Optional, TypeVar, Union, Any
 from . import (
     MetricaEPTSSerializer,
     DatafactorySerializer,
-    EPTSSerializer,
     MetricaEventsJsonSerializer,
     MetricaCsvTrackingSerializer,
     OptaSerializer,

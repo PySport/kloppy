@@ -43,8 +43,17 @@ def setup_package():
             'dataclasses;python_version<"3.7"',
         ],
         extras_require={
-            "test": ["pytest", "pandas>=1.0.0"],
-            "development": ["pre-commit"],
+            "test": [
+                "pytest",
+                "mypy==0.910",
+                "pandas>=1.0.0",
+                "black==20.8b1",
+            ],
+            "development": [
+                "pre-commit",
+                "types-pytz",
+                "types-python-dateutil",
+            ],
         },
     )
 

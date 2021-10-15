@@ -1,4 +1,5 @@
 from .event import (
+    DatafactorySerializer,
     MetricaEventsJsonSerializer,
     OptaSerializer,
     SportecEventSerializer,
@@ -11,5 +12,6 @@ from .tracking import (
     TRACABSerializer,
     TrackingDataSerializer,
     SkillCornerTrackingSerializer,
+    SecondSpectrumSerializer,
 )
 from .code import XMLCodeSerializer

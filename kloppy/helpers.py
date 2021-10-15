@@ -1,12 +1,15 @@
-from typing import Callable, Dict, List, TypeVar, Union, Any
+from typing import Callable, Dict, List, Optional, TypeVar, Union, Any
 
 from . import (
     MetricaEPTSSerializer,
+    DatafactorySerializer,
+    EPTSSerializer,
     MetricaEventsJsonSerializer,
     MetricaCsvTrackingSerializer,
     OptaSerializer,
     SportecEventSerializer,
     SkillCornerTrackingSerializer,
+    SecondSpectrumSerializer,
     StatsBombSerializer,
     TRACABSerializer,
     WyscoutSerializer,
@@ -49,6 +52,46 @@ def load_tracab_tracking_data(
             inputs={"metadata": metadata, "raw_data": raw_data},
             options=options,
         )
+
+
+def load_second_spectrum_tracking_data(
+    xml_metadata_filename: str,
+    raw_data_filename: str,
+    json_metadata_filename: Optional[str] = None,
+    options: dict = None,
+) -> TrackingDataset:
+    """
+    Load Second spectrum event data into a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset]
+
+    Parameters:
+        xml_metadata_filename: filename of xml metadata file for Second Spectrum tracking
+        raw_data_filename: filename of json containing the Second Spectrum frame data
+        json_metadata_filename: (Optional) filename of the json metadata for Second Spectrum. This file contains extra team and player info and can be omitted.
+        options:
+    """
+    serializer = SecondSpectrumSerializer()
+    if json_metadata_filename is not None:
+        with open(xml_metadata_filename, "rb") as xml_metadata, open(
+            json_metadata_filename, "rb"
+        ) as json_metadata, open(raw_data_filename, "rb") as raw_data:
+
+            return serializer.deserialize(
+                inputs={
+                    "xml_metadata": xml_metadata,
+                    "json_metadata": json_metadata,
+                    "raw_data": raw_data,
+                },
+                options=options,
+            )
+
+    else:
+        with open(xml_metadata_filename, "rb") as metadata, open(
+            raw_data_filename, "rb"
+        ) as raw_data:
+            return serializer.deserialize(
+                inputs={"xml_metadata": metadata, "raw_data": raw_data},
+                options=options,
+            )
 
 
 def load_skillcorner_tracking_data(
@@ -124,6 +167,24 @@ def load_metrica_epts_tracking_data(
 
         return serializer.deserialize(
             inputs={"metadata": metadata, "raw_data": raw_data},
+            options=options,
+        )
+
+
+def load_datafactory_event_data(
+    event_data_filename: str, options: dict = None
+) -> EventDataset:
+    """
+    Load Datafactory event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        event_data_filename: filename of json containing the events
+        options:
+    """
+    serializer = DatafactorySerializer()
+    with open(event_data_filename, "rb") as event_data:
+        return serializer.deserialize(
+            inputs={"event_data": event_data},
             options=options,
         )
 
@@ -485,6 +546,7 @@ __all__ = [
     "load_metrica_json_event_data",
     "load_epts_tracking_data",
     "load_metrica_epts_tracking_data",
+    "load_datafactory_event_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "load_sportec_event_data",

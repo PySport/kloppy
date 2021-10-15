@@ -1,4 +1,5 @@
 from .base import EventDataSerializer
+from .datafactory import DatafactorySerializer
 from .metrica import MetricaEventsJsonSerializer
 from .opta import OptaSerializer
 from .sportec import SportecEventSerializer

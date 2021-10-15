@@ -44,22 +44,26 @@ class Provider(Enum):
     Attributes:
         METRICA:
         TRACAB:
+        SECONDSPECTRUM:
         OPTA:
         SKILLCORNER:
         STATSBOMB:
         SPORTEC:
         WYSCOUT:
         KLOPPY:
+        DATAFACTORY:
     """
 
     METRICA = "metrica"
     TRACAB = "tracab"
+    SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
     WYSCOUT = "wyscout"
     KLOPPY = "kloppy"
+    DATAFACTORY = "datafactory"
     OTHER = "other"
 
     def __str__(self):
@@ -429,6 +433,30 @@ class TracabCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
+class SecondSpectrumCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SECONDSPECTRUM
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
+            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
+            length=self.length,
+            width=self.width,
+        )
+
+
+@dataclass
 class OptaCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -541,6 +569,28 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class DatafactoryCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.DATAFACTORY
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-1, 1),
+            y_dim=Dimension(-1, 1),
+        )
+
+
 def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.TRACAB:
@@ -566,6 +616,12 @@ def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.SKILLCORNER:
         return SkillCornerCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.DATAFACTORY:
+        return DatafactoryCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.SECONDSPECTRUM:
+        return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

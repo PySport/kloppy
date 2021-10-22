@@ -42,9 +42,25 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
         else:
             period = None
 
+        other_sensors = []
+        for sensor in metadata.sensors:
+            if sensor.sensor_id not in ["position", "distance", "speed"]:
+                other_sensors.append(sensor)
+
         players_data = {}
         for team in metadata.teams:
             for player in team.players:
+
+                other_data = {}
+                for sensor in other_sensors:
+                    other_data.update(
+                        {
+                            sensor.sensor_id: row[
+                                f"player_{player.player_id}_{sensor.channels[0].channel_id}"
+                            ]
+                        }
+                    )
+
                 players_data[player] = PlayerData(
                     coordinates=Point(
                         x=row[f"player_{player.player_id}_x"],
@@ -58,25 +74,8 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
                     distance=row[f"player_{player.player_id}_d"]
                     if f"player_{player.player_id}_d" in row
                     else None,
+                    other_data=other_data,
                 )
-
-        other_sensors = []
-        for sensor in metadata.sensors:
-            if sensor.sensor_id not in ["position", "distance", "speed"]:
-                other_sensors.append(sensor)
-
-        other_data = {}
-        for team in metadata.teams:
-            for player in team.players:
-                other_data[player] = {}
-                for sensor in other_sensors:
-                    other_data[player].update(
-                        {
-                            sensor.sensor_id: row[
-                                f"player_{player.player_id}_{sensor.channels[0].channel_id}"
-                            ]
-                        }
-                    )
 
         frame = Frame(
             frame_id=row["frame_id"],
@@ -85,7 +84,7 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
             ball_state=None,
             period=period,
             players_data=players_data,
-            other_data=other_data,
+            other_data={},
             ball_coordinates=Point3D(
                 x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
             ),

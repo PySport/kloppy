@@ -171,6 +171,7 @@ class Transformer:
                     ),
                     distance=player_data.distance,
                     speed=player_data.speed,
+                    other_data=player_data.other_data,
                 )
                 for key, player_data in frame.players_data.items()
             },
@@ -197,6 +198,7 @@ class Transformer:
                     ),
                     distance=player_data.distance,
                     speed=player_data.speed,
+                    other_data=player_data.other_data,
                 )
                 for key, player_data in frame.players_data.items()
             },
@@ -238,6 +240,7 @@ class Transformer:
                 coordinates=self.flip_point(data.coordinates),
                 distance=data.distance,
                 speed=data.speed,
+                other_data=data.other_data,
             )
 
         return Frame(

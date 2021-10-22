@@ -373,14 +373,22 @@ def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
             }
         )
 
+        if player_data.other_data:
+            for player, other_data in player_data.other_data.items():
+                for name, value in other_data.items():
+                    row.update(
+                        {
+                            f"{player.player_id}_{name}": value,
+                        }
+                    )
+
     if frame.other_data:
-        for player, other_data in frame.other_data.items():
-            for name, value in other_data.items():
-                row.update(
-                    {
-                        name: value,
-                    }
-                )
+        for name, value in frame.other_data.items():
+            row.update(
+                {
+                    name: value,
+                }
+            )
 
     return row
 

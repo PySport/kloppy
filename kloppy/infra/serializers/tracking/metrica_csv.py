@@ -257,7 +257,7 @@ class MetricaCsvTrackingSerializer(TrackingDataSerializer):
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,
-                    other_data=None,
+                    other_data={},
                 )
 
                 frame = transformer.transform_frame(frame)

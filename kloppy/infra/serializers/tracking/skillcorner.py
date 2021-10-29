@@ -130,7 +130,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             period=periods[frame_period],
             ball_state=None,
             ball_owning_team=ball_owning_team,
-            other_data=None,
+            other_data={},
         )
 
     @classmethod

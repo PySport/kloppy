@@ -154,4 +154,7 @@ class TestMetricaEPTSTracking:
 
         first_player = next(iter(dataset.records[0].players_data))
 
-        assert dataset.records[0].other_data[first_player]["mapping"] == 5.0
+        assert (
+            dataset.records[0].players_data[first_player].other_data["mapping"]
+            == 5.0
+        )

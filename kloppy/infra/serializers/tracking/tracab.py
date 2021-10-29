@@ -103,7 +103,7 @@ class TRACABSerializer(TrackingDataSerializer):
             ball_owning_team=ball_owning_team,
             players_data=players_data,
             period=period,
-            other_data=None,
+            other_data={},
         )
 
     @staticmethod

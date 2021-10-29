@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from kloppy.domain.models.common import DatasetType
@@ -12,13 +12,14 @@ class PlayerData:
     coordinates: Point
     distance: Optional[float] = None
     speed: Optional[float] = None
+    other_data: Dict[Player, Dict] = field(default_factory=dict)
 
 
 @dataclass
 class Frame(DataRecord):
     frame_id: int
     players_data: Dict[Player, PlayerData]
-    other_data: Dict[Player, Dict]
+    other_data: Dict
     ball_coordinates: Point
 
     @property

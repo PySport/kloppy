@@ -15,7 +15,7 @@ class Dimension:
     min: float
     max: float
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(self, Dimension):
             return self.min == other.min and self.max == other.max
 

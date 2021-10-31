@@ -1,6 +1,6 @@
-mkdocs
-mkdocs-jupyter
-mkdocs-material
-jupyter
-mkdocstrings
+mkdocs==1.2.3
+mkdocs-jupyter==0.18.0
+mkdocs-material==7.3.5
+jupyter==1.0.0
+mkdocstrings==0.16.2
 

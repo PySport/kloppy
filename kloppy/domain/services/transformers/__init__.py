@@ -116,6 +116,9 @@ class Transformer:
         if self._from_orientation == self._to_orientation:
             flip = False
         else:
+            if not action_executing_team:
+                action_executing_team = ball_owning_team
+
             orientation_factor_from = (
                 self._from_orientation.get_orientation_factor(
                     ball_owning_team=ball_owning_team,

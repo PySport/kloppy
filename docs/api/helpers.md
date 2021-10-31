@@ -4,6 +4,8 @@
 
 All event load functions support [options](#options).
 
+::: kloppy.load_datafactory_event_data
+
 ::: kloppy.load_statsbomb_event_data
       
 ::: kloppy.load_opta_event_data
@@ -23,7 +25,15 @@ Option | Type | Description | Default
 
 ## Loading tracking data
 
-Coming soon
+::: kloppy.load_tracab_tracking_data
+
+::: kloppy.load_skillcorner_tracking_data
+
+::: kloppy.load_metrica_csv_tracking_data
+
+::: kloppy.load_metrica_epts_tracking_data
+
+::: kloppy.load_second_spectrum_tracking_data
 
 ## Other helpers
 

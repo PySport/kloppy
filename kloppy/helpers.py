@@ -554,6 +554,7 @@ __all__ = [
     "load_epts_tracking_data",
     "load_metrica_epts_tracking_data",
     "load_datafactory_event_data",
+    "load_second_spectrum_tracking_data",
     "load_statsbomb_event_data",
     "load_opta_event_data",
     "load_sportec_event_data",

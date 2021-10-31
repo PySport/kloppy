@@ -2,6 +2,9 @@
 
 Find out all changes between different kloppy versions
 
+## 2.2.1 (2021-10-31)
+
+- Fix import load_second_spectrum_tracking_data
 
 ## 2.2.0 (2021-10-31)
 

@@ -3,6 +3,15 @@
 Find out all changes between different kloppy versions
 
 
+## 2.2.0 (2021-10-31)
+
+Pull request merged:
+
+- Second Spectrum deserializer ([#106](https://github.com/PySport/kloppy/pull/106))
+- Datafactory event deserializer ([#108](https://github.com/PySport/kloppy/pull/108))
+- Add distance and speed to frames as well as extra data when available ([#109](https://github.com/PySport/kloppy/pull/109))
+- Documentation updates ([#110](https://github.com/PySport/kloppy/pull/110), [#111](https://github.com/PySport/kloppy/pull/111))
+
 ## 2.1.0 (2021-08-22)
 
 Pull request merged:

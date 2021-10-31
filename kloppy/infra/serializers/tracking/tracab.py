@@ -65,7 +65,7 @@ class TRACABSerializer(TrackingDataSerializer):
                 team.players.append(player)
 
             players_data[player] = PlayerData(
-                coordinates=Point(float(x), float(y)), speed=speed
+                coordinates=Point(float(x), float(y)), speed=float(speed)
             )
 
         (

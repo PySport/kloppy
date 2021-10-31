@@ -49,4 +49,3 @@ class TestIssue113:
             f7=f"{dir_path}/opta_f7.xml",
             f24=f"{dir_path}/opta_f24.xml",
         )
-

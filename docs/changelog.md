@@ -2,6 +2,10 @@
 
 Find out all changes between different kloppy versions
 
+## 2.2.2 (2021-11-10)
+
+- Don't break when wyscout doesn't include end position of shot/pass
+
 ## 2.2.1 (2021-10-31)
 
 - Fix import load_second_spectrum_tracking_data

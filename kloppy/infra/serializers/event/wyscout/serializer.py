@@ -120,7 +120,9 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
         "result_coordinates": Point(
             x=float(raw_event["positions"][1]["x"]),
             y=float(raw_event["positions"][1]["y"]),
-        ) if len(raw_event['positions']) > 1 else None,
+        )
+        if len(raw_event["positions"]) > 1
+        else None,
         "qualifiers": qualifiers,
     }
 
@@ -177,7 +179,9 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         "receiver_coordinates": Point(
             x=float(raw_event["positions"][1]["x"]),
             y=float(raw_event["positions"][1]["y"]),
-        ) if len(raw_event['positions']) > 1 else None
+        )
+        if len(raw_event["positions"]) > 1
+        else None,
     }
 
 

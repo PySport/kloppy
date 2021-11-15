@@ -1,34 +1,29 @@
 import os
 from itertools import groupby
 
-from kloppy import StatsBombSerializer, add_state, to_pandas
 from kloppy.domain import EventType, Event, EventDataset
 from kloppy.domain.services.state_builder.builder import StateBuilder, T
 from kloppy.utils import performance_logging
-
+from kloppy import statsbomb
 
 class TestStateBuilder:
-    def _load_dataset(self, base_filename="statsbomb", options=None):
+    """
+
+    """
+    def _load_dataset(self, base_filename="statsbomb"):
         base_dir = os.path.dirname(__file__)
 
-        serializer = StatsBombSerializer()
+        return statsbomb.load(
+            event_data=f"{base_dir}/files/{base_filename}_event.json",
+            lineup_data=f"{base_dir}/files/{base_filename}_lineup.json"
+        )
 
-        with open(
-            f"{base_dir}/files/{base_filename}_lineup.json", "rb"
-        ) as lineup_data, open(
-            f"{base_dir}/files/{base_filename}_event.json", "rb"
-        ) as event_data:
-            dataset = serializer.deserialize(
-                inputs={"lineup_data": lineup_data, "event_data": event_data},
-                options=options,
-            )
-            return dataset
 
     def test_score_state_builder(self):
         dataset = self._load_dataset()
 
         with performance_logging("add_state"):
-            dataset_with_state = add_state(dataset, ["score"])
+            dataset_with_state = dataset.add_state("score")
 
         events_per_score = {}
         for score, events in groupby(
@@ -48,7 +43,7 @@ class TestStateBuilder:
         dataset = self._load_dataset()
 
         with performance_logging("add_state"):
-            dataset_with_state = add_state(dataset, ["sequence"])
+            dataset_with_state = dataset.add_state("sequence")
 
         events_per_sequence = {}
         for sequence_id, events in groupby(
@@ -65,7 +60,7 @@ class TestStateBuilder:
         dataset = self._load_dataset("statsbomb_15986")
 
         with performance_logging("add_state"):
-            dataset_with_state = add_state(dataset, ["lineup"])
+            dataset_with_state = dataset.add_state("lineup")
 
         last_events = []
         for lineup, events in groupby(
@@ -100,7 +95,7 @@ class TestStateBuilder:
         dataset = self._load_dataset("statsbomb_15986")
 
         with performance_logging("add_state"):
-            dataset_with_state = add_state(dataset, ["custom"])
+            dataset_with_state = dataset.add_state("custom")
 
         assert dataset_with_state.events[0].state["custom"] == 1
         assert dataset_with_state.events[1].state["custom"] == 3

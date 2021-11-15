@@ -10,7 +10,7 @@ from kloppy.domain import (
     Point,
     BodyPartQualifier,
     BodyPart,
-    DatasetType
+    DatasetType,
 )
 
 from kloppy import statsbomb

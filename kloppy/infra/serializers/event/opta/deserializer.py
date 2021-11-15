@@ -378,9 +378,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
     def provider(self) -> Provider:
         return Provider.OPTA
 
-    def deserialize(
-        self, inputs: OptaInputs
-    ) -> EventDataset:
+    def deserialize(self, inputs: OptaInputs) -> EventDataset:
         transformer = self.get_transformer(length=100, width=100)
 
         with performance_logging("load data", logger=logger):

@@ -37,7 +37,7 @@ from kloppy.domain import (
     Transformer,
     build_coordinate_system,
 )
-from kloppy.infra.serializers.event import EventDataDeserializer
+from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
 
 
@@ -349,67 +349,13 @@ DatafactoryInputs = NamedTuple("DatafactoryInputs", [("event_data", IO[str])])
 
 
 class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "event_data" not in inputs:
-            raise ValueError("Please specify a value for input 'event_data'")
+    @property
+    def provider(self) -> Provider:
+        return Provider.DATAFACTORY
 
     def deserialize(self, inputs: DatafactoryInputs) -> EventDataset:
-        """
-        Deserialize Datafactory event data into a `EventDataset`.
 
-        Parameters
-        ----------
-        inputs : dict
-            input `event_data` should point to a `Readable` object containing
-            the 'json' formatted event data.
-        options : dict
-            Options for deserialization of the Datafactory file. Possible options are
-            `event_types` (list of event types) to specify the event types that
-            should be returned.Generic events are barely parsed. This type of event
-            can be used to do the parsing yourself.
-            Every event has a 'raw_event' attribute which contains the original
-            dictionary.
-        Returns
-        -------
-        dataset : EventDataset
-        Raises
-        ------
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = DatafactorySerializer()
-        >>> with open("data.json", "rb") as event_data:
-        >>>
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             'event_data': event_data,
-        >>>         },
-        >>>         options={
-        >>>             'event_types': ["pass", "shot"]
-        >>>         }
-        >>>     )
-        """
-
-        from_coordinate_system = build_coordinate_system(
-            Provider.DATAFACTORY,
-            length=2,
-            width=2,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            options.get("coordinate_system", Provider.KLOPPY),
-            length=2,
-            width=2,
-        )
-
-        transformer = Transformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
-        )
+        transformer = self.get_transformer(length=2, width=2)
 
         with performance_logging("load data", logger=logger):
             data = json.load(inputs.event_data)
@@ -449,11 +395,6 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                 teams.append(team)
                 scores.append(score_data.get(team_id, {}).get("score"))
             score = Score(home=scores[0], away=scores[1])
-
-            wanted_event_types = [
-                EventType[event_type.upper()]
-                for event_type in options.get("event_types", [])
-            ]
 
             # setup periods
             status = incidences.pop(DF_EVENT_CLASS_STATUS)
@@ -609,12 +550,12 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         result=None,
                         qualifiers=None,
                     )
-                    if _include_event(event, wanted_event_types):
+                    if self.should_include_event(event):
                         events.append(
                             transformer.transform_event(ball_out_event)
                         )
 
-                if _include_event(event, wanted_event_types):
+                if self.should_include_event(event):
                     events.append(transformer.transform_event(event))
 
                 # only consider as a previous_event a ball-in-play event
@@ -629,19 +570,16 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
         metadata = Metadata(
             teams=teams,
             periods=sorted(periods.values(), key=lambda p: p.id),
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
             orientation=Orientation.HOME_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=score,
             provider=Provider.DATAFACTORY,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return EventDataset(
             metadata=metadata,
             records=events,
         )
-
-    def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
-        raise NotImplementedError

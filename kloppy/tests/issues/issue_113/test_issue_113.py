@@ -1,7 +1,7 @@
 import os
 
-from kloppy.domain import Transformer, Orientation, AttackingDirection
-from kloppy import OptaSerializer, to_pandas
+from kloppy.domain import Orientation
+from kloppy import opta
 
 
 def kloppy_load_data(f7, f24):
@@ -18,17 +18,11 @@ def kloppy_load_data(f7, f24):
         away_team_id: id of the away team
 
     """
-    serializer = OptaSerializer()
-    with open(f24, "rb") as f24_data, open(f7, "rb") as f7_data:
-        dataset = serializer.deserialize(
-            inputs={"f24_data": f24_data, "f7_data": f7_data}
-        )
-    dataset = Transformer.transform_dataset(
-        dataset, to_orientation=Orientation.FIXED_HOME_AWAY
-    )
+    dataset = opta.load(f7_data=f7, f24_data=f24)
 
-    events = to_pandas(
-        dataset,
+    events = dataset.transform(
+        to_orientation=Orientation.FIXED_HOME_AWAY
+    ).to_pandas(
         additional_columns={
             "event_name": lambda event: str(getattr(event, "event_name", "")),
             "player_name": lambda event: str(getattr(event, "player", "")),

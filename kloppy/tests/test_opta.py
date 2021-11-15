@@ -12,16 +12,14 @@ from kloppy.domain import (
     BodyPart,
     SetPieceType,
     PassType,
-    DatasetType
+    DatasetType,
 )
 
 from kloppy import opta
 
 
 class TestOpta:
-    """
-
-    """
+    """"""
 
     @pytest.fixture
     def f24_data(self) -> str:
@@ -35,9 +33,7 @@ class TestOpta:
 
     def test_correct_deserialization(self, f7_data: str, f24_data: str):
         dataset = opta.load(
-            f24_data=f24_data,
-            f7_data=f7_data,
-            coordinates="opta"
+            f24_data=f24_data, f7_data=f7_data, coordinates="opta"
         )
 
         assert dataset.metadata.provider == Provider.OPTA
@@ -81,7 +77,9 @@ class TestOpta:
         assert dataset.events[6].qualifiers[0].value == BodyPart.HEAD
         assert dataset.events[5].qualifiers[0].value == PassType.CHIPPED_PASS
 
-    def test_correct_normalized_deserialization(self, f7_data: str, f24_data: str):
+    def test_correct_normalized_deserialization(
+        self, f7_data: str, f24_data: str
+    ):
         dataset = opta.load(
             f24_data=f24_data,
             f7_data=f7_data,

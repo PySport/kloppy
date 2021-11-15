@@ -632,13 +632,13 @@ class EventDataset(Dataset):
     def events(self):
         return self.records
 
-    def add_state(self, *args, **kwargs):
+    def add_state(self, *builder_keys):
         """
         See [add_state][kloppy.domain.services.state_builder.add_state]
         """
-        from kloppy import add_state
+        from kloppy.domain.services.state_builder import add_state
 
-        return add_state(self, *args, **kwargs)
+        return add_state(self, *builder_keys)
 
 
 __all__ = [

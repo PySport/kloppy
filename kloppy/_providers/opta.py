@@ -29,7 +29,5 @@ def load(
     ) as f24_data_fp:
 
         return deserializer.deserialize(
-            inputs=OptaInputs(
-                f7_data=f7_data_fp, f24_data=f24_data_fp
-            ),
+            inputs=OptaInputs(f7_data=f7_data_fp, f24_data=f24_data_fp),
         )

@@ -1,1 +1,1 @@
-from .deserializer import DatafactoryDeserializer
+from .deserializer import DatafactoryDeserializer, DatafactoryInputs

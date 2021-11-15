@@ -314,6 +314,9 @@ class Transformer:
 
         return replace(event, **position_changes)
 
+    def get_to_coordinate_system(self) -> CoordinateSystem:
+        return self._to_coordinate_system
+
     @classmethod
     def transform_dataset(
         cls,

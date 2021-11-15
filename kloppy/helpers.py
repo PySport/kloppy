@@ -188,28 +188,6 @@ def load_datafactory_event_data(
         )
 
 
-def load_statsbomb_event_data(
-    event_data_filename: str, lineup_data_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Statsbomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        event_data_filename: filename of json containing the events
-        lineup_data_filename: filename of json containing the lineup information
-        options:
-    """
-    serializer = StatsBombSerializer()
-    with open(event_data_filename, "rb") as event_data, open(
-        lineup_data_filename, "rb"
-    ) as lineup_data:
-
-        return serializer.deserialize(
-            inputs={"event_data": event_data, "lineup_data": lineup_data},
-            options=options,
-        )
-
-
 def load_opta_event_data(
     f24_data_filename: str, f7_data_filename: str, options: dict = None
 ) -> EventDataset:

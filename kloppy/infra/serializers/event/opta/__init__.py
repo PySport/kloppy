@@ -1,1 +1,1 @@
-from .serializer import OptaSerializer
+from .deserializer import OptaDeserializer, OptaInputs

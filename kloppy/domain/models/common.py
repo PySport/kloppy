@@ -715,7 +715,7 @@ class Dataset(ABC):
         """
         See [to_pandas][kloppy.helpers.to_pandas]
         """
-        from kloppy import to_pandas
+        from kloppy.helpers import to_pandas
 
         return to_pandas(
             self,

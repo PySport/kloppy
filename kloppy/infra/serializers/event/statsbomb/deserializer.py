@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, NamedTuple, IO
 import logging
 import json
 
@@ -35,14 +35,12 @@ from kloppy.domain import (
     RecoveryEvent,
     FoulCommittedEvent,
     BallOutEvent,
-    Event,
-    build_coordinate_system,
-    Transformer,
     BodyPart,
     BodyPartQualifier,
 )
-from kloppy.infra.serializers.event import EventDataSerializer
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
+
+from ..deserializer import EventDataDeserializer
 
 logger = logging.getLogger(__name__)
 
@@ -323,88 +321,22 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     return shot_fidelity_version, xy_fidelity_version
 
 
-def _include_event(event: Event, wanted_event_types: List) -> bool:
-    return not wanted_event_types or event.event_type in wanted_event_types
+StatsbombInputs = NamedTuple(
+    "StatsbombInputs", [("event_data", IO[str]), ("lineup_data", IO[str])]
+)
 
 
-class StatsBombSerializer(EventDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "event_data" not in inputs:
-            raise ValueError("Please specify a value for input 'event_data'")
-        if "lineup_data" not in inputs:
-            raise ValueError("Please specify a value for input 'lineup_data'")
+class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
+    @property
+    def provider(self) -> Provider:
+        return Provider.STATSBOMB
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> EventDataset:
-        """
-                Deserialize StatsBomb event data into a `EventDataset`.
-
-                Parameters
-                ----------
-                inputs : dict
-                    input `event_data` should point to a `Readable` object containing
-                    the 'json' formatted event data. input `lineup_data` should point
-                    to a `Readable` object containing the 'json' formatted lineup data.
-                options : dict
-                    Options for deserialization of the StatsBomb file. Possible options are
-                    `event_types` (list of event types) to specify the event types that
-                    should be returned. Valid types: "shot", "pass", "carry", "take_on" and
-                    "generic". Generic is everything other than the first 4. Those events
-                    are barely parsed. This type of event can be used to do the parsing
-                    yourself.
-                    Every event has a 'raw_event' attribute which contains the original
-                    dictionary.
-                Returns
-                -------
-                dataset : EventDataset
-                Raises
-                ------
-
-                See Also
-                --------
-
-                Examples
-                --------
-                >>> serializer = StatsBombSerializer()
-                >>> with open("events/12312312.json", "rb") as event_data, \
-                >>>      open("lineups/123123123.json", "rb") as lineup_data:
-                >>>
-                >>>     dataset = serializer.deserialize(
-                >>>         inputs={
-                >>>             'event_data': event_data,
-                >>>             'lineup_data': lineup_data
-                >>>         },
-                >>>         options={
-                >>>             'event_types': ["pass", "take_on", "carry", "shot"]
-                >>>         }
-                >>>     )
-                """
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
-
-        from_coordinate_system = build_coordinate_system(
-            Provider.STATSBOMB,
-            length=120,
-            width=80,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            options.get("coordinate_system", Provider.KLOPPY),
-            length=120,
-            width=80,
-        )
-
-        transformer = Transformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
-        )
+    def deserialize(self, inputs: StatsbombInputs) -> EventDataset:
+        transformer = self.get_transformer(length=120, width=80)
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs["event_data"])
-            home_lineup, away_lineup = json.load(inputs["lineup_data"])
+            raw_events = json.load(inputs.event_data)
+            home_lineup, away_lineup = json.load(inputs.lineup_data)
             (
                 shot_fidelity_version,
                 xy_fidelity_version,
@@ -453,11 +385,6 @@ class StatsBombSerializer(EventDataSerializer):
             ]
 
             teams = [home_team, away_team]
-
-            wanted_event_types = [
-                EventType[event_type.upper()]
-                for event_type in options.get("event_types", [])
-            ]
 
             periods = []
             period = None
@@ -653,7 +580,7 @@ class StatsBombSerializer(EventDataSerializer):
                         **generic_event_kwargs,
                     )
 
-                if _include_event(event, wanted_event_types):
+                if self.should_include_event(event):
                     events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
@@ -670,19 +597,19 @@ class StatsBombSerializer(EventDataSerializer):
                             **generic_event_kwargs,
                         )
 
-                        if _include_event(event, wanted_event_types):
+                        if self.should_include_event(event):
                             events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=None,
             provider=Provider.STATSBOMB,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return EventDataset(

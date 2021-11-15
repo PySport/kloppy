@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union, IO, NamedTuple
 
 from kloppy.domain import (
     AttackingDirection,
@@ -37,7 +37,7 @@ from kloppy.domain import (
     Transformer,
     build_coordinate_system,
 )
-from kloppy.infra.serializers.event import EventDataSerializer
+from kloppy.infra.serializers.event import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
 
 
@@ -345,15 +345,16 @@ def _include_event(event: Event, wanted_event_types: List) -> bool:
     return not wanted_event_types or event.event_type in wanted_event_types
 
 
-class DatafactorySerializer(EventDataSerializer):
+DatafactoryInputs = NamedTuple("DatafactoryInputs", [("event_data", IO[str])])
+
+
+class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
         if "event_data" not in inputs:
             raise ValueError("Please specify a value for input 'event_data'")
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> EventDataset:
+    def deserialize(self, inputs: DatafactoryInputs) -> EventDataset:
         """
         Deserialize Datafactory event data into a `EventDataset`.
 
@@ -392,9 +393,6 @@ class DatafactorySerializer(EventDataSerializer):
         >>>         }
         >>>     )
         """
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
 
         from_coordinate_system = build_coordinate_system(
             Provider.DATAFACTORY,
@@ -414,7 +412,7 @@ class DatafactorySerializer(EventDataSerializer):
         )
 
         with performance_logging("load data", logger=logger):
-            data = json.load(inputs["event_data"])
+            data = json.load(inputs.event_data)
             match = data["match"]
             score_data = data["scoreStatus"]
             incidences = data["incidences"]

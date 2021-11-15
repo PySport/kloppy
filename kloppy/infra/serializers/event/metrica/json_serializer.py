@@ -31,7 +31,7 @@ from kloppy.domain import (
     Transformer,
 )
 
-from kloppy.infra.serializers.event import EventDataSerializer
+from kloppy.infra.serializers.event import EventDataDeserializer
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata,
 )

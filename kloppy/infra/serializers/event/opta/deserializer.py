@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, NamedTuple, IO
 import logging
 from datetime import datetime
 import pytz
@@ -36,15 +36,13 @@ from kloppy.domain import (
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
-    build_coordinate_system,
-    Transformer,
     BodyPartQualifier,
     BodyPart,
     PassType,
     PassQualifier,
 )
-from kloppy.infra.serializers.event import EventDataSerializer
-from kloppy.utils import Readable, performance_logging
+from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -370,89 +368,24 @@ def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
 
 
-class OptaSerializer(EventDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "f7_data" not in inputs:
-            raise ValueError("Please specify a value for input 'f7_data'")
-        if "f24_data" not in inputs:
-            raise ValueError("Please specify a value for input 'f24_data'")
+OptaInputs = NamedTuple(
+    "OptaInputs", [("f7_data", IO[bytes]), ("f24_data", IO[bytes])]
+)
+
+
+class OptaDeserializer(EventDataDeserializer[OptaInputs]):
+    @property
+    def provider(self) -> Provider:
+        return Provider.OPTA
 
     def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
+        self, inputs: OptaInputs
     ) -> EventDataset:
-        """
-                Deserialize Opta event data into a `EventDataset`.
-
-                Parameters
-                ----------
-                inputs : dict
-                    input `f24_data` should point to a `Readable` object containing
-                    the 'xml' formatted event data. input `f7_data` should point
-                    to a `Readable` object containing the 'xml' formatted f7 data.
-                options : dict
-                    Options for deserialization of the Opta file. Possible options are
-                    `event_types` (list of event types) to specify the event types that
-                    should be returned. Valid types: "shot", "pass", "carry", "take_on" and
-                    "generic". Generic is everything other than the first 4. Those events
-                    are barely parsed. This type of event can be used to do the parsing
-                    yourself.
-                    Every event has a 'raw_event' attribute which contains the original
-                    dictionary.
-                Returns
-                -------
-                dataset : EventDataset
-                Raises
-                ------
-
-                See Also
-                --------
-
-                Examples
-                --------
-                >>> serializer = OptaSerializer()
-                >>> with open("123_f24.xml", "rb") as f24_data, \
-                >>>      open("123_f7.xml", "rb") as f7_data:
-                >>>
-                >>>     dataset = serializer.deserialize(
-                >>>         inputs={
-                >>>             'f24_data': f24_data,
-                >>>             'f7_data': f7_data
-                >>>         },
-                >>>         options={
-                >>>             'event_types': ["pass", "take_on", "carry", "shot"]
-                >>>         }
-                >>>     )
-                """
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
-
-        from_coordinate_system = build_coordinate_system(
-            Provider.OPTA,
-            length=100,
-            width=100,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            options.get("coordinate_system", Provider.KLOPPY),
-            length=100,
-            width=100,
-        )
-
-        transformer = Transformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
-        )
+        transformer = self.get_transformer(length=100, width=100)
 
         with performance_logging("load data", logger=logger):
-            f7_root = objectify.fromstring(inputs["f7_data"].read())
-            f24_root = objectify.fromstring(inputs["f24_data"].read())
-
-            wanted_event_types = [
-                EventType[event_type.upper()]
-                for event_type in options.get("event_types", [])
-            ]
+            f7_root = objectify.fromstring(inputs.f7_data.read())
+            f24_root = objectify.fromstring(inputs.f24_data.read())
 
         with performance_logging("parse data", logger=logger):
             matchdata_path = objectify.ObjectPath(
@@ -632,28 +565,22 @@ class OptaSerializer(EventDataSerializer):
                             event_name=_get_event_type_name(type_id),
                         )
 
-                    if (
-                        not wanted_event_types
-                        or event.event_type in wanted_event_types
-                    ):
+                    if self.should_include_event(event):
                         events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             provider=Provider.OPTA,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return EventDataset(
             metadata=metadata,
             records=events,
         )
-
-    def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
-        raise NotImplementedError

@@ -3,15 +3,7 @@ import os
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from kloppy import (
-    to_pandas,
-    load_metrica_tracking_data,
-    load_metrica_csv_tracking_data,
-    load_tracab_tracking_data,
-    transform,
-    OptaSerializer,
-    TRACABSerializer,
-)
+
 from kloppy.domain import (
     Period,
     DatasetFlag,
@@ -23,8 +15,6 @@ from kloppy.domain import (
     Orientation,
     Provider,
     Frame,
-    EventDataset,
-    PassEvent,
     Metadata,
     Team,
     Ground,
@@ -197,7 +187,7 @@ class TestHelpers:
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = to_pandas(tracking_data)
+        data_frame = tracking_data.to_pandas()
 
         expected_data_frame = DataFrame.from_dict(
             {

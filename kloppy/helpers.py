@@ -232,45 +232,6 @@ def load_metrica_json_event_data(
         )
 
 
-def load_sportec_event_data(
-    event_data_filename: str, match_data_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Sportec event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        event_data_filename: filename of the XML file containing the events
-        match_data_filename: filename of the XML file containing the match information
-        options:
-    """
-    serializer = SportecEventSerializer()
-    with open(event_data_filename, "rb") as event_data, open(
-        match_data_filename, "rb"
-    ) as match_data:
-
-        return serializer.deserialize(
-            inputs={"event_data": event_data, "match_data": match_data},
-            options=options,
-        )
-
-
-def load_wyscout_event_data(
-    event_data_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Wyscout event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        event_data_filename: filename of the XML file containing the events and metadata
-        options:
-    """
-    serializer = WyscoutSerializer()
-    with open(event_data_filename, "rb") as event_data:
-        return serializer.deserialize(
-            inputs={"event_data": event_data}, options=options
-        )
-
-
 def load_xml_code_data(xml_filename: str) -> CodeDataset:
     serializer = XMLCodeSerializer()
     with open(xml_filename, "rb") as xml_file:

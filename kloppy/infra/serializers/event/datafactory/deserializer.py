@@ -345,7 +345,9 @@ def _include_event(event: Event, wanted_event_types: List) -> bool:
     return not wanted_event_types or event.event_type in wanted_event_types
 
 
-DatafactoryInputs = NamedTuple("DatafactoryInputs", [("event_data", IO[str])])
+DatafactoryInputs = NamedTuple(
+    "DatafactoryInputs", [("event_data", IO[bytes])]
+)
 
 
 class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):

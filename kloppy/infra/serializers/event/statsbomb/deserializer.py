@@ -322,7 +322,7 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
 
 
 StatsbombInputs = NamedTuple(
-    "StatsbombInputs", [("event_data", IO[str]), ("lineup_data", IO[str])]
+    "StatsbombInputs", [("event_data", IO[bytes]), ("lineup_data", IO[bytes])]
 )
 
 

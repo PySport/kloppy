@@ -1,3 +1,5 @@
+from typing import IO
+
 from lxml import objectify
 import warnings
 
@@ -181,7 +183,7 @@ def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
 
 
 def load_metadata(
-    metadata_file: Readable, provider: Provider = None
+    metadata_file: IO[bytes], provider: Provider = None
 ) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")

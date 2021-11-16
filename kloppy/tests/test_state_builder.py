@@ -6,18 +6,17 @@ from kloppy.domain.services.state_builder.builder import StateBuilder, T
 from kloppy.utils import performance_logging
 from kloppy import statsbomb
 
-class TestStateBuilder:
-    """
 
-    """
+class TestStateBuilder:
+    """"""
+
     def _load_dataset(self, base_filename="statsbomb"):
         base_dir = os.path.dirname(__file__)
 
         return statsbomb.load(
             event_data=f"{base_dir}/files/{base_filename}_event.json",
-            lineup_data=f"{base_dir}/files/{base_filename}_lineup.json"
+            lineup_data=f"{base_dir}/files/{base_filename}_lineup.json",
         )
-
 
     def test_score_state_builder(self):
         dataset = self._load_dataset()

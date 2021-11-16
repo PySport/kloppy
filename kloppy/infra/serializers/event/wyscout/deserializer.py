@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
     BallOutEvent,
@@ -36,15 +36,11 @@ from kloppy.domain import (
     TakeOnEvent,
     TakeOnResult,
     Team,
-    EventType,
-    Event,
-    build_coordinate_system,
-    Transformer,
 )
-from kloppy.infra.serializers.event import EventDataSerializer
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 from . import wyscout_events, wyscout_tags
+from ..deserializer import EventDataDeserializer
 
 logger = logging.getLogger(__name__)
 
@@ -264,47 +260,19 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
-def _include_event(event: Event, wanted_event_types: List) -> bool:
-    return not wanted_event_types or event.event_type in wanted_event_types
+WyscoutInputs = NamedTuple("WyscoutInputs", [("event_data", IO[bytes])])
 
 
-class WyscoutSerializer(EventDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        pass
+class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
+    @property
+    def provider(self) -> Provider:
+        return Provider.WYSCOUT
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> EventDataset:
-        WyscoutSerializer.__validate_inputs(inputs)
-
-        if not options:
-            options = {}
-
-        from_coordinate_system = build_coordinate_system(
-            Provider.WYSCOUT,
-            length=100,
-            width=100,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            options.get("coordinate_system", Provider.KLOPPY),
-            length=100,
-            width=100,
-        )
-
-        transformer = Transformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
-        )
-
-        wanted_event_types = [
-            EventType[event_type.upper()]
-            for event_type in options.get("event_types", [])
-        ]
+    def deserialize(self, inputs: WyscoutInputs) -> EventDataset:
+        transformer = self.get_transformer(length=100, width=100)
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs["event_data"])
+            raw_events = json.load(inputs.event_data)
             for event in raw_events["events"]:
                 if "eventId" not in event:
                     event["eventId"] = event["eventName"]
@@ -433,19 +401,19 @@ class WyscoutSerializer(EventDataSerializer):
                         **generic_event_args
                     )
 
-                if event and _include_event(event, wanted_event_types):
+                if event and self.should_include_event(event):
                     events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=[home_team, away_team],
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=None,
             orientation=Orientation.BALL_OWNING_TEAM,
             flags=None,
             provider=Provider.WYSCOUT,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return EventDataset(metadata=metadata, records=events)

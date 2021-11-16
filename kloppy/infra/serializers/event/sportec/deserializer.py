@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, NamedTuple, IO
 import logging
 from dateutil.parser import parse
 from lxml import objectify
@@ -42,7 +42,7 @@ from kloppy.domain import (
     build_coordinate_system,
     Transformer,
 )
-from kloppy.infra.serializers.event import EventDataSerializer
+from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
 
 logger = logging.getLogger(__name__)
@@ -263,33 +263,20 @@ def _parse_coordinates(event_attributes: Dict) -> Point:
     )
 
 
-def _include_event(event: Event, wanted_event_types: List) -> bool:
-    return not wanted_event_types or event.event_type in wanted_event_types
+SportecInputs = NamedTuple(
+    "SportecInputs", [("meta_data", IO[bytes]), ("event_data", IO[bytes])]
+)
 
 
-class SportecEventSerializer(EventDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "match_data" not in inputs:
-            raise ValueError("Please specify a value for input 'match_data'")
-        if "event_data" not in inputs:
-            raise ValueError("Please specify a value for input 'event_data'")
+class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SPORTEC
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> EventDataset:
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
-
+    def deserialize(self, inputs: SportecInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
-            match_root = objectify.fromstring(inputs["match_data"].read())
-            event_root = objectify.fromstring(inputs["event_data"].read())
-
-            wanted_event_types = [
-                EventType[event_type.upper()]
-                for event_type in options.get("event_types", [])
-            ]
+            match_root = objectify.fromstring(inputs.meta_data.read())
+            event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
             x_max = float(
@@ -299,22 +286,7 @@ class SportecEventSerializer(EventDataSerializer):
                 match_root.MatchInformation.Environment.attrib["PitchY"]
             )
 
-            from_coordinate_system = build_coordinate_system(
-                Provider.SPORTEC,
-                length=x_max,
-                width=y_max,
-            )
-
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
-                length=x_max,
-                width=y_max,
-            )
-
-            transformer = Transformer(
-                from_coordinate_system=from_coordinate_system,
-                to_coordinate_system=to_coordinate_system,
-            )
+            transformer = self.get_transformer(length=x_max, width=y_max)
 
             team_path = objectify.ObjectPath(
                 "PutDataRequest.MatchInformation.Teams"
@@ -539,7 +511,7 @@ class SportecEventSerializer(EventDataSerializer):
 
         events = list(
             filter(
-                lambda _event: _include_event(_event, wanted_event_types),
+                lambda _event: self.should_include_event(_event),
                 events,
             )
         )
@@ -547,19 +519,16 @@ class SportecEventSerializer(EventDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=score,
             frame_rate=None,
             orientation=orientation,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             provider=Provider.SPORTEC,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return EventDataset(
             metadata=metadata,
             records=events,
         )
-
-    def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
-        raise NotImplementedError

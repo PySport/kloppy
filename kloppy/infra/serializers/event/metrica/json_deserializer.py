@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, NamedTuple, IO
 import logging
 import json
 
@@ -30,8 +30,8 @@ from kloppy.domain import (
     build_coordinate_system,
     Transformer,
 )
+from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 
-from kloppy.infra.serializers.event import EventDataDeserializer
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata,
 )
@@ -247,92 +247,32 @@ def _parse_ball_owning_team(event_type: int, team: Team) -> Team:
         return None
 
 
-def _include_event(event: Event, wanted_event_types: List) -> bool:
-    return not wanted_event_types or event.event_type in wanted_event_types
+MetricaEventsJsonInputs = NamedTuple(
+    "MetricaEventsJsonInputs",
+    [("meta_data", IO[bytes]), ("event_data", IO[bytes])],
+)
 
 
-class MetricaEventsJsonSerializer(EventDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "event_data" not in inputs:
-            raise ValueError("Please specify a value for input 'event_data'")
-        if "metadata" not in inputs:
-            raise ValueError("Please specify a value for input 'metadata'")
+class MetricaEventsJsonDeserializer(
+    EventDataDeserializer[MetricaEventsJsonInputs]
+):
+    @property
+    def provider(self) -> Provider:
+        return Provider.METRICA
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> EventDataset:
-        """
-                Deserialize Metrica Sports event data json format into a `EventDataset`.
-
-                Parameters
-                ----------
-                inputs : dict
-                    input `event_data` should point to a `Readable` object containing
-                    the 'json' formatted event data. input `metadata` should point
-                    to a `Readable` object containing the `xml` metadata file.
-                options : dict
-                    Options for deserialization of the Metrica Sports event json file.
-                    Possible options are `event_types` (list of event types) to specify
-                    the event types that should be returned. Valid types: "shot", "pass",
-                    "carry", "take_on" and "generic". Generic is everything other than
-                    the first 4. Those events are barely parsed. This type of event can
-                    be used to do the parsing yourself.
-                    Every event has a 'raw_event' attribute which contains the original
-                    dictionary.
-                Returns
-                -------
-                dataset : EventDataset
-                Raises
-                ------
-
-                See Also
-                --------
-
-                Examples
-                --------
-                >>> serializer = MetricaEventsJsonSerializer()
-                >>> with open("events.json", "rb") as event_data, \
-                >>>      open("metadata.xml", "rb") as metadata:
-                >>>
-                >>>     dataset = serializer.deserialize(
-                >>>         inputs={
-                >>>             'event_data': event_data,
-                >>>             'metadata': metadata
-                >>>         },
-                >>>         options={
-                >>>             'event_types': ["pass", "take_on", "carry", "shot"]
-                >>>         }
-                >>>     )
-                """
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
-
+    def deserialize(self, inputs: MetricaEventsJsonInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs["event_data"])
+            raw_events = json.load(inputs.event_data)
             metadata = load_metadata(
-                inputs["metadata"], provider=Provider.METRICA
+                inputs.meta_data, provider=Provider.METRICA
             )
 
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
+            transformer = self.get_transformer(
                 length=metadata.pitch_dimensions.length,
                 width=metadata.pitch_dimensions.width,
             )
 
-            transformer = Transformer(
-                from_coordinate_system=metadata.coordinate_system,
-                to_coordinate_system=to_coordinate_system,
-            )
-
         with performance_logging("parse data", logger=logger):
-
-            wanted_event_types = [
-                EventType[event_type.upper()]
-                for event_type in options.get("event_types", [])
-            ]
-
             events = []
             for i, raw_event in enumerate(raw_events["data"]):
 
@@ -435,7 +375,7 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                         **generic_event_kwargs,
                     )
 
-                if _include_event(event, wanted_event_types):
+                if self.should_include_event(event):
                     events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
@@ -455,13 +395,10 @@ class MetricaEventsJsonSerializer(EventDataSerializer):
                             **generic_event_kwargs,
                         )
 
-                        if _include_event(event, wanted_event_types):
+                        if self.should_include_event(event):
                             events.append(transformer.transform_event(event))
 
         return EventDataset(
             metadata=metadata,
             records=events,
         )
-
-    def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
-        raise NotImplementedError

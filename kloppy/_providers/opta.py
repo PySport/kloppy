@@ -17,7 +17,7 @@ def load(
 
     Parameters:
         f7_data: filename of json containing the events
-        f7_data: filename of json containing the lineup information
+        f24_data: filename of json containing the lineup information
         event_types:
         coordinates:
     """

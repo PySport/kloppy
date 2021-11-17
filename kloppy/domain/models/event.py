@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Type, Union, Any
+from typing import Dict, List, Type, Union, Any, Callable
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -601,7 +601,7 @@ class FoulCommittedEvent(Event):
 
 
 @dataclass
-class EventDataset(Dataset):
+class EventDataset(Dataset[Event]):
     """
     EventDataset
 
@@ -612,19 +612,7 @@ class EventDataset(Dataset):
         events: alias for `records`
     """
 
-    records: List[
-        Union[
-            GenericEvent,
-            ShotEvent,
-            PassEvent,
-            TakeOnEvent,
-            CarryEvent,
-            SubstitutionEvent,
-            PlayerOffEvent,
-            PlayerOnEvent,
-            CardEvent,
-        ]
-    ]
+    records: List[Event]
 
     dataset_type: DatasetType = DatasetType.EVENT
 
@@ -639,6 +627,123 @@ class EventDataset(Dataset):
         from kloppy.domain.services.state_builder import add_state
 
         return add_state(self, *builder_keys)
+
+    def to_pandas(
+        self,
+        record_converter: Callable[[Event], Dict] = None,
+        additional_columns: Dict[
+            str, Union[Callable[[Event], Any], Any]
+        ] = None,
+    ) -> "DataFrame":
+        try:
+            import pandas as pd
+        except ImportError:
+            raise Exception(
+                "Seems like you don't have pandas installed. Please"
+                " install it using: pip install pandas"
+            )
+
+        if not record_converter:
+
+            def record_converter(event: Event) -> Dict:
+                row = dict(
+                    event_id=event.event_id,
+                    event_type=(
+                        event.event_type.value
+                        if event.event_type != EventType.GENERIC
+                        else f"GENERIC:{event.event_name}"
+                    ),
+                    result=event.result.value if event.result else None,
+                    success=event.result.is_success if event.result else None,
+                    period_id=event.period.id,
+                    timestamp=event.timestamp,
+                    end_timestamp=None,
+                    ball_state=event.ball_state.value
+                    if event.ball_state
+                    else None,
+                    ball_owning_team=event.ball_owning_team.team_id
+                    if event.ball_owning_team
+                    else None,
+                    team_id=event.team.team_id if event.team else None,
+                    player_id=event.player.player_id if event.player else None,
+                    coordinates_x=event.coordinates.x
+                    if event.coordinates
+                    else None,
+                    coordinates_y=event.coordinates.y
+                    if event.coordinates
+                    else None,
+                )
+                if (
+                    isinstance(event, PassEvent)
+                    and event.result == PassResult.COMPLETE
+                ):
+                    row.update(
+                        {
+                            "end_timestamp": event.receive_timestamp,
+                            "end_coordinates_x": event.receiver_coordinates.x
+                            if event.receiver_coordinates
+                            else None,
+                            "end_coordinates_y": event.receiver_coordinates.y
+                            if event.receiver_coordinates
+                            else None,
+                            "receiver_player_id": event.receiver_player.player_id
+                            if event.receiver_player
+                            else None,
+                        }
+                    )
+                elif isinstance(event, CarryEvent):
+                    row.update(
+                        {
+                            "end_timestamp": event.end_timestamp,
+                            "end_coordinates_x": event.end_coordinates.x
+                            if event.end_coordinates
+                            else None,
+                            "end_coordinates_y": event.end_coordinates.y
+                            if event.end_coordinates
+                            else None,
+                        }
+                    )
+                elif isinstance(event, ShotEvent):
+                    row.update(
+                        {
+                            "end_coordinates_x": event.result_coordinates.x
+                            if event.result_coordinates
+                            else None,
+                            "end_coordinates_y": event.result_coordinates.y
+                            if event.result_coordinates
+                            else None,
+                        }
+                    )
+                elif isinstance(event, CardEvent):
+                    row.update(
+                        {
+                            "card_type": event.card_type.value
+                            if event.card_type
+                            else None
+                        }
+                    )
+
+                if event.qualifiers:
+                    for qualifier in event.qualifiers:
+                        row.update(qualifier.to_dict())
+
+                return row
+
+        def generic_record_converter(event: Event):
+            row = record_converter(event)
+            if additional_columns:
+                for k, v in additional_columns.items():
+                    if callable(v):
+                        value = v(event)
+                    else:
+                        value = v
+                    row.update({k: value})
+
+            return row
+
+        return pd.DataFrame.from_records(
+            map(generic_record_converter, self.records)
+        )
 
 
 __all__ = [

@@ -1,6 +1,6 @@
 from kloppy.infra.serializers.tracking.metrica_epts.models import Sensor
 import logging
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, NamedTuple, IO
 from dataclasses import replace
 
 from kloppy.domain import (
@@ -13,23 +13,27 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
 from .reader import read_raw_data
-
-from .. import TrackingDataSerializer
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
 
-class MetricaEPTSSerializer(TrackingDataSerializer):
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "metadata" not in inputs:
-            raise ValueError("Please specify a value for 'metadata'")
-        if "raw_data" not in inputs:
-            raise ValueError("Please specify a value for 'raw_data'")
+MetricaEPTSTrackingDataInputs = NamedTuple(
+    "MetricaEPTSTrackingDataInputs",
+    [("meta_data", IO[bytes]), ("raw_data", IO[bytes])],
+)
+
+
+class MetricaEPTSTrackingDataDeserializer(
+    TrackingDataDeserializer[MetricaEPTSTrackingDataInputs]
+):
+    @property
+    def provider(self) -> Provider:
+        return Provider.METRICA
 
     @staticmethod
     def _frame_from_row(
@@ -96,68 +100,16 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
         return frame
 
     def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
+        self, inputs: MetricaEPTSTrackingDataInputs
     ) -> TrackingDataset:
-        """
-        Deserialize Metrica EPTS tracking data into a `TrackingDataset`.
-
-        Parameters
-        ----------
-        inputs : dict
-            input `raw_data` should point to a `Readable` object containing
-            the 'csv' formatted raw data. input `metadata` should point to
-            the xml metadata data.
-        options : dict
-            Options for deserialization of the EPTS file. Possible options are
-            `sample_rate` (float between 0 and 1) to specify the amount of
-            frames that should be loaded, `limit` to specify the max number of
-            frames that will be returned.
-        Returns
-        -------
-        dataset : TrackingDataset
-        Raises
-        ------
-        -
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = MetricaEPTSSerializer()
-        >>> with open("metadata.xml", "rb") as meta, \
-        >>>      open("raw.dat", "rb") as raw:
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             'metadata': meta,
-        >>>             'raw_data': raw
-        >>>         },
-        >>>         options={
-        >>>             'sample_rate': 1/12
-        >>>         }
-        >>>     )
-        """
-        self.__validate_inputs(inputs)
-
-        if not options:
-            options = {}
-
-        sample_rate = float(options.get("sample_rate", 1.0))
-        limit = int(options.get("limit", 0))
-
         with performance_logging("Loading metadata", logger=logger):
-            metadata = load_metadata(inputs["metadata"])
+            metadata = load_metadata(inputs.meta_data)
 
             if metadata.provider and metadata.pitch_dimensions:
-                to_coordinate_system = build_coordinate_system(
-                    options.get("coordinate_system", Provider.KLOPPY),
+                transformer = self.get_transformer(
                     length=metadata.pitch_dimensions.length,
                     width=metadata.pitch_dimensions.width,
-                )
-
-                transformer = Transformer(
-                    from_coordinate_system=metadata.coordinate_system,
-                    to_coordinate_system=to_coordinate_system,
+                    provider=metadata.coordinate_system.provider,
                 )
             else:
                 transformer = None
@@ -167,21 +119,21 @@ class MetricaEPTSSerializer(TrackingDataSerializer):
             frames = [
                 self._frame_from_row(row, metadata, transformer)
                 for row in read_raw_data(
-                    raw_data=inputs["raw_data"],
+                    raw_data=inputs.raw_data,
                     metadata=metadata,
                     sensor_ids=[
                         sensor.sensor_id for sensor in metadata.sensors
                     ],
-                    sample_rate=sample_rate,
-                    limit=limit,
+                    sample_rate=self.sample_rate,
+                    limit=self.limit,
                 )
             ]
 
         if transformer:
             metadata = replace(
                 metadata,
-                pitch_dimensions=to_coordinate_system.pitch_dimensions,
-                coordinate_system=to_coordinate_system,
+                pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
+                coordinate_system=transformer.get_to_coordinate_system(),
             )
 
         return TrackingDataset(records=frames, metadata=metadata)

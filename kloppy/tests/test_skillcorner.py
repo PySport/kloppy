@@ -1,6 +1,7 @@
 import os
 
-from kloppy import SkillCornerTrackingSerializer
+import pytest
+
 from kloppy.domain import (
     Period,
     Provider,
@@ -8,33 +9,28 @@ from kloppy.domain import (
     Orientation,
     Point,
     Point3D,
-    EventType,
-    SetPieceType,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
-from kloppy.helpers import _frame_to_pandas_row_converter
+
+from kloppy import skillcorner
 
 
 class TestSkillCornerTracking:
-    def test_correct_deserialization(self):
+    @pytest.fixture
+    def meta_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/skillcorner_match_data.json"
 
-        serializer = SkillCornerTrackingSerializer()
+    @pytest.fixture
+    def raw_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/skillcorner_structured_data.json"
 
-        with open(
-            f"{base_dir}/files/skillcorner_structured_data.json", "rb"
-        ) as raw_data, open(
-            f"{base_dir}/files/skillcorner_match_data.json", "rb"
-        ) as metadata:
-            dataset = serializer.deserialize(
-                inputs={
-                    "raw_data": raw_data,
-                    "metadata": metadata,
-                },
-                options={
-                    "coordinate_system": Provider.SKILLCORNER,
-                },
-            )
+    def test_correct_deserialization(self, raw_data: str, meta_data: str):
+        dataset = skillcorner.load(
+            meta_data=meta_data, raw_data=raw_data, coordinates="skillcorner"
+        )
+
         assert dataset.metadata.provider == Provider.SKILLCORNER
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 34783
@@ -110,22 +106,11 @@ class TestSkillCornerTracking:
         assert pitch_dimensions.y_dim.min == -34
         assert pitch_dimensions.y_dim.max == 34
 
-    def test_correct_normalized_deserialization(self):
+    def test_correct_normalized_deserialization(
+        self, meta_data: str, raw_data: str
+    ):
         base_dir = os.path.dirname(__file__)
-
-        serializer = SkillCornerTrackingSerializer()
-
-        with open(
-            f"{base_dir}/files/skillcorner_structured_data.json", "rb"
-        ) as raw_data, open(
-            f"{base_dir}/files/skillcorner_match_data.json", "rb"
-        ) as metadata:
-            dataset = serializer.deserialize(
-                inputs={
-                    "raw_data": raw_data,
-                    "metadata": metadata,
-                },
-            )
+        dataset = skillcorner.load(meta_data=meta_data, raw_data=raw_data)
 
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_data[

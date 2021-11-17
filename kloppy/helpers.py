@@ -1,19 +1,5 @@
-from typing import Callable, Dict, List, Optional, TypeVar, Union, Any
+from typing import Callable, Dict, List, TypeVar, Union, Any
 
-from . import (
-    MetricaEPTSSerializer,
-    DatafactorySerializer,
-    MetricaEventsJsonSerializer,
-    MetricaCsvTrackingSerializer,
-    OptaSerializer,
-    SportecEventSerializer,
-    SkillCornerTrackingSerializer,
-    SecondSpectrumSerializer,
-    StatsBombSerializer,
-    TRACABSerializer,
-    WyscoutSerializer,
-    XMLCodeSerializer,
-)
 from .domain import (
     CardEvent,
     CarryEvent,
@@ -37,212 +23,6 @@ from .domain import (
     Code,
     CoordinateSystem,
 )
-
-
-def load_tracab_tracking_data(
-    metadata_filename: str, raw_data_filename: str, options: dict = None
-) -> TrackingDataset:
-    serializer = TRACABSerializer()
-    with open(metadata_filename, "rb") as metadata, open(
-        raw_data_filename, "rb"
-    ) as raw_data:
-
-        return serializer.deserialize(
-            inputs={"metadata": metadata, "raw_data": raw_data},
-            options=options,
-        )
-
-
-def load_second_spectrum_tracking_data(
-    xml_metadata_filename: str,
-    raw_data_filename: str,
-    json_metadata_filename: Optional[str] = None,
-    options: dict = None,
-) -> TrackingDataset:
-    """
-    Load Second spectrum event data into a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset]
-
-    Parameters:
-        xml_metadata_filename: filename of xml metadata file for Second Spectrum tracking
-        raw_data_filename: filename of json containing the Second Spectrum frame data
-        json_metadata_filename: (Optional) filename of the json metadata for Second Spectrum. This file contains extra team and player info and can be omitted.
-        options:
-    """
-    serializer = SecondSpectrumSerializer()
-    if json_metadata_filename is not None:
-        with open(xml_metadata_filename, "rb") as xml_metadata, open(
-            json_metadata_filename, "rb"
-        ) as json_metadata, open(raw_data_filename, "rb") as raw_data:
-
-            return serializer.deserialize(
-                inputs={
-                    "xml_metadata": xml_metadata,
-                    "json_metadata": json_metadata,
-                    "raw_data": raw_data,
-                },
-                options=options,
-            )
-
-    else:
-        with open(xml_metadata_filename, "rb") as metadata, open(
-            raw_data_filename, "rb"
-        ) as raw_data:
-            return serializer.deserialize(
-                inputs={"xml_metadata": metadata, "raw_data": raw_data},
-                options=options,
-            )
-
-
-def load_skillcorner_tracking_data(
-    metadata_filename: str, raw_data_filename: str, options: dict = None
-) -> TrackingDataset:
-    serializer = SkillCornerTrackingSerializer()
-    with open(metadata_filename, "rb") as metadata, open(
-        raw_data_filename, "rb"
-    ) as raw_data:
-
-        return serializer.deserialize(
-            inputs={"metadata": metadata, "raw_data": raw_data},
-            options=options,
-        )
-
-
-def load_metrica_tracking_data(
-    raw_data_home_filename: str,
-    raw_data_away_filename: str,
-    options: dict = None,
-) -> TrackingDataset:
-    from warnings import warn
-
-    warn(
-        "load_metrica_tracking_data is a deprecated method, using load_metrica_csv_tracking_data instead"
-    )
-    return load_metrica_csv_tracking_data(
-        raw_data_home_filename,
-        raw_data_away_filename,
-        options,
-    )
-
-
-def load_metrica_csv_tracking_data(
-    raw_data_home_filename: str,
-    raw_data_away_filename: str,
-    options: dict = None,
-) -> TrackingDataset:
-    serializer = MetricaCsvTrackingSerializer()
-    with open(raw_data_home_filename, "rb") as raw_data_home, open(
-        raw_data_away_filename, "rb"
-    ) as raw_data_away:
-
-        return serializer.deserialize(
-            inputs={
-                "raw_data_home": raw_data_home,
-                "raw_data_away": raw_data_away,
-            },
-            options=options,
-        )
-
-
-def load_epts_tracking_data(
-    metadata_filename: str, raw_data_filename: str, options: dict = None
-) -> TrackingDataset:
-    from warnings import warn
-
-    warn(
-        "load_epts_tracking_data is a deprecated method, using load_metrica_epts_tracking_data instead"
-    )
-    return load_metrica_epts_tracking_data(
-        metadata_filename, raw_data_filename, options
-    )
-
-
-def load_metrica_epts_tracking_data(
-    metadata_filename: str, raw_data_filename: str, options: dict = None
-) -> TrackingDataset:
-    serializer = MetricaEPTSSerializer()
-    with open(metadata_filename, "rb") as metadata, open(
-        raw_data_filename, "rb"
-    ) as raw_data:
-
-        return serializer.deserialize(
-            inputs={"metadata": metadata, "raw_data": raw_data},
-            options=options,
-        )
-
-
-def load_datafactory_event_data(
-    event_data_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Datafactory event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        event_data_filename: filename of json containing the events
-        options:
-    """
-    serializer = DatafactorySerializer()
-    with open(event_data_filename, "rb") as event_data:
-        return serializer.deserialize(
-            inputs={"event_data": event_data},
-            options=options,
-        )
-
-
-def load_opta_event_data(
-    f24_data_filename: str, f7_data_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Opta event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        f24_data_filename: filename of the f24 XML file containing the events
-        f7_data_filename: filename of the f7 XML file containing metadata
-        options:
-    """
-    serializer = OptaSerializer()
-    with open(f24_data_filename, "rb") as f24_data, open(
-        f7_data_filename, "rb"
-    ) as f7_data:
-
-        return serializer.deserialize(
-            inputs={"f24_data": f24_data, "f7_data": f7_data},
-            options=options,
-        )
-
-
-def load_metrica_json_event_data(
-    raw_data_filename: str, metadata_filename: str, options: dict = None
-) -> EventDataset:
-    """
-    Load Metrica event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
-
-    Parameters:
-        raw_data_filename: filename of the json file containing the events
-        metadata_filename: filename of the EPTS XML file containing metadata
-        options:
-    """
-    serializer = MetricaEventsJsonSerializer()
-    with open(metadata_filename, "rb") as metadata, open(
-        raw_data_filename, "rb"
-    ) as raw_data:
-
-        return serializer.deserialize(
-            inputs={"metadata": metadata, "event_data": raw_data},
-            options=options,
-        )
-
-
-def load_xml_code_data(xml_filename: str) -> CodeDataset:
-    serializer = XMLCodeSerializer()
-    with open(xml_filename, "rb") as xml_file:
-        return serializer.deserialize(inputs={"xml_file": xml_file})
-
-
-def write_xml_code_data(dataset: CodeDataset, xml_filename: str):
-    serializer = XMLCodeSerializer()
-    with open(xml_filename, "wb") as xml_file:
-        content = serializer.serialize(dataset)
-        xml_file.write(content)
 
 
 DatasetT = TypeVar("DatasetT")
@@ -284,11 +64,11 @@ def transform(
             width=dataset.metadata.coordinate_system.width,
         )
 
-        return Transformer.transform_dataset(
-            dataset=dataset,
-            to_orientation=to_orientation,
-            to_coordinate_system=to_coordinate_system,
-        )
+    return Transformer.transform_dataset(
+        dataset=dataset,
+        to_orientation=to_orientation,
+        to_coordinate_system=to_coordinate_system,
+    )
 
 
 def _frame_to_pandas_row_converter(frame: Frame) -> Dict:
@@ -482,24 +262,3 @@ def to_pandas(
         return row
 
     return pd.DataFrame.from_records(map(generic_record_converter, records))
-
-
-__all__ = [
-    "load_tracab_tracking_data",
-    "load_skillcorner_tracking_data",
-    "load_metrica_tracking_data",
-    "load_metrica_csv_tracking_data",
-    "load_metrica_json_event_data",
-    "load_epts_tracking_data",
-    "load_metrica_epts_tracking_data",
-    "load_datafactory_event_data",
-    "load_second_spectrum_tracking_data",
-    "load_statsbomb_event_data",
-    "load_opta_event_data",
-    "load_sportec_event_data",
-    "load_wyscout_event_data",
-    "load_xml_code_data",
-    "write_xml_code_data",
-    "to_pandas",
-    "transform",
-]

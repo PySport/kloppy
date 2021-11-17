@@ -1,33 +1,36 @@
 import os
 
-from kloppy import MetricaCsvTrackingSerializer
+import pytest
+
 from kloppy.domain import (
     Period,
     Provider,
     AttackingDirection,
     Orientation,
     Point,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import metrica
 
 
 class TestMetricaCsvTracking:
-    def test_correct_deserialization(self):
+    """"""
+
+    @pytest.fixture
+    def home_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/metrica_home.csv"
 
-        serializer = MetricaCsvTrackingSerializer()
+    @pytest.fixture
+    def away_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/metrica_away.csv"
 
-        with open(
-            f"{base_dir}/files/metrica_home.csv", "rb"
-        ) as raw_data_home, open(
-            f"{base_dir}/files/metrica_away.csv", "rb"
-        ) as raw_data_away:
-            dataset = serializer.deserialize(
-                inputs={
-                    "raw_data_home": raw_data_home,
-                    "raw_data_away": raw_data_away,
-                }
-            )
+    def test_correct_deserialization(self, home_data: str, away_data: str):
+        dataset = metrica.load_tracking_csv(
+            home_data=home_data, away_data=away_data
+        )
         assert dataset.metadata.provider == Provider.METRICA
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6

@@ -3,7 +3,6 @@ import os
 from pandas import DataFrame
 from pandas._testing import assert_frame_equal
 
-from kloppy import XMLCodeSerializer
 from kloppy.domain import Period
 
 

@@ -1,4 +1,4 @@
 from .json_deserializer import (
-    MetricaEventsJsonDeserializer,
-    MetricaEventsJsonInputs,
+    MetricaJsonEventDataDeserializer,
+    MetricaJsonEventDataInputs,
 )

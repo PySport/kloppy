@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
 from enum import Enum, Flag
 from collections import Counter
 import numpy as np
@@ -28,14 +28,35 @@ from kloppy.domain import (
     build_coordinate_system,
     PlayerData,
 )
+from kloppy.infra.serializers.tracking.deserializer import (
+    TrackingDataDeserializer,
+)
 from kloppy.utils import Readable, performance_logging
-
-from . import TrackingDataSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class SkillCornerTrackingSerializer(TrackingDataSerializer):
+SkillCornerInputs = NamedTuple(
+    "SkillCornerInputs",
+    [("meta_data", IO[bytes]), ("raw_data", IO[bytes])],
+)
+
+
+class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
+    def __init__(
+        self,
+        limit: Optional[int] = None,
+        sample_rate: Optional[float] = None,
+        coordinate_system: Optional[Union[str, Provider]] = None,
+        include_empty_frames: Optional[bool] = False,
+    ):
+        super().__init__(limit, sample_rate, coordinate_system)
+        self.include_empty_frames = include_empty_frames
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.SKILLCORNER
+
     @classmethod
     def _get_frame_data(
         cls,
@@ -104,18 +125,14 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 player_id = str(track_id)
                 if group_name == "home team":
                     if f"anon_{player_id}" not in anon_players["HOME"].keys():
-                        player = cls.__create_anon_player(
-                            cls, teams, frame_record
-                        )
+                        player = cls.__create_anon_player(teams, frame_record)
                         anon_players["HOME"][f"anon_home_{player_id}"] = player
                     else:
                         player = anon_players["HOME"][f"anon_home_{player_id}"]
 
                 elif group_name == "away team":
                     if f"anon_{player_id}" not in anon_players["AWAY"].keys():
-                        player = cls.__create_anon_player(
-                            cls, teams, frame_record
-                        )
+                        player = cls.__create_anon_player(teams, frame_record)
                         anon_players["AWAY"][f"anon_away_{player_id}"] = player
                     else:
                         player = anon_players["AWAY"][f"anon_away_{player_id}"]
@@ -201,7 +218,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             )
         return periods
 
-    def __create_anon_player(self, teams, frame_record):
+    @classmethod
+    def __create_anon_player(cls, teams, frame_record):
         """
         creates a Player object for a track_id'ed player with known team membership but unknown identity.
 
@@ -236,66 +254,9 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             attributes={},
         )
 
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "metadata" not in inputs:
-            raise ValueError("Please specify a value for 'metadata'")
-        if "raw_data" not in inputs:
-            raise ValueError("Please specify a value for 'raw_data'")
-
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> TrackingDataset:
-        """
-        Deserialize SkillCorner tracking data into a `TrackingDataset`.
-
-        Parameters
-        ----------
-        inputs : dict
-            input `raw_data` should point to a `Readable` object containing
-            the 'json' formatted raw data. input `metadata` should point to
-            the json metadata data.
-        options : dict
-            Options for deserialization of the TRACAB file. Possible options are:  
-            `include_empty_frames` (boolean): default = False to specify whether frames without
-            any players_data or the ball_coordinates should be loaded  
-            `sample_rate` (float between 0 and 1) to specify the amount of frames that should be loaded  
-            and `limit` (int) to specify the max number of frames that will be returned.
-        Returns
-        -------
-        dataset : TrackingDataset
-        Raises
-        ------
-        -
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = SkillCornerSerializer()
-        >>> with open("match_data.json", "rb") as meta, \
-        >>>      open("structured_data.json", "rb") as raw:
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             'metadata': meta,
-        >>>             'raw_data': raw
-        >>>         },
-        >>>         options={
-        >>>         }
-        >>>     )
-        """
-        self.__validate_inputs(inputs)
-
-        metadata = self.__load_json(inputs["metadata"])
-        raw_data = self.__load_json(inputs["raw_data"])
-
-        if not options:
-            options = {}
-
-        sample_rate = float(options.get("sample_rate", 1.0))
-        limit = int(options.get("limit", 0))
-        include_empty_frames = bool(options.get("include_empty_frames", False))
+    def deserialize(self, inputs: SkillCornerInputs) -> TrackingDataset:
+        metadata = self.__load_json(inputs.meta_data)
+        raw_data = self.__load_json(inputs.raw_data)
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
@@ -325,21 +286,8 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             pitch_size_width = metadata["pitch_width"]
             pitch_size_length = metadata["pitch_length"]
 
-            from_coordinate_system = build_coordinate_system(
-                Provider.SKILLCORNER,
-                length=pitch_size_length,
-                width=pitch_size_width,
-            )
-
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
-                length=pitch_size_length,
-                width=pitch_size_width,
-            )
-
-            transformer = Transformer(
-                from_coordinate_system=from_coordinate_system,
-                to_coordinate_system=to_coordinate_system,
+            transformer = self.get_transformer(
+                length=pitch_size_length, width=pitch_size_width
             )
 
             home_team_id = metadata["home_team"]["id"]
@@ -352,15 +300,11 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 name=metadata["home_team"]["name"],
                 ground=Ground.HOME,
             )
-            self.home_team = home_team
-
             away_team = Team(
                 team_id=away_team_id,
                 name=metadata["away_team"]["name"],
                 ground=Ground.AWAY,
             )
-            self.away_team = away_team
-
             teams = [home_team, away_team]
 
             for player_id in player_dict.keys():
@@ -399,7 +343,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
 
             def _iter():
                 n = 0
-                sample = 1.0 / sample_rate
+                sample = 1.0 / self.sample_rate
 
                 for frame in raw_data:
                     frame_period = frame["period"]
@@ -415,7 +359,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         for _frame in _iter():
             # include frame if there is any tracking data, players or ball.
             # or if include_empty_frames == True
-            if include_empty_frames or len(_frame["data"]) > 0:
+            if self.include_empty_frames or len(_frame["data"]) > 0:
                 frame = self._get_frame_data(
                     teams,
                     teamdict,
@@ -434,7 +378,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
                 frames.append(frame)
                 n_frames += 1
 
-                if limit and n_frames >= limit:
+                if self.limit and n_frames >= self.limit:
                     break
 
         self._set_skillcorner_attacking_directions(frames, periods)
@@ -450,7 +394,7 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=Score(
                 home=metadata["home_team_score"],
                 away=metadata["away_team_score"],
@@ -459,13 +403,10 @@ class SkillCornerTrackingSerializer(TrackingDataSerializer):
             orientation=orientation,
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return TrackingDataset(
             records=frames,
             metadata=metadata,
         )
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

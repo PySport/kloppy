@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
-from typing import Dict, List, Optional, Callable, Union, Any
+from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
 
 from .pitch import PitchDimensions, Point, Dimension
 
@@ -692,8 +692,11 @@ class DatasetType(Enum):
         return self.value
 
 
+T = TypeVar("T")
+
+
 @dataclass
-class Dataset(ABC):
+class Dataset(ABC, Generic[T]):
     """
     Dataset
 
@@ -703,7 +706,7 @@ class Dataset(ABC):
 
     """
 
-    records: List[DataRecord]
+    records: List[T]
     metadata: Metadata
 
     @property
@@ -711,23 +714,80 @@ class Dataset(ABC):
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
 
-    def to_pandas(self, *args, **kwargs):
+    @abstractmethod
+    def to_pandas(
+        self,
+        record_converter: Callable[[T], Dict] = None,
+        additional_columns: Dict[str, Union[Callable[[T], Any], Any]] = None,
+    ) -> "DataFrame":
         """
-        See [to_pandas][kloppy.helpers.to_pandas]
-        """
-        from kloppy.helpers import to_pandas
+        Convert Dataset to a pandas dataframe
 
-        return to_pandas(
-            self,
-            *args,
-            **kwargs,
+        Arguments:
+            dataset: Dataset to operate on. Don't pass this argument when you do dataset.to_pandas()
+            _record_converter: Custom converter to go from record to DataRecord to Dict
+            additional_columns: Additional columns to add to the dataframe
+
+        Examples:
+            >>> dataframe = dataset.to_pandas(additional_columns={
+            >>>    'player_name': lambda event: event.player.name
+            >>> })
+        """
+        try:
+            import pandas as pd
+        except ImportError:
+            raise Exception(
+                "Seems like you don't have pandas installed. Please"
+                " install it using: pip install pandas"
+            )
+
+        if isinstance(dataset, Dataset):
+            records = dataset.records
+        elif isinstance(dataset, list):
+            records = dataset
+        else:
+            raise Exception("Unknown dataset type")
+
+        if not records:
+            return pd.DataFrame()
+
+        if not _record_converter:
+            if isinstance(dataset, TrackingDataset) or isinstance(
+                records[0], Frame
+            ):
+                _record_converter = _frame_to_pandas_row_converter
+            elif isinstance(dataset, EventDataset) or isinstance(
+                records[0], Event
+            ):
+                _record_converter = _event_to_pandas_row_converter
+            elif isinstance(dataset, CodeDataset) or isinstance(
+                records[0], Code
+            ):
+                _record_converter = _code_to_pandas_row_converter
+            else:
+                raise Exception("Don't know how to convert rows")
+
+        def generic_record_converter(record: Union[Frame, Event]):
+            row = _record_converter(record)
+            if additional_columns:
+                for k, v in additional_columns.items():
+                    if callable(v):
+                        value = v(record)
+                    else:
+                        value = v
+                    row.update({k: value})
+
+            return row
+
+        return pd.DataFrame.from_records(
+            map(generic_record_converter, records)
         )
 
     def transform(self, *args, **kwargs):
         """
         See [transform][kloppy.helpers.transform]
         """
-        from kloppy import transform
+        from kloppy.helpers import transform
 
         return transform(self, *args, **kwargs)
 

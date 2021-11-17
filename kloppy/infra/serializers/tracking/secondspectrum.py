@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
 
@@ -28,12 +28,37 @@ from kloppy.domain import (
 
 from kloppy.utils import Readable, performance_logging
 
-from . import TrackingDataSerializer
+from .deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
+SecondSpectrumInputs = NamedTuple(
+    "SecondSpectrumInputs",
+    [
+        ("meta_data", IO[bytes]),
+        ("raw_data", IO[bytes]),
+        ("additional_meta_data", Optional[IO[bytes]]),
+    ],
+)
 
-class SecondSpectrumSerializer(TrackingDataSerializer):
+
+class SecondSpectrumDeserializer(
+    TrackingDataDeserializer[SecondSpectrumInputs]
+):
+    def __init__(
+        self,
+        limit: Optional[int] = None,
+        sample_rate: Optional[float] = None,
+        coordinate_system: Optional[Union[str, Provider]] = None,
+        only_alive: Optional[bool] = True,
+    ):
+        super().__init__(limit, sample_rate, coordinate_system)
+        self.only_alive = only_alive
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.SECONDSPECTRUM
+
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
 
@@ -86,66 +111,11 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> TrackingDataset:
-        """
-        Deserialize Second Spectrum tracking data into a `TrackingDataset`.
-
-        Parameters
-        ----------
-        inputs : dict
-            input `raw_data` should point to a `Readable` object containing
-            the 'jsonl' formatted raw data from Second Spectrum. input `xml_metadata` 
-            should point to the xml metadata. input `json_metadata` is optional and should point 
-            to the 'jsonl' metadata file if it's available.
-        options : dict
-            Options for deserialization of the Second Spectrum file. Possible options are
-            `only_alive` (boolean) to specify that only frames with alive ball state
-            should be loaded, or `sample_rate` (float between 0 and 1) to specify
-            the amount of frames that should be loaded, `limit` to specify the maximum number of
-            frames that will be returned.
-        Returns
-        -------
-        dataset : TrackingDataset
-        Raises
-        ------
-        -
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = SecondSpectrumSerializer()
-        >>> with open('metadata.xml', "rb") as metadata, \
-        >>>         open('metadata.jsonl', "rb") as json_metadata, \
-        >>>         open('rawdata.jsonl', "rb") as raw_data:
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             "xml_metadata": metadata, 
-        >>>             "raw_data": raw_data, 
-        >>>             "json_metadata" : json_metadata
-        >>>         },
-        >>>         options={
-        >>>             "only_alive": False,
-        >>>             "limit": 4000,
-        >>>             "sample_rate" : 0.1
-        >>>         },
-        >>>     )
-        """
-        self.__validate_inputs(inputs)
-
-        if not options:
-            options = {}
-
-        sample_rate = float(options.get("sample_rate", 1.0))
-        limit = int(options.get("limit", 0))
-        only_alive = bool(options.get("only_alive", True))
+    def deserialize(self, inputs: SecondSpectrumInputs) -> TrackingDataset:
 
         # Handles the XML metadata that contains the pitch dimensions and frame info
         with performance_logging("Loading XML metadata", logger=logger):
-            match = objectify.fromstring(inputs["xml_metadata"].read()).match
+            match = objectify.fromstring(inputs.meta_data.read()).match
             frame_rate = int(match.attrib["iFrameRateFps"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
@@ -169,10 +139,10 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
         teams = [home_team, away_team]
 
-        if "json_metadata" in inputs:
+        if inputs.additional_meta_data:
             with performance_logging("Loading JSON metadata", logger=logger):
                 try:
-                    metadata = json.loads(inputs["json_metadata"].read())
+                    metadata = json.loads(inputs.additional_meta_data.read())
 
                     home_team_id = metadata["homeOptaId"]
                     away_team_id = metadata["awayOptaId"]
@@ -228,29 +198,15 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
 
         # Handles the tracking frame data
         with performance_logging("Loading data", logger=logger):
-
-            from_coordinate_system = build_coordinate_system(
-                Provider.SECONDSPECTRUM,
-                length=pitch_size_width,
-                width=pitch_size_height,
-            )
-
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
-                length=pitch_size_width,
-                width=pitch_size_height,
-            )
-
-            transformer = Transformer(
-                from_coordinate_system=from_coordinate_system,
-                to_coordinate_system=to_coordinate_system,
+            transformer = self.get_transformer(
+                length=pitch_size_width, width=pitch_size_height
             )
 
             def _iter():
                 n = 0
-                sample = 1 / sample_rate
+                sample = 1 / self.sample_rate
 
-                for line_ in inputs["raw_data"].readlines():
+                for line_ in inputs.raw_data.readlines():
                     line_ = line_.strip().decode("ascii")
                     if not line_:
                         continue
@@ -258,7 +214,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                     # Each line is just json so we just parse it
                     frame_data = json.loads(line_)
 
-                    if only_alive and not frame_data["live"]:
+                    if self.only_alive and not frame_data["live"]:
                         continue
 
                     if n % sample == 0:
@@ -281,7 +237,7 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
                         )
                     )
 
-                if limit and n + 1 >= limit:
+                if self.limit and n + 1 >= self.limit:
                     break
 
         orientation = (
@@ -293,19 +249,16 @@ class SecondSpectrumSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.SECONDSPECTRUM,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return TrackingDataset(
             records=frames,
             metadata=metadata,
         )
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

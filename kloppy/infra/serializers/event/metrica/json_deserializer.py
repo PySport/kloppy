@@ -26,16 +26,13 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     Qualifier,
-    Event,
-    build_coordinate_system,
-    Transformer,
 )
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata,
 )
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -247,20 +244,20 @@ def _parse_ball_owning_team(event_type: int, team: Team) -> Team:
         return None
 
 
-MetricaEventsJsonInputs = NamedTuple(
+MetricaJsonEventDataInputs = NamedTuple(
     "MetricaEventsJsonInputs",
     [("meta_data", IO[bytes]), ("event_data", IO[bytes])],
 )
 
 
-class MetricaEventsJsonDeserializer(
-    EventDataDeserializer[MetricaEventsJsonInputs]
+class MetricaJsonEventDataDeserializer(
+    EventDataDeserializer[MetricaJsonEventDataInputs]
 ):
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
 
-    def deserialize(self, inputs: MetricaEventsJsonInputs) -> EventDataset:
+    def deserialize(self, inputs: MetricaJsonEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
             metadata = load_metadata(

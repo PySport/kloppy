@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from kloppy import datasets, to_pandas
+from kloppy import datasets
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
         "metrica_tracking", options={"limit": 1000}, game="game2"
     )
 
-    data_frame = to_pandas(dataset)
+    data_frame = dataset.to_pandas()
     print(data_frame)
 
 

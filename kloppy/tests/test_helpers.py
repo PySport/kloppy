@@ -21,43 +21,12 @@ from kloppy.domain import (
     Player,
     PlayerData,
 )
-from kloppy.domain.models.common import DatasetType
+from kloppy.helpers import transform
+
+from kloppy import opta
 
 
 class TestHelpers:
-    def test_load_metrica_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_metrica_tracking_data(
-            f"{base_dir}/files/metrica_home.csv",
-            f"{base_dir}/files/metrica_away.csv",
-        )
-        assert len(dataset.records) == 6
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.METRICA
-        assert dataset.dataset_type == DatasetType.TRACKING
-
-    def test_load_metrica_csv_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_metrica_csv_tracking_data(
-            f"{base_dir}/files/metrica_home.csv",
-            f"{base_dir}/files/metrica_away.csv",
-        )
-        assert len(dataset.records) == 6
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.METRICA
-        assert dataset.dataset_type == DatasetType.TRACKING
-
-    def test_load_tracab_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_tracab_tracking_data(
-            f"{base_dir}/files/tracab_meta.xml",
-            f"{base_dir}/files/tracab_raw.dat",
-        )
-        assert len(dataset.records) == 5  # only alive=True
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.TRACAB
-        assert dataset.dataset_type == DatasetType.TRACKING
-
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
@@ -209,25 +178,19 @@ class TestHelpers:
 
     def test_to_pandas_generic_events(self):
         base_dir = os.path.dirname(__file__)
+        dataset = opta.load(
+            f7_data=f"{base_dir}/files/opta_f7.xml",
+            f24_data=f"{base_dir}/files/opta_f24.xml",
+        )
 
-        serializer = OptaSerializer()
-
-        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
-            f"{base_dir}/files/opta_f7.xml", "rb"
-        ) as f7_data:
-            dataset = serializer.deserialize(
-                inputs={"f24_data": f24_data, "f7_data": f7_data}
-            )
-
-        dataframe = to_pandas(dataset)
+        dataframe = dataset.to_pandas()
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = to_pandas(
-            tracking_data,
+        data_frame = tracking_data.to_pandas(
             additional_columns={
                 "match": "test",
                 "bonus_column": lambda frame: frame.frame_id + 10,

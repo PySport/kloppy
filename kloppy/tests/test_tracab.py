@@ -1,6 +1,7 @@
 import os
 
-from kloppy import TRACABSerializer
+import pytest
+
 from kloppy.domain import (
     Period,
     AttackingDirection,
@@ -11,27 +12,32 @@ from kloppy.domain import (
     BallState,
     Team,
     Ground,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import tracab
 
 
 class TestTracabTracking:
-    def test_correct_deserialization(self):
+    @pytest.fixture
+    def meta_data(self) -> str:
         base_dir = os.path.dirname(__file__)
 
-        serializer = TRACABSerializer()
+        return f"{base_dir}/files/tracab_meta.xml"
 
-        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
-            f"{base_dir}/files/tracab_raw.dat", "rb"
-        ) as raw_data:
+    @pytest.fixture
+    def raw_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
 
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data},
-                options={
-                    "only_alive": False,
-                    "coordinate_system": Provider.TRACAB,
-                },
-            )
+        return f"{base_dir}/files/tracab_raw.dat"
+
+    def test_correct_deserialization(self, meta_data: str, raw_data: str):
+        dataset = tracab.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="tracab",
+            only_alive=False,
+        )
 
         assert dataset.metadata.provider == Provider.TRACAB
         assert dataset.dataset_type == DatasetType.TRACKING
@@ -53,14 +59,14 @@ class TestTracabTracking:
         )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            "19"
+            19
         )
         assert dataset.records[0].players_data[
             player_home_19
         ].coordinates == Point(x=-1234.0, y=-294.0)
 
         player_away_19 = dataset.metadata.teams[1].get_player_by_jersey_number(
-            "19"
+            19
         )
         assert dataset.records[0].players_data[
             player_away_19
@@ -87,24 +93,15 @@ class TestTracabTracking:
             for player in dataset.records[3].players_data.keys()
         ]
 
-    def test_correct_normalized_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-
-        serializer = TRACABSerializer()
-
-        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
-            f"{base_dir}/files/tracab_raw.dat", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data},
-                options={
-                    "only_alive": False,
-                },
-            )
+    def test_correct_normalized_deserialization(
+        self, meta_data: str, raw_data: str
+    ):
+        dataset = tracab.load(
+            meta_data=meta_data, raw_data=raw_data, only_alive=False
+        )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            "19"
+            19
         )
 
         assert dataset.records[0].players_data[

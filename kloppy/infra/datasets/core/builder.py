@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from typing import Dict, Type, Union
+from typing import Dict, Type, Union, Callable
 
+from kloppy.domain import Dataset
 from ...serializers.tracking import TrackingDataSerializer
 from .registered import RegisteredDataset
 
@@ -11,5 +12,5 @@ class DatasetBuilder(metaclass=RegisteredDataset):
         raise NotImplementedError
 
     @abstractmethod
-    def get_serializer_cls(self) -> Union[Type[TrackingDataSerializer]]:
+    def loader(self) -> Callable[[], Dataset]:
         raise NotImplementedError

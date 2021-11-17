@@ -1,45 +1,46 @@
 import logging
 import os
 
-from kloppy import SecondSpectrumSerializer
+import pytest
+
 from kloppy.domain import (
-    Period,
     AttackingDirection,
     Orientation,
     Provider,
     Point,
     Point3D,
-    BallState,
-    Team,
-    Ground,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import secondspectrum
 
 
 class TestSecondSpectrumTracking:
-    def test_correct_deserialization(self):
+    @pytest.fixture
+    def meta_data(self) -> str:
         base_dir = os.path.dirname(__file__)
-        serializer = SecondSpectrumSerializer()
+        return f"{base_dir}/files/second_spectrum_fake_metadata.xml"
 
-        xml_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.xml"
-        json_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.jsonl"
-        rawfloc = f"{base_dir}/files/second_spectrum_fake_data.jsonl"
+    @pytest.fixture
+    def raw_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/second_spectrum_fake_data.jsonl"
 
-        with open(xml_mdfloc, "rb") as metadata, open(
-            json_mdfloc, "rb"
-        ) as json_metadata, open(rawfloc, "rb") as raw_data:
+    @pytest.fixture
+    def additional_meta_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/second_spectrum_fake_metadata.json"
 
-            dataset = serializer.deserialize(
-                inputs={
-                    "xml_metadata": metadata,
-                    "raw_data": raw_data,
-                    "json_metadata": json_metadata,
-                },
-                options={
-                    "only_alive": False,
-                    "coordinate_system": Provider.SECONDSPECTRUM,
-                },
-            )
+    def test_correct_deserialization(
+        self, meta_data: str, raw_data: str, additional_meta_data: str
+    ):
+        dataset = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+        )
 
         # Check provider, type, shape, etc
         assert dataset.metadata.provider == Provider.SECONDSPECTRUM
@@ -94,28 +95,15 @@ class TestSecondSpectrumTracking:
         assert pitch_dimensions.y_dim.min == -33.985
         assert pitch_dimensions.y_dim.max == 33.985
 
-    def test_correct_normalized_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-        serializer = SecondSpectrumSerializer()
-
-        xml_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.xml"
-        json_mdfloc = f"{base_dir}/files/second_spectrum_fake_metadata.jsonl"
-        rawfloc = f"{base_dir}/files/second_spectrum_fake_data.jsonl"
-
-        with open(xml_mdfloc, "rb") as metadata, open(
-            json_mdfloc, "rb"
-        ) as json_metadata, open(rawfloc, "rb") as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={
-                    "xml_metadata": metadata,
-                    "raw_data": raw_data,
-                    "json_metadata": json_metadata,
-                },
-                options={
-                    "only_alive": False,
-                },
-            )
+    def test_correct_normalized_deserialization(
+        self, meta_data: str, raw_data: str, additional_meta_data: str
+    ):
+        dataset = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+        )
 
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_coordinates[home_player] == Point(

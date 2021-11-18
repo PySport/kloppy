@@ -21,9 +21,8 @@ from kloppy.domain import (
     Player,
     PlayerData,
 )
-from kloppy.helpers import transform
 
-from kloppy import opta
+from kloppy import opta, tracab
 
 
 class TestHelpers:
@@ -106,8 +105,7 @@ class TestHelpers:
         tracking_data = self._get_tracking_dataset()
 
         # orientation change AND dimension scale
-        transformed_dataset = transform(
-            tracking_data,
+        transformed_dataset = tracking_data.transform(
             to_orientation="AWAY_TEAM",
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
@@ -120,32 +118,23 @@ class TestHelpers:
         )
 
     def test_transform_to_coordinate_system(self):
-
         base_dir = os.path.dirname(__file__)
 
-        serializer = TRACABSerializer()
-
-        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
-            f"{base_dir}/files/tracab_raw.dat", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data},
-                options={
-                    "only_alive": False,
-                    "coordinate_system": Provider.TRACAB,
-                },
-            )
+        dataset = tracab.load(
+            meta_data=f"{base_dir}/files/tracab_meta.xml",
+            raw_data=f"{base_dir}/files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab"
+        )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            "19"
+            19
         )
         assert dataset.records[0].players_data[
             player_home_19
         ].coordinates == Point(x=-1234.0, y=-294.0)
 
-        transformed_dataset = transform(
-            dataset,
+        transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA,
         )
 

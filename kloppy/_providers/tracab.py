@@ -14,7 +14,7 @@ def load(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = True
 ) -> TrackingDataset:
     deserializer = TRACABDeserializer(
         sample_rate=sample_rate,

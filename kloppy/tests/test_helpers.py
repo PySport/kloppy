@@ -124,7 +124,7 @@ class TestHelpers:
             meta_data=f"{base_dir}/files/tracab_meta.xml",
             raw_data=f"{base_dir}/files/tracab_raw.dat",
             only_alive=False,
-            coordinates="tracab"
+            coordinates="tracab",
         )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(

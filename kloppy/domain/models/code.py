@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Callable, Union, Any
 
 from kloppy.domain.models.common import DatasetType
 
@@ -32,7 +32,7 @@ class Code(DataRecord):
 
 
 @dataclass
-class CodeDataset(Dataset):
+class CodeDataset(Dataset[Code]):
     records: List[Code]
 
     dataset_type: DatasetType = DatasetType.CODE
@@ -40,6 +40,51 @@ class CodeDataset(Dataset):
     @property
     def codes(self):
         return self.records
+
+    def to_pandas(
+        self,
+        record_converter: Callable[[Code], Dict] = None,
+        additional_columns: Dict[
+            str, Union[Callable[[Code], Any], Any]
+        ] = None,
+    ) -> "DataFrame":
+        try:
+            import pandas as pd
+        except ImportError:
+            raise Exception(
+                "Seems like you don't have pandas installed. Please"
+                " install it using: pip install pandas"
+            )
+
+        if not record_converter:
+
+            def record_converter(code: Code) -> Dict:
+                row = dict(
+                    code_id=code.code_id,
+                    period_id=code.period.id if code.period else None,
+                    timestamp=code.timestamp,
+                    end_timestamp=code.end_timestamp,
+                    code=code.code,
+                )
+                row.update(code.labels)
+
+                return row
+
+        def generic_record_converter(code: Code):
+            row = record_converter(code)
+            if additional_columns:
+                for k, v in additional_columns.items():
+                    if callable(v):
+                        value = v(code)
+                    else:
+                        value = v
+                    row.update({k: value})
+
+            return row
+
+        return pd.DataFrame.from_records(
+            map(generic_record_converter, self.records)
+        )
 
 
 __all__ = ["Code", "CodeDataset"]

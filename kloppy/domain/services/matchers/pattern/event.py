@@ -166,5 +166,6 @@ __all__ = [
     "same_as",
     "not_same_as",
     "function",
+    "group",
     "Query",
 ]

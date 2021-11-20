@@ -1,12 +1,18 @@
 import warnings
-from typing import Dict, Type
+from typing import Dict
 
 from ..core.builder import DatasetBuilder
-from ...serializers.event import EventDataSerializer, StatsBombSerializer
+from ...serializers.event.statsbomb import (
+    StatsBombDeserializer,
+    StatsbombInputs,
+)
 
 
 # 3749133 / 38412
 class Statsbomb(DatasetBuilder):
+    deserializer_cls = StatsBombDeserializer
+    inputs_cls = StatsbombInputs
+
     def get_dataset_urls(self, **kwargs) -> Dict[str, str]:
         warnings.warn(
             "\n\nYou are about to use StatsBomb public data."
@@ -20,6 +26,3 @@ class Statsbomb(DatasetBuilder):
             "event_data": f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json",
             "lineup_data": f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json",
         }
-
-    def get_serializer_cls(self) -> Type[EventDataSerializer]:
-        return StatsBombSerializer

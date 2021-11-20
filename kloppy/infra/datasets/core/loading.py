@@ -65,9 +65,10 @@ def load(
     }
 
     try:
-        serializer_cls = builder.get_serializer_cls()
-        serializer = serializer_cls()
-        dataset = serializer.deserialize(inputs=file_handlers, options=options)
+        deserializer = builder.deserializer_cls(**options)
+        dataset = deserializer.deserialize(
+            inputs=builder.inputs_cls(**file_handlers)
+        )
     finally:
         for fp in file_handlers.values():
             fp.close()

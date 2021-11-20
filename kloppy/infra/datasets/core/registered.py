@@ -3,7 +3,11 @@ import abc
 from typing import Type, Dict
 
 
-# from .builder import DatasetBuilder
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .builder import DatasetBuilder
+
 from kloppy.utils import camelcase_to_snakecase
 
 _DATASET_REGISTRY: Dict[str, Type["DatasetBuilder"]] = {}

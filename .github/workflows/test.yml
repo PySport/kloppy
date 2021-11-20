@@ -32,4 +32,4 @@ jobs:
         black --check .
     - name: Test with pytest
       run: |
-        pytest
+        pytest --color=yes

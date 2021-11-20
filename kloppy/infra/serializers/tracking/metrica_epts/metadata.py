@@ -7,7 +7,6 @@ from kloppy.domain import (
     Period,
     PitchDimensions,
     Dimension,
-    Team,
     Score,
     Ground,
     DatasetFlag,
@@ -18,7 +17,6 @@ from kloppy.domain import (
     Provider,
     build_coordinate_system,
 )
-from kloppy.utils import Readable
 
 from .models import *
 
@@ -143,7 +141,7 @@ def _load_pitch_dimensions(
     field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
-    if field_size_elm and normalized:
+    if field_size_elm is not None and normalized:
         return PitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),

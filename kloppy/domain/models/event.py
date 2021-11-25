@@ -39,6 +39,7 @@ class ShotResult(ResultType):
     POST = "POST"
     BLOCKED = "BLOCKED"
     SAVED = "SAVED"
+    OWN_GOAL = "OWN_GOAL"
 
     @property
     def is_success(self):
@@ -229,6 +230,16 @@ class SetPieceQualifier(EnumQualifier):
 
     value: SetPieceType
 
+@dataclass
+class CardQualifier(EnumQualifier):
+    """
+    CardQualifier
+
+    Attributes:
+        value: Specifies the type card
+    """
+
+    value: CardType
 
 class PassType(Enum):
     """
@@ -270,7 +281,6 @@ class PassType(Enum):
 @dataclass
 class PassQualifier(EnumQualifier):
     value: PassType
-
 
 class BodyPart(Enum):
     """
@@ -659,6 +669,7 @@ __all__ = [
     "PlayerOffEvent",
     "CardEvent",
     "CardType",
+    "CardQualifier",
     "EventDataset",
     "RecoveryEvent",
     "FoulCommittedEvent",

@@ -238,6 +238,7 @@ def _parse_take_on(outcome: int) -> Dict:
         result = TakeOnResult.INCOMPLETE
     return dict(result=result)
 
+
 def _parse_card(raw_qualifiers: List) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
@@ -251,6 +252,7 @@ def _parse_card(raw_qualifiers: List) -> Dict:
         card_type = None
 
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
+
 
 def _parse_shot(
     raw_qualifiers: Dict[int, str], type_id: int, coordinates: Point
@@ -320,7 +322,7 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
             last_name=team_players[player_elm.attrib["PlayerRef"]][
                 "last_name"
             ],
-            starting= True if player_elm.attrib["Status"] == "Start" else False,
+            starting=True if player_elm.attrib["Status"] == "Start" else False,
             position=Position(
                 position_id=player_elm.attrib["Formation_Place"],
                 name=player_elm.attrib["Position"],
@@ -395,6 +397,7 @@ def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(BodyPartQualifier(value=BodyPart.OTHER))
     return qualifiers
 
+
 def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
@@ -405,6 +408,7 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
 
     return qualifiers
+
 
 def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
@@ -469,7 +473,9 @@ class OptaSerializer(EventDataSerializer):
             options = {}
 
         from_coordinate_system = build_coordinate_system(
-            Provider.OPTA, length=100, width=100,
+            Provider.OPTA,
+            length=100,
+            width=100,
         )
 
         to_coordinate_system = build_coordinate_system(
@@ -520,8 +526,16 @@ class OptaSerializer(EventDataSerializer):
 
             game_elm = f24_root.find("Game")
             periods = [
-                Period(id=1, start_timestamp=None, end_timestamp=None,),
-                Period(id=2, start_timestamp=None, end_timestamp=None,),
+                Period(
+                    id=1,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+                Period(
+                    id=2,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
             ]
             possession_team = None
             events = []
@@ -600,12 +614,14 @@ class OptaSerializer(EventDataSerializer):
                             raw_qualifiers, outcome
                         )
                         event = PassEvent.create(
-                            **pass_event_kwargs, **generic_event_kwargs,
+                            **pass_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass(raw_qualifiers)
                         event = PassEvent.create(
-                            **pass_event_kwargs, **generic_event_kwargs,
+                            **pass_event_kwargs,
+                            **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
@@ -622,7 +638,14 @@ class OptaSerializer(EventDataSerializer):
                     ):
                         if type_id == EVENT_TYPE_SHOT_GOAL:
                             if 374 in raw_qualifiers.keys():
-                                generic_event_kwargs["timestamp"] = _parse_f24_datetime(raw_qualifiers.get(374).replace(" ", "T")) - period.start_timestamp
+                                generic_event_kwargs["timestamp"] = (
+                                    _parse_f24_datetime(
+                                        raw_qualifiers.get(374).replace(
+                                            " ", "T"
+                                        )
+                                    )
+                                    - period.start_timestamp
+                                )
                         shot_event_kwargs = _parse_shot(
                             raw_qualifiers,
                             type_id,
@@ -660,9 +683,9 @@ class OptaSerializer(EventDataSerializer):
                         card_event_kwargs = _parse_card(raw_qualifiers)
 
                         event = CardEvent.create(
-                                **card_event_kwargs,
-                                **generic_event_kwargs,
-                            )
+                            **card_event_kwargs,
+                            **generic_event_kwargs,
+                        )
 
                     else:
                         event = GenericEvent.create(
@@ -690,7 +713,10 @@ class OptaSerializer(EventDataSerializer):
             coordinate_system=to_coordinate_system,
         )
 
-        return EventDataset(metadata=metadata, records=events,)
+        return EventDataset(
+            metadata=metadata,
+            records=events,
+        )
 
     def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
         raise NotImplementedError

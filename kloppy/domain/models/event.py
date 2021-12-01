@@ -230,6 +230,7 @@ class SetPieceQualifier(EnumQualifier):
 
     value: SetPieceType
 
+
 @dataclass
 class CardQualifier(EnumQualifier):
     """
@@ -240,6 +241,7 @@ class CardQualifier(EnumQualifier):
     """
 
     value: CardType
+
 
 class PassType(Enum):
     """
@@ -281,6 +283,7 @@ class PassType(Enum):
 @dataclass
 class PassQualifier(EnumQualifier):
     value: PassType
+
 
 class BodyPart(Enum):
     """

@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 2.3.0 (2021-12-03)
+
+Pull request merged:
+
+- Opta serializer improvements ([#119](https://github.com/PySport/kloppy/pull/119))
+
 ## 2.2.2 (2021-11-10)
 
 - Don't break when wyscout doesn't include end position of shot/pass

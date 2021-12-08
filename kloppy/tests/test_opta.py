@@ -16,6 +16,7 @@ from kloppy.domain import (
     CardType,
 )
 from kloppy.domain.models.common import DatasetType
+from kloppy.helpers import to_pandas
 
 
 class TestOpta:
@@ -96,6 +97,11 @@ class TestOpta:
 
         # Check Own goal
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
+
+        # Check to_pandas conversion for multiple pass qualifier
+        df = to_pandas(dataset.events)
+        assert df.loc[10, "pass_type_assist"] == True
+        assert df.loc[10, "pass_type_cross"] == True
 
     def test_correct_normalized_deserialization(self):
         base_dir = os.path.dirname(__file__)

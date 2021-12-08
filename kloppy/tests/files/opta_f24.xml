@@ -127,6 +127,8 @@
       <Q id="1540725732" qualifier_id="279" value="S" />
     </Event>
     <Event id="1594254267" event_id="329" type_id="1" period_id="2" min="45" sec="4" player_id="248479" team_id="2592" outcome="0" x="35.6" y="80.5" timestamp="2018-09-23T16:05:32.873" last_modified="2018-09-23T17:14:58" version="1537719297885">
+      <Q id="1241809254" qualifier_id="2" />
+      <Q id="1241809255" qualifier_id="210" />
       <Q id="1241809256" qualifier_id="212" value="15.6" />
       <Q id="1754788999" qualifier_id="213" value="1.9" />
       <Q id="1865376227" qualifier_id="140" value="30.3" />

@@ -30,7 +30,7 @@ from kloppy.domain import (
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
-    load_metadata,
+    load_metadata, DeserializationError,
 )
 from kloppy.utils import performance_logging
 
@@ -134,7 +134,7 @@ def _parse_pass(
             else:
                 result = PassResult.INCOMPLETE
         else:
-            raise Exception(f"Unknown pass outcome: {event_type_id}")
+            raise DeserializationError(f"Unknown pass outcome: {event_type_id}")
 
         receiver_player = None
         receiver_coordinates = None
@@ -210,7 +210,7 @@ def _parse_shot(event: Dict, previous_event: Dict, subtypes: List) -> Dict:
     elif MS_SHOT_OUTCOME_GOAL in subtypes:
         result = ShotResult.GOAL
     else:
-        raise Exception(f"Unknown shot outcome")
+        raise DeserializationError(f"Unknown shot outcome")
 
     qualifiers = _get_event_qualifiers(event, previous_event, subtypes)
 
@@ -244,10 +244,9 @@ def _parse_ball_owning_team(event_type: int, team: Team) -> Team:
         return None
 
 
-MetricaJsonEventDataInputs = NamedTuple(
-    "MetricaEventsJsonInputs",
-    [("meta_data", IO[bytes]), ("event_data", IO[bytes])],
-)
+class MetricaJsonEventDataInputs(NamedTuple):
+    meta_data: IO[bytes]
+    event_data: IO[bytes]
 
 
 class MetricaJsonEventDataDeserializer(
@@ -278,7 +277,7 @@ class MetricaJsonEventDataDeserializer(
                 elif raw_event["team"]["id"] == metadata.teams[1].team_id:
                     team = metadata.teams[1]
                 else:
-                    raise Exception(
+                    raise DeserializationError(
                         f"Unknown team_id {raw_event['team']['id']}"
                     )
 

@@ -38,6 +38,7 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
@@ -146,7 +147,7 @@ def _parse_bodypart(event_dict: Dict) -> BodyPart:
     elif bodypart_id == SB_BODYPART_NO_TOUCH:
         body_part = BodyPart.NO_TOUCH
     else:
-        raise Exception(f"Unknown body part: {bodypart_id}")
+        raise DeserializationError(f"Unknown body part: {bodypart_id}")
 
     return body_part
 
@@ -165,7 +166,7 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
         elif outcome_id == SB_PASS_OUTCOME_UNKNOWN:
             result = None
         else:
-            raise Exception(f"Unknown pass outcome: {outcome_id}")
+            raise DeserializationError(f"Unknown pass outcome: {outcome_id}")
 
         receiver_player = None
     else:
@@ -229,7 +230,7 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     elif outcome_id == SB_SHOT_OUTCOME_GOAL:
         result = ShotResult.GOAL
     else:
-        raise Exception(f"Unknown shot outcome: {outcome_id}")
+        raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
     qualifiers = _get_event_qualifiers(shot_dict)
 
@@ -258,7 +259,7 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
         elif outcome_id == SB_PASS_OUTCOME_COMPLETE:
             result = TakeOnResult.COMPLETE
         else:
-            raise Exception(
+            raise DeserializationError(
                 f"Unknown pass outcome: {take_on_dict['outcome']['name']}({outcome_id})"
             )
     else:
@@ -274,7 +275,7 @@ def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
             replacement_player = player
             break
     else:
-        raise Exception(
+        raise DeserializationError(
             f'Could not find replacement player {substitution_dict["replacement"]["id"]}'
         )
 
@@ -291,7 +292,7 @@ def _parse_card(card_containing_dict: Dict) -> Dict:
         elif card_id in (7, 67):
             card_type = CardType.FIRST_YELLOW
         else:
-            raise Exception(f"Unknown card id {card_id}")
+            raise DeserializationError(f"Unknown card id {card_id}")
     else:
         card_type = None
 
@@ -321,9 +322,9 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     return shot_fidelity_version, xy_fidelity_version
 
 
-StatsbombInputs = NamedTuple(
-    "StatsbombInputs", [("event_data", IO[bytes]), ("lineup_data", IO[bytes])]
-)
+class StatsbombInputs(NamedTuple):
+    event_data: IO[bytes]
+    lineup_data: IO[bytes]
 
 
 class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
@@ -395,7 +396,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 elif raw_event["team"]["id"] == away_lineup["team_id"]:
                     team = teams[1]
                 else:
-                    raise Exception(
+                    raise DeserializationError(
                         f"Unknown team_id {raw_event['team']['id']}"
                     )
 
@@ -410,7 +411,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 ):
                     possession_team = teams[1]
                 else:
-                    raise Exception(
+                    raise DeserializationError(
                         f"Unknown possession_team_id: {raw_event['possession_team']}"
                     )
 

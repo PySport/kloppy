@@ -42,6 +42,7 @@ from kloppy.domain import (
     build_coordinate_system,
     Transformer,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
 
@@ -263,9 +264,9 @@ def _parse_coordinates(event_attributes: Dict) -> Point:
     )
 
 
-SportecInputs = NamedTuple(
-    "SportecInputs", [("meta_data", IO[bytes]), ("event_data", IO[bytes])]
-)
+class SportecInputs(NamedTuple):
+    meta_data: IO[bytes]
+    event_data: IO[bytes]
 
 
 class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
@@ -299,7 +300,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                 elif team_elm.attrib["Role"] == "guest":
                     away_team = _team_from_xml_elm(team_elm)
                 else:
-                    raise Exception(f"Unknown side: {team_elm.attrib['Role']}")
+                    raise DeserializationError(f"Unknown side: {team_elm.attrib['Role']}")
 
             (
                 home_score,
@@ -309,7 +310,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
             teams = [home_team, away_team]
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
-                raise Exception("LineUp incomplete")
+                raise DeserializationError("LineUp incomplete")
 
             periods = []
             period_id = 0
@@ -511,7 +512,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
 
         events = list(
             filter(
-                lambda _event: self.should_include_event(_event),
+                self.should_include_event,
                 events,
             )
         )

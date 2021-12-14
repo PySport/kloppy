@@ -54,7 +54,7 @@ class TrackingDataset(Dataset[Frame]):
         try:
             import pandas as pd
         except ImportError:
-            raise Exception(
+            raise ImportError(
                 "Seems like you don't have pandas installed. Please"
                 " install it using: pip install pandas"
             )

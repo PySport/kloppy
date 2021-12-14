@@ -5,6 +5,8 @@ from kloppy.domain import Team, Player, Metadata
 
 
 # TODO: fill this with from SplitRegisters
+from kloppy.exceptions import DeserializationError
+
 NON_SPLIT_CHAR_REGEX = "[^,;:]*"
 
 
@@ -131,7 +133,7 @@ class SplitRegister:
             elif child_elm.tag == "SplitRegister":
                 child = SplitRegister.from_xml_element(child_elm)
             else:
-                raise Exception(f"Unknown tag {child_elm.tag}")
+                raise DeserializationError(f"Unknown tag {child_elm.tag}")
 
             children.append(child)
 

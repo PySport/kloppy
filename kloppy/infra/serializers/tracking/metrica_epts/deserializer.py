@@ -22,10 +22,9 @@ from ..deserializer import TrackingDataDeserializer
 logger = logging.getLogger(__name__)
 
 
-MetricaEPTSTrackingDataInputs = NamedTuple(
-    "MetricaEPTSTrackingDataInputs",
-    [("meta_data", IO[bytes]), ("raw_data", IO[bytes])],
-)
+class MetricaEPTSTrackingDataInputs(NamedTuple):
+    meta_data: IO[bytes]
+    raw_data: IO[bytes]
 
 
 class MetricaEPTSTrackingDataDeserializer(

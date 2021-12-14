@@ -44,6 +44,7 @@ from kloppy.domain import (
     PassType,
     PassQualifier,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
@@ -290,7 +291,7 @@ def _parse_team_players(
             }
             break
     else:
-        raise Exception(f"Could not parse players for {team_ref}")
+        raise DeserializationError(f"Could not parse players for {team_ref}")
 
     return team_name, players
 
@@ -412,9 +413,9 @@ def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
 
 
-OptaInputs = NamedTuple(
-    "OptaInputs", [("f7_data", IO[bytes]), ("f24_data", IO[bytes])]
-)
+class OptaInputs(NamedTuple):
+    f7_data: IO[bytes]
+    f24_data: IO[bytes]
 
 
 class OptaDeserializer(EventDataDeserializer[OptaInputs]):
@@ -447,13 +448,13 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     away_score = team_elm.attrib["Score"]
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
-                    raise Exception(f"Unknown side: {team_elm.attrib['Side']}")
+                    raise DeserializationError(f"Unknown side: {team_elm.attrib['Side']}")
 
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
-                raise Exception("LineUp incomplete")
+                raise DeserializationError("LineUp incomplete")
 
             game_elm = f24_root.find("Game")
             periods = [
@@ -504,7 +505,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     elif event_elm.attrib["team_id"] == away_team.team_id:
                         team = teams[1]
                     else:
-                        raise Exception(
+                        raise DeserializationError(
                             f"Unknown team_id {event_elm.attrib['team_id']}"
                         )
 

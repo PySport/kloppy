@@ -22,7 +22,7 @@ nav:
     - State: quickstart/state.ipynb
     - Examples: quickstart/examples.ipynb
   - API Reference:
-    - Helpers: api/helpers.md
+    - Main: api/main.md
     - Domain:
       - Common: api/domain/common.md
       - Pitch: api/domain/pitch.md

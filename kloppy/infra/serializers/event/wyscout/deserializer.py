@@ -260,7 +260,8 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
-WyscoutInputs = NamedTuple("WyscoutInputs", [("event_data", IO[bytes])])
+class WyscoutInputs(NamedTuple):
+    event_data: IO[bytes]
 
 
 class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):

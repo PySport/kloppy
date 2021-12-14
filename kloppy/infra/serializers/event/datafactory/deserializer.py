@@ -37,6 +37,7 @@ from kloppy.domain import (
     Transformer,
     build_coordinate_system,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
 
@@ -310,7 +311,7 @@ def _parse_shot(raw_event: Dict, previous_event: Dict = None) -> Dict:
     ):
         result = ShotResult.SAVED
     else:
-        raise Exception(f"Unknown shot outcome: {outcome_id}")
+        raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
     qualifiers = _get_event_qualifiers(raw_event, previous_event)
 
@@ -329,7 +330,7 @@ def _parse_card(raw_event: Dict) -> Dict:
     elif card_id == DF_EVENT_TYPE_YELLOW_CARD:
         card_type = CardType.FIRST_YELLOW
     else:
-        raise Exception(f"Unknown card id {card_id}")
+        raise DeserializationError(f"Unknown card id {card_id}")
 
     return dict(card_type=card_type)
 
@@ -345,9 +346,8 @@ def _include_event(event: Event, wanted_event_types: List) -> bool:
     return not wanted_event_types or event.event_type in wanted_event_types
 
 
-DatafactoryInputs = NamedTuple(
-    "DatafactoryInputs", [("event_data", IO[bytes])]
-)
+class DatafactoryInputs(NamedTuple):
+    event_data: IO[bytes]
 
 
 class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):

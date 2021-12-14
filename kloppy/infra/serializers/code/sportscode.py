@@ -30,10 +30,8 @@ def parse_value(s: str) -> Union[str, float, int]:
         return s
 
 
-SportsCodeInputs = NamedTuple(
-    "SportsCodeInputs",
-    [("data", IO[bytes])],
-)
+class SportsCodeInputs(NamedTuple):
+    data: IO[bytes]
 
 
 class SportsCodeDeserializer(CodeDataDeserializer[SportsCodeInputs]):

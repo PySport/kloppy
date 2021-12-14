@@ -4,6 +4,7 @@ from enum import Enum, Flag
 from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
 
 from .pitch import PitchDimensions, Point, Dimension
+from ...exceptions import OrientationError
 
 
 @dataclass
@@ -239,21 +240,21 @@ class Orientation(Enum):
             elif attacking_direction == AttackingDirection.AWAY_HOME:
                 return 1
             else:
-                raise Exception("AttackingDirection not set")
+                raise OrientationError("AttackingDirection not set")
         elif self == Orientation.AWAY_TEAM:
             if attacking_direction == AttackingDirection.AWAY_HOME:
                 return -1
             elif attacking_direction == AttackingDirection.HOME_AWAY:
                 return 1
             else:
-                raise Exception("AttackingDirection not set")
+                raise OrientationError("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team.ground == Ground.HOME:
                 return -1
             elif ball_owning_team.ground == Ground.AWAY:
                 return 1
             else:
-                raise Exception(
+                raise OrientationError(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
@@ -262,11 +263,11 @@ class Orientation(Enum):
             elif action_executing_team.ground == Ground.AWAY:
                 return 1
             else:
-                raise Exception(
+                raise OrientationError(
                     f"Invalid action_executing_team: {action_executing_team}"
                 )
         else:
-            raise Exception(f"Unknown orientation: {self}")
+            raise OrientationError(f"Unknown orientation: {self}")
 
     def __repr__(self):
         return self.value
@@ -720,68 +721,7 @@ class Dataset(ABC, Generic[T]):
         record_converter: Callable[[T], Dict] = None,
         additional_columns: Dict[str, Union[Callable[[T], Any], Any]] = None,
     ) -> "DataFrame":
-        """
-        Convert Dataset to a pandas dataframe
-
-        Arguments:
-            dataset: Dataset to operate on. Don't pass this argument when you do dataset.to_pandas()
-            _record_converter: Custom converter to go from record to DataRecord to Dict
-            additional_columns: Additional columns to add to the dataframe
-
-        Examples:
-            >>> dataframe = dataset.to_pandas(additional_columns={
-            >>>    'player_name': lambda event: event.player.name
-            >>> })
-        """
-        try:
-            import pandas as pd
-        except ImportError:
-            raise Exception(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
-
-        if isinstance(dataset, Dataset):
-            records = dataset.records
-        elif isinstance(dataset, list):
-            records = dataset
-        else:
-            raise Exception("Unknown dataset type")
-
-        if not records:
-            return pd.DataFrame()
-
-        if not _record_converter:
-            if isinstance(dataset, TrackingDataset) or isinstance(
-                records[0], Frame
-            ):
-                _record_converter = _frame_to_pandas_row_converter
-            elif isinstance(dataset, EventDataset) or isinstance(
-                records[0], Event
-            ):
-                _record_converter = _event_to_pandas_row_converter
-            elif isinstance(dataset, CodeDataset) or isinstance(
-                records[0], Code
-            ):
-                _record_converter = _code_to_pandas_row_converter
-            else:
-                raise Exception("Don't know how to convert rows")
-
-        def generic_record_converter(record: Union[Frame, Event]):
-            row = _record_converter(record)
-            if additional_columns:
-                for k, v in additional_columns.items():
-                    if callable(v):
-                        value = v(record)
-                    else:
-                        value = v
-                    row.update({k: value})
-
-            return row
-
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, records)
-        )
+        pass
 
     def transform(self, *args, **kwargs):
         """

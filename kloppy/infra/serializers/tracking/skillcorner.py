@@ -36,10 +36,9 @@ from kloppy.utils import Readable, performance_logging
 logger = logging.getLogger(__name__)
 
 
-SkillCornerInputs = NamedTuple(
-    "SkillCornerInputs",
-    [("meta_data", IO[bytes]), ("raw_data", IO[bytes])],
-)
+class SkillCornerInputs(NamedTuple):
+    meta_data: IO[bytes]
+    raw_data: IO[bytes]
 
 
 class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):

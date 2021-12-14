@@ -26,6 +26,7 @@ from kloppy.domain import (
     Transformer,
     PlayerData,
 )
+from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
@@ -33,10 +34,10 @@ from .deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
-TRACABInputs = NamedTuple(
-    "TRACABInputs",
-    [("meta_data", IO[bytes]), ("raw_data", IO[bytes])],
-)
+
+class TRACABInputs(NamedTuple):
+    meta_data: IO[bytes]
+    raw_data: IO[bytes]
 
 
 class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
@@ -103,14 +104,14 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
         elif ball_owning_team == "A":
             ball_owning_team = teams[1]
         else:
-            raise Exception(f"Unknown ball owning team: {ball_owning_team}")
+            raise DeserializationError(f"Unknown ball owning team: {ball_owning_team}")
 
         if ball_state == "Alive":
             ball_state = BallState.ALIVE
         elif ball_state == "Dead":
             ball_state = BallState.DEAD
         else:
-            raise Exception(f"Unknown ball state: {ball_state}")
+            raise DeserializationError(f"Unknown ball state: {ball_state}")
 
         return Frame(
             frame_id=frame_id,

@@ -31,10 +31,9 @@ from kloppy.utils import Readable, performance_logging
 logger = logging.getLogger(__name__)
 
 
-MetricaCSVTrackingDataInputs = NamedTuple(
-    "MetricaCSVTrackingDataInputs",
-    [("home_data", IO[bytes]), ("away_data", IO[bytes])],
-)
+class MetricaCSVTrackingDataInputs(NamedTuple):
+    home_data: IO[bytes]
+    away_data: IO[bytes]
 
 
 class MetricaCSVTrackingDataDeserializer(

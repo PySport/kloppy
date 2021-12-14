@@ -19,6 +19,7 @@ from kloppy.domain import (
     Origin,
 )
 from kloppy.domain.models.event import Event
+from kloppy.exceptions import KloppyError
 
 
 class Transformer:
@@ -397,4 +398,4 @@ class Transformer:
                 records=events,
             )
         else:
-            raise Exception("Unknown Dataset type")
+            raise KloppyError("Unknown Dataset type")

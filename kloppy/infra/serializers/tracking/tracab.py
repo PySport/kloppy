@@ -104,7 +104,9 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
         elif ball_owning_team == "A":
             ball_owning_team = teams[1]
         else:
-            raise DeserializationError(f"Unknown ball owning team: {ball_owning_team}")
+            raise DeserializationError(
+                f"Unknown ball owning team: {ball_owning_team}"
+            )
 
         if ball_state == "Alive":
             ball_state = BallState.ALIVE

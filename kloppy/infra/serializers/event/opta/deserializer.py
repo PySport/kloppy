@@ -448,7 +448,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     away_score = team_elm.attrib["Score"]
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
-                    raise DeserializationError(f"Unknown side: {team_elm.attrib['Side']}")
+                    raise DeserializationError(
+                        f"Unknown side: {team_elm.attrib['Side']}"
+                    )
 
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]

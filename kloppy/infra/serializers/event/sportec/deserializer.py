@@ -300,7 +300,9 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                 elif team_elm.attrib["Role"] == "guest":
                     away_team = _team_from_xml_elm(team_elm)
                 else:
-                    raise DeserializationError(f"Unknown side: {team_elm.attrib['Role']}")
+                    raise DeserializationError(
+                        f"Unknown side: {team_elm.attrib['Role']}"
+                    )
 
             (
                 home_score,

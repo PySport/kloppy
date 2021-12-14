@@ -8,6 +8,3 @@ class DeserializationError(KloppyError):
 
 class OrientationError(KloppyError):
     pass
-
-
-

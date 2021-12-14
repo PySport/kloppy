@@ -30,7 +30,8 @@ from kloppy.domain import (
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
-    load_metadata, DeserializationError,
+    load_metadata,
+    DeserializationError,
 )
 from kloppy.utils import performance_logging
 
@@ -134,7 +135,9 @@ def _parse_pass(
             else:
                 result = PassResult.INCOMPLETE
         else:
-            raise DeserializationError(f"Unknown pass outcome: {event_type_id}")
+            raise DeserializationError(
+                f"Unknown pass outcome: {event_type_id}"
+            )
 
         receiver_player = None
         receiver_coordinates = None

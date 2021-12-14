@@ -169,6 +169,50 @@
       <Q id="1982245989" qualifier_id="56" value="Back" />
       <Q id="1223973456" qualifier_id="167" />
     </Event>
+    <Event id="2318695229" event_id="292" type_id="16" period_id="2" min="47" sec="19" player_id="460842" team_id="2592" outcome="1" x="90.2" y="62.0" timestamp="2018-09-23T16:07:48.325" last_modified="2018-09-23T16:05:50" version="1629011564949">
+      <Q id="3037279881" qualifier_id="395" value="93.8" />
+      <Q id="3035784297" qualifier_id="103" value="2.5" />
+      <Q id="3038190069" qualifier_id="178" />
+      <Q id="3035782383" qualifier_id="17" />
+      <Q id="3035784303" qualifier_id="230" value="94.5" />
+      <Q id="3035782783" qualifier_id="374" value="2018-09-23 16:07:48.525" />
+      <Q id="3035784299" qualifier_id="214" />
+      <Q id="3035784285" qualifier_id="80" />
+      <Q id="3035784291" qualifier_id="55" value="291" />
+      <Q id="3035784295" qualifier_id="102" value="47.8" />
+      <Q id="3035784289" qualifier_id="154" />
+      <Q id="3035782385" qualifier_id="56" value="Center" />
+      <Q id="3035782777" qualifier_id="72" />
+      <Q id="3037279883" qualifier_id="396" value="60.7" />
+      <Q id="3035784287" qualifier_id="29" />
+      <Q id="3035784305" qualifier_id="231" value="57.0" />
+      <Q id="3035782785" qualifier_id="375" value="22:42.896" />
+      <Q id="3035784283" qualifier_id="23" />
+      <Q id="3035784301" qualifier_id="328" />
+    </Event>
+    <Event id="2318697001" event_id="319" type_id="16" period_id="2" min="49" sec="19" player_id="460842" team_id="2592" outcome="1" x="17.9" y="48.0" timestamp="2018-09-23T16:09:48.325" last_modified="2021-08-15T08:21:39" version="1629012098571">
+      <Q id="3035792903" qualifier_id="20" />
+      <Q id="3035792905" qualifier_id="374" value="2018-09-23 16:07:49.525" />
+      <Q id="3037294331" qualifier_id="395" value="96.5" />
+      <Q id="3038199221" qualifier_id="178" />
+      <Q id="3035791681" qualifier_id="56" value="Center" />
+      <Q id="3035791679" qualifier_id="28" />
+      <Q id="3035793869" qualifier_id="80" />
+      <Q id="3035793879" qualifier_id="231" value="50.4" />
+      <Q id="3035792907" qualifier_id="375" value="26:30.978" />
+      <Q id="3037294333" qualifier_id="396" value="47.3" />
+      <Q id="3035791677" qualifier_id="18" />
+      <Q id="3035793871" qualifier_id="102" value="45.6" />
+      <Q id="3035793877" qualifier_id="230" value="96.5" />
+      <Q id="3035791675" qualifier_id="22" />
+      <Q id="3035793875" qualifier_id="136" />
+      <Q id="3035793873" qualifier_id="103" value="1.9" />
+    </Event>
+    <Event id="2318454729" event_id="17" type_id="17" period_id="2" min="50" sec="19" player_id="460842" team_id="2592" outcome="1" x="0.0" y="0.0" timestamp="2018-09-23T16:10:48.325" last_modified="2021-08-15T05:10:21" version="1629000620887">
+      <Q id="3034536633" qualifier_id="33" />
+      <Q id="3034536635" qualifier_id="166" />
+      <Q id="3034536755" qualifier_id="343" value="3" />
+    </Event>
     <Event id="1484626979" event_id="710" type_id="30" period_id="2" min="95" sec="8" team_id="2592" outcome="1" x="0.0" y="0.0" timestamp="2018-09-23T16:55:37.250" last_modified="2018-09-23T16:55:37" version="1537718137253">
       <Q id="2119253310" qualifier_id="57" value="0" />
       <Q id="1331973943" qualifier_id="209" />

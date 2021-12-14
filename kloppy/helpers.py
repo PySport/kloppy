@@ -134,7 +134,8 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
         coordinates_x=event.coordinates.x if event.coordinates else None,
         coordinates_y=event.coordinates.y if event.coordinates else None,
     )
-    if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
+    # if isinstance(event, PassEvent) and event.result == PassResult.COMPLETE:
+    if isinstance(event, PassEvent):
         row.update(
             {
                 "end_timestamp": event.receive_timestamp,

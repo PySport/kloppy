@@ -33,6 +33,9 @@ from kloppy.domain import (
     RecoveryEvent,
     BallOutEvent,
     FoulCommittedEvent,
+    CardEvent,
+    CardType,
+    CardQualifier,
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
@@ -59,6 +62,7 @@ EVENT_TYPE_SHOT_GOAL = 16
 EVENT_TYPE_BALL_OUT = 5
 EVENT_TYPE_CORNER_AWARDED = 6
 EVENT_TYPE_FOUL_COMMITTED = 4
+EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
@@ -96,6 +100,10 @@ EVENT_QUALIFIER_FLICK_ON = 168
 EVENT_QUALIFIER_SWITCH_OF_PLAY = 196
 EVENT_QUALIFIER_ASSIST = 210
 EVENT_QUALIFIER_ASSIST_2ND = 218
+
+EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
+EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
+EVENT_QUALIFIER_RED_CARD = 33
 
 event_type_names = {
     1: "pass",
@@ -194,7 +202,10 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-        receiver_coordinates = None
+        # receiver_coordinates = None
+        receiver_coordinates = Point(
+            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
+        )
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
@@ -226,13 +237,32 @@ def _parse_take_on(outcome: int) -> Dict:
     return dict(result=result)
 
 
+def _parse_card(raw_qualifiers: List) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+
+    if EVENT_QUALIFIER_RED_CARD in qualifiers:
+        card_type = CardType.RED
+    elif EVENT_QUALIFIER_FIRST_YELLOW_CARD in qualifiers:
+        card_type = CardType.FIRST_YELLOW
+    elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in qualifiers:
+        card_type = CardType.SECOND_YELLOW
+    else:
+        card_type = None
+
+    return dict(result=None, qualifiers=qualifiers, card_type=card_type)
+
+
 def _parse_shot(
     raw_qualifiers: Dict[int, str], type_id: int, coordinates: Point
 ) -> Dict:
     if type_id == EVENT_TYPE_SHOT_GOAL:
         if 28 in raw_qualifiers:
             coordinates = Point(x=100 - coordinates.x, y=100 - coordinates.y)
-        result = ShotResult.GOAL
+            result = ShotResult.OWN_GOAL
+            # ball_owning_team =
+            # timestamp =
+        else:
+            result = ShotResult.GOAL
     else:
         result = None
 
@@ -290,6 +320,7 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
             last_name=team_players[player_elm.attrib["PlayerRef"]][
                 "last_name"
             ],
+            starting=True if player_elm.attrib["Status"] == "Start" else False,
             position=Position(
                 position_id=player_elm.attrib["Formation_Place"],
                 name=player_elm.attrib["Position"],
@@ -308,6 +339,7 @@ def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_pass_qualifiers(raw_qualifiers))
+    qualifiers.extend(_get_event_card_qualifiers(raw_qualifiers))
     return qualifiers
 
 
@@ -361,6 +393,18 @@ def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
     elif EVENT_QUALIFIER_OTHER_BODYPART in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.OTHER))
+    return qualifiers
+
+
+def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    qualifiers = []
+    if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
+        qualifiers.append(CardQualifier(value=CardType.RED))
+    elif EVENT_QUALIFIER_FIRST_YELLOW_CARD in raw_qualifiers:
+        qualifiers.append(CardQualifier(value=CardType.FIRST_YELLOW))
+    elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in raw_qualifiers:
+        qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
+
     return qualifiers
 
 
@@ -523,6 +567,16 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         EVENT_TYPE_SHOT_SAVED,
                         EVENT_TYPE_SHOT_GOAL,
                     ):
+                        if type_id == EVENT_TYPE_SHOT_GOAL:
+                            if 374 in raw_qualifiers.keys():
+                                generic_event_kwargs["timestamp"] = (
+                                    _parse_f24_datetime(
+                                        raw_qualifiers.get(374).replace(
+                                            " ", "T"
+                                        )
+                                    )
+                                    - period.start_timestamp
+                                )
                         shot_event_kwargs = _parse_shot(
                             raw_qualifiers,
                             type_id,
@@ -552,6 +606,15 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = BallOutEvent.create(
                             result=None,
                             qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+
+                    elif type_id == EVENT_TYPE_CARD:
+                        generic_event_kwargs["ball_state"] = BallState.DEAD
+                        card_event_kwargs = _parse_card(raw_qualifiers)
+
+                        event = CardEvent.create(
+                            **card_event_kwargs,
                             **generic_event_kwargs,
                         )
 

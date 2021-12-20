@@ -1,1 +1,1 @@
-from ._providers.wyscout import load
+from ._providers.wyscout import load, load_open_data

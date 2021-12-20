@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from kloppy import datasets
+from kloppy import statsbomb
 from kloppy.utils import performance_logging
 
 
@@ -18,8 +18,8 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    dataset = datasets.load(
-        "statsbomb", {"event_types": ["pass", "take_on", "carry", "shot"]}
+    dataset = statsbomb.load_open_data(
+        event_types=["pass", "take_on", "carry", "shot"]
     )
 
     with performance_logging("transform", logger=logger):

@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from kloppy.domain import EventDataset, TrackingDataset
+from kloppy.exceptions import KloppyError
 from kloppy.infra.serializers.event.metrica import (
     MetricaJsonEventDataDeserializer,
     MetricaJsonEventDataInputs,
@@ -74,3 +75,29 @@ def load_event(
                 event_data=event_data_fp, meta_data=meta_data_fp
             )
         )
+
+
+def load_open_data(
+    match_id: Union[str, int] = "1",
+    sample_rate: Optional[float] = None,
+    limit: Optional[int] = None,
+    coordinates: Optional[str] = None,
+) -> TrackingDataset:
+    if match_id == "1" or match_id == 1:
+        home_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv"
+        away_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv"
+    elif match_id == "2" or match_id == 2:
+        home_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Home_Team.csv"
+        away_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Away_Team.csv"
+    else:
+        raise KloppyError(
+            f"Don't know where to fetch Metrica open data for {match_id}"
+        )
+
+    return load_tracking_csv(
+        home_data=home_data,
+        away_data=away_data,
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinates=coordinates,
+    )

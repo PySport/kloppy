@@ -2,7 +2,7 @@ import logging
 import sys
 from collections import Counter
 
-from kloppy import datasets
+from kloppy import metrica
 import matplotlib.pyplot as plt
 
 from kloppy.domain import Ground
@@ -18,9 +18,7 @@ def main():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
-    dataset = datasets.load(
-        "metrica_tracking", options={"sample_rate": 1.0 / 25}
-    )
+    dataset = metrica.load_open_data(sample_rate=1.0 / 25)
 
     playing_seconds_per_player = Counter()
     for frame in dataset.frames:

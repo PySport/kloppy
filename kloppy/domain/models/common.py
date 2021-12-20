@@ -113,7 +113,9 @@ class Player:
     def full_name(self):
         if self.name:
             return self.name
-        return f"{self.first_name} {self.last_name}"
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return f"{self.team.ground}_{self.jersey_no}"
 
     def __str__(self):
         return self.full_name

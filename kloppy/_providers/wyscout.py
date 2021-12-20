@@ -1,3 +1,5 @@
+from typing import Union
+
 from kloppy.infra.serializers.event.wyscout import (
     WyscoutDeserializer,
     WyscoutInputs,
@@ -26,3 +28,15 @@ def load(
         return deserializer.deserialize(
             inputs=WyscoutInputs(event_data=event_data_fp),
         )
+
+
+def load_open_data(
+    match_id: Union[str, int] = "2499841",
+    event_types: Optional[List[str]] = None,
+    coordinates: Optional[str] = None,
+) -> EventDataset:
+    return load(
+        event_data=f"https://raw.githubusercontent.com/koenvo/wyscout-soccer-match-event-dataset/main/processed/files/{match_id}.json",
+        event_types=event_types,
+        coordinates=coordinates,
+    )

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.skillcorner import (
@@ -30,3 +30,20 @@ def load(
                 meta_data=meta_data_fp, raw_data=raw_data_fp
             )
         )
+
+
+def load_open_data(
+    match_id: Union[str, int] = "4039",
+    sample_rate: Optional[float] = None,
+    limit: Optional[int] = None,
+    coordinates: Optional[str] = None,
+    include_empty_frames: Optional[bool] = False,
+) -> TrackingDataset:
+    return load(
+        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/match_data.json",
+        raw_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/structured_data.json",
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinates=coordinates,
+        include_empty_frames=include_empty_frames,
+    )

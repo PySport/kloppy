@@ -15,6 +15,6 @@ def load(data: str) -> CodeDataset:
 
 
 def save(dataset: CodeDataset, output_filename: str):
-    with open(output_filename, "rb") as fp:
+    with open(output_filename, "wb") as fp:
         serializer = SportsCodeSerializer()
         fp.write(serializer.serialize(dataset))

@@ -14,27 +14,39 @@ theme:
 
 nav:
   - Home: index.md
-  - Quickstart Guides:
-    - Event Data: quickstart/event_data.ipynb
-    - Tracking Data: quickstart/tracking_data.ipynb
-    - Broadcast Tracking Data: quickstart/broadcast_tracking_data.ipynb
-    - Code data: quickstart/code_data.ipynb
-    - State: quickstart/state.ipynb
-    - Examples: quickstart/examples.ipynb
+  - Getting-started:
+      - Datafactory: getting-started/datafactory.ipynb
+      - Metrica: asd
+      - Opta: getting-started/opta.ipynb
+      - SecondSpectrum: getting-started/secondspectrum.ipynb
+      - SkillCorner: getting-started/skillcorner.ipynb
+      - Sportec: getting-started/sportec.ipynb
+      - Sportscode: getting-started/sportscode.ipynb
+      - Statsbomb: getting-started/statsbomb.ipynb
+      - TRACAB: getting-started/tracab.ipynb
+      - Wyscout: getting-started/wyscout.ipynb
+  - Examples:
+    - Event Data: examples/event_data.ipynb
+    - Tracking Data: examples/tracking_data.ipynb
+    - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
+    - Code data: examples/code_data.ipynb
+    - State: examples/state.ipynb
+    - Plotting2: examples/plotting.ipynb
   - API Reference:
-    - Main: api/main.md
+#    - Main: api/main.md
     - Domain:
       - Common: api/domain/common.md
       - Pitch: api/domain/pitch.md
       - Tracking: api/domain/tracking.md
       - Event: api/domain/event.md
   - Providers: 'providers.md'
-  - Issues: 'issues.md'
-  - Contributing: 'contributing.md'
-  - Sponsors: 'sponsors.md'
-  - About: 'about.md'
-  - Changelog: 'changelog.md'
-  - License: 'license.md'
+  - Other:
+    - Issues: 'issues.md'
+    - Contributing: 'contributing.md'
+    - Sponsors: 'sponsors.md'
+    - About: 'about.md'
+    - Changelog: 'changelog.md'
+    - License: 'license.md'
 
 plugins:
   - mkdocs-jupyter:

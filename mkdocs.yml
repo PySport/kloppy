@@ -16,7 +16,7 @@ nav:
   - Home: index.md
   - Getting-started:
       - Datafactory: getting-started/datafactory.ipynb
-      - Metrica: asd
+      - Metrica: getting-started/metrica.ipynb
       - Opta: getting-started/opta.ipynb
       - SecondSpectrum: getting-started/secondspectrum.ipynb
       - SkillCorner: getting-started/skillcorner.ipynb

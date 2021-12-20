@@ -89,16 +89,12 @@ class TrackingDataset(Dataset[Frame]):
                     )
 
                     if player_data.other_data:
-                        for (
-                            player,
-                            other_data,
-                        ) in player_data.other_data.items():
-                            for name, value in other_data.items():
-                                row.update(
-                                    {
-                                        f"{player.player_id}_{name}": value,
-                                    }
-                                )
+                        for name, value in player_data.other_data.items():
+                            row.update(
+                                {
+                                    f"{player.player_id}_{name}": value,
+                                }
+                            )
 
                 if frame.other_data:
                     for name, value in frame.other_data.items():

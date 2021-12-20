@@ -12,14 +12,14 @@ class PlayerData:
     coordinates: Point
     distance: Optional[float] = None
     speed: Optional[float] = None
-    other_data: Dict[Player, Dict] = field(default_factory=dict)
+    other_data: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class Frame(DataRecord):
     frame_id: int
     players_data: Dict[Player, PlayerData]
-    other_data: Dict
+    other_data: Dict[str, Any]
     ball_coordinates: Point
 
     @property

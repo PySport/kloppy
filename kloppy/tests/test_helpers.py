@@ -86,11 +86,7 @@ class TestHelpers:
                             distance=0.03,
                             speed=10.5,
                             other_data={
-                                Player(
-                                    team=home_team,
-                                    player_id="home_1",
-                                    jersey_no=1,
-                                ): {"extra_data": 1}
+                                "extra_data": 1
                             },
                         )
                     },

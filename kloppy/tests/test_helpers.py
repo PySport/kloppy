@@ -85,9 +85,7 @@ class TestHelpers:
                             coordinates=Point(x=15, y=35),
                             distance=0.03,
                             speed=10.5,
-                            other_data={
-                                "extra_data": 1
-                            },
+                            other_data={"extra_data": 1},
                         )
                     },
                     other_data={"extra_data": 1},

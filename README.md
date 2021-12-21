@@ -1,4 +1,4 @@
-# kloppy: standardizing soccer tracking and event data <a href='https://kloppy.pysport.org'><img src="docs/logo.png" align="right" height="139"/></a>
+# kloppy: standardizing soccer tracking and event data <a href='https://kloppy.pysport.org'><img style="width: 180px" src="https://github.com/PySport/kloppy/raw/master/docs/logo.png" align="right" height="139"/></a>
 > klop·pen (klopte, heeft geklopt) - juist zijn; overeenkomen, uitkomen met: *dat klopt, dat kan kloppen* is juist; *dat klopt als een zwerende vinger* dat is helemaal juist
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/kloppy.svg)](https://pypi.org/project/kloppy/)
@@ -25,13 +25,13 @@ Here are just a few of the things that kloppy does well:
 - Transform the **orientation** of a dataset (e.g., from TRACAB fixed orientation to "Home Team" orientation)
 
 #### Pattern matching
-- Search for **[complexe patterns](examples/pattern_matching/repository/README.md)** in event data
+- Search for **[complexe patterns](https://github.com/PySport/kloppy/examples/pattern_matching/repository/README.md)** in event data
 - Use `kloppy-query` to export fragments to XML file
 
 
 ## Where to get it
 
-The source code is currently hosted on GitHub at: https://github.com/PySport/kloppy.
+The source code is currently hosted on GitHub at: [https://github.com/PySport/kloppy](https://github.com/PySport/kloppy).
 
 Installers for the latest released version are available at the [Python package index](https://pypi.org/project/kloppy).
 
@@ -41,13 +41,13 @@ pip install kloppy
 
 ## Documentation
 
-The official documentation is hosted on pysport.org: https://kloppy.pysport.org.
+The official documentation is hosted on pysport.org: [https://kloppy.pysport.org](https://kloppy.pysport.org). 
 
 
 ## Contributing to kloppy
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-An overview on how to contribute can be found in the **[contributing guide](CONTRIBUTING.md)**.
+An overview on how to contribute can be found in the **[contributing guide](https://kloppy.pysport.org/contributing)**.
 
 If you are simply looking to start working with the kloppy codebase, navigate to the GitHub "issues" tab and start looking through interesting issues.

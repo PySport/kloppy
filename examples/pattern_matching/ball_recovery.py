@@ -2,7 +2,7 @@ import logging
 import sys
 from collections import Counter
 
-from kloppy import datasets, event_pattern_matching as pm
+from kloppy import statsbomb, event_pattern_matching as pm
 from kloppy.utils import performance_logging
 
 
@@ -20,8 +20,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     # let's grab Barcelona - Deportivo Alavés from statsbomb, and load only shots and passes
-    dataset = datasets.load(
-        "statsbomb", options={"event_types": ["shot", "pass"]}, match_id=15946
+    dataset = statsbomb.load_open_data(
+        event_types=["shot", "pass"], match_id="15946"
     )
 
     # ok, this is where the magic starts

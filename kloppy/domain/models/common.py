@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
-from typing import Dict, List, Optional, Callable, Union, Any
+from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
 
 from .pitch import PitchDimensions, Point, Dimension
+from ...exceptions import OrientationError
 
 
 @dataclass
@@ -112,7 +113,9 @@ class Player:
     def full_name(self):
         if self.name:
             return self.name
-        return f"{self.first_name} {self.last_name}"
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return f"{self.team.ground}_{self.jersey_no}"
 
     def __str__(self):
         return self.full_name
@@ -239,21 +242,21 @@ class Orientation(Enum):
             elif attacking_direction == AttackingDirection.AWAY_HOME:
                 return 1
             else:
-                raise Exception("AttackingDirection not set")
+                raise OrientationError("AttackingDirection not set")
         elif self == Orientation.AWAY_TEAM:
             if attacking_direction == AttackingDirection.AWAY_HOME:
                 return -1
             elif attacking_direction == AttackingDirection.HOME_AWAY:
                 return 1
             else:
-                raise Exception("AttackingDirection not set")
+                raise OrientationError("AttackingDirection not set")
         elif self == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team.ground == Ground.HOME:
                 return -1
             elif ball_owning_team.ground == Ground.AWAY:
                 return 1
             else:
-                raise Exception(
+                raise OrientationError(
                     f"Invalid ball_owning_team: {ball_owning_team}"
                 )
         elif self == Orientation.ACTION_EXECUTING_TEAM:
@@ -262,11 +265,11 @@ class Orientation(Enum):
             elif action_executing_team.ground == Ground.AWAY:
                 return 1
             else:
-                raise Exception(
+                raise OrientationError(
                     f"Invalid action_executing_team: {action_executing_team}"
                 )
         else:
-            raise Exception(f"Unknown orientation: {self}")
+            raise OrientationError(f"Unknown orientation: {self}")
 
     def __repr__(self):
         return self.value
@@ -692,8 +695,11 @@ class DatasetType(Enum):
         return self.value
 
 
+T = TypeVar("T")
+
+
 @dataclass
-class Dataset(ABC):
+class Dataset(ABC, Generic[T]):
     """
     Dataset
 
@@ -703,7 +709,7 @@ class Dataset(ABC):
 
     """
 
-    records: List[DataRecord]
+    records: List[T]
     metadata: Metadata
 
     @property
@@ -711,23 +717,19 @@ class Dataset(ABC):
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
 
-    def to_pandas(self, *args, **kwargs):
-        """
-        See [to_pandas][kloppy.helpers.to_pandas]
-        """
-        from kloppy import to_pandas
-
-        return to_pandas(
-            self,
-            *args,
-            **kwargs,
-        )
+    @abstractmethod
+    def to_pandas(
+        self,
+        record_converter: Callable[[T], Dict] = None,
+        additional_columns: Dict[str, Union[Callable[[T], Any], Any]] = None,
+    ) -> "DataFrame":
+        pass
 
     def transform(self, *args, **kwargs):
         """
         See [transform][kloppy.helpers.transform]
         """
-        from kloppy import transform
+        from kloppy.helpers import transform
 
         return transform(self, *args, **kwargs)
 

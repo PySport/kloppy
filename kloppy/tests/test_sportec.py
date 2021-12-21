@@ -1,31 +1,37 @@
 import os
 
-from kloppy import (
-    MetricaCsvTrackingSerializer,
-    MetricaEventsJsonSerializer,
-    load_sportec_event_data,
-)
+import pytest
+
 from kloppy.domain import (
     Period,
     Provider,
     AttackingDirection,
     Orientation,
     Point,
-    EventType,
     SetPieceType,
     BodyPart,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import sportec
 
 
 class TestSportecEvent:
-    def test_correct_deserialization(self):
-        base_dir = os.path.dirname(__file__)
+    """"""
 
-        dataset = load_sportec_event_data(
-            f"{base_dir}/files/sportec_events.xml",
-            f"{base_dir}/files/sportec_meta.xml",
-            options={"coordinate_system": Provider.SPORTEC},
+    @pytest.fixture
+    def event_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/sportec_events.xml"
+
+    @pytest.fixture
+    def meta_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/sportec_meta.xml"
+
+    def test_correct_deserialization(self, event_data: str, meta_data: str):
+        dataset = sportec.load(
+            event_data=event_data, meta_data=meta_data, coordinates="sportec"
         )
 
         assert dataset.metadata.provider == Provider.SPORTEC
@@ -65,12 +71,9 @@ class TestSportecEvent:
 
         assert dataset.events[0].coordinates == Point(56.41, 68.0)
 
-    def test_correct_normalized_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-
-        dataset = load_sportec_event_data(
-            f"{base_dir}/files/sportec_events.xml",
-            f"{base_dir}/files/sportec_meta.xml",
-        )
+    def test_correct_normalized_deserialization(
+        self, event_data: str, meta_data: str
+    ):
+        dataset = sportec.load(event_data=event_data, meta_data=meta_data)
 
         assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)

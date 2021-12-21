@@ -31,11 +31,11 @@ def main():
     )
 
     # step 1: load metadata
-    with open("epts_metrica_metadata.xml", "rb") as meta_fp:
+    with open("epts_meta.xml", "rb") as meta_fp:
         metadata = epts_load_metadata(meta_fp)
 
     # step 2: try to load the raw data
-    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+    with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'speed' sensor
         records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
     # raw_fp is closed here
@@ -54,7 +54,7 @@ def main():
         # all items from `records`.
 
     # step 3: this works
-    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+    with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'speed' sensor
         records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
         # consume all records before we close `raw_fp`
@@ -68,7 +68,7 @@ def main():
     # all the items.
 
     # step 5: put the records in a pandas dataframe
-    with open("epts_metrica_tracking.txt", "rb") as raw_fp:
+    with open("epts_raw.txt", "rb") as raw_fp:
         # we are only interested in the data from the 'speed' sensor
         records = epts_read_raw_data(raw_fp, metadata, sensor_ids=["speed"])
         data_frame = DataFrame.from_records(records)

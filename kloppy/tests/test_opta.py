@@ -1,37 +1,42 @@
 import os
 
-from kloppy import OptaSerializer
+import pytest
+
 from kloppy.domain import (
     AttackingDirection,
     Period,
     Orientation,
     Provider,
-    Player,
-    Position,
     Ground,
     Point,
     BodyPart,
     SetPieceType,
     PassType,
+    DatasetType,
     CardType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import opta
 
 
 class TestOpta:
-    def test_correct_deserialization(self):
+    """"""
+
+    @pytest.fixture
+    def f24_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/opta_f24.xml"
 
-        serializer = OptaSerializer()
+    @pytest.fixture
+    def f7_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/opta_f7.xml"
 
-        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
-            f"{base_dir}/files/opta_f7.xml", "rb"
-        ) as f7_data:
+    def test_correct_deserialization(self, f7_data: str, f24_data: str):
+        dataset = opta.load(
+            f24_data=f24_data, f7_data=f7_data, coordinates="opta"
+        )
 
-            dataset = serializer.deserialize(
-                inputs={"f24_data": f24_data, "f7_data": f7_data},
-                options={"coordinate_system": Provider.OPTA},
-            )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 20
@@ -97,17 +102,11 @@ class TestOpta:
         # Check Own goal
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
 
-    def test_correct_normalized_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-
-        serializer = OptaSerializer()
-
-        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
-            f"{base_dir}/files/opta_f7.xml", "rb"
-        ) as f7_data:
-
-            dataset = serializer.deserialize(
-                inputs={"f24_data": f24_data, "f7_data": f7_data}
-            )
-
+    def test_correct_normalized_deserialization(
+        self, f7_data: str, f24_data: str
+    ):
+        dataset = opta.load(
+            f24_data=f24_data,
+            f7_data=f7_data,
+        )
         assert dataset.events[0].coordinates == Point(0.501, 0.506)

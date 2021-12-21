@@ -1,1 +1,1 @@
-from .serializer import WyscoutSerializer
+from .deserializer import WyscoutDeserializer, WyscoutInputs

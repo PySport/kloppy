@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.0.0 (2021-12-21)
+
+Pull request merged:
+
+- Implement simpler api ([#118](https://github.com/PySport/kloppy/pull/118))
+
 ## 2.3.0 (2021-12-03)
 
 Pull request merged:

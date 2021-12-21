@@ -3,15 +3,7 @@ import os
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from kloppy import (
-    to_pandas,
-    load_metrica_tracking_data,
-    load_metrica_csv_tracking_data,
-    load_tracab_tracking_data,
-    transform,
-    OptaSerializer,
-    TRACABSerializer,
-)
+
 from kloppy.domain import (
     Period,
     DatasetFlag,
@@ -23,51 +15,17 @@ from kloppy.domain import (
     Orientation,
     Provider,
     Frame,
-    EventDataset,
-    PassEvent,
     Metadata,
     Team,
     Ground,
     Player,
     PlayerData,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import opta, tracab
 
 
 class TestHelpers:
-    def test_load_metrica_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_metrica_tracking_data(
-            f"{base_dir}/files/metrica_home.csv",
-            f"{base_dir}/files/metrica_away.csv",
-        )
-        assert len(dataset.records) == 6
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.METRICA
-        assert dataset.dataset_type == DatasetType.TRACKING
-
-    def test_load_metrica_csv_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_metrica_csv_tracking_data(
-            f"{base_dir}/files/metrica_home.csv",
-            f"{base_dir}/files/metrica_away.csv",
-        )
-        assert len(dataset.records) == 6
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.METRICA
-        assert dataset.dataset_type == DatasetType.TRACKING
-
-    def test_load_tracab_tracking_data(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = load_tracab_tracking_data(
-            f"{base_dir}/files/tracab_meta.xml",
-            f"{base_dir}/files/tracab_raw.dat",
-        )
-        assert len(dataset.records) == 5  # only alive=True
-        assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.provider == Provider.TRACAB
-        assert dataset.dataset_type == DatasetType.TRACKING
-
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
@@ -127,13 +85,7 @@ class TestHelpers:
                             coordinates=Point(x=15, y=35),
                             distance=0.03,
                             speed=10.5,
-                            other_data={
-                                Player(
-                                    team=home_team,
-                                    player_id="home_1",
-                                    jersey_no=1,
-                                ): {"extra_data": 1}
-                            },
+                            other_data={"extra_data": 1},
                         )
                     },
                     other_data={"extra_data": 1},
@@ -147,8 +99,7 @@ class TestHelpers:
         tracking_data = self._get_tracking_dataset()
 
         # orientation change AND dimension scale
-        transformed_dataset = transform(
-            tracking_data,
+        transformed_dataset = tracking_data.transform(
             to_orientation="AWAY_TEAM",
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
@@ -161,32 +112,23 @@ class TestHelpers:
         )
 
     def test_transform_to_coordinate_system(self):
-
         base_dir = os.path.dirname(__file__)
 
-        serializer = TRACABSerializer()
-
-        with open(f"{base_dir}/files/tracab_meta.xml", "rb") as metadata, open(
-            f"{base_dir}/files/tracab_raw.dat", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data},
-                options={
-                    "only_alive": False,
-                    "coordinate_system": Provider.TRACAB,
-                },
-            )
+        dataset = tracab.load(
+            meta_data=f"{base_dir}/files/tracab_meta.xml",
+            raw_data=f"{base_dir}/files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            "19"
+            19
         )
         assert dataset.records[0].players_data[
             player_home_19
         ].coordinates == Point(x=-1234.0, y=-294.0)
 
-        transformed_dataset = transform(
-            dataset,
+        transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA,
         )
 
@@ -197,7 +139,7 @@ class TestHelpers:
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = to_pandas(tracking_data)
+        data_frame = tracking_data.to_pandas()
 
         expected_data_frame = DataFrame.from_dict(
             {
@@ -219,25 +161,19 @@ class TestHelpers:
 
     def test_to_pandas_generic_events(self):
         base_dir = os.path.dirname(__file__)
+        dataset = opta.load(
+            f7_data=f"{base_dir}/files/opta_f7.xml",
+            f24_data=f"{base_dir}/files/opta_f24.xml",
+        )
 
-        serializer = OptaSerializer()
-
-        with open(f"{base_dir}/files/opta_f24.xml", "rb") as f24_data, open(
-            f"{base_dir}/files/opta_f7.xml", "rb"
-        ) as f7_data:
-            dataset = serializer.deserialize(
-                inputs={"f24_data": f24_data, "f7_data": f7_data}
-            )
-
-        dataframe = to_pandas(dataset)
+        dataframe = dataset.to_pandas()
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = to_pandas(
-            tracking_data,
+        data_frame = tracking_data.to_pandas(
             additional_columns={
                 "match": "test",
                 "bonus_column": lambda frame: frame.frame_id + 10,

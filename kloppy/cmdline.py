@@ -4,14 +4,8 @@ import sys
 import textwrap
 from collections import Counter
 
-from kloppy import (
-    load_datafactory_event_data,
-    load_opta_event_data,
-    load_statsbomb_event_data,
-    load_wyscout_event_data,
-    write_xml_code_data,
-    event_pattern_matching as pm,
-)
+from kloppy import datafactory, opta, statsbomb, wyscout, sportscode
+from kloppy import event_pattern_matching as pm
 from kloppy.domain import CodeDataset, Code
 from kloppy.utils import performance_logging
 
@@ -105,32 +99,32 @@ def run_query(argv=sys.argv[1:]):
     if opts.input_statsbomb:
         with performance_logging("load dataset", logger=logger):
             events_filename, lineup_filename = opts.input_statsbomb.split(",")
-            dataset = load_statsbomb_event_data(
-                events_filename.strip(),
-                lineup_filename.strip(),
-                options={"event_types": query.event_types},
+            dataset = statsbomb.load(
+                event_data=events_filename.strip(),
+                lineup_data=lineup_filename.strip(),
+                event_types=query.event_types,
             )
     if opts.input_opta:
         with performance_logging("load dataset", logger=logger):
             f24_filename, f7_filename = opts.input_opta.split(",")
-            dataset = load_opta_event_data(
-                f24_filename.strip(),
-                f7_filename.strip(),
-                options={"event_types": query.event_types},
+            dataset = opta.load(
+                f24_data=f24_filename.strip(),
+                f7_data=f7_filename.strip(),
+                event_types=query.event_types,
             )
     if opts.input_datafactory:
         with performance_logging("load dataset", logger=logger):
             events_filename = opts.input_datafactory
-            dataset = load_datafactory_event_data(
-                events_filename.strip(),
-                options={"event_types": query.event_types},
+            dataset = datafactory.load(
+                event_data=events_filename.strip(),
+                event_types=query.event_types,
             )
     if opts.input_wyscout:
         with performance_logging("load dataset", logger=logger):
             events_filename = opts.input_wyscout
-            dataset = load_wyscout_event_data(
-                events_filename,
-                options={"event_types": query.event_types},
+            dataset = wyscout.load(
+                event_data=events_filename,
+                event_types=query.event_types,
             )
 
     if not dataset:
@@ -142,8 +136,7 @@ def run_query(argv=sys.argv[1:]):
     # Construct new code dataset with same properties (eg periods)
     # as original event dataset.
     # Records will be added later below
-    code_dataset = CodeDataset(metadata=dataset.metadata, records=[])
-
+    records = []
     counter = Counter()
     for i, match in enumerate(matches):
         team = match.events[0].team
@@ -175,10 +168,12 @@ def run_query(argv=sys.argv[1:]):
                 ball_state=None,
                 ball_owning_team=None,
             )
-            code_dataset.records.append(code)
+            records.append(code)
+
+    code_dataset = CodeDataset(metadata=dataset.metadata, records=records)
 
     if opts.output_xml:
-        write_xml_code_data(code_dataset, opts.output_xml)
+        sportscode.save(code_dataset, opts.output_xml)
         logger.info(f"Wrote {len(code_dataset.codes)} video fragments to file")
 
     if opts.stats == "text":

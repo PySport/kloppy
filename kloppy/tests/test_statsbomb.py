@@ -1,6 +1,7 @@
 import os
 
-from kloppy import StatsBombSerializer
+import pytest
+
 from kloppy.domain import (
     AttackingDirection,
     Period,
@@ -9,33 +10,33 @@ from kloppy.domain import (
     Point,
     BodyPartQualifier,
     BodyPart,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import statsbomb
 
 
 class TestStatsbomb:
-    def _load_dataset(self, options=None):
+    """"""
+
+    @pytest.fixture
+    def event_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/statsbomb_event.json"
 
-        serializer = StatsBombSerializer()
+    @pytest.fixture
+    def lineup_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/statsbomb_lineup.json"
 
-        with open(
-            f"{base_dir}/files/statsbomb_lineup.json", "rb"
-        ) as lineup_data, open(
-            f"{base_dir}/files/statsbomb_event.json", "rb"
-        ) as event_data:
-            dataset = serializer.deserialize(
-                inputs={"lineup_data": lineup_data, "event_data": event_data},
-                options=options,
-            )
-            return dataset
-
-    def test_correct_deserialization(self):
+    def test_correct_deserialization(self, lineup_data: str, event_data: str):
         """
         This test uses data from the StatsBomb open data project.
         """
-        dataset = self._load_dataset(
-            options={"coordinate_system": Provider.STATSBOMB}
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            coordinates="statsbomb",
         )
 
         assert dataset.metadata.provider == Provider.STATSBOMB
@@ -88,20 +89,27 @@ class TestStatsbomb:
             dataset.events[195].get_qualifier_value(BodyPartQualifier) is None
         )
 
-    def test_correct_normalized_deserialization(self):
+    def test_correct_normalized_deserialization(
+        self, lineup_data: str, event_data: str
+    ):
         """
         This test uses data from the StatsBomb open data project.
         """
-        dataset = self._load_dataset()
+        dataset = statsbomb.load(
+            lineup_data=lineup_data, event_data=event_data
+        )
 
         assert dataset.events[10].coordinates == Point(0.2875, 0.25625)
 
-    def test_substitution(self):
+    def test_substitution(self, lineup_data: str, event_data: str):
         """
         Test substitution events
         """
-
-        dataset = self._load_dataset({"event_types": ["substitution"]})
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["substitution"],
+        )
 
         assert len(dataset.events) == 6
 

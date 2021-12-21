@@ -1,6 +1,8 @@
 import os
 
-from kloppy import MetricaEventsJsonSerializer
+import pytest
+
+from kloppy import metrica
 from kloppy.domain import (
     Period,
     Provider,
@@ -12,21 +14,20 @@ from kloppy.domain.models.common import DatasetType
 
 
 class TestMetricaEvents:
-    def test_correct_deserialization(self):
-
+    @pytest.fixture
+    def meta_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/epts_metrica_metadata.xml"
 
-        serializer = MetricaEventsJsonSerializer()
+    @pytest.fixture
+    def event_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/metrica_events.json"
 
-        with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
-        ) as metadata, open(
-            f"{base_dir}/files/metrica_events.json", "rb"
-        ) as event_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "event_data": event_data}
-            )
+    def test_correct_deserialization(self, event_data: str, meta_data: str):
+        dataset = metrica.load_event(
+            event_data=event_data, meta_data=meta_data
+        )
 
         assert dataset.metadata.provider == Provider.METRICA
         assert dataset.dataset_type == DatasetType.EVENT

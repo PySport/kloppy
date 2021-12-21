@@ -1,6 +1,7 @@
 import os
 
-from kloppy import DatafactorySerializer
+import pytest
+
 from kloppy.domain import (
     AttackingDirection,
     Ground,
@@ -9,23 +10,22 @@ from kloppy.domain import (
     Point,
     Provider,
     SetPieceType,
+    DatasetType,
 )
-from kloppy.domain.models.common import DatasetType
+
+from kloppy import datafactory
 
 
 class TestDatafactory:
-    def test_correct_deserialization(self):
+    @pytest.fixture
+    def event_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/datafactory_events.json"
 
-        serializer = DatafactorySerializer()
-
-        with open(
-            f"{base_dir}/files/datafactory_events.json", "r"
-        ) as event_data:
-            dataset = serializer.deserialize(
-                inputs={"event_data": event_data},
-                options={"coordinate_system": Provider.DATAFACTORY},
-            )
+    def test_correct_deserialization(self, event_data: str):
+        dataset = datafactory.load(
+            event_data=event_data, coordinates="datafactory"
+        )
 
         assert dataset.metadata.provider == Provider.DATAFACTORY
         assert dataset.dataset_type == DatasetType.EVENT
@@ -65,16 +65,7 @@ class TestDatafactory:
         assert dataset.events[0].qualifiers[0].value == SetPieceType.KICK_OFF
         assert dataset.events[412].qualifiers[0].value == SetPieceType.THROW_IN
 
-    def test_correct_normalized_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-
-        serializer = DatafactorySerializer()
-
-        with open(
-            f"{base_dir}/files/datafactory_events.json", "r"
-        ) as event_data:
-            dataset = serializer.deserialize(
-                inputs={"event_data": event_data},
-            )
+    def test_correct_normalized_deserialization(self, event_data: str):
+        dataset = datafactory.load(event_data=event_data)
 
         assert dataset.events[0].coordinates == Point(0.505, 0.505)

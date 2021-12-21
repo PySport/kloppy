@@ -3,18 +3,15 @@ import os
 from pandas import DataFrame
 from pandas._testing import assert_frame_equal
 
-from kloppy import XMLCodeSerializer
 from kloppy.domain import Period
+from kloppy import sportscode
+from kloppy.infra.serializers.code.sportscode import SportsCodeSerializer
 
 
 class TestXMLCodeTracking:
     def test_correct_deserialization(self):
         base_dir = os.path.dirname(__file__)
-
-        serializer = XMLCodeSerializer()
-
-        with open(f"{base_dir}/files/code_xml.xml", "rb") as xml_file:
-            dataset = serializer.deserialize(inputs={"xml_file": xml_file})
+        dataset = sportscode.load(f"{base_dir}/files/code_xml.xml")
 
         assert len(dataset.metadata.periods) == 1
 
@@ -55,11 +52,7 @@ class TestXMLCodeTracking:
 
     def test_correct_serialization(self):
         base_dir = os.path.dirname(__file__)
-
-        serializer = XMLCodeSerializer()
-
-        with open(f"{base_dir}/files/code_xml.xml", "rb") as xml_file:
-            dataset = serializer.deserialize(inputs={"xml_file": xml_file})
+        dataset = sportscode.load(f"{base_dir}/files/code_xml.xml")
 
         del dataset.codes[2:]
 
@@ -69,6 +62,8 @@ class TestXMLCodeTracking:
             Period(id=2, start_timestamp=45 * 60 + 10, end_timestamp=90 * 60),
         ]
         dataset.codes[1].period = dataset.metadata.periods[1]
+
+        serializer = SportsCodeSerializer()
         output = serializer.serialize(dataset)
 
         expected_output = """<?xml version='1.0' encoding='utf-8'?>

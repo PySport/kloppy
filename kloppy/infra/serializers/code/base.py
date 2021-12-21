@@ -1,17 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Generic, TypeVar
 
 from kloppy.utils import Readable
 from kloppy.domain import CodeDataset
 
 
-class CodeDataSerializer(ABC):
+T = TypeVar("T")
+
+
+class CodeDataDeserializer(ABC, Generic[T]):
     @abstractmethod
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> CodeDataset:
+    def deserialize(self, inputs: T) -> CodeDataset:
         raise NotImplementedError
 
+
+class CodeDataSerializer(ABC):
     @abstractmethod
     def serialize(self, dataset: CodeDataset) -> bytes:
         raise NotImplementedError

@@ -1,18 +1,13 @@
 import os
 import re
 
+import pytest
 from pandas import DataFrame
 from lxml import objectify
 
-from kloppy import MetricaEPTSSerializer
 from kloppy.domain import (
-    Period,
-    AttackingDirection,
-    Orientation,
     Point,
     Point3D,
-    BallState,
-    Team,
     Provider,
 )
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
@@ -26,6 +21,9 @@ from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     read_raw_data,
 )
 from kloppy.utils import performance_logging
+
+
+from kloppy import metrica
 
 
 class TestMetricaEPTSTracking:
@@ -108,20 +106,20 @@ class TestMetricaEPTSTracking:
         assert "player_Track_1_s" in data_frame.columns
         assert "player_Track_1_x" not in data_frame.columns
 
-    def test_correct_deserialization(self):
+    @pytest.fixture
+    def meta_data(self) -> str:
         base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/epts_metrica_metadata.xml"
 
-        serializer = MetricaEPTSSerializer()
+    @pytest.fixture
+    def raw_data(self) -> str:
+        base_dir = os.path.dirname(__file__)
+        return f"{base_dir}/files/epts_metrica_tracking.txt"
 
-        with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
-        ) as metadata, open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data}
-            )
+    def test_correct_deserialization(self, meta_data: str, raw_data: str):
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data, raw_data=raw_data
+        )
 
         first_player = next(iter(dataset.records[0].players_data))
 
@@ -137,20 +135,10 @@ class TestMetricaEPTSTracking:
             x=0.52867, y=0.7069, z=None
         )
 
-    def test_other_data_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-
-        serializer = MetricaEPTSSerializer()
-
-        with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
-        ) as metadata, open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
-
-            dataset = serializer.deserialize(
-                inputs={"metadata": metadata, "raw_data": raw_data}
-            )
+    def test_other_data_deserialization(self, meta_data: str, raw_data: str):
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data, raw_data=raw_data
+        )
 
         first_player = next(iter(dataset.records[0].players_data))
 

@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple, Set, Iterator
+from typing import List, Tuple, Set, Iterator, IO
 
 from kloppy.utils import Readable
 
@@ -39,7 +39,7 @@ def build_regex(
 
 
 def read_raw_data(
-    raw_data: Readable,
+    raw_data: IO[bytes],
     metadata: EPTSMetadata,
     sensor_ids: List[str] = None,
     sample_rate: float = 1.0,

@@ -1,3 +1,5 @@
+from typing import IO
+
 from lxml import objectify
 import warnings
 
@@ -5,7 +7,6 @@ from kloppy.domain import (
     Period,
     PitchDimensions,
     Dimension,
-    Team,
     Score,
     Ground,
     DatasetFlag,
@@ -16,7 +17,6 @@ from kloppy.domain import (
     Provider,
     build_coordinate_system,
 )
-from kloppy.utils import Readable
 
 from .models import *
 
@@ -141,7 +141,7 @@ def _load_pitch_dimensions(
     field_size_path = objectify.ObjectPath("Metadata.Sessions.Session[0]")
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
-    if field_size_elm and normalized:
+    if field_size_elm is not None and normalized:
         return PitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
@@ -181,7 +181,7 @@ def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
 
 
 def load_metadata(
-    metadata_file: Readable, provider: Provider = None
+    metadata_file: IO[bytes], provider: Provider = None
 ) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")

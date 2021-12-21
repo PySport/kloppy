@@ -19,6 +19,7 @@ from kloppy.domain import (
     Origin,
 )
 from kloppy.domain.models.event import Event
+from kloppy.exceptions import KloppyError
 
 
 class Transformer:
@@ -314,6 +315,9 @@ class Transformer:
 
         return replace(event, **position_changes)
 
+    def get_to_coordinate_system(self) -> CoordinateSystem:
+        return self._to_coordinate_system
+
     @classmethod
     def transform_dataset(
         cls,
@@ -394,4 +398,4 @@ class Transformer:
                 records=events,
             )
         else:
-            raise Exception("Unknown Dataset type")
+            raise KloppyError("Unknown Dataset type")

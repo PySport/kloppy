@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, Dict
+from typing import Tuple, Dict, NamedTuple, IO, Optional, Union
 
 from lxml import objectify
 
@@ -26,15 +26,35 @@ from kloppy.domain import (
     Transformer,
     PlayerData,
 )
+from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from . import TrackingDataSerializer
+from .deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
 
-class TRACABSerializer(TrackingDataSerializer):
+class TRACABInputs(NamedTuple):
+    meta_data: IO[bytes]
+    raw_data: IO[bytes]
+
+
+class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
+    def __init__(
+        self,
+        limit: Optional[int] = None,
+        sample_rate: Optional[float] = None,
+        coordinate_system: Optional[Union[str, Provider]] = None,
+        only_alive: Optional[bool] = True,
+    ):
+        super().__init__(limit, sample_rate, coordinate_system)
+        self.only_alive = only_alive
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.TRACAB
+
     @classmethod
     def _frame_from_line(cls, teams, period, line, frame_rate):
         line = str(line)
@@ -84,14 +104,16 @@ class TRACABSerializer(TrackingDataSerializer):
         elif ball_owning_team == "A":
             ball_owning_team = teams[1]
         else:
-            raise Exception(f"Unknown ball owning team: {ball_owning_team}")
+            raise DeserializationError(
+                f"Unknown ball owning team: {ball_owning_team}"
+            )
 
         if ball_state == "Alive":
             ball_state = BallState.ALIVE
         elif ball_state == "Dead":
             ball_state = BallState.DEAD
         else:
-            raise Exception(f"Unknown ball state: {ball_state}")
+            raise DeserializationError(f"Unknown ball state: {ball_state}")
 
         return Frame(
             frame_id=frame_id,
@@ -113,66 +135,14 @@ class TRACABSerializer(TrackingDataSerializer):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
-    ) -> TrackingDataset:
-        """
-        Deserialize TRACAB tracking data into a `TrackingDataset`.
-
-        Parameters
-        ----------
-        inputs : dict
-            input `raw_data` should point to a `Readable` object containing
-            the 'csv' formatted raw data. input `metadata` should point to
-            the xml metadata data.
-        options : dict
-            Options for deserialization of the TRACAB file. Possible options are
-            `only_alive` (boolean) to specify that only frames with alive ball state
-            should be loaded, or `sample_rate` (float between 0 and 1) to specify
-            the amount of frames that should be loaded, `limit` to specify the max number of
-            frames that will be returned.
-        Returns
-        -------
-        dataset : TrackingDataset
-        Raises
-        ------
-        -
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = TRACABSerializer()
-        >>> with open("metadata.xml", "rb") as meta, \
-        >>>      open("raw.dat", "rb") as raw:
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             'metadata': meta,
-        >>>             'raw_data': raw
-        >>>         },
-        >>>         options={
-        >>>             'only_alive': True,
-        >>>             'sample_rate': 1/12
-        >>>         }
-        >>>     )
-        """
-        self.__validate_inputs(inputs)
-
-        if not options:
-            options = {}
-
-        sample_rate = float(options.get("sample_rate", 1.0))
-        limit = int(options.get("limit", 0))
-        only_alive = bool(options.get("only_alive", True))
-
+    def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
         # TODO: also used in Metrica, extract to a method
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
         teams = [home_team, away_team]
 
         with performance_logging("Loading metadata", logger=logger):
-            match = objectify.fromstring(inputs["metadata"].read()).match
+            match = objectify.fromstring(inputs.meta_data.read()).match
             frame_rate = int(match.attrib["iFrameRateFps"])
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
@@ -192,34 +162,21 @@ class TRACABSerializer(TrackingDataSerializer):
 
         with performance_logging("Loading data", logger=logger):
 
-            from_coordinate_system = build_coordinate_system(
-                Provider.TRACAB,
-                length=pitch_size_width,
-                width=pitch_size_height,
-            )
-
-            to_coordinate_system = build_coordinate_system(
-                options.get("coordinate_system", Provider.KLOPPY),
-                length=pitch_size_width,
-                width=pitch_size_height,
-            )
-
-            transformer = Transformer(
-                from_coordinate_system=from_coordinate_system,
-                to_coordinate_system=to_coordinate_system,
+            transformer = self.get_transformer(
+                length=pitch_size_width, width=pitch_size_height
             )
 
             def _iter():
                 n = 0
-                sample = 1.0 / sample_rate
+                sample = 1.0 / self.sample_rate
 
-                for line_ in inputs["raw_data"].readlines():
+                for line_ in inputs.raw_data.readlines():
                     line_ = line_.strip().decode("ascii")
                     if not line_:
                         continue
 
                     frame_id = int(line_[:10].split(":", 1)[0])
-                    if only_alive and not line_.endswith("Alive;:"):
+                    if self.only_alive and not line_.endswith("Alive;:"):
                         continue
 
                     for period_ in periods:
@@ -243,7 +200,7 @@ class TRACABSerializer(TrackingDataSerializer):
                         )
                     )
 
-                if limit and n >= limit:
+                if self.limit and n >= self.limit:
                     break
 
         orientation = (
@@ -255,19 +212,16 @@ class TRACABSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return TrackingDataset(
             records=frames,
             metadata=metadata,
         )
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

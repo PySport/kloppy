@@ -1,6 +1,6 @@
 import logging
 from collections import namedtuple
-from typing import Tuple, Dict, Iterator
+from typing import Tuple, Dict, Iterator, IO, NamedTuple
 
 from kloppy.domain import (
     attacking_direction_from_frame,
@@ -22,33 +22,35 @@ from kloppy.domain import (
     Transformer,
     PlayerData,
 )
+from kloppy.infra.serializers.tracking.deserializer import (
+    TrackingDataDeserializer,
+)
 from kloppy.utils import Readable, performance_logging
 
-from . import TrackingDataSerializer
 
 logger = logging.getLogger(__name__)
 
 
-class MetricaCsvTrackingSerializer(TrackingDataSerializer):
+class MetricaCSVTrackingDataInputs(NamedTuple):
+    home_data: IO[bytes]
+    away_data: IO[bytes]
+
+
+class MetricaCSVTrackingDataDeserializer(
+    TrackingDataDeserializer[MetricaCSVTrackingDataInputs]
+):
     __PartialFrame = namedtuple(
         "PartialFrame",
         "team period frame_id players_data ball_coordinates",
     )
 
-    @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "raw_data_home" not in inputs:
-            raise ValueError(
-                "Please specify a value for input 'raw_data_home'"
-            )
-        if "raw_data_away" not in inputs:
-            raise ValueError(
-                "Please specify a value for input 'raw_data_away'"
-            )
+    @property
+    def provider(self) -> Provider:
+        return Provider.METRICA
 
     def __create_iterator(
         self,
-        data: Readable,
+        data: IO[bytes],
         sample_rate: float,
         frame_rate: int,
         ground: Ground,
@@ -146,83 +148,23 @@ class MetricaCsvTrackingSerializer(TrackingDataSerializer):
             raise ValueError("raw_data_away contains home team data")
 
     def deserialize(
-        self, inputs: Dict[str, Readable], options: Dict = None
+        self, inputs: MetricaCSVTrackingDataInputs
     ) -> TrackingDataset:
-        """
-        Deserialize Metrica tracking data into a `TrackingDataset`.
-
-        Parameters
-        ----------
-        inputs : dict
-            input `raw_data_home` should point to a `Readable` object containing
-            the 'csv' formatted raw data for the home team. input `raw_data_away` should point
-            to a `Readable` object containing the 'csv' formatted raw data for the away team.
-        options : dict
-            Options for deserialization of the Metrica file. Possible options are
-            `sample_rate` (float between 0 and 1) to specify the amount of
-            frames that should be loaded, `limit` to specify the max number of
-            frames that will be returned.
-        Returns
-        -------
-        dataset : TrackingDataset
-        Raises
-        ------
-        ValueError when both input files don't seem to belong to each other
-
-        See Also
-        --------
-
-        Examples
-        --------
-        >>> serializer = MetricaCsvTrackingSerializer()
-        >>> with open("Sample_Game_1_RawTrackingData_Away_Team.csv", "rb") as raw_home, \
-        >>>      open("Sample_Game_1_RawTrackingData_Home_Team.csv", "rb") as raw_away:
-        >>>
-        >>>     dataset = serializer.deserialize(
-        >>>         inputs={
-        >>>             'raw_data_home': raw_home,
-        >>>             'raw_data_away': raw_away
-        >>>         },
-        >>>         options={
-        >>>             'sample_rate': 1/12
-        >>>         }
-        >>>     )
-        """
-        self.__validate_inputs(inputs)
-        if not options:
-            options = {}
-
-        sample_rate = float(options.get("sample_rate", 1.0))
-        limit = int(options.get("limit", 0))
-        length = int(options.get("length", 105))
-        width = int(options.get("width", 68))
+        # TODO: consider passing this in __init__
+        length = 105
+        width = 68
 
         # consider reading this from data
         frame_rate = 25
 
-        from_coordinate_system = build_coordinate_system(
-            Provider.METRICA,
-            length=length,
-            width=width,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            options.get("coordinate_system", Provider.KLOPPY),
-            length=length,
-            width=width,
-        )
-
-        transformer = Transformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
-        )
+        transformer = self.get_transformer(length=length, width=width)
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
-                inputs["raw_data_home"], sample_rate, frame_rate, Ground.HOME
+                inputs.home_data, self.sample_rate, frame_rate, Ground.HOME
             )
             away_iterator = self.__create_iterator(
-                inputs["raw_data_away"], sample_rate, frame_rate, Ground.AWAY
+                inputs.away_data, self.sample_rate, frame_rate, Ground.AWAY
             )
 
             partial_frames = zip(home_iterator, away_iterator)
@@ -278,7 +220,7 @@ class MetricaCsvTrackingSerializer(TrackingDataSerializer):
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
-                if limit and n >= limit:
+                if self.limit and n >= self.limit:
                     break
 
         orientation = (
@@ -290,16 +232,13 @@ class MetricaCsvTrackingSerializer(TrackingDataSerializer):
         metadata = Metadata(
             teams=teams,
             periods=periods,
-            pitch_dimensions=to_coordinate_system.pitch_dimensions,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.METRICA,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
-            coordinate_system=to_coordinate_system,
+            coordinate_system=transformer.get_to_coordinate_system(),
         )
 
         return TrackingDataset(records=frames, metadata=metadata)
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

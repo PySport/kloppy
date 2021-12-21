@@ -29,6 +29,8 @@ def setup_package():
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
             "License :: OSI Approved",
             "Topic :: Scientific/Engineering",
         ],
@@ -36,15 +38,16 @@ def setup_package():
             "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
         },
         install_requires=[
-            "lxml>=4.5.0",
-            "requests>=2.0.0",
-            "networkx>=2.4",
+            "lxml>=4.5.0,<5",
+            "requests>=2.0.0,<3",
             "pytz>=2020.1",
-            'dataclasses;python_version<"3.7"',
+            'dataclasses==0.8;python_version<"3.7"',
+            "python-dateutil>=2.8.1,<3",
         ],
         extras_require={
-            "test": ["pytest", "pandas>=1.0.0"],
-            "development": ["pre-commit"],
+            "test": ["pytest>=6.2.5,<7", "pandas>=1.0.0,<2", "black==20.8b1"],
+            "development": ["pre-commit==2.6.0"],
+            "query": ["networkx>=2.4,<3"],
         },
     )
 

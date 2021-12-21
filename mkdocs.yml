@@ -33,7 +33,6 @@ nav:
     - State: examples/state.ipynb
     - Plotting2: examples/plotting.ipynb
   - API Reference:
-#    - Main: api/main.md
     - Domain:
       - Common: api/domain/common.md
       - Pitch: api/domain/pitch.md

@@ -65,3 +65,4 @@ style#two-columns-ul + ul {
 - [Ricardo Tavares](https://github.com/rjtavares)
 - [Thomas Seidl](https://github.com/ThomasSeidl)
 - [Tim Keller](https://github.com/TK5-Tim)
+- [Will McGugan](https://github.com/willmcgugan)

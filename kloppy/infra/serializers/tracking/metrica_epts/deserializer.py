@@ -136,6 +136,3 @@ class MetricaEPTSTrackingDataDeserializer(
             )
 
         return TrackingDataset(records=frames, metadata=metadata)
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

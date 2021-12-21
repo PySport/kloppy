@@ -418,6 +418,3 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
         )
 
         return EventDataset(metadata=metadata, records=events)
-
-    def serialize(self, data_set: EventDataset) -> Tuple[str, str]:
-        raise NotImplementedError

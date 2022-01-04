@@ -26,6 +26,7 @@ from kloppy.domain import (
     EventType,
     Ground,
     Score,
+    Formation,
     Provider,
     Metadata,
     Player,
@@ -33,6 +34,7 @@ from kloppy.domain import (
     RecoveryEvent,
     BallOutEvent,
     FoulCommittedEvent,
+    FormationChangeEvent,
     CardEvent,
     CardType,
     CardQualifier,
@@ -65,6 +67,7 @@ EVENT_TYPE_CORNER_AWARDED = 6
 EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
+EVENT_TYPE_FORMATION_CHANGE = 40
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
 
@@ -105,6 +108,8 @@ EVENT_QUALIFIER_ASSIST_2ND = 218
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
 EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
 EVENT_QUALIFIER_RED_CARD = 33
+
+EVENT_QUALIFIER_TEAM_FORMATION = 130
 
 event_type_names = {
     1: "pass",
@@ -186,6 +191,33 @@ event_type_names = {
     77: "player off pitch",
 }
 
+formation_names = {
+    2: "4-4-2",
+    3: "4-1-2-1-2",
+    4: "4-3-3",
+    5: "4-5-1",
+    6: "4-4-1-1",
+    7: "4-1-4-1",
+    8: "4-2-3-1",
+    9: "4-3-2-1",
+    10: "5-3-2",
+    11: "5-4-1",
+    12: "3-5-2",
+    13: "3-4-3",
+    14: "3-1-3-1-2",
+    15: "4-2-2-2",
+    16: "3-5-1-1",
+    17: "3-4-2-1",
+    18: "3-4-1-2",
+    19: "3-1-4-2",
+    20: "3-1-2-1-3",
+    21: "4-1-3-2",
+    22: "4-2-4-0",
+    23: "4-3-1-2",
+    24: "3-2-4-1",
+    25: "3-3-3-1",
+}
+
 
 def _parse_f24_datetime(dt_str: str) -> float:
     return (
@@ -251,6 +283,13 @@ def _parse_card(raw_qualifiers: List) -> Dict:
         card_type = None
 
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
+
+
+def _parse_formation_change(raw_qualifiers: List) -> Dict:
+    formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
+    formation_name = formation_names[formation_id]
+
+    return dict(formation=formation_name)
 
 
 def _parse_shot(
@@ -440,19 +479,28 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
 
             home_score = None
             away_score = None
+            home_formation = None
+            away_formation = None
             for team_elm in team_elms:
                 if team_elm.attrib["Side"] == "Home":
                     home_score = team_elm.attrib["Score"]
+                    home_formation = "-".join(
+                        list(team_elm.attrib["Formation"])
+                    )
                     home_team = _team_from_xml_elm(team_elm, f7_root)
+
                 elif team_elm.attrib["Side"] == "Away":
                     away_score = team_elm.attrib["Score"]
+                    away_formation = "-".join(
+                        list(team_elm.attrib["Formation"])
+                    )
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise DeserializationError(
                         f"Unknown side: {team_elm.attrib['Side']}"
                     )
-
             score = Score(home=home_score, away=away_score)
+            formations = Formation(home=home_formation, away=away_formation)
             teams = [home_team, away_team]
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
@@ -612,6 +660,18 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **generic_event_kwargs,
                         )
 
+                    elif type_id == EVENT_TYPE_FORMATION_CHANGE:
+
+                        formation_change_event_kwargs = (
+                            _parse_formation_change(raw_qualifiers)
+                        )
+                        event = FormationChangeEvent.create(
+                            result=None,
+                            qualifiers=None,
+                            **formation_change_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+
                     elif type_id == EVENT_TYPE_CARD:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_qualifiers)
@@ -637,6 +697,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=score,
+            formations=formations,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,

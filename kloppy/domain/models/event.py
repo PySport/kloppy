@@ -130,6 +130,17 @@ class CardType(Enum):
     RED = "RED"
 
 
+class FormationType(Enum):
+    """
+    FormationType
+
+    Attributes:
+        FORMATION_TYPE (FormationType): formation the team changes to
+    """
+
+    FORMATION_TYPE = None
+
+
 class EventType(Enum):
     """
     Attributes:
@@ -145,6 +156,7 @@ class EventType(Enum):
         RECOVERY (EventType):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
+        FORMATION_CHANGE (EventType)
     """
 
     GENERIC = "generic"
@@ -160,6 +172,7 @@ class EventType(Enum):
     RECOVERY = "RECOVERY"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+    FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
         return self.value
@@ -570,6 +583,24 @@ class CardEvent(Event):
 
 @dataclass
 @docstring_inherit_attributes(Event)
+class FormationChangeEvent(Event):
+    """
+    CardEvent
+
+    Attributes:
+        event_type (EventType): `EventType.FORMATION_CHANGE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"card"`
+        card_type: See [`CardType`][kloppy.domain.models.event.CardType]
+    """
+
+    formation: FormationType
+
+    event_type: EventType = EventType.FORMATION_CHANGE
+    event_name: str = "formation_change"
+
+
+@dataclass
+@docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
     """
     RecoveryEvent
@@ -778,6 +809,8 @@ __all__ = [
     "CardEvent",
     "CardType",
     "CardQualifier",
+    "FormationType",
+    "FormationChangeEvent",
     "EventDataset",
     "RecoveryEvent",
     "FoulCommittedEvent",

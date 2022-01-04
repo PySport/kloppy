@@ -21,6 +21,20 @@ class Score:
     away: int
 
 
+@dataclass
+class Formation:
+    """
+    Formation
+
+    Attributes:
+        home:
+        away:
+    """
+
+    home: str
+    away: str
+
+
 class Ground(Enum):
     """
     Attributes:
@@ -660,6 +674,7 @@ class Metadata:
         periods: See [`Period`][kloppy.domain.models.common.Period]
         pitch_dimensions: See [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
         score: See [`Score`][kloppy.domain.models.common.Score]
+        formation:
         frame_rate:
         orientation: See [`Orientation`][kloppy.domain.models.common.Orientation]
         flags:
@@ -670,6 +685,7 @@ class Metadata:
     periods: List[Period]
     pitch_dimensions: PitchDimensions
     score: Score
+    formations: Formation
     frame_rate: float
     orientation: Orientation
     flags: DatasetFlag

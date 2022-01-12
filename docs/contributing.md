@@ -21,8 +21,25 @@ please specify if it relates to any existing issues.
 
 ## Project Setup
 
-After you have forked the code and cloned it to your machine, execute the command `pip install -r requirements.txt` 
-in order to install all necessary project dependencies.
+After you have forked the code and cloned it to your machine, execute the following commands in order to install all necessary
+project dependencies. It is recommanded to create a virtual environment.
+
+### Environment setup
+
+```bash
+# create virtual environment
+python3 -m virtualenv .venv
+source .venv/bin/activate
+
+# bump dependencies inside virtual env
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+
+# install extra dependencies
+python -m pip install -e '.[test]'
+python -m pip install -e '.[development]'
+python -m pip install -e '.[query]'
+```
 
 ## Code Formatting
 
@@ -37,6 +54,22 @@ follow these instructions:
 - When you next run a `git commit` command on the repository, _black_ will run and automatically format any changed
 files. *Note*: if _black_ needs to re-format a file, the commit will fail, meaning you will then need to execute
 `git add .` and `git commit` again to commit the files updated by _black_.
+
+## Documentation
+
+This project uses [MkDocs](https://www.mkdocs.org/) to generate documentation from pages written in Markdown.
+
+To build docs :
+
+```bash
+# install dependencies for documentation (in virtual env)
+python -m pip install -r docs-requirements.txt
+
+# start MkDocs built-in dev-server
+mkdocs serve
+```
+
+Open up [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser to preview your documentation.
 
 ## Contributors (sorted alphabetically)
 

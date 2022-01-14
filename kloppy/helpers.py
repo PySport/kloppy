@@ -460,6 +460,11 @@ def _event_to_pandas_row_converter(event: Event) -> Dict:
             {"card_type": event.card_type.value if event.card_type else None}
         )
 
+    # parse qualifiers
+    if event.qualifiers:
+        for qualifier in event.qualifiers:
+            row.update(qualifier.to_dict())
+
     # # init dict with all possible values for PassType (mapping all values to False)
     # list_pass_types = [f"pass_type_{p.value.lower()}" for p in PassType]
     # dict_pass_types = dict.fromkeys(list_pass_types, False)

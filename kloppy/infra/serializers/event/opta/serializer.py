@@ -362,10 +362,10 @@ def _get_event_pass_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(PassQualifier(value=PassType.LAUNCH))
     if EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
         qualifiers.append(PassQualifier(value=PassType.FLICK_ON))
-    if EVENT_QUALIFIER_ASSIST in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST))
-    if EVENT_QUALIFIER_ASSIST_2ND in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST_2ND))
+    # if EVENT_QUALIFIER_ASSIST in raw_qualifiers:
+    #     qualifiers.append(PassQualifier(value=PassType.ASSIST))
+    # if EVENT_QUALIFIER_ASSIST_2ND in raw_qualifiers:
+    #     qualifiers.append(PassQualifier(value=PassType.ASSIST_2ND))
     return qualifiers
 
 

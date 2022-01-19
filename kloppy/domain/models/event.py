@@ -138,7 +138,58 @@ class FormationType(Enum):
         FORMATION_TYPE (FormationType): formation the team changes to
     """
 
-    FORMATION_TYPE = None
+    # FORMATION_TYPE = None
+    FOUR_FOUR_TWO = "4-4-2"
+    FOUR_ONE_TWO_ONE_TWO = "4-1-2-1-2"
+    FOUR_THREE_THREE = "4-3-3"
+    FOUR_FIVE_ONE = "4-5-1"
+    FOUR_FOUR_ONE_ONE = "4-4-1-1"
+    FOUR_ONE_FOUR_ONE = "4-1-4-1"
+    FOUR_TWO_THREE_ONE = "4-2-3-1"
+    FOUR_THREE_TWO_ONE = "4-3-2-1"
+    FIVE_THREE_TWO = "5-3-2"
+    FIVE_FOUR_ONE = "5-4-1"
+    THREE_FIVE_TWO = "3-5-2"
+    THREE_FOUR_THREE = "3-4-3"
+    THREE_ONE_THREE_ONE_TWO = "3-1-3-1-2"
+    FOUR_TWO_TWO_TWO = "4-2-2-2"
+    THREE_FIVE_ONE_ONE = "3-5-1-1"
+    THREE_FOUR_TWO_ONE = "3-4-2-1"
+    THREE_FOUR_ONE_TWO = "3-4-1-2"
+    THREE_ONE_FOUR_TWO = "3-1-4-2"
+    THREE_ONE_TWO_ONE_THREE = "3-1-2-1-3"
+    FOUR_ONE_THREE_TWO = "4-1-3-2"
+    FOUR_TWO_FOUR_ZERO = "4-2-4-0"
+    FOUR_THREE_ONE_TWO = "4-3-1-2"
+    THREE_TWO_FOUR_ONE = "3-2-4-1"
+    THREE_THREE_THREE_ONE = "3-3-3-1"
+
+    # formation_names = {
+    #     2: "4-4-2",
+    #     3: "4-1-2-1-2",
+    #     4: "4-3-3",
+    #     5: "4-5-1",
+    #     6: "4-4-1-1",
+    #     7: "4-1-4-1",
+    #     8: "4-2-3-1",
+    #     9: "4-3-2-1",
+    #     10: "5-3-2",
+    #     11: "5-4-1",
+    #     12: "3-5-2",
+    #     13: "3-4-3",
+    #     14: "3-1-3-1-2",
+    #     15: "4-2-2-2",
+    #     16: "3-5-1-1",
+    #     17: "3-4-2-1",
+    #     18: "3-4-1-2",
+    #     19: "3-1-4-2",
+    #     20: "3-1-2-1-3",
+    #     21: "4-1-3-2",
+    #     22: "4-2-4-0",
+    #     23: "4-3-1-2",
+    #     24: "3-2-4-1",
+    #     25: "3-3-3-1",
+    # }
 
 
 class EventType(Enum):
@@ -585,12 +636,12 @@ class CardEvent(Event):
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """
-    CardEvent
+    FormationChangeEvent
 
     Attributes:
         event_type (EventType): `EventType.FORMATION_CHANGE` (See [`EventType`][kloppy.domain.models.event.EventType])
         event_name (str): `"card"`
-        card_type: See [`CardType`][kloppy.domain.models.event.CardType]
+        formation: See [`FormationType`][kloppy.domain.models.event.FormationType]
     """
 
     formation: FormationType

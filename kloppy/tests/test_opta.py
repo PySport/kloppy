@@ -14,6 +14,8 @@ from kloppy.domain import (
     PassType,
     DatasetType,
     CardType,
+
+    FormationType
 )
 
 from kloppy import opta
@@ -25,17 +27,34 @@ class TestOpta:
     @pytest.fixture
     def f24_data(self) -> str:
         base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f24.xml"
+        # return f"{base_dir}/files/opta_f24.xml"
+        return f"{base_dir}/files/F24-112-2123610.xml"
 
     @pytest.fixture
     def f7_data(self) -> str:
         base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f7.xml"
+        # return f"{base_dir}/files/opta_f7.xml"
+        return f"{base_dir}/files/F7-112-2123610.xml"
 
     def test_correct_deserialization(self, f7_data: str, f24_data: str):
         dataset = opta.load(
             f24_data=f24_data, f7_data=f7_data, coordinates="opta"
         )
+
+        dataset = dataset.add_state(['score', 'formation'])
+
+        dataframe = dataset.to_pandas(additional_columns={
+            'home_score': lambda event: event.state['score'].home,
+            'away_score': lambda event: event.state['score'].away,
+            'home_formation': lambda event: event.state['formation'].home,
+            'away_formation': lambda event: event.state['formation'].away,
+        })
+        print()
+        print()
+        print("TEST", FormationType.FOUR_THREE_THREE.value)
+        print()
+        print(dataframe["home_formation"])
+        print(dataframe["home_formation"].unique(), dataframe["away_formation"].unique())
 
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT

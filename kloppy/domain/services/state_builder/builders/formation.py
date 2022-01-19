@@ -6,14 +6,15 @@ from kloppy.domain import (
     Ground,
     ShotResult,
     EventDataset,
+    FormationType,
 )
 from ..builder import StateBuilder
 
 
 @dataclass
 class Formation:
-    home: str
-    away: str
+    home: FormationType
+    away: FormationType
 
     def __str__(self):
         return f"{self.home}-{self.away}"
@@ -31,7 +32,7 @@ class FormationStateBuilder(StateBuilder):
     def reduce_after(self, state: Formation, event: Event) -> Formation:
         if isinstance(event, FormationChangeEvent):
             if event.team.ground == Ground.HOME:
-                state = replace(state, home=event.formation)
+                state = replace(state, home=event.formation.value)
             else:
-                state = replace(state, away=event.formation)
+                state = replace(state, away=event.formation.value)
         return state

@@ -26,7 +26,6 @@ from kloppy.domain import (
     EventType,
     Ground,
     Score,
-    Formation,
     Provider,
     Metadata,
     Player,
@@ -192,7 +191,7 @@ event_type_names = {
     77: "player off pitch",
 }
 
-formation_names = {
+formations = {
     2: FormationType.FOUR_FOUR_TWO,
     3: FormationType.FOUR_ONE_TWO_ONE_TWO,
     4: FormationType.FOUR_THREE_THREE,
@@ -288,9 +287,9 @@ def _parse_card(raw_qualifiers: List) -> Dict:
 
 def _parse_formation_change(raw_qualifiers: List) -> Dict:
     formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
-    formation_name = formation_names[formation_id]
+    formation = formations[formation_id]
 
-    return dict(formation=formation_name)
+    return dict(formation=formation)
 
 
 def _parse_shot(
@@ -343,12 +342,14 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     )
 
     team_id = team_elm.attrib["TeamRef"].lstrip("t")
+    formation = "-".join(list(team_elm.attrib["Formation"]))
     team = Team(
         team_id=str(team_id),
         name=team_name,
         ground=Ground.HOME
         if team_elm.attrib["Side"] == "Home"
         else Ground.AWAY,
+        starting_formation=formation,
     )
     team.players = [
         Player(
@@ -480,28 +481,18 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
 
             home_score = None
             away_score = None
-            home_formation = None
-            away_formation = None
             for team_elm in team_elms:
                 if team_elm.attrib["Side"] == "Home":
                     home_score = team_elm.attrib["Score"]
-                    home_formation = "-".join(
-                        list(team_elm.attrib["Formation"])
-                    )
                     home_team = _team_from_xml_elm(team_elm, f7_root)
-
                 elif team_elm.attrib["Side"] == "Away":
                     away_score = team_elm.attrib["Score"]
-                    away_formation = "-".join(
-                        list(team_elm.attrib["Formation"])
-                    )
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise DeserializationError(
                         f"Unknown side: {team_elm.attrib['Side']}"
                     )
             score = Score(home=home_score, away=away_score)
-            formations = Formation(home=home_formation, away=away_formation)
             teams = [home_team, away_team]
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
@@ -662,7 +653,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         )
 
                     elif type_id == EVENT_TYPE_FORMATION_CHANGE:
-
                         formation_change_event_kwargs = (
                             _parse_formation_change(raw_qualifiers)
                         )
@@ -698,7 +688,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=score,
-            formations=formations,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM,

@@ -80,6 +80,27 @@ class TestStateBuilder:
             (EventType.GENERIC, 21),
         ]
 
+    def test_formation_state_builder(self):
+        dataset = self._load_dataset("statsbomb")
+
+        with performance_logging("add_state"):
+            dataset_with_state = dataset.add_state("formation")
+
+        events_per_formation_change = {}
+        for formation, events in groupby(
+            dataset_with_state.events,
+            lambda event: event.state["formation"].away,
+        ):
+            events = list(events)
+            events_per_formation_change[str(formation)] = len(events)
+
+        # inspect FormationChangeEvent usage and formation state_builder
+        assert events_per_formation_change["4-1-4-1"] == 3073
+        assert events_per_formation_change["4-4-2"] == 949
+
+        assert dataset.metadata.teams[0].starting_formation == "4-4-2"
+        assert dataset_with_state.events[1].state["formation"].home == "4-4-2"
+
     def test_register_custom_builder(self):
         class CustomStateBuilder(StateBuilder):
             def initial_state(self, dataset: EventDataset) -> int:

@@ -4,7 +4,6 @@ from kloppy.domain import (
     FormationChangeEvent,
     Event,
     Ground,
-    ShotResult,
     EventDataset,
     FormationType,
 )
@@ -17,13 +16,15 @@ class Formation:
     away: FormationType
 
     def __str__(self):
-        return f"{self.home}-{self.away}"
+        return f"{self.home} {self.away}"
 
 
 class FormationStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Formation:
-        home_formation = dataset.metadata.formations.home
-        away_formation = dataset.metadata.formations.away
+        home_team, away_team = dataset.metadata.teams
+        home_formation = home_team.starting_formation
+        away_formation = away_team.starting_formation
+
         return Formation(home=home_formation, away=away_formation)
 
     def reduce_before(self, state: Formation, event: Event) -> Formation:

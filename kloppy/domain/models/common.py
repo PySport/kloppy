@@ -21,20 +21,6 @@ class Score:
     away: int
 
 
-@dataclass
-class Formation:
-    """
-    Formation
-
-    Attributes:
-        home:
-        away:
-    """
-
-    home: str
-    away: str
-
-
 class Ground(Enum):
     """
     Attributes:
@@ -152,11 +138,13 @@ class Team:
         name: readable name of the team
         ground: See [`Ground`][kloppy.domain.models.common.Ground]
         players: See [`Player`][kloppy.domain.models.common.Player]
+        starting_formation: See ['FormationType']
     """
 
     team_id: str
     name: str
     ground: Ground
+    starting_formation: str = ""
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
@@ -674,7 +662,6 @@ class Metadata:
         periods: See [`Period`][kloppy.domain.models.common.Period]
         pitch_dimensions: See [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
         score: See [`Score`][kloppy.domain.models.common.Score]
-        formation:
         frame_rate:
         orientation: See [`Orientation`][kloppy.domain.models.common.Orientation]
         flags:
@@ -685,7 +672,6 @@ class Metadata:
     periods: List[Period]
     pitch_dimensions: PitchDimensions
     score: Score
-    formations: Formation
     frame_rate: float
     orientation: Orientation
     flags: DatasetFlag

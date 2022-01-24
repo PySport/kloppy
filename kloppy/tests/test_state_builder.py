@@ -32,7 +32,7 @@ class TestStateBuilder:
             events_per_score[str(score)] = len(events)
 
         assert events_per_score == {
-            "0-0": 2897,
+            "0-0": 2898,
             "1-0": 717,
             "2-0": 405,
             "3-0": 3,
@@ -53,7 +53,7 @@ class TestStateBuilder:
             events_per_sequence[sequence_id] = len(events)
 
         assert events_per_sequence[0] == 4
-        assert events_per_sequence[50] == 14
+        assert events_per_sequence[51] == 14
 
     def test_lineup_state_builder(self):
         dataset = self._load_dataset("statsbomb_15986")

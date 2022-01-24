@@ -14,6 +14,8 @@ from kloppy.domain import (
 )
 
 from kloppy import statsbomb
+from kloppy.domain.models.event import CardType
+from kloppy.infra.serializers.event.wyscout.wyscout_tags import YELLOW_CARD
 
 
 class TestStatsbomb:
@@ -128,3 +130,30 @@ class TestStatsbomb:
             assert event.replacement_player == event.team.get_player_by_id(
                 replacement_player_id
             )
+
+    def test_card(self, lineup_data: str, event_data: str):
+        """
+        Test card events
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["card"],
+        )
+
+        assert len(dataset.events) == 2
+
+        for card in dataset.events:
+            assert card.card_type == CardType.FIRST_YELLOW
+
+    def test_foul_committed(self, lineup_data: str, event_data: str):
+        """
+        Test foul committed events
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["foul_committed"],
+        )
+
+        assert len(dataset.events) == 2

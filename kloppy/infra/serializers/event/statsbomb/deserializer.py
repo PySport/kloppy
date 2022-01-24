@@ -174,7 +174,8 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
         receiver_player = team.get_player_by_id(pass_dict["recipient"]["id"])
 
     receiver_coordinates = _parse_coordinates(
-        pass_dict["end_location"], fidelity_version
+        pass_dict["end_location"],
+        fidelity_version,
     )
 
     qualifiers = _get_event_qualifiers(pass_dict)
@@ -295,19 +296,32 @@ def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
     }
 
 
-def _parse_card(card_containing_dict: Dict) -> Dict:
-    if "card" in card_containing_dict:
-        card_id = card_containing_dict["card"]["id"]
-        if card_id in (5, 65):
-            card_type = CardType.RED
-        elif card_id in (6, 66):
-            card_type = CardType.SECOND_YELLOW
-        elif card_id in (7, 67):
-            card_type = CardType.FIRST_YELLOW
-        else:
-            raise DeserializationError(f"Unknown card id {card_id}")
+def _parse_bad_behaviour(bad_behaviour_dict: Dict) -> Dict:
+    bad_behaviour = {}
+    if "card" in bad_behaviour_dict:
+        bad_behaviour["card"] = _parse_card(bad_behaviour_dict["card"])
+
+    return bad_behaviour
+
+
+def _parse_foul_committed(foul_committed_dict: Dict) -> Dict:
+    foul_committed = {}
+    if "card" in foul_committed_dict:
+        foul_committed["card"] = _parse_card(foul_committed_dict["card"])
+
+    return foul_committed
+
+
+def _parse_card(card_dict: Dict) -> Dict:
+    card_id = card_dict["id"]
+    if card_id in (5, 65):
+        card_type = CardType.RED
+    elif card_id in (6, 66):
+        card_type = CardType.SECOND_YELLOW
+    elif card_id in (7, 67):
+        card_type = CardType.FIRST_YELLOW
     else:
-        card_type = None
+        raise DeserializationError(f"Unknown card id {card_id}")
 
     return {
         "card_type": card_type,
@@ -510,7 +524,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 # are flipped between Statsbomb and kloppy
                 elif event_type == SB_EVENT_TYPE_DRIBBLE:
                     take_on_event_kwargs = _parse_take_on(
-                        take_on_dict=raw_event["dribble"]
+                        take_on_dict=raw_event["dribble"],
                     )
                     event = TakeOnEvent.create(
                         qualifiers=None,
@@ -530,7 +544,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         **generic_event_kwargs,
                     )
 
-                    # lineup affecting events
+                # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
                         substitution_dict=raw_event["substitution"],
@@ -543,10 +557,11 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         **generic_event_kwargs,
                     )
                 elif event_type == SB_EVENT_TYPE_BAD_BEHAVIOUR:
-                    card_kwargs = _parse_card(
-                        card_containing_dict=raw_event.get("bad_behaviour", {})
+                    bad_behaviour_kwargs = _parse_bad_behaviour(
+                        bad_behaviour_dict=raw_event.get("bad_behaviour", {}),
                     )
-                    if card_kwargs["card_type"]:
+                    if "card" in bad_behaviour_kwargs:
+                        card_kwargs = bad_behaviour_kwargs["card"]
                         event = CardEvent.create(
                             result=None,
                             qualifiers=None,
@@ -554,12 +569,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                             **generic_event_kwargs,
                         )
                 elif event_type == SB_EVENT_TYPE_FOUL_COMMITTED:
-                    card_kwargs = _parse_card(
-                        card_containing_dict=raw_event.get(
+                    foul_committed_kwargs = _parse_foul_committed(
+                        foul_committed_dict=raw_event.get(
                             "foul_committed", {}
-                        )
+                        ),
                     )
-                    if card_kwargs["card_type"]:
+                    if "card" in foul_committed_kwargs:
+                        card_kwargs = foul_committed_kwargs["card"]
                         event = CardEvent.create(
                             result=None,
                             qualifiers=None,

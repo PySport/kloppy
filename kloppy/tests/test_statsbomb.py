@@ -4,18 +4,17 @@ import pytest
 
 from kloppy.domain import (
     AttackingDirection,
-    Period,
-    Orientation,
-    Provider,
-    Point,
-    BodyPartQualifier,
     BodyPart,
+    BodyPartQualifier,
     DatasetType,
+    Orientation,
+    Period,
+    Point,
+    Provider,
 )
 
 from kloppy import statsbomb
 from kloppy.domain.models.event import CardType
-from kloppy.infra.serializers.event.wyscout.wyscout_tags import YELLOW_CARD
 
 
 class TestStatsbomb:

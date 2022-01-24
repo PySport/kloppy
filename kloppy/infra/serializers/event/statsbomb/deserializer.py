@@ -252,7 +252,8 @@ def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
     return {
         "result": CarryResult.COMPLETE,
         "end_coordinates": _parse_coordinates(
-            carry_dict["end_location"], fidelity_version
+            carry_dict["end_location"],
+            fidelity_version,
         ),
     }
 
@@ -475,7 +476,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     "player": player,
                     "coordinates": (
                         _parse_coordinates(
-                            raw_event.get("location"), fidelity_version
+                            raw_event.get("location"),
+                            fidelity_version,
                         )
                         if "location" in raw_event
                         else None
@@ -489,7 +491,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         team=team,
                         fidelity_version=fidelity_version,
                     )
-
                     event = PassEvent.create(
                         # TODO: Consider moving this to _parse_pass
                         receive_timestamp=timestamp + raw_event["duration"],
@@ -498,10 +499,11 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     )
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
-                        shot_dict=raw_event["shot"]
+                        shot_dict=raw_event["shot"],
                     )
                     event = ShotEvent.create(
-                        **shot_event_kwargs, **generic_event_kwargs
+                        **shot_event_kwargs,
+                        **generic_event_kwargs,
                     )
 
                 # For dribble and carry the definitions
@@ -531,7 +533,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
-                        substitution_dict=raw_event["substitution"], team=team
+                        substitution_dict=raw_event["substitution"],
+                        team=team,
                     )
                     event = SubstitutionEvent.create(
                         result=None,
@@ -565,11 +568,15 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         )
                 elif event_type == SB_EVENT_TYPE_PLAYER_ON:
                     event = PlayerOnEvent.create(
-                        result=None, qualifiers=None, **generic_event_kwargs
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
                     )
                 elif event_type == SB_EVENT_TYPE_PLAYER_OFF:
                     event = PlayerOffEvent.create(
-                        result=None, qualifiers=None, **generic_event_kwargs
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
                     )
 
                 elif event_type == SB_EVENT_TYPE_RECOVERY:

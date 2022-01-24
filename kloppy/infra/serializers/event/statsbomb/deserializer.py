@@ -179,12 +179,12 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
 
     qualifiers = _get_event_qualifiers(pass_dict)
 
-    return dict(
-        result=result,
-        receiver_coordinates=receiver_coordinates,
-        receiver_player=receiver_player,
-        qualifiers=qualifiers,
-    )
+    return {
+        "result": result,
+        "receiver_coordinates": receiver_coordinates,
+        "receiver_player": receiver_player,
+        "qualifiers": qualifiers,
+    }
 
 
 def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
@@ -211,6 +211,14 @@ def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
     return qualifiers
 
 
+def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    return []
+
+
+def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+    return []
+
+
 def _parse_shot(shot_dict: Dict) -> Dict:
     outcome_id = shot_dict["outcome"]["id"]
     if outcome_id == SB_SHOT_OUTCOME_OFF_TARGET:
@@ -234,19 +242,19 @@ def _parse_shot(shot_dict: Dict) -> Dict:
 
     qualifiers = _get_event_qualifiers(shot_dict)
 
-    return dict(
-        result=result,
-        qualifiers=qualifiers,
-    )
+    return {
+        "result": result,
+        "qualifiers": qualifiers,
+    }
 
 
 def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
-    return dict(
-        result=CarryResult.COMPLETE,
-        end_coordinates=_parse_coordinates(
+    return {
+        "result": CarryResult.COMPLETE,
+        "end_coordinates": _parse_coordinates(
             carry_dict["end_location"], fidelity_version
         ),
-    )
+    }
 
 
 def _parse_take_on(take_on_dict: Dict) -> Dict:
@@ -265,7 +273,9 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
     else:
         result = TakeOnResult.COMPLETE
 
-    return dict(result=result)
+    return {
+        "result": result,
+    }
 
 
 def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
@@ -279,7 +289,9 @@ def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
             f'Could not find replacement player {substitution_dict["replacement"]["id"]}'
         )
 
-    return dict(replacement_player=replacement_player)
+    return {
+        "replacement_player": replacement_player,
+    }
 
 
 def _parse_card(card_containing_dict: Dict) -> Dict:
@@ -296,7 +308,9 @@ def _parse_card(card_containing_dict: Dict) -> Dict:
     else:
         card_type = None
 
-    return dict(card_type=card_type)
+    return {
+        "card_type": card_type,
+    }
 
 
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
@@ -449,25 +463,25 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     # TODO: Uh ohhhh.. don't know which one to pick
                     fidelity_version = xy_fidelity_version
 
-                generic_event_kwargs = dict(
+                generic_event_kwargs = {
                     # from DataRecord
-                    period=period,
-                    timestamp=timestamp,
-                    ball_owning_team=possession_team,
-                    ball_state=BallState.ALIVE,
+                    "period": period,
+                    "timestamp": timestamp,
+                    "ball_owning_team": possession_team,
+                    "ball_state": BallState.ALIVE,
                     # from Event
-                    event_id=raw_event["id"],
-                    team=team,
-                    player=player,
-                    coordinates=(
+                    "event_id": raw_event["id"],
+                    "team": team,
+                    "player": player,
+                    "coordinates": (
                         _parse_coordinates(
                             raw_event.get("location"), fidelity_version
                         )
                         if "location" in raw_event
                         else None
                     ),
-                    raw_event=raw_event,
-                )
+                    "raw_event": raw_event,
+                }
 
                 if event_type == SB_EVENT_TYPE_PASS:
                     pass_event_kwargs = _parse_pass(

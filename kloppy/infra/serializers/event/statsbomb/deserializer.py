@@ -406,9 +406,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
             events = []
             for raw_event in raw_events:
                 if raw_event["team"]["id"] == home_lineup["team_id"]:
-                    team = teams[0]
+                    team = home_team
                 elif raw_event["team"]["id"] == away_lineup["team_id"]:
-                    team = teams[1]
+                    team = away_team
                 else:
                     raise DeserializationError(
                         f"Unknown team_id {raw_event['team']['id']}"
@@ -418,12 +418,12 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     raw_event["possession_team"]["id"]
                     == home_lineup["team_id"]
                 ):
-                    possession_team = teams[0]
+                    possession_team = home_team
                 elif (
                     raw_event["possession_team"]["id"]
                     == away_lineup["team_id"]
                 ):
-                    possession_team = teams[1]
+                    possession_team = away_team
                 else:
                     raise DeserializationError(
                         f"Unknown possession_team_id: {raw_event['possession_team']}"

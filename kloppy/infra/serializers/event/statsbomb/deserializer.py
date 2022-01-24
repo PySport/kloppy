@@ -212,14 +212,6 @@ def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
-    return []
-
-
-def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
-    return []
-
-
 def _parse_shot(shot_dict: Dict) -> Dict:
     outcome_id = shot_dict["outcome"]["id"]
     if outcome_id == SB_SHOT_OUTCOME_OFF_TARGET:
@@ -499,26 +491,29 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     "raw_event": raw_event,
                 }
 
+                new_events = []
                 if event_type == SB_EVENT_TYPE_PASS:
                     pass_event_kwargs = _parse_pass(
                         pass_dict=raw_event["pass"],
                         team=team,
                         fidelity_version=fidelity_version,
                     )
-                    event = PassEvent.create(
+                    pass_event = PassEvent.create(
                         # TODO: Consider moving this to _parse_pass
                         receive_timestamp=timestamp + raw_event["duration"],
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(pass_event)
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
                         shot_dict=raw_event["shot"],
                     )
-                    event = ShotEvent.create(
+                    shot_event = ShotEvent.create(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(shot_event)
 
                 # For dribble and carry the definitions
                 # are flipped between Statsbomb and kloppy
@@ -526,23 +521,25 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     take_on_event_kwargs = _parse_take_on(
                         take_on_dict=raw_event["dribble"],
                     )
-                    event = TakeOnEvent.create(
+                    take_on_event = TakeOnEvent.create(
                         qualifiers=None,
                         **take_on_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(take_on_event)
                 elif event_type == SB_EVENT_TYPE_CARRY:
                     carry_event_kwargs = _parse_carry(
                         carry_dict=raw_event["carry"],
                         fidelity_version=fidelity_version,
                     )
-                    event = CarryEvent.create(
+                    carry_event = CarryEvent.create(
                         qualifiers=None,
                         # TODO: Consider moving this to _parse_carry
                         end_timestamp=timestamp + raw_event.get("duration", 0),
                         **carry_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(carry_event)
 
                 # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
@@ -550,93 +547,104 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         substitution_dict=raw_event["substitution"],
                         team=team,
                     )
-                    event = SubstitutionEvent.create(
+                    substitution_event = SubstitutionEvent.create(
                         result=None,
                         qualifiers=None,
                         **substitution_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(substitution_event)
                 elif event_type == SB_EVENT_TYPE_BAD_BEHAVIOUR:
                     bad_behaviour_kwargs = _parse_bad_behaviour(
                         bad_behaviour_dict=raw_event.get("bad_behaviour", {}),
                     )
                     if "card" in bad_behaviour_kwargs:
                         card_kwargs = bad_behaviour_kwargs["card"]
-                        event = CardEvent.create(
+                        card_event = CardEvent.create(
                             result=None,
                             qualifiers=None,
                             card_type=card_kwargs["card_type"],
                             **generic_event_kwargs,
                         )
+                        new_events.append(card_event)
                 elif event_type == SB_EVENT_TYPE_FOUL_COMMITTED:
                     foul_committed_kwargs = _parse_foul_committed(
                         foul_committed_dict=raw_event.get(
                             "foul_committed", {}
                         ),
                     )
+                    foul_committed_event = FoulCommittedEvent.create(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(foul_committed_event)
                     if "card" in foul_committed_kwargs:
                         card_kwargs = foul_committed_kwargs["card"]
-                        event = CardEvent.create(
+                        card_event = CardEvent.create(
                             result=None,
                             qualifiers=None,
                             card_type=card_kwargs["card_type"],
                             **generic_event_kwargs,
                         )
+                        new_events.append(card_event)
                 elif event_type == SB_EVENT_TYPE_PLAYER_ON:
-                    event = PlayerOnEvent.create(
+                    player_on_event = PlayerOnEvent.create(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
+                    new_events.append(player_on_event)
                 elif event_type == SB_EVENT_TYPE_PLAYER_OFF:
-                    event = PlayerOffEvent.create(
+                    player_off_event = PlayerOffEvent.create(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
+                    new_events.append(player_off_event)
 
                 elif event_type == SB_EVENT_TYPE_RECOVERY:
-                    event = RecoveryEvent.create(
+                    recovery_event = RecoveryEvent.create(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
-
-                elif event_type == SB_EVENT_TYPE_FOUL_COMMITTED:
-                    event = FoulCommittedEvent.create(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
+                    new_events.append(recovery_event)
 
                 # rest: generic
                 else:
-                    event = GenericEvent.create(
+                    generic_event = GenericEvent.create(
                         result=None,
                         qualifiers=None,
                         event_name=raw_event["type"]["name"],
                         **generic_event_kwargs,
                     )
+                    new_events.append(generic_event)
 
-                if self.should_include_event(event):
-                    events.append(transformer.transform_event(event))
+                for event in new_events:
+                    if self.should_include_event(event):
+                        transformed_event = transformer.transform_event(event)
+                        events.append(transformed_event)
 
-                # Checks if the event ended out of the field and adds a synthetic out event
-                if event.result in OUT_EVENT_RESULTS:
-                    generic_event_kwargs["ball_state"] = BallState.DEAD
-                    if event.receiver_coordinates:
-                        generic_event_kwargs[
-                            "coordinates"
-                        ] = event.receiver_coordinates
+                    # Checks if the event ended out of the field and adds a synthetic out event
+                    if event.result in OUT_EVENT_RESULTS:
+                        generic_event_kwargs["ball_state"] = BallState.DEAD
+                        if event.receiver_coordinates:
+                            generic_event_kwargs[
+                                "coordinates"
+                            ] = event.receiver_coordinates
 
-                        event = BallOutEvent.create(
-                            result=None,
-                            qualifiers=None,
-                            **generic_event_kwargs,
-                        )
+                            ball_out_event = BallOutEvent.create(
+                                result=None,
+                                qualifiers=None,
+                                **generic_event_kwargs,
+                            )
 
-                        if self.should_include_event(event):
-                            events.append(transformer.transform_event(event))
+                            if self.should_include_event(ball_out_event):
+                                transformed_ball_out_event = (
+                                    transformer.transform_event(ball_out_event)
+                                )
+                                events.append(transformed_ball_out_event)
 
         metadata = Metadata(
             teams=teams,

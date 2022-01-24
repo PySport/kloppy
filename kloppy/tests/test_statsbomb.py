@@ -43,7 +43,7 @@ class TestStatsbomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4022
+        assert len(dataset.events) == 4023
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -78,12 +78,12 @@ class TestStatsbomb:
         assert dataset.events[10].coordinates == Point(34.5, 20.5)
 
         assert (
-            dataset.events[791].get_qualifier_value(BodyPartQualifier)
+            dataset.events[792].get_qualifier_value(BodyPartQualifier)
             == BodyPart.HEAD
         )
 
         assert (
-            dataset.events[2231].get_qualifier_value(BodyPartQualifier)
+            dataset.events[2232].get_qualifier_value(BodyPartQualifier)
             == BodyPart.RIGHT_FOOT
         )
 
@@ -156,4 +156,4 @@ class TestStatsbomb:
             event_types=["foul_committed"],
         )
 
-        assert len(dataset.events) == 2
+        assert len(dataset.events) == 23

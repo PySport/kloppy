@@ -4,16 +4,17 @@ import pytest
 
 from kloppy.domain import (
     AttackingDirection,
-    Period,
-    Orientation,
-    Provider,
-    Point,
-    BodyPartQualifier,
     BodyPart,
+    BodyPartQualifier,
     DatasetType,
+    Orientation,
+    Period,
+    Point,
+    Provider,
 )
 
 from kloppy import statsbomb
+from kloppy.domain.models.event import CardType
 
 
 class TestStatsbomb:
@@ -41,7 +42,7 @@ class TestStatsbomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4022
+        assert len(dataset.events) == 4023
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -76,12 +77,12 @@ class TestStatsbomb:
         assert dataset.events[10].coordinates == Point(34.5, 20.5)
 
         assert (
-            dataset.events[791].get_qualifier_value(BodyPartQualifier)
+            dataset.events[792].get_qualifier_value(BodyPartQualifier)
             == BodyPart.HEAD
         )
 
         assert (
-            dataset.events[2231].get_qualifier_value(BodyPartQualifier)
+            dataset.events[2232].get_qualifier_value(BodyPartQualifier)
             == BodyPart.RIGHT_FOOT
         )
 
@@ -128,3 +129,30 @@ class TestStatsbomb:
             assert event.replacement_player == event.team.get_player_by_id(
                 replacement_player_id
             )
+
+    def test_card(self, lineup_data: str, event_data: str):
+        """
+        Test card events
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["card"],
+        )
+
+        assert len(dataset.events) == 2
+
+        for card in dataset.events:
+            assert card.card_type == CardType.FIRST_YELLOW
+
+    def test_foul_committed(self, lineup_data: str, event_data: str):
+        """
+        Test foul committed events
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["foul_committed"],
+        )
+
+        assert len(dataset.events) == 23

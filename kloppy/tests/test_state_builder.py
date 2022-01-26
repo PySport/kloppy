@@ -98,8 +98,12 @@ class TestStateBuilder:
         assert events_per_formation_change["4-1-4-1"] == 3074
         assert events_per_formation_change["4-4-2"] == 949
 
-        assert dataset.metadata.teams[0].starting_formation == FormationType("4-4-2")
-        assert dataset_with_state.events[1].state["formation"].home == FormationType("4-4-2")
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-4-2"
+        )
+        assert dataset_with_state.events[1].state[
+            "formation"
+        ].home == FormationType("4-4-2")
 
     def test_register_custom_builder(self):
         class CustomStateBuilder(StateBuilder):

@@ -19,7 +19,7 @@ class Formation:
     def __str__(self):
         if self.home and self.away:
             return f"{self.home.value} {self.away.value}"
-        return 'Unknown'
+        return "Unknown"
 
 
 class FormationStateBuilder(StateBuilder):

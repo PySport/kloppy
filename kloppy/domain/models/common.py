@@ -8,8 +8,6 @@ from .formation import FormationType
 from ...exceptions import OrientationError
 
 
-
-
 @dataclass
 class Score:
     """

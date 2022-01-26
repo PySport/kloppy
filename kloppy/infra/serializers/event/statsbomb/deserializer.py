@@ -414,7 +414,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
             }
 
             starting_formations = {
-                raw_event['team']['id']: FormationType(
+                raw_event["team"]["id"]: FormationType(
                     "-".join(list(str(raw_event["tactics"]["formation"])))
                 )
                 for raw_event in raw_events

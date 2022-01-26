@@ -1,7 +1,7 @@
 import os
 from itertools import groupby
 
-from kloppy.domain import EventType, Event, EventDataset
+from kloppy.domain import EventType, Event, EventDataset, FormationType
 from kloppy.domain.services.state_builder.builder import StateBuilder, T
 from kloppy.utils import performance_logging
 from kloppy import statsbomb
@@ -95,11 +95,11 @@ class TestStateBuilder:
             events_per_formation_change[str(formation)] = len(events)
 
         # inspect FormationChangeEvent usage and formation state_builder
-        assert events_per_formation_change["4-1-4-1"] == 3073
+        assert events_per_formation_change["4-1-4-1"] == 3074
         assert events_per_formation_change["4-4-2"] == 949
 
-        assert dataset.metadata.teams[0].starting_formation == "4-4-2"
-        assert dataset_with_state.events[1].state["formation"].home == "4-4-2"
+        assert dataset.metadata.teams[0].starting_formation == FormationType("4-4-2")
+        assert dataset_with_state.events[1].state["formation"].home == FormationType("4-4-2")
 
     def test_register_custom_builder(self):
         class CustomStateBuilder(StateBuilder):

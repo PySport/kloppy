@@ -355,7 +355,7 @@ def _parse_card(card_dict: Dict) -> Dict:
 def _parse_formation_change(formation_id: int) -> Dict:
     formation = formations[formation_id]
 
-    return dict(formation=formation)
+    return dict(formation_type=formation)
 
 
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
@@ -413,17 +413,19 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 for player in raw_event["tactics"]["lineup"]
             }
 
-            starting_formations = [
-                str(raw_event["tactics"]["formation"])
+            starting_formations = {
+                raw_event['team']['id']: FormationType(
+                    "-".join(list(str(raw_event["tactics"]["formation"])))
+                )
                 for raw_event in raw_events
                 if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI
-            ]
+            }
 
             home_team = Team(
                 team_id=str(home_lineup["team_id"]),
                 name=home_lineup["team_name"],
                 ground=Ground.HOME,
-                starting_formation="-".join(list(starting_formations[0])),
+                starting_formation=starting_formations[home_lineup["team_id"]],
             )
             home_team.players = [
                 Player(
@@ -440,7 +442,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 team_id=str(away_lineup["team_id"]),
                 name=away_lineup["team_name"],
                 ground=Ground.AWAY,
-                starting_formation="-".join(list(starting_formations[1])),
+                starting_formation=starting_formations[away_lineup["team_id"]],
             )
             away_team.players = [
                 Player(
@@ -662,12 +664,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     formation_change_event_kwargs = _parse_formation_change(
                         raw_event["tactics"]["formation"]
                     )
-                    event = FormationChangeEvent.create(
+                    formation_change_event = FormationChangeEvent.create(
                         result=None,
                         qualifiers=None,
                         **formation_change_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    new_events.append(formation_change_event)
                 # rest: generic
                 else:
                     generic_event = GenericEvent.create(

@@ -138,11 +138,13 @@ class Team:
         name: readable name of the team
         ground: See [`Ground`][kloppy.domain.models.common.Ground]
         players: See [`Player`][kloppy.domain.models.common.Player]
+        starting_formation: See ['FormationType']
     """
 
     team_id: str
     name: str
     ground: Ground
+    starting_formation: str = ""
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):

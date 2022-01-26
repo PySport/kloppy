@@ -35,6 +35,8 @@ from kloppy.domain import (
     RecoveryEvent,
     FoulCommittedEvent,
     BallOutEvent,
+    FormationChangeEvent,
+    FormationType,
     BodyPart,
     BodyPartQualifier,
 )
@@ -54,6 +56,7 @@ SB_EVENT_TYPE_CARRY = 43
 SB_EVENT_TYPE_HALF_START = 18
 SB_EVENT_TYPE_HALF_END = 34
 SB_EVENT_TYPE_STARTING_XI = 35
+SB_EVENT_TYPE_FORMATION_CHANGE = 36
 
 SB_EVENT_TYPE_SUBSTITUTION = 19
 SB_EVENT_TYPE_FOUL_COMMITTED = 22
@@ -97,6 +100,35 @@ SB_BODYPART_DROP_KICK = 68
 SB_BODYPART_KEEPER_ARM = 69
 SB_BODYPART_OTHER = 70
 SB_BODYPART_NO_TOUCH = 106
+
+formations = {
+    3142: FormationType.THREE_ONE_FOUR_TWO,
+    32212: FormationType.THREE_TWO_TWO_ONE_TWO,
+    32221: FormationType.THREE_TWO_TWO_TWO_ONE,
+    3232: FormationType.THREE_TWO_THREE_TWO,
+    3322: FormationType.THREE_THREE_TWO_TWO,
+    3412: FormationType.THREE_FOUR_ONE_TWO,
+    3421: FormationType.THREE_FOUR_TWO_ONE,
+    343: FormationType.THREE_FOUR_THREE,
+    3511: FormationType.THREE_FIVE_ONE_ONE,
+    352: FormationType.THREE_FIVE_TWO,
+    41212: FormationType.FOUR_ONE_TWO_ONE_TWO,
+    41221: FormationType.FOUR_ONE_TWO_TWO_ONE,
+    4141: FormationType.FOUR_ONE_FOUR_ONE,
+    42121: FormationType.FOUR_TWO_ONE_TWO_ONE,
+    42211: FormationType.FOUR_TWO_TWO_ONE_ONE,
+    4222: FormationType.FOUR_TWO_TWO_TWO,
+    4231: FormationType.FOUR_TWO_THREE_ONE,
+    4312: FormationType.FOUR_THREE_ONE_TWO,
+    4321: FormationType.FOUR_THREE_TWO_ONE,
+    433: FormationType.FOUR_THREE_THREE,
+    4411: FormationType.FOUR_FOUR_ONE_ONE,
+    442: FormationType.FOUR_FOUR_TWO,
+    451: FormationType.FOUR_FIVE_ONE,
+    5221: FormationType.FIVE_TWO_TWO_ONE,
+    532: FormationType.FIVE_THREE_TWO,
+    541: FormationType.FIVE_FOUR_ONE,
+}
 
 
 def parse_str_ts(timestamp: str) -> float:
@@ -320,6 +352,12 @@ def _parse_card(card_dict: Dict) -> Dict:
     }
 
 
+def _parse_formation_change(formation_id: int) -> Dict:
+    formation = formations[formation_id]
+
+    return dict(formation=formation)
+
+
 def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     """
     Find out if x and y are integers disguised as floats
@@ -374,10 +412,18 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI
                 for player in raw_event["tactics"]["lineup"]
             }
+
+            starting_formations = [
+                str(raw_event["tactics"]["formation"])
+                for raw_event in raw_events
+                if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI
+            ]
+
             home_team = Team(
                 team_id=str(home_lineup["team_id"]),
                 name=home_lineup["team_name"],
                 ground=Ground.HOME,
+                starting_formation="-".join(list(starting_formations[0])),
             )
             home_team.players = [
                 Player(
@@ -394,6 +440,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                 team_id=str(away_lineup["team_id"]),
                 name=away_lineup["team_name"],
                 ground=Ground.AWAY,
+                starting_formation="-".join(list(starting_formations[1])),
             )
             away_team.players = [
                 Player(
@@ -611,6 +658,16 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     )
                     new_events.append(recovery_event)
 
+                elif event_type == SB_EVENT_TYPE_FORMATION_CHANGE:
+                    formation_change_event_kwargs = _parse_formation_change(
+                        raw_event["tactics"]["formation"]
+                    )
+                    event = FormationChangeEvent.create(
+                        result=None,
+                        qualifiers=None,
+                        **formation_change_event_kwargs,
+                        **generic_event_kwargs,
+                    )
                 # rest: generic
                 else:
                     generic_event = GenericEvent.create(

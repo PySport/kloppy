@@ -33,6 +33,8 @@ from kloppy.domain import (
     RecoveryEvent,
     BallOutEvent,
     FoulCommittedEvent,
+    FormationChangeEvent,
+    FormationType,
     CardEvent,
     CardType,
     CardQualifier,
@@ -65,6 +67,7 @@ EVENT_TYPE_CORNER_AWARDED = 6
 EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
+EVENT_TYPE_FORMATION_CHANGE = 40
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
 
@@ -105,6 +108,8 @@ EVENT_QUALIFIER_ASSIST_2ND = 218
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
 EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
 EVENT_QUALIFIER_RED_CARD = 33
+
+EVENT_QUALIFIER_TEAM_FORMATION = 130
 
 event_type_names = {
     1: "pass",
@@ -186,6 +191,33 @@ event_type_names = {
     77: "player off pitch",
 }
 
+formations = {
+    2: FormationType.FOUR_FOUR_TWO,
+    3: FormationType.FOUR_ONE_TWO_ONE_TWO,
+    4: FormationType.FOUR_THREE_THREE,
+    5: FormationType.FOUR_FIVE_ONE,
+    6: FormationType.FOUR_FOUR_ONE_ONE,
+    7: FormationType.FOUR_ONE_FOUR_ONE,
+    8: FormationType.FOUR_TWO_THREE_ONE,
+    9: FormationType.FOUR_THREE_TWO_ONE,
+    10: FormationType.FIVE_THREE_TWO,
+    11: FormationType.FIVE_FOUR_ONE,
+    12: FormationType.THREE_FIVE_TWO,
+    13: FormationType.THREE_FOUR_THREE,
+    14: FormationType.THREE_ONE_THREE_ONE_TWO,
+    15: FormationType.FOUR_TWO_TWO_TWO,
+    16: FormationType.THREE_FIVE_ONE_ONE,
+    17: FormationType.THREE_FOUR_TWO_ONE,
+    18: FormationType.THREE_FOUR_ONE_TWO,
+    19: FormationType.THREE_ONE_FOUR_TWO,
+    20: FormationType.THREE_ONE_TWO_ONE_THREE,
+    21: FormationType.FOUR_ONE_THREE_TWO,
+    22: FormationType.FOUR_TWO_FOUR_ZERO,
+    23: FormationType.FOUR_THREE_ONE_TWO,
+    24: FormationType.THREE_TWO_FOUR_ONE,
+    25: FormationType.THREE_THREE_THREE_ONE,
+}
+
 
 def _parse_f24_datetime(dt_str: str) -> float:
     return (
@@ -253,6 +285,13 @@ def _parse_card(raw_qualifiers: List) -> Dict:
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
 
 
+def _parse_formation_change(raw_qualifiers: List) -> Dict:
+    formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
+    formation = formations[formation_id]
+
+    return dict(formation=formation)
+
+
 def _parse_shot(
     raw_qualifiers: Dict[int, str], type_id: int, coordinates: Point
 ) -> Dict:
@@ -303,12 +342,14 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     )
 
     team_id = team_elm.attrib["TeamRef"].lstrip("t")
+    formation = "-".join(list(team_elm.attrib["Formation"]))
     team = Team(
         team_id=str(team_id),
         name=team_name,
         ground=Ground.HOME
         if team_elm.attrib["Side"] == "Home"
         else Ground.AWAY,
+        starting_formation=formation,
     )
     team.players = [
         Player(
@@ -451,7 +492,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     raise DeserializationError(
                         f"Unknown side: {team_elm.attrib['Side']}"
                     )
-
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
 
@@ -609,6 +649,17 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = BallOutEvent.create(
                             result=None,
                             qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+
+                    elif type_id == EVENT_TYPE_FORMATION_CHANGE:
+                        formation_change_event_kwargs = (
+                            _parse_formation_change(raw_qualifiers)
+                        )
+                        event = FormationChangeEvent.create(
+                            result=None,
+                            qualifiers=None,
+                            **formation_change_event_kwargs,
                             **generic_event_kwargs,
                         )
 

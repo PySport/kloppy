@@ -2,6 +2,14 @@
 
 Find out all changes between different kloppy versions
 
+## 3.1.0 (2022-01-28)
+
+Pull requests merged:
+
+- Improve contribution guide ([#123](https://github.com/PySport/kloppy/pull/123))
+- Fix extraction of foul committed events ([#126](https://github.com/PySport/kloppy/pull/126))
+- Add formation statebuilder + read opta/statsbomb formation events ([#125](https://github.com/PySport/kloppy/pull/125))
+
 ## 3.0.0 (2021-12-21)
 
 Pull request merged:

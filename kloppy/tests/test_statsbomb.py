@@ -11,6 +11,7 @@ from kloppy.domain import (
     Period,
     Point,
     Provider,
+    FormationType,
 )
 
 from kloppy import statsbomb
@@ -49,8 +50,12 @@ class TestStatsbomb:
         )
         assert dataset.metadata.teams[0].name == "Barcelona"
         assert dataset.metadata.teams[1].name == "Deportivo Alavés"
-        assert dataset.metadata.teams[0].starting_formation == "4-4-2"
-        assert dataset.metadata.teams[1].starting_formation == "4-1-4-1"
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-4-2"
+        )
+        assert dataset.metadata.teams[1].starting_formation == FormationType(
+            "4-1-4-1"
+        )
 
         player = dataset.metadata.teams[0].get_player_by_id("5503")
         assert player.player_id == "5503"

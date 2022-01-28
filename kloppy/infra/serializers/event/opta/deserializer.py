@@ -12,18 +12,13 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PitchDimensions,
-    Dimension,
     PassEvent,
     ShotEvent,
     TakeOnEvent,
-    CarryEvent,
     GenericEvent,
     PassResult,
     ShotResult,
     TakeOnResult,
-    CarryResult,
-    EventType,
     Ground,
     Score,
     Provider,
@@ -289,7 +284,7 @@ def _parse_formation_change(raw_qualifiers: List) -> Dict:
     formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
     formation = formations[formation_id]
 
-    return dict(formation=formation)
+    return dict(formation_type=formation)
 
 
 def _parse_shot(
@@ -349,7 +344,7 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
         ground=Ground.HOME
         if team_elm.attrib["Side"] == "Home"
         else Ground.AWAY,
-        starting_formation=formation,
+        starting_formation=FormationType(formation),
     )
     team.players = [
         Player(

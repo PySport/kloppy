@@ -4,6 +4,7 @@ from enum import Enum, Flag
 from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
 
 from .pitch import PitchDimensions, Point, Dimension
+from .formation import FormationType
 from ...exceptions import OrientationError
 
 
@@ -144,7 +145,7 @@ class Team:
     team_id: str
     name: str
     ground: Ground
-    starting_formation: str = ""
+    starting_formation: Optional[FormationType] = None
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):

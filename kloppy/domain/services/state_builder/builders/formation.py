@@ -1,4 +1,5 @@
 from dataclasses import replace, dataclass
+from typing import Optional
 
 from kloppy.domain import (
     FormationChangeEvent,
@@ -12,11 +13,13 @@ from ..builder import StateBuilder
 
 @dataclass
 class Formation:
-    home: FormationType
-    away: FormationType
+    home: Optional[FormationType] = None
+    away: Optional[FormationType] = None
 
     def __str__(self):
-        return f"{self.home} {self.away}"
+        if self.home and self.away:
+            return f"{self.home.value} {self.away.value}"
+        return "Unknown"
 
 
 class FormationStateBuilder(StateBuilder):
@@ -33,7 +36,7 @@ class FormationStateBuilder(StateBuilder):
     def reduce_after(self, state: Formation, event: Event) -> Formation:
         if isinstance(event, FormationChangeEvent):
             if event.team.ground == Ground.HOME:
-                state = replace(state, home=event.formation.value)
+                state = replace(state, home=event.formation_type)
             else:
-                state = replace(state, away=event.formation.value)
+                state = replace(state, away=event.formation_type)
         return state

@@ -3,7 +3,7 @@ from dataclasses import replace
 from kloppy.domain import List, EventDataset
 
 # register all of them
-from . import builders
+from . import builders as _builders
 
 from .registered import create_state_builder
 

@@ -14,6 +14,7 @@ from kloppy.domain import (
     PassType,
     DatasetType,
     CardType,
+    FormationType,
 )
 
 from kloppy import opta
@@ -52,10 +53,14 @@ class TestOpta:
         )
         assert dataset.metadata.teams[0].name == "FC København"
         assert dataset.metadata.teams[0].ground == Ground.HOME
-        assert dataset.metadata.teams[0].starting_formation == "4-4-2"
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-4-2"
+        )
         assert dataset.metadata.teams[1].name == "FC Nordsjælland"
         assert dataset.metadata.teams[1].ground == Ground.AWAY
-        assert dataset.metadata.teams[1].starting_formation == "4-3-3"
+        assert dataset.metadata.teams[1].starting_formation == FormationType(
+            "4-3-3"
+        )
 
         player = dataset.metadata.teams[0].players[0]
         assert player.player_id == "111319"

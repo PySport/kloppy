@@ -20,7 +20,6 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     CarryResult,
-    EventType,
     Metadata,
     Ground,
     Player,
@@ -29,7 +28,6 @@ from kloppy.domain import (
     PlayerOnEvent,
     PlayerOffEvent,
     CardType,
-    Qualifier,
     SetPieceQualifier,
     SetPieceType,
     RecoveryEvent,
@@ -40,6 +38,7 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
 )
+from kloppy.domain.models.event import PassQualifier, PassType
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
@@ -71,6 +70,10 @@ SB_PASS_OUTCOME_OUT = 75
 SB_PASS_OUTCOME_OFFSIDE = 76
 SB_PASS_OUTCOME_UNKNOWN = 77
 
+SB_PASS_HEIGHT_GROUND = 1
+SB_PASS_HEIGHT_LOW = 2
+SB_PASS_HEIGHT_HIGH = 3
+
 SB_SHOT_OUTCOME_BLOCKED = 96
 SB_SHOT_OUTCOME_GOAL = 97
 SB_SHOT_OUTCOME_OFF_TARGET = 98
@@ -100,6 +103,8 @@ SB_BODYPART_DROP_KICK = 68
 SB_BODYPART_KEEPER_ARM = 69
 SB_BODYPART_OTHER = 70
 SB_BODYPART_NO_TOUCH = 106
+
+SB_TECHNIQUE_THROUGH_BALL = 108
 
 formations = {
     3142: FormationType.THREE_ONE_FOUR_TWO,
@@ -188,9 +193,44 @@ def _get_body_part_qualifiers(
     return qualifiers
 
 
-def _get_set_piece_qualifiers(
-    pass_dict: Dict,
-) -> List[SetPieceQualifier]:
+def _get_pass_qualifiers(pass_dict: Dict) -> List[PassQualifier]:
+    qualifiers = []
+    if "cross" in pass_dict:
+        cross_qualifier = PassQualifier(value=PassType.CROSS)
+        qualifiers.append(cross_qualifier)
+    if "technique" in pass_dict:
+        technique_id = pass_dict["technique"]["id"]
+        if technique_id == SB_TECHNIQUE_THROUGH_BALL:
+            through_ball_qualifier = PassQualifier(value=PassType.THROUGH_BALL)
+            qualifiers.append(through_ball_qualifier)
+    if "switch" in pass_dict:
+        switch_qualifier = PassQualifier(value=PassType.SWITCH_OF_PLAY)
+        qualifiers.append(switch_qualifier)
+    if "height" in pass_dict:
+        height_id = pass_dict["height"]["id"]
+        if height_id == SB_PASS_HEIGHT_HIGH:
+            high_pass_qualifier = PassQualifier(value=PassType.HIGH_PASS)
+            qualifiers.append(high_pass_qualifier)
+    if "length" in pass_dict:
+        pass_length = pass_dict["length"]
+        if pass_length > 35:  # adopt Opta definition: 32 meters -> 35 yards
+            long_ball_qualifier = PassQualifier(value=PassType.LONG_BALL)
+            qualifiers.append(long_ball_qualifier)
+    if "body_part" in pass_dict:
+        body_part_id = pass_dict["body_part"]["id"]
+        if body_part_id == SB_BODYPART_HEAD:
+            head_pass_qualifier = PassQualifier(value=PassType.HEAD_PASS)
+            qualifiers.append(head_pass_qualifier)
+        elif body_part_id == SB_BODYPART_KEEPER_ARM:
+            hand_pass_qualifier = PassQualifier(value=PassType.HAND_PASS)
+            qualifiers.append(hand_pass_qualifier)
+    if "goal_assist" in pass_dict:
+        assist_qualifier = PassQualifier(value=PassType.ASSIST)
+        qualifiers.append(assist_qualifier)
+    return qualifiers
+
+
+def _get_set_piece_qualifiers(pass_dict: Dict) -> List[SetPieceQualifier]:
     qualifiers = []
     if "type" in pass_dict:
         type_id = pass_dict["type"]["id"]
@@ -239,6 +279,8 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     )
 
     qualifiers = []
+    pass_qualifiers = _get_pass_qualifiers(pass_dict)
+    qualifiers.extend(pass_qualifiers)
     set_piece_qualifiers = _get_set_piece_qualifiers(pass_dict)
     qualifiers.extend(set_piece_qualifiers)
     body_part_qualifiers = _get_body_part_qualifiers(pass_dict)

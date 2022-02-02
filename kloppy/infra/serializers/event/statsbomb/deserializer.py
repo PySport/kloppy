@@ -154,34 +154,62 @@ def _parse_coordinates(
     )
 
 
-def _parse_bodypart(event_dict: Dict) -> BodyPart:
-    bodypart_id = event_dict["body_part"]["id"]
-    if bodypart_id == SB_BODYPART_BOTH_HANDS:
-        body_part = BodyPart.BOTH_HANDS
-    elif bodypart_id == SB_BODYPART_CHEST:
-        body_part = BodyPart.CHEST
-    elif bodypart_id == SB_BODYPART_HEAD:
-        body_part = BodyPart.HEAD
-    elif bodypart_id == SB_BODYPART_LEFT_FOOT:
-        body_part = BodyPart.LEFT_FOOT
-    elif bodypart_id == SB_BODYPART_LEFT_HAND:
-        body_part = BodyPart.LEFT_HAND
-    elif bodypart_id == SB_BODYPART_RIGHT_FOOT:
-        body_part = BodyPart.RIGHT_FOOT
-    elif bodypart_id == SB_BODYPART_RIGHT_HAND:
-        body_part = BodyPart.RIGHT_HAND
-    elif bodypart_id == SB_BODYPART_DROP_KICK:
-        body_part = BodyPart.DROP_KICK
-    elif bodypart_id == SB_BODYPART_KEEPER_ARM:
-        body_part = BodyPart.KEEPER_ARM
-    elif bodypart_id == SB_BODYPART_OTHER:
-        body_part = BodyPart.OTHER
-    elif bodypart_id == SB_BODYPART_NO_TOUCH:
-        body_part = BodyPart.NO_TOUCH
-    else:
-        raise DeserializationError(f"Unknown body part: {bodypart_id}")
+def _get_body_part_qualifiers(
+    event_type_dict: Dict,
+) -> List[BodyPartQualifier]:
+    qualifiers = []
+    if "body_part" in event_type_dict:
+        body_part_id = event_type_dict["body_part"]["id"]
+        if body_part_id == SB_BODYPART_BOTH_HANDS:
+            body_part = BodyPart.BOTH_HANDS
+        elif body_part_id == SB_BODYPART_CHEST:
+            body_part = BodyPart.CHEST
+        elif body_part_id == SB_BODYPART_HEAD:
+            body_part = BodyPart.HEAD
+        elif body_part_id == SB_BODYPART_LEFT_FOOT:
+            body_part = BodyPart.LEFT_FOOT
+        elif body_part_id == SB_BODYPART_LEFT_HAND:
+            body_part = BodyPart.LEFT_HAND
+        elif body_part_id == SB_BODYPART_RIGHT_FOOT:
+            body_part = BodyPart.RIGHT_FOOT
+        elif body_part_id == SB_BODYPART_RIGHT_HAND:
+            body_part = BodyPart.RIGHT_HAND
+        elif body_part_id == SB_BODYPART_DROP_KICK:
+            body_part = BodyPart.DROP_KICK
+        elif body_part_id == SB_BODYPART_KEEPER_ARM:
+            body_part = BodyPart.KEEPER_ARM
+        elif body_part_id == SB_BODYPART_OTHER:
+            body_part = BodyPart.OTHER
+        elif body_part_id == SB_BODYPART_NO_TOUCH:
+            body_part = BodyPart.NO_TOUCH
+        else:
+            raise DeserializationError(f"Unknown body part: {body_part_id}")
+        qualifiers.append(BodyPartQualifier(value=body_part))
+    return qualifiers
 
-    return body_part
+
+def _get_set_piece_qualifiers(
+    pass_dict: Dict,
+) -> List[SetPieceQualifier]:
+    qualifiers = []
+    if "type" in pass_dict:
+        type_id = pass_dict["type"]["id"]
+        set_piece_type = None
+        if type_id == SB_EVENT_TYPE_CORNER_KICK:
+            set_piece_type = SetPieceType.CORNER_KICK
+        elif type_id == SB_EVENT_TYPE_FREE_KICK:
+            set_piece_type = SetPieceType.FREE_KICK
+        elif type_id == SB_EVENT_TYPE_PENALTY:
+            set_piece_type = SetPieceType.PENALTY
+        elif type_id == SB_EVENT_TYPE_THROW_IN:
+            set_piece_type = SetPieceType.THROW_IN
+        elif type_id == SB_EVENT_TYPE_KICK_OFF:
+            set_piece_type = SetPieceType.KICK_OFF
+        elif type_id == SB_EVENT_TYPE_GOAL_KICK:
+            set_piece_type = SetPieceType.GOAL_KICK
+        if set_piece_type:
+            qualifiers.append(SetPieceQualifier(value=set_piece_type))
+    return qualifiers
 
 
 def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
@@ -210,7 +238,11 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
         fidelity_version,
     )
 
-    qualifiers = _get_event_qualifiers(pass_dict)
+    qualifiers = []
+    set_piece_qualifiers = _get_set_piece_qualifiers(pass_dict)
+    qualifiers.extend(set_piece_qualifiers)
+    body_part_qualifiers = _get_body_part_qualifiers(pass_dict)
+    qualifiers.extend(body_part_qualifiers)
 
     return {
         "result": result,
@@ -218,30 +250,6 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
         "receiver_player": receiver_player,
         "qualifiers": qualifiers,
     }
-
-
-def _get_event_qualifiers(qualifiers_dict: Dict) -> List[Qualifier]:
-    qualifiers = []
-    if "type" in qualifiers_dict:
-        if qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_CORNER_KICK:
-            qualifiers.append(
-                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
-            )
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_FREE_KICK:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_PENALTY:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_THROW_IN:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_KICK_OFF:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
-        elif qualifiers_dict["type"]["id"] == SB_EVENT_TYPE_GOAL_KICK:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
-
-    if "body_part" in qualifiers_dict:
-        qualifiers.append(BodyPartQualifier(_parse_bodypart(qualifiers_dict)))
-
-    return qualifiers
 
 
 def _parse_shot(shot_dict: Dict) -> Dict:
@@ -265,7 +273,9 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     else:
         raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
-    qualifiers = _get_event_qualifiers(shot_dict)
+    qualifiers = []
+    body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
+    qualifiers.extend(body_part_qualifiers)
 
     return {
         "result": result,

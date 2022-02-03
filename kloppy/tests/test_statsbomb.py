@@ -1,4 +1,3 @@
-from ast import Pass
 import os
 
 import pytest
@@ -18,7 +17,6 @@ from kloppy.domain import (
 from kloppy import statsbomb
 from kloppy.domain.models.event import (
     CardType,
-    PassEvent,
     PassQualifier,
     PassType,
 )

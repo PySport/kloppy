@@ -27,6 +27,10 @@ class Code(DataRecord):
     labels: Dict[str, str] = field(default_factory=dict)
 
     @property
+    def record_id(self) -> str:
+        return self.record_id
+
+    @property
     def start_timestamp(self):
         return self.timestamp
 

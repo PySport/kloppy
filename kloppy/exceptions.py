@@ -8,3 +8,11 @@ class DeserializationError(KloppyError):
 
 class OrientationError(KloppyError):
     pass
+
+
+class OrphanedRecordError(KloppyError):
+    pass
+
+
+class InvalidFilterError(KloppyError):
+    pass

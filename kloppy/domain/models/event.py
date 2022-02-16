@@ -2,7 +2,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Type, Union, Any, Callable
+from functools import partial
+from typing import Dict, List, Type, Union, Any, Callable, Optional
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -14,6 +15,7 @@ from kloppy.utils import (
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
+from ...exceptions import OrphanedRecordError, InvalidFilterError
 
 
 class ResultType(Enum):
@@ -21,6 +23,9 @@ class ResultType(Enum):
     @abstractmethod
     def is_success(self):
         raise NotImplementedError
+
+    def __str__(self):
+        return self.value
 
 
 class ShotResult(ResultType):
@@ -363,12 +368,17 @@ class Event(DataRecord, ABC):
     player: Player
     coordinates: Point
 
-    result: Union[ResultType, None]
+    result: Optional[ResultType]
 
     raw_event: Dict
     state: Dict[str, Any]
+    related_event_ids: List[str]
 
     qualifiers: List[Qualifier]
+
+    @property
+    def record_id(self) -> str:
+        return self.event_id
 
     @property
     @abstractmethod
@@ -382,7 +392,10 @@ class Event(DataRecord, ABC):
 
     @classmethod
     def create(cls, **kwargs):
-        return cls(**kwargs, state={})
+        extra_kwargs = {"state": {}}
+        if "related_event_ids" not in kwargs:
+            extra_kwargs["related_event_ids"] = []
+        return cls(**kwargs, **extra_kwargs)
 
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
         """
@@ -402,6 +415,102 @@ class Event(DataRecord, ABC):
                 if isinstance(qualifier, qualifier_type):
                     return qualifier.value
         return None
+
+    def get_related_events(self) -> List["Event"]:
+        if not self.dataset:
+            raise OrphanedRecordError()
+
+        return [
+            self.dataset.get_record_by_id(event_id)
+            for event_id in self.related_event_ids
+        ]
+
+    def get_related_event(
+        self, type_: Union[str, EventType]
+    ) -> Optional["Event"]:
+        event_type = (
+            EventType[type_.upper()] if isinstance(type_, str) else type_
+        )
+        for related_event in self.get_related_events():
+            if related_event.event_type == event_type:
+                return related_event
+        return None
+
+    """Define all related events for easy access"""
+
+    def related_pass(self) -> Optional["PassEvent"]:
+        return self.get_related_event(EventType.PASS)
+
+    def related_shot(self) -> Optional["ShotEvent"]:
+        return self.get_related_event(EventType.SHOT)
+
+    def related_take_on(self) -> Optional["TakeOnEvent"]:
+        return self.get_related_event(EventType.TAKE_ON)
+
+    def related_carry(self) -> Optional["CarryEvent"]:
+        return self.get_related_event(EventType.CARRY)
+
+    def related_substitution(self) -> Optional["SubstitutionEvent"]:
+        return self.get_related_event(EventType.SUBSTITUTION)
+
+    def related_card(self) -> Optional["CardEvent"]:
+        return self.get_related_event(EventType.CARD)
+
+    def related_player_on(self) -> Optional["PlayerOnEvent"]:
+        return self.get_related_event(EventType.PLAYER_ON)
+
+    def related_player_off(self) -> Optional["PlayerOffEvent"]:
+        return self.get_related_event(EventType.PLAYER_OFF)
+
+    def related_recovery(self) -> Optional["RecoveryEvent"]:
+        return self.get_related_event(EventType.RECOVERY)
+
+    def related_ball_out(self) -> Optional["BallOutEvent"]:
+        return self.get_related_event(EventType.BALL_OUT)
+
+    def related_foul_committed(self) -> Optional["FoulCommittedEvent"]:
+        return self.get_related_event(EventType.FOUL_COMMITTED)
+
+    def related_formation_change(self) -> Optional["FormationChangeEvent"]:
+        return self.get_related_event(EventType.FORMATION_CHANGE)
+
+    def matches(self, filter_) -> bool:
+        if filter_ is None:
+            return True
+        elif callable(filter_):
+            return filter_(self)
+        elif isinstance(filter_, str):
+            parts = filter_.upper().split(" ")
+            for part in parts:
+                if part in EventType._member_names_:
+                    if self.event_type != EventType[part]:
+                        return False
+                elif (
+                    self.result
+                    and part in self.result.__class__._member_names_
+                ):
+                    if self.result != self.result.__class__[part]:
+                        return False
+                else:
+                    return False
+            return True
+
+    def __str__(self):
+        m, s = divmod(self.timestamp, 60)
+
+        event_type = (
+            self.__class__.__name__
+            if not isinstance(self, GenericEvent)
+            else f"GenericEvent:{self.event_name}"
+        )
+
+        return (
+            f"<{event_type} "
+            f"event_id='{self.event_id}' "
+            f"time='P{self.period.id}T{m:02.0f}:{s:02.0f}' "
+            f"player='{self.player}' "
+            f"result='{self.result}'>"
+        )
 
 
 @dataclass
@@ -653,6 +762,9 @@ class EventDataset(Dataset[Event]):
     @property
     def events(self):
         return self.records
+
+    def get_event_by_id(self, event_id: str) -> Event:
+        return self.get_record_by_id(event_id)
 
     def add_state(self, *builder_keys):
         """

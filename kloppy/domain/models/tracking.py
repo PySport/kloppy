@@ -23,6 +23,10 @@ class Frame(DataRecord):
     ball_coordinates: Point
 
     @property
+    def record_id(self) -> int:
+        return self.frame_id
+
+    @property
     def players_coordinates(self):
         return {
             player: player_data.coordinates

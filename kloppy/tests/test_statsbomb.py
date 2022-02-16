@@ -209,3 +209,19 @@ class TestStatsbomb:
         )
 
         assert len(dataset.events) == 23
+
+    def test_related_events(self, lineup_data: str, event_data: str):
+        print("")
+        dataset = statsbomb.load(
+            lineup_data=lineup_data, event_data=event_data
+        )
+        for shot in dataset.find_all("saved shot"):
+            print(shot)
+            print(shot.prev("incomplete"))
+            print("----")
+
+        #
+        # event = dataset.get_event_by_id("8e3dacc2-7a39-4301-9053-e78cfec1aa95")
+        #
+        # print(event)
+        # print(event.next("shot"))

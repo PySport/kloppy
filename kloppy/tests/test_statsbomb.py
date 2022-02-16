@@ -15,7 +15,11 @@ from kloppy.domain import (
 )
 
 from kloppy import statsbomb
-from kloppy.domain.models.event import CardType
+from kloppy.domain.models.event import (
+    CardType,
+    PassQualifier,
+    PassType,
+)
 
 
 class TestStatsbomb:
@@ -96,6 +100,48 @@ class TestStatsbomb:
         assert (
             dataset.events[195].get_qualifier_value(BodyPartQualifier) is None
         )
+
+        assert (
+            dataset.events[1433].get_qualifier_value(PassQualifier)
+            == PassType.CROSS
+        )
+
+        assert (
+            dataset.events[1552].get_qualifier_value(PassQualifier)
+            == PassType.THROUGH_BALL
+        )
+
+        assert (
+            dataset.events[443].get_qualifier_value(PassQualifier)
+            == PassType.SWITCH_OF_PLAY
+        )
+
+        assert (
+            dataset.events[3438].get_qualifier_value(PassQualifier)
+            == PassType.LONG_BALL
+        )
+
+        assert (
+            dataset.events[2266].get_qualifier_value(PassQualifier)
+            == PassType.HIGH_PASS
+        )
+
+        assert (
+            dataset.events[653].get_qualifier_value(PassQualifier)
+            == PassType.HEAD_PASS
+        )
+
+        assert (
+            dataset.events[3134].get_qualifier_value(PassQualifier)
+            == PassType.HAND_PASS
+        )
+
+        assert (
+            dataset.events[3611].get_qualifier_value(PassQualifier)
+            == PassType.ASSIST
+        )
+
+        assert dataset.events[3392].get_qualifier_value(PassQualifier) is None
 
     def test_correct_normalized_deserialization(
         self, lineup_data: str, event_data: str

@@ -2,7 +2,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from functools import partial
 from typing import Dict, List, Type, Union, Any, Callable, Optional
 
 from kloppy.domain.models.common import DatasetType
@@ -480,19 +479,31 @@ class Event(DataRecord, ABC):
         elif callable(filter_):
             return filter_(self)
         elif isinstance(filter_, str):
-            parts = filter_.upper().split(" ")
-            for part in parts:
-                if part in EventType._member_names_:
-                    if self.event_type != EventType[part]:
-                        return False
-                elif (
-                    self.result
-                    and part in self.result.__class__._member_names_
-                ):
-                    if self.result != self.result.__class__[part]:
-                        return False
-                else:
+            """
+            Allowed formats:
+            1. <event_type>
+            2. <event_type>.<result>
+
+            This format always us to go to css selectors without breaking existing code.
+            """
+            parts = filter_.upper().split(".")
+            if len(parts) == 2:
+                event_type, result = parts
+            elif len(parts) == 1:
+                event_type = parts[0]
+                result = None
+            else:
+                raise InvalidFilterError(
+                    f"Don't know how to apply filter {filter_}"
+                )
+
+            if self.event_type != EventType[event_type]:
+                return False
+
+            if result:
+                if self.result != self.result.__class__[result]:
                     return False
+
             return True
 
     def __str__(self):
@@ -512,8 +523,11 @@ class Event(DataRecord, ABC):
             f"result='{self.result}'>"
         )
 
+    def __repr__(self):
+        return str(self)
 
-@dataclass
+
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class GenericEvent(Event):
     """
@@ -528,7 +542,7 @@ class GenericEvent(Event):
     event_name: str = "generic"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
     """
@@ -548,7 +562,7 @@ class ShotEvent(Event):
     event_name: str = "shot"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
     """
@@ -573,7 +587,7 @@ class PassEvent(Event):
     event_name: str = "pass"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
     """
@@ -591,7 +605,7 @@ class TakeOnEvent(Event):
     event_name: str = "take_on"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class CarryEvent(Event):
     """
@@ -614,7 +628,7 @@ class CarryEvent(Event):
     event_name: str = "carry"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
     """
@@ -632,7 +646,7 @@ class SubstitutionEvent(Event):
     event_name: str = "substitution"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PlayerOffEvent(Event):
     """
@@ -647,7 +661,7 @@ class PlayerOffEvent(Event):
     event_name: str = "player_off"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PlayerOnEvent(Event):
     """
@@ -662,7 +676,7 @@ class PlayerOnEvent(Event):
     event_name: str = "player_on"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
@@ -680,7 +694,7 @@ class CardEvent(Event):
     event_name: str = "card"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """
@@ -698,7 +712,7 @@ class FormationChangeEvent(Event):
     event_name: str = "formation_change"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
     """
@@ -713,7 +727,7 @@ class RecoveryEvent(Event):
     event_name: str = "recovery"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class BallOutEvent(Event):
     """
@@ -728,7 +742,7 @@ class BallOutEvent(Event):
     event_name: str = "ball_out"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
@@ -743,7 +757,7 @@ class FoulCommittedEvent(Event):
     event_name: str = "foul_committed"
 
 
-@dataclass
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset

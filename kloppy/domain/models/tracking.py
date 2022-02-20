@@ -15,7 +15,7 @@ class PlayerData:
     other_data: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(repr=False)
 class Frame(DataRecord):
     frame_id: int
     players_data: Dict[Player, PlayerData]

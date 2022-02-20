@@ -670,6 +670,11 @@ class DataRecord(ABC):
         prev: Optional["DataRecord"],
         next_: Optional["DataRecord"],
     ):
+        if hasattr(self, "dataset"):
+            # TODO: determine if next/prev record should be affected
+            # by Dataset.filter
+            return
+
         self.dataset = dataset
         self.prev_record = prev
         self.next_record = next_
@@ -705,6 +710,11 @@ class DataRecord(ABC):
                 return self.next_record.next(
                     filter_, search_depth=search_depth - 1
                 )
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}>"
+
+    __repr__ = __str__
 
 
 @dataclass
@@ -817,7 +827,7 @@ class Dataset(ABC, Generic[T]):
             records=self.find_all(filter_),
         )
 
-    def find_all(self, filter_) -> List["DataRecord"]:
+    def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
 
     @classmethod

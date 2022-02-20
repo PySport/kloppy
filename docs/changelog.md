@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.1.1 (2022-02-20)
+
+Pull requests merged:
+
+- Add end coordinates for incomplete passes in to_pandas ([#131](https://github.com/PySport/kloppy/pull/131))
+
 ## 3.1.0 (2022-01-28)
 
 Pull requests merged:

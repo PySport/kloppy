@@ -22,7 +22,7 @@ from kloppy.domain import (
     PlayerData,
 )
 
-from kloppy import opta, tracab
+from kloppy import opta, tracab, statsbomb
 
 
 class TestHelpers:
@@ -169,6 +169,20 @@ class TestHelpers:
         dataframe = dataset.to_pandas()
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
+
+    def test_to_pandas_incomplete_pass(self):
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
+            event_data=f"{base_dir}/files/statsbomb_event.json",
+        )
+        df = dataset.to_pandas()
+        incomplete_passes = df[
+            (df.event_type == "PASS") & (df.result == "INCOMPLETE")
+        ].reset_index()
+        assert incomplete_passes.loc[0, "end_coordinates_y"] == 0.90625
+        assert incomplete_passes.loc[0, "end_coordinates_x"] == 0.7125
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()

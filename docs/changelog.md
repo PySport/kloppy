@@ -2,6 +2,11 @@
 
 Find out all changes between different kloppy versions
 
+## 3.2.0 (2022-03-12)
+
+Pull requests merged:
+- Add related events and next/prev with more easy filtering ([#129](https://github.com/PySport/kloppy/pull/129))
+
 ## 3.1.1 (2022-02-20)
 
 Pull requests merged:

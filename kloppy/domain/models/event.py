@@ -833,10 +833,7 @@ class EventDataset(Dataset[Event]):
                     if event.coordinates
                     else None,
                 )
-                if (
-                    isinstance(event, PassEvent)
-                    and event.result == PassResult.COMPLETE
-                ):
+                if isinstance(event, PassEvent):
                     row.update(
                         {
                             "end_timestamp": event.receive_timestamp,

@@ -13,4 +13,4 @@ except NameError:
 #     )
 #     from .domain.services.state_builder import add_state
 
-__version__ = "3.1.0"
+__version__ = "3.1.1"

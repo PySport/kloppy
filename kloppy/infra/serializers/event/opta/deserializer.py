@@ -83,6 +83,7 @@ EVENT_QUALIFIER_THROW_IN = 107
 EVENT_QUALIFIER_CORNER_KICK = 6
 EVENT_QUALIFIER_PENALTY = 9
 EVENT_QUALIFIER_KICK_OFF = 279
+EVENT_QUALIFIER_FREE_KICK_SHOT = 26
 
 EVENT_QUALIFIER_HEAD_PASS = 3
 EVENT_QUALIFIER_HEAD = 15
@@ -405,7 +406,10 @@ def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
-    elif EVENT_QUALIFIER_FREE_KICK in raw_qualifiers:
+    elif (
+        EVENT_QUALIFIER_FREE_KICK in raw_qualifiers
+        or EVENT_QUALIFIER_FREE_KICK_SHOT in raw_qualifiers
+    ):
         qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
     elif EVENT_QUALIFIER_PENALTY in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))

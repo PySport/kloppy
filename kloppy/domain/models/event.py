@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Type, Union, Any, Callable
+from typing import Dict, List, Type, Union, Any, Callable, Optional
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -14,6 +14,7 @@ from kloppy.utils import (
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
+from ...exceptions import OrphanedRecordError, InvalidFilterError
 
 
 class ResultType(Enum):
@@ -21,6 +22,9 @@ class ResultType(Enum):
     @abstractmethod
     def is_success(self):
         raise NotImplementedError
+
+    def __str__(self):
+        return self.value
 
 
 class ShotResult(ResultType):
@@ -363,12 +367,17 @@ class Event(DataRecord, ABC):
     player: Player
     coordinates: Point
 
-    result: Union[ResultType, None]
+    result: Optional[ResultType]
 
     raw_event: Dict
     state: Dict[str, Any]
+    related_event_ids: List[str]
 
     qualifiers: List[Qualifier]
+
+    @property
+    def record_id(self) -> str:
+        return self.event_id
 
     @property
     @abstractmethod
@@ -382,7 +391,10 @@ class Event(DataRecord, ABC):
 
     @classmethod
     def create(cls, **kwargs):
-        return cls(**kwargs, state={})
+        extra_kwargs = {"state": {}}
+        if "related_event_ids" not in kwargs:
+            extra_kwargs["related_event_ids"] = []
+        return cls(**kwargs, **extra_kwargs)
 
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
         """
@@ -403,8 +415,133 @@ class Event(DataRecord, ABC):
                     return qualifier.value
         return None
 
+    def get_related_events(self) -> List["Event"]:
+        if not self.dataset:
+            raise OrphanedRecordError()
 
-@dataclass
+        return [
+            self.dataset.get_record_by_id(event_id)
+            for event_id in self.related_event_ids
+        ]
+
+    def get_related_event(
+        self, type_: Union[str, EventType]
+    ) -> Optional["Event"]:
+        event_type = (
+            EventType[type_.upper()] if isinstance(type_, str) else type_
+        )
+        for related_event in self.get_related_events():
+            if related_event.event_type == event_type:
+                return related_event
+        return None
+
+    """Define all related events for easy access"""
+
+    def related_pass(self) -> Optional["PassEvent"]:
+        return self.get_related_event(EventType.PASS)
+
+    def related_shot(self) -> Optional["ShotEvent"]:
+        return self.get_related_event(EventType.SHOT)
+
+    def related_take_on(self) -> Optional["TakeOnEvent"]:
+        return self.get_related_event(EventType.TAKE_ON)
+
+    def related_carry(self) -> Optional["CarryEvent"]:
+        return self.get_related_event(EventType.CARRY)
+
+    def related_substitution(self) -> Optional["SubstitutionEvent"]:
+        return self.get_related_event(EventType.SUBSTITUTION)
+
+    def related_card(self) -> Optional["CardEvent"]:
+        return self.get_related_event(EventType.CARD)
+
+    def related_player_on(self) -> Optional["PlayerOnEvent"]:
+        return self.get_related_event(EventType.PLAYER_ON)
+
+    def related_player_off(self) -> Optional["PlayerOffEvent"]:
+        return self.get_related_event(EventType.PLAYER_OFF)
+
+    def related_recovery(self) -> Optional["RecoveryEvent"]:
+        return self.get_related_event(EventType.RECOVERY)
+
+    def related_ball_out(self) -> Optional["BallOutEvent"]:
+        return self.get_related_event(EventType.BALL_OUT)
+
+    def related_foul_committed(self) -> Optional["FoulCommittedEvent"]:
+        return self.get_related_event(EventType.FOUL_COMMITTED)
+
+    def related_formation_change(self) -> Optional["FormationChangeEvent"]:
+        return self.get_related_event(EventType.FORMATION_CHANGE)
+
+    def matches(self, filter_) -> bool:
+        if filter_ is None:
+            return True
+        elif callable(filter_):
+            return filter_(self)
+        elif isinstance(filter_, str):
+            """
+            Allowed formats:
+            1. <event_type>
+            2. <event_type>.<result>
+
+            This format always us to go to css selectors without breaking existing code.
+            """
+            parts = filter_.upper().split(".")
+            if len(parts) == 2:
+                event_type, result = parts
+            elif len(parts) == 1:
+                event_type = parts[0]
+                result = None
+            else:
+                raise InvalidFilterError(
+                    f"Don't know how to apply filter {filter_}"
+                )
+
+            if event_type:
+                try:
+                    if self.event_type != EventType[event_type]:
+                        return False
+                except KeyError:
+                    raise InvalidFilterError(
+                        f"Cannot find event type {event_type}. Possible options: {[e.value.lower() for e in EventType]}"
+                    )
+
+            if result:
+                if not self.result:
+                    return False
+
+                try:
+                    if self.result != self.result.__class__[result]:
+                        return False
+                except KeyError:
+                    # result isn't applicable for this event
+                    # example: result='GOAL' event=<Pass>
+                    return False
+
+            return True
+
+    def __str__(self):
+        m, s = divmod(self.timestamp, 60)
+
+        event_type = (
+            self.__class__.__name__
+            if not isinstance(self, GenericEvent)
+            else f"GenericEvent:{self.event_name}"
+        )
+
+        return (
+            f"<{event_type} "
+            f"event_id='{self.event_id}' "
+            f"time='P{self.period.id}T{m:02.0f}:{s:02.0f}' "
+            f"player='{self.player}' "
+            f"result='{self.result}'>"
+        )
+
+    def __repr__(self):
+        return str(self)
+
+
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class GenericEvent(Event):
     """
@@ -419,7 +556,7 @@ class GenericEvent(Event):
     event_name: str = "generic"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
     """
@@ -439,7 +576,7 @@ class ShotEvent(Event):
     event_name: str = "shot"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
     """
@@ -464,7 +601,7 @@ class PassEvent(Event):
     event_name: str = "pass"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
     """
@@ -482,7 +619,7 @@ class TakeOnEvent(Event):
     event_name: str = "take_on"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class CarryEvent(Event):
     """
@@ -505,7 +642,7 @@ class CarryEvent(Event):
     event_name: str = "carry"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
     """
@@ -523,7 +660,7 @@ class SubstitutionEvent(Event):
     event_name: str = "substitution"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PlayerOffEvent(Event):
     """
@@ -538,7 +675,7 @@ class PlayerOffEvent(Event):
     event_name: str = "player_off"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PlayerOnEvent(Event):
     """
@@ -553,7 +690,7 @@ class PlayerOnEvent(Event):
     event_name: str = "player_on"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
@@ -571,7 +708,7 @@ class CardEvent(Event):
     event_name: str = "card"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """
@@ -589,7 +726,7 @@ class FormationChangeEvent(Event):
     event_name: str = "formation_change"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
     """
@@ -604,7 +741,7 @@ class RecoveryEvent(Event):
     event_name: str = "recovery"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class BallOutEvent(Event):
     """
@@ -619,7 +756,7 @@ class BallOutEvent(Event):
     event_name: str = "ball_out"
 
 
-@dataclass
+@dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
@@ -634,7 +771,7 @@ class FoulCommittedEvent(Event):
     event_name: str = "foul_committed"
 
 
-@dataclass
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset
@@ -653,6 +790,9 @@ class EventDataset(Dataset[Event]):
     @property
     def events(self):
         return self.records
+
+    def get_event_by_id(self, event_id: str) -> Event:
+        return self.get_record_by_id(event_id)
 
     def add_state(self, *builder_keys):
         """

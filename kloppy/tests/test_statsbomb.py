@@ -209,3 +209,20 @@ class TestStatsbomb:
         )
 
         assert len(dataset.events) == 23
+
+    def test_related_events(self, lineup_data: str, event_data: str):
+        dataset = statsbomb.load(
+            lineup_data=lineup_data, event_data=event_data
+        )
+        carry_event = dataset.get_event_by_id(
+            "8e3dacc2-7a39-4301-9053-e78cfec1aa95"
+        )
+        pass_event = dataset.get_event_by_id(
+            "d1cccb73-c7ef-4b02-8267-ebd7f149904b"
+        )
+        receipt_event = dataset.get_event_by_id(
+            "61da36dc-d862-416c-8ee3-1a0cd24dc086"
+        )
+
+        assert carry_event.get_related_events() == [receipt_event, pass_event]
+        assert carry_event.related_pass() == pass_event

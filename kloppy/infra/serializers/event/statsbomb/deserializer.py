@@ -589,6 +589,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         if "location" in raw_event
                         else None
                     ),
+                    "related_event_ids": raw_event.get("related_events", []),
                     "raw_event": raw_event,
                 }
 

@@ -5,7 +5,11 @@ from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
 
 from .pitch import PitchDimensions, Point, Dimension
 from .formation import FormationType
-from ...exceptions import OrientationError
+from ...exceptions import (
+    OrientationError,
+    OrphanedRecordError,
+    InvalidFilterError,
+)
 
 
 @dataclass
@@ -647,10 +651,62 @@ class DataRecord(ABC):
         ball_state: See [`Team`][kloppy.domain.models.common.BallState]
     """
 
+    dataset: "Dataset" = field(init=False)
+    prev_record: Optional["DataRecord"] = field(init=False)
+    next_record: Optional["DataRecord"] = field(init=False)
     period: Period
     timestamp: float
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
+
+    @property
+    @abstractmethod
+    def record_id(self) -> Union[int, str]:
+        pass
+
+    def set_refs(
+        self,
+        dataset: "Dataset",
+        prev: Optional["DataRecord"],
+        next_: Optional["DataRecord"],
+    ):
+        if hasattr(self, "dataset"):
+            # TODO: determine if next/prev record should be affected
+            # by Dataset.filter
+            return
+
+        self.dataset = dataset
+        self.prev_record = prev
+        self.next_record = next_
+
+    def matches(self, filter_) -> bool:
+        if filter_ is None:
+            return True
+        elif callable(filter_):
+            return filter_(self)
+        else:
+            raise InvalidFilterError()
+
+    def prev(self, filter_=None) -> Optional["DataRecord"]:
+        if self.prev_record:
+            prev_record = self.prev_record
+            while prev_record:
+                if prev_record.matches(filter_):
+                    return prev_record
+                prev_record = prev_record.prev_record
+
+    def next(self, filter_=None) -> Optional["DataRecord"]:
+        if self.next_record:
+            next_record = self.next_record
+            while next_record:
+                if next_record.matches(filter_):
+                    return next_record
+                next_record = next_record.next_record
+
+    def __str__(self):
+        return f"<{self.__class__.__name__}>"
+
+    __repr__ = __str__
 
 
 @dataclass
@@ -698,7 +754,7 @@ class DatasetType(Enum):
         return self.value
 
 
-T = TypeVar("T")
+T = TypeVar("T", bound="DataRecord")
 
 
 @dataclass
@@ -714,6 +770,16 @@ class Dataset(ABC, Generic[T]):
 
     records: List[T]
     metadata: Metadata
+
+    def __post_init__(self):
+        for i, record in enumerate(self.records):
+            record.set_refs(
+                dataset=self,
+                prev=self.records[i - 1] if i > 0 else None,
+                next_=self.records[i + 1]
+                if i + 1 < len(self.records)
+                else None,
+            )
 
     @property
     @abstractmethod
@@ -736,21 +802,30 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_fn: Callable[[DataRecord], bool]):
+    def filter(self, filter_):
         """
-        Filter all records used `filter_fn`
+        Filter all records used `filter_`
 
         Arguments:
-            - filter_fn:
+            - filter_:
 
         Examples:
             >>> from kloppy.domain import EventType
             >>> dataset = dataset.filter(lambda event: event.event_type == EventType.PASS)
+            >>> dataset = dataset.filter('pass')
         """
         return replace(
             self,
-            records=[record for record in self.records if filter_fn(record)],
+            records=self.find_all(filter_),
         )
+
+    def find_all(self, filter_) -> List[T]:
+        return [record for record in self.records if record.matches(filter_)]
+
+    def find(self, filter_) -> Optional[T]:
+        for record in self.records:
+            if record.matches(filter_):
+                return record
 
     @classmethod
     def from_dataset(
@@ -787,3 +862,8 @@ class Dataset(ABC, Generic[T]):
             metadata=dataset.metadata,
             records=[mapper_fn(record) for record in dataset.records],
         )
+
+    def get_record_by_id(self, record_id: Union[int, str]) -> Optional[T]:
+        for record in self.records:
+            if record.record_id == record_id:
+                return record

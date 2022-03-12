@@ -15,12 +15,16 @@ class PlayerData:
     other_data: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(repr=False)
 class Frame(DataRecord):
     frame_id: int
     players_data: Dict[Player, PlayerData]
     other_data: Dict[str, Any]
     ball_coordinates: Point
+
+    @property
+    def record_id(self) -> int:
+        return self.frame_id
 
     @property
     def players_coordinates(self):

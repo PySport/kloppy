@@ -687,29 +687,21 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(self, filter_=None, search_depth=50) -> Optional["DataRecord"]:
-        if search_depth == 0:
-            return None
-
+    def prev(self, filter_=None) -> Optional["DataRecord"]:
         if self.prev_record:
-            if self.prev_record.matches(filter_):
-                return self.prev_record
-            else:
-                return self.prev_record.prev(
-                    filter_, search_depth=search_depth - 1
-                )
+            prev_record = self.prev_record
+            while prev_record:
+                if prev_record.matches(filter_):
+                    return prev_record
+                prev_record = prev_record.prev_record
 
-    def next(self, filter_=None, search_depth=50) -> Optional["DataRecord"]:
-        if search_depth == 0:
-            return None
-
+    def next(self, filter_=None) -> Optional["DataRecord"]:
         if self.next_record:
-            if self.next_record.matches(filter_):
-                return self.next_record
-            else:
-                return self.next_record.next(
-                    filter_, search_depth=search_depth - 1
-                )
+            next_record = self.next_record
+            while next_record:
+                if next_record.matches(filter_):
+                    return next_record
+                next_record = next_record.next_record
 
     def __str__(self):
         return f"<{self.__class__.__name__}>"
@@ -829,6 +821,11 @@ class Dataset(ABC, Generic[T]):
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
+
+    def find(self, filter_) -> Optional[T]:
+        for record in self.records:
+            if record.matches(filter_):
+                return record
 
     @classmethod
     def from_dataset(

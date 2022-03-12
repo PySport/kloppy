@@ -226,4 +226,3 @@ class TestStatsbomb:
 
         assert carry_event.get_related_events() == [receipt_event, pass_event]
         assert carry_event.related_pass() == pass_event
-        assert pass_event.related_carry() == carry_event

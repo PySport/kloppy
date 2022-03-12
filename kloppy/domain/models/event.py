@@ -497,11 +497,25 @@ class Event(DataRecord, ABC):
                     f"Don't know how to apply filter {filter_}"
                 )
 
-            if self.event_type != EventType[event_type]:
-                return False
+            if event_type:
+                try:
+                    if self.event_type != EventType[event_type]:
+                        return False
+                except KeyError:
+                    raise InvalidFilterError(
+                        f"Cannot find event type {event_type}. Possible options: {[e.value.lower() for e in EventType]}"
+                    )
 
             if result:
-                if self.result != self.result.__class__[result]:
+                if not self.result:
+                    return False
+
+                try:
+                    if self.result != self.result.__class__[result]:
+                        return False
+                except KeyError:
+                    # result isn't applicable for this event
+                    # example: result='GOAL' event=<Pass>
                     return False
 
             return True

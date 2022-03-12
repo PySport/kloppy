@@ -1,4 +1,4 @@
-site_name: kloppy 3.1.1
+site_name: kloppy 3.2.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
@@ -31,7 +31,8 @@ nav:
     - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
     - Code data: examples/code_data.ipynb
     - State: examples/state.ipynb
-    - Plotting2: examples/plotting.ipynb
+    - Navigating: examples/navigating.ipynb
+    - Plotting: examples/plotting.ipynb
   - API Reference:
     - Domain:
       - Common: api/domain/common.md

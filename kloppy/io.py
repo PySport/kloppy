@@ -31,6 +31,7 @@ if _RUNS_IN_BROWSER:
         with open(local_filename, "w") as f:
             f.write(request.responseText)
 
+
 else:
 
     def download_file(url: str, local_filename: str) -> None:

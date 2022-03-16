@@ -38,7 +38,7 @@ def setup_package():
             "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
         },
         install_requires=[
-            "lxml>=4.5.0,<5",
+            "lxml>=4.4.0,<5",
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'dataclasses==0.8;python_version<"3.7"',

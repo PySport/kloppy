@@ -5,6 +5,13 @@ from typing import Union, IO, Dict
 
 from io import BytesIO
 
+try:
+    from js import XMLHttpRequest
+
+    _RUNS_IN_BROWSER = True
+except ImportError:
+    _RUNS_IN_BROWSER = False
+
 import requests
 
 
@@ -15,13 +22,24 @@ _open = open
 
 FileLike = Union[str, bytes, IO[bytes]]
 
+if _RUNS_IN_BROWSER:
 
-def download_file(url: str, local_filename: str) -> None:
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    def download_file(url: str, local_filename: str) -> None:
+        request = XMLHttpRequest.new()
+        request.open("GET", url, False)
+        request.send(None)
+        with open(local_filename, "w") as f:
+            f.write(request.responseText)
+
+
+else:
+
+    def download_file(url: str, local_filename: str) -> None:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(local_filename, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
 
 
 def get_local_file(url: str) -> str:

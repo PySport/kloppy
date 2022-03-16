@@ -2,6 +2,11 @@
 
 Find out all changes between different kloppy versions
 
+## 3.2.1 (2022-03-16)
+
+Pull requests merged:
+- Make kloppy work within a Pyodide environment ([#132](https://github.com/PySport/kloppy/pull/132))
+
 ## 3.2.0 (2022-03-12)
 
 Pull requests merged:

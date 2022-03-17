@@ -16,6 +16,7 @@ from kloppy.domain import (
     Provider,
     Frame,
     Metadata,
+    MetricaCoordinateSystem,
     Team,
     Ground,
     Player,
@@ -110,6 +111,16 @@ class TestHelpers:
         assert transformed_dataset.frames[1].ball_coordinates == Point(
             x=1, y=0
         )
+        assert (
+            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
+        )
+        assert transformed_dataset.metadata.coordinate_system is None
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == PitchDimensions(
+                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            )
+        )
 
     def test_transform_to_coordinate_system(self):
         base_dir = os.path.dirname(__file__)
@@ -129,12 +140,29 @@ class TestHelpers:
         ].coordinates == Point(x=-1234.0, y=-294.0)
 
         transformed_dataset = dataset.transform(
-            to_coordinate_system=Provider.METRICA,
+            to_coordinate_system=Provider.METRICA
+        )
+        transformerd_coordinate_system = MetricaCoordinateSystem(
+            normalized=True,
+            length=dataset.metadata.coordinate_system.length,
+            width=dataset.metadata.coordinate_system.width,
         )
 
         assert transformed_dataset.records[0].players_data[
             player_home_19
         ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+        assert (
+            transformed_dataset.metadata.orientation
+            == dataset.metadata.orientation
+        )
+        assert (
+            transformed_dataset.metadata.coordinate_system
+            == transformerd_coordinate_system
+        )
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == transformerd_coordinate_system.pitch_dimensions
+        )
 
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()

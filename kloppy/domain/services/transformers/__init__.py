@@ -356,6 +356,11 @@ class Transformer:
                 to_pitch_dimensions=to_pitch_dimensions,
                 to_orientation=to_orientation,
             )
+            metadata = replace(
+                dataset.metadata,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+            )
 
         elif to_coordinate_system:
 
@@ -364,6 +369,12 @@ class Transformer:
                 from_orientation=dataset.metadata.orientation,
                 to_coordinate_system=to_coordinate_system,
                 to_orientation=to_orientation,
+            )
+            metadata = replace(
+                dataset.metadata,
+                coordinate_system=to_coordinate_system,
+                pitch_dimensions=to_coordinate_system.pitch_dimensions,
+                orientation=to_orientation,
             )
 
         else:
@@ -374,12 +385,11 @@ class Transformer:
                 to_coordinate_system=dataset.metadata.coordinate_system,
                 to_orientation=to_orientation,
             )
+            metadata = replace(
+                dataset.metadata,
+                orientation=to_orientation,
+            )
 
-        metadata = replace(
-            dataset.metadata,
-            pitch_dimensions=to_pitch_dimensions,
-            orientation=to_orientation,
-        )
         if isinstance(dataset, TrackingDataset):
             frames = [
                 transformer.transform_frame(record)

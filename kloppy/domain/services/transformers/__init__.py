@@ -273,6 +273,7 @@ class Transformer:
         if self.__needs_flip(
             ball_owning_team=event.ball_owning_team,
             attacking_direction=event.period.attacking_direction,
+            action_executing_team=event.team
         ):
             event = self.__flip_event(event)
 
@@ -401,7 +402,10 @@ class Transformer:
                 records=frames,
             )
         elif isinstance(dataset, EventDataset):
-            events = list(map(transformer.transform_event, dataset.records))
+            events = [
+                transformer.transform_event(event)
+                for event in dataset.records
+            ]
 
             return EventDataset(
                 metadata=metadata,

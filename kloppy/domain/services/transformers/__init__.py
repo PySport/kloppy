@@ -273,7 +273,7 @@ class Transformer:
         if self.__needs_flip(
             ball_owning_team=event.ball_owning_team,
             attacking_direction=event.period.attacking_direction,
-            action_executing_team=event.team
+            action_executing_team=event.team,
         ):
             event = self.__flip_event(event)
 
@@ -403,8 +403,7 @@ class Transformer:
             )
         elif isinstance(dataset, EventDataset):
             events = [
-                transformer.transform_event(event)
-                for event in dataset.records
+                transformer.transform_event(event) for event in dataset.records
             ]
 
             return EventDataset(

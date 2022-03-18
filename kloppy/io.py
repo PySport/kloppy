@@ -1,18 +1,12 @@
 import logging
 import os
 import urllib.parse
-from typing import Union, IO, Dict
+from typing import Union, IO, BinaryIO, Tuple
 
 from io import BytesIO
 
-try:
-    from js import XMLHttpRequest
-
-    _RUNS_IN_BROWSER = True
-except ImportError:
-    _RUNS_IN_BROWSER = False
-
-import requests
+from kloppy.config import get_config
+from kloppy.infra.io.adapters import get_adapter
 
 
 logger = logging.getLogger(__name__)
@@ -22,43 +16,24 @@ _open = open
 
 FileLike = Union[str, bytes, IO[bytes]]
 
-if _RUNS_IN_BROWSER:
 
-    def download_file(url: str, local_filename: str) -> None:
-        request = XMLHttpRequest.new()
-        request.open("GET", url, False)
-        request.send(None)
-        with open(local_filename, "w") as f:
-            f.write(request.responseText)
-
-
-else:
-
-    def download_file(url: str, local_filename: str) -> None:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(local_filename, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-
-
-def get_local_file(url: str) -> str:
-    cache_dir = os.environ.get("KLOPPY_CACHE_DIR", None)
-    if not cache_dir:
-        cache_dir = os.path.expanduser("~/kloppy_cache")
-
+def get_local_cache_stream(url: str, cache_dir: str) -> Tuple[BinaryIO, bool]:
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
     filename = urllib.parse.quote_plus(url)
     local_filename = f"{cache_dir}/{filename}"
-    if not os.path.exists(local_filename):
-        logger.info(f"Downloading {filename}")
-        download_file(url, local_filename)
-        logger.info("Download complete")
-    else:
-        logger.info(f"Using local cached file {local_filename}")
-    return local_filename
+
+    # Open the file in append+read mode
+    # this makes sure:
+    # 1. The file is created when it does not exist
+    # 2. The file is not truncated when it does exist
+    # 3. The file can be read
+    return _open(local_filename, "a+b"), (
+        os.path.exists(local_filename)
+        and os.path.getsize(local_filename) > 0
+        and local_filename
+    )
 
 
 def open_as_file(input_: FileLike) -> IO:
@@ -66,10 +41,27 @@ def open_as_file(input_: FileLike) -> IO:
         if "{" in input_ or "<" in input_:
             return BytesIO(input_.encode("utf8"))
         else:
-            if input_.startswith("http://") or input_.startswith("https://"):
-                input_ = get_local_file(input_)
+            adapter = get_adapter(input_)
+            if adapter:
+                cache_dir = get_config("io.cache")
+                if cache_dir:
+                    stream, local_cache_file = get_local_cache_stream(
+                        input_, cache_dir
+                    )
+                else:
+                    stream = BytesIO()
+                    local_cache_file = None
 
-            return _open(input_, "rb")
+                if not local_cache_file:
+                    logger.info(f"Retrieving {input_}")
+                    adapter.read_to_stream(input_, stream)
+                    logger.info("Retrieval complete")
+                else:
+                    logger.info(f"Using local cached file {local_cache_file}")
+                stream.seek(0)
+            else:
+                stream = _open(input_, "rb")
+            return stream
     elif isinstance(input_, bytes):
         return BytesIO(input_)
     else:

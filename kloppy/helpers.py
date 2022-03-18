@@ -1,3 +1,5 @@
+import s3fs
+
 from typing import Callable, Dict, List, Optional, TypeVar, Union, Any
 
 from . import (
@@ -212,7 +214,7 @@ def load_statsbomb_event_data(
 
 
 def load_opta_event_data(
-    f24_data_filename: str, f7_data_filename: str, options: dict = None
+    f24_data_filename: str, f7_data_filename: str, s3_fs: s3fs.S3FileSystem = None, options: dict = None
 ) -> EventDataset:
     """
     Load Opta event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
@@ -220,17 +222,29 @@ def load_opta_event_data(
     Parameters:
         f24_data_filename: filename of the f24 XML file containing the events
         f7_data_filename: filename of the f7 XML file containing metadata
+        s3_fs: S3FileSystem. Default: None --> local
         options:
     """
     serializer = OptaSerializer()
-    with open(f24_data_filename, "rb") as f24_data, open(
-        f7_data_filename, "rb"
-    ) as f7_data:
 
-        return serializer.deserialize(
-            inputs={"f24_data": f24_data, "f7_data": f7_data},
-            options=options,
-        )
+    if not s3_fs is None:
+        with s3_fs.open(f24_data_filename, "rb") as f24_data, s3_fs.open(
+            f7_data_filename, "rb"
+        ) as f7_data:
+
+            return serializer.deserialize(
+                inputs={"f24_data": f24_data, "f7_data": f7_data},
+                options=options,
+            )
+    else:
+        with open(f24_data_filename, "rb") as f24_data, open(
+            f7_data_filename, "rb"
+        ) as f7_data:
+
+            return serializer.deserialize(
+                inputs={"f24_data": f24_data, "f7_data": f7_data},
+                options=options,
+            )
 
 
 def load_metrica_json_event_data(
@@ -278,7 +292,7 @@ def load_sportec_event_data(
 
 
 def load_wyscout_event_data(
-    event_data_filename: str, options: dict = None
+    event_data_filename: str, s3_fs: s3fs.S3FileSystem = None, options: dict = None
 ) -> EventDataset:
     """
     Load Wyscout event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
@@ -288,16 +302,28 @@ def load_wyscout_event_data(
         options:
     """
     serializer = WyscoutSerializer()
-    with open(event_data_filename, "rb") as event_data:
-        return serializer.deserialize(
-            inputs={"event_data": event_data}, options=options
-        )
+
+    if not s3_fs is None:
+        with s3_fs.open(event_data_filename, "rb") as event_data:
+            return serializer.deserialize(
+                inputs={"event_data": event_data}, options=options
+            )
+    else:
+        with open(event_data_filename, "rb") as event_data:
+            return serializer.deserialize(
+                inputs={"event_data": event_data}, options=options
+            )
 
 
-def load_xml_code_data(xml_filename: str) -> CodeDataset:
+def load_xml_code_data(xml_filename: str, s3_fs: s3fs.S3FileSystem = None) -> CodeDataset:
     serializer = XMLCodeSerializer()
-    with open(xml_filename, "rb") as xml_file:
-        return serializer.deserialize(inputs={"xml_file": xml_file})
+
+    if not s3_fs is None:
+        with s3_fs.open(xml_filename, "rb") as xml_file:
+            return serializer.deserialize(inputs={"xml_file": xml_file})
+    else:
+        with open(xml_filename, "rb") as xml_file:
+            return serializer.deserialize(inputs={"xml_file": xml_file})
 
 
 def write_xml_code_data(dataset: CodeDataset, xml_filename: str):

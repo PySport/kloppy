@@ -5,3 +5,4 @@ networkx>=2.4
 pytest
 pandas>=1.0.0
 pre-commit
+s3fs==0.4.0

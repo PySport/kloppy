@@ -41,7 +41,7 @@ def transform(
         )
 
     if to_orientation and isinstance(to_orientation, str):
-        to_orientation = Orientation[to_orientation]
+        to_orientation = Orientation[to_orientation.upper()]
 
     if to_pitch_dimensions and (
         isinstance(to_pitch_dimensions, list)

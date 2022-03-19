@@ -164,6 +164,57 @@ class TestHelpers:
             == transformerd_coordinate_system.pitch_dimensions
         )
 
+    def test_transform_event_data(self):
+        """Make sure event data that's in ACTION_EXECUTING orientation is
+        transformed correctly"""
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
+            event_data=f"{base_dir}/files/statsbomb_event.json",
+        )
+
+        home_team, away_team = dataset.metadata.teams
+
+        # This is a pressure event by Deportivo while Barcelona is in possession
+        pressure_event = dataset.get_event_by_id(
+            "6399af5c-74b8-4efe-ae19-85f331d355e8"
+        )
+        assert pressure_event.team == away_team
+        assert pressure_event.ball_owning_team == home_team
+
+        receipt_event = pressure_event.next()
+        assert receipt_event.team == home_team
+        assert receipt_event.ball_owning_team == home_team
+
+        transformed_dataset = dataset.transform(
+            to_orientation="fixed_home_away"
+        )
+        transformed_pressure_event = transformed_dataset.get_event_by_id(
+            pressure_event.event_id
+        )
+        transformed_receipt_event = transformed_pressure_event.next()
+
+        # The receipt event is executed by the away team and should be changed by the transformation
+        assert (
+            pressure_event.coordinates.x
+            == 1 - transformed_pressure_event.coordinates.x
+        )
+        assert (
+            pressure_event.coordinates.y
+            == 1 - transformed_pressure_event.coordinates.y
+        )
+
+        # The receipt event is executed by the home team and shouldn't be changed by the transformation
+        assert (
+            receipt_event.coordinates.x
+            == transformed_receipt_event.coordinates.x
+        )
+        assert (
+            receipt_event.coordinates.y
+            == transformed_receipt_event.coordinates.y
+        )
+
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 

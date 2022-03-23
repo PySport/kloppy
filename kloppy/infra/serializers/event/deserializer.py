@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Generic, TypeVar, Union
 
+from kloppy.config import get_config
 from kloppy.domain import (
     EventDataset,
     Event,
@@ -30,7 +31,7 @@ class EventDataDeserializer(ABC, Generic[T]):
         ]
 
         if not coordinate_system:
-            coordinate_system = Provider.KLOPPY
+            coordinate_system = get_config("coordinate_system")
 
         if isinstance(coordinate_system, str):
             coordinate_system = Provider[coordinate_system.upper()]

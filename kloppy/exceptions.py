@@ -16,3 +16,11 @@ class OrphanedRecordError(KloppyError):
 
 class InvalidFilterError(KloppyError):
     pass
+
+
+class AdapterError(KloppyError):
+    pass
+
+
+class InputNotFoundError(KloppyError):
+    pass

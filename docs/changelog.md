@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+## 3.3.0 (2022-03-23)
+
+Pull requests merged:
+- Add adapters and config ([#140](https://github.com/PySport/kloppy/pull/140))
+- Fix transformation for events when ball_owning_team does not equal action_executing_team ([#139](https://github.com/PySport/kloppy/pull/139))
+- Fix metadata update after dataset transformation ([#133](https://github.com/PySport/kloppy/pull/133))
+
 ## 3.2.1 (2022-03-16)
 
 Pull requests merged:

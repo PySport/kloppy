@@ -31,7 +31,7 @@ class EventDataDeserializer(ABC, Generic[T]):
         ]
 
         if not coordinate_system:
-            coordinate_system = get_config("deserializer.coordinate_system")
+            coordinate_system = get_config("coordinate_system")
 
         if isinstance(coordinate_system, str):
             coordinate_system = Provider[coordinate_system.upper()]

@@ -40,7 +40,7 @@ class TestAdapter:
                 output.write(fp.read())
                 fp.close()
 
-        with config_context("io.cache", None):
+        with config_context("cache", None):
             with pytest.raises(FileNotFoundError):
                 # When our adapter is not registered yet
                 # kloppy will fallback to regular `open`.

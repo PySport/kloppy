@@ -22,7 +22,7 @@ class S3Adapter(Adapter):
                 " install it using: pip install s3fs"
             )
 
-        s3_fs = get_config("io.adapters.s3.s3fs")
+        s3_fs = get_config("adapters.s3.s3fs")
         if not s3_fs:
             if not self.s3_fs:
                 s3_fs = s3fs.S3FileSystem()

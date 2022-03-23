@@ -35,7 +35,7 @@ class TestConfig:
             dataset.metadata.coordinate_system, KloppyCoordinateSystem
         )
 
-        set_config("deserializer.coordinate_system", "opta")
+        set_config("coordinate_system", "opta")
 
         dataset = opta.load(f24_data=f24_data, f7_data=f7_data)
         assert isinstance(
@@ -43,14 +43,14 @@ class TestConfig:
         )
 
     def test_config_context(self, f24_data: str, f7_data: str):
-        assert get_config("deserializer.coordinate_system") == "kloppy"
+        assert get_config("coordinate_system") == "kloppy"
 
-        with config_context("deserializer.coordinate_system", "opta"):
-            assert get_config("deserializer.coordinate_system") == "opta"
+        with config_context("coordinate_system", "opta"):
+            assert get_config("coordinate_system") == "opta"
 
             dataset = opta.load(f24_data=f24_data, f7_data=f7_data)
 
-        assert get_config("deserializer.coordinate_system") == "kloppy"
+        assert get_config("coordinate_system") == "kloppy"
 
         assert isinstance(
             dataset.metadata.coordinate_system, OptaCoordinateSystem

@@ -43,7 +43,7 @@ def open_as_file(input_: FileLike) -> IO:
         else:
             adapter = get_adapter(input_)
             if adapter:
-                cache_dir = get_config("io.cache")
+                cache_dir = get_config("cache")
                 if cache_dir:
                     stream, local_cache_file = get_local_cache_stream(
                         input_, cache_dir

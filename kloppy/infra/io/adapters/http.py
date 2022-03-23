@@ -11,7 +11,7 @@ class HTTPAdapter(Adapter):
         return url.startswith("http://") or url.startswith("https://")
 
     def read_to_stream(self, url: str, output: BinaryIO):
-        auth_config = get_config("io.adapters.http.authentication")
+        auth_config = get_config("adapters.http.authentication")
 
         try:
             from js import XMLHttpRequest

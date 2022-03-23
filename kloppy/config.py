@@ -1,7 +1,13 @@
 import os
 from contextlib import contextmanager
 from copy import copy
-from typing import Any, Dict, Optional, TypedDict
+from typing import Any, Optional
+
+try:
+    from typing import TypedDict
+except ImportError:
+    from mypy_extensions import TypedDict
+
 
 cache_dir = os.environ.get("KLOPPY_CACHE_DIR")
 if not cache_dir:
@@ -10,10 +16,11 @@ if not cache_dir:
 Config = TypedDict(
     "Config",
     {
-        "io.cache": Optional[str],
-        "io.adapters.http.basic_authentication": Optional[str],
-        "io.adapters.s3.s3fs": Optional[Any],
-        "deserializer.coordinate_system": Optional[str],
+        "cache": Optional[str],
+        "coordinate_system": Optional[str],
+
+        "adapters.http.basic_authentication": Optional[str],
+        "adapters.s3.s3fs": Optional[Any],
     },
 )
 
@@ -23,10 +30,11 @@ class PartialConfig(Config, total=False):
 
 
 _default_config: Config = {
-    "io.cache": cache_dir,
-    "io.adapters.http.basic_authentication": None,
-    "io.adapters.s3.s3fs": None,
-    "deserializer.coordinate_system": "kloppy",
+    "cache": cache_dir,
+    "coordinate_system": "kloppy",
+    "adapters.http.basic_authentication": None,
+    "adapters.s3.s3fs": None,
+
 }
 
 config = copy(_default_config)
@@ -44,8 +52,10 @@ def set_config(key: str, value: Optional[str]):
         raise KeyError(f"Non existing config '{key}'")
 
 
-def get_config(key: str):
-    if key in config:
+def get_config(key: Optional[str] = None):
+    if key is None:
+        return config
+    elif key in config:
         return config[key]
     else:
         raise KeyError(f"Non existing config '{key}'")

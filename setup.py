@@ -42,6 +42,7 @@ def setup_package():
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'dataclasses==0.8;python_version<"3.7"',
+            'mypy_extensions'
             "python-dateutil>=2.8.1,<3",
         ],
         extras_require={

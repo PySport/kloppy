@@ -44,7 +44,7 @@ class TestAdapter:
         with config_context("cache", None):
             with pytest.raises(InputNotFoundError):
                 # When our adapter is not registered yet
-                # kloppy will fallback to regular `open`.
+                # kloppy will fall back to regular `open`.
                 opta.load(f24_data="test123://f24", f7_data="test123://f7")
 
             custom_adapter = CustomAdapter()

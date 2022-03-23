@@ -5,6 +5,7 @@ import pytest
 from kloppy import opta
 from kloppy.config import config_context
 from kloppy.domain import Provider, DatasetType
+from kloppy.exceptions import InputNotFoundError
 from kloppy.infra.io.adapters import Adapter, adapters
 
 
@@ -41,7 +42,7 @@ class TestAdapter:
                 fp.close()
 
         with config_context("cache", None):
-            with pytest.raises(FileNotFoundError):
+            with pytest.raises(InputNotFoundError):
                 # When our adapter is not registered yet
                 # kloppy will fallback to regular `open`.
                 opta.load(f24_data="test123://f24", f7_data="test123://f7")

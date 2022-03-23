@@ -20,3 +20,7 @@ class InvalidFilterError(KloppyError):
 
 class AdapterError(KloppyError):
     pass
+
+
+class InputNotFoundError(KloppyError):
+    pass

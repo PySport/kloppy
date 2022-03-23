@@ -6,6 +6,7 @@ from typing import Union, IO, BinaryIO, Tuple
 from io import BytesIO
 
 from kloppy.config import get_config
+from kloppy.exceptions import InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
 
 
@@ -60,6 +61,9 @@ def open_as_file(input_: FileLike) -> IO:
                     logger.info(f"Using local cached file {local_cache_file}")
                 stream.seek(0)
             else:
+                if not os.path.exists(input_):
+                    raise InputNotFoundError(f"File {input_} does not exist")
+
                 stream = _open(input_, "rb")
             return stream
     elif isinstance(input_, bytes):

@@ -18,7 +18,6 @@ Config = TypedDict(
     {
         "cache": Optional[str],
         "coordinate_system": Optional[str],
-
         "adapters.http.basic_authentication": Optional[str],
         "adapters.s3.s3fs": Optional[Any],
     },
@@ -34,7 +33,6 @@ _default_config: Config = {
     "coordinate_system": "kloppy",
     "adapters.http.basic_authentication": None,
     "adapters.s3.s3fs": None,
-
 }
 
 config = copy(_default_config)

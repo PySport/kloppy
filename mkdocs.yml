@@ -33,6 +33,8 @@ nav:
     - State: examples/state.ipynb
     - Navigating: examples/navigating.ipynb
     - Plotting: examples/plotting.ipynb
+    - Config: examples/config.ipynb
+    - Adapters: examples/adapter.ipynb
   - API Reference:
     - Domain:
       - Common: api/domain/common.md

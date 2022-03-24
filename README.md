@@ -51,3 +51,11 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 An overview on how to contribute can be found in the **[contributing guide](https://kloppy.pysport.org/contributing)**.
 
 If you are simply looking to start working with the kloppy codebase, navigate to the GitHub "issues" tab and start looking through interesting issues.
+
+## Current contributors
+
+<a href="https://github.com/PySport/kloppy/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PySport/kloppy" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

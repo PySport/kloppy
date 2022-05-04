@@ -31,7 +31,9 @@ class HTTPAdapter(Adapter):
         if _RUNS_IN_BROWSER:
             request = XMLHttpRequest.new()
             if basic_authentication:
-                authentication = base64.b64encode(basic_authentication.join(":"))
+                authentication = base64.b64encode(
+                    basic_authentication.join(":")
+                )
                 request.setRequestHeader(
                     "Authorization",
                     f"Basic {authentication}",

@@ -11,7 +11,7 @@ class HTTPAdapter(Adapter):
         return url.startswith("http://") or url.startswith("https://")
 
     def read_to_stream(self, url: str, output: BinaryIO):
-        auth_config = get_config("adapters.http.authentication")
+        basic_authentication = get_config("adapters.http.basic_authentication")
 
         try:
             from js import XMLHttpRequest
@@ -30,8 +30,8 @@ class HTTPAdapter(Adapter):
 
         if _RUNS_IN_BROWSER:
             request = XMLHttpRequest.new()
-            if auth_config:
-                authentication = base64.b64encode(auth_config.join(":"))
+            if basic_authentication:
+                authentication = base64.b64encode(basic_authentication.join(":"))
                 request.setRequestHeader(
                     "Authorization",
                     f"Basic {authentication}",
@@ -42,8 +42,8 @@ class HTTPAdapter(Adapter):
             output.write(request.responseText)
         else:
             auth = None
-            if auth_config:
-                auth = requests.auth.HTTPBasicAuth(*auth_config)
+            if basic_authentication:
+                auth = requests.auth.HTTPBasicAuth(*basic_authentication)
 
             with requests.get(url, stream=True, auth=auth) as r:
                 r.raise_for_status()

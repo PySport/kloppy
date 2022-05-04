@@ -2,6 +2,11 @@
 
 Find out all changes between different kloppy versions
 
+## 3.3.1 (2022-05-04)
+
+Pull requests merged:
+- Fix http authentication ([#141](https://github.com/PySport/kloppy/pull/141))
+
 ## 3.3.0 (2022-03-23)
 
 Pull requests merged:

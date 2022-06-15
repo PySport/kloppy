@@ -11,15 +11,11 @@ from kloppy.domain import (
     Period,
     Orientation,
     Provider,
-    PitchDimensions,
-    Dimension,
     DatasetFlag,
     Metadata,
     Team,
     Ground,
     Player,
-    build_coordinate_system,
-    Transformer,
     PlayerData,
 )
 from kloppy.infra.serializers.tracking.deserializer import (

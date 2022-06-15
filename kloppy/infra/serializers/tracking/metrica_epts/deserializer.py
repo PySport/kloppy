@@ -1,6 +1,5 @@
-from kloppy.infra.serializers.tracking.metrica_epts.models import Sensor
 import logging
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import NamedTuple, IO
 from dataclasses import replace
 
 from kloppy.domain import (
@@ -8,10 +7,9 @@ from kloppy.domain import (
     Frame,
     Point,
     Point3D,
-    Transformer,
-    build_coordinate_system,
     Provider,
     PlayerData,
+    DatasetTransformer
 )
 from kloppy.utils import performance_logging
 
@@ -36,7 +34,7 @@ class MetricaEPTSTrackingDataDeserializer(
 
     @staticmethod
     def _frame_from_row(
-        row: dict, metadata: EPTSMetadata, transformer: Transformer
+        row: dict, metadata: EPTSMetadata, transformer: DatasetTransformer
     ) -> Frame:
         timestamp = row["timestamp"]
         if metadata.periods and row["period_id"]:

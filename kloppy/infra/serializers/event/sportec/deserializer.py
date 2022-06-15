@@ -12,8 +12,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PitchDimensions,
-    Dimension,
     PassEvent,
     ShotEvent,
     GenericEvent,
@@ -26,7 +24,6 @@ from kloppy.domain import (
     Metadata,
     Player,
     Position,
-    Event,
     SetPieceQualifier,
     SetPieceType,
     BodyPartQualifier,
@@ -39,12 +36,10 @@ from kloppy.domain import (
     CardType,
     FoulCommittedEvent,
     AttackingDirection,
-    build_coordinate_system,
-    Transformer,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

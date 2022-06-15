@@ -2,7 +2,7 @@ from typing import List
 
 from kloppy.domain import AttackingDirection, Frame, Ground
 
-from .transformers import Transformer
+from .transformers import DatasetTransformer
 
 # NOT YET: from .enrichers import TrackingPossessionEnricher
 

@@ -1,26 +1,13 @@
-from typing import Callable, Dict, List, TypeVar, Union, Any
+from typing import TypeVar, Union
 
 from .domain import (
-    CardEvent,
-    CarryEvent,
-    DataRecord,
     Dataset,
     Dimension,
-    Event,
-    EventDataset,
-    EventType,
-    Frame,
     Orientation,
-    PassEvent,
-    PassResult,
     PitchDimensions,
-    ShotEvent,
-    TrackingDataset,
-    Transformer,
+    DatasetTransformer,
     Provider,
     build_coordinate_system,
-    CodeDataset,
-    Code,
     CoordinateSystem,
 )
 
@@ -51,7 +38,7 @@ def transform(
             x_dim=Dimension(*to_pitch_dimensions[0]),
             y_dim=Dimension(*to_pitch_dimensions[1]),
         )
-        return Transformer.transform_dataset(
+        return DatasetTransformer.transform_dataset(
             dataset=dataset,
             to_orientation=to_orientation,
             to_pitch_dimensions=to_pitch_dimensions,
@@ -64,7 +51,7 @@ def transform(
             width=dataset.metadata.coordinate_system.width,
         )
 
-    return Transformer.transform_dataset(
+    return DatasetTransformer.transform_dataset(
         dataset=dataset,
         to_orientation=to_orientation,
         to_coordinate_system=to_coordinate_system,

@@ -13,17 +13,12 @@ from kloppy.domain import (
     Team,
     BallState,
     Period,
-    Provider,
     Orientation,
-    PitchDimensions,
-    Dimension,
     attacking_direction_from_frame,
     Metadata,
     Ground,
     Player,
-    build_coordinate_system,
     Provider,
-    Transformer,
     PlayerData,
 )
 from kloppy.exceptions import DeserializationError

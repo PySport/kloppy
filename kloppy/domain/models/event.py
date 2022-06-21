@@ -771,6 +771,14 @@ class FoulCommittedEvent(Event):
     event_name: str = "foul_committed"
 
 
+FIELD_ALIASES = {
+    "type": ["event_type"],
+    "period": ["period_id"],
+    "time": ["timestamp"],
+    "coordinates": ["coordinates_x", "coordinates_y"],
+}
+
+
 @dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
@@ -804,6 +812,7 @@ class EventDataset(Dataset[Event]):
 
     def to_pandas(
         self,
+        *fields: List[Callable[[Event], Any]],
         record_converter: Callable[[Event], Dict] = None,
         additional_columns: Dict[
             str, Union[Callable[[Event], Any], Any]
@@ -909,7 +918,17 @@ class EventDataset(Dataset[Event]):
                     else:
                         value = v
                     row.update({k: value})
-
+            if fields:
+                row_new = {}
+                for field in fields:
+                    if callable(field):
+                        row_new.update(field(event))
+                    elif field in FIELD_ALIASES:
+                        for alias in FIELD_ALIASES[field]:
+                            row_new[alias] = row[alias]
+                    else:
+                        row_new[field] = row[field]
+                row = row_new
             return row
 
         return pd.DataFrame.from_records(
@@ -918,6 +937,7 @@ class EventDataset(Dataset[Event]):
 
 
 __all__ = [
+    "EnumQualifier",
     "ResultType",
     "EventType",
     "ShotResult",

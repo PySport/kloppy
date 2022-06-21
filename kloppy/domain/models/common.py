@@ -771,6 +771,9 @@ class Dataset(ABC, Generic[T]):
     records: List[T]
     metadata: Metadata
 
+    def __iter__(self):
+        return iter(self.records)
+
     def __post_init__(self):
         for i, record in enumerate(self.records):
             record.set_refs(

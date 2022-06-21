@@ -24,3 +24,7 @@ class AdapterError(KloppyError):
 
 class InputNotFoundError(KloppyError):
     pass
+
+
+class UnknownEncoderError(KloppyError):
+    pass

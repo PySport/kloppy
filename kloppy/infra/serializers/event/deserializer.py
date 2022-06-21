@@ -43,7 +43,9 @@ class EventDataDeserializer(ABC, Generic[T]):
             return True
         return event.event_type in self.event_types
 
-    def get_transformer(self, length: float, width: float) -> DatasetTransformer:
+    def get_transformer(
+        self, length: float, width: float
+    ) -> DatasetTransformer:
         from_coordinate_system = build_coordinate_system(
             self.provider,
             length=length,

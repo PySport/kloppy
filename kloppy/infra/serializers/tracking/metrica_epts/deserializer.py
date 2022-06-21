@@ -9,7 +9,7 @@ from kloppy.domain import (
     Point3D,
     Provider,
     PlayerData,
-    DatasetTransformer
+    DatasetTransformer,
 )
 from kloppy.utils import performance_logging
 

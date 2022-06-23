@@ -833,7 +833,9 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            record_converter = default_record_converter
+            from ..services.transformers.attribute import Default
+
+            record_converter = Default()
 
         def generic_record_converter(event: Event):
             row = record_converter(event)
@@ -844,6 +846,7 @@ class EventDataset(Dataset[Event]):
                     else:
                         value = v
                     row.update({k: value})
+            return row
 
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)

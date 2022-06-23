@@ -28,3 +28,7 @@ class InputNotFoundError(KloppyError):
 
 class UnknownEncoderError(KloppyError):
     pass
+
+
+class KloppyParameterError(KloppyError):
+    pass

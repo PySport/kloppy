@@ -1,3 +1,5 @@
+import sys
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -11,9 +13,13 @@ from typing import (
     Optional,
     Iterable,
     overload,
-    Literal,
     TYPE_CHECKING,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (

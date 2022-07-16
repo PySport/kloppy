@@ -3,12 +3,9 @@ import os
 import pytest
 from kloppy import statsbomb
 
-# from kloppy.domain.services.transformers.attribute import BodyPart
 from kloppy.domain import EventDataset, Point
 from kloppy.domain.services.transformers.attribute import (
-    Default,
-    AngleToGoal,
-    DistanceToGoal,
+    DistanceToGoalTransformer,
 )
 
 
@@ -72,7 +69,10 @@ class TestToRecords:
         """
 
         records = dataset.filter("pass").to_records(
-            "timestamp", "player_id", "coordinates_*", DistanceToGoal()
+            "timestamp",
+            "player_id",
+            "coordinates_*",
+            DistanceToGoalTransformer(),
         )
         assert records[0] == {
             "timestamp": 0.098,

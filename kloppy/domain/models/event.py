@@ -833,9 +833,9 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import Default
+            from ..services.transformers.attribute import DefaultTransformer
 
-            record_converter = Default()
+            record_converter = DefaultTransformer()
 
         def generic_record_converter(event: Event):
             row = record_converter(event)

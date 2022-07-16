@@ -2,7 +2,7 @@ from fnmatch import fnmatch
 from typing import NewType, Union, Callable, Any, Dict
 
 from kloppy.domain import Event
-from kloppy.domain.services.transformers.attribute import Default
+from kloppy.domain.services.transformers.attribute import DefaultTransformer
 from kloppy.exceptions import KloppyError
 
 Column = NewType("Column", Union[str, Callable[[Event], Any]])
@@ -16,9 +16,9 @@ class EventToRecordTransformer:
     ):
         if not columns and not named_columns:
 
-            converter = Default()
+            converter = DefaultTransformer()
         else:
-            default = Default()
+            default = DefaultTransformer()
             has_string_columns = any(
                 not callable(column) for column in columns
             )

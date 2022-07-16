@@ -129,7 +129,7 @@ def create_transformer_from_qualifier(
     return _Transformer
 
 
-class Default(EventAttributeTransformer):
+class DefaultTransformer(EventAttributeTransformer):
     def __init__(
         self,
         *include: str,

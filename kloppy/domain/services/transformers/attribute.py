@@ -24,18 +24,6 @@ from kloppy.exceptions import (
 from kloppy.utils import camelcase_to_snakecase
 
 
-# class OneHotEncoder:
-#     def __init__(self, name: str, options: List[str]):
-#         self.options = options
-#         self.name = name
-#
-#     def encode(self, value: str) -> Dict[str, bool]:
-#         return {
-#             f"is_{self.name}_{option_.lower()}": option_ == value
-#             for option_ in self.options
-#         }
-
-
 class OneHotEncoder:
     def __init__(self, name: str, options: List[str]):
         self.options = options
@@ -57,7 +45,7 @@ class EventAttributeTransformer(ABC):
         pass
 
 
-class AngleToGoal(EventAttributeTransformer):
+class AngleToGoalTransformer(EventAttributeTransformer):
     def __call__(self, event: Event) -> Dict[str, Any]:
         metadata = event.dataset.metadata
         if metadata.orientation != Orientation.ACTION_EXECUTING_TEAM:
@@ -90,7 +78,7 @@ class AngleToGoal(EventAttributeTransformer):
         }
 
 
-class DistanceToGoal(EventAttributeTransformer):
+class DistanceToGoalTransformer(EventAttributeTransformer):
     def __call__(self, event: Event) -> Dict[str, Any]:
         metadata = event.dataset.metadata
         if metadata.orientation != Orientation.ACTION_EXECUTING_TEAM:
@@ -236,4 +224,4 @@ class Default(EventAttributeTransformer):
             return row
 
 
-BodyPart = create_transformer_from_qualifier(BodyPartQualifier)
+BodyPartTransformer = create_transformer_from_qualifier(BodyPartQualifier)

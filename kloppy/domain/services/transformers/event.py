@@ -3,6 +3,7 @@ from typing import NewType, Union, Callable, Any, Dict
 
 from kloppy.domain import Event
 from kloppy.domain.services.transformers.attribute import Default
+from kloppy.exceptions import KloppyError
 
 Column = NewType("Column", Union[str, Callable[[Event], Any]])
 
@@ -54,7 +55,7 @@ class EventToRecordTransformer:
                             row[column] = getattr(event, column, None)
 
                 for name, column in named_columns.items():
-                    row[name] = column(event) if callable(event) else column
+                    row[name] = column(event) if callable(column) else column
 
                 return row
 

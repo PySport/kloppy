@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.4.0 (2022-07-17)
+
+Pull requests merged:
+- Changes to FormationType ([#143](https://github.com/PySport/kloppy/pull/143))
+- Add attribute transformer and to_df ([#144](https://github.com/PySport/kloppy/pull/144))
+
 ## 3.3.1 (2022-05-04)
 
 Pull requests merged:

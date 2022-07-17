@@ -13,7 +13,6 @@ from kloppy.domain import (
     DatasetFlag,
     Event,
     EventDataset,
-    EventType,
     FoulCommittedEvent,
     GenericEvent,
     Ground,
@@ -34,8 +33,6 @@ from kloppy.domain import (
     ShotResult,
     SubstitutionEvent,
     Team,
-    Transformer,
-    build_coordinate_system,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer

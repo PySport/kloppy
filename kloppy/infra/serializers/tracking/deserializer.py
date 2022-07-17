@@ -2,11 +2,10 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Optional, Union
 
 from kloppy.domain import (
-    Dataset,
     Provider,
     TrackingDataset,
     build_coordinate_system,
-    Transformer,
+    DatasetTransformer,
 )
 
 T = TypeVar("T")
@@ -37,7 +36,7 @@ class TrackingDataDeserializer(ABC, Generic[T]):
 
     def get_transformer(
         self, length: float, width: float, provider: Optional[Provider] = None
-    ) -> Transformer:
+    ) -> DatasetTransformer:
         from_coordinate_system = build_coordinate_system(
             provider or self.provider,
             length=length,
@@ -50,7 +49,7 @@ class TrackingDataDeserializer(ABC, Generic[T]):
             width=width,
         )
 
-        return Transformer(
+        return DatasetTransformer(
             from_coordinate_system=from_coordinate_system,
             to_coordinate_system=to_coordinate_system,
         )

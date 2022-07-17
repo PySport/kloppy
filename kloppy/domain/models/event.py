@@ -1,8 +1,25 @@
-# Metrica Documentation https://github.com/metrica-sports/sample-data/blob/master/documentation/events-definitions.pdf
+import sys
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Type, Union, Any, Callable, Optional
+from typing import (
+    Dict,
+    List,
+    Type,
+    Union,
+    Any,
+    Callable,
+    Optional,
+    Iterable,
+    overload,
+    TYPE_CHECKING,
+)
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -14,7 +31,11 @@ from kloppy.utils import (
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
+
 from ...exceptions import OrphanedRecordError, InvalidFilterError
+
+if TYPE_CHECKING:
+    from ..services.transformers.event import Column
 
 
 class ResultType(Enum):
@@ -818,87 +839,9 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
+            from ..services.transformers.attribute import DefaultTransformer
 
-            def record_converter(event: Event) -> Dict:
-                row = dict(
-                    event_id=event.event_id,
-                    event_type=(
-                        event.event_type.value
-                        if event.event_type != EventType.GENERIC
-                        else f"GENERIC:{event.event_name}"
-                    ),
-                    result=event.result.value if event.result else None,
-                    success=event.result.is_success if event.result else None,
-                    period_id=event.period.id,
-                    timestamp=event.timestamp,
-                    end_timestamp=None,
-                    ball_state=event.ball_state.value
-                    if event.ball_state
-                    else None,
-                    ball_owning_team=event.ball_owning_team.team_id
-                    if event.ball_owning_team
-                    else None,
-                    team_id=event.team.team_id if event.team else None,
-                    player_id=event.player.player_id if event.player else None,
-                    coordinates_x=event.coordinates.x
-                    if event.coordinates
-                    else None,
-                    coordinates_y=event.coordinates.y
-                    if event.coordinates
-                    else None,
-                )
-                if isinstance(event, PassEvent):
-                    row.update(
-                        {
-                            "end_timestamp": event.receive_timestamp,
-                            "end_coordinates_x": event.receiver_coordinates.x
-                            if event.receiver_coordinates
-                            else None,
-                            "end_coordinates_y": event.receiver_coordinates.y
-                            if event.receiver_coordinates
-                            else None,
-                            "receiver_player_id": event.receiver_player.player_id
-                            if event.receiver_player
-                            else None,
-                        }
-                    )
-                elif isinstance(event, CarryEvent):
-                    row.update(
-                        {
-                            "end_timestamp": event.end_timestamp,
-                            "end_coordinates_x": event.end_coordinates.x
-                            if event.end_coordinates
-                            else None,
-                            "end_coordinates_y": event.end_coordinates.y
-                            if event.end_coordinates
-                            else None,
-                        }
-                    )
-                elif isinstance(event, ShotEvent):
-                    row.update(
-                        {
-                            "end_coordinates_x": event.result_coordinates.x
-                            if event.result_coordinates
-                            else None,
-                            "end_coordinates_y": event.result_coordinates.y
-                            if event.result_coordinates
-                            else None,
-                        }
-                    )
-                elif isinstance(event, CardEvent):
-                    row.update(
-                        {
-                            "card_type": event.card_type.value
-                            if event.card_type
-                            else None
-                        }
-                    )
-
-                if event.qualifiers:
-                    for qualifier in event.qualifiers:
-                        row.update(qualifier.to_dict())
-
-                return row
+            record_converter = DefaultTransformer()
 
         def generic_record_converter(event: Event):
             row = record_converter(event)
@@ -909,15 +852,55 @@ class EventDataset(Dataset[Event]):
                     else:
                         value = v
                     row.update({k: value})
-
             return row
 
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
         )
 
+    @overload
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: Literal[True] = True,
+        **named_columns: "Column",
+    ) -> List[Dict[str, Any]]:
+        ...
+
+    @overload
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: Literal[False] = False,
+        **named_columns: "Column",
+    ) -> Iterable[Dict[str, Any]]:
+        ...
+
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: bool = True,
+        **named_columns: "Column",
+    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
+        from ..services.transformers.event import EventToRecordTransformer
+
+        transformer = EventToRecordTransformer(*columns, **named_columns)
+        iterator = map(transformer, self.events)
+        if as_list:
+            return list(iterator)
+        else:
+            return iterator
+
+    def to_df(self, *columns: "Column", **named_columns: "Column"):
+        from pandas import DataFrame
+
+        return DataFrame.from_records(
+            self.to_records(*columns, **named_columns, as_list=False)
+        )
+
 
 __all__ = [
+    "EnumQualifier",
     "ResultType",
     "EventType",
     "ShotResult",

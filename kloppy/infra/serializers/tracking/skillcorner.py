@@ -9,7 +9,6 @@ from kloppy.domain import (
     attacking_direction_from_frame,
     AttackingDirection,
     DatasetFlag,
-    Dimension,
     Frame,
     Ground,
     Metadata,
@@ -20,18 +19,15 @@ from kloppy.domain import (
     Point3D,
     Position,
     Provider,
-    PitchDimensions,
     Score,
     Team,
     TrackingDataset,
-    Transformer,
-    build_coordinate_system,
     PlayerData,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

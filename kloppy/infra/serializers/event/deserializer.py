@@ -6,7 +6,7 @@ from kloppy.domain import (
     EventDataset,
     Event,
     EventType,
-    Transformer,
+    DatasetTransformer,
     Provider,
     build_coordinate_system,
 )
@@ -43,7 +43,9 @@ class EventDataDeserializer(ABC, Generic[T]):
             return True
         return event.event_type in self.event_types
 
-    def get_transformer(self, length: float, width: float) -> Transformer:
+    def get_transformer(
+        self, length: float, width: float
+    ) -> DatasetTransformer:
         from_coordinate_system = build_coordinate_system(
             self.provider,
             length=length,
@@ -56,7 +58,7 @@ class EventDataDeserializer(ABC, Generic[T]):
             width=width,
         )
 
-        return Transformer(
+        return DatasetTransformer(
             from_coordinate_system=from_coordinate_system,
             to_coordinate_system=to_coordinate_system,
         )

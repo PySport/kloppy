@@ -18,6 +18,7 @@ class FormationType(Enum):
         THREE_FOUR_ONE_TWO (str):
         THREE_FOUR_TWO_ONE (str):
         THREE_FOUR_THREE (str):
+        THREE_FOUR_THREE_DIAMOND (str):
         THREE_FIVE_ONE_ONE (str):
         THREE_FIVE_TWO (str):
         FOUR_ONE_TWO_ONE_TWO (str):
@@ -45,7 +46,7 @@ class FormationType(Enum):
     THREE_ONE_THREE_ONE_TWO = "3-1-3-1-2"
     THREE_ONE_FOUR_TWO = "3-1-4-2"
     THREE_TWO_TWO_ONE_TWO = "3-2-2-1-2"
-    THREE_TWO_TWO_TWO_ONE = "3-2-2-1-2"
+    THREE_TWO_TWO_TWO_ONE = "3-2-2-2-1"
     THREE_TWO_THREE_TWO = "3-2-3-2"
     THREE_THREE_TWO_TWO = "3-3-2-2"
     THREE_TWO_FOUR_ONE = "3-2-4-1"
@@ -53,6 +54,7 @@ class FormationType(Enum):
     THREE_FOUR_ONE_TWO = "3-4-1-2"
     THREE_FOUR_TWO_ONE = "3-4-2-1"
     THREE_FOUR_THREE = "3-4-3"
+    THREE_FOUR_THREE_DIAMOND = "3-4-3-d"
     THREE_FIVE_ONE_ONE = "3-5-1-1"
     THREE_FIVE_TWO = "3-5-2"
     FOUR_ONE_TWO_ONE_TWO = "4-1-2-1-2"

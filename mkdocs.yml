@@ -64,6 +64,9 @@ plugins:
             heading_level: 3
       watch:
         - kloppy
+  - exclude:
+      glob:
+        - presentations/*
 
 markdown_extensions:
   - pymdownx.highlight:

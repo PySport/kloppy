@@ -1,4 +1,4 @@
-jinja2==2.10.1
+jinja2==2.*
 mkdocs==1.2.4
 mkdocs-jupyter==0.18.0
 mkdocs-material==7.3.5

@@ -2,6 +2,10 @@ class KloppyError(Exception):
     pass
 
 
+class SerializationError(KloppyError):
+    pass
+
+
 class DeserializationError(KloppyError):
     pass
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, Dict, Union, IO, NamedTuple
+from typing import Union, IO, NamedTuple
 
 from lxml import objectify, etree
 
@@ -12,10 +12,9 @@ from kloppy.domain import (
     Provider,
     DatasetFlag,
     Score,
-    PitchDimensions,
     Orientation,
 )
-from kloppy.utils import Readable
+from kloppy.exceptions import SerializationError
 
 from .base import CodeDataDeserializer, CodeDataSerializer
 
@@ -28,6 +27,18 @@ def parse_value(s: str) -> Union[str, float, int]:
         return func(s)
     except ValueError:
         return s
+
+
+def parse_labels(instance):
+    ret = {}
+    for label in instance.iterchildren("label"):
+        group = label.find("group")
+        text = parse_value(str(label.find("text")))
+        if group is None:
+            ret[text] = True
+        else:
+            ret[group] = text
+    return ret
 
 
 class SportsCodeInputs(NamedTuple):
@@ -49,12 +60,7 @@ class SportsCodeDeserializer(CodeDataDeserializer[SportsCodeInputs]):
                 code=str(instance.code),
                 timestamp=float(instance.start),
                 end_timestamp=end_timestamp,
-                labels={
-                    str(label.find("group")): parse_value(
-                        str(label.find("text"))
-                    )
-                    for label in instance.iterchildren("label")
-                },
+                labels=parse_labels(instance),
                 ball_state=None,
                 ball_owning_team=None,
             )
@@ -104,11 +110,18 @@ class SportsCodeSerializer(CodeDataSerializer):
 
             for group, text in code.labels.items():
                 label = etree.SubElement(instance, "label")
-                group_ = etree.SubElement(label, "group")
-                group_.text = group
-
                 text_ = etree.SubElement(label, "text")
-                text_.text = str(text)
+                if isinstance(text, bool):
+                    if not text:
+                        raise SerializationError(
+                            f"You are not allowed to pass a False value for {group}"
+                        )
+
+                    text_.text = group
+                else:
+                    group_ = etree.SubElement(label, "group")
+                    group_.text = group
+                    text_.text = str(text)
 
         return etree.tostring(
             root,

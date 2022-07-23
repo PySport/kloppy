@@ -106,11 +106,11 @@ class TestHelpers:
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
 
-        assert transformed_dataset.frames[0].ball_coordinates == Point(
-            x=0, y=1
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=0, y=1, z=0
         )
-        assert transformed_dataset.frames[1].ball_coordinates == Point(
-            x=1, y=0
+        assert transformed_dataset.frames[1].ball_coordinates == Point3D(
+            x=1, y=0, z=1
         )
         assert (
             transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM

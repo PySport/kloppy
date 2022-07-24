@@ -59,7 +59,14 @@ class SecondSpectrumDeserializer(
         frame_id = frame_data["frameIdx"]
         frame_timestamp = frame_data["gameClock"]
 
-        ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
+        if frame_data["ball"]["xyz"]:
+            ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
+            ball_coordinates = Point3D(
+                float(ball_x), float(ball_y), float(ball_z)
+            )
+        else:
+            ball_coordinates = None
+
         ball_state = BallState.ALIVE if frame_data["live"] else BallState.DEAD
         ball_owning_team = (
             teams[0] if frame_data["lastTouch"] == "home" else teams[1]
@@ -88,9 +95,7 @@ class SecondSpectrumDeserializer(
         return Frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
+            ball_coordinates=ball_coordinates,
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_data=players_data,
@@ -107,36 +112,68 @@ class SecondSpectrumDeserializer(
 
     def deserialize(self, inputs: SecondSpectrumInputs) -> TrackingDataset:
 
+        metadata = None
+
         # Handles the XML metadata that contains the pitch dimensions and frame info
         with performance_logging("Loading XML metadata", logger=logger):
-            match = objectify.fromstring(inputs.meta_data.read()).match
-            frame_rate = int(match.attrib["iFrameRateFps"])
-            pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
-            pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
+            # The meta data can also be in JSON format. In that case
+            # it also contains the 'additional metadata'.
+            # First do a 'peek' to determine the char
+            first_byte = inputs.meta_data.read(1)
+            if first_byte == b"{":
+                metadata = json.loads(first_byte + inputs.meta_data.read())
 
-            periods = []
-            for period in match.iterchildren(tag="period"):
-                start_frame_id = int(period.attrib["iStartFrame"])
-                end_frame_id = int(period.attrib["iEndFrame"])
-                if start_frame_id != 0 or end_frame_id != 0:
-                    # Frame IDs are unix timestamps (in milliseconds)
-                    periods.append(
-                        Period(
-                            id=int(period.attrib["iId"]),
-                            start_timestamp=start_frame_id,
-                            end_timestamp=end_frame_id,
+                frame_rate = int(metadata["fps"])
+                pitch_size_height = float(metadata["pitchLength"])
+                pitch_size_width = float(metadata["pitchWidth"])
+
+                periods = []
+                for period in metadata["periods"]:
+                    start_frame_id = int(period["startFrameIdx"])
+                    end_frame_id = int(period["endFrameIdx"])
+                    if start_frame_id != 0 or end_frame_id != 0:
+                        # Frame IDs are unix timestamps (in milliseconds)
+                        periods.append(
+                            Period(
+                                id=int(period["number"]),
+                                start_timestamp=start_frame_id,
+                                end_timestamp=end_frame_id,
+                            )
                         )
-                    )
+            else:
+                match = objectify.fromstring(
+                    first_byte + inputs.meta_data.read()
+                ).match
+                frame_rate = int(match.attrib["iFrameRateFps"])
+                pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
+                pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
+
+                periods = []
+                for period in match.iterchildren(tag="period"):
+                    start_frame_id = int(period.attrib["iStartFrame"])
+                    end_frame_id = int(period.attrib["iEndFrame"])
+                    if start_frame_id != 0 or end_frame_id != 0:
+                        # Frame IDs are unix timestamps (in milliseconds)
+                        periods.append(
+                            Period(
+                                id=int(period.attrib["iId"]),
+                                start_timestamp=start_frame_id,
+                                end_timestamp=end_frame_id,
+                            )
+                        )
 
         # Default team initialisation
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
         teams = [home_team, away_team]
 
-        if inputs.additional_meta_data:
+        if inputs.additional_meta_data or metadata:
             with performance_logging("Loading JSON metadata", logger=logger):
                 try:
-                    metadata = json.loads(inputs.additional_meta_data.read())
+                    if inputs.additional_meta_data:
+                        metadata = json.loads(
+                            inputs.additional_meta_data.read()
+                        )
 
                     home_team_id = metadata["homeOptaId"]
                     away_team_id = metadata["awayOptaId"]

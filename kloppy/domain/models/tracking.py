@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Callable, Union, Any
 from kloppy.domain.models.common import DatasetType
 
 from .common import Dataset, DataRecord, Player
-from .pitch import Point
+from .pitch import Point, Point3D
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Frame(DataRecord):
     frame_id: int
     players_data: Dict[Player, PlayerData]
     other_data: Dict[str, Any]
-    ball_coordinates: Point
+    ball_coordinates: Point3D
 
     @property
     def record_id(self) -> int:
@@ -79,6 +79,9 @@ class TrackingDataset(Dataset[Frame]):
                     if frame.ball_coordinates
                     else None,
                     ball_y=frame.ball_coordinates.y
+                    if frame.ball_coordinates
+                    else None,
+                    ball_z=frame.ball_coordinates.z
                     if frame.ball_coordinates
                     else None,
                 )

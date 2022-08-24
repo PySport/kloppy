@@ -84,20 +84,36 @@ def load_open_data(
     coordinates: Optional[str] = None,
 ) -> TrackingDataset:
     if match_id == "1" or match_id == 1:
-        home_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv"
-        away_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv"
+        return load_tracking_csv(
+            home_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv",
+            away_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv",
+            sample_rate=sample_rate,
+            limit=limit,
+            coordinates=coordinates,
+        )
     elif match_id == "2" or match_id == 2:
-        home_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Home_Team.csv"
-        away_data = "https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Away_Team.csv"
+        return load_tracking_csv(
+            home_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Home_Team.csv",
+            away_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Away_Team.csv",
+            sample_rate=sample_rate,
+            limit=limit,
+            coordinates=coordinates,
+        )
+    elif match_id == "3" or match_id == 3:
+        return load_tracking_epts(
+            meta_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_3/Sample_Game_3_metadata.xml",
+            raw_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
+            "master/data/Sample_Game_3/Sample_Game_3_tracking.txt",
+            sample_rate=sample_rate,
+            limit=limit,
+            coordinates=coordinates,
+        )
     else:
         raise KloppyError(
             f"Don't know where to fetch Metrica open data for {match_id}"
         )
-
-    return load_tracking_csv(
-        home_data=home_data,
-        away_data=away_data,
-        sample_rate=sample_rate,
-        limit=limit,
-        coordinates=coordinates,
-    )

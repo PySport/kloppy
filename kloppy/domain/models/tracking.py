@@ -81,15 +81,20 @@ class TrackingDataset(Dataset[Frame]):
                     ball_y=frame.ball_coordinates.y
                     if frame.ball_coordinates
                     else None,
-                    ball_z=frame.ball_coordinates.z
+                    ball_z=getattr(frame.ball_coordinates, "z", None)
                     if frame.ball_coordinates
                     else None,
                 )
                 for player, player_data in frame.players_data.items():
+
                     row.update(
                         {
-                            f"{player.player_id}_x": player_data.coordinates.x,
-                            f"{player.player_id}_y": player_data.coordinates.y,
+                            f"{player.player_id}_x": player_data.coordinates.x
+                            if player_data.coordinates
+                            else None,
+                            f"{player.player_id}_y": player_data.coordinates.y
+                            if player_data.coordinates
+                            else None,
                             f"{player.player_id}_d": player_data.distance,
                             f"{player.player_id}_s": player_data.speed,
                         }

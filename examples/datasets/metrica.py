@@ -25,6 +25,12 @@ def main():
     data_frame = dataset.to_pandas()
     print(data_frame)
 
+    # Also load dataset in new metrica format
+    dataset = metrica.load_open_data(limit=10_000, match_id="3")
+    data_frame = dataset.to_pandas()
+    df = data_frame[data_frame.ball_x.notnull()]
+    print(df)
+
 
 if __name__ == "__main__":
     main()

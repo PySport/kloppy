@@ -21,6 +21,7 @@ from kloppy.domain import (
     Ground,
     Player,
     PlayerData,
+    Point3D,
 )
 
 from kloppy import opta, tracab, statsbomb
@@ -71,7 +72,7 @@ class TestHelpers:
                     period=periods[0],
                     players_data={},
                     other_data=None,
-                    ball_coordinates=Point(x=100, y=-50),
+                    ball_coordinates=Point3D(x=100, y=-50, z=0),
                 ),
                 Frame(
                     frame_id=2,
@@ -90,7 +91,7 @@ class TestHelpers:
                         )
                     },
                     other_data={"extra_data": 1},
-                    ball_coordinates=Point(x=0, y=50),
+                    ball_coordinates=Point3D(x=0, y=50, z=1),
                 ),
             ],
         )
@@ -105,11 +106,11 @@ class TestHelpers:
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
 
-        assert transformed_dataset.frames[0].ball_coordinates == Point(
-            x=0, y=1
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=0, y=1, z=0
         )
-        assert transformed_dataset.frames[1].ball_coordinates == Point(
-            x=1, y=0
+        assert transformed_dataset.frames[1].ball_coordinates == Point3D(
+            x=1, y=0, z=1
         )
         assert (
             transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
@@ -228,6 +229,7 @@ class TestHelpers:
                 "ball_owning_team_id": {0: None, 1: None},
                 "ball_x": {0: 100, 1: 0},
                 "ball_y": {0: -50, 1: 50},
+                "ball_z": {0: 0, 1: 1},
                 "home_1_x": {0: None, 1: 15.0},
                 "home_1_y": {0: None, 1: 35.0},
                 "home_1_d": {0: None, 1: 0.03},
@@ -281,6 +283,7 @@ class TestHelpers:
                 "ball_owning_team_id": [None, None],
                 "ball_x": [100, 0],
                 "ball_y": [-50, 50],
+                "ball_z": [0, 1],
                 "match": ["test", "test"],
                 "bonus_column": [11, 12],
                 "home_1_x": [None, 15],

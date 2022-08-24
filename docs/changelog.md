@@ -2,6 +2,13 @@
 
 Find out all changes between different kloppy versions
 
+## 3.4.1 (2022-08-24)
+
+Pull requests merged:
+- Accept json meta data for secondspectrum and fix non-alive ball ([#146](https://github.com/PySport/kloppy/pull/146))
+- Fix for SportsCode XML ([#147](https://github.com/PySport/kloppy/pull/147))
+- Add Metrica Open Data Game 3 + Fix for loading it ([#151](https://github.com/PySport/kloppy/pull/151))
+
 ## 3.4.0 (2022-07-17)
 
 Pull requests merged:

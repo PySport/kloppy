@@ -2,9 +2,10 @@
 
 Find out all changes between different kloppy versions
 
-## 3.4.1 (2022-08-24)
+## 3.5.0 (2022-08-24)
 
 Pull requests merged:
+
 - Accept json meta data for secondspectrum and fix non-alive ball ([#146](https://github.com/PySport/kloppy/pull/146))
 - Fix for SportsCode XML ([#147](https://github.com/PySport/kloppy/pull/147))
 - Add Metrica Open Data Game 3 + Fix for loading it ([#151](https://github.com/PySport/kloppy/pull/151))
@@ -12,17 +13,20 @@ Pull requests merged:
 ## 3.4.0 (2022-07-17)
 
 Pull requests merged:
+
 - Changes to FormationType ([#143](https://github.com/PySport/kloppy/pull/143))
 - Add attribute transformer and to_df ([#144](https://github.com/PySport/kloppy/pull/144))
 
 ## 3.3.1 (2022-05-04)
 
 Pull requests merged:
+
 - Fix http authentication ([#141](https://github.com/PySport/kloppy/pull/141))
 
 ## 3.3.0 (2022-03-23)
 
 Pull requests merged:
+
 - Add adapters and config ([#140](https://github.com/PySport/kloppy/pull/140))
 - Fix transformation for events when ball_owning_team does not equal action_executing_team ([#139](https://github.com/PySport/kloppy/pull/139))
 - Fix metadata update after dataset transformation ([#133](https://github.com/PySport/kloppy/pull/133))
@@ -30,11 +34,13 @@ Pull requests merged:
 ## 3.2.1 (2022-03-16)
 
 Pull requests merged:
+
 - Make kloppy work within a Pyodide environment ([#132](https://github.com/PySport/kloppy/pull/132))
 
 ## 3.2.0 (2022-03-12)
 
 Pull requests merged:
+
 - Add related events and next/prev with more easy filtering ([#129](https://github.com/PySport/kloppy/pull/129))
 
 ## 3.1.1 (2022-02-20)

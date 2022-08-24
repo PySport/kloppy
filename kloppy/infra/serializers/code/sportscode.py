@@ -26,7 +26,7 @@ def parse_value(s: str) -> Union[str, float, int]:
         func = float if "." in s else int
         return func(s)
     except ValueError:
-        return s
+        return str(s)
 
 
 def parse_labels(instance):
@@ -37,7 +37,7 @@ def parse_labels(instance):
         if group is None:
             ret[text] = True
         else:
-            ret[group] = text
+            ret[str(group)] = text
     return ret
 
 
@@ -109,18 +109,22 @@ class SportsCodeSerializer(CodeDataSerializer):
             code_.text = code.code
 
             for group, text in code.labels.items():
+                # Labels can be in two formats:
+                # {"name": "value"} or {"name": True}
                 label = etree.SubElement(instance, "label")
-                text_ = etree.SubElement(label, "text")
                 if isinstance(text, bool):
                     if not text:
                         raise SerializationError(
                             f"You are not allowed to pass a False value for {group}"
                         )
 
+                    text_ = etree.SubElement(label, "text")
                     text_.text = group
                 else:
                     group_ = etree.SubElement(label, "group")
-                    group_.text = group
+                    group_.text = str(group)
+
+                    text_ = etree.SubElement(label, "text")
                     text_.text = str(text)
 
         return etree.tostring(

@@ -30,7 +30,7 @@ class HTTPAdapter(Adapter):
 
         if _RUNS_IN_BROWSER:
             xhr = XMLHttpRequest.new()
-            xhr.responseType = 'arraybuffer'
+            xhr.responseType = "arraybuffer"
             if basic_authentication:
                 authentication = base64.b64encode(
                     basic_authentication.join(":")
@@ -44,12 +44,12 @@ class HTTPAdapter(Adapter):
             xhr.send(None)
 
             # Borrowed from 'raise_for_status'
-            http_error_msg = ''
+            http_error_msg = ""
             if 400 <= xhr.status < 500:
-                http_error_msg = f'{xhr.status} Client Error: url: {url}"
+                http_error_msg = f"{xhr.status} Client Error: url: {url}"
 
             elif 500 <= xhr.status < 600:
-                http_error_msg = f'{xhr.status} Server Error: url: {url}"
+                http_error_msg = f"{xhr.status} Server Error: url: {url}"
 
             if http_error_msg:
                 raise AdapterError(http_error_msg)

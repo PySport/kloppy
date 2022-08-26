@@ -2,6 +2,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.5.1 (2022-08-26)
+
+Pull requests merged:
+
+- When in browser, retrieve data as arraybuffer ([#152](https://github.com/PySport/kloppy/pull/152))
+
 ## 3.5.0 (2022-08-24)
 
 Pull requests merged:

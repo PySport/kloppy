@@ -29,19 +29,32 @@ class HTTPAdapter(Adapter):
             _RUNS_IN_BROWSER = False
 
         if _RUNS_IN_BROWSER:
-            request = XMLHttpRequest.new()
+            xhr = XMLHttpRequest.new()
+            xhr.responseType = "arraybuffer"
             if basic_authentication:
                 authentication = base64.b64encode(
                     basic_authentication.join(":")
                 )
-                request.setRequestHeader(
+                xhr.setRequestHeader(
                     "Authorization",
                     f"Basic {authentication}",
                 )
 
-            request.open("GET", url, False)
-            request.send(None)
-            output.write(request.responseText)
+            xhr.open("GET", url, False)
+            xhr.send(None)
+
+            # Borrowed from 'raise_for_status'
+            http_error_msg = ""
+            if 400 <= xhr.status < 500:
+                http_error_msg = f"{xhr.status} Client Error: url: {url}"
+
+            elif 500 <= xhr.status < 600:
+                http_error_msg = f"{xhr.status} Server Error: url: {url}"
+
+            if http_error_msg:
+                raise AdapterError(http_error_msg)
+
+            output.write(xhr.response.to_py().tobytes())
         else:
             auth = None
             if basic_authentication:

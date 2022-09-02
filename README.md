@@ -25,7 +25,7 @@ Here are just a few of the things that kloppy does well:
 - Transform the **orientation** of a dataset (e.g., from TRACAB fixed orientation to "Home Team" orientation)
 
 #### Pattern matching
-- Search for **[complexe patterns](https://github.com/PySport/kloppy/examples/pattern_matching/repository/README.md)** in event data
+- Search for **[complex patterns](https://github.com/PySport/kloppy/blob/master/examples/pattern_matching/repository/README.md)** in event data
 - Use `kloppy-query` to export fragments to XML file
 
 

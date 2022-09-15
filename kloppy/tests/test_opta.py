@@ -109,7 +109,7 @@ class TestOpta:
         # Check Own goal
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
-        assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167\
+        assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

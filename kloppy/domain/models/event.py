@@ -14,6 +14,8 @@ from typing import (
     Iterable,
     overload,
     TYPE_CHECKING,
+    Generic,
+    TypeVar,
 )
 
 if sys.version_info >= (3, 8):
@@ -792,6 +794,14 @@ class FoulCommittedEvent(Event):
     event_name: str = "foul_committed"
 
 
+class EventFactory:
+    def build_pass(self, **kwargs) -> PassEvent:
+        return PassEvent.create(**kwargs)
+
+    def build_shot(self, **kwargs) -> ShotEvent:
+        return ShotEvent.create(**kwargs)
+
+
 @dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
@@ -935,4 +945,5 @@ __all__ = [
     "GoalkeeperAction",
     "GoalkeeperActionQualifier",
     "CounterAttackQualifier",
+    "EventFactory",
 ]

@@ -9,6 +9,7 @@ from kloppy.domain import (
     DatasetTransformer,
     Provider,
     build_coordinate_system,
+    EventFactory,
 )
 
 T = TypeVar("T")
@@ -19,6 +20,7 @@ class EventDataDeserializer(ABC, Generic[T]):
         self,
         event_types: Optional[List[Union[EventType, str]]] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
+        event_factory: Optional[EventFactory] = None,
     ):
         if not event_types:
             event_types = []
@@ -37,6 +39,10 @@ class EventDataDeserializer(ABC, Generic[T]):
             coordinate_system = Provider[coordinate_system.upper()]
 
         self.coordinate_system = coordinate_system
+
+        if not event_factory:
+            event_factory = EventFactory()
+        self.event_factory = event_factory
 
     def should_include_event(self, event: Event) -> bool:
         if not self.event_types:

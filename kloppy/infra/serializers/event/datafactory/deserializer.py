@@ -490,7 +490,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         next_event=next_event,
                     )
                     event_base_kwargs.update(pass_event_kwargs)
-                    event = PassEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_pass(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_SHOTS:
                     shot_event_kwargs = _parse_shot(
@@ -498,7 +498,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         previous_event=previous_event,
                     )
                     event_base_kwargs.update(shot_event_kwargs)
-                    event = ShotEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_shot(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_STEALINGS:
                     event = RecoveryEvent.create(**event_base_kwargs)

@@ -396,7 +396,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                     shot_event_kwargs = _parse_shot(
                         event_name=event_name, event_chain=event_chain
                     )
-                    event = ShotEvent.create(
+                    event = self.event_factory.build_shot(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )
@@ -404,7 +404,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                     pass_event_kwargs = _parse_pass(
                         event_chain=event_chain, team=team
                     )
-                    event = PassEvent.create(
+                    event = self.event_factory.build_pass(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                         receive_timestamp=None,

@@ -586,13 +586,13 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         pass_event_kwargs = _parse_pass(
                             raw_qualifiers, outcome
                         )
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass(raw_qualifiers)
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
@@ -627,7 +627,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
-                        event = ShotEvent.create(**kwargs)
+                        event = self.event_factory.build_shot(**kwargs)
 
                     elif type_id == EVENT_TYPE_RECOVERY:
                         event = RecoveryEvent.create(

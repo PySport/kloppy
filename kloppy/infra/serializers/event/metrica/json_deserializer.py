@@ -318,7 +318,7 @@ class MetricaJsonEventDataDeserializer(
                         team=team,
                     )
 
-                    event = PassEvent.create(
+                    event = self.event_factory.build_pass(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )
@@ -329,7 +329,7 @@ class MetricaJsonEventDataDeserializer(
                         previous_event=previous_event,
                         subtypes=subtypes,
                     )
-                    event = ShotEvent.create(
+                    event = self.event_factory.build_shot(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )

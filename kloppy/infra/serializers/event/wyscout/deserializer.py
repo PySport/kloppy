@@ -334,12 +334,12 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                 event = None
                 if raw_event["eventId"] == wyscout_events.SHOT.EVENT:
                     shot_event_args = _parse_shot(raw_event, next_event)
-                    event = ShotEvent.create(
+                    event = self.event_factory.build_shot(
                         **shot_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
                     pass_event_args = _parse_pass(raw_event, next_event)
-                    event = PassEvent.create(
+                    event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.FOUL.EVENT:
@@ -367,14 +367,14 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                         raw_event["subEventId"]
                         in wyscout_events.FREE_KICK.PASS_TYPES
                     ):
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **set_piece_event_args, **generic_event_args
                         )
                     elif (
                         raw_event["subEventId"]
                         in wyscout_events.FREE_KICK.SHOT_TYPES
                     ):
-                        event = ShotEvent.create(
+                        event = self.event_factory.build_shot(
                             **set_piece_event_args, **generic_event_args
                         )
 

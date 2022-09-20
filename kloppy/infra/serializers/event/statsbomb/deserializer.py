@@ -38,7 +38,7 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
 )
-from kloppy.domain.models.event import PassQualifier, PassType
+from kloppy.domain.models.event import PassQualifier, PassType, EventType
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
@@ -600,8 +600,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         team=team,
                         fidelity_version=fidelity_version,
                     )
-                    pass_event = PassEvent.create(
-                        # TODO: Consider moving this to _parse_pass
+                    pass_event = self.event_factory.build_pass(
                         receive_timestamp=timestamp + raw_event["duration"],
                         **pass_event_kwargs,
                         **generic_event_kwargs,
@@ -611,7 +610,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     shot_event_kwargs = _parse_shot(
                         shot_dict=raw_event["shot"],
                     )
-                    shot_event = ShotEvent.create(
+                    shot_event = self.event_factory.build_shot(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )

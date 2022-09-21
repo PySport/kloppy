@@ -336,7 +336,7 @@ class MetricaJsonEventDataDeserializer(
 
                 elif subtypes and MS_EVENT_TYPE_DRIBBLE in subtypes:
                     take_on_event_kwargs = _parse_take_on(subtypes=subtypes)
-                    event = TakeOnEvent.create(
+                    event = self.event_factory.build_take_on(
                         qualifiers=None,
                         **take_on_event_kwargs,
                         **generic_event_kwargs,
@@ -346,28 +346,28 @@ class MetricaJsonEventDataDeserializer(
                     carry_event_kwargs = _parse_carry(
                         event=raw_event,
                     )
-                    event = CarryEvent.create(
+                    event = self.event_factory.build_carry(
                         qualifiers=None,
                         **carry_event_kwargs,
                         **generic_event_kwargs,
                     )
 
                 elif event_type == MS_EVENT_TYPE_RECOVERY:
-                    event = RecoveryEvent.create(
+                    event = self.event_factory.build_recovery(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
 
                 elif event_type == MS_EVENT_TYPE_FOUL_COMMITTED:
-                    event = FoulCommittedEvent.create(
+                    event = self.event_factory.build_foul_committed(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
 
                 else:
-                    event = GenericEvent.create(
+                    event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=None,
                         event_name=raw_event["type"]["name"],
@@ -388,7 +388,7 @@ class MetricaJsonEventDataDeserializer(
                             "time"
                         ]
 
-                        event = BallOutEvent.create(
+                        event = self.event_factory.build_ball_out(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,

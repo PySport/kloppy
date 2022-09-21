@@ -54,10 +54,10 @@ class TestAdapter:
                 f24_data="test123://f24", f7_data="test123://f7"
             )
 
+            # cleanup
+            adapters.remove(custom_adapter)
+
             # Asserts borrowed from `test_opta.py`
             assert dataset.metadata.provider == Provider.OPTA
             assert dataset.dataset_type == DatasetType.EVENT
             assert len(dataset.events) == 20
-
-            # cleanup
-            adapters.remove(custom_adapter)

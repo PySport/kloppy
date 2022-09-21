@@ -801,6 +801,39 @@ class EventFactory:
     def build_shot(self, **kwargs) -> ShotEvent:
         return ShotEvent.create(**kwargs)
 
+    def build_generic(self, **kwargs) -> GenericEvent:
+        return GenericEvent.create(**kwargs)
+
+    def build_recovery(self, **kwargs) -> RecoveryEvent:
+        return RecoveryEvent.create(**kwargs)
+
+    def build_take_on(self, **kwargs) -> TakeOnEvent:
+        return TakeOnEvent.create(**kwargs)
+
+    def build_carry(self, **kwargs) -> CarryEvent:
+        return CarryEvent.create(**kwargs)
+
+    def build_formation_change(self, **kwargs) -> FormationChangeEvent:
+        return FormationChangeEvent.create(**kwargs)
+
+    def build_ball_out(self, **kwargs) -> BallOutEvent:
+        return BallOutEvent.create(**kwargs)
+
+    def build_player_on(self, **kwargs) -> PlayerOnEvent:
+        return PlayerOnEvent.create(**kwargs)
+
+    def build_player_off(self, **kwargs) -> PlayerOffEvent:
+        return PlayerOffEvent.create(**kwargs)
+
+    def build_card(self, **kwargs) -> CardEvent:
+        return CardEvent.create(**kwargs)
+
+    def build_foul_committed(self, **kwargs) -> FoulCommittedEvent:
+        return FoulCommittedEvent.create(**kwargs)
+
+    def build_substitution(self, **kwargs) -> SubstitutionEvent:
+        return SubstitutionEvent.create(**kwargs)
+
 
 @dataclass(repr=False)
 class EventDataset(Dataset[Event]):

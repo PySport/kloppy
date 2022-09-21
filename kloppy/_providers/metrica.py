@@ -1,6 +1,6 @@
 from typing import Optional, List, Union
 
-from kloppy.domain import EventDataset, TrackingDataset
+from kloppy.domain import EventDataset, TrackingDataset, EventFactory
 from kloppy.exceptions import KloppyError
 from kloppy.infra.serializers.event.metrica import (
     MetricaJsonEventDataDeserializer,
@@ -62,9 +62,12 @@ def load_event(
     meta_data: FileLike,
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     deserializer = MetricaJsonEventDataDeserializer(
-        event_types=event_types, coordinate_system=coordinates
+        event_types=event_types,
+        coordinate_system=coordinates,
+        event_factory=event_factory,
     )
 
     with open_as_file(event_data) as event_data_fp, open_as_file(

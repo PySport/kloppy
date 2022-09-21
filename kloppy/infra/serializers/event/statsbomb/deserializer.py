@@ -622,7 +622,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     take_on_event_kwargs = _parse_take_on(
                         take_on_dict=raw_event["dribble"],
                     )
-                    take_on_event = TakeOnEvent.create(
+                    take_on_event = self.event_factory.build_take_on(
                         qualifiers=None,
                         **take_on_event_kwargs,
                         **generic_event_kwargs,
@@ -633,7 +633,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         carry_dict=raw_event["carry"],
                         fidelity_version=fidelity_version,
                     )
-                    carry_event = CarryEvent.create(
+                    carry_event = self.event_factory.build_carry(
                         qualifiers=None,
                         # TODO: Consider moving this to _parse_carry
                         end_timestamp=timestamp + raw_event.get("duration", 0),
@@ -648,7 +648,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         substitution_dict=raw_event["substitution"],
                         team=team,
                     )
-                    substitution_event = SubstitutionEvent.create(
+                    substitution_event = self.event_factory.build_substitution(
                         result=None,
                         qualifiers=None,
                         **substitution_event_kwargs,
@@ -661,7 +661,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     )
                     if "card" in bad_behaviour_kwargs:
                         card_kwargs = bad_behaviour_kwargs["card"]
-                        card_event = CardEvent.create(
+                        card_event = self.event_factory.build_card(
                             result=None,
                             qualifiers=None,
                             card_type=card_kwargs["card_type"],
@@ -674,15 +674,17 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                             "foul_committed", {}
                         ),
                     )
-                    foul_committed_event = FoulCommittedEvent.create(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
+                    foul_committed_event = (
+                        self.event_factory.build_foul_committed(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
                     )
                     new_events.append(foul_committed_event)
                     if "card" in foul_committed_kwargs:
                         card_kwargs = foul_committed_kwargs["card"]
-                        card_event = CardEvent.create(
+                        card_event = self.event_factory.build_card(
                             result=None,
                             qualifiers=None,
                             card_type=card_kwargs["card_type"],
@@ -690,14 +692,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                         )
                         new_events.append(card_event)
                 elif event_type == SB_EVENT_TYPE_PLAYER_ON:
-                    player_on_event = PlayerOnEvent.create(
+                    player_on_event = self.event_factory.build_player_on(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
                     new_events.append(player_on_event)
                 elif event_type == SB_EVENT_TYPE_PLAYER_OFF:
-                    player_off_event = PlayerOffEvent.create(
+                    player_off_event = self.event_factory.build_player_off(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
@@ -705,7 +707,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     new_events.append(player_off_event)
 
                 elif event_type == SB_EVENT_TYPE_RECOVERY:
-                    recovery_event = RecoveryEvent.create(
+                    recovery_event = self.event_factory.build_recovery(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
@@ -716,16 +718,18 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     formation_change_event_kwargs = _parse_formation_change(
                         raw_event["tactics"]["formation"]
                     )
-                    formation_change_event = FormationChangeEvent.create(
-                        result=None,
-                        qualifiers=None,
-                        **formation_change_event_kwargs,
-                        **generic_event_kwargs,
+                    formation_change_event = (
+                        self.event_factory.build_formation_change(
+                            result=None,
+                            qualifiers=None,
+                            **formation_change_event_kwargs,
+                            **generic_event_kwargs,
+                        )
                     )
                     new_events.append(formation_change_event)
                 # rest: generic
                 else:
-                    generic_event = GenericEvent.create(
+                    generic_event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=None,
                         event_name=raw_event["type"]["name"],
@@ -746,7 +750,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                                 "coordinates"
                             ] = event.receiver_coordinates
 
-                            ball_out_event = BallOutEvent.create(
+                            ball_out_event = self.event_factory.build_ball_out(
                                 result=None,
                                 qualifiers=None,
                                 **generic_event_kwargs,

@@ -6,7 +6,7 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
     StatsbombInputs,
 )
-from kloppy.domain import EventDataset, Optional, List
+from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike
 
 
@@ -15,6 +15,7 @@ def load(
     lineup_data: FileLike,
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
     Load Statsbomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
@@ -24,11 +25,12 @@ def load(
         lineup_data: filename of json containing the lineup information
         event_types:
         coordinates:
+        event_factory:
     """
     deserializer = StatsBombDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=StatsbombEventFactory(),
+        event_factory=event_factory or StatsbombEventFactory(),
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data
@@ -45,6 +47,7 @@ def load_open_data(
     match_id: Union[str, int] = "15946",
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     warnings.warn(
         "\n\nYou are about to use StatsBomb public data."
@@ -58,4 +61,5 @@ def load_open_data(
         lineup_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json",
         event_types=event_types,
         coordinates=coordinates,
+        event_factory=event_factory,
     )

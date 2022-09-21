@@ -1,3 +1,4 @@
+from kloppy.config import get_config
 from kloppy.infra.serializers.event.datafactory import (
     DatafactoryDeserializer,
     DatafactoryInputs,
@@ -24,7 +25,7 @@ def load(
     deserializer = DatafactoryDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory,
+        event_factory=event_factory or get_config("event_factory"),
     )
     with open_as_file(event_data) as event_data_fp:
 

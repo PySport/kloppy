@@ -1,3 +1,4 @@
+from kloppy.config import get_config
 from kloppy.infra.serializers.event.opta import (
     OptaDeserializer,
     OptaInputs,
@@ -26,7 +27,7 @@ def load(
     deserializer = OptaDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory,
+        event_factory=event_factory or get_config("event_factory"),
     )
     with open_as_file(f7_data) as f7_data_fp, open_as_file(
         f24_data

@@ -1,6 +1,7 @@
 import warnings
 from typing import Union
 
+from kloppy.config import get_config
 from kloppy.domain.models.statsbomb.event import StatsbombEventFactory
 from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
@@ -30,7 +31,9 @@ def load(
     deserializer = StatsBombDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory or StatsbombEventFactory(),
+        event_factory=event_factory
+        or get_config("event_factory")
+        or StatsbombEventFactory(),
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data

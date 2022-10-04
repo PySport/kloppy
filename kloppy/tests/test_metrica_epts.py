@@ -146,3 +146,19 @@ class TestMetricaEPTSTracking:
             dataset.records[0].players_data[first_player].other_data["mapping"]
             == 5.0
         )
+
+    def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(self):
+        base_dir = os.path.dirname(__file__)
+
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata_unused_sensor.xml", "rb"
+        ) as metadata_fp, open(
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+        ) as raw_data:
+            dataset = metrica.load_tracking_epts(
+                meta_data=metadata_fp, raw_data=raw_data
+            )
+        # Sensor of each player is only 2
+        assert len(dataset.metadata.player_channels[0].channel.sensor.channels) == 2
+        # But all defined sensors in the metadata are 4
+        assert len(dataset.metadata.sensors) == 4

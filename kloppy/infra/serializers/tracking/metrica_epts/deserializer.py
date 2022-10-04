@@ -54,11 +54,11 @@ class MetricaEPTSTrackingDataDeserializer(
 
                 other_data = {}
                 for sensor in other_sensors:
+                    player_sensor_field_str = f"player_{player.player_id}_{sensor.channels[0].channel_id}"
+                    player_sensor_val = None if player_sensor_field_str not in row else row[player_sensor_field_str]
                     other_data.update(
                         {
-                            sensor.sensor_id: row[
-                                f"player_{player.player_id}_{sensor.channels[0].channel_id}"
-                            ]
+                            sensor.sensor_id: player_sensor_val
                         }
                     )
 

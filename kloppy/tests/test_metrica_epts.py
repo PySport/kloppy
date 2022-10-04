@@ -147,7 +147,9 @@ class TestMetricaEPTSTracking:
             == 5.0
         )
 
-    def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(self):
+    def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(
+        self,
+    ):
         base_dir = os.path.dirname(__file__)
 
         with open(
@@ -159,6 +161,9 @@ class TestMetricaEPTSTracking:
                 meta_data=metadata_fp, raw_data=raw_data
             )
         # Sensor of each player is only 2
-        assert len(dataset.metadata.player_channels[0].channel.sensor.channels) == 2
+        assert (
+            len(dataset.metadata.player_channels[0].channel.sensor.channels)
+            == 2
+        )
         # But all defined sensors in the metadata are 4
         assert len(dataset.metadata.sensors) == 4

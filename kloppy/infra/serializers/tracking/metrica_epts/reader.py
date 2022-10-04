@@ -56,9 +56,10 @@ def read_raw_data(
     current_data_spec_idx = 0
     end_frame_id = 0
     regex = None
+    frame_name = "frameCount"
 
     def _set_current_data_spec(idx):
-        nonlocal current_data_spec_idx, end_frame_id, regex
+        nonlocal current_data_spec_idx, end_frame_id, regex, frame_name
         current_data_spec_idx = idx
         regex_str = build_regex(
             data_specs[current_data_spec_idx],
@@ -68,6 +69,7 @@ def read_raw_data(
 
         end_frame_id = data_specs[current_data_spec_idx].end_frame
         regex = re.compile(regex_str)
+        frame_name = data_specs[current_data_spec_idx].split_register.children[0].name
 
     _set_current_data_spec(0)
 
@@ -81,11 +83,11 @@ def read_raw_data(
 
         line = line.strip().decode("ascii")
         row = {k: float(v) for k, v in regex.search(line).groupdict().items()}
-        frame_id = int(row["frameCount"])
+        frame_id = int(row[frame_name])
         if frame_id <= end_frame_id:
             timestamp = frame_id / metadata.frame_rate
 
-            del row["frameCount"]
+            del row[frame_name]
             row["frame_id"] = frame_id
             row["timestamp"] = timestamp
 

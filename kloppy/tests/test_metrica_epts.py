@@ -160,10 +160,12 @@ class TestMetricaEPTSTracking:
             dataset = metrica.load_tracking_epts(
                 meta_data=metadata_fp, raw_data=raw_data
             )
-        # Sensor of each player is only 2
-        assert (
-            len(dataset.metadata.player_channels[0].channel.sensor.channels)
-            == 2
-        )
+        # Acceleration field is in other data
+        other_data = list(dataset.frames[0].players_data.items())[0][
+            1
+        ].other_data
+        assert "acceleration" in other_data
+        # But is None due to there is not channel for this sensor
+        assert other_data["acceleration"] is None
         # But all defined sensors in the metadata are 4
         assert len(dataset.metadata.sensors) == 4

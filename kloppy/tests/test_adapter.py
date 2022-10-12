@@ -62,5 +62,3 @@ class TestAdapter:
             assert dataset.dataset_type == DatasetType.EVENT
             assert len(dataset.events) == 21
 
-            # cleanup
-            adapters.remove(custom_adapter)

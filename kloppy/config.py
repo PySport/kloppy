@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 from copy import copy
-from typing import Any, Optional, Literal
+from typing import Any, Optional
 
 from kloppy.domain import EventFactory
 
@@ -10,6 +10,10 @@ try:
 except ImportError:
     from mypy_extensions import TypedDict
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 cache_dir = os.environ.get("KLOPPY_CACHE_DIR")
 if not cache_dir:

@@ -81,11 +81,6 @@ class AngleToGoalTransformer(EventAttributeTransformer):
 class DistanceToGoalTransformer(EventAttributeTransformer):
     def __call__(self, event: Event) -> Dict[str, Any]:
         metadata = event.dataset.metadata
-        if metadata.orientation != Orientation.ACTION_EXECUTING_TEAM:
-            raise OrientationError(
-                "Can only calculate Angle when dataset orientation is ACTION_EXECUTING_TEAM"
-            )
-
         if not event.coordinates:
             return {"distance_to_goal": None}
 
@@ -99,6 +94,28 @@ class DistanceToGoalTransformer(EventAttributeTransformer):
 
         return {
             "distance_to_goal": math.sqrt(
+                (goal_x - event_x) ** 2 + (goal_y - event_y) ** 2
+            )
+        }
+
+
+class DistanceToOwnGoalTransformer(EventAttributeTransformer):
+    def __call__(self, event: Event) -> Dict[str, Any]:
+        metadata = event.dataset.metadata
+
+        if not event.coordinates:
+            return {"distance_to_own_goal": None}
+
+        event_x = event.coordinates.x
+        event_y = event.coordinates.y
+        goal_x = metadata.pitch_dimensions.x_dim.min
+        goal_y = (
+            metadata.pitch_dimensions.y_dim.max
+            + metadata.pitch_dimensions.y_dim.min
+        ) / 2
+
+        return {
+            "distance_to_own_goal": math.sqrt(
                 (goal_x - event_x) ** 2 + (goal_y - event_y) ** 2
             )
         }

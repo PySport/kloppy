@@ -251,7 +251,9 @@ def _parse_offside_pass(raw_qualifiers: List) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
     return dict(
         result=PassResult.OFFSIDE,
-        receiver_coordinates=None,
+        receiver_coordinates=Point(
+            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
+        ),
         receiver_player=None,
         receive_timestamp=None,
         qualifiers=qualifiers,

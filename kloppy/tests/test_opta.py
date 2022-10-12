@@ -40,7 +40,7 @@ class TestOpta:
 
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 20
+        assert len(dataset.events) == 21
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -108,6 +108,8 @@ class TestOpta:
 
         # Check Own goal
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
+        # Check OFFSIDE pass has end_coordinates
+        assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

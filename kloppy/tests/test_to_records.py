@@ -6,6 +6,7 @@ from kloppy import statsbomb
 from kloppy.domain import EventDataset, Point
 from kloppy.domain.services.transformers.attribute import (
     DistanceToGoalTransformer,
+    DistanceToOwnGoalTransformer,
 )
 
 
@@ -73,6 +74,7 @@ class TestToRecords:
             "player_id",
             "coordinates_*",
             DistanceToGoalTransformer(),
+            DistanceToOwnGoalTransformer(),
         )
         assert records[0] == {
             "timestamp": 0.098,
@@ -80,4 +82,5 @@ class TestToRecords:
             "coordinates_x": 60.5,
             "coordinates_y": 40.5,
             "distance_to_goal": 59.50210080324896,
+            "distance_to_own_goal": 60.502066080424065,
         }

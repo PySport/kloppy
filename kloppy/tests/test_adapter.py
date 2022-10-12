@@ -61,4 +61,3 @@ class TestAdapter:
             assert dataset.metadata.provider == Provider.OPTA
             assert dataset.dataset_type == DatasetType.EVENT
             assert len(dataset.events) == 21
-

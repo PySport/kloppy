@@ -48,7 +48,9 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
 
     if len(relevant_kwargs) < len(all_kwargs):
         skipped_kwargs = set(all_kwargs.keys()) - set(relevant_kwargs.keys())
-        warnings.warn(f"The following arguments were skipped: {skipped_kwargs}")
+        warnings.warn(
+            f"The following arguments were skipped: {skipped_kwargs}"
+        )
 
     return event_cls(**relevant_kwargs)
 

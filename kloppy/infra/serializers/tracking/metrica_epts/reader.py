@@ -69,7 +69,9 @@ def read_raw_data(
 
         end_frame_id = data_specs[current_data_spec_idx].end_frame
         regex = re.compile(regex_str)
-        frame_name = data_specs[current_data_spec_idx].split_register.children[0].name
+        frame_name = (
+            data_specs[current_data_spec_idx].split_register.children[0].name
+        )
 
     _set_current_data_spec(0)
 

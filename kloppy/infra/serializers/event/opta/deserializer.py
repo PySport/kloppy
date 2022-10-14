@@ -588,19 +588,19 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         pass_event_kwargs = _parse_pass(
                             raw_qualifiers, outcome
                         )
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_OFFSIDE_PASS:
                         pass_event_kwargs = _parse_offside_pass(raw_qualifiers)
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
-                        event = TakeOnEvent.create(
+                        event = self.event_factory.build_take_on(
                             qualifiers=None,
                             **take_on_event_kwargs,
                             **generic_event_kwargs,
@@ -629,17 +629,17 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
-                        event = ShotEvent.create(**kwargs)
+                        event = self.event_factory.build_shot(**kwargs)
 
                     elif type_id == EVENT_TYPE_RECOVERY:
-                        event = RecoveryEvent.create(
+                        event = self.event_factory.build_recovery(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
 
                     elif type_id == EVENT_TYPE_FOUL_COMMITTED:
-                        event = FoulCommittedEvent.create(
+                        event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
@@ -647,7 +647,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
 
                     elif type_id in BALL_OUT_EVENTS:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
-                        event = BallOutEvent.create(
+                        event = self.event_factory.build_ball_out(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
@@ -657,7 +657,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         formation_change_event_kwargs = (
                             _parse_formation_change(raw_qualifiers)
                         )
-                        event = FormationChangeEvent.create(
+                        event = self.event_factory.build_formation_change(
                             result=None,
                             qualifiers=None,
                             **formation_change_event_kwargs,
@@ -668,13 +668,13 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_qualifiers)
 
-                        event = CardEvent.create(
+                        event = self.event_factory.build_card(
                             **card_event_kwargs,
                             **generic_event_kwargs,
                         )
 
                     else:
-                        event = GenericEvent.create(
+                        event = self.event_factory.build_generic(
                             **generic_event_kwargs,
                             result=None,
                             qualifiers=None,

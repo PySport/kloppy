@@ -1,1 +1,1 @@
-from .deserializer import StatsBombDeserializer, StatsbombInputs
+from .deserializer import StatsBombDeserializer, StatsBombInputs

@@ -334,29 +334,29 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                 event = None
                 if raw_event["eventId"] == wyscout_events.SHOT.EVENT:
                     shot_event_args = _parse_shot(raw_event, next_event)
-                    event = ShotEvent.create(
+                    event = self.event_factory.build_shot(
                         **shot_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
                     pass_event_args = _parse_pass(raw_event, next_event)
-                    event = PassEvent.create(
+                    event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.FOUL.EVENT:
                     foul_event_args = _parse_foul(raw_event)
-                    event = FoulCommittedEvent.create(
+                    event = self.event_factory.build_foul_committed(
                         **foul_event_args, **generic_event_args
                     )
                     if any(
                         (_has_tag(raw_event, tag) for tag in wyscout_tags.CARD)
                     ):
                         card_event_args = _parse_card(raw_event)
-                        event = CardEvent.create(
+                        event = self.event_factory.build_card(
                             **card_event_args, **generic_event_args
                         )
                 elif raw_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
                     ball_out_event_args = _parse_ball_out(raw_event)
-                    event = BallOutEvent.create(
+                    event = self.event_factory.build_ball_out(
                         **ball_out_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.FREE_KICK.EVENT:
@@ -367,14 +367,14 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                         raw_event["subEventId"]
                         in wyscout_events.FREE_KICK.PASS_TYPES
                     ):
-                        event = PassEvent.create(
+                        event = self.event_factory.build_pass(
                             **set_piece_event_args, **generic_event_args
                         )
                     elif (
                         raw_event["subEventId"]
                         in wyscout_events.FREE_KICK.SHOT_TYPES
                     ):
-                        event = ShotEvent.create(
+                        event = self.event_factory.build_shot(
                             **set_piece_event_args, **generic_event_args
                         )
 
@@ -382,12 +382,12 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                     raw_event["eventId"] == wyscout_events.OTHERS_ON_BALL.EVENT
                 ):
                     recovery_event_args = _parse_recovery(raw_event)
-                    event = RecoveryEvent.create(
+                    event = self.event_factory.build_recovery(
                         **recovery_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.DUEL.EVENT:
                     takeon_event_args = _parse_takeon(raw_event)
-                    event = TakeOnEvent.create(
+                    event = self.event_factory.build_take_on(
                         **takeon_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] not in [
@@ -396,7 +396,7 @@ class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
                 ]:
                     # The events SAVE and OFFSIDE are already merged with PASS and SHOT events
                     qualifiers = _generic_qualifiers(raw_event)
-                    event = GenericEvent.create(
+                    event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=qualifiers,
                         **generic_event_args

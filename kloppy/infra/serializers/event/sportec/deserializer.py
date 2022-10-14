@@ -396,7 +396,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                     shot_event_kwargs = _parse_shot(
                         event_name=event_name, event_chain=event_chain
                     )
-                    event = ShotEvent.create(
+                    event = self.event_factory.build_shot(
                         **shot_event_kwargs,
                         **generic_event_kwargs,
                     )
@@ -404,14 +404,14 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                     pass_event_kwargs = _parse_pass(
                         event_chain=event_chain, team=team
                     )
-                    event = PassEvent.create(
+                    event = self.event_factory.build_pass(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                         receive_timestamp=None,
                         receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
-                    event = RecoveryEvent.create(
+                    event = self.event_factory.build_recovery(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
@@ -424,7 +424,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                         "player"
                     ]
                     del substitution_event_kwargs["player"]
-                    event = SubstitutionEvent.create(
+                    event = self.event_factory.build_substitution(
                         result=None,
                         qualifiers=None,
                         **substitution_event_kwargs,
@@ -432,7 +432,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                     )
                 elif event_name == SPORTEC_EVENT_NAME_CAUTION:
                     card_kwargs = _parse_caution(event_attributes)
-                    event = CardEvent.create(
+                    event = self.event_factory.build_card(
                         result=None,
                         qualifiers=None,
                         **card_kwargs,
@@ -441,13 +441,13 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                 elif event_name == SPORTEC_EVENT_NAME_FOUL:
                     foul_kwargs = _parse_foul(event_attributes, teams=teams)
                     generic_event_kwargs.update(foul_kwargs)
-                    event = FoulCommittedEvent.create(
+                    event = self.event_factory.build_foul_committed(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
                     )
                 else:
-                    event = GenericEvent.create(
+                    event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=None,
                         event_name=event_name,
@@ -489,7 +489,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                             "DecisionTimestamp"
                         ]
                     )
-                    out_event = BallOutEvent.create(
+                    out_event = self.event_factory.build_ball_out(
                         period=period,
                         timestamp=decision_timestamp - period.start_timestamp,
                         ball_owning_team=None,

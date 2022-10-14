@@ -490,7 +490,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         next_event=next_event,
                     )
                     event_base_kwargs.update(pass_event_kwargs)
-                    event = PassEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_pass(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_SHOTS:
                     shot_event_kwargs = _parse_shot(
@@ -498,10 +498,12 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         previous_event=previous_event,
                     )
                     event_base_kwargs.update(shot_event_kwargs)
-                    event = ShotEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_shot(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_STEALINGS:
-                    event = RecoveryEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_recovery(
+                        **event_base_kwargs
+                    )
 
                 elif e_class == DF_EVENT_CLASS_FOULS:
                     # NOTE: could use qualifiers? (hand, foul, penalty?)
@@ -509,32 +511,36 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     event_base_kwargs["ball_owning_team"] = (
                         home_team if team == away_team else away_team
                     )
-                    event = FoulCommittedEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_foul_committed(
+                        **event_base_kwargs
+                    )
 
                 elif e_class in DF_EVENT_CLASS_CARDS:
                     card_kwargs = _parse_card(
                         raw_event=raw_event,
                     )
                     event_base_kwargs.update(card_kwargs)
-                    event = CardEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_card(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_SUBSTITUTIONS:
                     substitution_event_kwargs = _parse_substitution(
                         raw_event=raw_event, team=team
                     )
                     event_base_kwargs.update(substitution_event_kwargs)
-                    event = SubstitutionEvent.create(**event_base_kwargs)
+                    event = self.event_factory.build_substitution(
+                        **event_base_kwargs
+                    )
 
                 else:
                     # otherwise, a generic event
-                    event = GenericEvent.create(
+                    event = self.event_factory.build_generic(
                         event_name=e_class,
                         **event_base_kwargs,
                     )
 
                 # check if the event implies ball was out of the field and add a synthetic out event
                 if raw_event["type"] in BALL_OUT_EVENTS:
-                    ball_out_event = BallOutEvent.create(
+                    ball_out_event = self.event_factory.build_ball_out(
                         # from DataRecord
                         period=period,
                         timestamp=timestamp,

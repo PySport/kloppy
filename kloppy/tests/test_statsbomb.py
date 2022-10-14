@@ -22,7 +22,7 @@ from kloppy.domain.models.event import (
 )
 
 
-class TestStatsbomb:
+class TestStatsBomb:
     """"""
 
     @pytest.fixture

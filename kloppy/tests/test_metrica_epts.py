@@ -146,3 +146,26 @@ class TestMetricaEPTSTracking:
             dataset.records[0].players_data[first_player].other_data["mapping"]
             == 5.0
         )
+
+    def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(
+        self,
+    ):
+        base_dir = os.path.dirname(__file__)
+
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata_unused_sensor.xml", "rb"
+        ) as metadata_fp, open(
+            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+        ) as raw_data:
+            dataset = metrica.load_tracking_epts(
+                meta_data=metadata_fp, raw_data=raw_data
+            )
+        # Acceleration field is in other data
+        other_data = list(dataset.frames[0].players_data.items())[0][
+            1
+        ].other_data
+        assert "acceleration" in other_data
+        # But is None due to there is not channel for this sensor
+        assert other_data["acceleration"] is None
+        # But all defined sensors in the metadata are 4
+        assert len(dataset.metadata.sensors) == 4

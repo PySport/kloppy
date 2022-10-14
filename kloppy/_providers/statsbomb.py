@@ -32,8 +32,8 @@ def load(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory
-                      or get_config("event_factory")
-                      or StatsBombEventFactory(),
+        or get_config("event_factory")
+        or StatsBombEventFactory(),
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data

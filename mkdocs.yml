@@ -35,12 +35,12 @@ nav:
     - Plotting: examples/plotting.ipynb
     - Config: examples/config.ipynb
     - Adapters: examples/adapter.ipynb
-  - API Reference:
-    - Domain:
-      - Common: api/domain/common.md
-      - Pitch: api/domain/pitch.md
-      - Tracking: api/domain/tracking.md
-      - Event: api/domain/event.md
+#  - API Reference:
+#    - Domain:
+#      - Common: api/domain/common.md
+#      - Pitch: api/domain/pitch.md
+#      - Tracking: api/domain/tracking.md
+#      - Event: api/domain/event.md
   - Providers: 'providers.md'
   - Other:
     - Issues: 'issues.md'

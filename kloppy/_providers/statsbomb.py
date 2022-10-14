@@ -2,10 +2,10 @@ import warnings
 from typing import Union
 
 from kloppy.config import get_config
-from kloppy.domain.models.statsbomb.event import StatsbombEventFactory
+from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
 from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
-    StatsbombInputs,
+    StatsBombInputs,
 )
 from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike
@@ -19,7 +19,7 @@ def load(
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
-    Load Statsbomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    Load StatsBomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
 
     Parameters:
         event_data: filename of json containing the events
@@ -32,15 +32,15 @@ def load(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory
-        or get_config("event_factory")
-        or StatsbombEventFactory(),
+                      or get_config("event_factory")
+                      or StatsBombEventFactory(),
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data
     ) as lineup_data_fp:
 
         return deserializer.deserialize(
-            inputs=StatsbombInputs(
+            inputs=StatsBombInputs(
                 event_data=event_data_fp, lineup_data=lineup_data_fp
             ),
         )

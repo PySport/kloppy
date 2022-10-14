@@ -513,7 +513,7 @@ class SportecCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
-class StatsbombCoordinateSystem(CoordinateSystem):
+class StatsBombCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.STATSBOMB
@@ -619,7 +619,7 @@ def build_coordinate_system(provider: Provider, **kwargs):
         return SportecCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.STATSBOMB:
-        return StatsbombCoordinateSystem(normalized=False, **kwargs)
+        return StatsBombCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.WYSCOUT:
         return WyscoutCoordinateSystem(normalized=False, **kwargs)

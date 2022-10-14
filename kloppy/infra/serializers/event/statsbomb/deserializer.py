@@ -433,17 +433,17 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
     return shot_fidelity_version, xy_fidelity_version
 
 
-class StatsbombInputs(NamedTuple):
+class StatsBombInputs(NamedTuple):
     event_data: IO[bytes]
     lineup_data: IO[bytes]
 
 
-class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
+class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     @property
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(self, inputs: StatsbombInputs) -> EventDataset:
+    def deserialize(self, inputs: StatsBombInputs) -> EventDataset:
         transformer = self.get_transformer(length=120, width=80)
 
         with performance_logging("load data", logger=logger):
@@ -617,7 +617,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsbombInputs]):
                     new_events.append(shot_event)
 
                 # For dribble and carry the definitions
-                # are flipped between Statsbomb and kloppy
+                # are flipped between StatsBomb and kloppy
                 elif event_type == SB_EVENT_TYPE_DRIBBLE:
                     take_on_event_kwargs = _parse_take_on(
                         take_on_dict=raw_event["dribble"],

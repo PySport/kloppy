@@ -7,7 +7,7 @@ from ... import EventFactory, create_event
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(PassEvent)
-class StatsbombPassEvent(PassEvent):
+class StatsBombPassEvent(PassEvent):
     """
     Attributes:
 
@@ -16,16 +16,16 @@ class StatsbombPassEvent(PassEvent):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(ShotEvent)
-class StatsbombShotEvent(ShotEvent):
+class StatsBombShotEvent(ShotEvent):
     """
     Attributes:
 
     """
 
 
-class StatsbombEventFactory(EventFactory):
-    def build_pass(self, **kwargs) -> StatsbombPassEvent:
-        return create_event(StatsbombPassEvent, **kwargs)
+class StatsBombEventFactory(EventFactory):
+    def build_pass(self, **kwargs) -> StatsBombPassEvent:
+        return create_event(StatsBombPassEvent, **kwargs)
 
-    def build_shot(self, **kwargs) -> StatsbombShotEvent:
-        return create_event(StatsbombShotEvent, **kwargs)
+    def build_shot(self, **kwargs) -> StatsBombShotEvent:
+        return create_event(StatsBombShotEvent, **kwargs)

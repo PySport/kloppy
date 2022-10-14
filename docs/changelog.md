@@ -1,6 +1,14 @@
 # Changelog
 
+
 Find out all changes between different kloppy versions
+
+## 3.6.0 (2022-10-14)
+
+Pull requests merged:
+
+- Fix metrica EPTS load ([#159](https://github.com/PySport/kloppy/pull/159))
+- Accept a custom EventFactory to build events ([#160](https://github.com/PySport/kloppy/pull/160))
 
 ## 3.5.1 (2022-08-26)
 

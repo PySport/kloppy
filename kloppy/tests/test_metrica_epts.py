@@ -169,3 +169,32 @@ class TestMetricaEPTSTracking:
         assert other_data["acceleration"] is None
         # But all defined sensors in the metadata are 4
         assert len(dataset.metadata.sensors) == 4
+
+    def test_read_empty_player_values(
+        self,
+    ):
+        base_dir = os.path.dirname(__file__)
+
+        with open(
+            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+        ) as metadata_fp, open(
+            f"{base_dir}/files/epts_metrica_tracking_with_empty_values.txt",
+            "rb",
+        ) as raw_data:
+            dataset = metrica.load_tracking_epts(
+                meta_data=metadata_fp, raw_data=raw_data
+            )
+
+        first_player = next(iter(dataset.records[0].players_data))
+
+        first_player_x = (
+            dataset.records[0].players_data[first_player].coordinates.x
+        )
+
+        first_player_y = (
+            dataset.records[0].players_data[first_player].coordinates.y
+        )
+
+        # x,y coordinates of the first player are empty. Check if they are nan's
+        assert first_player_x != first_player_x
+        assert first_player_y != first_player_y

@@ -83,8 +83,13 @@ def read_raw_data(
         if i % sample != 0:
             continue
 
+        def to_float(v):
+            return float(v) if v else float("nan")
+
         line = line.strip().decode("ascii")
-        row = {k: float(v) for k, v in regex.search(line).groupdict().items()}
+        row = {
+            k: to_float(v) for k, v in regex.search(line).groupdict().items()
+        }
         frame_id = int(row[frame_name])
         if frame_id <= end_frame_id:
             timestamp = frame_id / metadata.frame_rate

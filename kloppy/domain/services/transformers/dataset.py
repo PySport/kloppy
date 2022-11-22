@@ -277,6 +277,9 @@ class DatasetTransformer:
         ):
             event = self.__flip_event(event)
 
+        if event.freeze_frame:
+            event.freeze_frame = self.transform_frame(event.freeze_frame)
+
         return event
 
     def __change_event_coordinate_system(self, event: Event):

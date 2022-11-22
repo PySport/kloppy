@@ -12,6 +12,8 @@ from kloppy.domain import (
     Point,
     Provider,
     FormationType,
+    Frame,
+    Position,
 )
 
 from kloppy import statsbomb
@@ -65,7 +67,9 @@ class TestStatsBomb:
         assert player.player_id == "5503"
         assert player.jersey_no == 10
         assert str(player) == "Lionel Andrés Messi Cuccittini"
-        assert player.position is None  # not set
+        assert player.position == Position(
+            position_id="24", name="Left Center Forward", coordinates=None
+        )
         assert player.starting
 
         sub_player = dataset.metadata.teams[0].get_player_by_id("3501")
@@ -226,3 +230,36 @@ class TestStatsBomb:
 
         assert carry_event.get_related_events() == [receipt_event, pass_event]
         assert carry_event.related_pass() == pass_event
+
+    def test_player_position(self, lineup_data: str, event_data: str):
+        """
+        Validate position information is loaded correctly from the STARTING_XI events.
+
+        TODO: Fix when player is substituted
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+        )
+        player_5246 = dataset.metadata.teams[0].get_player_by_id(20055)
+        assert player_5246.position.position_id == "1"
+
+    def test_freeze_frame(self, lineup_data: str, event_data: str):
+        """
+        Test freeze-frame is properly loaded and attached to shot events. The
+        freeze-frames contain location information on player level.
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            coordinates="statsbomb",
+        )
+        shot_event = dataset.get_event_by_id(
+            "65f16e50-7c5d-4293-b2fc-d20887a772f9"
+        )
+        assert isinstance(shot_event.freeze_frame, Frame)
+
+        player_5246 = dataset.metadata.teams[0].get_player_by_id(5246)
+        assert shot_event.freeze_frame.players_coordinates[
+            player_5246
+        ] == Point(103.2, 43.6)

@@ -80,7 +80,7 @@ class Provider(Enum):
 class Position:
     position_id: str
     name: str
-    coordinates: Point
+    coordinates: Optional[Point] = None
 
     def __str__(self):
         return self.name
@@ -171,7 +171,7 @@ class Team:
 
         return None
 
-    def get_player_by_id(self, player_id: str):
+    def get_player_by_id(self, player_id: Union[int, str]):
         player_id = str(player_id)
 
         for player in self.players:

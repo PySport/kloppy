@@ -216,6 +216,36 @@ class TestHelpers:
             == transformed_receipt_event.coordinates.y
         )
 
+    def test_transform_event_data_freeze_frame(self):
+        """Make sure the freeze frame within event data is transformed too"""
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
+            event_data=f"{base_dir}/files/statsbomb_event.json",
+        )
+
+        _, away_team = dataset.metadata.teams
+
+        shot_event = dataset.get_event_by_id(
+            "65f16e50-7c5d-4293-b2fc-d20887a772f9"
+        )
+        transformed_dataset = dataset.transform(
+            to_orientation="fixed_away_home"
+        )
+        shot_event_transformed = transformed_dataset.get_event_by_id(
+            shot_event.event_id
+        )
+
+        player = away_team.get_player_by_id(6612)
+        coordinates = shot_event.freeze_frame.players_coordinates[player]
+        coordinates_transformed = (
+            shot_event_transformed.freeze_frame.players_coordinates[player]
+        )
+
+        assert coordinates.x == 1 - coordinates_transformed.x
+        assert coordinates.y == 1 - coordinates_transformed.y
+
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 

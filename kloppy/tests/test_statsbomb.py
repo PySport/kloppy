@@ -275,12 +275,12 @@ class TestStatsBomb:
             coordinates="statsbomb",
         )
 
-        shot = dataset.find("pass")
+        pass_ = dataset.find("pass")
         coordinates_per_team = defaultdict(list)
         for (
             player,
             coordinates,
-        ) in shot.freeze_frame.players_coordinates.items():
+        ) in pass_.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
 
         assert coordinates_per_team == {
@@ -300,6 +300,6 @@ class TestStatsBomb:
             ],
         }
 
-        assert shot.freeze_frame.players_coordinates[shot.player] == Point(
+        assert pass_.freeze_frame.players_coordinates[pass_.player] == Point(
             x=60.018825, y=39.621055000000005
         )

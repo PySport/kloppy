@@ -337,6 +337,7 @@ def _parse_freeze_frame(
     home_team: Team,
     away_team: Team,
     event: Event,
+    visible_area: Optional[List] = None,
 ) -> Optional[Frame]:
     players_data = {}
     for i, freeze_frame_player in enumerate(freeze_frame):
@@ -350,11 +351,18 @@ def _parse_freeze_frame(
                 freeze_frame_player["player"]["id"]
             )
         else:
-            player = Player(
-                player_id=f"T{freeze_frame_team.team_id}-E{event.event_id}-{i}",
-                team=freeze_frame_team,
-                jersey_no=None,
-            )
+            if freeze_frame_player.get("actor"):
+                player = event.player
+            elif freeze_frame_player.get("keeper"):
+                player = freeze_frame_team.get_player_by_position(
+                    position_id=1
+                )
+            else:
+                player = Player(
+                    player_id=f"T{freeze_frame_team.team_id}-E{event.event_id}-{i}",
+                    team=freeze_frame_team,
+                    jersey_no=None,
+                )
 
         players_data[player] = PlayerData(
             coordinates=_parse_coordinates(
@@ -372,7 +380,7 @@ def _parse_freeze_frame(
         timestamp=event.timestamp,
         ball_state=event.ball_state,
         ball_owning_team=event.ball_owning_team,
-        other_data={},
+        other_data={"visible_area": visible_area},
     )
 
 
@@ -487,6 +495,7 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
 class StatsBombInputs(NamedTuple):
     event_data: IO[bytes]
     lineup_data: IO[bytes]
+    three_sixty_data: Optional[IO[bytes]]
 
 
 class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
@@ -500,6 +509,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
             home_lineup, away_lineup = json.load(inputs.lineup_data)
+            if inputs.three_sixty_data:
+                three_sixty_data = {
+                    item["event_uuid"]: item
+                    for item in json.load(inputs.three_sixty_data)
+                }
+            else:
+                three_sixty_data = {}
+
             (
                 shot_fidelity_version,
                 xy_fidelity_version,
@@ -822,13 +839,29 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Last step is to add freeze_frame information
         for event in events:
             if event.event_type == EventType.SHOT:
+                if "freeze_frame" in event.raw_event["shot"]:
+                    event.freeze_frame = transformer.transform_frame(
+                        _parse_freeze_frame(
+                            freeze_frame=event.raw_event["shot"][
+                                "freeze_frame"
+                            ],
+                            home_team=home_team,
+                            away_team=away_team,
+                            event=event,
+                            fidelity_version=fidelity_version,
+                        )
+                    )
+
+            if not event.freeze_frame and event.event_id in three_sixty_data:
+                freeze_frame = three_sixty_data[event.event_id]
                 event.freeze_frame = transformer.transform_frame(
                     _parse_freeze_frame(
-                        freeze_frame=event.raw_event["shot"]["freeze_frame"],
+                        freeze_frame=freeze_frame["freeze_frame"],
                         home_team=home_team,
                         away_team=away_team,
                         event=event,
                         fidelity_version=fidelity_version,
+                        visible_area=freeze_frame["visible_area"],
                     )
                 )
 

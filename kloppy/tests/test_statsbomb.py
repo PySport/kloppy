@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 import pytest
 
@@ -263,3 +264,42 @@ class TestStatsBomb:
         assert shot_event.freeze_frame.players_coordinates[
             player_5246
         ] == Point(103.2, 43.6)
+
+    def test_freeze_frame_360(self):
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            event_data=f"{base_dir}/files/statsbomb_3788741_event.json",
+            lineup_data=f"{base_dir}/files/statsbomb_3788741_lineup.json",
+            three_sixty_data=f"{base_dir}/files/statsbomb_3788741_360.json",
+            coordinates="statsbomb",
+        )
+
+        shot = dataset.find("pass")
+        coordinates_per_team = defaultdict(list)
+        for (
+            player,
+            coordinates,
+        ) in shot.freeze_frame.players_coordinates.items():
+            coordinates_per_team[player.team.name].append(coordinates)
+
+        assert coordinates_per_team == {
+            "Italy": [
+                Point(x=43.672042000000005, y=31.609489),
+                Point(x=44.016185, y=45.22054),
+                Point(x=49.69454, y=35.055324000000006),
+                Point(x=54.51254, y=29.714278),
+                Point(x=58.29811, y=48.149497000000004),
+                Point(x=60.362968, y=30.403444999999998),
+            ],
+            "Turkey": [
+                Point(x=60.018825, y=39.621055000000005),
+                Point(x=61.223323, y=47.977206),
+                Point(x=67.417896, y=32.643237000000006),
+                Point(x=68.96654000000001, y=43.325328000000006),
+            ],
+        }
+
+        assert shot.freeze_frame.players_coordinates[shot.player] == Point(
+            x=60.018825, y=39.621055000000005
+        )

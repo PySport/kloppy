@@ -1,7 +1,7 @@
 import logging
 import os
 import urllib.parse
-from typing import Union, IO, BinaryIO, Tuple
+from typing import Union, IO, BinaryIO, Tuple, Optional
 
 from io import BytesIO
 

@@ -3,6 +3,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.6.1 (2022-11-22)
+
+Pull requests merged:
+
+- Fixing load empty values from metrica epts loader ([#163](https://github.com/PySport/kloppy/pull/163))
+
 ## 3.6.0 (2022-10-14)
 
 Pull requests merged:

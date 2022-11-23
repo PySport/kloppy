@@ -1,6 +1,6 @@
 import contextlib
 import warnings
-from typing import Union, Literal
+from typing import Union
 
 from kloppy.config import get_config
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory

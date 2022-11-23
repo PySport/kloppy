@@ -370,6 +370,10 @@ def _parse_freeze_frame(
             )
         )
 
+    if event.player not in players_data:
+        # Shot data from event stream might not include coordinates for event player
+        players_data[event.player] = PlayerData(coordinates=event.coordinates)
+
     return Frame(
         frame_id=None,  # TODO: come up with a clever value here
         ball_coordinates=Point3D(

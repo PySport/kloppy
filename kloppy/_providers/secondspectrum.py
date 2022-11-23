@@ -6,7 +6,7 @@ from kloppy.infra.serializers.tracking.secondspectrum import (
     SecondSpectrumDeserializer,
     SecondSpectrumInputs,
 )
-from kloppy.io import FileLike, open_as_file
+from kloppy.io import FileLike, open_as_file, Source
 
 
 @contextlib.contextmanager
@@ -33,7 +33,7 @@ def load(
         raw_data
     ) as raw_data_fp, open_as_file(
         additional_meta_data
-    ) if additional_meta_data else dummy_context_mgr() as additional_meta_data_fp:
+    ) as additional_meta_data_fp:
         return deserializer.deserialize(
             inputs=SecondSpectrumInputs(
                 meta_data=meta_data_fp,

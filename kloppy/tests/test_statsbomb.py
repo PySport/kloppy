@@ -258,7 +258,11 @@ class TestStatsBomb:
         shot_event = dataset.get_event_by_id(
             "65f16e50-7c5d-4293-b2fc-d20887a772f9"
         )
-        assert isinstance(shot_event.freeze_frame, Frame)
+
+        event_player_coordinates = shot_event.freeze_frame.players_coordinates[
+            shot_event.player
+        ]
+        assert event_player_coordinates == shot_event.coordinates
 
         player_5246 = dataset.metadata.teams[0].get_player_by_id(5246)
         assert shot_event.freeze_frame.players_coordinates[

@@ -2,7 +2,7 @@ from typing import BinaryIO
 import base64
 
 from kloppy.config import get_config
-from kloppy.exceptions import AdapterError
+from kloppy.exceptions import AdapterError, InputNotFoundError
 from .adapter import Adapter
 
 
@@ -61,6 +61,9 @@ class HTTPAdapter(Adapter):
                 auth = requests.auth.HTTPBasicAuth(*basic_authentication)
 
             with requests.get(url, stream=True, auth=auth) as r:
+                if r.status_code == 404:
+                    raise InputNotFoundError(f"Could not find {url}")
+
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=8192):
                     output.write(chunk)

@@ -269,6 +269,8 @@ class TestStatsBomb:
             player_5246
         ] == Point(103.2, 43.6)
 
+        assert shot_event.freeze_frame.frame_id == 3727
+
     def test_freeze_frame_360(self):
         base_dir = os.path.dirname(__file__)
 
@@ -279,12 +281,12 @@ class TestStatsBomb:
             coordinates="statsbomb",
         )
 
-        pass_ = dataset.find("pass")
+        pass_event = dataset.find("pass")
         coordinates_per_team = defaultdict(list)
         for (
             player,
             coordinates,
-        ) in pass_.freeze_frame.players_coordinates.items():
+        ) in pass_event.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
 
         assert coordinates_per_team == {
@@ -304,6 +306,8 @@ class TestStatsBomb:
             ],
         }
 
-        assert pass_.freeze_frame.players_coordinates[pass_.player] == Point(
-            x=60.018825, y=39.621055000000005
-        )
+        assert pass_event.freeze_frame.players_coordinates[
+            pass_event.player
+        ] == Point(x=60.018825, y=39.621055000000005)
+
+        assert pass_event.freeze_frame.frame_id == 21

@@ -102,6 +102,8 @@ SB_BODYPART_NO_TOUCH = 106
 
 SB_TECHNIQUE_THROUGH_BALL = 108
 
+FREEZE_FRAME_FPS = 25
+
 formations = {
     3142: FormationType.THREE_ONE_FOUR_TWO,
     32212: FormationType.THREE_TWO_TWO_ONE_TWO,
@@ -362,7 +364,9 @@ def _parse_freeze_frame(
         players_data[event.player] = PlayerData(coordinates=event.coordinates)
 
     return Frame(
-        frame_id=None,  # TODO: come up with a clever value here
+        frame_id=int(
+            event.period.start_timestamp + event.timestamp * FREEZE_FRAME_FPS
+        ),
         ball_coordinates=Point3D(
             x=event.coordinates.x, y=event.coordinates.y, z=0  # No clue
         ),

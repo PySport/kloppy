@@ -3,6 +3,12 @@
 
 Find out all changes between different kloppy versions
 
+## 3.7.0 (2022-11-24)
+
+Pull requests merged:
+
+- Freeze frame support ([#164](https://github.com/PySport/kloppy/pull/164))
+
 ## 3.6.1 (2022-11-22)
 
 Pull requests merged:

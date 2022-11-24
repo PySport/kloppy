@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 import pytest
 
@@ -12,6 +13,8 @@ from kloppy.domain import (
     Point,
     Provider,
     FormationType,
+    Frame,
+    Position,
 )
 
 from kloppy import statsbomb
@@ -65,7 +68,9 @@ class TestStatsBomb:
         assert player.player_id == "5503"
         assert player.jersey_no == 10
         assert str(player) == "Lionel Andrés Messi Cuccittini"
-        assert player.position is None  # not set
+        assert player.position == Position(
+            position_id="24", name="Left Center Forward", coordinates=None
+        )
         assert player.starting
 
         sub_player = dataset.metadata.teams[0].get_player_by_id("3501")
@@ -226,3 +231,83 @@ class TestStatsBomb:
 
         assert carry_event.get_related_events() == [receipt_event, pass_event]
         assert carry_event.related_pass() == pass_event
+
+    def test_player_position(self, lineup_data: str, event_data: str):
+        """
+        Validate position information is loaded correctly from the STARTING_XI events.
+
+        TODO: Fix when player is substituted
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+        )
+        player_5246 = dataset.metadata.teams[0].get_player_by_id(20055)
+        assert player_5246.position.position_id == "1"
+
+    def test_freeze_frame(self, lineup_data: str, event_data: str):
+        """
+        Test freeze-frame is properly loaded and attached to shot events. The
+        freeze-frames contain location information on player level.
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            coordinates="statsbomb",
+        )
+        shot_event = dataset.get_event_by_id(
+            "65f16e50-7c5d-4293-b2fc-d20887a772f9"
+        )
+
+        event_player_coordinates = shot_event.freeze_frame.players_coordinates[
+            shot_event.player
+        ]
+        assert event_player_coordinates == shot_event.coordinates
+
+        player_5246 = dataset.metadata.teams[0].get_player_by_id(5246)
+        assert shot_event.freeze_frame.players_coordinates[
+            player_5246
+        ] == Point(103.2, 43.6)
+
+        assert shot_event.freeze_frame.frame_id == 3727
+
+    def test_freeze_frame_360(self):
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            event_data=f"{base_dir}/files/statsbomb_3788741_event.json",
+            lineup_data=f"{base_dir}/files/statsbomb_3788741_lineup.json",
+            three_sixty_data=f"{base_dir}/files/statsbomb_3788741_360.json",
+            coordinates="statsbomb",
+        )
+
+        pass_event = dataset.find("pass")
+        coordinates_per_team = defaultdict(list)
+        for (
+            player,
+            coordinates,
+        ) in pass_event.freeze_frame.players_coordinates.items():
+            coordinates_per_team[player.team.name].append(coordinates)
+
+        assert coordinates_per_team == {
+            "Italy": [
+                Point(x=43.672042000000005, y=31.609489),
+                Point(x=44.016185, y=45.22054),
+                Point(x=49.69454, y=35.055324000000006),
+                Point(x=54.51254, y=29.714278),
+                Point(x=58.29811, y=48.149497000000004),
+                Point(x=60.362968, y=30.403444999999998),
+            ],
+            "Turkey": [
+                Point(x=60.018825, y=39.621055000000005),
+                Point(x=61.223323, y=47.977206),
+                Point(x=67.417896, y=32.643237000000006),
+                Point(x=68.96654000000001, y=43.325328000000006),
+            ],
+        }
+
+        assert pass_event.freeze_frame.players_coordinates[
+            pass_event.player
+        ] == Point(x=60.018825, y=39.621055000000005)
+
+        assert pass_event.freeze_frame.frame_id == 21

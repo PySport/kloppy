@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Tuple, Dict, List, NamedTuple, IO, Optional
 import logging
 import json
 
@@ -11,11 +11,6 @@ from kloppy.domain import (
     DatasetFlag,
     Orientation,
     Provider,
-    PassEvent,
-    ShotEvent,
-    TakeOnEvent,
-    CarryEvent,
-    GenericEvent,
     PassResult,
     ShotResult,
     TakeOnResult,
@@ -23,22 +18,23 @@ from kloppy.domain import (
     Metadata,
     Ground,
     Player,
-    SubstitutionEvent,
-    CardEvent,
-    PlayerOnEvent,
-    PlayerOffEvent,
     CardType,
     SetPieceQualifier,
     SetPieceType,
-    RecoveryEvent,
-    FoulCommittedEvent,
-    BallOutEvent,
-    FormationChangeEvent,
     FormationType,
     BodyPart,
     BodyPartQualifier,
+    Position,
+    Frame,
+    PlayerData,
+    Point3D,
 )
-from kloppy.domain.models.event import PassQualifier, PassType, EventType
+from kloppy.domain.models.event import (
+    PassQualifier,
+    PassType,
+    EventType,
+    Event,
+)
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
@@ -105,6 +101,8 @@ SB_BODYPART_OTHER = 70
 SB_BODYPART_NO_TOUCH = 106
 
 SB_TECHNIQUE_THROUGH_BALL = 108
+
+FREEZE_FRAME_FPS = 25
 
 formations = {
     3142: FormationType.THREE_ONE_FOUR_TWO,
@@ -319,10 +317,66 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 
-    return {
-        "result": result,
-        "qualifiers": qualifiers,
-    }
+    return {"result": result, "qualifiers": qualifiers}
+
+
+def _parse_freeze_frame(
+    freeze_frame: List[Dict],
+    fidelity_version: int,
+    home_team: Team,
+    away_team: Team,
+    event: Event,
+    visible_area: Optional[List] = None,
+) -> Optional[Frame]:
+    players_data = {}
+    for i, freeze_frame_player in enumerate(freeze_frame):
+        if (event.team == home_team) == freeze_frame_player["teammate"]:
+            freeze_frame_team = home_team
+        else:
+            freeze_frame_team = away_team
+
+        if "player" in freeze_frame_player:
+            player = freeze_frame_team.get_player_by_id(
+                freeze_frame_player["player"]["id"]
+            )
+        else:
+            if freeze_frame_player.get("actor"):
+                player = event.player
+            elif freeze_frame_player.get("keeper"):
+                player = freeze_frame_team.get_player_by_position(
+                    position_id=1
+                )
+            else:
+                player = Player(
+                    player_id=f"T{freeze_frame_team.team_id}-E{event.event_id}-{i}",
+                    team=freeze_frame_team,
+                    jersey_no=None,
+                )
+
+        players_data[player] = PlayerData(
+            coordinates=_parse_coordinates(
+                freeze_frame_player["location"], fidelity_version
+            )
+        )
+
+    if event.player not in players_data:
+        # Shot data from event stream might not include coordinates for event player
+        players_data[event.player] = PlayerData(coordinates=event.coordinates)
+
+    return Frame(
+        frame_id=int(
+            event.period.start_timestamp + event.timestamp * FREEZE_FRAME_FPS
+        ),
+        ball_coordinates=Point3D(
+            x=event.coordinates.x, y=event.coordinates.y, z=0  # No clue
+        ),
+        players_data=players_data,
+        period=event.period,
+        timestamp=event.timestamp,
+        ball_state=event.ball_state,
+        ball_owning_team=event.ball_owning_team,
+        other_data={"visible_area": visible_area},
+    )
 
 
 def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
@@ -436,6 +490,7 @@ def _determine_xy_fidelity_versions(events: List[Dict]) -> Tuple[int, int]:
 class StatsBombInputs(NamedTuple):
     event_data: IO[bytes]
     lineup_data: IO[bytes]
+    three_sixty_data: Optional[IO[bytes]]
 
 
 class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
@@ -449,6 +504,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
             home_lineup, away_lineup = json.load(inputs.lineup_data)
+            if inputs.three_sixty_data:
+                three_sixty_data = {
+                    item["event_uuid"]: item
+                    for item in json.load(inputs.three_sixty_data)
+                }
+            else:
+                three_sixty_data = {}
+
             (
                 shot_fidelity_version,
                 xy_fidelity_version,
@@ -458,12 +521,16 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             )
 
         with performance_logging("parse data", logger=logger):
-            starting_player_ids = {
-                str(player["player"]["id"])
-                for raw_event in raw_events
-                if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI
-                for player in raw_event["tactics"]["lineup"]
-            }
+            player_positions = {}
+            for raw_event in raw_events:
+                if raw_event["type"]["id"] == SB_EVENT_TYPE_STARTING_XI:
+                    for player in raw_event["tactics"]["lineup"]:
+                        player_positions[
+                            str(player["player"]["id"])
+                        ] = Position(
+                            position_id=str(player["position"]["id"]),
+                            name=player["position"]["name"],
+                        )
 
             starting_formations = {
                 raw_event["team"]["id"]: FormationType(
@@ -485,7 +552,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     team=home_team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
-                    starting=str(player["player_id"]) in starting_player_ids,
+                    starting=str(player["player_id"]) in player_positions,
+                    position=player_positions.get(str(player["player_id"])),
                 )
                 for player in home_lineup["lineup"]
             ]
@@ -502,7 +570,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     team=away_team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
-                    starting=str(player["player_id"]) in starting_player_ids,
+                    starting=str(player["player_id"]) in player_positions,
+                    position=player_positions.get(str(player["player_id"])),
                 )
                 for player in away_lineup["lineup"]
             ]
@@ -761,6 +830,35 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                                     transformer.transform_event(ball_out_event)
                                 )
                                 events.append(transformed_ball_out_event)
+
+        # Last step is to add freeze_frame information
+        for event in events:
+            if event.event_type == EventType.SHOT:
+                if "freeze_frame" in event.raw_event["shot"]:
+                    event.freeze_frame = transformer.transform_frame(
+                        _parse_freeze_frame(
+                            freeze_frame=event.raw_event["shot"][
+                                "freeze_frame"
+                            ],
+                            home_team=home_team,
+                            away_team=away_team,
+                            event=event,
+                            fidelity_version=fidelity_version,
+                        )
+                    )
+
+            if not event.freeze_frame and event.event_id in three_sixty_data:
+                freeze_frame = three_sixty_data[event.event_id]
+                event.freeze_frame = transformer.transform_frame(
+                    _parse_freeze_frame(
+                        freeze_frame=freeze_frame["freeze_frame"],
+                        home_team=home_team,
+                        away_team=away_team,
+                        event=event,
+                        fidelity_version=fidelity_version,
+                        visible_area=freeze_frame["visible_area"],
+                    )
+                )
 
         metadata = Metadata(
             teams=teams,

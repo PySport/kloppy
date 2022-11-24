@@ -1,3 +1,4 @@
+import contextlib
 import warnings
 from typing import Union
 
@@ -8,12 +9,18 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombInputs,
 )
 from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike
+from kloppy.io import open_as_file, FileLike, Source
+
+
+@contextlib.contextmanager
+def dummy_context_mgr():
+    yield None
 
 
 def load(
     event_data: FileLike,
     lineup_data: FileLike,
+    three_sixty_data: Optional[FileLike] = None,
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
@@ -24,6 +31,7 @@ def load(
     Parameters:
         event_data: filename of json containing the events
         lineup_data: filename of json containing the lineup information
+        three_sixty_data: filename of json containing the 360 data
         event_types:
         coordinates:
         event_factory:
@@ -37,11 +45,15 @@ def load(
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data
-    ) as lineup_data_fp:
+    ) as lineup_data_fp, open_as_file(
+        Source.create(three_sixty_data, optional=True)
+    ) as three_sixty_data_fp:
 
         return deserializer.deserialize(
             inputs=StatsBombInputs(
-                event_data=event_data_fp, lineup_data=lineup_data_fp
+                event_data=event_data_fp,
+                lineup_data=lineup_data_fp,
+                three_sixty_data=three_sixty_data_fp,
             ),
         )
 
@@ -62,6 +74,10 @@ def load_open_data(
     return load(
         event_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json",
         lineup_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json",
+        three_sixty_data=Source(
+            f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/three-sixty/{match_id}.json",
+            skip_if_missing=True,
+        ),
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,

@@ -1,3 +1,4 @@
+import dataclasses
 import warnings
 from dataclasses import fields
 from typing import TypeVar, Type
@@ -38,12 +39,19 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     if "related_event_ids" not in kwargs:
         extra_kwargs["related_event_ids"] = []
 
+    if "freeze_frame" not in kwargs:
+        kwargs["freeze_frame"] = None
+
     all_kwargs = dict(**kwargs, **extra_kwargs)
 
     relevant_kwargs = {
         field.name: all_kwargs.get(field.name, field.default)
         for field in fields(event_cls)
         if field.init
+        and not (
+            field.default == dataclasses.MISSING
+            and field.name not in all_kwargs
+        )
     }
 
     if len(relevant_kwargs) < len(all_kwargs):

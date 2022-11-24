@@ -14,8 +14,6 @@ from typing import (
     Iterable,
     overload,
     TYPE_CHECKING,
-    Generic,
-    TypeVar,
 )
 
 if sys.version_info >= (3, 8):
@@ -38,6 +36,7 @@ from ...exceptions import OrphanedRecordError, InvalidFilterError
 
 if TYPE_CHECKING:
     from ..services.transformers.event import Column
+    from .tracking import Frame
 
 
 class ResultType(Enum):
@@ -398,6 +397,8 @@ class Event(DataRecord, ABC):
 
     qualifiers: List[Qualifier]
 
+    freeze_frame: Optional["Frame"]
+
     @property
     def record_id(self) -> str:
         return self.event_id
@@ -411,13 +412,6 @@ class Event(DataRecord, ABC):
     @abstractmethod
     def event_name(self) -> str:
         raise NotImplementedError
-
-    @classmethod
-    def create(cls, **kwargs):
-        extra_kwargs = {"state": {}}
-        if "related_event_ids" not in kwargs:
-            extra_kwargs["related_event_ids"] = []
-        return cls(**kwargs, **extra_kwargs)
 
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
         """

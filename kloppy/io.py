@@ -4,7 +4,7 @@ import os
 import urllib.parse
 from dataclasses import dataclass, replace
 from pathlib import PurePath
-from typing import Union, IO, BinaryIO, Tuple, Optional
+from typing import Union, IO, BinaryIO, Tuple
 
 from io import BytesIO
 

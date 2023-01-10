@@ -1,9 +1,28 @@
 from typing import BinaryIO
-import base64
 
 from kloppy.config import get_config
 from kloppy.exceptions import AdapterError, InputNotFoundError
 from .adapter import Adapter
+
+try:
+    from js import XMLHttpRequest
+
+    RUNS_IN_BROWSER = True
+except ImportError:
+    RUNS_IN_BROWSER = False
+
+
+def check_requests_patch():
+    if RUNS_IN_BROWSER:
+        try:
+            import pyodide_http
+        except ImportError:
+            raise AdapterError(
+                "Seems like you don't have `pyodide-http` installed, which is required to make http requests "
+                "work in the browser. Please install it using: pip install pyodide-http"
+            )
+
+        pyodide_http.patch_all()
 
 
 class HTTPAdapter(Adapter):
@@ -11,59 +30,26 @@ class HTTPAdapter(Adapter):
         return url.startswith("http://") or url.startswith("https://")
 
     def read_to_stream(self, url: str, output: BinaryIO):
+        check_requests_patch()
+
         basic_authentication = get_config("adapters.http.basic_authentication")
 
         try:
-            from js import XMLHttpRequest
-
-            _RUNS_IN_BROWSER = True
+            import requests
         except ImportError:
-            try:
-                import requests
-            except ImportError:
-                raise AdapterError(
-                    "Seems like you don't have requests installed. Please"
-                    " install it using: pip install requests"
-                )
+            raise AdapterError(
+                "Seems like you don't have requests installed. Please"
+                " install it using: pip install requests"
+            )
 
-            _RUNS_IN_BROWSER = False
+        auth = None
+        if basic_authentication:
+            auth = requests.auth.HTTPBasicAuth(*basic_authentication)
 
-        if _RUNS_IN_BROWSER:
-            xhr = XMLHttpRequest.new()
-            xhr.responseType = "arraybuffer"
-            if basic_authentication:
-                authentication = base64.b64encode(
-                    basic_authentication.join(":")
-                )
-                xhr.setRequestHeader(
-                    "Authorization",
-                    f"Basic {authentication}",
-                )
+        with requests.get(url, stream=True, auth=auth) as r:
+            if r.status_code == 404:
+                raise InputNotFoundError(f"Could not find {url}")
 
-            xhr.open("GET", url, False)
-            xhr.send(None)
-
-            # Borrowed from 'raise_for_status'
-            http_error_msg = ""
-            if 400 <= xhr.status < 500:
-                http_error_msg = f"{xhr.status} Client Error: url: {url}"
-
-            elif 500 <= xhr.status < 600:
-                http_error_msg = f"{xhr.status} Server Error: url: {url}"
-
-            if http_error_msg:
-                raise AdapterError(http_error_msg)
-
-            output.write(xhr.response.to_py().tobytes())
-        else:
-            auth = None
-            if basic_authentication:
-                auth = requests.auth.HTTPBasicAuth(*basic_authentication)
-
-            with requests.get(url, stream=True, auth=auth) as r:
-                if r.status_code == 404:
-                    raise InputNotFoundError(f"Could not find {url}")
-
-                r.raise_for_status()
-                for chunk in r.iter_content(chunk_size=8192):
-                    output.write(chunk)
+            r.raise_for_status()
+            for chunk in r.iter_content(chunk_size=8192):
+                output.write(chunk)

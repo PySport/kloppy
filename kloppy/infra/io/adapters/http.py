@@ -38,7 +38,7 @@ class HTTPAdapter(Adapter):
             import requests
         except ImportError:
             raise AdapterError(
-                "Seems like you don't have requests installed. Please"
+                "Seems like you don't have `requests` installed. Please"
                 " install it using: pip install requests"
             )
 

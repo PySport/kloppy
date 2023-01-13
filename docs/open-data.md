@@ -12,9 +12,9 @@
 Luckily there are some providers kind enough to make parts of their data available for the public.
 
 ## Event data
-- [StatsBomb](getting-started/statsbomb/#load-open-data) - [source](https://github.com/statsbomb/open-data)
-- [Wyscout](getting-started/wyscout/#load-open-data) - [source](https://github.com/koenvo/wyscout-soccer-match-event-dataset#references)
+- [StatsBomb](/getting-started/statsbomb/#load-open-data) - [source](https://github.com/statsbomb/open-data)
+- [Wyscout](/getting-started/wyscout/#load-open-data) - [source](https://github.com/koenvo/wyscout-soccer-match-event-dataset#references)
 
 ## Tracking data
-- [Metrica](getting-started/metrica/#load-open-tracking-data) - [source](https://github.com/metrica-sports/sample-data)
-- [SkillCorner](getting-started/skillcorner/#load-open-data) - [source](https://github.com/SkillCorner/opendata)
+- [Metrica](/getting-started/metrica/#load-open-tracking-data) - [source](https://github.com/metrica-sports/sample-data)
+- [SkillCorner](/getting-started/skillcorner/#load-open-data) - [source](https://github.com/SkillCorner/opendata)

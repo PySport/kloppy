@@ -14,6 +14,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Open-data: open-data.md
   - Getting-started:
       - Datafactory: getting-started/datafactory.ipynb
       - Metrica: getting-started/metrica.ipynb

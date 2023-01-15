@@ -742,6 +742,7 @@ class Metadata:
     flags: DatasetFlag
     provider: Provider
     coordinate_system: CoordinateSystem
+    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
 
 class DatasetType(Enum):

@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Dict, Union, Set
+from dataclasses import dataclass, field
+from typing import List, Dict, Union
 
 from kloppy.domain import Team, Player, Metadata
 
@@ -160,6 +160,8 @@ class DataFormatSpecification:
 
 @dataclass
 class EPTSMetadata(Metadata):
-    player_channels: List[PlayerChannel]
-    data_format_specifications: List[DataFormatSpecification]
-    sensors: List[Sensor]
+    player_channels: List[PlayerChannel] = field(default_factory=list)
+    data_format_specifications: List[DataFormatSpecification] = field(
+        default_factory=list
+    )
+    sensors: List[Sensor] = field(default_factory=list)

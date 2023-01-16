@@ -3,7 +3,8 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass, replace
-from typing import Union, IO, BinaryIO, Tuple, Optional
+from pathlib import PurePath
+from typing import Union, IO, BinaryIO, Tuple
 
 from io import BytesIO
 
@@ -19,7 +20,7 @@ _open = open
 
 @dataclass(frozen=True)
 class Source:
-    data: str
+    data: "FileLike"
     optional: bool = False
     skip_if_missing: bool = False
 
@@ -30,7 +31,7 @@ class Source:
         return Source(data=input_, **kwargs)
 
 
-FileLike = Union[str, bytes, IO[bytes], Source]
+FileLike = Union[str, PurePath, bytes, IO[bytes], Source]
 
 
 def get_local_cache_stream(url: str, cache_dir: str) -> Tuple[BinaryIO, bool]:
@@ -58,49 +59,51 @@ def dummy_context_mgr():
 
 
 def open_as_file(input_: FileLike) -> IO:
-    if isinstance(input_, str) or isinstance(input_, Source):
-        if isinstance(input_, str):
-            input_ = Source(input_)
-
+    if isinstance(input_, Source):
         if input_.data is None and input_.optional:
             # This saves us some additional code in every vendor specific code
             return dummy_context_mgr()
 
-        if "{" in input_.data or "<" in input_.data:
-            return BytesIO(input_.data.encode("utf8"))
+        try:
+            return open_as_file(input_.data)
+        except InputNotFoundError:
+            if input_.skip_if_missing:
+                logging.info(f"Input {input_.data} not found. Skipping")
+                return dummy_context_mgr()
+            raise
+    elif isinstance(input_, str) or isinstance(input_, PurePath):
+        if isinstance(input_, PurePath):
+            input_ = str(input_)
+            is_path = True
         else:
-            adapter = get_adapter(input_.data)
+            is_path = False
+
+        if not is_path and ("{" in input_ or "<" in input_):
+            return BytesIO(input_.encode("utf8"))
+        else:
+            adapter = get_adapter(input_)
             if adapter:
                 cache_dir = get_config("cache")
                 if cache_dir:
                     stream, local_cache_file = get_local_cache_stream(
-                        input_.data, cache_dir
+                        input_, cache_dir
                     )
                 else:
                     stream = BytesIO()
                     local_cache_file = None
 
                 if not local_cache_file:
-                    logger.info(f"Retrieving {input_.data}")
-                    try:
-                        adapter.read_to_stream(input_.data, stream)
-                    except InputNotFoundError:
-                        if input_.skip_if_missing:
-                            logging.info(
-                                f"Input {input_.data} not found. Skipping"
-                            )
-                            return dummy_context_mgr()
-                        raise
-
+                    logger.info(f"Retrieving {input_}")
+                    adapter.read_to_stream(input_, stream)
                     logger.info("Retrieval complete")
                 else:
                     logger.info(f"Using local cached file {local_cache_file}")
                 stream.seek(0)
             else:
-                if not os.path.exists(input_.data):
+                if not os.path.exists(input_):
                     raise InputNotFoundError(f"File {input_} does not exist")
 
-                stream = _open(input_.data, "rb")
+                stream = _open(input_, "rb")
             return stream
     elif isinstance(input_, bytes):
         return BytesIO(input_)

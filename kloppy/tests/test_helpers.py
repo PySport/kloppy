@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
@@ -25,6 +26,7 @@ from kloppy.domain import (
 )
 
 from kloppy import opta, tracab, statsbomb
+from kloppy.io import open_as_file
 
 
 class TestHelpers:
@@ -326,3 +328,12 @@ class TestHelpers:
         )
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
+
+
+class TestOpenAsFile:
+    def test_path(self):
+        path = Path(__file__).parent / "files/tracab_meta.xml"
+        with open_as_file(path) as fp:
+            data = fp.read()
+
+        assert len(data) == os.path.getsize(path)

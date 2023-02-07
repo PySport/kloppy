@@ -39,14 +39,18 @@ def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
     }
 
 
-def _load_periods(metadata_elm, team_map: dict, frame_rate: int) -> List[Period]:
+def _load_periods(
+    metadata_elm, team_map: dict, frame_rate: int
+) -> List[Period]:
     global_config_elm = metadata_elm.find("GlobalConfig")
     provider_params = _load_provider_parameters(
         global_config_elm.find("ProviderGlobalParameters")
     )
 
     provider_teams_params = {
-        team_map[team_elm.attrib["id"]]: _load_provider_parameters(team_elm.find("ProviderTeamsParameters"))
+        team_map[team_elm.attrib["id"]]: _load_provider_parameters(
+            team_elm.find("ProviderTeamsParameters")
+        )
         for team_elm in metadata_elm.find("Teams").iterchildren(tag="Team")
     }
 
@@ -60,13 +64,29 @@ def _load_periods(metadata_elm, team_map: dict, frame_rate: int) -> List[Period]
     periods = []
 
     for idx, period_name in enumerate(period_names):
-        # the attacking direction is only defined for the first period 
+        # the attacking direction is only defined for the first period
         # and alternates between periods
         invert = idx % 2
-        if provider_teams_params[Ground.HOME].get("attack_direction_first_half") == "left_to_right":
-            attacking_direction = [AttackingDirection.HOME_AWAY, AttackingDirection.AWAY_HOME][invert]
-        elif provider_teams_params[Ground.HOME].get("attack_direction_first_half") == "right_to_left":
-            attacking_direction = [AttackingDirection.AWAY_HOME, AttackingDirection.HOME_AWAY][invert]
+        if (
+            provider_teams_params[Ground.HOME].get(
+                "attack_direction_first_half"
+            )
+            == "left_to_right"
+        ):
+            attacking_direction = [
+                AttackingDirection.HOME_AWAY,
+                AttackingDirection.AWAY_HOME,
+            ][invert]
+        elif (
+            provider_teams_params[Ground.HOME].get(
+                "attack_direction_first_half"
+            )
+            == "right_to_left"
+        ):
+            attacking_direction = [
+                AttackingDirection.AWAY_HOME,
+                AttackingDirection.HOME_AWAY,
+            ][invert]
         else:
             attacking_direction = AttackingDirection.NOT_SET
 
@@ -147,7 +167,6 @@ def _load_sensors(sensors_elm) -> List[Sensor]:
 def _load_pitch_dimensions(
     metadata_elm, sensors: List[Sensor]
 ) -> Union[None, PitchDimensions]:
-
     normalized = False
     for sensor in sensors:
         if sensor.sensor_id == "position":

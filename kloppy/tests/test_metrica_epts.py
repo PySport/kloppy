@@ -6,6 +6,7 @@ from pandas import DataFrame
 from lxml import objectify
 
 from kloppy.domain import (
+    Orientation,
     Point,
     Point3D,
     Provider,
@@ -125,7 +126,7 @@ class TestMetricaEPTSTracking:
 
         assert len(dataset.records) == 100
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation is None
+        assert dataset.metadata.orientation is Orientation.HOME_TEAM
 
         assert dataset.records[0].players_data[
             first_player

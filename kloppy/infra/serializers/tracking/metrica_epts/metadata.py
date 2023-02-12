@@ -39,10 +39,20 @@ def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
     }
 
 
-def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
+def _load_periods(
+    metadata_elm, team_map: dict, frame_rate: int
+) -> List[Period]:
+    global_config_elm = metadata_elm.find("GlobalConfig")
     provider_params = _load_provider_parameters(
         global_config_elm.find("ProviderGlobalParameters")
     )
+
+    provider_teams_params = {
+        team_map[team_elm.attrib["id"]]: _load_provider_parameters(
+            team_elm.find("ProviderTeamsParameters")
+        )
+        for team_elm in metadata_elm.find("Teams").iterchildren(tag="Team")
+    }
 
     period_names = [
         "first_half",
@@ -54,6 +64,32 @@ def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
     periods = []
 
     for idx, period_name in enumerate(period_names):
+        # the attacking direction is only defined for the first period
+        # and alternates between periods
+        invert = idx % 2
+        if (
+            provider_teams_params[Ground.HOME].get(
+                "attack_direction_first_half"
+            )
+            == "left_to_right"
+        ):
+            attacking_direction = [
+                AttackingDirection.HOME_AWAY,
+                AttackingDirection.AWAY_HOME,
+            ][invert]
+        elif (
+            provider_teams_params[Ground.HOME].get(
+                "attack_direction_first_half"
+            )
+            == "right_to_left"
+        ):
+            attacking_direction = [
+                AttackingDirection.AWAY_HOME,
+                AttackingDirection.HOME_AWAY,
+            ][invert]
+        else:
+            attacking_direction = AttackingDirection.NOT_SET
+
         start_key = f"{period_name}_start"
         end_key = f"{period_name}_end"
         if start_key in provider_params:
@@ -63,6 +99,7 @@ def _load_periods(global_config_elm, frame_rate: int) -> List[Period]:
                     start_timestamp=float(provider_params[start_key])
                     / frame_rate,
                     end_timestamp=float(provider_params[end_key]) / frame_rate,
+                    attacking_direction=attacking_direction,
                 )
             )
         else:
@@ -130,7 +167,6 @@ def _load_sensors(sensors_elm) -> List[Sensor]:
 def _load_pitch_dimensions(
     metadata_elm, sensors: List[Sensor]
 ) -> Union[None, PitchDimensions]:
-
     normalized = False
     for sensor in sensors:
         if sensor.sensor_id == "position":
@@ -197,8 +233,8 @@ def load_metadata(
     )
 
     _team_map = {
-        Ground.HOME: score_elm.attrib["idLocalTeam"],
-        Ground.AWAY: score_elm.attrib["idVisitingTeam"],
+        score_elm.attrib["idLocalTeam"]: Ground.HOME,
+        score_elm.attrib["idVisitingTeam"]: Ground.AWAY,
     }
 
     _team_name_map = {
@@ -207,7 +243,7 @@ def load_metadata(
     }
 
     teams_metadata = {}
-    for ground, team_id in _team_map.items():
+    for team_id, ground in _team_map.items():
         team = Team(
             team_id=team_id, name=_team_name_map[team_id], ground=ground
         )
@@ -248,7 +284,7 @@ def load_metadata(
 
     frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
     pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
-    periods = _load_periods(metadata.find("GlobalConfig"), frame_rate)
+    periods = _load_periods(metadata, _team_map, frame_rate)
 
     if periods:
         start_attacking_direction = periods[0].attacking_direction
@@ -257,12 +293,12 @@ def load_metadata(
 
     orientation = (
         (
-            Orientation.FIXED_HOME_AWAY
+            Orientation.HOME_TEAM
             if start_attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
+            else Orientation.AWAY_TEAM
         )
         if start_attacking_direction != AttackingDirection.NOT_SET
-        else None
+        else Orientation.NOT_SET
     )
 
     metadata.orientation = orientation
@@ -285,7 +321,7 @@ def load_metadata(
         frame_rate=frame_rate,
         sensors=sensors,
         score=score,
-        orientation=None,
+        orientation=orientation,
         provider=provider,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         coordinate_system=from_coordinate_system,

@@ -16,8 +16,8 @@ class TestWyscout:
 
     def test_correct_deserialization(self, event_data: str):
         dataset = wyscout.load(event_data=event_data, coordinates="wyscout")
-        assert dataset.records[10].coordinates == Point(23.0, 74.0)
+        assert dataset.records[2].coordinates == Point(36.0, 78.0)
 
     def test_correct_normalized_deserialization(self, event_data: str):
         dataset = wyscout.load(event_data=event_data)
-        assert dataset.records[10].coordinates == Point(0.23, 0.74)
+        assert dataset.records[2].coordinates == Point(0.36, 0.78)

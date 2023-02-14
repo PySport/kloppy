@@ -3,6 +3,11 @@
 
 Find out all changes between different kloppy versions
 
+## 3.7.1 (2023-01-16)
+
+Pull requests merged:
+- Refactor open_as_file to also accept Path inputs ([#165](https://github.com/PySport/kloppy/pull/165))
+
 ## 3.7.0 (2022-11-24)
 
 Pull requests merged:

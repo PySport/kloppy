@@ -4,6 +4,7 @@ import pytest
 
 from kloppy import metrica
 from kloppy.domain import (
+    Orientation,
     Period,
     Provider,
     AttackingDirection,
@@ -33,7 +34,7 @@ class TestMetricaEvents:
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 3684
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation is None
+        assert dataset.metadata.orientation is Orientation.HOME_TEAM
         assert dataset.metadata.teams[0].name == "Team A"
         assert dataset.metadata.teams[1].name == "Team B"
 

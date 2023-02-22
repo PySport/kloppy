@@ -129,11 +129,13 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     pass_result = None
+    receiver_player = None
 
     if raw_event["pass"]["accurate"] is True:
         pass_result = PassResult.COMPLETE
+        receiver_player = team.get_player_by_id(raw_event["pass"]["recipient"]["id"])
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
@@ -148,7 +150,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         "result": pass_result,
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
-        "receiver_player": None,
+        "receiver_player": receiver_player,
         "receiver_coordinates": Point(
             x=float(raw_event["pass"]["endLocation"]["x"]),
             y=float(raw_event["pass"]["endLocation"]["y"]),
@@ -192,27 +194,26 @@ def _parse_ball_out(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
-
     result = {}
 
     # Pass set pieces
     if raw_event["type"]["primary"] == "goal_kick":
         qualifiers.append(SetPieceQualifier(SetPieceType.GOAL_KICK))
-        result = _parse_pass(raw_event, next_event)
+        result = _parse_pass(raw_event, next_event, team)
     elif raw_event["type"]["primary"] == "throw_in":
         qualifiers.append(SetPieceQualifier(SetPieceType.THROW_IN))
         qualifiers.append(PassQualifier(PassType.HAND_PASS))
-        result = _parse_pass(raw_event, next_event)
+        result = _parse_pass(raw_event, next_event, team)
     elif (
         raw_event["type"]["primary"] == "free_kick"
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
-        result = _parse_pass(raw_event, next_event)
+        result = _parse_pass(raw_event, next_event, team)
     elif raw_event["type"]["primary"] == "corner":
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
-        result = _parse_pass(raw_event, next_event)
+        result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
     elif (
         raw_event["type"]["primary"] == "free_kick"
@@ -293,6 +294,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     next_event = raw_events["events"][idx + 1]
 
                 team_id = str(raw_event["team"]["id"])
+                team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
                 period_id = int(raw_event["matchPeriod"].replace("H", ""))
 
@@ -314,7 +316,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     )
                     if raw_event["location"]
                     else None,
-                    "team": teams[team_id],
+                    "team": team,
                     "player": players[team_id][player_id]
                     if player_id != INVALID_PLAYER
                     else None,
@@ -334,7 +336,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **shot_event_args, **generic_event_args
                     )
                 elif primary_event_type == "pass":
-                    pass_event_args = _parse_pass(raw_event, next_event)
+                    pass_event_args = _parse_pass(raw_event, next_event, team)
                     event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )
@@ -350,7 +352,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     and "free_kick_shot" not in secondary_event_types
                 ):
                     set_piece_event_args = _parse_set_piece(
-                        raw_event, next_event
+                        raw_event, next_event, team
                     )
                     event = self.event_factory.build_pass(
                         **set_piece_event_args, **generic_event_args
@@ -360,7 +362,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     and "free_kick_shot" in secondary_event_types
                 ):
                     set_piece_event_args = _parse_set_piece(
-                        raw_event, next_event
+                        raw_event, next_event, team
                     )
                     event = self.event_factory.build_shot(
                         **set_piece_event_args, **generic_event_args

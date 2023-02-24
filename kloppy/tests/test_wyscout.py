@@ -23,21 +23,19 @@ class TestWyscout:
         dataset = wyscout.load(
             event_data=event_v3_data,
             coordinates="wyscout",
-            data_model_version="V3",
+            data_version="V3",
         )
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: str):
-        dataset = wyscout.load(
-            event_data=event_v3_data, data_model_version="V3"
-        )
+        dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
         assert dataset.records[2].coordinates == Point(0.36, 0.78)
 
     def test_correct_v2_deserialization(self, event_v2_data: str):
         dataset = wyscout.load(
             event_data=event_v2_data,
             coordinates="wyscout",
-            data_model_version="V2",
+            data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
 

@@ -39,8 +39,10 @@ from kloppy.domain import (
 )
 from kloppy.utils import performance_logging
 
-from . import wyscout_events, wyscout_tags
+from . import wyscout_tags
 from ..deserializer import EventDataDeserializer
+from .deserializer_v2 import WyscoutInputs
+
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +146,9 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
 
     if raw_event["pass"]["accurate"] is True:
         pass_result = PassResult.COMPLETE
-        receiver_player = team.get_player_by_id(raw_event["pass"]["recipient"]["id"])
+        receiver_player = team.get_player_by_id(
+            raw_event["pass"]["recipient"]["id"]
+        )
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
@@ -263,10 +267,6 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
-class WyscoutInputs(NamedTuple):
-    event_data: IO[bytes]
-
-
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -318,7 +318,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 ball_owning_team = None
                 if raw_event["possession"]:
-                    ball_owning_team = teams[str(raw_event["possession"]["team"]["id"])]
+                    ball_owning_team = teams[
+                        str(raw_event["possession"]["team"]["id"])
+                    ]
 
                 generic_event_args = {
                     "event_id": raw_event["id"],

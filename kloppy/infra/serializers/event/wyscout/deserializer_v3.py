@@ -92,8 +92,17 @@ def _parse_shot(raw_event: Dict) -> Dict:
         result = ShotResult.GOAL
     elif raw_event["shot"]["onTarget"] is True:
         result = ShotResult.SAVED
+    elif raw_event["shot"]["goalZone"] == "bc":
+        result = ShotResult.BLOCKED
     else:
         result = ShotResult.OFF_TARGET
+
+    if raw_event["shot"]["bodyPart"] == "head_or_other":
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+    elif raw_event["shot"]["bodyPart"] == "left_foot":
+        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
+    elif raw_event["shot"]["bodyPart"] == "left_foot":
+        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
     return {
         "result": result,
@@ -307,6 +316,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         )
                     )
 
+                ball_owning_team = None
+                if raw_event["possession"]:
+                    ball_owning_team = teams[str(raw_event["possession"]["team"]["id"])]
+
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
@@ -320,7 +333,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "player": players[team_id][player_id]
                     if player_id != INVALID_PLAYER
                     else None,
-                    "ball_owning_team": None,
+                    "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],
                     "timestamp": float(

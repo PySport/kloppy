@@ -260,6 +260,7 @@ class DefaultFrameTransformer:
         row = dict(
             period_id=frame.period.id if frame.period else None,
             timestamp=frame.timestamp,
+            frame_id=frame.frame_id,
             ball_state=frame.ball_state.value if frame.ball_state else None,
             ball_owning_team_id=frame.ball_owning_team.team_id
             if frame.ball_owning_team

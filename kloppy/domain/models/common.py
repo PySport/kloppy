@@ -16,12 +16,13 @@ from typing import (
     Iterable,
 )
 
+
 from .pitch import PitchDimensions, Point, Dimension
 from .formation import FormationType
 from ...exceptions import (
     OrientationError,
-    OrphanedRecordError,
     InvalidFilterError,
+    KloppyParameterError,
 )
 
 
@@ -934,16 +935,28 @@ class Dataset(ABC, Generic[T]):
         else:
             return iterator
 
-    def to_df(self, *columns: "Column", **named_columns: "Column"):
-        from pandas import DataFrame
+    def to_df(
+        self,
+        *columns: "Column",
+        engine: Optional[Union[Literal["polars"], Literal["pandas"]]] = None,
+        **named_columns: "Column",
+    ):
+        from kloppy.config import get_config
 
-        return DataFrame.from_records(
-            self.to_records(*columns, **named_columns, as_list=False)
-        )
+        if not engine:
+            engine = get_config("dataframe.engine")
 
-    def to_polars(self, *columns: "Column", **named_columns: "Column"):
-        from polars import DataFrame
+        if engine == "pandas":
+            from pandas import DataFrame
 
-        return DataFrame(
-            self.to_records(*columns, **named_columns, as_list=False)
-        )
+            return DataFrame.from_records(
+                self.to_records(*columns, **named_columns, as_list=False)
+            )
+        elif engine == "polars":
+            from polars import DataFrame
+
+            return DataFrame(
+                self.to_records(*columns, **named_columns, as_list=False)
+            )
+        else:
+            raise KloppyParameterError(f"Engine {engine} is not valid")

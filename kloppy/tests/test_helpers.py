@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from kloppy.config import config_context
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
@@ -329,9 +330,9 @@ class TestHelpers:
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
-    def test_to_polars(self):
+    def test_event_dataset_to_polars(self):
         """
-        Make sure a dataset can be exported as a Polars DataFrame
+        Make sure an event dataset can be exported as a Polars DataFrame
         """
         base_dir = os.path.dirname(__file__)
 
@@ -339,12 +340,41 @@ class TestHelpers:
             lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
             event_data=f"{base_dir}/files/statsbomb_event.json",
         )
-        df = dataset.to_polars()
+        df = dataset.to_df(engine="polars")
 
         import polars as pl
 
         c = df.select(pl.col("event_id").count())[0, 0]
         assert c == 4023
+
+    def test_tracking_dataset_to_polars(self):
+        """
+        Make sure a tracking dataset can be exported as a Polars DataFrame
+        """
+        dataset = self._get_tracking_dataset()
+
+        df = dataset.to_df(engine="polars")
+
+        import polars as pl
+
+        c = df.select(pl.col("frame_id").count())[0, 0]
+        assert c == 2
+
+    def test_to_df_config(self):
+        """
+        Make sure to_df get engine from config. By default, pandas, otherwise polars
+        """
+
+        import pandas as pd
+        import polars as pl
+
+        dataset = self._get_tracking_dataset()
+        df = dataset.to_df()
+        assert isinstance(df, pd.DataFrame)
+
+        with config_context("dataframe.engine", "polars"):
+            df = dataset.to_df()
+            assert isinstance(df, pl.DataFrame)
 
 
 class TestOpenAsFile:

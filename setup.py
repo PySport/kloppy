@@ -47,7 +47,12 @@ def setup_package():
             "python-dateutil>=2.8.1,<3",
         ],
         extras_require={
-            "test": ["pytest>=6.2.5,<7", "pandas>=1.0.0,<2", "black==22.3.0"],
+            "test": [
+                "pytest>=6.2.5,<7",
+                "pandas>=1.0.0,<2",
+                "black==22.3.0",
+                "polars>=0.16.6",
+            ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],
         },

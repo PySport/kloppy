@@ -64,59 +64,11 @@ class TrackingDataset(Dataset[Frame]):
             )
 
         if not record_converter:
+            from ..services.transformers.attribute import (
+                DefaultFrameTransformer,
+            )
 
-            def record_converter(frame: Frame) -> Dict:
-                row = dict(
-                    period_id=frame.period.id if frame.period else None,
-                    timestamp=frame.timestamp,
-                    ball_state=frame.ball_state.value
-                    if frame.ball_state
-                    else None,
-                    ball_owning_team_id=frame.ball_owning_team.team_id
-                    if frame.ball_owning_team
-                    else None,
-                    ball_x=frame.ball_coordinates.x
-                    if frame.ball_coordinates
-                    else None,
-                    ball_y=frame.ball_coordinates.y
-                    if frame.ball_coordinates
-                    else None,
-                    ball_z=getattr(frame.ball_coordinates, "z", None)
-                    if frame.ball_coordinates
-                    else None,
-                )
-                for player, player_data in frame.players_data.items():
-
-                    row.update(
-                        {
-                            f"{player.player_id}_x": player_data.coordinates.x
-                            if player_data.coordinates
-                            else None,
-                            f"{player.player_id}_y": player_data.coordinates.y
-                            if player_data.coordinates
-                            else None,
-                            f"{player.player_id}_d": player_data.distance,
-                            f"{player.player_id}_s": player_data.speed,
-                        }
-                    )
-
-                    if player_data.other_data:
-                        for name, value in player_data.other_data.items():
-                            row.update(
-                                {
-                                    f"{player.player_id}_{name}": value,
-                                }
-                            )
-
-                if frame.other_data:
-                    for name, value in frame.other_data.items():
-                        row.update(
-                            {
-                                name: value,
-                            }
-                        )
-
-                return row
+            record_converter = DefaultFrameTransformer()
 
         def generic_record_converter(frame: Frame):
             row = record_converter(frame)

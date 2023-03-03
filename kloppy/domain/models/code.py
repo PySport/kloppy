@@ -61,18 +61,11 @@ class CodeDataset(Dataset[Code]):
             )
 
         if not record_converter:
+            from ..services.transformers.attribute import (
+                DefaultCodeTransformer,
+            )
 
-            def record_converter(code: Code) -> Dict:
-                row = dict(
-                    code_id=code.code_id,
-                    period_id=code.period.id if code.period else None,
-                    timestamp=code.timestamp,
-                    end_timestamp=code.end_timestamp,
-                    code=code.code,
-                )
-                row.update(code.labels)
-
-                return row
+            record_converter = DefaultCodeTransformer()
 
         def generic_record_converter(code: Code):
             row = record_converter(code)

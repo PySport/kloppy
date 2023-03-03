@@ -835,9 +835,11 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import DefaultTransformer
+            from ..services.transformers.attribute import (
+                DefaultEventTransformer,
+            )
 
-            record_converter = DefaultTransformer()
+            record_converter = DefaultEventTransformer()
 
         def generic_record_converter(event: Event):
             row = record_converter(event)
@@ -852,46 +854,6 @@ class EventDataset(Dataset[Event]):
 
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
-        )
-
-    @overload
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: Literal[True] = True,
-        **named_columns: "Column",
-    ) -> List[Dict[str, Any]]:
-        ...
-
-    @overload
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: Literal[False] = False,
-        **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]:
-        ...
-
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: bool = True,
-        **named_columns: "Column",
-    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
-        from ..services.transformers.event import EventToRecordTransformer
-
-        transformer = EventToRecordTransformer(*columns, **named_columns)
-        iterator = map(transformer, self.events)
-        if as_list:
-            return list(iterator)
-        else:
-            return iterator
-
-    def to_df(self, *columns: "Column", **named_columns: "Column"):
-        from pandas import DataFrame
-
-        return DataFrame.from_records(
-            self.to_records(*columns, **named_columns, as_list=False)
         )
 
 

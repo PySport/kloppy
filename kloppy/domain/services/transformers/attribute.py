@@ -5,8 +5,9 @@ from typing import Dict, Any, Set, Type, Union, List, Optional
 from kloppy.domain import (
     Event,
     BodyPartQualifier,
-    DatasetTransformer,
     Orientation,
+    Frame,
+    Code,
 )
 from kloppy.domain.models.event import (
     EnumQualifier,
@@ -146,7 +147,7 @@ def create_transformer_from_qualifier(
     return _Transformer
 
 
-class DefaultTransformer(EventAttributeTransformer):
+class DefaultEventTransformer(EventAttributeTransformer):
     def __init__(
         self,
         *include: str,
@@ -232,6 +233,109 @@ class DefaultTransformer(EventAttributeTransformer):
         if event.qualifiers:
             for qualifier in event.qualifiers:
                 row.update(qualifier.to_dict())
+
+        if self.include:
+            return {k: row[k] for k in self.include}
+        elif self.exclude:
+            return {k: v for k, v in row.items() if k not in self.exclude}
+        else:
+            return row
+
+
+class DefaultFrameTransformer:
+    def __init__(
+        self,
+        *include: str,
+        exclude: Optional[List[str]] = None,
+    ):
+        if include and exclude:
+            raise KloppyParameterError(
+                f"Cannot specify both include as exclude"
+            )
+
+        self.exclude = exclude or []
+        self.include = include or []
+
+    def __call__(self, frame: Frame) -> Dict[str, Any]:
+        row = dict(
+            period_id=frame.period.id if frame.period else None,
+            timestamp=frame.timestamp,
+            ball_state=frame.ball_state.value if frame.ball_state else None,
+            ball_owning_team_id=frame.ball_owning_team.team_id
+            if frame.ball_owning_team
+            else None,
+            ball_x=frame.ball_coordinates.x
+            if frame.ball_coordinates
+            else None,
+            ball_y=frame.ball_coordinates.y
+            if frame.ball_coordinates
+            else None,
+            ball_z=getattr(frame.ball_coordinates, "z", None)
+            if frame.ball_coordinates
+            else None,
+        )
+        for player, player_data in frame.players_data.items():
+
+            row.update(
+                {
+                    f"{player.player_id}_x": player_data.coordinates.x
+                    if player_data.coordinates
+                    else None,
+                    f"{player.player_id}_y": player_data.coordinates.y
+                    if player_data.coordinates
+                    else None,
+                    f"{player.player_id}_d": player_data.distance,
+                    f"{player.player_id}_s": player_data.speed,
+                }
+            )
+
+            if player_data.other_data:
+                for name, value in player_data.other_data.items():
+                    row.update(
+                        {
+                            f"{player.player_id}_{name}": value,
+                        }
+                    )
+
+        if frame.other_data:
+            for name, value in frame.other_data.items():
+                row.update(
+                    {
+                        name: value,
+                    }
+                )
+
+        if self.include:
+            return {k: row[k] for k in self.include}
+        elif self.exclude:
+            return {k: v for k, v in row.items() if k not in self.exclude}
+        else:
+            return row
+
+
+class DefaultCodeTransformer:
+    def __init__(
+        self,
+        *include: str,
+        exclude: Optional[List[str]] = None,
+    ):
+        if include and exclude:
+            raise KloppyParameterError(
+                f"Cannot specify both include as exclude"
+            )
+
+        self.exclude = exclude or []
+        self.include = include or []
+
+    def __call__(self, code: Code) -> Dict[str, Any]:
+        row = dict(
+            code_id=code.code_id,
+            period_id=code.period.id if code.period else None,
+            timestamp=code.timestamp,
+            end_timestamp=code.end_timestamp,
+            code=code.code,
+        )
+        row.update(code.labels)
 
         if self.include:
             return {k: row[k] for k in self.include}

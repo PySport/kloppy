@@ -329,6 +329,23 @@ class TestHelpers:
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
+    def test_to_polars(self):
+        """
+        Make sure a dataset can be exported as a Polars DataFrame
+        """
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
+            event_data=f"{base_dir}/files/statsbomb_event.json",
+        )
+        df = dataset.to_polars()
+
+        import polars as pl
+
+        c = df.select(pl.col("event_id").count())[0, 0]
+        assert c == 4023
+
 
 class TestOpenAsFile:
     def test_path(self):

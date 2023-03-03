@@ -1,3 +1,4 @@
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
@@ -12,9 +13,13 @@ from typing import (
     Generic,
     NewType,
     overload,
-    Literal,
     Iterable,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 
 from .pitch import PitchDimensions, Point, Dimension

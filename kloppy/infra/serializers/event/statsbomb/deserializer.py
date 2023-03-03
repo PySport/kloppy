@@ -505,7 +505,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
-            home_lineup, away_lineup = json.load(inputs.lineup_data)
+            lineups = json.load(inputs.lineup_data)
+
+            # First event (Starting-XI) determines home team
+            if raw_events[0]["team"]["id"] == lineups[0]["team_id"]:
+                home_lineup, away_lineup = lineups
+            else:
+                away_lineup, home_lineup = lineups
+
             if inputs.three_sixty_data:
                 three_sixty_data = {
                     item["event_uuid"]: item

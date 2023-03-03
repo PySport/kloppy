@@ -256,6 +256,7 @@ class TestHelpers:
 
         expected_data_frame = DataFrame.from_dict(
             {
+                "frame_id": {0: 1, 1: 2},
                 "period_id": {0: 1, 1: 1},
                 "timestamp": {0: 0.1, 1: 0.2},
                 "ball_state": {0: None, 1: None},
@@ -310,6 +311,7 @@ class TestHelpers:
 
         expected_data_frame = DataFrame.from_dict(
             {
+                "frame_id": [1, 2],
                 "period_id": [1, 1],
                 "timestamp": [0.1, 0.2],
                 "ball_state": [None, None],

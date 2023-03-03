@@ -4,7 +4,10 @@ from typing import List, Dict, Callable, Union, Any
 from kloppy.domain.models.common import DatasetType
 
 from .common import Dataset, DataRecord
-from ...utils import docstring_inherit_attributes
+from kloppy.utils import (
+    docstring_inherit_attributes,
+    deprecated,
+)
 
 
 @dataclass
@@ -45,6 +48,9 @@ class CodeDataset(Dataset[Code]):
     def codes(self):
         return self.records
 
+    @deprecated(
+        "to_pandas will be removed in the future. Please use to_df instead."
+    )
     def to_pandas(
         self,
         record_converter: Callable[[Code], Dict] = None,

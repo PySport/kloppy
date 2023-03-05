@@ -22,12 +22,12 @@ def main():
     # We can pass additional keyword arguments to the loaders to specify a different dataset
     dataset = metrica.load_open_data(limit=1000, match_id="2")
 
-    data_frame = dataset.to_pandas()
+    data_frame = dataset.to_df()
     print(data_frame)
 
     # Also load dataset in new metrica format
     dataset = metrica.load_open_data(limit=10_000, match_id="3")
-    data_frame = dataset.to_pandas()
+    data_frame = dataset.to_df()
     df = data_frame[data_frame.ball_x.notnull()]
     print(df)
 

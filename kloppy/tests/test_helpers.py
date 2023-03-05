@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from kloppy.config import config_context
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
@@ -255,6 +256,7 @@ class TestHelpers:
 
         expected_data_frame = DataFrame.from_dict(
             {
+                "frame_id": {0: 1, 1: 2},
                 "period_id": {0: 1, 1: 1},
                 "timestamp": {0: 0.1, 1: 0.2},
                 "ball_state": {0: None, 1: None},
@@ -309,6 +311,7 @@ class TestHelpers:
 
         expected_data_frame = DataFrame.from_dict(
             {
+                "frame_id": [1, 2],
                 "period_id": [1, 1],
                 "timestamp": [0.1, 0.2],
                 "ball_state": [None, None],
@@ -328,6 +331,52 @@ class TestHelpers:
         )
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
+
+    def test_event_dataset_to_polars(self):
+        """
+        Make sure an event dataset can be exported as a Polars DataFrame
+        """
+        base_dir = os.path.dirname(__file__)
+
+        dataset = statsbomb.load(
+            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
+            event_data=f"{base_dir}/files/statsbomb_event.json",
+        )
+        df = dataset.to_df(engine="polars")
+
+        import polars as pl
+
+        c = df.select(pl.col("event_id").count())[0, 0]
+        assert c == 4023
+
+    def test_tracking_dataset_to_polars(self):
+        """
+        Make sure a tracking dataset can be exported as a Polars DataFrame
+        """
+        dataset = self._get_tracking_dataset()
+
+        df = dataset.to_df(engine="polars")
+
+        import polars as pl
+
+        c = df.select(pl.col("frame_id").count())[0, 0]
+        assert c == 2
+
+    def test_to_df_config(self):
+        """
+        Make sure to_df get engine from config. By default, pandas, otherwise polars
+        """
+
+        import pandas as pd
+        import polars as pl
+
+        dataset = self._get_tracking_dataset()
+        df = dataset.to_df()
+        assert isinstance(df, pd.DataFrame)
+
+        with config_context("dataframe.engine", "polars"):
+            df = dataset.to_df()
+            assert isinstance(df, pl.DataFrame)
 
 
 class TestOpenAsFile:

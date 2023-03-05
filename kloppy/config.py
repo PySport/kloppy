@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 from copy import copy
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from kloppy.domain import EventFactory
 
@@ -27,6 +27,9 @@ Config = TypedDict(
         "event_factory": Optional[EventFactory],
         "adapters.http.basic_authentication": Optional[str],
         "adapters.s3.s3fs": Optional[Any],
+        "dataframe.engine": Optional[
+            Union[Literal["pandas"], Literal["polars"]]
+        ],
     },
 )
 
@@ -37,6 +40,7 @@ CONFIG_KEYS = Literal[
     "event_factory",
     "adapters.http.basic_authentication",
     "adapters.s3.s3fs",
+    "dataframe.engine",
 ]
 
 
@@ -50,6 +54,7 @@ _default_config: Config = {
     "event_factory": None,
     "adapters.http.basic_authentication": None,
     "adapters.s3.s3fs": None,
+    "dataframe.engine": "pandas",
 }
 
 config = copy(_default_config)

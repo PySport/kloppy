@@ -1,14 +1,33 @@
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
-from typing import Dict, List, Optional, Callable, Union, Any, TypeVar, Generic
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Callable,
+    Union,
+    Any,
+    TypeVar,
+    Generic,
+    NewType,
+    overload,
+    Iterable,
+)
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
+
 
 from .pitch import PitchDimensions, Point, Dimension
 from .formation import FormationType
 from ...exceptions import (
     OrientationError,
-    OrphanedRecordError,
     InvalidFilterError,
+    KloppyParameterError,
 )
 
 
@@ -777,6 +796,8 @@ class Dataset(ABC, Generic[T]):
 
     """
 
+    Column = NewType("Column", Union[str, Callable[[T], Any]])
+
     records: List[T]
     metadata: Metadata
 
@@ -882,3 +903,65 @@ class Dataset(ABC, Generic[T]):
         for record in self.records:
             if record.record_id == record_id:
                 return record
+
+    @overload
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: Literal[True] = True,
+        **named_columns: "Column",
+    ) -> List[Dict[str, Any]]:
+        ...
+
+    @overload
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: Literal[False] = False,
+        **named_columns: "Column",
+    ) -> Iterable[Dict[str, Any]]:
+        ...
+
+    def to_records(
+        self,
+        *columns: "Column",
+        as_list: bool = True,
+        **named_columns: "Column",
+    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
+
+        from ..services.transformers.data_record import get_transformer_cls
+
+        transformer = get_transformer_cls(self.dataset_type)(
+            *columns, **named_columns
+        )
+        iterator = map(transformer, self.records)
+        if as_list:
+            return list(iterator)
+        else:
+            return iterator
+
+    def to_df(
+        self,
+        *columns: "Column",
+        engine: Optional[Union[Literal["polars"], Literal["pandas"]]] = None,
+        **named_columns: "Column",
+    ):
+        from kloppy.config import get_config
+
+        if not engine:
+            engine = get_config("dataframe.engine")
+
+        if engine == "pandas":
+            from pandas import DataFrame
+
+            return DataFrame.from_records(
+                self.to_records(*columns, **named_columns, as_list=False)
+            )
+        elif engine == "polars":
+            from polars import DataFrame
+
+            return DataFrame(
+                self.to_records(*columns, **named_columns, as_list=False)
+            )
+        else:
+            raise KloppyParameterError(f"Engine {engine} is not valid")

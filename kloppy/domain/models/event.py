@@ -1,5 +1,3 @@
-import sys
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -11,21 +9,15 @@ from typing import (
     Any,
     Callable,
     Optional,
-    Iterable,
-    overload,
     TYPE_CHECKING,
 )
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
     camelcase_to_snakecase,
     removes_suffix,
     docstring_inherit_attributes,
+    deprecated,
 )
 
 from .common import DataRecord, Dataset, Player, Team
@@ -35,7 +27,6 @@ from .pitch import Point
 from ...exceptions import OrphanedRecordError, InvalidFilterError
 
 if TYPE_CHECKING:
-    from ..services.transformers.event import Column
     from .tracking import Frame
 
 
@@ -819,6 +810,9 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
+    @deprecated(
+        "to_pandas will be removed in the future. Please use to_df instead."
+    )
     def to_pandas(
         self,
         record_converter: Callable[[Event], Dict] = None,
@@ -835,9 +829,11 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import DefaultTransformer
+            from ..services.transformers.attribute import (
+                DefaultEventTransformer,
+            )
 
-            record_converter = DefaultTransformer()
+            record_converter = DefaultEventTransformer()
 
         def generic_record_converter(event: Event):
             row = record_converter(event)
@@ -852,46 +848,6 @@ class EventDataset(Dataset[Event]):
 
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
-        )
-
-    @overload
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: Literal[True] = True,
-        **named_columns: "Column",
-    ) -> List[Dict[str, Any]]:
-        ...
-
-    @overload
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: Literal[False] = False,
-        **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]:
-        ...
-
-    def to_records(
-        self,
-        *columns: "Column",
-        as_list: bool = True,
-        **named_columns: "Column",
-    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
-        from ..services.transformers.event import EventToRecordTransformer
-
-        transformer = EventToRecordTransformer(*columns, **named_columns)
-        iterator = map(transformer, self.events)
-        if as_list:
-            return list(iterator)
-        else:
-            return iterator
-
-    def to_df(self, *columns: "Column", **named_columns: "Column"):
-        from pandas import DataFrame
-
-        return DataFrame.from_records(
-            self.to_records(*columns, **named_columns, as_list=False)
         )
 
 

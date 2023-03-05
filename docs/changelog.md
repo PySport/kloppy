@@ -3,6 +3,17 @@
 
 Find out all changes between different kloppy versions
 
+## 3.8.0 (2023-03-05)
+
+Pull requests merged:
+- Fix for Incorrect home/away mapping in Statsbomb metadata ([#174](https://github.com/PySport/kloppy/pull/174))
+- Added extra formations ([#166](https://github.com/PySport/kloppy/pull/166))
+- Set correct orientation for Metrica EPTS ([#168](https://github.com/PySport/kloppy/pull/168))
+- Add polars support ([#172](https://github.com/PySport/kloppy/pull/172))
+
+Important changes:
+- `to_pandas` is deprecated, `to_df` should be used. `to_df` is now a method on all Dataset types (event, tracking and code), and accepts an additional `engine` keyword argument that can be `polars` or `pandas`. The default value is `pandas` but can be changed using the config variable `dataframe.engine` 
+
 ## 3.7.1 (2023-01-16)
 
 Pull requests merged:

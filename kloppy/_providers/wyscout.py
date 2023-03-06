@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Union, Type
 
 from kloppy.config import get_config
 from kloppy.infra.serializers.event.wyscout import (
@@ -28,21 +28,18 @@ def load(
         event_factory:
         data_version:
     """
-    if data_version not in ["V3", "V2"]:
-        data_version = identify_data_version(event_data)
+    if data_version == "V2":
+        deserializer_class = WyscoutDeserializerV2
+    elif data_version == "V3":
+        deserializer_class = WyscoutDeserializerV3
+    else:
+        deserializer_class = identify_deserializer(event_data)
 
-    if data_version == "V3":
-        deserializer = WyscoutDeserializerV3(
-            event_types=event_types,
-            coordinate_system=coordinates,
-            event_factory=event_factory or get_config("event_factory"),
-        )
-    elif data_version == "V2":
-        deserializer = WyscoutDeserializerV2(
-            event_types=event_types,
-            coordinate_system=coordinates,
-            event_factory=event_factory or get_config("event_factory"),
-        )
+    deserializer = deserializer_class(
+        event_types=event_types,
+        coordinate_system=coordinates,
+        event_factory=event_factory or get_config("event_factory"),
+    )
 
     with open_as_file(event_data) as event_data_fp:
         return deserializer.deserialize(
@@ -64,18 +61,22 @@ def load_open_data(
     )
 
 
-def identify_data_version(event_data: FileLike) -> str:
-    with open(event_data) as json_file:
-        events_with_meta = json.load(json_file)
+def identify_deserializer(event_data: FileLike) -> Type[WyscoutDeserializerV3 | WyscoutDeserializerV2]:
+    with open_as_file(event_data) as event_data_fp:
+        events_with_meta = json.load(event_data_fp)
+
     events = events_with_meta["events"]
     first_event = events[0]
+
+    deserializer = None
     if "eventName" in first_event:
-        data_version = "V2"
-        return data_version
+        deserializer = WyscoutDeserializerV2
     elif "primary" in first_event.get("type", {}):
-        data_version = "V3"
-        return data_version
-    else:
+        deserializer = WyscoutDeserializerV3
+
+    if deserializer is None:
         raise ValueError(
-            "Wyscout data model could not be recognized, please specify"
+            "Wyscout data version could not be recognized, please specify"
         )
+
+    return deserializer

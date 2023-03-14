@@ -61,7 +61,9 @@ def load_open_data(
     )
 
 
-def identify_deserializer(event_data: FileLike) -> Type[WyscoutDeserializerV3 | WyscoutDeserializerV2]:
+def identify_deserializer(
+    event_data: FileLike,
+) -> Type[WyscoutDeserializerV3 | WyscoutDeserializerV2]:
     with open_as_file(event_data) as event_data_fp:
         events_with_meta = json.load(event_data_fp)
 

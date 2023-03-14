@@ -7,7 +7,7 @@ Find out all changes between different kloppy versions
 
 Pull requests merged:
 
-- WyScout V3 deserializer ([#170](https://github.com/PySport/kloppy/pull/170))
+- Wyscout V3 deserializer ([#170](https://github.com/PySport/kloppy/pull/170))
 
 ## 3.8.0 (2023-03-05)
 

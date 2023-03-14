@@ -264,7 +264,7 @@ class WyscoutInputs(NamedTuple):
     event_data: IO[bytes]
 
 
-class WyscoutDeserializer(EventDataDeserializer[WyscoutInputs]):
+class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
         return Provider.WYSCOUT

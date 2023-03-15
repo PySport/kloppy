@@ -224,7 +224,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_pass(raw_event, next_event, team)
-    elif raw_event["type"]["primary"] == "corner":
+    elif (
+        raw_event["type"]["primary"] == "corner"
+    ) and "shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
@@ -232,6 +234,11 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
         raw_event["type"]["primary"] == "free_kick"
     ) and "free_kick_shot" in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
+        result = _parse_shot(raw_event)
+    elif (raw_event["type"]["primary"] == "corner") and "shot" in raw_event[
+        "type"
+    ]["secondary"]:
+        qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_shot(raw_event)
     elif raw_event["type"]["primary"] == "penalty":
         qualifiers.append(SetPieceQualifier(SetPieceType.PENALTY))
@@ -361,10 +368,15 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **takeon_event_args, **generic_event_args
                     )
                 elif (
-                    primary_event_type in ["throw_in", "goal_kick", "corner"]
-                ) or (
-                    primary_event_type == "free_kick"
-                    and "free_kick_shot" not in secondary_event_types
+                    (primary_event_type in ["throw_in", "goal_kick"])
+                    or (
+                        primary_event_type == "free_kick"
+                        and "free_kick_shot" not in secondary_event_types
+                    )
+                    or (
+                        primary_event_type == "corner"
+                        and "shot" not in secondary_event_types
+                    )
                 ):
                     set_piece_event_args = _parse_set_piece(
                         raw_event, next_event, team
@@ -372,9 +384,16 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_pass(
                         **set_piece_event_args, **generic_event_args
                     )
-                elif (primary_event_type == "penalty") or (
-                    primary_event_type == "free_kick"
-                    and "free_kick_shot" in secondary_event_types
+                elif (
+                    (primary_event_type == "penalty")
+                    or (
+                        primary_event_type == "free_kick"
+                        and "free_kick_shot" in secondary_event_types
+                    )
+                    or (
+                        primary_event_type == "corner"
+                        and "shot" in secondary_event_types
+                    )
                 ):
                     set_piece_event_args = _parse_set_piece(
                         raw_event, next_event, team

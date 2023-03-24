@@ -39,6 +39,12 @@ Installers for the latest released version are available at the [Python package 
 pip install kloppy
 ```
 
+Install from github (dev version)
+
+```sh
+pip install git+https://github.com/PySport/kloppy.git
+```
+
 ## Documentation
 
 The official documentation is hosted on pysport.org: [https://kloppy.pysport.org](https://kloppy.pysport.org). 

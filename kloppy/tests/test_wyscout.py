@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from kloppy.domain import Point
+from kloppy.domain import Point, SetPieceType, SetPieceQualifier
 
 from kloppy import wyscout
 
@@ -42,3 +42,12 @@ class TestWyscout:
     def test_correct_auto_recognize_deserialization(self, event_v2_data: str):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
+
+    def test_correct_handling_of_corner_shot(self, event_v3_data: str):
+        dataset = wyscout.load(
+            event_data=event_v3_data, data_version="V3", event_types=["shot"]
+        )
+        assert (
+            dataset.events[0].get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
+        )

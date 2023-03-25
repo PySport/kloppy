@@ -34,4 +34,4 @@ class S3Adapter(Adapter):
         s3_fs = self._get_s3fs()
 
         with s3_fs.open(url, "rb") as fp:
-            shutil.copyfile(fp, output)
+            shutil.copyfileobj(fp, output)

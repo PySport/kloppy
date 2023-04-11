@@ -980,8 +980,28 @@ class Dataset(ABC, Generic[T]):
             engine = get_config("dataframe.engine")
 
         if engine == "pandas[pyarrow]":
-            import pyarrow as pa
-            from pandas import ArrowDtype
+            try:
+                import pandas
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pandas installed. Please"
+                    " install it using: pip install pandas"
+                )
+            try:
+                from pandas import ArrowDtype
+            except ImportError:
+                raise ImportError(
+                    "Seems like you have an older version of pandas installed. Please"
+                    " update using: pip install pandas>=2.0"
+                )
+
+            try:
+                import pyarrow as pa
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pyarrow installed. Please"
+                    " install it using: pip install pyarrow"
+                )
 
             table = pa.Table.from_pydict(
                 self.to_dict(*columns, **named_columns)
@@ -989,11 +1009,23 @@ class Dataset(ABC, Generic[T]):
             return table.to_pandas(types_mapper=ArrowDtype)
 
         elif engine == "pandas":
-            from pandas import DataFrame
+            try:
+                from pandas import DataFrame
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pandas installed. Please"
+                    " install it using: pip install pandas"
+                )
 
             return DataFrame.from_dict(self.to_dict(*columns, **named_columns))
         elif engine == "polars":
-            from polars import from_dict
+            try:
+                from polars import from_dict
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have polars installed. Please"
+                    " install it using: pip install polars"
+                )
 
             return from_dict(self.to_dict(*columns, **named_columns))
         else:

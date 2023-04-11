@@ -49,7 +49,7 @@ def setup_package():
         extras_require={
             "test": [
                 "pytest>=6.2.5,<7",
-                "pandas>=1.0.0,<2",
+                "pandas>=2.0",
                 "black==22.3.0",
                 "polars>=0.16.6",
                 "pyarrow==11.0.0",

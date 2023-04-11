@@ -1,5 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
 from typing import (
@@ -940,10 +941,37 @@ class Dataset(ABC, Generic[T]):
         else:
             return iterator
 
+    def to_dict(
+        self,
+        *columns: "Column",
+        **named_columns: "Column",
+    ) -> Dict[str, List[Any]]:
+
+        from ..services.transformers.data_record import get_transformer_cls
+
+        transformer = get_transformer_cls(self.dataset_type)(
+            *columns, **named_columns
+        )
+
+        c = len(self.records)
+        items = defaultdict(lambda: [None] * c)
+        for i, record in enumerate(self.records):
+            item = transformer(record)
+            for k, v in item.items():
+                items[k][i] = v
+
+        return items
+
     def to_df(
         self,
         *columns: "Column",
-        engine: Optional[Union[Literal["polars"], Literal["pandas"]]] = None,
+        engine: Optional[
+            Union[
+                Literal["polars"],
+                Literal["pandas"],
+                Literal["pandas[pyarrow]"],
+            ]
+        ] = None,
         **named_columns: "Column",
     ):
         from kloppy.config import get_config
@@ -951,17 +979,22 @@ class Dataset(ABC, Generic[T]):
         if not engine:
             engine = get_config("dataframe.engine")
 
-        if engine == "pandas":
+        if engine == "pandas[pyarrow]":
+            import pyarrow as pa
+            from pandas import ArrowDtype
+
+            table = pa.Table.from_pydict(
+                self.to_dict(*columns, **named_columns)
+            )
+            return table.to_pandas(types_mapper=ArrowDtype)
+
+        elif engine == "pandas":
             from pandas import DataFrame
 
-            return DataFrame.from_records(
-                self.to_records(*columns, **named_columns, as_list=False)
-            )
+            return DataFrame.from_dict(self.to_dict(*columns, **named_columns))
         elif engine == "polars":
-            from polars import DataFrame
+            from polars import from_dict
 
-            return DataFrame(
-                self.to_records(*columns, **named_columns, as_list=False)
-            )
+            return from_dict(self.to_dict(*columns, **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")

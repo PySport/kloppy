@@ -378,6 +378,11 @@ class TestHelpers:
             df = dataset.to_df()
             assert isinstance(df, pl.DataFrame)
 
+        with config_context("dataframe.engine", "pandas[pyarrow]"):
+            df = dataset.to_df()
+            assert isinstance(df, pd.DataFrame)
+            assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
+
 
 class TestOpenAsFile:
     def test_path(self):

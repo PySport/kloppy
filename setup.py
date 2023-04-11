@@ -52,7 +52,7 @@ def setup_package():
                 "pandas>=1.0.0,<2",
                 "black==22.3.0",
                 "polars>=0.16.6",
-                "pyarrow==11.0.0"
+                "pyarrow==11.0.0",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

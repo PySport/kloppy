@@ -1,5 +1,8 @@
 import os
+import sys
 from pathlib import Path
+
+import pytest
 
 from kloppy.config import config_context
 from pandas import DataFrame
@@ -378,10 +381,17 @@ class TestHelpers:
             df = dataset.to_df()
             assert isinstance(df, pl.DataFrame)
 
-        with config_context("dataframe.engine", "pandas[pyarrow]"):
-            df = dataset.to_df()
-            assert isinstance(df, pd.DataFrame)
-            assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8")
+    def test_to_df_pyarrow(self):
+        """
+        Make sure we can export to pandas[pyarrow]. Only works for Python > 3.7
+        """
+        import pandas as pd
+
+        dataset = self._get_tracking_dataset()
+        df = dataset.to_df(engine="pandas[pyarrow]")
+        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
 
 
 class TestOpenAsFile:

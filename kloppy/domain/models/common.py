@@ -944,23 +944,29 @@ class Dataset(ABC, Generic[T]):
     def to_dict(
         self,
         *columns: "Column",
+        orient: Literal["list"] = "list",
         **named_columns: "Column",
     ) -> Dict[str, List[Any]]:
 
-        from ..services.transformers.data_record import get_transformer_cls
+        if orient == "list":
+            from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(
-            *columns, **named_columns
-        )
+            transformer = get_transformer_cls(self.dataset_type)(
+                *columns, **named_columns
+            )
 
-        c = len(self.records)
-        items = defaultdict(lambda: [None] * c)
-        for i, record in enumerate(self.records):
-            item = transformer(record)
-            for k, v in item.items():
-                items[k][i] = v
+            c = len(self.records)
+            items = defaultdict(lambda: [None] * c)
+            for i, record in enumerate(self.records):
+                item = transformer(record)
+                for k, v in item.items():
+                    items[k][i] = v
 
-        return items
+            return items
+        else:
+            raise KloppyParameterError(
+                f"Orient {orient} is not supported. Only orient='list' is supported"
+            )
 
     def to_df(
         self,
@@ -981,18 +987,18 @@ class Dataset(ABC, Generic[T]):
 
         if engine == "pandas[pyarrow]":
             try:
-                import pandas
+                import pandas as pd
+
+                types_mapper = pd.ArrowDtype
             except ImportError:
                 raise ImportError(
                     "Seems like you don't have pandas installed. Please"
                     " install it using: pip install pandas"
                 )
-            try:
-                from pandas import ArrowDtype
-            except ImportError:
-                raise ImportError(
+            except AttributeError:
+                raise AttributeError(
                     "Seems like you have an older version of pandas installed. Please"
-                    " update using: pip install pandas>=2.0"
+                    " upgrade to at least 1.5 using: pip install pandas>=1.5"
                 )
 
             try:
@@ -1006,7 +1012,7 @@ class Dataset(ABC, Generic[T]):
             table = pa.Table.from_pydict(
                 self.to_dict(*columns, **named_columns)
             )
-            return table.to_pandas(types_mapper=ArrowDtype)
+            return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":
             try:

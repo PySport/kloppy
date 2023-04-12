@@ -49,10 +49,13 @@ def setup_package():
             "test": [
                 "pytest>=6.2.5,<7",
                 'pandas>=2;python_version>"3.7"',
-                'pandas>=1.5,<2;python_version<"3.8"',
+                'pandas>=1.0,<2;python_version<"3.8"',
                 "black==22.3.0",
                 "polars>=0.16.6",
-                "pyarrow>=11.0.0",
+                # We could install pyarrow as it's compatible with
+                # python 3.7. But the python 3.7 compatible version
+                # of Pandas (1.3) does not support pyarrow
+                'pyarrow==11.0.0;python_version>"3.7"',
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

@@ -49,10 +49,10 @@ def setup_package():
             "test": [
                 "pytest>=6.2.5,<7",
                 'pandas>=2;python_version>"3.7"',
-                'pandas>=1.0,<2;python_version<"3.8"',
+                'pandas>=1.5,<2;python_version<"3.8"',
                 "black==22.3.0",
                 "polars>=0.16.6",
-                'pyarrow==11.0.0;python_version>"3.7"',
+                "pyarrow>=11.0.0",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

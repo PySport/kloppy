@@ -1,5 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from enum import Enum, Flag
 from typing import (
@@ -940,10 +941,43 @@ class Dataset(ABC, Generic[T]):
         else:
             return iterator
 
+    def to_dict(
+        self,
+        *columns: "Column",
+        orient: Literal["list"] = "list",
+        **named_columns: "Column",
+    ) -> Dict[str, List[Any]]:
+
+        if orient == "list":
+            from ..services.transformers.data_record import get_transformer_cls
+
+            transformer = get_transformer_cls(self.dataset_type)(
+                *columns, **named_columns
+            )
+
+            c = len(self.records)
+            items = defaultdict(lambda: [None] * c)
+            for i, record in enumerate(self.records):
+                item = transformer(record)
+                for k, v in item.items():
+                    items[k][i] = v
+
+            return items
+        else:
+            raise KloppyParameterError(
+                f"Orient {orient} is not supported. Only orient='list' is supported"
+            )
+
     def to_df(
         self,
         *columns: "Column",
-        engine: Optional[Union[Literal["polars"], Literal["pandas"]]] = None,
+        engine: Optional[
+            Union[
+                Literal["polars"],
+                Literal["pandas"],
+                Literal["pandas[pyarrow]"],
+            ]
+        ] = None,
         **named_columns: "Column",
     ):
         from kloppy.config import get_config
@@ -951,17 +985,54 @@ class Dataset(ABC, Generic[T]):
         if not engine:
             engine = get_config("dataframe.engine")
 
-        if engine == "pandas":
-            from pandas import DataFrame
+        if engine == "pandas[pyarrow]":
+            try:
+                import pandas as pd
 
-            return DataFrame.from_records(
-                self.to_records(*columns, **named_columns, as_list=False)
+                types_mapper = pd.ArrowDtype
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pandas installed. Please"
+                    " install it using: pip install pandas"
+                )
+            except AttributeError:
+                raise AttributeError(
+                    "Seems like you have an older version of pandas installed. Please"
+                    " upgrade to at least 1.5 using: pip install pandas>=1.5"
+                )
+
+            try:
+                import pyarrow as pa
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pyarrow installed. Please"
+                    " install it using: pip install pyarrow"
+                )
+
+            table = pa.Table.from_pydict(
+                self.to_dict(*columns, **named_columns)
             )
+            return table.to_pandas(types_mapper=types_mapper)
+
+        elif engine == "pandas":
+            try:
+                from pandas import DataFrame
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have pandas installed. Please"
+                    " install it using: pip install pandas"
+                )
+
+            return DataFrame.from_dict(self.to_dict(*columns, **named_columns))
         elif engine == "polars":
-            from polars import DataFrame
+            try:
+                from polars import from_dict
+            except ImportError:
+                raise ImportError(
+                    "Seems like you don't have polars installed. Please"
+                    " install it using: pip install polars"
+                )
 
-            return DataFrame(
-                self.to_records(*columns, **named_columns, as_list=False)
-            )
+            return from_dict(self.to_dict(*columns, **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")

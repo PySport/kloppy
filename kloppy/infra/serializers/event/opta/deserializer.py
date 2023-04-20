@@ -49,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 EVENT_TYPE_START_PERIOD = 32
 EVENT_TYPE_END_PERIOD = 30
+EVENT_TYPE_DELETED_EVENT = 43
 
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
@@ -538,6 +539,11 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         f"Set end of period {period.id} to {timestamp}"
                     )
                     period.end_timestamp = timestamp
+                elif type_id == EVENT_TYPE_DELETED_EVENT:
+                    logger.debug(
+                        f"Skipping event {event_id} because it is a deleted event (type id - {type_id})"
+                    )
+                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet

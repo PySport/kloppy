@@ -106,6 +106,8 @@ FREEZE_FRAME_FPS = 25
 
 formations = {
     3142: FormationType.THREE_ONE_FOUR_TWO,
+    312112: FormationType.THREE_ONE_TWO_ONE_ONE_TWO,
+    31222: FormationType.THREE_ONE_TWO_TWO_TWO,
     32122: FormationType.THREE_TWO_ONE_TWO_TWO,
     32212: FormationType.THREE_TWO_TWO_ONE_TWO,
     32221: FormationType.THREE_TWO_TWO_TWO_ONE,
@@ -116,11 +118,13 @@ formations = {
     343: FormationType.THREE_FOUR_THREE,
     3511: FormationType.THREE_FIVE_ONE_ONE,
     352: FormationType.THREE_FIVE_TWO,
+    41131: FormationType.FOUR_ONE_ONE_THREE_ONE,
     41212: FormationType.FOUR_ONE_TWO_ONE_TWO,
     41221: FormationType.FOUR_ONE_TWO_TWO_ONE,
     4132: FormationType.FOUR_ONE_THREE_TWO,
     4141: FormationType.FOUR_ONE_FOUR_ONE,
     42121: FormationType.FOUR_TWO_ONE_TWO_ONE,
+    4213: FormationType.FOUR_TWO_ONE_THREE,
     42211: FormationType.FOUR_TWO_TWO_ONE_ONE,
     4222: FormationType.FOUR_TWO_TWO_TWO,
     4231: FormationType.FOUR_TWO_THREE_ONE,
@@ -679,7 +683,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         fidelity_version=fidelity_version,
                     )
                     pass_event = self.event_factory.build_pass(
-                        receive_timestamp=timestamp + raw_event["duration"],
+                        receive_timestamp=timestamp
+                        + raw_event.get("duration", 0.0),
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )

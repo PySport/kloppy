@@ -77,6 +77,7 @@ class Provider(Enum):
         WYSCOUT:
         KLOPPY:
         DATAFACTORY:
+        STATSPERFORM:
     """
 
     METRICA = "metrica"
@@ -89,6 +90,7 @@ class Provider(Enum):
     WYSCOUT = "wyscout"
     KLOPPY = "kloppy"
     DATAFACTORY = "datafactory"
+    STATSPERFORM = "statsperform"
     OTHER = "other"
 
     def __str__(self):

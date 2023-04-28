@@ -40,7 +40,7 @@ class DatasetTransformer:
             and to_coordinate_system
         ):
             raise ValueError(
-                "You can't specify both a PitchDimension and CoordinateSysetm transformation on the same Transformer instance"
+                "You can't specify both a PitchDimension and CoordinateSystem transformation on the same Transformer instance"
             )
 
         self._from_coordinate_system = from_coordinate_system

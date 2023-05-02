@@ -41,7 +41,7 @@ class TestStatsperformTracking:
             coordinates="statsperform",
         )
         df = dataset.to_df()
-        a=3
+        a = 3
         # Check provider, type, shape, etc
         assert dataset.metadata.provider == Provider.STATSPERFORM
         assert dataset.dataset_type == DatasetType.TRACKING

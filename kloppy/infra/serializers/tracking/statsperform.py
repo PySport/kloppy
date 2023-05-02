@@ -36,9 +36,7 @@ class StatsperformInputs(NamedTuple):
     player_data: Optional[IO[bytes]] = None
 
 
-class StatsperformDeserializer(
-    TrackingDataDeserializer[StatsperformInputs]
-):
+class StatsperformDeserializer(TrackingDataDeserializer[StatsperformInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -70,12 +68,15 @@ class StatsperformDeserializer(
 
         for period_id in unique_period_ids:
             period_start_index = period_ids.index(period_id)
-            period_end_index = len(period_ids) - period_ids[::-1].index(period_id) - 1
-            periods.append(Period(
-                id=int(period_id),
-                start_timestamp=int(frame_ids[period_start_index]),
-                end_timestamp=int(frame_ids[period_end_index]),
+            period_end_index = (
+                len(period_ids) - period_ids[::-1].index(period_id) - 1
             )
+            periods.append(
+                Period(
+                    id=int(period_id),
+                    start_timestamp=int(frame_ids[period_start_index]),
+                    end_timestamp=int(frame_ids[period_end_index]),
+                )
             )
 
         return periods
@@ -109,10 +110,10 @@ class StatsperformDeserializer(
         ball_owning_team = None
 
         if len(components) > 2:
-            ball_x, ball_y, ball_z = map(float, components[2].split(";")[0].split(","))
-            ball_coordinates = Point3D(
-                ball_x, ball_y, ball_z
+            ball_x, ball_y, ball_z = map(
+                float, components[2].split(";")[0].split(",")
             )
+            ball_coordinates = Point3D(ball_x, ball_y, ball_z)
         else:
             ball_coordinates = np.nan
 
@@ -169,9 +170,7 @@ class StatsperformDeserializer(
         player_data = inputs.meta_data.read()
 
         with performance_logging("Loading XML metadata", logger=logger):
-            match = objectify.fromstring(
-                metadata
-            ).matchInfo
+            match = objectify.fromstring(metadata).matchInfo
             teams = []
             for team_info in match.contestants.iterchildren(tag="contestant"):
                 if team_info.attrib["position"] == "home":
@@ -194,7 +193,9 @@ class StatsperformDeserializer(
 
         if inputs.player_data:
             with performance_logging("Loading JSON metadata", logger=logger):
-                start_epoch_timestamp = int(raw_data.decode("ascii").splitlines()[0].split(";")[0])
+                start_epoch_timestamp = int(
+                    raw_data.decode("ascii").splitlines()[0].split(";")[0]
+                )
                 for player_info in player_data:
                     player_data = player_info.split(",")
                     player = Player(
@@ -222,7 +223,7 @@ class StatsperformDeserializer(
                     if self.only_alive and not line_.endswith("Alive;:"):
                         continue
                     period_id = int(line_.split(";")[1].split(",")[1])
-                    period_ = periods[period_id-1]
+                    period_ = periods[period_id - 1]
                     if period_.contains(frame_id / frame_rate):
                         if n % sample == 0:
                             yield period_, line_

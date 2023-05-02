@@ -26,9 +26,7 @@ def load(
     )
     with open_as_file(meta_data) as meta_data_fp, open_as_file(
         raw_data
-    ) as raw_data_fp, open_as_file(
-        player_data
-    ) as player_data_fp:
+    ) as raw_data_fp, open_as_file(player_data) as player_data_fp:
         return deserializer.deserialize(
             inputs=StatsperformInputs(
                 meta_data=meta_data_fp,

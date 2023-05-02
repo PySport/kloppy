@@ -67,7 +67,7 @@ class TestStatsperformTracking:
 
         # Check some timestamps
         assert dataset.records[0].timestamp == 0  # First frame
-        assert dataset.records[20].timestamp == 2.0 # Later frame
+        assert dataset.records[20].timestamp == 2.0  # Later frame
 
         # Check some players
         home_player = dataset.metadata.teams[0].players[2]

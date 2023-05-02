@@ -23,7 +23,7 @@ class TestStatsperformTracking:
     @pytest.fixture
     def raw_data(self) -> str:
         base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsperform_2456693_tracking.txt"
+        return f"{base_dir}/files/statsperform_2456693_tracking.TXT"
 
     @pytest.fixture
     def player_data(self) -> str:
@@ -40,7 +40,8 @@ class TestStatsperformTracking:
             only_alive=False,
             coordinates="statsperform",
         )
-
+        df = dataset.to_df()
+        a=3
         # Check provider, type, shape, etc
         assert dataset.metadata.provider == Provider.STATSPERFORM
         assert dataset.dataset_type == DatasetType.TRACKING

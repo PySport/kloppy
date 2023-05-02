@@ -63,7 +63,7 @@ class StatsperformDeserializer(TrackingDataDeserializer[StatsperformInputs]):
             period_ids.append(time_info[1])
             frame_ids.append(time_info[0])
 
-        unique_period_ids = list(set(period_ids))
+        unique_period_ids = list(dict.fromkeys(period_ids).keys())
         periods = []
 
         for period_id in unique_period_ids:

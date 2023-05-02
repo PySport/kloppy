@@ -630,6 +630,28 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class StatsperformCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.STATSPERFORM
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
+        )
+
+
 def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.TRACAB:
@@ -661,6 +683,9 @@ def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.SECONDSPECTRUM:
         return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.STATSPERFORM:
+        return StatsperformCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

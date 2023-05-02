@@ -55,69 +55,95 @@ class StatsperformDeserializer(
 
     @classmethod
     def __get_periods(cls, tracking):
-        """gets the Periods contained in the tracking data"""
-        periods = {}
+        """Gets the Periods contained in the tracking data."""
         lines = tracking.decode("ascii").splitlines()
-        _periods = []
-        _frames = []
+        period_ids = []
+        frame_ids = []
+
         for line in lines:
             time_info = line.split(";")[1].split(",")
-            _periods.append(time_info[1])
-            _frames.append(time_info[0])
+            period_ids.append(time_info[1])
+            frame_ids.append(time_info[0])
 
-        reversed_periods = _periods.copy()
-        reversed_periods.reverse()
-        unique_periods = list(dict.fromkeys(_periods))
-        print(unique_periods)
-        for period in unique_periods:
-            period_start_index = _periods.index(period)
-            period_end_index = len(_periods) - reversed_periods.index(period) - 1
-            periods[period] = Period(
-                id=period,
-                start_timestamp=_frames[period_start_index],
-                end_timestamp=_frames[period_end_index],
+        unique_period_ids = list(set(period_ids))
+        periods = []
+
+        for period_id in unique_period_ids:
+            period_start_index = period_ids.index(period_id)
+            period_end_index = len(period_ids) - period_ids[::-1].index(period_id) - 1
+            periods.append(Period(
+                id=int(period_id),
+                start_timestamp=int(frame_ids[period_start_index]),
+                end_timestamp=int(frame_ids[period_end_index]),
+            )
             )
 
         return periods
 
+    @classmethod
+    def __get_frame_rate(cls, tracking):
+        """gets the frame rate of the tracking data"""
+        lines = tracking.decode("ascii").splitlines()
+        timestamps = []
+        num_frames = 5
+
+        for i in [0, num_frames]:
+            timestamp = int(lines[i].split(";")[1].split(",")[0]) / 1000
+            timestamps.append(timestamp)
+
+        duration = timestamps[1] - timestamps[0]
+        frame_rate = num_frames / duration
+
+        return frame_rate
 
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
-        frame_id = frame_data["frameIdx"]
-        frame_timestamp = frame_data["gameClock"]
+        components = frame_data[1].split(":")
+        frame_info = components[0].split(";")
 
-        if frame_data["ball"]["xyz"]:
-            ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
+        frame_id = int(frame_info[0])
+        frame_timestamp = int(frame_info[1].split(",")[0]) / 1000
+        match_status = int(frame_info[1].split(",")[2])
+
+        ball_state = BallState.ALIVE if match_status == 0 else BallState.DEAD
+        ball_owning_team = None
+
+        if len(components) > 2:
+            ball_x, ball_y, ball_z = map(float, components[2].split(";")[0].split(","))
             ball_coordinates = Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
+                ball_x, ball_y, ball_z
             )
         else:
-            ball_coordinates = None
-
-        ball_state = BallState.ALIVE if frame_data["live"] else BallState.DEAD
-        ball_owning_team = (
-            teams[0] if frame_data["lastTouch"] == "home" else teams[1]
-        )
+            ball_coordinates = np.nan
 
         players_data = {}
-        for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
-            for player_data in frame_data[team_str]:
+        player_info = components[1]
+        for player_data in player_info.split(";")[:-1]:
+            (
+                team_side_id,
+                player_id,
+                jersey_no,
+                x,
+                y,
+            ) = player_data.split(",")
 
-                jersey_no = player_data["number"]
-                x, y, _ = player_data["xyz"]
-                player = team.get_player_by_jersey_number(jersey_no)
+            # Goalkeepers have id 3 and 4
+            if int(team_side_id) > 2:
+                team_side_id = int(team_side_id) - 3
+            team = teams[int(team_side_id)]
+            player = team.get_player_by_id(int(player_id))
 
-                if not player:
-                    player = Player(
-                        player_id=player_data["playerId"],
-                        team=team,
-                        jersey_no=int(jersey_no),
-                    )
-                    team.players.append(player)
-
-                players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y))
+            if not player:
+                player = Player(
+                    player_id=int(player_id),
+                    team=team,
+                    jersey_no=int(jersey_no),
                 )
+                team.players.append(player)
+
+            players_data[player] = PlayerData(
+                coordinates=Point(float(x), float(y))
+            )
 
         return Frame(
             frame_id=frame_id,
@@ -143,8 +169,6 @@ class StatsperformDeserializer(
         player_data = inputs.meta_data.read()
 
         with performance_logging("Loading XML metadata", logger=logger):
-            periods = self.__get_periods(raw_data)
-
             match = objectify.fromstring(
                 metadata
             ).matchInfo
@@ -161,40 +185,30 @@ class StatsperformDeserializer(
                 )
                 teams.append(team)
 
-            frame_rate = int(10)  # TODO: This should be changable based on whether the 10FPS or 25 FPS is loaded
-            pitch_size_length = float(100)
-            pitch_size_width = float(100)
+            # Get Frame Rate - Either 10FPS or 25FPS
+            frame_rate = self.__get_frame_rate(raw_data)
+            pitch_size_length = 100
+            pitch_size_width = 100
+
+        periods = self.__get_periods(raw_data)
 
         if inputs.player_data:
             with performance_logging("Loading JSON metadata", logger=logger):
                 start_epoch_timestamp = int(raw_data.decode("ascii").splitlines()[0].split(";")[0])
                 for player_info in player_data:
-                    player = player_info.split(",")
-
-                    player_position_id = int(player[1])
-                    if player_position_id in [1, 3]:
-                        team = teams[0]
-                    elif player_position_id in [2, 4]:
-                        team = teams[1]
-                    position = "field player" if player_position_id in [1, 2] else "goalkeeper",
+                    player_data = player_info.split(",")
                     player = Player(
-                        player_id=str(player[8]),
-                        name=player[3],
-                        starting=player[6] == start_epoch_timestamp,
-                        # position= Position(
-                        #                 #position_id=None,
-                        #                 name=str(position),
-                        #                 coordinates=None,
-                        #             ),
+                        player_id=str(player_data[8]),
+                        name=player_data[3],
+                        starting=player_data[6] == start_epoch_timestamp,
                         team=team,
-                        jersey_no=int(player[0]),
-                        attributes={"statsUuid": int(player[8])},
+                        jersey_no=int(player_data[0]),
+                        attributes={"statsUuid": int(player_data[8])},
                     )
                     team.players.append(player)
 
         # Handles the tracking frame data
-        with performance_logging("Loading data", logger=logger): #TODO: LEFT HERE
-            #TODO: Make this transformer work:
+        with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
                 length=pitch_size_length, width=pitch_size_width
             )
@@ -205,25 +219,20 @@ class StatsperformDeserializer(
 
                 for line_ in raw_data.decode("ascii").splitlines():
                     frame_id = int(line_.split(";")[1].split(",")[0])
-                    # if self.only_alive and not line_.endswith("Alive;:"):
-                    #     continue
+                    if self.only_alive and not line_.endswith("Alive;:"):
+                        continue
+                    period_id = int(line_.split(";")[1].split(",")[1])
+                    period_ = periods[period_id-1]
+                    if period_.contains(frame_id / frame_rate):
+                        if n % sample == 0:
+                            yield period_, line_
+                        n += 1
 
-                    for period_ in periods:
-                        print(period_)
-                        print(frame_id)
-                        print(frame_rate)
-                        if period_.contains(frame_id / frame_rate):
-                            if n % sample == 0:
-                                yield period_, line_
-                            n += 1
-
-            # Hopelijk redelijk hetzelfde vanaf hier, alleen _frame_from_frame_data functie aanpassen.
             frames = []
             for n, frame_data in enumerate(_iter()):
-                period = periods[frame_data["period"] - 1]
+                period = frame_data[0]
                 frame = self._frame_from_framedata(teams, period, frame_data)
-                #TODO: use transformer...
-                #frame = transformer.transform_frame(frame)
+                frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
                 if not period.attacking_direction_set:

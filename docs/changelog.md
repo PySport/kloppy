@@ -3,6 +3,14 @@
 
 Find out all changes between different kloppy versions
 
+## 3.10.0 (2023-04-13)
+
+Pull requests merged:
+
+- Add support for corner shots ([#176](https://github.com/PySport/kloppy/pull/176))
+- Fix S3Adapter.read_to_stream ([#179](https://github.com/PySport/kloppy/pull/179))
+- Add pandas pyarrow support + better performance on to_df ([#180](https://github.com/PySport/kloppy/pull/180))
+
 ## 3.9.0 (2023-03-14)
 
 Pull requests merged:

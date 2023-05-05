@@ -1,5 +1,8 @@
 import os
+import sys
 from pathlib import Path
+
+import pytest
 
 from kloppy.config import config_context
 from pandas import DataFrame
@@ -377,6 +380,21 @@ class TestHelpers:
         with config_context("dataframe.engine", "polars"):
             df = dataset.to_df()
             assert isinstance(df, pl.DataFrame)
+
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8")
+    def test_to_df_pyarrow(self):
+        """
+        Make sure we can export to pandas[pyarrow]. Only works for Python > 3.7.
+
+        The pyarrow engine is part of pandas >=1.5. Pandas 1.3 was the last
+        version that supports python 3.7, and does not support pyarrow.
+        """
+        import pandas as pd
+
+        dataset = self._get_tracking_dataset()
+        df = dataset.to_df(engine="pandas[pyarrow]")
+        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
 
 
 class TestOpenAsFile:

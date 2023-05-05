@@ -43,12 +43,6 @@
       <Q id="1732357099" qualifier_id="141" value="39.8" />
       <Q id="1624111274" qualifier_id="212" value="9.5" />
     </Event>
-    <!-- Deleted Event Example Start -->
-    <Event id="1782829017" event_id="5" type_id="43" period_id="1" min="0" sec="5" player_id="164266" team_id="569" outcome="1" x="27.9" y="39.8" timestamp="2018-09-23T15:02:18.107" last_modified="2018-09-23T15:02:20" version="1537711340007">
-      <Q id="1936779704" qualifier_id="56" value="Back" />
-      <Q id="1534616574" qualifier_id="144" value="50" />
-    <!-- Deleted Event Example End -->
-    </Event>
     <Event id="1782829017" event_id="5" type_id="1" period_id="1" min="0" sec="5" player_id="164266" team_id="569" outcome="1" x="27.9" y="39.8" timestamp="2018-09-23T15:02:18.907" last_modified="2018-09-23T15:02:20" version="1537711340607">
       <Q id="1534616574" qualifier_id="141" value="62.0" />
       <Q id="1902441765" qualifier_id="213" value="1.5" />
@@ -164,11 +158,20 @@
       <Q id="1886028577" qualifier_id="56" value="Right" />
       <Q id="1172988180" qualifier_id="141" value="3.1" />
     </Event>
+    <!-- Example Event to be deleted
     <Event id="2087733359" event_id="503" type_id="50" period_id="2" min="45" sec="19" player_id="82830" team_id="569" outcome="1" x="49.2" y="4.1" timestamp="2018-09-23T16:05:48.315" last_modified="2018-09-23T16:05:50" version="1537715149715">
       <Q id="2044867402" qualifier_id="233" value="331" />
       <Q id="1813964827" qualifier_id="56" value="Back" />
       <Q id="1731026934" qualifier_id="286" />
+    </Event -->
+    <!-- Deleted Event Example Start -->
+    <Event id="2087733359" event_id="503" type_id="43" period_id="2" min="45" sec="19" player_id="82830" team_id="569" outcome="1" x="49.2" y="4.1" timestamp="2018-09-23T16:05:48.315" last_modified="2018-09-23T16:05:50" version="1537715149715">
+      <Q id="2044867402" qualifier_id="233" value="331" />
+      <Q id="1813964827" qualifier_id="56" value="Back" />
+      <Q id="1731026934" qualifier_id="286" />
+      <Q id="371368182" qualifier_id="144" value="50" />
     </Event>
+    <!-- Deleted Event Example End -->
     <Event id="1683295820" event_id="331" type_id="7" period_id="2" min="45" sec="19" player_id="460842" team_id="2592" outcome="1" x="50.8" y="95.9" timestamp="2018-09-23T16:05:48.325" last_modified="2018-09-23T16:05:50" version="1537715149712">
       <Q id="1975691485" qualifier_id="233" value="503" />
       <Q id="1671364023" qualifier_id="285" />

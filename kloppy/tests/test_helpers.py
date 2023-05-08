@@ -129,6 +129,41 @@ class TestHelpers:
             )
         )
 
+    def test_transform_to_orientation(self):
+        tracking_data = self._get_tracking_dataset()
+
+        transformed_dataset = tracking_data.transform(
+            to_orientation=Orientation.AWAY_TEAM,
+        )
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=0, y=50, z=0
+        )
+        assert (
+            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
+        )
+
+    def test_transform_to_pitch_dimensions(self):
+        tracking_data = self._get_tracking_dataset()
+
+        transformed_dataset = tracking_data.transform(
+            to_pitch_dimensions=PitchDimensions(
+                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            ),
+        )
+
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=1, y=0, z=0
+        )
+        assert transformed_dataset.frames[1].ball_coordinates == Point3D(
+            x=0, y=1, z=1
+        )
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == PitchDimensions(
+                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            )
+        )
+
     def test_transform_to_coordinate_system(self):
         base_dir = os.path.dirname(__file__)
 

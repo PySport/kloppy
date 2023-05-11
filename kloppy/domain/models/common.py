@@ -250,6 +250,42 @@ class AttackingDirection(Enum):
         return self.value
 
 
+@dataclass
+class Period:
+    """
+    Period
+
+    Attributes:
+        id: `1` for first half, `2` for second half, `3` for first overtime,
+            `4` for second overtime, and `5` for penalty shootouts
+        start_timestamp: timestamp given by provider (can be unix timestamp or relative)
+        end_timestamp: timestamp given by provider (can be unix timestamp or relative)
+        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
+    """
+
+    id: int
+    start_timestamp: float
+    end_timestamp: float
+    attacking_direction: AttackingDirection = AttackingDirection.NOT_SET
+
+    def contains(self, timestamp: float):
+        return self.start_timestamp <= timestamp <= self.end_timestamp
+
+    @property
+    def attacking_direction_set(self):
+        return self.attacking_direction != AttackingDirection.NOT_SET
+
+    def set_attacking_direction(self, attacking_direction: AttackingDirection):
+        self.attacking_direction = attacking_direction
+
+    @property
+    def duration(self):
+        return self.end_timestamp - self.start_timestamp
+
+    def __eq__(self, other):
+        return isinstance(other, Period) and other.id == self.id
+
+
 class Orientation(Enum):
     # change when possession changes
     BALL_OWNING_TEAM = "ball-owning-team"
@@ -268,50 +304,74 @@ class Orientation(Enum):
     # Not set in dataset
     NOT_SET = "not-set"
 
+    def get_attacking_direction(self, period: Period) -> AttackingDirection:
+        if self == Orientation.FIXED_HOME_AWAY:
+            return AttackingDirection.HOME_AWAY
+        if self == Orientation.FIXED_AWAY_HOME:
+            return AttackingDirection.AWAY_HOME
+        if self == Orientation.HOME_TEAM:
+            dirmap = {
+                1: AttackingDirection.HOME_AWAY,
+                2: AttackingDirection.AWAY_HOME,
+                3: AttackingDirection.HOME_AWAY,
+                4: AttackingDirection.AWAY_HOME,
+            }
+            return dirmap.get(period.id, period.attacking_direction)
+        if self == Orientation.AWAY_TEAM:
+            dirmap = {
+                1: AttackingDirection.AWAY_HOME,
+                2: AttackingDirection.HOME_AWAY,
+                3: AttackingDirection.AWAY_HOME,
+                4: AttackingDirection.HOME_AWAY,
+            }
+            return dirmap.get(period.id, period.attacking_direction)
+        return AttackingDirection.NOT_SET
+
     def get_orientation_factor(
         self,
-        attacking_direction: AttackingDirection,
+        period: Period,
         ball_owning_team: Team,
         action_executing_team: Team,
     ) -> int:
+        if period.id == 5:
+            return 1  # the orientation of penalty shootouts is not transformed
         if self == Orientation.FIXED_HOME_AWAY:
-            return -1
-        elif self == Orientation.FIXED_AWAY_HOME:
             return 1
-        elif self == Orientation.HOME_TEAM:
-            if attacking_direction == AttackingDirection.HOME_AWAY:
-                return -1
-            elif attacking_direction == AttackingDirection.AWAY_HOME:
+        if self == Orientation.FIXED_AWAY_HOME:
+            return -1
+        if self == Orientation.HOME_TEAM:
+            if period.id == 1 or period.id == 3:
                 return 1
-            else:
-                raise OrientationError("AttackingDirection not set")
-        elif self == Orientation.AWAY_TEAM:
-            if attacking_direction == AttackingDirection.AWAY_HOME:
+            if period.id == 2 or period.id == 4:
                 return -1
-            elif attacking_direction == AttackingDirection.HOME_AWAY:
+            raise OrientationError(
+                f"AttackingDirection not defined for period with id {period.id}"
+            )
+        if self == Orientation.AWAY_TEAM:
+            if period.id == 1 or period.id == 3:
+                return -1
+            if period.id == 2 or period.id == 4:
                 return 1
-            else:
-                raise OrientationError("AttackingDirection not set")
-        elif self == Orientation.BALL_OWNING_TEAM:
+            raise OrientationError(
+                f"AttackingDirection not defined for period with id {period.id}"
+            )
+        if self == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team.ground == Ground.HOME:
-                return -1
-            elif ball_owning_team.ground == Ground.AWAY:
                 return 1
-            else:
-                raise OrientationError(
-                    f"Invalid ball_owning_team: {ball_owning_team}"
-                )
-        elif self == Orientation.ACTION_EXECUTING_TEAM:
+            if ball_owning_team.ground == Ground.AWAY:
+                return -1
+            raise OrientationError(
+                f"Invalid ball_owning_team: {ball_owning_team}"
+            )
+        if self == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team.ground == Ground.HOME:
-                return -1
-            elif action_executing_team.ground == Ground.AWAY:
                 return 1
-            else:
-                raise OrientationError(
-                    f"Invalid action_executing_team: {action_executing_team}"
-                )
-        else:
-            raise OrientationError(f"Unknown orientation: {self}")
+            if action_executing_team.ground == Ground.AWAY:
+                return -1
+            raise OrientationError(
+                f"Invalid action_executing_team: {action_executing_team}"
+            )
+        raise OrientationError(f"Unknown orientation: {self}")
 
     def __repr__(self):
         return self.value
@@ -323,43 +383,6 @@ class VerticalOrientation(Enum):
 
     # the y axis decreases as you go from top to bottom of the pitch
     BOTTOM_TO_TOP = "bottom-to-top"
-
-
-@dataclass
-class Period:
-    """
-    Period
-
-    Attributes:
-        id: `1` for first half, `2` for second half
-        start_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        end_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
-    """
-
-    id: int
-    start_timestamp: float
-    end_timestamp: float
-    attacking_direction: Optional[
-        AttackingDirection
-    ] = AttackingDirection.NOT_SET
-
-    def contains(self, timestamp: float):
-        return self.start_timestamp <= timestamp <= self.end_timestamp
-
-    @property
-    def attacking_direction_set(self):
-        return self.attacking_direction != AttackingDirection.NOT_SET
-
-    def set_attacking_direction(self, attacking_direction: AttackingDirection):
-        self.attacking_direction = attacking_direction
-
-    @property
-    def duration(self):
-        return self.end_timestamp - self.start_timestamp
-
-    def __eq__(self, other):
-        return isinstance(other, Period) and other.id == self.id
 
 
 class Origin(Enum):
@@ -847,6 +870,18 @@ class Metadata:
     score: Optional[Score] = None
     frame_rate: Optional[float] = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+
+    def __post_init__(self):
+        if self.coordinate_system is not None:
+            # set the pitch dimensions from the coordinate system
+            self.pitch_dimensions = self.coordinate_system.pitch_dimensions
+
+        if self.orientation is not None:
+            # set the attacking directions from the orientation
+            for period in self.periods:
+                period.attacking_direction = (
+                    self.orientation.get_attacking_direction(period)
+                )
 
 
 T = TypeVar("T", bound="DataRecord")

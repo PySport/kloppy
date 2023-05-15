@@ -388,7 +388,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         metadata = Metadata(
             teams=teams,
-            periods=periods,
+            periods=sorted(periods.values(), key=lambda p: p.id),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=Score(
                 home=metadata["home_team_score"],

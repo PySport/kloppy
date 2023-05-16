@@ -152,22 +152,24 @@ class TestHelpers:
         )
 
     def test_transform_to_orientation(self):
-        tracking_data = self._get_tracking_dataset()
-
-        original = tracking_data.transform(
+        # Create a dataset with the KLOPPY pitch dimensions
+        # and HOME_TEAM orientation
+        original = self._get_tracking_dataset().transform(
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
+        assert original.metadata.orientation == Orientation.HOME_TEAM
         assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
+        assert original.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        # the frames should have the correct attacking direction
         assert (
             original.frames[0].period.attacking_direction
             == AttackingDirection.HOME_AWAY
         )
-        assert original.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
         assert (
             original.frames[1].period.attacking_direction
             == AttackingDirection.AWAY_HOME
         )
-        assert original.metadata.orientation == Orientation.HOME_TEAM
+        # the metadata should have the correct attacking direction
         assert (
             original.metadata.periods[0].attacking_direction
             == AttackingDirection.HOME_AWAY
@@ -177,23 +179,25 @@ class TestHelpers:
             == AttackingDirection.AWAY_HOME
         )
 
-        print("T1")
+        # Transform to AWAY_TEAM orientation
         transform1 = original.transform(
             to_orientation=Orientation.AWAY_TEAM,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
+        assert transform1.metadata.orientation == Orientation.AWAY_TEAM
         # all coordinates should be flipped
         assert transform1.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
+        assert transform1.frames[1].ball_coordinates == Point3D(x=1, y=0, z=1)
+        # the frames should have the correct attacking direction
         assert (
             transform1.frames[0].period.attacking_direction
             == AttackingDirection.AWAY_HOME
         )
-        assert transform1.frames[1].ball_coordinates == Point3D(x=1, y=0, z=1)
         assert (
             transform1.frames[1].period.attacking_direction
             == AttackingDirection.HOME_AWAY
         )
-        assert transform1.metadata.orientation == Orientation.AWAY_TEAM
+        # the metadata should have the correct attacking direction
         assert (
             transform1.metadata.periods[0].attacking_direction
             == AttackingDirection.AWAY_HOME
@@ -203,112 +207,80 @@ class TestHelpers:
             == AttackingDirection.HOME_AWAY
         )
 
-        print("T2")
+        # Transform to FIXED_AWAY_HOME orientation
         transform2 = transform1.transform(
             to_orientation=Orientation.FIXED_AWAY_HOME,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
+        assert transform2.metadata.orientation == Orientation.FIXED_AWAY_HOME
         # all coordintes in the second half should be flipped
         assert transform2.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
-        assert (
-            transform2.frames[0].period.attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
         assert transform2.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
-        assert (
-            transform2.frames[1].period.attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
-        assert transform2.metadata.orientation == Orientation.FIXED_AWAY_HOME
-        assert (
-            transform2.metadata.periods[0].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
-        assert (
-            transform2.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
+        # the frames should have the correct attacking direction
+        for frame in transform2.frames:
+            assert (
+                frame.period.attacking_direction
+                == AttackingDirection.AWAY_HOME
+            )
+        # the metadata should have the correct attacking direction
+        for period in transform2.metadata.periods:
+            assert period.attacking_direction == AttackingDirection.AWAY_HOME
 
-        print("T3")
+        # Transform to BALL_OWNING_TEAM orientation
         transform3 = transform2.transform(
             to_orientation=Orientation.BALL_OWNING_TEAM,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
+        assert transform3.metadata.orientation == Orientation.BALL_OWNING_TEAM
         # the coordinates of frame 1 should be flipped
         assert transform3.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
-        assert (
-            transform3.frames[0].period.attacking_direction
-            == AttackingDirection.NOT_SET
-        )
         assert transform3.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
-        assert (
-            transform3.frames[1].period.attacking_direction
-            == AttackingDirection.NOT_SET
-        )
-        assert transform3.metadata.orientation == Orientation.BALL_OWNING_TEAM
-        assert (
-            transform3.metadata.periods[0].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
-        assert (
-            transform3.metadata.periods[1].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
+        # the frames should have the correct attacking direction
+        for frame in transform3.frames:
+            assert (
+                frame.period.attacking_direction == AttackingDirection.NOT_SET
+            )
+        # the metadata should have the correct attacking direction
+        for period in transform3.metadata.periods:
+            assert period.attacking_direction == AttackingDirection.NOT_SET
 
-        print("T4")
-        transform4 = transform2.transform(
+        # Transform to ACTION_EXECUTING_TEAM orientation
+        transform4 = transform3.transform(
             to_orientation=Orientation.ACTION_EXECUTING_TEAM,
             to_pitch_dimensions=[[0, 1], [0, 1]],
-        )
-        # should be identical to transform3 as the action_executing team is not defined
-        assert transform4.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
-        assert (
-            transform4.frames[0].period.attacking_direction
-            == AttackingDirection.NOT_SET
-        )
-        assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
-        assert (
-            transform4.frames[1].period.attacking_direction
-            == AttackingDirection.NOT_SET
         )
         assert (
             transform4.metadata.orientation
             == Orientation.ACTION_EXECUTING_TEAM
         )
-        assert (
-            transform4.metadata.periods[0].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
-        assert (
-            transform4.metadata.periods[1].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
+        # should be identical to transform3 as the action_executing team is not defined
+        assert transform4.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
+        # the frames should have the correct attacking direction
+        assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        for frame in transform4.frames:
+            assert (
+                frame.period.attacking_direction == AttackingDirection.NOT_SET
+            )
+        # the metadata should have the correct attacking direction
+        for period in transform4.metadata.periods:
+            assert period.attacking_direction == AttackingDirection.NOT_SET
 
-        print("T5")
+        # Transform back to the original HOME_TEAM orientation
         transform5 = transform4.transform(
             to_orientation=Orientation.HOME_TEAM,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
         # we should be back at the original
-        assert transform5.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
-        assert (
-            transform5.frames[0].period.attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
-        assert transform5.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
-        assert (
-            transform5.frames[1].period.attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
-        assert transform5.metadata.orientation == Orientation.HOME_TEAM
-        assert (
-            transform5.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
-        assert (
-            transform5.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
+        for frame1, frame2 in zip(original.frames, transform5.frames):
+            assert frame1.ball_coordinates == frame2.ball_coordinates
+            assert (
+                frame1.period.attacking_direction
+                == frame2.period.attacking_direction
+            )
+        for period1, period2 in zip(
+            original.metadata.periods, transform5.metadata.periods
+        ):
+            assert period1.attacking_direction == period2.attacking_direction
 
     def test_transform_to_coordinate_system(self):
         base_dir = os.path.dirname(__file__)

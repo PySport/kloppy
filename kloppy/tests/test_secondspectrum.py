@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import pytest
 
@@ -17,22 +17,19 @@ from kloppy import secondspectrum
 
 class TestSecondSpectrumTracking:
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/second_spectrum_fake_metadata.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/second_spectrum_fake_metadata.xml"
 
     @pytest.fixture
-    def raw_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/second_spectrum_fake_data.jsonl"
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/second_spectrum_fake_data.jsonl"
 
     @pytest.fixture
-    def additional_meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/second_spectrum_fake_metadata.json"
+    def additional_meta_data(self, base_dir) -> str:
+        return base_dir / "files/second_spectrum_fake_metadata.json"
 
     def test_correct_deserialization(
-        self, meta_data: str, raw_data: str, additional_meta_data: str
+        self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
         dataset = secondspectrum.load(
             meta_data=meta_data,
@@ -96,7 +93,7 @@ class TestSecondSpectrumTracking:
         assert pitch_dimensions.y_dim.max == 33.985
 
     def test_correct_normalized_deserialization(
-        self, meta_data: str, raw_data: str, additional_meta_data: str
+        self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
         dataset = secondspectrum.load(
             meta_data=meta_data,

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 
@@ -20,16 +20,14 @@ class TestSportecEvent:
     """"""
 
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/sportec_events.xml"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_events.xml"
 
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/sportec_meta.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_meta.xml"
 
-    def test_correct_deserialization(self, event_data: str, meta_data: str):
+    def test_correct_deserialization(self, event_data: Path, meta_data: Path):
         dataset = sportec.load(
             event_data=event_data, meta_data=meta_data, coordinates="sportec"
         )
@@ -72,7 +70,7 @@ class TestSportecEvent:
         assert dataset.events[0].coordinates == Point(56.41, 68.0)
 
     def test_correct_normalized_deserialization(
-        self, event_data: str, meta_data: str
+        self, event_data: Path, meta_data: Path
     ):
         dataset = sportec.load(event_data=event_data, meta_data=meta_data)
 

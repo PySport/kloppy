@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from kloppy.domain import (
@@ -24,14 +22,12 @@ class TestOpta:
     """"""
 
     @pytest.fixture
-    def f24_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f24.xml"
+    def f24_data(self, base_dir) -> str:
+        return base_dir / "files/opta_f24.xml"
 
     @pytest.fixture
-    def f7_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f7.xml"
+    def f7_data(self, base_dir) -> str:
+        return base_dir / "files/opta_f7.xml"
 
     def test_correct_deserialization(self, f7_data: str, f24_data: str):
         dataset = opta.load(

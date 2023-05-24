@@ -1,4 +1,3 @@
-import os
 from itertools import groupby
 
 from kloppy.domain import EventType, Event, EventDataset, FormationType
@@ -10,16 +9,14 @@ from kloppy import statsbomb
 class TestStateBuilder:
     """"""
 
-    def _load_dataset(self, base_filename="statsbomb"):
-        base_dir = os.path.dirname(__file__)
-
+    def _load_dataset(self, base_dir, base_filename="statsbomb"):
         return statsbomb.load(
-            event_data=f"{base_dir}/files/{base_filename}_event.json",
-            lineup_data=f"{base_dir}/files/{base_filename}_lineup.json",
+            event_data=base_dir / f"files/{base_filename}_event.json",
+            lineup_data=base_dir / f"files/{base_filename}_lineup.json",
         )
 
-    def test_score_state_builder(self):
-        dataset = self._load_dataset()
+    def test_score_state_builder(self, base_dir):
+        dataset = self._load_dataset(base_dir)
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("score")
@@ -38,8 +35,8 @@ class TestStateBuilder:
             "3-0": 3,
         }
 
-    def test_sequence_state_builder(self):
-        dataset = self._load_dataset()
+    def test_sequence_state_builder(self, base_dir):
+        dataset = self._load_dataset(base_dir)
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("sequence")
@@ -55,8 +52,8 @@ class TestStateBuilder:
         assert events_per_sequence[0] == 4
         assert events_per_sequence[51] == 14
 
-    def test_lineup_state_builder(self):
-        dataset = self._load_dataset("statsbomb_15986")
+    def test_lineup_state_builder(self, base_dir):
+        dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("lineup")
@@ -80,8 +77,8 @@ class TestStateBuilder:
             (EventType.GENERIC, 21),
         ]
 
-    def test_formation_state_builder(self):
-        dataset = self._load_dataset("statsbomb")
+    def test_formation_state_builder(self, base_dir):
+        dataset = self._load_dataset(base_dir, base_filename="statsbomb")
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("formation")
@@ -105,7 +102,7 @@ class TestStateBuilder:
             "formation"
         ].home == FormationType("4-4-2")
 
-    def test_register_custom_builder(self):
+    def test_register_custom_builder(self, base_dir):
         class CustomStateBuilder(StateBuilder):
             def initial_state(self, dataset: EventDataset) -> int:
                 return 0
@@ -116,7 +113,7 @@ class TestStateBuilder:
             def reduce_after(self, state: int, event: Event) -> int:
                 return state + 1
 
-        dataset = self._load_dataset("statsbomb_15986")
+        dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("custom")

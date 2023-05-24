@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 
@@ -11,14 +9,12 @@ class TestEvent:
     """"""
 
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_event.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_event.json"
 
     @pytest.fixture
-    def lineup_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_lineup.json"
+    def lineup_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_lineup.json"
 
     @pytest.fixture()
     def dataset(self, lineup_data: str, event_data: str) -> EventDataset:

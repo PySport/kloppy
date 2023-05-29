@@ -1,5 +1,5 @@
 import pytest
-import os
+from pathlib import Path
 
 from kloppy.domain import (
     AttackingDirection,
@@ -13,18 +13,16 @@ from kloppy.domain import (
 from kloppy import statsperform
 
 
-class TestStatsperformTracking:
+class TestStatsPerformTracking:
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsperform_MA1_metadata.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/statsperform_MA1_metadata.xml"
 
     @pytest.fixture
-    def raw_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsperform_MA25_tracking.txt"
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/statsperform_MA25_tracking.txt"
 
-    def test_correct_deserialization(self, meta_data: str, raw_data: str):
+    def test_correct_deserialization(self, meta_data: Path, raw_data: Path):
         dataset = statsperform.load(
             meta_data=meta_data,
             raw_data=raw_data,
@@ -37,22 +35,22 @@ class TestStatsperformTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 92
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.FIXED_AWAY_HOME
 
         # Check the Periods
-        assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == 0
-        assert dataset.metadata.periods[0].end_timestamp == 2500
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
-
-        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].id == 1
         assert dataset.metadata.periods[1].start_timestamp == 0
-        assert dataset.metadata.periods[1].end_timestamp == 6500
+        assert dataset.metadata.periods[1].end_timestamp == 2500
         assert (
             dataset.metadata.periods[1].attacking_direction
+            == AttackingDirection.AWAY_HOME
+        )
+
+        assert dataset.metadata.periods[2].id == 2
+        assert dataset.metadata.periods[2].start_timestamp == 0
+        assert dataset.metadata.periods[2].end_timestamp == 6500
+        assert (
+            dataset.metadata.periods[2].attacking_direction
             == AttackingDirection.HOME_AWAY
         )
 

@@ -632,7 +632,7 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
-class StatsperformCoordinateSystem(CoordinateSystem):
+class StatsPerformCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.STATSPERFORM
@@ -688,7 +688,7 @@ def build_coordinate_system(provider: Provider, **kwargs):
         return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.STATSPERFORM:
-        return StatsperformCoordinateSystem(normalized=False, **kwargs)
+        return StatsPerformCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):

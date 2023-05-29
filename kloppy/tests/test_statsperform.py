@@ -16,11 +16,11 @@ from kloppy import statsperform
 class TestStatsPerformTracking:
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
-        return base_dir / "files/statsperform_MA1_metadata.xml"
+        return base_dir / "files/statsperform_ma1_metadata.xml"
 
     @pytest.fixture
     def raw_data(self, base_dir) -> str:
-        return base_dir / "files/statsperform_MA25_tracking.txt"
+        return base_dir / "files/statsperform_ma25_tracking.txt"
 
     def test_correct_deserialization(self, meta_data: Path, raw_data: Path):
         dataset = statsperform.load(

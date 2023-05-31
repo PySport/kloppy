@@ -22,6 +22,7 @@ from kloppy.domain.models.event import (
     CardType,
     PassQualifier,
     PassType,
+    EventType,
 )
 
 
@@ -147,6 +148,8 @@ class TestStatsBomb:
         )
 
         assert dataset.events[3392].get_qualifier_value(PassQualifier) is None
+
+        assert dataset.events[271].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_deserialization(
         self, lineup_data: str, event_data: str

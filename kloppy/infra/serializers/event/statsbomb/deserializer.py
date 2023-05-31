@@ -43,6 +43,7 @@ from ..deserializer import EventDataDeserializer
 logger = logging.getLogger(__name__)
 
 SB_EVENT_TYPE_RECOVERY = 2
+SB_EVENT_TYPE_CLEARANCE = 9
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
 SB_EVENT_TYPE_PASS = 30
@@ -693,7 +694,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(shot_event)
-
+                elif event_type == SB_EVENT_TYPE_CLEARANCE:
+                    clearance_event = self.event_factory.build_clearance(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(clearance_event)
                 # For dribble and carry the definitions
                 # are flipped between StatsBomb and kloppy
                 elif event_type == SB_EVENT_TYPE_DRIBBLE:

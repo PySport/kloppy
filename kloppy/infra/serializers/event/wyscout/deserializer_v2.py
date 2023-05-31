@@ -3,37 +3,28 @@ import logging
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
-    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
     CounterAttackQualifier,
     Dimension,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
     GoalkeeperAction,
     GoalkeeperActionQualifier,
     Ground,
     Metadata,
     Orientation,
-    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
-    PitchDimensions,
     Player,
     Point,
     Provider,
     Qualifier,
-    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    TakeOnEvent,
     TakeOnResult,
     Team,
 )
@@ -381,10 +372,20 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 elif (
                     raw_event["eventId"] == wyscout_events.OTHERS_ON_BALL.EVENT
                 ):
-                    recovery_event_args = _parse_recovery(raw_event)
-                    event = self.event_factory.build_recovery(
-                        **recovery_event_args, **generic_event_args
-                    )
+                    if (
+                        raw_event["subEventId"]
+                        == wyscout_events.OTHERS_ON_BALL.CLEARANCE
+                    ):
+                        event = self.event_factory.build_clearance(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_args,
+                        )
+                    else:
+                        recovery_event_args = _parse_recovery(raw_event)
+                        event = self.event_factory.build_recovery(
+                            **recovery_event_args, **generic_event_args
+                        )
                 elif raw_event["eventId"] == wyscout_events.DUEL.EVENT:
                     takeon_event_args = _parse_takeon(raw_event)
                     event = self.event_factory.build_take_on(
@@ -399,7 +400,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=qualifiers,
-                        **generic_event_args
+                        **generic_event_args,
                     )
 
                 if event and self.should_include_event(event):

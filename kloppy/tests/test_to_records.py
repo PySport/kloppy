@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 from kloppy import statsbomb
@@ -12,17 +12,15 @@ from kloppy.domain.services.transformers.attribute import (
 
 class TestToRecords:
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_event.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_event.json"
 
     @pytest.fixture
-    def lineup_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_lineup.json"
+    def lineup_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_lineup.json"
 
     @pytest.fixture
-    def dataset(self, event_data: str, lineup_data: str) -> EventDataset:
+    def dataset(self, event_data: Path, lineup_data: Path) -> EventDataset:
         return statsbomb.load(
             lineup_data=lineup_data,
             event_data=event_data,

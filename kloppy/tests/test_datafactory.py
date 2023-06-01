@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from kloppy.domain import (
@@ -18,9 +16,8 @@ from kloppy import datafactory
 
 class TestDatafactory:
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/datafactory_events.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/datafactory_events.json"
 
     def test_correct_deserialization(self, event_data: str):
         dataset = datafactory.load(

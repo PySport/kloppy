@@ -1,4 +1,3 @@
-import os
 import re
 
 import pytest
@@ -28,10 +27,9 @@ from kloppy import metrica
 
 
 class TestMetricaEPTSTracking:
-    def test_regex(self):
-        base_dir = os.path.dirname(__file__)
+    def test_regex(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
@@ -49,10 +47,9 @@ class TestMetricaEPTSTracking:
 
         assert result is not None
 
-    def test_provider_name_recognition(self):
-        base_dir = os.path.dirname(__file__)
+    def test_provider_name_recognition(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp:
             root = objectify.fromstring(metadata_fp.read())
             metadata = root.find("Metadata")
@@ -60,30 +57,26 @@ class TestMetricaEPTSTracking:
 
         assert provider_from_file == Provider.METRICA
 
-    def test_read(self):
-        base_dir = os.path.dirname(__file__)
+    def test_read(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
 
         with open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+            base_dir / "files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
             iterator = read_raw_data(raw_data, metadata)
 
             with performance_logging("load"):
                 assert list(iterator)
 
-    def test_read_to_pandas(self):
-        base_dir = os.path.dirname(__file__)
-
+    def test_read_to_pandas(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+            base_dir / "files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
-
             metadata = load_metadata(metadata_fp)
             records = read_raw_data(
                 raw_data, metadata, sensor_ids=["position"]
@@ -92,13 +85,11 @@ class TestMetricaEPTSTracking:
 
         assert "player_Track_1_x" in data_frame.columns
 
-    def test_skip_sensors(self):
-        base_dir = os.path.dirname(__file__)
-
+    def test_skip_sensors(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+            base_dir / "files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
             metadata = load_metadata(metadata_fp)
             records = read_raw_data(raw_data, metadata, sensor_ids=["speed"])
@@ -108,14 +99,12 @@ class TestMetricaEPTSTracking:
         assert "player_Track_1_x" not in data_frame.columns
 
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/epts_metrica_metadata.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/epts_metrica_metadata.xml"
 
     @pytest.fixture
-    def raw_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/epts_metrica_tracking.txt"
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/epts_metrica_tracking.txt"
 
     def test_correct_deserialization(self, meta_data: str, raw_data: str):
         dataset = metrica.load_tracking_epts(
@@ -149,14 +138,12 @@ class TestMetricaEPTSTracking:
         )
 
     def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(
-        self,
+        self, base_dir
     ):
-        base_dir = os.path.dirname(__file__)
-
         with open(
-            f"{base_dir}/files/epts_metrica_metadata_unused_sensor.xml", "rb"
+            base_dir / "files/epts_metrica_metadata_unused_sensor.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_metrica_tracking.txt", "rb"
+            base_dir / "files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
             dataset = metrica.load_tracking_epts(
                 meta_data=metadata_fp, raw_data=raw_data
@@ -171,15 +158,11 @@ class TestMetricaEPTSTracking:
         # But all defined sensors in the metadata are 4
         assert len(dataset.metadata.sensors) == 4
 
-    def test_read_empty_player_values(
-        self,
-    ):
-        base_dir = os.path.dirname(__file__)
-
+    def test_read_empty_player_values(self, base_dir):
         with open(
-            f"{base_dir}/files/epts_metrica_metadata.xml", "rb"
+            base_dir / "files/epts_metrica_metadata.xml", "rb"
         ) as metadata_fp, open(
-            f"{base_dir}/files/epts_metrica_tracking_with_empty_values.txt",
+            base_dir / "files/epts_metrica_tracking_with_empty_values.txt",
             "rb",
         ) as raw_data:
             dataset = metrica.load_tracking_epts(

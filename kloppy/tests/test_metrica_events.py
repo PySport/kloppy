@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from kloppy import metrica
@@ -16,14 +14,12 @@ from kloppy.domain.models.common import DatasetType
 
 class TestMetricaEvents:
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/epts_metrica_metadata.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/epts_metrica_metadata.xml"
 
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/metrica_events.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/metrica_events.json"
 
     def test_correct_deserialization(self, event_data: str, meta_data: str):
         dataset = metrica.load_event(

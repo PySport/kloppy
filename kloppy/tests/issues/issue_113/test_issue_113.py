@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from kloppy.domain import Orientation
 from kloppy import opta
@@ -38,8 +38,8 @@ def kloppy_load_data(f7, f24):
 
 class TestIssue113:
     def test_parse_opta(self):
-        dir_path = os.path.dirname(__file__)
+        dir_path = Path(__file__).parent
         kloppy_load_data(
-            f7=f"{dir_path}/opta_f7.xml",
-            f24=f"{dir_path}/opta_f24.xml",
+            f7=dir_path / "opta_f7.xml",
+            f24=dir_path / "opta_f24.xml",
         )

@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from kloppy.domain import (
@@ -18,14 +16,12 @@ class TestMetricaCsvTracking:
     """"""
 
     @pytest.fixture
-    def home_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/metrica_home.csv"
+    def home_data(self, base_dir) -> str:
+        return base_dir / "files/metrica_home.csv"
 
     @pytest.fixture
-    def away_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/metrica_away.csv"
+    def away_data(self, base_dir) -> str:
+        return base_dir / "files/metrica_away.csv"
 
     def test_correct_deserialization(self, home_data: str, away_data: str):
         dataset = metrica.load_tracking_csv(

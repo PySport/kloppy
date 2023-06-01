@@ -9,9 +9,8 @@ from kloppy.infra.serializers.code.sportscode import SportsCodeSerializer
 
 
 class TestXMLCodeTracking:
-    def test_correct_deserialization(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = sportscode.load(f"{base_dir}/files/code_xml.xml")
+    def test_correct_deserialization(self, base_dir):
+        dataset = sportscode.load(base_dir / "files/code_xml.xml")
 
         assert len(dataset.metadata.periods) == 1
 
@@ -50,9 +49,8 @@ class TestXMLCodeTracking:
 
         assert_frame_equal(dataframe, expected_data_frame)
 
-    def test_correct_serialization(self):
-        base_dir = os.path.dirname(__file__)
-        dataset = sportscode.load(f"{base_dir}/files/code_xml.xml")
+    def test_correct_serialization(self, base_dir):
+        dataset = sportscode.load(base_dir / "files/code_xml.xml")
 
         del dataset.codes[2:]
 

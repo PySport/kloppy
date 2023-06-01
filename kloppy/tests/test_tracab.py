@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 
@@ -20,18 +20,14 @@ from kloppy import tracab
 
 class TestTracabTracking:
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-
-        return f"{base_dir}/files/tracab_meta.xml"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/tracab_meta.xml"
 
     @pytest.fixture
-    def raw_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/tracab_raw.dat"
 
-        return f"{base_dir}/files/tracab_raw.dat"
-
-    def test_correct_deserialization(self, meta_data: str, raw_data: str):
+    def test_correct_deserialization(self, meta_data: Path, raw_data: Path):
         dataset = tracab.load(
             meta_data=meta_data,
             raw_data=raw_data,
@@ -94,7 +90,7 @@ class TestTracabTracking:
         ]
 
     def test_correct_normalized_deserialization(
-        self, meta_data: str, raw_data: str
+        self, meta_data: Path, raw_data: Path
     ):
         dataset = tracab.load(
             meta_data=meta_data, raw_data=raw_data, only_alive=False

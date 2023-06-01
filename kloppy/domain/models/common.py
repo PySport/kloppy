@@ -760,6 +760,9 @@ class DataRecord(ABC):
                     return next_record
                 next_record = next_record.next_record
 
+    def replace(self, **changes):
+        return replace(self, **changes)
+
     def __str__(self):
         return f"<{self.__class__.__name__}>"
 
@@ -883,6 +886,11 @@ class Dataset(ABC, Generic[T]):
         return replace(
             self,
             records=self.find_all(filter_),
+        )
+
+    def map(self, mapper):
+        return replace(
+            self, records=[mapper(record) for record in self.records]
         )
 
     def find_all(self, filter_) -> List[T]:
@@ -1065,3 +1073,8 @@ class Dataset(ABC, Generic[T]):
             return from_dict(self.to_dict(*columns, **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} record_count={len(self.records)}>"
+
+    __str__ = __repr__

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?><SoccerFeed>
+  <SoccerDocument>
+    <MatchData>
+      <Stat Type="match_time">96</Stat>
+      <Stat Type="first_half_start">20180923T150213+0100</Stat>
+      <Stat Type="first_half_time">47</Stat>
+      <Stat Type="first_half_stop">20180923T154821+0100</Stat>
+      <Stat Type="second_half_start">20180923T160528+0100</Stat>
+      <Stat Type="second_half_time">51</Stat>
+      <Stat Type="second_half_stop">20180923T165537+0100</Stat>
+      <TeamData Formation="442" Score="2" Side="Home" TeamRef="t569">
+        <PlayerLineUp>
+          <MatchPlayer Formation_Place="1" PlayerRef="p111319" Position="Goalkeeper" ShirtNumber="21" Status="Start" />
+          <MatchPlayer Formation_Place="3" PlayerRef="p80398" Position="Defender" ShirtNumber="20" Status="Start" />
+          <MatchPlayer Formation_Place="5" PlayerRef="p164266" Position="Defender" ShirtNumber="19" Status="Start" />
+          <MatchPlayer Formation_Place="2" PlayerRef="p82830" Position="Defender" ShirtNumber="22" Status="Start" />
+          <MatchPlayer Formation_Place="6" PlayerRef="p77384" Position="Defender" ShirtNumber="5" Status="Start" />
+          <MatchPlayer Formation_Place="8" PlayerRef="p76001" Position="Midfielder" ShirtNumber="33" Status="Start" />
+          <MatchPlayer Captain="1" Formation_Place="4" PlayerRef="p84359" Position="Midfielder" ShirtNumber="10" Status="Start" />
+          <MatchPlayer Formation_Place="7" PlayerRef="p162037" Position="Midfielder" ShirtNumber="29" Status="Start" />
+          <MatchPlayer Formation_Place="11" PlayerRef="p76507" Position="Midfielder" ShirtNumber="8" Status="Start" />
+          <MatchPlayer Formation_Place="10" PlayerRef="p48337" Position="Striker" ShirtNumber="14" Status="Start" />
+          <MatchPlayer Formation_Place="9" PlayerRef="p123125" Position="Striker" ShirtNumber="7" Status="Start" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p88022" Position="Substitute" ShirtNumber="28" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p48469" Position="Substitute" ShirtNumber="3" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p202456" Position="Substitute" ShirtNumber="4" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p27261" Position="Substitute" ShirtNumber="6" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p226967" Position="Substitute" ShirtNumber="26" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p14190" Position="Substitute" ShirtNumber="1" Status="Sub" SubPosition="Goalkeeper" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p81185" Position="Substitute" ShirtNumber="16" Status="Sub" SubPosition="Midfielder" />
+        </PlayerLineUp>
+        </TeamData>
+      <TeamData Formation="433" Score="1" Side="Away" TeamRef="t2592">
+        <PlayerLineUp>
+          <MatchPlayer Formation_Place="1" PlayerRef="p84490" Position="Goalkeeper" ShirtNumber="18" Status="Start" />
+          <MatchPlayer Captain="1" Formation_Place="5" PlayerRef="p232018" Position="Defender" ShirtNumber="4" Status="Start" />
+          <MatchPlayer Formation_Place="6" PlayerRef="p223842" Position="Defender" ShirtNumber="17" Status="Start" />
+          <MatchPlayer Formation_Place="2" PlayerRef="p208695" Position="Defender" ShirtNumber="2" Status="Start" />
+          <MatchPlayer Formation_Place="3" PlayerRef="p213398" Position="Defender" ShirtNumber="3" Status="Start" />
+          <MatchPlayer Formation_Place="7" PlayerRef="p449897" Position="Midfielder" ShirtNumber="22" Status="Start" />
+          <MatchPlayer Formation_Place="8" PlayerRef="p445731" Position="Midfielder" ShirtNumber="19" Status="Start" />
+          <MatchPlayer Formation_Place="4" PlayerRef="p248479" Position="Midfielder" ShirtNumber="8" Status="Start" />
+          <MatchPlayer Formation_Place="10" PlayerRef="p116187" Position="Striker" ShirtNumber="11" Status="Start" />
+          <MatchPlayer Formation_Place="9" PlayerRef="p430368" Position="Striker" ShirtNumber="21" Status="Start" />
+          <MatchPlayer Formation_Place="11" PlayerRef="p440088" Position="Striker" ShirtNumber="24" Status="Start" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p184269" Position="Substitute" ShirtNumber="14" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p216557" Position="Substitute" ShirtNumber="28" Status="Sub" SubPosition="Goalkeeper" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p433463" Position="Substitute" ShirtNumber="16" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p232016" Position="Substitute" ShirtNumber="30" Status="Sub" SubPosition="Defender" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p460842" Position="Substitute" ShirtNumber="39" Status="Sub" SubPosition="Midfielder" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p249864" Position="Substitute" ShirtNumber="34" Status="Sub" SubPosition="Forward" />
+          <MatchPlayer Formation_Place="0" PlayerRef="p45097" Position="Substitute" ShirtNumber="7" Status="Sub" SubPosition="Forward" />
+        </PlayerLineUp>
+        </TeamData>
+    </MatchData>
+    <Team uID="t569">
+      <Country>Denmark</Country>
+      <Kit id="790" colour1="#FFFFFF" type="home" />
+      <Name>FC København</Name>
+      <Player Position="Goalkeeper" uID="p111319">
+        <PersonName>
+          <First>Jesse</First>
+          <Last>Joronen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p80398">
+        <PersonName>
+          <First>Nicolai</First>
+          <Last>Boilesen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p164266">
+        <PersonName>
+          <First>Denis</First>
+          <Last>Vavro</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p82830">
+        <PersonName>
+          <First>Peter</First>
+          <Last>Ankersen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p77384">
+        <PersonName>
+          <First>Andreas</First>
+          <Last>Bjelland</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p76001">
+        <PersonName>
+          <First>Rasmus</First>
+          <Last>Falk Jensen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p84359">
+        <PersonName>
+          <First>José Carlos</First>
+          <Known>Zeca</Known>
+          <Last>Gonçalves Rodrigues</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p162037">
+        <PersonName>
+          <First>Robert</First>
+          <Last>Skov</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p76507">
+        <PersonName>
+          <First>Nicolaj</First>
+          <Last>Thomsen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Striker" uID="p48337">
+        <PersonName>
+          <First>Dame</First>
+          <Last>N'Doye</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Striker" uID="p123125">
+        <PersonName>
+          <First>Viktor</First>
+          <Last>Fischer</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p88022">
+        <PersonName>
+          <First>Pieros</First>
+          <Last>Sotiriou</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p48469">
+        <PersonName>
+          <First>Pierre</First>
+          <Last>Bengtsson</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p202456">
+        <PersonName>
+          <First>Sotiris</First>
+          <Last>Papagiannopoulos</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p27261">
+        <PersonName>
+          <First>William</First>
+          <Last>Kvist</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p226967">
+        <PersonName>
+          <First>Carlo</First>
+          <Last>Holse</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p14190">
+        <PersonName>
+          <First>Stephan</First>
+          <Last>Andersen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p81185">
+        <PersonName>
+          <First>Jan</First>
+          <Last>Gregus</Last>
+        </PersonName>
+      </Player>
+      <TeamOfficial Type="Manager" uID="man37347">
+        <PersonName>
+          <First>Stale</First>
+          <Last>Solbakken</Last>
+        </PersonName>
+      </TeamOfficial>
+    </Team>
+    <Team uID="t2592">
+      <Country>Denmark</Country>
+      <Kit id="4598" colour1="#339966" type="away" />
+      <Name>FC Nordsjælland</Name>
+      <Player Position="Goalkeeper" uID="p84490">
+        <PersonName>
+          <First>Nicolai</First>
+          <Last>Larsen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p232018">
+        <PersonName>
+          <First>Victor</First>
+          <Last>Nelsson</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p223842">
+        <PersonName>
+          <First>Andreas</First>
+          <Last>Skovgaard</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p208695">
+        <PersonName>
+          <First>Karlo</First>
+          <Last>Bartolec</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Defender" uID="p213398">
+        <PersonName>
+          <First>Ulrik</First>
+          <Last>Jenssen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p449897">
+        <PersonName>
+          <First>Jacob</First>
+          <Last>Christensen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p445731">
+        <PersonName>
+          <First>Nicklas Strunck</First>
+          <Last>Jakobsen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Midfielder" uID="p248479">
+        <PersonName>
+          <First>Magnus</First>
+          <Last>Andersen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Striker" uID="p116187">
+        <PersonName>
+          <First>Godsway</First>
+          <Last>Donyoh</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Striker" uID="p430368">
+        <PersonName>
+          <First>Andreas</First>
+          <Last>Skov Olsen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Striker" uID="p440088">
+        <PersonName>
+          <First>Jonathan</First>
+          <Last>Oluwadara Amon</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p184269">
+        <PersonName>
+          <First>Mathias</First>
+          <Last>Rasmussen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p216557">
+        <PersonName>
+          <First>Peter</First>
+          <Last>Vindahl Jensen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p433463">
+        <PersonName>
+          <First>Benjamin</First>
+          <Last>Hansen</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p232016">
+        <PersonName>
+          <First>Abdul</First>
+          <Last>Mumin</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p460842">
+        <PersonName>
+          <First>Mohammed</First>
+          <Last>Kudus</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p249864">
+        <PersonName>
+          <First>Martin</First>
+          <Last>Frese</Last>
+        </PersonName>
+      </Player>
+      <Player Position="Substitute" uID="p45097">
+        <PersonName>
+          <First>Mikkel</First>
+          <Last>Rygaard Jensen</Last>
+        </PersonName>
+      </Player>
+      <TeamOfficial Type="Manager" uID="man40907">
+        <PersonName>
+          <First>Kasper</First>
+          <Last>Hjulmand</Last>
+        </PersonName>
+      </TeamOfficial>
+    </Team>
+  </SoccerDocument>
+</SoccerFeed>

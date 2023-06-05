@@ -1,4 +1,4 @@
-site_name: kloppy 3.10.0
+site_name: kloppy 3.11.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
@@ -24,6 +24,7 @@ nav:
       - Sportec: getting-started/sportec.ipynb
       - Sportscode: getting-started/sportscode.ipynb
       - Statsbomb: getting-started/statsbomb.ipynb
+      - StatsPerform: getting-started/statsperform.ipynb
       - TRACAB: getting-started/tracab.ipynb
       - Wyscout: getting-started/wyscout.ipynb
   - Examples:

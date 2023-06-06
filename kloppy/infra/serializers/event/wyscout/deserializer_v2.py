@@ -123,6 +123,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         qualifiers.append(PassQualifier(PassType.HAND_PASS))
     elif raw_event["subEventId"] == wyscout_events.PASS.HEAD:
         qualifiers.append(PassQualifier(PassType.HEAD_PASS))
+        qualifiers.append(BodyPartQualifier(BodyPart.HEAD))
     elif raw_event["subEventId"] == wyscout_events.PASS.HIGH:
         qualifiers.append(PassQualifier(PassType.HIGH_PASS))
     elif raw_event["subEventId"] == wyscout_events.PASS.LAUNCH:
@@ -376,9 +377,10 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         raw_event["subEventId"]
                         == wyscout_events.OTHERS_ON_BALL.CLEARANCE
                     ):
+                        clearance_qualifiers = _parse_clearance(raw_event)
                         event = self.event_factory.build_clearance(
                             result=None,
-                            qualifiers=None,
+                            qualifiers=clearance_qualifiers,
                             **generic_event_args,
                         )
                     else:

@@ -260,6 +260,10 @@ def _parse_take_on(outcome: int) -> Dict:
     return dict(result=result)
 
 
+def _parse_clearance(raw_qualifiers: List) -> Dict:
+    return dict(qualifiers=_get_event_qualifiers(raw_qualifiers))
+
+
 def _parse_card(raw_qualifiers: List) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
@@ -629,9 +633,12 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_CLEARANCE:
+                        clearance_event_kwargs = _parse_clearance(
+                            raw_qualifiers
+                        )
                         event = self.event_factory.build_clearance(
                             result=None,
-                            qualifiers=None,
+                            **clearance_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif type_id == EVENT_TYPE_FOUL_COMMITTED:

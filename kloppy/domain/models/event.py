@@ -659,8 +659,8 @@ class ClearanceEvent(Event):
     ClearanceEvent
 
     Attributes:
-        event_type (EventType): `EventType.PASS` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"pass"`
+        event_type (EventType): `EventType.CLEARANCE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"clearance"`
     """
 
     event_type: EventType = EventType.CLEARANCE

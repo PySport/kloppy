@@ -173,6 +173,11 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
+def _parse_clearance(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    return {"result": None, "qualifiers": qualifiers}
+
+
 def _parse_foul(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
@@ -377,10 +382,9 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         raw_event["subEventId"]
                         == wyscout_events.OTHERS_ON_BALL.CLEARANCE
                     ):
-                        clearance_qualifiers = _parse_clearance(raw_event)
+                        clearance_event_args = _parse_clearance(raw_event)
                         event = self.event_factory.build_clearance(
-                            result=None,
-                            qualifiers=clearance_qualifiers,
+                            **clearance_event_args,
                             **generic_event_args,
                         )
                     else:

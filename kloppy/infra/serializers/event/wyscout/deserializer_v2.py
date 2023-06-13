@@ -13,8 +13,8 @@ from kloppy.domain import (
     EventDataset,
     FoulCommittedEvent,
     GenericEvent,
-    GoalkeeperAction,
-    GoalkeeperActionQualifier,
+    GoalkeeperQualifier,
+    GoalkeeperType,
     Ground,
     Metadata,
     Orientation,
@@ -103,13 +103,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     if next_event["eventId"] == wyscout_events.SAVE.EVENT:
         if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
-            qualifiers.append(
-                GoalkeeperActionQualifier(GoalkeeperAction.REFLEX)
-            )
-        if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
-            qualifiers.append(
-                GoalkeeperActionQualifier(GoalkeeperAction.SAVE_ATTEMPT)
-            )
+            qualifiers.append(GoalkeeperQualifier(GoalkeeperType.REFLEX))
 
     return {
         "result": result,
@@ -179,6 +173,25 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         if len(raw_event["positions"]) > 1
         else None,
     }
+
+
+def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
+    qualifiers = _generic_qualifiers(raw_event)
+    goalkeeper_qualifiers = []
+    if not _has_tag(raw_event, wyscout_tags.GOAL):
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperType.SAVE)
+        )
+    else:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperType.SAVE_ATTEMPT)
+        )
+    if raw_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperType.REFLEX)
+        )
+    qualifiers.extend(goalkeeper_qualifiers)
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_foul(raw_event: Dict) -> Dict:
@@ -358,6 +371,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     ball_out_event_args = _parse_ball_out(raw_event)
                     event = self.event_factory.build_ball_out(
                         **ball_out_event_args, **generic_event_args
+                    )
+                elif raw_event["eventId"] == wyscout_events.SAVE.EVENT:
+                    goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
+                    event = self.event_factory.build_goalkeeper_event(
+                        **goalkeeper_save_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.FREE_KICK.EVENT:
                     set_piece_event_args = _parse_set_piece(

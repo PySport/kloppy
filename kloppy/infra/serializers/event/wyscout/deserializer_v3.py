@@ -13,8 +13,9 @@ from kloppy.domain import (
     EventDataset,
     FoulCommittedEvent,
     GenericEvent,
-    GoalkeeperAction,
-    GoalkeeperActionQualifier,
+    GoalkeeperEvent,
+    GoalkeeperQualifier,
+    GoalkeeperType,
     Ground,
     Metadata,
     Orientation,
@@ -202,6 +203,24 @@ def _parse_recovery(raw_event: Dict) -> Dict:
     }
 
 
+def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+
+    goalkeeper_qualifiers = []
+    if "save" in raw_event["type"]["secondary"]:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperType.SAVE)
+        )
+
+    if "save_with_reflex" == "save_with_reflex":
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperType.REFLEX)
+        )
+    qualifiers.extend(goalkeeper_qualifiers)
+
+    return {"result": None, "qualifiers": qualifiers}
+
+
 def _parse_ball_out(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {"result": None, "qualifiers": qualifiers}
@@ -366,6 +385,13 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     takeon_event_args = _parse_takeon(raw_event)
                     event = self.event_factory.build_take_on(
                         **takeon_event_args, **generic_event_args
+                    )
+                elif (primary_event_type == "shot_against") & (
+                    "save" in raw_event["type"]["secondary"]
+                ):
+                    goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
+                    event = self.event_factory.build_goalkeeper_event(
+                        **goalkeeper_save_args, **generic_event_args
                     )
                 elif (
                     (primary_event_type in ["throw_in", "goal_kick"])

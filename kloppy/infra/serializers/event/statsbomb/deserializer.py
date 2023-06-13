@@ -19,6 +19,8 @@ from kloppy.domain import (
     Ground,
     Player,
     CardType,
+    GoalkeeperQualifier,
+    GoalkeeperType,
     SetPieceQualifier,
     SetPieceType,
     FormationType,
@@ -45,6 +47,7 @@ logger = logging.getLogger(__name__)
 SB_EVENT_TYPE_RECOVERY = 2
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_TYPE_GOALKEEPER_EVENT = 23
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_CARRY = 43
 
@@ -99,6 +102,29 @@ SB_BODYPART_DROP_KICK = 68
 SB_BODYPART_KEEPER_ARM = 69
 SB_BODYPART_OTHER = 70
 SB_BODYPART_NO_TOUCH = 106
+
+SB_GOALKEEPER_COLLECTED = 25
+SB_GOALKEEPER_GOAL_CONCEDED = 26
+SB_GOALKEEPER_KEEPER_SWEEPER = 27
+SB_GOALKEEPER_PENALTY_CONCEDED = 28
+SB_GOALKEEPER_PENALTY_SAVED = 29
+SB_GOALKEEPER_PUNCH = 30
+SB_GOALKEEPER_SAVE = 31
+SB_GOALKEEPER_SHOT_FACED = 32
+SB_GOALKEEPER_SHOT_SAVED = 33
+SB_GOALKEEPER_SMOTHER = 34
+
+SB_GOALKEEPER_PENALTY_SAVED_TO_POST = 109
+SB_GOALKEEPER_SAVED_TO_POST = (
+    110  # A save by the goalkeeper that hits the post
+)
+SB_GOALKEEPER_SHOT_SAVED_OFF_TARGET = 113
+SB_GOALKEEPER_SHOT_SAVED_TO_POST = (
+    114  # A shot saved by the goalkeeper that hits the post
+)
+
+SB_GOALKEEPER_CLAIM = 47
+SB_GOALKEEPER_CLEAR = 48
 
 SB_TECHNIQUE_THROUGH_BALL = 108
 
@@ -256,6 +282,33 @@ def _get_set_piece_qualifiers(pass_dict: Dict) -> List[SetPieceQualifier]:
     return qualifiers
 
 
+def _get_goalkeeper_qualifiers(
+    goalkeeper_dict: Dict,
+) -> List[SetPieceQualifier]:
+    qualifiers = []
+    save_event_types = [
+        SB_GOALKEEPER_SHOT_SAVED,
+        SB_GOALKEEPER_PENALTY_SAVED_TO_POST,
+        SB_GOALKEEPER_SAVED_TO_POST,
+        SB_GOALKEEPER_SHOT_SAVED_OFF_TARGET,
+        SB_GOALKEEPER_SHOT_SAVED_TO_POST,
+    ]
+    if "type" in goalkeeper_dict:
+        type_id = goalkeeper_dict["type"]["id"]
+        goalkeeper_qualifier = None
+        if type_id in save_event_types:
+            goalkeeper_qualifier = GoalkeeperType.SAVE
+        elif type_id == SB_GOALKEEPER_SMOTHER:
+            goalkeeper_qualifier = GoalkeeperType.SMOTHER
+        elif type_id == SB_GOALKEEPER_PUNCH:
+            goalkeeper_qualifier = GoalkeeperType.PUNCH
+
+        if goalkeeper_qualifier:
+            qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))
+
+    return qualifiers
+
+
 def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     if "outcome" in pass_dict:
         outcome_id = pass_dict["outcome"]["id"]
@@ -393,6 +446,15 @@ def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
             fidelity_version,
         ),
     }
+
+
+def _parse_goalkeeper_event(goalkeeper_dict: Dict) -> Dict:
+    qualifiers = []
+    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(goalkeeper_dict)
+    qualifiers.extend(goalkeeper_qualifiers)
+    body_part_qualifiers = _get_body_part_qualifiers(goalkeeper_dict)
+    qualifiers.extend(body_part_qualifiers)
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_take_on(take_on_dict: Dict) -> Dict:
@@ -724,7 +786,26 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(carry_event)
-
+                elif event_type == SB_EVENT_TYPE_GOALKEEPER_EVENT:
+                    goalkeeper_event_kwargs = _parse_goalkeeper_event(
+                        goalkeeper_dict=raw_event["goalkeeper"],
+                    )
+                    if goalkeeper_event_kwargs["qualifiers"]:
+                        goalkeeper_event = (
+                            self.event_factory.build_goalkeeper_event(
+                                **goalkeeper_event_kwargs,
+                                **generic_event_kwargs,
+                            )
+                        )
+                        new_events.append(goalkeeper_event)
+                    else:
+                        generic_event = self.event_factory.build_generic(
+                            result=None,
+                            qualifiers=None,
+                            event_name=raw_event["type"]["name"],
+                            **generic_event_kwargs,
+                        )
+                        new_events.append(generic_event)
                 # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(

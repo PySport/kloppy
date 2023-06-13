@@ -163,6 +163,7 @@ class EventType(Enum):
         RECOVERY (EventType):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
+        GOALKEEPER (EventType):
         FORMATION_CHANGE (EventType):
     """
 
@@ -179,6 +180,7 @@ class EventType(Enum):
     RECOVERY = "RECOVERY"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+    GOALKEEPER = "GOALKEEPER"
     FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
@@ -311,7 +313,7 @@ class BodyPart(Enum):
 
     Attributes:
         RIGHT_FOOT (BodyPart): Pass or Shot with right foot, save with right foot (for goalkeepers).
-        LEFT_FOOT (BodyPart): Pass or Shot with leftt foot, save with left foot (for goalkeepers).
+        LEFT_FOOT (BodyPart): Pass or Shot with left foot, save with left foot (for goalkeepers).
         HEAD (BodyPart): Pass or Shot with head, save with head (for goalkeepers).
         BOTH_HANDS (BodyPart): Goalkeeper only. Save with both hands.
         CHEST (BodyPart): Goalkeeper only. Save with chest.
@@ -344,14 +346,34 @@ class BodyPartQualifier(EnumQualifier):
     value: BodyPart
 
 
-class GoalkeeperAction(Enum):
+class GoalkeeperType(Enum):
+    """
+    GoalkeeperType
+
+    Attributes:
+        SAVE (GoalkeeperType): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperType): Goalkeeper catches cross.
+        PUNCH (GoalkeeperType): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperType): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperType): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperType): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperType): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = "SAVE"
+    CLAIM = "CLAIM"
+    PUNCH = "PUNCH"
+    PICK_UP = "PICK_UP"
+    SMOTHER = "SMOTHER"
+
     REFLEX = "REFLEX"
     SAVE_ATTEMPT = "SAVE_ATTEMPT"
 
 
 @dataclass
-class GoalkeeperActionQualifier(EnumQualifier):
-    value: GoalkeeperAction
+class GoalkeeperQualifier(EnumQualifier):
+    value: GoalkeeperType
 
 
 @dataclass
@@ -780,6 +802,21 @@ class FoulCommittedEvent(Event):
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class GoalkeeperEvent(Event):
+    """
+    GoalkeeperEvent
+
+    Attributes:
+        event_type (EventType): `EventType.GOALKEEPER` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "goalkeeper"
+    """
+
+    event_type: EventType = EventType.GOALKEEPER
+    event_name: str = "goalkeeper"
+
+
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset
@@ -884,7 +921,8 @@ __all__ = [
     "PassType",
     "BodyPart",
     "BodyPartQualifier",
-    "GoalkeeperAction",
-    "GoalkeeperActionQualifier",
+    "GoalkeeperEvent",
+    "GoalkeeperQualifier",
+    "GoalkeeperType",
     "CounterAttackQualifier",
 ]

@@ -103,7 +103,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif raw_event["shot"]["bodyPart"] == "left_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
-    elif raw_event["shot"]["bodyPart"] == "left_foot":
+    elif raw_event["shot"]["bodyPart"] == "right_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
     return {

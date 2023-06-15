@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 
@@ -17,16 +17,14 @@ from kloppy import skillcorner
 
 class TestSkillCornerTracking:
     @pytest.fixture
-    def meta_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/skillcorner_match_data.json"
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_match_data.json"
 
     @pytest.fixture
-    def raw_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/skillcorner_structured_data.json"
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_structured_data.json"
 
-    def test_correct_deserialization(self, raw_data: str, meta_data: str):
+    def test_correct_deserialization(self, raw_data: Path, meta_data: Path):
         dataset = skillcorner.load(
             meta_data=meta_data, raw_data=raw_data, coordinates="skillcorner"
         )
@@ -36,13 +34,13 @@ class TestSkillCornerTracking:
         assert len(dataset.records) == 34783
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.AWAY_TEAM
-        assert dataset.metadata.periods[1] == Period(
+        assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=0.0,
             end_timestamp=2753.3,
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
-        assert dataset.metadata.periods[2] == Period(
+        assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=2700.0,
             end_timestamp=5509.7,
@@ -109,7 +107,6 @@ class TestSkillCornerTracking:
     def test_correct_normalized_deserialization(
         self, meta_data: str, raw_data: str
     ):
-        base_dir = os.path.dirname(__file__)
         dataset = skillcorner.load(meta_data=meta_data, raw_data=raw_data)
 
         home_player = dataset.metadata.teams[0].players[2]

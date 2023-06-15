@@ -1,4 +1,5 @@
-from typing import TypeVar, Union
+from typing import Union, Optional
+from collections.abc import Sequence
 
 from .domain import (
     Dataset,
@@ -12,47 +13,45 @@ from .domain import (
 )
 
 
-DatasetT = TypeVar("DatasetT")
-
-
 def transform(
     dataset: Dataset,
-    to_orientation=None,
-    to_pitch_dimensions=None,
-    to_coordinate_system: Union[CoordinateSystem, Provider] = None,
+    to_orientation: Optional[Union[Orientation, str]] = None,
+    to_pitch_dimensions: Optional[Union[PitchDimensions, Sequence]] = None,
+    to_coordinate_system: Optional[
+        Union[CoordinateSystem, Provider, str]
+    ] = None,
 ) -> Dataset:
-
-    if to_pitch_dimensions and to_coordinate_system:
-        raise ValueError(
-            "You can't do both a PitchDimension and CoordinateSysetm on the same dataset transformation"
-        )
-
-    if to_orientation and isinstance(to_orientation, str):
+    # convert raw orientation to object
+    if to_orientation is not None and isinstance(to_orientation, str):
         to_orientation = Orientation[to_orientation.upper()]
 
-    if to_pitch_dimensions and (
-        isinstance(to_pitch_dimensions, list)
-        or isinstance(to_pitch_dimensions, tuple)
+    # convert raw pitch dimensions to object
+    if to_pitch_dimensions is not None and isinstance(
+        to_pitch_dimensions, Sequence
     ):
         to_pitch_dimensions = PitchDimensions(
             x_dim=Dimension(*to_pitch_dimensions[0]),
             y_dim=Dimension(*to_pitch_dimensions[1]),
         )
-        return DatasetTransformer.transform_dataset(
-            dataset=dataset,
-            to_orientation=to_orientation,
-            to_pitch_dimensions=to_pitch_dimensions,
-        )
 
-    if to_coordinate_system and isinstance(to_coordinate_system, Provider):
-        to_coordinate_system = build_coordinate_system(
-            provider=to_coordinate_system,
-            length=dataset.metadata.coordinate_system.length,
-            width=dataset.metadata.coordinate_system.width,
-        )
+    # convert raw coordinate system to object
+    if to_coordinate_system is not None:
+        if isinstance(to_coordinate_system, str):
+            to_coordinate_system = build_coordinate_system(
+                provider=Provider[to_coordinate_system.upper()],
+                length=dataset.metadata.coordinate_system.length,
+                width=dataset.metadata.coordinate_system.width,
+            )
+        elif isinstance(to_coordinate_system, Provider):
+            to_coordinate_system = build_coordinate_system(
+                provider=to_coordinate_system,
+                length=dataset.metadata.coordinate_system.length,
+                width=dataset.metadata.coordinate_system.width,
+            )
 
     return DatasetTransformer.transform_dataset(
         dataset=dataset,
         to_orientation=to_orientation,
         to_coordinate_system=to_coordinate_system,
+        to_pitch_dimensions=to_pitch_dimensions,
     )

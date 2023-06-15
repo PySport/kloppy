@@ -78,6 +78,7 @@ class Provider(Enum):
         WYSCOUT:
         KLOPPY:
         DATAFACTORY:
+        STATSPERFORM:
     """
 
     METRICA = "metrica"
@@ -90,6 +91,7 @@ class Provider(Enum):
     WYSCOUT = "wyscout"
     KLOPPY = "kloppy"
     DATAFACTORY = "datafactory"
+    STATSPERFORM = "statsperform"
     OTHER = "other"
 
     def __str__(self):
@@ -629,6 +631,30 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class StatsPerformCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.STATSPERFORM
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(0, 100),
+            y_dim=Dimension(0, 100),
+            length=self.length,
+            width=self.width,
+        )
+
+
 def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.TRACAB:
@@ -660,6 +686,9 @@ def build_coordinate_system(provider: Provider, **kwargs):
 
     if provider == Provider.SECONDSPECTRUM:
         return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
+
+    if provider == Provider.STATSPERFORM:
+        return StatsPerformCoordinateSystem(normalized=False, **kwargs)
 
 
 class DatasetFlag(Flag):
@@ -730,6 +759,9 @@ class DataRecord(ABC):
                 if next_record.matches(filter_):
                     return next_record
                 next_record = next_record.next_record
+
+    def replace(self, **changes):
+        return replace(self, **changes)
 
     def __str__(self):
         return f"<{self.__class__.__name__}>"
@@ -854,6 +886,11 @@ class Dataset(ABC, Generic[T]):
         return replace(
             self,
             records=self.find_all(filter_),
+        )
+
+    def map(self, mapper):
+        return replace(
+            self, records=[mapper(record) for record in self.records]
         )
 
     def find_all(self, filter_) -> List[T]:
@@ -1036,3 +1073,8 @@ class Dataset(ABC, Generic[T]):
             return from_dict(self.to_dict(*columns, **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} record_count={len(self.records)}>"
+
+    __str__ = __repr__

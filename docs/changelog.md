@@ -3,6 +3,17 @@
 
 Find out all changes between different kloppy versions
 
+## 3.11.0 (2023-06-05)
+
+Pull requests merged:
+
+- Fix datatype of SkillCorner metadata.periods ([#189](https://github.com/PySport/kloppy/pull/189))
+- Fix inputs of kloppy.helpers.transform ([#186](https://github.com/PySport/kloppy/pull/186))
+- Refactor pathlib tests ([#193](https://github.com/PySport/kloppy/pull/193))
+- StatsPerform deserializer ([#191](https://github.com/PySport/kloppy/pull/191))
+- Allow chaining of operators on a Dataset (filter + map) ([#183](https://github.com/PySport/kloppy/pull/183))
+- Opta remove deleted events ([#182](https://github.com/PySport/kloppy/pull/182))
+
 ## 3.10.0 (2023-04-13)
 
 Pull requests merged:

@@ -129,12 +129,45 @@ class TestHelpers:
             )
         )
 
-    def test_transform_to_coordinate_system(self):
-        base_dir = os.path.dirname(__file__)
+    def test_transform_to_orientation(self):
+        tracking_data = self._get_tracking_dataset()
 
+        transformed_dataset = tracking_data.transform(
+            to_orientation=Orientation.AWAY_TEAM,
+        )
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=0, y=50, z=0
+        )
+        assert (
+            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
+        )
+
+    def test_transform_to_pitch_dimensions(self):
+        tracking_data = self._get_tracking_dataset()
+
+        transformed_dataset = tracking_data.transform(
+            to_pitch_dimensions=PitchDimensions(
+                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            ),
+        )
+
+        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
+            x=1, y=0, z=0
+        )
+        assert transformed_dataset.frames[1].ball_coordinates == Point3D(
+            x=0, y=1, z=1
+        )
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == PitchDimensions(
+                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            )
+        )
+
+    def test_transform_to_coordinate_system(self, base_dir):
         dataset = tracab.load(
-            meta_data=f"{base_dir}/files/tracab_meta.xml",
-            raw_data=f"{base_dir}/files/tracab_raw.dat",
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
             only_alive=False,
             coordinates="tracab",
         )
@@ -171,14 +204,12 @@ class TestHelpers:
             == transformerd_coordinate_system.pitch_dimensions
         )
 
-    def test_transform_event_data(self):
+    def test_transform_event_data(self, base_dir):
         """Make sure event data that's in ACTION_EXECUTING orientation is
         transformed correctly"""
-        base_dir = os.path.dirname(__file__)
-
         dataset = statsbomb.load(
-            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
-            event_data=f"{base_dir}/files/statsbomb_event.json",
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
         )
 
         home_team, away_team = dataset.metadata.teams
@@ -222,13 +253,11 @@ class TestHelpers:
             == transformed_receipt_event.coordinates.y
         )
 
-    def test_transform_event_data_freeze_frame(self):
+    def test_transform_event_data_freeze_frame(self, base_dir):
         """Make sure the freeze frame within event data is transformed too"""
-        base_dir = os.path.dirname(__file__)
-
         dataset = statsbomb.load(
-            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
-            event_data=f"{base_dir}/files/statsbomb_event.json",
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
         )
 
         _, away_team = dataset.metadata.teams
@@ -277,23 +306,20 @@ class TestHelpers:
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
-    def test_to_pandas_generic_events(self):
-        base_dir = os.path.dirname(__file__)
+    def test_to_pandas_generic_events(self, base_dir):
         dataset = opta.load(
-            f7_data=f"{base_dir}/files/opta_f7.xml",
-            f24_data=f"{base_dir}/files/opta_f24.xml",
+            f7_data=base_dir / "files/opta_f7.xml",
+            f24_data=base_dir / "files/opta_f24.xml",
         )
 
         dataframe = dataset.to_pandas()
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
-    def test_to_pandas_incomplete_pass(self):
-        base_dir = os.path.dirname(__file__)
-
+    def test_to_pandas_incomplete_pass(self, base_dir):
         dataset = statsbomb.load(
-            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
-            event_data=f"{base_dir}/files/statsbomb_event.json",
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
         )
         df = dataset.to_pandas()
         incomplete_passes = df[
@@ -335,15 +361,13 @@ class TestHelpers:
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
-    def test_event_dataset_to_polars(self):
+    def test_event_dataset_to_polars(self, base_dir):
         """
         Make sure an event dataset can be exported as a Polars DataFrame
         """
-        base_dir = os.path.dirname(__file__)
-
         dataset = statsbomb.load(
-            lineup_data=f"{base_dir}/files/statsbomb_lineup.json",
-            event_data=f"{base_dir}/files/statsbomb_event.json",
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
         )
         df = dataset.to_df(engine="polars")
 

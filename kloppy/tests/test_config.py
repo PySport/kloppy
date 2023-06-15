@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from kloppy import opta
 from kloppy.config import set_config, get_config, config_context, reset_config
@@ -16,14 +14,12 @@ class TestConfig:
             reset_config()
 
     @pytest.fixture
-    def f24_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f24.xml"
+    def f24_data(self, base_dir) -> str:
+        return base_dir / "files/opta_f24.xml"
 
     @pytest.fixture
-    def f7_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/opta_f7.xml"
+    def f7_data(self, base_dir) -> str:
+        return base_dir / "files/opta_f7.xml"
 
     def test_set_config(self, f24_data: str, f7_data: str):
         """

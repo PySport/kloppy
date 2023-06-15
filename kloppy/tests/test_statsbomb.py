@@ -1,5 +1,5 @@
-import os
 from collections import defaultdict
+from pathlib import Path
 
 import pytest
 
@@ -29,16 +29,16 @@ class TestStatsBomb:
     """"""
 
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_event.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_event.json"
 
     @pytest.fixture
-    def lineup_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_lineup.json"
+    def lineup_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_lineup.json"
 
-    def test_correct_deserialization(self, lineup_data: str, event_data: str):
+    def test_correct_deserialization(
+        self, lineup_data: Path, event_data: Path
+    ):
         """
         This test uses data from the StatsBomb open data project.
         """
@@ -149,7 +149,7 @@ class TestStatsBomb:
         assert dataset.events[3392].get_qualifier_value(PassQualifier) is None
 
     def test_correct_normalized_deserialization(
-        self, lineup_data: str, event_data: str
+        self, lineup_data: Path, event_data: Path
     ):
         """
         This test uses data from the StatsBomb open data project.
@@ -160,7 +160,7 @@ class TestStatsBomb:
 
         assert dataset.events[10].coordinates == Point(0.2875, 0.25625)
 
-    def test_substitution(self, lineup_data: str, event_data: str):
+    def test_substitution(self, lineup_data: Path, event_data: Path):
         """
         Test substitution events
         """
@@ -188,7 +188,7 @@ class TestStatsBomb:
                 replacement_player_id
             )
 
-    def test_card(self, lineup_data: str, event_data: str):
+    def test_card(self, lineup_data: Path, event_data: Path):
         """
         Test card events
         """
@@ -203,7 +203,7 @@ class TestStatsBomb:
         for card in dataset.events:
             assert card.card_type == CardType.FIRST_YELLOW
 
-    def test_foul_committed(self, lineup_data: str, event_data: str):
+    def test_foul_committed(self, lineup_data: Path, event_data: Path):
         """
         Test foul committed events
         """
@@ -215,7 +215,7 @@ class TestStatsBomb:
 
         assert len(dataset.events) == 23
 
-    def test_related_events(self, lineup_data: str, event_data: str):
+    def test_related_events(self, lineup_data: Path, event_data: Path):
         dataset = statsbomb.load(
             lineup_data=lineup_data, event_data=event_data
         )
@@ -232,7 +232,7 @@ class TestStatsBomb:
         assert carry_event.get_related_events() == [receipt_event, pass_event]
         assert carry_event.related_pass() == pass_event
 
-    def test_player_position(self, lineup_data: str, event_data: str):
+    def test_player_position(self, lineup_data: Path, event_data: Path):
         """
         Validate position information is loaded correctly from the STARTING_XI events.
 
@@ -245,7 +245,7 @@ class TestStatsBomb:
         player_5246 = dataset.metadata.teams[0].get_player_by_id(20055)
         assert player_5246.position.position_id == "1"
 
-    def test_freeze_frame(self, lineup_data: str, event_data: str):
+    def test_freeze_frame(self, lineup_data: Path, event_data: Path):
         """
         Test freeze-frame is properly loaded and attached to shot events. The
         freeze-frames contain location information on player level.
@@ -271,13 +271,11 @@ class TestStatsBomb:
 
         assert shot_event.freeze_frame.frame_id == 3727
 
-    def test_freeze_frame_360(self):
-        base_dir = os.path.dirname(__file__)
-
+    def test_freeze_frame_360(self, base_dir):
         dataset = statsbomb.load(
-            event_data=f"{base_dir}/files/statsbomb_3788741_event.json",
-            lineup_data=f"{base_dir}/files/statsbomb_3788741_lineup.json",
-            three_sixty_data=f"{base_dir}/files/statsbomb_3788741_360.json",
+            event_data=base_dir / "files/statsbomb_3788741_event.json",
+            lineup_data=base_dir / "files/statsbomb_3788741_lineup.json",
+            three_sixty_data=base_dir / "files/statsbomb_3788741_360.json",
             coordinates="statsbomb",
         )
 

@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 
@@ -11,14 +9,12 @@ class TestEvent:
     """"""
 
     @pytest.fixture
-    def event_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_event.json"
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_event.json"
 
     @pytest.fixture
-    def lineup_data(self) -> str:
-        base_dir = os.path.dirname(__file__)
-        return f"{base_dir}/files/statsbomb_lineup.json"
+    def lineup_data(self, base_dir) -> str:
+        return base_dir / "files/statsbomb_lineup.json"
 
     @pytest.fixture()
     def dataset(self, lineup_data: str, event_data: str) -> EventDataset:
@@ -63,6 +59,23 @@ class TestEvent:
             "4c7c4ab1-6b9f-4504-a237-249c2e0c549f",
             "683c6752-13bc-4892-94ed-22e1c938f1f7",
             "55d71847-9511-4417-aea9-6f415e279011",
+        ]
+
+    def test_map(self, dataset: EventDataset):
+        """
+        Test the `map` method on a Dataset to allow chaining (filter and map)
+        """
+        goals_dataset = dataset.filter("shot.goal")
+
+        assert goals_dataset.records[0].player is not None
+        goals_dataset = goals_dataset.map(
+            lambda event: event.replace(player=None)
+        )
+
+        assert [record.player for record in goals_dataset] == [
+            None,
+            None,
+            None,
         ]
 
     def test_find_all(self, dataset: EventDataset):

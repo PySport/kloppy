@@ -228,16 +228,13 @@ def _parse_f24_datetime(dt_str: str) -> float:
 
 def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     if outcome:
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-        # receiver_coordinates = None
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
+    receiver_coordinates = Point(
+        x=float(raw_qualifiers[140]) if 140 in raw_qualifiers else 0,
+        y=float(raw_qualifiers[141]) if 141 in raw_qualifiers else 0
+    )
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 

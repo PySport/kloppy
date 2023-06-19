@@ -434,6 +434,83 @@
         "name": "Bologna"
       },
       "videoTimestamp": "8.148438"
+    },{
+      "id": 1343788476,
+      "matchId": 2852835,
+      "matchPeriod": "1H",
+      "minute": 0,
+      "second": 52,
+      "matchTimestamp": "00:00:52.511",
+      "videoTimestamp": "53.511357",
+      "type": {
+        "primary": "infraction",
+        "secondary": [
+          "foul"
+        ]
+      },
+      "location": {
+        "x": 65,
+        "y": 11
+      },
+      "team": {
+        "formation": "4-2-3-1",
+        "id": 3166,
+        "name": "Bologna"
+      },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 20623,
+        "name": "R. Soriano",
+        "position": "AMF"
+      },
+      "pass": null,
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": {
+        "yellowCard": false,
+        "redCard": false,
+        "type": "regular_foul",
+        "opponent": {
+        "id": 20583,
+        "name": "Danilo",
+        "position": "RCB"
+      }
+      },
+      "carry": null,
+      "possession": {
+        "attack": {
+          "flank": "right",
+          "withGoal": false,
+          "withShot": false,
+          "withShotOnGoal": false,
+          "xg": 0
+        },
+        "duration": "28.0201355",
+        "endLocation": {
+          "x": 83,
+          "y": 0
+        },
+        "eventIndex": 2,
+        "eventsNumber": 14,
+        "id": 663291836,
+        "startLocation": {
+          "x": 40,
+          "y": 68
+        },
+        "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+        "types": [
+          "attack"
+        ]
+      }
     }
   ],
   "formations": {

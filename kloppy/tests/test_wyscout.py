@@ -25,8 +25,8 @@ class TestWyscout:
         )
         assert dataset.events[2].coordinates == Point(36.0, 78.0)
         assert (
-                dataset.events[4].get_qualifier_value(SetPieceQualifier)
-                == SetPieceType.CORNER_KICK
+            dataset.events[4].get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
         )
         assert dataset.events[5].event_type == EventType.FOUL_COMMITTED
 
@@ -45,5 +45,3 @@ class TestWyscout:
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-
-

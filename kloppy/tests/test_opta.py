@@ -13,7 +13,7 @@ from kloppy.domain import (
     DatasetType,
     CardType,
     FormationType,
-    CounterAttackQualifier
+    CounterAttackQualifier,
 )
 
 from kloppy import opta
@@ -109,7 +109,9 @@ class TestOpta:
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
 
         # Check counterattack
-        assert CounterAttackQualifier(value=True) in dataset.events[17].qualifiers  # 2318695229
+        assert (
+            CounterAttackQualifier(value=True) in dataset.events[17].qualifiers
+        )  # 2318695229
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

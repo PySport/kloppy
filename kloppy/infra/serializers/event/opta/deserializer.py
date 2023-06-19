@@ -40,7 +40,7 @@ from kloppy.domain import (
     BodyPart,
     PassType,
     PassQualifier,
-    CounterAttackQualifier
+    CounterAttackQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -234,7 +234,7 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
         result = PassResult.INCOMPLETE
     receiver_coordinates = Point(
         x=float(raw_qualifiers[140]) if 140 in raw_qualifiers else 0,
-        y=float(raw_qualifiers[141]) if 141 in raw_qualifiers else 0
+        y=float(raw_qualifiers[141]) if 141 in raw_qualifiers else 0,
     )
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
@@ -461,7 +461,9 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_event_counter_attack_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_event_counter_attack_qualifiers(
+    raw_qualifiers: List,
+) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_COUNTER_ATTACK in raw_qualifiers:
         qualifiers.append(CounterAttackQualifier(True))

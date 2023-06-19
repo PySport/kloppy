@@ -346,7 +346,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         raw_event["second"] + raw_event["minute"] * 60
                     )
                     if period_id == 1
-                    else float(raw_event["second"] + (raw_event["minute"] * 60) - (60 * 45)),
+                    else float(
+                        raw_event["second"]
+                        + (raw_event["minute"] * 60)
+                        - (60 * 45)
+                    ),
                 }
 
                 primary_event_type = raw_event["type"]["primary"]

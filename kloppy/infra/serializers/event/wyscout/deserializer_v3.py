@@ -415,7 +415,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         if event and self.should_include_event(event):
                             events.append(transformer.transform_event(event))
                         continue
-                    if "yellow_card" in secondary_event_types:
+                    if (
+                        "yellow_card" in secondary_event_types
+                        or "red_card" in secondary_event_types
+                    ):
                         card_event_args = _parse_card(raw_event)
                         event = self.event_factory.build_card(
                             **card_event_args, **generic_event_args

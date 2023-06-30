@@ -24,6 +24,7 @@ class Frame(DataRecord):
     players_data: Dict[Player, PlayerData]
     other_data: Dict[str, Any]
     ball_coordinates: Point3D
+    ball_speed: int
 
     @property
     def record_id(self) -> int:

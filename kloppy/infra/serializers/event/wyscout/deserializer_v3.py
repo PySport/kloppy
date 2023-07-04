@@ -10,6 +10,9 @@ from kloppy.domain import (
     CardType,
     CounterAttackQualifier,
     Dimension,
+    DuelType,
+    DuelQualifier,
+    DuelResult,
     EventDataset,
     FoulCommittedEvent,
     GenericEvent,
@@ -248,24 +251,46 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
+
     result = None
+    duel_qualifiers = []
+    if "loose_ball_duel" in raw_event["type"]["secondary"]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.LOOSE_BALL)])
+    if "ground_duel" in raw_event["type"]["secondary"]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    if "sliding_tackle" in raw_event["type"]["secondary"]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND), DuelQualifier(value=DuelType.SLIDING_TACKLE)])
+    if "aerial_duel" in raw_event["type"]["secondary"]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.AERIAL)])
+
+
+    qualifiers.extend(duel_qualifiers)
+
+    # get result value
     if "offensive_duel" in raw_event["type"]["secondary"]:
         if raw_event["groundDuel"]["keptPossession"]:
-            result = TakeOnResult.COMPLETE
+            result = DuelResult.WON
         else:
-            result = TakeOnResult.INCOMPLETE
+            result = DuelResult.LOST
     elif "defensive_duel" in raw_event["type"]["secondary"]:
         if raw_event["groundDuel"]["recoveredPossession"]:
-            result = TakeOnResult.COMPLETE
+            result = DuelResult.WON
         else:
-            result = TakeOnResult.INCOMPLETE
+            result = DuelResult.LOST
     elif "aerial_duel" in raw_event["type"]["secondary"]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.AERIAL)])
         if raw_event["aerialDuel"]["firstTouch"]:
-            result = TakeOnResult.COMPLETE
+            result = DuelResult.WON
         else:
-            result = TakeOnResult.INCOMPLETE
+            result = DuelResult.LOST
+    # elif "sliding_tackle" in raw_event["type"]["secondary"]:
+    #     duel_qualifiers.extend([DuelQualifier(value=DuelType.AERIAL)])
+    #     if raw_event["aerialDuel"]["firstTouch"]:
+    #         result = DuelResult.WON
+    #     else:
+    #         result = DuelResult.LOST
 
     return {"result": result, "qualifiers": qualifiers}
 
@@ -363,9 +388,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **pass_event_args, **generic_event_args
                     )
                 elif primary_event_type == "duel":
-                    takeon_event_args = _parse_takeon(raw_event)
-                    event = self.event_factory.build_take_on(
-                        **takeon_event_args, **generic_event_args
+                    duel_event_args = _parse_duel(raw_event)
+                    event = self.event_factory.build_duel(
+                        **duel_event_args, **generic_event_args
                     )
                 elif (
                     (primary_event_type in ["throw_in", "goal_kick"])

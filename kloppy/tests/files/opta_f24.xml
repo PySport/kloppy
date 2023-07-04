@@ -85,10 +85,8 @@
       <Q id="2022515959" qualifier_id="285" />
       <Q id="1344596334" qualifier_id="233" value="9" />
     </Event>
-    <Event id="2140914735" event_id="9" type_id="44" period_id="1" min="0" sec="21" player_id="84359" team_id="569" outcome="1" x="58.2" y="26.6" timestamp="2018-09-23T15:02:35.171" last_modified="2018-09-23T15:02:37" version="1537711356793">
-      <Q id="1681866436" qualifier_id="56" value="Center" />
-      <Q id="1234458284" qualifier_id="286" />
-      <Q id="1514024241" qualifier_id="233" value="4" />
+    <Event id="2140914735" event_id="9" type_id="67" period_id="1" min="0" sec="21" player_id="84359" team_id="569" outcome="1" x="58.2" y="26.6" timestamp="2018-09-23T15:02:35.171" last_modified="2018-09-23T15:02:37" version="1537711356793">
+      <Q id="4100379669" qualifier_id="233" value="892" />
     </Event>
     <Event id="1821879260" event_id="321" type_id="30" period_id="1" min="46" sec="7" team_id="2592" outcome="1" x="0.0" y="0.0" timestamp="2018-09-23T15:48:21.132" last_modified="2018-09-23T15:48:22" version="1537714101136">
       <Q id="1701622280" qualifier_id="57" value="0" />

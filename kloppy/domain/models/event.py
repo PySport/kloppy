@@ -140,10 +140,12 @@ class DuelResult(ResultType):
     Attributes:
         WON (DuelResult): When winning the duel (player touching the ball first)
         LOST (DuelResult): When losing the duel (opponent touches the ball first)
+        NEUTRAL (DuelResult): When neither player wins duel [Mainly for WyScout v2]
     """
 
     WON = "WON"
     LOST = "LOST"
+    NEUTRAL = "NEUTRAL"
 
     @property
     def is_success(self):
@@ -385,14 +387,12 @@ class DuelType(Enum):
         GROUND (DuelType): A duel when the ball is on the ground.
         LOOSE_BALL (DuelType): When the ball is not under the control of any particular player or team.
         SLIDING_TACKLE (DuelType): A duel where the player slides on the ground to kick the ball away from an opponent.
-        STANDING_TACKLE (DuelType): A duel where the player makes a standing tackle.
     """
 
     AERIAL = "AERIAL"
     GROUND = "GROUND"
     LOOSE_BALL = "LOOSE_BALL"
     SLIDING_TACKLE = "SLIDING_TACKLE"
-    STANDING_TACKLE = "STANDING_TACKLE"
 
 
 @dataclass
@@ -468,7 +468,6 @@ class Event(DataRecord, ABC):
                 if isinstance(qualifier, qualifier_type):
                     return qualifier.value
         return None
-
 
     def get_qualifier_values(self, qualifier_type: Type[Qualifier]):
         """

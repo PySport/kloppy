@@ -353,7 +353,6 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
         return Provider.DATAFACTORY
 
     def deserialize(self, inputs: DatafactoryInputs) -> EventDataset:
-
         transformer = self.get_transformer(length=2, width=2)
 
         with performance_logging("load data", logger=logger):

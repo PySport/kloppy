@@ -253,44 +253,64 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
 
 def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
-
-    result = None
     duel_qualifiers = []
-    if "loose_ball_duel" in raw_event["type"]["secondary"]:
-        duel_qualifiers.extend([DuelQualifier(value=DuelType.LOOSE_BALL)])
-    if "ground_duel" in raw_event["type"]["secondary"]:
-        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
-    if "sliding_tackle" in raw_event["type"]["secondary"]:
-        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND), DuelQualifier(value=DuelType.SLIDING_TACKLE)])
-    if "aerial_duel" in raw_event["type"]["secondary"]:
-        duel_qualifiers.extend([DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.AERIAL)])
+    secondary_types = raw_event["type"]["secondary"]
 
+    if "ground_duel" in secondary_types:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.GROUND))
+    elif "aerial_duel" in secondary_types:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    else:
+        if (
+            "loose_ball_duel" in secondary_types
+            and "sliding_tackle" in secondary_types
+        ):
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
+        elif "loose_ball_duel" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                ]
+            )
+        elif "sliding_tackle" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
 
     qualifiers.extend(duel_qualifiers)
 
-    # get result value
-    if "offensive_duel" in raw_event["type"]["secondary"]:
-        if raw_event["groundDuel"]["keptPossession"]:
-            result = DuelResult.WON
-        else:
-            result = DuelResult.LOST
-    elif "defensive_duel" in raw_event["type"]["secondary"]:
-        if raw_event["groundDuel"]["recoveredPossession"]:
-            result = DuelResult.WON
-        else:
-            result = DuelResult.LOST
-    elif "aerial_duel" in raw_event["type"]["secondary"]:
-        duel_qualifiers.extend([DuelQualifier(value=DuelType.AERIAL)])
-        if raw_event["aerialDuel"]["firstTouch"]:
-            result = DuelResult.WON
-        else:
-            result = DuelResult.LOST
-    # elif "sliding_tackle" in raw_event["type"]["secondary"]:
-    #     duel_qualifiers.extend([DuelQualifier(value=DuelType.AERIAL)])
-    #     if raw_event["aerialDuel"]["firstTouch"]:
-    #         result = DuelResult.WON
-    #     else:
-    #         result = DuelResult.LOST
+    if (
+        "offensive_duel" in secondary_types
+        and raw_event["groundDuel"]["keptPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "defensive_duel" in secondary_types
+        and raw_event["groundDuel"]["recoveredPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "aerial_duel" in secondary_types
+        and raw_event["aerialDuel"]["firstTouch"]
+    ):
+        result = DuelResult.WON
+    else:
+        result = DuelResult.LOST
 
     return {"result": result, "qualifiers": qualifiers}
 

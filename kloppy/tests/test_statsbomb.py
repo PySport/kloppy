@@ -150,9 +150,14 @@ class TestStatsBomb:
 
         assert dataset.events[3400].get_qualifier_value(PassQualifier) is None
 
-        assert dataset.events[194].get_qualifier_values(DuelQualifier)[1].value == DuelType.AERIAL
-        assert dataset.events[307].get_qualifier_values(DuelQualifier)[1].value == DuelType.STANDING_TACKLE
-        assert dataset.events[4032].get_qualifier_values(DuelQualifier)[1].value == DuelType.GROUND
+        assert (
+            dataset.events[194].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[4032].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.GROUND
+        )
 
     def test_correct_normalized_deserialization(
         self, lineup_data: Path, event_data: Path

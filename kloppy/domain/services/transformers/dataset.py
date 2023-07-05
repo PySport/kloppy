@@ -30,7 +30,6 @@ class DatasetTransformer:
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
     ):
-
         if (
             from_pitch_dimensions
             and from_coordinate_system
@@ -90,7 +89,6 @@ class DatasetTransformer:
     def change_point_dimensions(
         self, point: Union[Point, Point3D, None]
     ) -> Union[Point, Point3D, None]:
-
         if point is None:
             return None
 
@@ -108,7 +106,6 @@ class DatasetTransformer:
     def flip_point(
         self, point: Union[Point, Point3D, None]
     ) -> Union[Point, Point3D, None]:
-
         if not point:
             return None
 
@@ -160,7 +157,6 @@ class DatasetTransformer:
         return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
-
         # Change coordinate system
         if self._needs_coordinate_system_change:
             frame = self.__change_frame_coordinate_system(frame)
@@ -178,7 +174,6 @@ class DatasetTransformer:
         return frame
 
     def __change_frame_coordinate_system(self, frame: Frame):
-
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -205,7 +200,6 @@ class DatasetTransformer:
         )
 
     def __change_frame_dimensions(self, frame: Frame):
-
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -234,7 +228,6 @@ class DatasetTransformer:
     def __change_point_coordinate_system(
         self, point: Union[Point, Point3D, None]
     ) -> Union[Point, Point3D, None]:
-
         if not point:
             return None
 
@@ -257,7 +250,6 @@ class DatasetTransformer:
             return Point(x=x, y=y)
 
     def __flip_frame(self, frame: Frame):
-
         players_data = {}
         for player, data in frame.players_data.items():
             players_data[player] = PlayerData(
@@ -281,7 +273,6 @@ class DatasetTransformer:
         )
 
     def transform_event(self, event: Event) -> Event:
-
         # Change coordinate system
         if self._needs_coordinate_system_change:
             event = self.__change_event_coordinate_system(event)
@@ -303,7 +294,6 @@ class DatasetTransformer:
         return event
 
     def __change_event_coordinate_system(self, event: Event):
-
         position_changes = {
             field.name: self.__change_point_coordinate_system(
                 getattr(event, field.name)
@@ -316,7 +306,6 @@ class DatasetTransformer:
         return replace(event, **position_changes)
 
     def __change_event_dimensions(self, event: Event):
-
         position_changes = {
             field.name: self.change_point_dimensions(
                 getattr(event, field.name)
@@ -329,7 +318,6 @@ class DatasetTransformer:
         return replace(event, **position_changes)
 
     def __flip_event(self, event: Event):
-
         position_changes = {
             field.name: self.flip_point(getattr(event, field.name))
             for field in fields(event)
@@ -350,7 +338,6 @@ class DatasetTransformer:
         to_orientation: Optional[Orientation] = None,
         to_coordinate_system: Optional[CoordinateSystem] = None,
     ) -> Dataset:
-
         if (
             to_pitch_dimensions is None
             and to_orientation is None

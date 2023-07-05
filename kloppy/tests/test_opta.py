@@ -110,9 +110,14 @@ class TestOpta:
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
 
         # Check DuelQualifiers
-        assert dataset.events[7].get_qualifier_values(DuelQualifier)[1].value == DuelType.AERIAL
-        assert dataset.events[8].get_qualifier_values(DuelQualifier)[1].value == DuelType.GROUND
-        assert dataset.events[16].get_qualifier_values(DuelQualifier)[1].value == DuelType.STANDING_TACKLE
+        assert (
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.GROUND
+        )
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

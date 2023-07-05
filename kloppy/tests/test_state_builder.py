@@ -29,10 +29,10 @@ class TestStateBuilder:
             events_per_score[str(score)] = len(events)
 
         assert events_per_score == {
-            "0-0": 2898,
+            "0-0": 2909,
             "1-0": 717,
             "2-0": 405,
-            "3-0": 3,
+            "3-0": 8,
         }
 
     def test_sequence_state_builder(self, base_dir):
@@ -92,8 +92,8 @@ class TestStateBuilder:
             events_per_formation_change[str(formation)] = len(events)
 
         # inspect FormationChangeEvent usage and formation state_builder
-        assert events_per_formation_change["4-1-4-1"] == 3074
-        assert events_per_formation_change["4-4-2"] == 949
+        assert events_per_formation_change["4-1-4-1"] == 3085
+        assert events_per_formation_change["4-4-2"] == 954
 
         assert dataset.metadata.teams[0].starting_formation == FormationType(
             "4-4-2"

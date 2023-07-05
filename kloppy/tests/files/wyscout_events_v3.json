@@ -441,7 +441,8 @@
         "primary": "duel",
         "secondary": [
           "ground_duel",
-          "offensive_duel"
+          "offensive_duel",
+          "loose_ball_duel"
         ]
       },
       "location": {

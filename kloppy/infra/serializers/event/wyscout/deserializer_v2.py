@@ -10,6 +10,9 @@ from kloppy.domain import (
     CardType,
     CounterAttackQualifier,
     Dimension,
+    DuelResult,
+    DuelQualifier,
+    DuelType,
     EventDataset,
     FoulCommittedEvent,
     GenericEvent,
@@ -33,8 +36,6 @@ from kloppy.domain import (
     SetPieceType,
     ShotEvent,
     ShotResult,
-    TakeOnEvent,
-    TakeOnResult,
     Team,
 )
 from kloppy.utils import performance_logging
@@ -245,13 +246,44 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
+    duel_qualifiers = []
+
+    sub_event_id = raw_event["subEventId"]
+
+    if sub_event_id == wyscout_events.DUEL.AERIAL:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    elif sub_event_id in [
+        wyscout_events.DUEL.GROUND_ATTACKING,
+        wyscout_events.DUEL.GROUND_DEFENDING,
+    ]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif sub_event_id == wyscout_events.DUEL.GROUND_LOOSE_BALL:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.GROUND),
+            ]
+        )
+
+    if _has_tag(raw_event, wyscout_tags.SLIDING_TACKLE):
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.SLIDING_TACKLE)])
+
+    qualifiers.extend(duel_qualifiers)
+
     result = None
-    if _has_tag(raw_event, wyscout_tags.LOST):
-        result = TakeOnResult.INCOMPLETE
     if _has_tag(raw_event, wyscout_tags.WON):
-        result = TakeOnResult.COMPLETE
+        result = DuelResult.WON
+    elif _has_tag(raw_event, wyscout_tags.LOST):
+        result = DuelResult.LOST
+    elif _has_tag(raw_event, wyscout_tags.NEUTRAL):
+        result = DuelResult.NEUTRAL
 
     return {"result": result, "qualifiers": qualifiers}
 
@@ -386,9 +418,9 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         **recovery_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] == wyscout_events.DUEL.EVENT:
-                    takeon_event_args = _parse_takeon(raw_event)
-                    event = self.event_factory.build_take_on(
-                        **takeon_event_args, **generic_event_args
+                    duel_event_args = _parse_duel(raw_event)
+                    event = self.event_factory.build_duel(
+                        **duel_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] not in [
                     wyscout_events.SAVE.EVENT,

@@ -87,24 +87,13 @@ SB_SHOT_OUTCOME_SAVED_TO_POST = 116
 SB_EVENT_TYPE_AERIAL_LOST = 10
 SB_EVENT_TYPE_TACKLE = 11
 
-# SB_50_50_OUTCOME_WON = 108
-# SB_50_50_OUTCOME_LOST = 109
-# SB_50_50_OUTCOME_SUCCESS_TO_OPPOSITION = 2  # TODO: Documentation says: 148 - Asking StatsBomb support
-# SB_50_50_OUTCOME_SUCCESS_TO_TEAM = 3  # TODO: Documentation says: 147 - Asking StatsBomb support
-#
-# SB_DUEL_OUTCOME_LOST = 1
-# SB_DUEL_OUTCOME_WON = 4
-# SB_DUEL_OUTCOME_LOST_IN_PLAY = 13
-# SB_DUEL_OUTCOME_LOST_OUT = 14
-# SB_DUEL_OUTCOME_SUCCESS = 15
-# SB_DUEL_OUTCOME_SUCCESS_IN_PLAY = 16
-# SB_DUEL_OUTCOME_SUCCESS_OUT = 17
-DUEL_WON_NAMES = ["Won", "Success To Team", "Success", "Success In Play", "Success Out"]
-DUEL_LOST_NAMES = ["Lost", "Aerial Lost", "Success To Opposition", "Lost In Play", "Lost Out"]
-# DUEL_WON_IDS = [SB_50_50_OUTCOME_WON, SB_50_50_OUTCOME_SUCCESS_TO_TEAM, SB_DUEL_OUTCOME_WON, SB_DUEL_OUTCOME_SUCCESS,
-#                 SB_DUEL_OUTCOME_SUCCESS_IN_PLAY, SB_DUEL_OUTCOME_SUCCESS_OUT]
-# DUEL_LOST_IDS = [SB_50_50_OUTCOME_LOST, SB_50_50_OUTCOME_SUCCESS_TO_OPPOSITION, SB_DUEL_OUTCOME_LOST,
-#                  SB_DUEL_OUTCOME_LOST_IN_PLAY, SB_DUEL_OUTCOME_LOST_OUT, SB_EVENT_TYPE_AERIAL_LOST]
+DUEL_WON_NAMES = [
+    "Won",
+    "Success To Team",
+    "Success",
+    "Success In Play",
+    "Success Out",
+]
 
 SB_EVENT_TYPE_FREE_KICK = 62
 SB_EVENT_TYPE_THROW_IN = 67
@@ -443,56 +432,55 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
     }
 
 
-def _parse_duel(raw_event: dict, event_type: int, ) -> Dict:
-    qualifiers = []
+def _parse_duel(
+    raw_event: dict,
+    event_type: int,
+) -> Dict:
+    duel_dict = None
+    duel_qualifiers = []
 
     if event_type == SB_EVENT_TYPE_DUEL:
-        duel_dict = raw_event["duel"]
-        if "type" in duel_dict:
-            type_id = duel_dict["type"]["id"]
-            if type_id == SB_EVENT_TYPE_AERIAL_LOST:
-                duel_qualifiers = [DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.AERIAL)]
-            elif type_id == SB_EVENT_TYPE_TACKLE:
-                duel_qualifiers = [DuelQualifier(value=DuelType.GROUND), DuelQualifier(value=DuelType.STANDING_TACKLE)]
+        duel_dict = raw_event.get("duel", {})
+        type_id = duel_dict.get("type", {}).get("id")
+        if type_id == SB_EVENT_TYPE_AERIAL_LOST:
+            duel_qualifiers = [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        elif type_id == SB_EVENT_TYPE_TACKLE:
+            duel_qualifiers = [DuelQualifier(value=DuelType.GROUND)]
     elif event_type == SB_EVENT_TYPE_50_50:
-        duel_dict = raw_event["50_50"]
-        duel_qualifiers = [DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.GROUND)]
+        duel_dict = raw_event.get("50_50", {})
+        duel_qualifiers = [
+            DuelQualifier(value=DuelType.LOOSE_BALL),
+            DuelQualifier(value=DuelType.GROUND),
+        ]
 
-    qualifiers.extend(duel_qualifiers)
-    body_part_qualifiers = _get_body_part_qualifiers(duel_dict)
-    qualifiers.extend(body_part_qualifiers)
+    qualifiers = duel_qualifiers + _get_body_part_qualifiers(duel_dict)
 
-    if "outcome" in duel_dict:
-        outcome_name = duel_dict["outcome"]["name"]
-    else:
-        outcome_name = duel_dict["type"]["name"]
+    outcome_name = duel_dict.get("outcome", {}).get("name") or duel_dict.get(
+        "type", {}
+    ).get("name")
 
-    result = None
     if outcome_name in DUEL_WON_NAMES:
         result = DuelResult.WON
-    elif outcome_name in DUEL_LOST_NAMES:
+    else:
         result = DuelResult.LOST
 
-    return {
-        "result": result,
-        "qualifiers": qualifiers
-    }
+    return {"result": result, "qualifiers": qualifiers}
 
 
 def _parse_aerial_won_duel(raw_event: dict, type_name: str) -> Dict:
-    qualifiers = []
     aerial_won_dict = raw_event[type_name]
-    duel_qualifiers = [DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.AERIAL)]
+    duel_qualifiers = [
+        DuelQualifier(value=DuelType.LOOSE_BALL),
+        DuelQualifier(value=DuelType.AERIAL),
+    ]
+    qualifiers = duel_qualifiers + _get_body_part_qualifiers(aerial_won_dict)
+
     result = DuelResult.WON
 
-    qualifiers.extend(duel_qualifiers)
-    body_part_qualifiers = _get_body_part_qualifiers(aerial_won_dict)
-    qualifiers.extend(body_part_qualifiers)
-
-    return {
-        "result": result,
-        "qualifiers": qualifiers
-    }
+    return {"result": result, "qualifiers": qualifiers}
 
 
 def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
@@ -908,9 +896,12 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     )
                     new_events.append(generic_event)
 
-                # Add possible aerial won - Last, since applicable to multiple event types
+                # Add possible aerial won - Applicable to multiple event types
                 for type_name in ["shot", "clearance", "miscontrol", "pass"]:
-                    if type_name in raw_event and "aerial_won" in raw_event[type_name]:
+                    if (
+                        type_name in raw_event
+                        and "aerial_won" in raw_event[type_name]
+                    ):
                         duel_event_kwargs = _parse_aerial_won_duel(
                             raw_event=raw_event, type_name=type_name
                         )
@@ -919,7 +910,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                             **generic_event_kwargs,
                         )
                         new_events.append(duel_event)
-
 
                 for event in new_events:
                     if self.should_include_event(event):

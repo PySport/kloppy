@@ -20,6 +20,8 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     DuelResult,
+    DuelType,
+    DuelQualifier,
     Ground,
     Score,
     Provider,
@@ -41,8 +43,6 @@ from kloppy.domain import (
     BodyPart,
     PassType,
     PassQualifier,
-    DuelType,
-    DuelQualifier
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -319,8 +319,22 @@ def _parse_shot(
 
 def _parse_duel(raw_qualifiers: List, type_id: int, outcome: int) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
-    duel_qualifiers = _get_duel_qualifiers(type_id)
-    qualifiers.extend(duel_qualifiers)
+    if type_id == EVENT_TYPE_TACKLE:
+        qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif type_id == EVENT_TYPE_AERIAL:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    elif type_id == EVENT_TYPE_50_50:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.GROUND),
+            ]
+        )
 
     if outcome:
         result = DuelResult.WON
@@ -473,17 +487,6 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
 
     return qualifiers
-
-
-def _get_duel_qualifiers(type_id: int) -> List[Qualifier]:
-    if type_id == EVENT_TYPE_TACKLE:
-        duel_qualifiers = [DuelQualifier(value=DuelType.GROUND), DuelQualifier(value=DuelType.STANDING_TACKLE)]
-    elif type_id == EVENT_TYPE_AERIAL:
-        duel_qualifiers = [DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.AERIAL)]
-    elif type_id == EVENT_TYPE_50_50:
-        duel_qualifiers = [DuelQualifier(value=DuelType.LOOSE_BALL), DuelQualifier(value=DuelType.GROUND)]
-
-    return duel_qualifiers
 
 
 def _get_event_type_name(type_id: int) -> str:
@@ -676,12 +679,16 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
+
                     elif type_id in DUEL_EVENTS:
-                        duel_event_kwargs = _parse_duel(raw_qualifiers, type_id, outcome)
+                        duel_event_kwargs = _parse_duel(
+                            raw_qualifiers, type_id, outcome
+                        )
                         event = self.event_factory.build_duel(
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
+
                     elif type_id == EVENT_TYPE_FOUL_COMMITTED:
                         event = self.event_factory.build_foul_committed(
                             result=None,

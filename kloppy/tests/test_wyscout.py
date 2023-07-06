@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from kloppy.domain import Point, SetPieceType, SetPieceQualifier
+from kloppy.domain.models import EventType
 
 from kloppy import wyscout
 
@@ -24,6 +25,7 @@ class TestWyscout:
             data_version="V3",
         )
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
+        assert dataset.events[5].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
@@ -36,6 +38,7 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
+        assert dataset.events[136].event_type == EventType.CLEARANCE
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")

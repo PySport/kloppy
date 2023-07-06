@@ -12,10 +12,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PassEvent,
-    ShotEvent,
-    TakeOnEvent,
-    GenericEvent,
     PassResult,
     ShotResult,
     TakeOnResult,
@@ -25,12 +21,7 @@ from kloppy.domain import (
     Metadata,
     Player,
     Position,
-    RecoveryEvent,
-    BallOutEvent,
-    FoulCommittedEvent,
-    FormationChangeEvent,
     FormationType,
-    CardEvent,
     CardType,
     CardQualifier,
     Qualifier,
@@ -54,6 +45,7 @@ EVENT_TYPE_DELETED_EVENT = 43
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
 EVENT_TYPE_TAKE_ON = 3
+EVENT_TYPE_CLEARANCE = 12
 EVENT_TYPE_SHOT_MISS = 13
 EVENT_TYPE_SHOT_POST = 14
 EVENT_TYPE_SHOT_SAVED = 15
@@ -267,6 +259,10 @@ def _parse_take_on(outcome: int) -> Dict:
     else:
         result = TakeOnResult.INCOMPLETE
     return dict(result=result)
+
+
+def _parse_clearance(raw_qualifiers: List) -> Dict:
+    return dict(qualifiers=_get_event_qualifiers(raw_qualifiers))
 
 
 def _parse_card(raw_qualifiers: List) -> Dict:
@@ -636,21 +632,27 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
                         event = self.event_factory.build_shot(**kwargs)
-
                     elif type_id == EVENT_TYPE_RECOVERY:
                         event = self.event_factory.build_recovery(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-
+                    elif type_id == EVENT_TYPE_CLEARANCE:
+                        clearance_event_kwargs = _parse_clearance(
+                            raw_qualifiers
+                        )
+                        event = self.event_factory.build_clearance(
+                            result=None,
+                            **clearance_event_kwargs,
+                            **generic_event_kwargs,
+                        )
                     elif type_id == EVENT_TYPE_FOUL_COMMITTED:
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-
                     elif type_id in BALL_OUT_EVENTS:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         event = self.event_factory.build_ball_out(
@@ -658,7 +660,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-
                     elif type_id == EVENT_TYPE_FORMATION_CHANGE:
                         formation_change_event_kwargs = (
                             _parse_formation_change(raw_qualifiers)
@@ -669,7 +670,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **formation_change_event_kwargs,
                             **generic_event_kwargs,
                         )
-
                     elif type_id == EVENT_TYPE_CARD:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_qualifiers)
@@ -678,7 +678,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **card_event_kwargs,
                             **generic_event_kwargs,
                         )
-
                     else:
                         event = self.event_factory.build_generic(
                             **generic_event_kwargs,

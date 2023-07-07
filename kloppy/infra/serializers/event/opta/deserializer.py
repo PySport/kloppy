@@ -667,8 +667,8 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **generic_event_kwargs,
                         )
                     elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
-                            outcome == 0
-                        ):
+                        outcome == 0
+                    ):
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,

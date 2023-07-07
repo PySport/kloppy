@@ -3,37 +3,25 @@ import logging
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
-    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
     CounterAttackQualifier,
-    Dimension,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
-    GoalkeeperAction,
-    GoalkeeperActionQualifier,
     Ground,
     Metadata,
     Orientation,
-    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
-    PitchDimensions,
     Player,
     Point,
     Provider,
     Qualifier,
-    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    TakeOnEvent,
     TakeOnResult,
     Team,
 )
@@ -102,7 +90,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif raw_event["shot"]["bodyPart"] == "left_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
-    elif raw_event["shot"]["bodyPart"] == "left_foot":
+    elif raw_event["shot"]["bodyPart"] == "right_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
     return {
@@ -192,6 +180,14 @@ def _parse_card(raw_event: Dict) -> Dict:
 
 
 def _parse_recovery(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    return {
+        "result": None,
+        "qualifiers": qualifiers,
+    }
+
+
+def _parse_clearance(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -369,6 +365,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     takeon_event_args = _parse_takeon(raw_event)
                     event = self.event_factory.build_take_on(
                         **takeon_event_args, **generic_event_args
+                    )
+                elif primary_event_type == "clearance":
+                    clearance_event_args = _parse_clearance(raw_event)
+                    event = self.event_factory.build_clearance(
+                        **clearance_event_args, **generic_event_args
                     )
                 elif (
                     (primary_event_type in ["throw_in", "goal_kick"])

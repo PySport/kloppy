@@ -10,6 +10,7 @@ from kloppy.domain import (
     TakeOnEvent,
     RecoveryEvent,
     CarryEvent,
+    ClearanceEvent,
     FormationChangeEvent,
     BallOutEvent,
     PlayerOnEvent,
@@ -81,6 +82,9 @@ class EventFactory:
 
     def build_carry(self, **kwargs) -> CarryEvent:
         return create_event(CarryEvent, **kwargs)
+
+    def build_clearance(self, **kwargs) -> ClearanceEvent:
+        return create_event(ClearanceEvent, **kwargs)
 
     def build_formation_change(self, **kwargs) -> FormationChangeEvent:
         return create_event(FormationChangeEvent, **kwargs)

@@ -336,10 +336,7 @@ def _parse_duel(raw_qualifiers: List, type_id: int, outcome: int) -> Dict:
             ]
         )
 
-    if outcome:
-        result = DuelResult.WON
-    else:
-        result = DuelResult.LOST
+    result = DuelResult.WON if outcome else DuelResult.LOST
 
     return dict(
         result=result,

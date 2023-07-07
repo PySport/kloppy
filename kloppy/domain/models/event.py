@@ -488,10 +488,7 @@ class Event(DataRecord, ABC):
                 if isinstance(qualifier, qualifier_type):
                     qualifiers.append(qualifier)
 
-            if qualifiers:
-                return qualifiers
-
-        return None
+        return qualifiers
 
     def get_related_events(self) -> List["Event"]:
         if not self.dataset:

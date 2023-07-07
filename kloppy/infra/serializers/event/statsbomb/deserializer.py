@@ -462,10 +462,9 @@ def _parse_duel(
         "type", {}
     ).get("name")
 
-    if outcome_name in DUEL_WON_NAMES:
-        result = DuelResult.WON
-    else:
-        result = DuelResult.LOST
+    result = (
+        DuelResult.WON if outcome_name in DUEL_WON_NAMES else DuelResult.LOST
+    )
 
     return {"result": result, "qualifiers": qualifiers}
 
@@ -909,7 +908,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
-                        new_events.append(duel_event)
+                        # add duel event as first event.
+                        new_events.insert(0, duel_event)
 
                 for event in new_events:
                     if self.should_include_event(event):

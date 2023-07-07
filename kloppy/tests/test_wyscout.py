@@ -31,7 +31,7 @@ class TestWyscout:
             data_version="V3",
         )
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
-        assert dataset.events[5].event_type == EventType.CLEARANCE
+        assert dataset.events[8].event_type == EventType.CLEARANCE
 
         assert (
             dataset.events[5].get_qualifier_value(DuelQualifier)

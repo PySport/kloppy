@@ -24,6 +24,7 @@ from kloppy.domain.models.event import (
     CardType,
     PassQualifier,
     PassType,
+    EventType,
 )
 
 
@@ -158,6 +159,8 @@ class TestStatsBomb:
             dataset.events[4032].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.GROUND
         )
+
+        assert dataset.events[271].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_deserialization(
         self, lineup_data: Path, event_data: Path

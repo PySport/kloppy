@@ -60,6 +60,7 @@ EVENT_TYPE_TAKE_ON = 3
 EVENT_TYPE_TACKLE = 7
 EVENT_TYPE_AERIAL = 44
 EVENT_TYPE_50_50 = 67
+EVENT_TYPE_CLEARANCE = 12
 EVENT_TYPE_SHOT_MISS = 13
 EVENT_TYPE_SHOT_POST = 14
 EVENT_TYPE_SHOT_SAVED = 15
@@ -274,6 +275,10 @@ def _parse_take_on(outcome: int) -> Dict:
     else:
         result = TakeOnResult.INCOMPLETE
     return dict(result=result)
+
+
+def _parse_clearance(raw_qualifiers: List) -> Dict:
+    return dict(qualifiers=_get_event_qualifiers(raw_qualifiers))
 
 
 def _parse_card(raw_qualifiers: List) -> Dict:
@@ -674,6 +679,16 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = self.event_factory.build_recovery(
                             result=None,
                             qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+
+                    elif type_id == EVENT_TYPE_CLEARANCE:
+                        clearance_event_kwargs = _parse_clearance(
+                            raw_qualifiers
+                        )
+                        event = self.event_factory.build_clearance(
+                            result=None,
+                            **clearance_event_kwargs,
                             **generic_event_kwargs,
                         )
 

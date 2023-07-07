@@ -8,6 +8,7 @@ from kloppy.domain import (
     DuelQualifier,
     DuelType,
 )
+from kloppy.domain.models import EventType
 
 from kloppy import wyscout
 
@@ -30,6 +31,7 @@ class TestWyscout:
             data_version="V3",
         )
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
+        assert dataset.events[5].event_type == EventType.CLEARANCE
 
         assert (
             dataset.events[5].get_qualifier_value(DuelQualifier)
@@ -55,6 +57,7 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
+        assert dataset.events[136].event_type == EventType.CLEARANCE
 
         assert (
             dataset.events[39].get_qualifier_value(DuelQualifier)

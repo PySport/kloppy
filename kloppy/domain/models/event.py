@@ -178,6 +178,7 @@ class EventType(Enum):
         SHOT (EventType):
         TAKE_ON (EventType):
         CARRY (EventType):
+        CLEARANCE (EventType):
         DUEL (EventType):
         SUBSTITUTION (EventType):
         CARD (EventType):
@@ -195,6 +196,7 @@ class EventType(Enum):
     SHOT = "SHOT"
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
+    CLEARANCE = "CLEARANCE"
     DUEL = "DUEL"
     SUBSTITUTION = "SUBSTITUTION"
     CARD = "CARD"
@@ -719,6 +721,21 @@ class CarryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class ClearanceEvent(Event):
+    """
+    ClearanceEvent
+
+    Attributes:
+        event_type (EventType): `EventType.CLEARANCE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"clearance"`
+    """
+
+    event_type: EventType = EventType.CLEARANCE
+    event_name: str = "clearance"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class DuelEvent(Event):
     """
     DuelEvent
@@ -948,6 +965,7 @@ __all__ = [
     "PassEvent",
     "TakeOnEvent",
     "CarryEvent",
+    "ClearanceEvent",
     "SubstitutionEvent",
     "PlayerOnEvent",
     "PlayerOffEvent",

@@ -645,6 +645,70 @@
         "name": "Bologna"
       },
       "videoTimestamp": "8.148438"
+    },
+    {
+        "id": 663291842,
+        "minute": 0,
+        "matchId": 2852835,
+        "matchPeriod": "1H",
+        "matchTimestamp": "00:20:47.357",
+        "videoTimestamp": "1248.357802",
+        "minute": 20,
+        "second": 47,
+        "relatedEventId": 1345263904,
+        "type": {
+            "primary": "clearance",
+            "secondary": [
+                "head_pass",
+                "loss"
+            ]
+        },
+        "location": {
+            "x": 21,
+            "y": 7
+        },
+        "team": {
+            "formation": "4-2-3-1",
+            "id": 3166,
+            "name": "Bologna"
+        },
+        "opponentTeam": {
+            "formation": "3-4-3",
+            "id": 3185,
+            "name": "Torino"
+        },
+        "player": {
+            "id": 20583,
+            "name": "Danilo",
+            "position": "RCB"
+        },
+        "pass": null,
+        "shot": null,
+        "groundDuel": null,
+        "aerialDuel": null,
+        "infraction": null,
+        "carry": null,
+        "possession": {
+            "id": 1345264932,
+            "duration": "0.8534285",
+            "types": [],
+            "eventsNumber": 2,
+            "eventIndex": 0,
+            "startLocation": {
+                "x": 21,
+                "y": 7
+            },
+            "endLocation": {
+                "x": 25,
+                "y": 0
+            },
+            "team": {
+                "id": 3166,
+                "name": "Bologna",
+                "formation": "4-3-3"
+            },
+            "attack": null
+        }
     }
   ],
   "formations": {

@@ -185,6 +185,7 @@ class DatasetTransformer:
             ball_coordinates=self.__change_point_coordinate_system(
                 frame.ball_coordinates
             ),
+            ball_speed=frame.ball_speed,
             players_data={
                 key: PlayerData(
                     coordinates=self.__change_point_coordinate_system(

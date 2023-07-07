@@ -63,8 +63,10 @@ class SecondSpectrumDeserializer(
             ball_coordinates = Point3D(
                 float(ball_x), float(ball_y), float(ball_z)
             )
+            ball_speed = frame_data["ball"]["speed"]
         else:
             ball_coordinates = None
+            ball_speed = None
 
         ball_state = BallState.ALIVE if frame_data["live"] else BallState.DEAD
         ball_owning_team = (
@@ -76,6 +78,7 @@ class SecondSpectrumDeserializer(
             for player_data in frame_data[team_str]:
                 jersey_no = player_data["number"]
                 x, y, _ = player_data["xyz"]
+                speed = player_data["speed"]
                 player = team.get_player_by_jersey_number(jersey_no)
 
                 if not player:
@@ -87,13 +90,14 @@ class SecondSpectrumDeserializer(
                     team.players.append(player)
 
                 players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y))
+                    coordinates=Point(float(x), float(y)), speed=speed
                 )
 
         return Frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,
+            ball_speed=ball_speed,
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_data=players_data,

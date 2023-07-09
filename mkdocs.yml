@@ -15,18 +15,22 @@ theme:
 nav:
   - Home: index.md
   - Open-data: open-data.md
-  - Getting-started:
-      - Datafactory: getting-started/datafactory.ipynb
-      - Metrica: getting-started/metrica.ipynb
-      - Opta: getting-started/opta.ipynb
-      - SecondSpectrum: getting-started/secondspectrum.ipynb
-      - SkillCorner: getting-started/skillcorner.ipynb
-      - Sportec: getting-started/sportec.ipynb
-      - Sportscode: getting-started/sportscode.ipynb
-      - Statsbomb: getting-started/statsbomb.ipynb
-      - StatsPerform: getting-started/statsperform.ipynb
-      - TRACAB: getting-started/tracab.ipynb
-      - Wyscout: getting-started/wyscout.ipynb
+  - Tutorials:
+      - Getting-started:
+          - Event-data:
+              - Datafactory: tutorials/getting-started/event-data/datafactory.ipynb
+              - Metrica: tutorials/getting-started/event-data/metrica.ipynb
+              - Opta: tutorials/getting-started/event-data/opta.ipynb
+              - Sportec: tutorials/getting-started/event-data/sportec.ipynb
+              - Sportscode: tutorials/getting-started/event-data/sportscode.ipynb
+              - Statsbomb: tutorials/getting-started/event-data/statsbomb.ipynb
+              - Wyscout: tutorials/getting-started/event-data/wyscout.ipynb
+          - Tracking-data:
+              - Metrica: tutorials/getting-started/tracking-data/metrica.ipynb
+              - SecondSpectrum: tutorials/getting-started/tracking-data/secondspectrum.ipynb
+              - SkillCorner: tutorials/getting-started/tracking-data/skillcorner.ipynb
+              - StatsPerform: tutorials/getting-started/tracking-data/statsperform.ipynb
+              - TRACAB: tutorials/getting-started/tracking-data/tracab.ipynb
   - Examples:
     - Event Data: examples/event_data.ipynb
     - Tracking Data: examples/tracking_data.ipynb
@@ -43,7 +47,12 @@ nav:
 #      - Pitch: api/domain/pitch.md
 #      - Tracking: api/domain/tracking.md
 #      - Event: api/domain/event.md
-  - Providers: 'providers.md'
+  - Functionality: 
+    - Providers: 'functionality/providers.md'
+    - Event: 'functionality/event-data.md'
+    - Tracking: 'functionality/tracking-data.md'
+    - Coordinate-Systems: 'functionality/coordinate-systems.md'
+    # - Dataset-Types: 'functionality/coordinate-systems.md'
   - Other:
     - Issues: 'issues.md'
     - Contributing: 'contributing.md'

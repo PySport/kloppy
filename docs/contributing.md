@@ -6,6 +6,13 @@ is nobody already working on the same issue and to ensure your time as a contrib
 
 ## How to Contribute
 
+There are two ways to contribute:
+
+1. [Contributing to Code](#contributing-to-code)
+2. [Contributing to Documentation](#contributing-to-documentation)
+
+## Contributing to Code
+
 All code changes happen through Pull Requests. If you would like to contribute, follow the steps below to set up 
 the project and make changes:
 
@@ -55,7 +62,7 @@ follow these instructions:
 files. *Note*: if _black_ needs to re-format a file, the commit will fail, meaning you will then need to execute
 `git add .` and `git commit` again to commit the files updated by _black_.
 
-## Documentation
+## Contributing to Documentation
 
 This project uses [MkDocs](https://www.mkdocs.org/) to generate documentation from pages written in Markdown.
 
@@ -70,6 +77,8 @@ mkdocs serve
 ```
 
 Open up [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser to preview your documentation.
+
+Use `mkdocs.yml` to add new page references or update the file layout.
 
 ## Contributors (sorted alphabetically)
 

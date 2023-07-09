@@ -31,16 +31,16 @@ nav:
               - SkillCorner: tutorials/getting-started/tracking-data/skillcorner.ipynb
               - StatsPerform: tutorials/getting-started/tracking-data/statsperform.ipynb
               - TRACAB: tutorials/getting-started/tracking-data/tracab.ipynb
-  - Examples:
-    - Event Data: examples/event_data.ipynb
-    - Tracking Data: examples/tracking_data.ipynb
-    - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
-    - Code data: examples/code_data.ipynb
-    - State: examples/state.ipynb
-    - Navigating: examples/navigating.ipynb
-    - Plotting: examples/plotting.ipynb
-    - Config: examples/config.ipynb
-    - Adapters: examples/adapter.ipynb
+      - Examples:
+        - Event Data: tutorials/examples/event_data.ipynb
+        - Tracking Data: tutorials/examples/tracking_data.ipynb
+        - Broadcast Tracking Data: tutorials/examples/broadcast_tracking_data.ipynb
+        - Code data: tutorials/examples/code_data.ipynb
+        - State: tutorials/examples/state.ipynb
+        - Navigating: tutorials/examples/navigating.ipynb
+        - Plotting: tutorials/examples/plotting.ipynb
+        - Config: tutorials/examples/config.ipynb
+        - Adapters: tutorials/examples/adapter.ipynb
 #  - API Reference:
 #    - Domain:
 #      - Common: api/domain/common.md

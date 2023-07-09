@@ -102,8 +102,6 @@ Please consult the `EventFactory` and `EventDataset` documentation for more deta
 
 ### Sportscode
 
----
-
 ### load
 `kloppy.kloppy._providers.sportscode.load(data)`
 

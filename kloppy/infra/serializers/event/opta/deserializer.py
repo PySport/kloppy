@@ -31,6 +31,7 @@ from kloppy.domain import (
     BodyPart,
     PassType,
     PassQualifier,
+    CounterAttackQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -97,6 +98,8 @@ EVENT_QUALIFIER_ASSIST_2ND = 218
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
 EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
 EVENT_QUALIFIER_RED_CARD = 33
+
+EVENT_QUALIFIER_COUNTER_ATTACK = 23
 
 EVENT_QUALIFIER_TEAM_FORMATION = 130
 
@@ -218,16 +221,13 @@ def _parse_f24_datetime(dt_str: str) -> float:
 
 def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     if outcome:
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-        # receiver_coordinates = None
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
+    receiver_coordinates = Point(
+        x=float(raw_qualifiers[140]) if 140 in raw_qualifiers else 0,
+        y=float(raw_qualifiers[141]) if 141 in raw_qualifiers else 0,
+    )
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
@@ -298,6 +298,14 @@ def _parse_shot(
             # timestamp =
         else:
             result = ShotResult.GOAL
+    elif 82 in raw_qualifiers:
+        result = ShotResult.BLOCKED
+    elif type_id == EVENT_TYPE_SHOT_MISS:
+        result = ShotResult.OFF_TARGET
+    elif type_id == EVENT_TYPE_SHOT_POST:
+        result = ShotResult.OFF_TARGET
+    elif type_id == EVENT_TYPE_SHOT_SAVED:
+        result = ShotResult.SAVED
     else:
         result = None
 
@@ -377,6 +385,7 @@ def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_pass_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_card_qualifiers(raw_qualifiers))
+    qualifiers.extend(_get_event_counter_attack_qualifiers(raw_qualifiers))
     return qualifiers
 
 
@@ -444,6 +453,16 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(CardQualifier(value=CardType.FIRST_YELLOW))
     elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
+
+    return qualifiers
+
+
+def _get_event_counter_attack_qualifiers(
+    raw_qualifiers: List,
+) -> List[Qualifier]:
+    qualifiers = []
+    if EVENT_QUALIFIER_COUNTER_ATTACK in raw_qualifiers:
+        qualifiers.append(CounterAttackQualifier(True))
 
     return qualifiers
 
@@ -647,7 +666,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **clearance_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_FOUL_COMMITTED:
+                    elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
+                        outcome == 0
+                    ):
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,

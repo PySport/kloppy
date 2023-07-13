@@ -1,8 +1,7 @@
 from pathlib import Path
 
 import pytest
-from kloppy.domain import Point, SetPieceType, SetPieceQualifier
-from kloppy.domain.models import EventType
+from kloppy.domain import Point, SetPieceType, SetPieceQualifier, EventType
 
 from kloppy import wyscout
 
@@ -24,8 +23,13 @@ class TestWyscout:
             coordinates="wyscout",
             data_version="V3",
         )
-        assert dataset.records[2].coordinates == Point(36.0, 78.0)
-        assert dataset.events[5].event_type == EventType.CLEARANCE
+        assert dataset.events[2].coordinates == Point(36.0, 78.0)
+        assert (
+            dataset.events[4].get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
+        )
+        assert dataset.events[5].event_type == EventType.FOUL_COMMITTED
+        assert dataset.events[6].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
@@ -43,12 +47,3 @@ class TestWyscout:
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-
-    def test_correct_handling_of_corner_shot(self, event_v3_data: Path):
-        dataset = wyscout.load(
-            event_data=event_v3_data, data_version="V3", event_types=["shot"]
-        )
-        assert (
-            dataset.events[0].get_qualifier_value(SetPieceQualifier)
-            == SetPieceType.CORNER_KICK
-        )

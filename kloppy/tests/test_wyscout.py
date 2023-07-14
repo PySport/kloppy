@@ -34,7 +34,7 @@ class TestWyscout:
         )
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
         assert (
-            dataset.events[5].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[10].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
         assert (
@@ -67,8 +67,7 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-        assert dataset.events[136].event_type == EventType.CLEARANCE
-
+        assert dataset.events[137].event_type == EventType.CLEARANCE
         assert (
             dataset.events[39].get_qualifier_value(DuelQualifier)
             == DuelType.GROUND
@@ -78,7 +77,7 @@ class TestWyscout:
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[258].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[259].get_qualifier_values(DuelQualifier)[2].value
             == DuelType.SLIDING_TACKLE
         )
         assert (

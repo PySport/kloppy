@@ -759,9 +759,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
-                        outcome == 0
-                    ):
                     elif type_id in KEEPER_EVENTS:
                         goalkeeper_event_kwargs = _parse_goalkeeper_events(
                             raw_qualifiers, type_id
@@ -770,7 +767,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **goalkeeper_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_FOUL_COMMITTED:
+                    elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
+                        outcome == 0
+                    ):
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,

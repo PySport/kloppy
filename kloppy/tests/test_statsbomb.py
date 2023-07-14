@@ -164,17 +164,17 @@ class TestStatsBomb:
         assert dataset.events[272].event_type == EventType.CLEARANCE
 
         assert (
-            dataset.events[759].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[761].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
 
         assert (
-            dataset.events[4023].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[4039].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
         )
 
         assert (
-            dataset.events[4024].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[4040].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PUNCH
         )
 

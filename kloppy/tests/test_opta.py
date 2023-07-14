@@ -118,23 +118,23 @@ class TestOpta:
 
         # Check goalkeeper qualifiers
         assert (
-            dataset.events[21].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[23].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
         assert (
-            dataset.events[22].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.CLAIM
         )
         assert (
-            dataset.events[23].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PUNCH
         )
         assert (
-            dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[26].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PICK_UP
         )
         assert (
-            dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[27].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
         )
 

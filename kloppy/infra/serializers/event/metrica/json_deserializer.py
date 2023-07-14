@@ -118,7 +118,6 @@ def _parse_subtypes(event: dict) -> List:
 def _parse_pass(
     event: Dict, previous_event: Dict, subtypes: List, team: Team
 ) -> Dict:
-
     event_type_id = event["type"]["id"]
 
     if event_type_id == MS_PASS_OUTCOME_COMPLETE:
@@ -157,7 +156,6 @@ def _parse_pass(
 def _get_event_qualifiers(
     event: Dict, previous_event: Dict, subtypes: List
 ) -> List[Qualifier]:
-
     qualifiers = []
 
     qualifiers.extend(_get_event_setpiece_qualifiers(previous_event, subtypes))
@@ -169,7 +167,6 @@ def _get_event_qualifiers(
 def _get_event_setpiece_qualifiers(
     previous_event: Dict, subtypes: List
 ) -> List[Qualifier]:
-
     qualifiers = []
     previous_event_type_id = previous_event["type"]["id"]
     if previous_event_type_id == MS_SET_PIECE:
@@ -193,7 +190,6 @@ def _get_event_setpiece_qualifiers(
 
 
 def _get_event_bodypart_qualifiers(subtypes: List) -> List[Qualifier]:
-
     qualifiers = []
     if subtypes and MS_BODY_PART_HEAD in subtypes:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -274,7 +270,6 @@ class MetricaJsonEventDataDeserializer(
         with performance_logging("parse data", logger=logger):
             events = []
             for i, raw_event in enumerate(raw_events["data"]):
-
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
                 elif raw_event["team"]["id"] == metadata.teams[1].team_id:

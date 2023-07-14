@@ -123,7 +123,6 @@ class MetricaCSVTrackingDataDeserializer(
     def __validate_partials(
         home_partial_frame: __PartialFrame, away_partial_frame: __PartialFrame
     ):
-
         if home_partial_frame.frame_id != away_partial_frame.frame_id:
             raise ValueError(
                 f"frame_id mismatch: home {home_partial_frame.frame_id}, "

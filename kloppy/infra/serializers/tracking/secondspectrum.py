@@ -55,7 +55,6 @@ class SecondSpectrumDeserializer(
 
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
-
         frame_id = frame_data["frameIdx"]
         frame_timestamp = frame_data["gameClock"]
 
@@ -77,7 +76,6 @@ class SecondSpectrumDeserializer(
         players_data = {}
         for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
             for player_data in frame_data[team_str]:
-
                 jersey_no = player_data["number"]
                 x, y, _ = player_data["xyz"]
                 speed = player_data["speed"]
@@ -115,7 +113,6 @@ class SecondSpectrumDeserializer(
             raise ValueError("Please specify a value for 'raw_data'")
 
     def deserialize(self, inputs: SecondSpectrumInputs) -> TrackingDataset:
-
         metadata = None
 
         # Handles the XML metadata that contains the pitch dimensions and frame info
@@ -205,7 +202,6 @@ class SecondSpectrumDeserializer(
                         teams, ["homePlayers", "awayPlayers"]
                     ):
                         for player_data in metadata[team_str]:
-
                             # We use the attributes field of Player to store the extra IDs provided by the
                             # metadata. We designate the player_id to be the 'optaId' field as this is what's
                             # used as 'player_id' in the raw frame data file

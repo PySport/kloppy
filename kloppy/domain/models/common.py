@@ -426,7 +426,6 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-
         if self.length is not None and self.width is not None:
             return PitchDimensions(
                 x_dim=Dimension(0, 1),
@@ -656,7 +655,6 @@ class StatsPerformCoordinateSystem(CoordinateSystem):
 
 
 def build_coordinate_system(provider: Provider, **kwargs):
-
     if provider == Provider.TRACAB:
         return TracabCoordinateSystem(normalized=False, **kwargs)
 
@@ -966,7 +964,6 @@ class Dataset(ABC, Generic[T]):
         as_list: bool = True,
         **named_columns: "Column",
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
-
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -984,7 +981,6 @@ class Dataset(ABC, Generic[T]):
         orient: Literal["list"] = "list",
         **named_columns: "Column",
     ) -> Dict[str, List[Any]]:
-
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 

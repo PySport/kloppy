@@ -18,5 +18,5 @@ class TestIssue60:
         # OPTA F24 file: Pass -> Deleted Event -> Tackle
         assert event_dataset.events[14].event_name == "pass"
         assert (
-            event_dataset.events[15].event_name == "tackle"
+            event_dataset.events[15].event_name == "duel"
         )  # Deleted Event is filter out

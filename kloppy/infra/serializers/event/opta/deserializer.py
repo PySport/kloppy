@@ -12,16 +12,28 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
+    PassEvent,
+    ShotEvent,
+    TakeOnEvent,
+    GenericEvent,
     PassResult,
     ShotResult,
     TakeOnResult,
+    DuelResult,
+    DuelType,
+    DuelQualifier,
     Ground,
     Score,
     Provider,
     Metadata,
     Player,
     Position,
+    RecoveryEvent,
+    BallOutEvent,
+    FoulCommittedEvent,
+    FormationChangeEvent,
     FormationType,
+    CardEvent,
     CardType,
     CardQualifier,
     Qualifier,
@@ -46,6 +58,9 @@ EVENT_TYPE_DELETED_EVENT = 43
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
 EVENT_TYPE_TAKE_ON = 3
+EVENT_TYPE_TACKLE = 7
+EVENT_TYPE_AERIAL = 44
+EVENT_TYPE_50_50 = 67
 EVENT_TYPE_CLEARANCE = 12
 EVENT_TYPE_SHOT_MISS = 13
 EVENT_TYPE_SHOT_POST = 14
@@ -59,6 +74,7 @@ EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
+DUEL_EVENTS = [EVENT_TYPE_TACKLE, EVENT_TYPE_AERIAL, EVENT_TYPE_50_50]
 
 BALL_OWNING_EVENTS = (
     EVENT_TYPE_PASS,
@@ -312,6 +328,33 @@ def _parse_shot(
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
     return dict(coordinates=coordinates, result=result, qualifiers=qualifiers)
+
+
+def _parse_duel(raw_qualifiers: List, type_id: int, outcome: int) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    if type_id == EVENT_TYPE_TACKLE:
+        qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif type_id == EVENT_TYPE_AERIAL:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    elif type_id == EVENT_TYPE_50_50:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.GROUND),
+            ]
+        )
+
+    result = DuelResult.WON if outcome else DuelResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=qualifiers,
+    )
 
 
 def _parse_team_players(
@@ -622,7 +665,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
                         event = self.event_factory.build_take_on(
-                            qualifiers=None,
                             **take_on_event_kwargs,
                             **generic_event_kwargs,
                         )
@@ -664,6 +706,14 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = self.event_factory.build_clearance(
                             result=None,
                             **clearance_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+                    elif type_id in DUEL_EVENTS:
+                        duel_event_kwargs = _parse_duel(
+                            raw_qualifiers, type_id, outcome
+                        )
+                        event = self.event_factory.build_duel(
+                            **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (

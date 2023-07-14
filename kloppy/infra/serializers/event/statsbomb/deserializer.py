@@ -15,6 +15,9 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     CarryResult,
+    DuelResult,
+    DuelQualifier,
+    DuelType,
     Metadata,
     Ground,
     Player,
@@ -43,10 +46,12 @@ from ..deserializer import EventDataDeserializer
 logger = logging.getLogger(__name__)
 
 SB_EVENT_TYPE_RECOVERY = 2
+SB_EVENT_TYPE_DUEL = 4
 SB_EVENT_TYPE_CLEARANCE = 9
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
 SB_EVENT_TYPE_PASS = 30
+SB_EVENT_TYPE_50_50 = 33
 SB_EVENT_TYPE_CARRY = 43
 
 SB_EVENT_TYPE_HALF_START = 18
@@ -79,6 +84,17 @@ SB_SHOT_OUTCOME_SAVED = 100
 SB_SHOT_OUTCOME_OFF_WAYWARD = 101
 SB_SHOT_OUTCOME_SAVED_OFF_TARGET = 115
 SB_SHOT_OUTCOME_SAVED_TO_POST = 116
+
+SB_EVENT_TYPE_AERIAL_LOST = 10
+SB_EVENT_TYPE_TACKLE = 11
+
+DUEL_WON_NAMES = [
+    "Won",
+    "Success To Team",
+    "Success",
+    "Success In Play",
+    "Success Out",
+]
 
 SB_EVENT_TYPE_FREE_KICK = 62
 SB_EVENT_TYPE_THROW_IN = 67
@@ -436,6 +452,56 @@ def _parse_take_on(take_on_dict: Dict) -> Dict:
     }
 
 
+def _parse_duel(
+    raw_event: dict,
+    event_type: int,
+) -> Dict:
+    duel_dict = None
+    duel_qualifiers = []
+
+    if event_type == SB_EVENT_TYPE_DUEL:
+        duel_dict = raw_event.get("duel", {})
+        type_id = duel_dict.get("type", {}).get("id")
+        if type_id == SB_EVENT_TYPE_AERIAL_LOST:
+            duel_qualifiers = [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        elif type_id == SB_EVENT_TYPE_TACKLE:
+            duel_qualifiers = [DuelQualifier(value=DuelType.GROUND)]
+    elif event_type == SB_EVENT_TYPE_50_50:
+        duel_dict = raw_event.get("50_50", {})
+        duel_qualifiers = [
+            DuelQualifier(value=DuelType.LOOSE_BALL),
+            DuelQualifier(value=DuelType.GROUND),
+        ]
+
+    qualifiers = duel_qualifiers + _get_body_part_qualifiers(duel_dict)
+
+    outcome_name = duel_dict.get("outcome", {}).get("name") or duel_dict.get(
+        "type", {}
+    ).get("name")
+
+    result = (
+        DuelResult.WON if outcome_name in DUEL_WON_NAMES else DuelResult.LOST
+    )
+
+    return {"result": result, "qualifiers": qualifiers}
+
+
+def _parse_aerial_won_duel(raw_event: dict, type_name: str) -> Dict:
+    aerial_won_dict = raw_event[type_name]
+    duel_qualifiers = [
+        DuelQualifier(value=DuelType.LOOSE_BALL),
+        DuelQualifier(value=DuelType.AERIAL),
+    ]
+    qualifiers = duel_qualifiers + _get_body_part_qualifiers(aerial_won_dict)
+
+    result = DuelResult.WON
+
+    return {"result": result, "qualifiers": qualifiers}
+
+
 def _parse_substitution(substitution_dict: Dict, team: Team) -> Dict:
     replacement_player = None
     for player in team.players:
@@ -753,6 +819,15 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(carry_event)
+                elif event_type in [SB_EVENT_TYPE_DUEL, SB_EVENT_TYPE_50_50]:
+                    duel_event_kwargs = _parse_duel(
+                        raw_event=raw_event, event_type=event_type
+                    )
+                    duel_event = self.event_factory.build_duel(
+                        **duel_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(duel_event)
 
                 # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
@@ -848,6 +923,22 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(generic_event)
+
+                # Add possible aerial won - Applicable to multiple event types
+                for type_name in ["shot", "clearance", "miscontrol", "pass"]:
+                    if (
+                        type_name in raw_event
+                        and "aerial_won" in raw_event[type_name]
+                    ):
+                        duel_event_kwargs = _parse_aerial_won_duel(
+                            raw_event=raw_event, type_name=type_name
+                        )
+                        duel_event = self.event_factory.build_duel(
+                            **duel_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+                        # add duel event as first event.
+                        new_events.insert(0, duel_event)
 
                 for event in new_events:
                     if self.should_include_event(event):

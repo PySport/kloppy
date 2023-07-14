@@ -3,25 +3,40 @@ import logging
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
+    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
+    CardEvent,
     CardType,
     CounterAttackQualifier,
+    Dimension,
+    DuelType,
+    DuelQualifier,
+    DuelResult,
     EventDataset,
+    FoulCommittedEvent,
+    GenericEvent,
+    GoalkeeperAction,
+    GoalkeeperActionQualifier,
     Ground,
     Metadata,
     Orientation,
+    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
+    PitchDimensions,
     Player,
     Point,
     Provider,
     Qualifier,
+    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
+    ShotEvent,
     ShotResult,
+    TakeOnEvent,
     TakeOnResult,
     Team,
 )
@@ -241,24 +256,66 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
-    result = None
-    if "offensive_duel" in raw_event["type"]["secondary"]:
-        if raw_event["groundDuel"]["keptPossession"]:
-            result = TakeOnResult.COMPLETE
-        else:
-            result = TakeOnResult.INCOMPLETE
-    elif "defensive_duel" in raw_event["type"]["secondary"]:
-        if raw_event["groundDuel"]["recoveredPossession"]:
-            result = TakeOnResult.COMPLETE
-        else:
-            result = TakeOnResult.INCOMPLETE
-    elif "aerial_duel" in raw_event["type"]["secondary"]:
-        if raw_event["aerialDuel"]["firstTouch"]:
-            result = TakeOnResult.COMPLETE
-        else:
-            result = TakeOnResult.INCOMPLETE
+    duel_qualifiers = []
+    secondary_types = raw_event["type"]["secondary"]
+
+    if "ground_duel" in secondary_types:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.GROUND))
+    elif "aerial_duel" in secondary_types:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    else:
+        if (
+            "loose_ball_duel" in secondary_types
+            and "sliding_tackle" in secondary_types
+        ):
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
+        elif "loose_ball_duel" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                ]
+            )
+        elif "sliding_tackle" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
+
+    qualifiers.extend(duel_qualifiers)
+
+    if (
+        "offensive_duel" in secondary_types
+        and raw_event["groundDuel"]["keptPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "defensive_duel" in secondary_types
+        and raw_event["groundDuel"]["recoveredPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "aerial_duel" in secondary_types
+        and raw_event["aerialDuel"]["firstTouch"]
+    ):
+        result = DuelResult.WON
+    else:
+        result = DuelResult.LOST
 
     return {"result": result, "qualifiers": qualifiers}
 
@@ -362,9 +419,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **pass_event_args, **generic_event_args
                     )
                 elif primary_event_type == "duel":
-                    takeon_event_args = _parse_takeon(raw_event)
-                    event = self.event_factory.build_take_on(
-                        **takeon_event_args, **generic_event_args
+                    duel_event_args = _parse_duel(raw_event)
+                    event = self.event_factory.build_duel(
+                        **duel_event_args, **generic_event_args
                     )
                 elif primary_event_type == "clearance":
                     clearance_event_args = _parse_clearance(raw_event)

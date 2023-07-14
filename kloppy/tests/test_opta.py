@@ -13,6 +13,8 @@ from kloppy.domain import (
     DatasetType,
     CardType,
     FormationType,
+    DuelQualifier,
+    DuelType,
     CounterAttackQualifier,
 )
 
@@ -116,6 +118,16 @@ class TestOpta:
         assert (
             CounterAttackQualifier(value=True) in dataset.events[17].qualifiers
         )  # 2318695229
+
+        # Check DuelQualifiers
+        assert (
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.GROUND
+        )
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

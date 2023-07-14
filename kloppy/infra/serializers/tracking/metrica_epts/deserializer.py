@@ -51,7 +51,6 @@ class MetricaEPTSTrackingDataDeserializer(
         players_data = {}
         for team in metadata.teams:
             for player in team.players:
-
                 other_data = {}
                 for sensor in other_sensors:
                     player_sensor_field_str = f"player_{player.player_id}_{sensor.channels[0].channel_id}"

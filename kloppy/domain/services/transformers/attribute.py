@@ -276,7 +276,6 @@ class DefaultFrameTransformer:
             else None,
         )
         for player, player_data in frame.players_data.items():
-
             row.update(
                 {
                     f"{player.player_id}_x": player_data.coordinates.x

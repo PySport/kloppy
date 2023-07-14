@@ -30,25 +30,26 @@ class TestWyscout:
             coordinates="wyscout",
             data_version="V3",
         )
+        df = dataset.to_df()
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
         assert (
-                dataset.events[4].get_qualifier_value(SetPieceQualifier)
-                == SetPieceType.CORNER_KICK
+            dataset.events[4].get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
         )
         assert dataset.events[5].event_type == EventType.FOUL_COMMITTED
         assert (
-            dataset.events[5].get_qualifier_value(DuelQualifier)
+            dataset.events[6].get_qualifier_value(DuelQualifier)
             == DuelType.GROUND
         )
         assert (
-            dataset.events[6].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[7].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[8].get_qualifier_values(DuelQualifier)[2].value
             == DuelType.SLIDING_TACKLE
         )
-        assert dataset.events[8].event_type == EventType.CLEARANCE
+        assert dataset.events[9].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")

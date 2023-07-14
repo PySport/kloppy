@@ -42,7 +42,6 @@ from kloppy.domain import (
 )
 from kloppy.utils import performance_logging
 
-from . import wyscout_tags
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
 
@@ -187,12 +186,10 @@ def _parse_foul(raw_event: Dict) -> Dict:
 def _parse_card(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     card_type = None
-    if _has_tag(raw_event, wyscout_tags.RED_CARD):
-        card_type = CardType.RED
-    elif _has_tag(raw_event, wyscout_tags.YELLOW_CARD):
+    if _check_secondary_event_types(raw_event, ["yellow_card"]):
         card_type = CardType.FIRST_YELLOW
-    elif _has_tag(raw_event, wyscout_tags.SECOND_YELLOW_CARD):
-        card_type = CardType.SECOND_YELLOW
+    elif _check_secondary_event_types(raw_event, ["red_card"]):
+        card_type = CardType.RED
 
     return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
@@ -400,6 +397,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "period": periods[-1],
                     "timestamp": float(
                         raw_event["second"] + raw_event["minute"] * 60
+                    )
+                    if period_id == 1
+                    else float(
+                        raw_event["second"]
+                        + (raw_event["minute"] * 60)
+                        - (60 * 45)
                     ),
                 }
 
@@ -459,6 +462,28 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_shot(
                         **set_piece_event_args, **generic_event_args
                     )
+                elif primary_event_type == "infraction":
+                    if "foul" in secondary_event_types:
+                        foul_event_args = _parse_foul(raw_event)
+                        event = self.event_factory.build_foul_committed(
+                            **foul_event_args, **generic_event_args
+                        )
+                        # We already append event to events
+                        # as we potentially have a card and foul event for one raw event
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
+                        continue
+                    if (
+                        "yellow_card" in secondary_event_types
+                        or "red_card" in secondary_event_types
+                    ):
+                        card_event_args = _parse_card(raw_event)
+                        event = self.event_factory.build_card(
+                            **card_event_args, **generic_event_args
+                        )
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
+                        continue
 
                 else:
                     event = self.event_factory.build_generic(

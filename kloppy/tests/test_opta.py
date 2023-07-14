@@ -15,6 +15,7 @@ from kloppy.domain import (
     FormationType,
     DuelQualifier,
     DuelType,
+    CounterAttackQualifier,
 )
 
 from kloppy.domain.models.event import EventType
@@ -112,6 +113,11 @@ class TestOpta:
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
+
+        # Check counterattack
+        assert (
+            CounterAttackQualifier(value=True) in dataset.events[17].qualifiers
+        )  # 2318695229
 
         # Check DuelQualifiers
         assert (

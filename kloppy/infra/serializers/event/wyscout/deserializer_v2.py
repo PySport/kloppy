@@ -3,37 +3,31 @@ import logging
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
-    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
     CounterAttackQualifier,
     Dimension,
+    DuelResult,
+    DuelQualifier,
+    DuelType,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
     GoalkeeperQualifier,
     GoalkeeperActionType,
     Ground,
     Metadata,
     Orientation,
-    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
-    PitchDimensions,
     Player,
     Point,
     Provider,
     Qualifier,
-    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    TakeOnEvent,
     TakeOnResult,
     Team,
 )
@@ -129,6 +123,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         qualifiers.append(PassQualifier(PassType.HAND_PASS))
     elif raw_event["subEventId"] == wyscout_events.PASS.HEAD:
         qualifiers.append(PassQualifier(PassType.HEAD_PASS))
+        qualifiers.append(BodyPartQualifier(BodyPart.HEAD))
     elif raw_event["subEventId"] == wyscout_events.PASS.HIGH:
         qualifiers.append(PassQualifier(PassType.HIGH_PASS))
     elif raw_event["subEventId"] == wyscout_events.PASS.LAUNCH:
@@ -176,6 +171,11 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         if len(raw_event["positions"]) > 1
         else None,
     }
+
+
+def _parse_clearance(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
@@ -261,13 +261,44 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
+    duel_qualifiers = []
+
+    sub_event_id = raw_event["subEventId"]
+
+    if sub_event_id == wyscout_events.DUEL.AERIAL:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    elif sub_event_id in [
+        wyscout_events.DUEL.GROUND_ATTACKING,
+        wyscout_events.DUEL.GROUND_DEFENDING,
+    ]:
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif sub_event_id == wyscout_events.DUEL.GROUND_LOOSE_BALL:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.GROUND),
+            ]
+        )
+
+    if _has_tag(raw_event, wyscout_tags.SLIDING_TACKLE):
+        duel_qualifiers.extend([DuelQualifier(value=DuelType.SLIDING_TACKLE)])
+
+    qualifiers.extend(duel_qualifiers)
+
     result = None
-    if _has_tag(raw_event, wyscout_tags.LOST):
-        result = TakeOnResult.INCOMPLETE
     if _has_tag(raw_event, wyscout_tags.WON):
-        result = TakeOnResult.COMPLETE
+        result = DuelResult.WON
+    elif _has_tag(raw_event, wyscout_tags.LOST):
+        result = DuelResult.LOST
+    elif _has_tag(raw_event, wyscout_tags.NEUTRAL):
+        result = DuelResult.NEUTRAL
 
     return {"result": result, "qualifiers": qualifiers}
 
@@ -402,14 +433,24 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 elif (
                     raw_event["eventId"] == wyscout_events.OTHERS_ON_BALL.EVENT
                 ):
-                    recovery_event_args = _parse_recovery(raw_event)
-                    event = self.event_factory.build_recovery(
-                        **recovery_event_args, **generic_event_args
-                    )
+                    if (
+                        raw_event["subEventId"]
+                        == wyscout_events.OTHERS_ON_BALL.CLEARANCE
+                    ):
+                        clearance_event_args = _parse_clearance(raw_event)
+                        event = self.event_factory.build_clearance(
+                            **clearance_event_args,
+                            **generic_event_args,
+                        )
+                    else:
+                        recovery_event_args = _parse_recovery(raw_event)
+                        event = self.event_factory.build_recovery(
+                            **recovery_event_args, **generic_event_args
+                        )
                 elif raw_event["eventId"] == wyscout_events.DUEL.EVENT:
-                    takeon_event_args = _parse_takeon(raw_event)
-                    event = self.event_factory.build_take_on(
-                        **takeon_event_args, **generic_event_args
+                    duel_event_args = _parse_duel(raw_event)
+                    event = self.event_factory.build_duel(
+                        **duel_event_args, **generic_event_args
                     )
                 elif raw_event["eventId"] not in [
                     wyscout_events.SAVE.EVENT,
@@ -420,7 +461,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=qualifiers,
-                        **generic_event_args
+                        **generic_event_args,
                     )
 
                 if event and self.should_include_event(event):

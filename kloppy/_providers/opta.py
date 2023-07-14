@@ -32,7 +32,6 @@ def load(
     with open_as_file(f7_data) as f7_data_fp, open_as_file(
         f24_data
     ) as f24_data_fp:
-
         return deserializer.deserialize(
             inputs=OptaInputs(f7_data=f7_data_fp, f24_data=f24_data_fp),
         )

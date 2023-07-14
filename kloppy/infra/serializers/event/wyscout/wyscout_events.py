@@ -4,6 +4,7 @@ from typing import List
 class DUEL:
     EVENT = 1
 
+    AERIAL = 10
     GROUND_ATTACKING = 11
     GROUND_DEFENDING = 12
     GROUND_LOOSE_BALL = 13

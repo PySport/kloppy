@@ -5,6 +5,9 @@ from kloppy.domain import (
     Point,
     SetPieceType,
     SetPieceQualifier,
+    DuelQualifier,
+    DuelType,
+    EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
 )
@@ -34,6 +37,24 @@ class TestWyscout:
             dataset.events[5].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
+        assert (
+            dataset.events[4].get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
+        )
+        assert dataset.events[5].event_type == EventType.FOUL_COMMITTED
+        assert (
+            dataset.events[6].get_qualifier_value(DuelQualifier)
+            == DuelType.GROUND
+        )
+        assert (
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[8].get_qualifier_values(DuelQualifier)[2].value
+            == DuelType.SLIDING_TACKLE
+        )
+        assert dataset.events[9].event_type == EventType.CLEARANCE
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
@@ -46,6 +67,20 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
+        assert dataset.events[136].event_type == EventType.CLEARANCE
+
+        assert (
+            dataset.events[39].get_qualifier_value(DuelQualifier)
+            == DuelType.GROUND
+        )
+        assert (
+            dataset.events[43].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[258].get_qualifier_values(DuelQualifier)[2].value
+            == DuelType.SLIDING_TACKLE
+        )
         assert (
             dataset.events[291].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
@@ -54,12 +89,3 @@ class TestWyscout:
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-
-    def test_correct_handling_of_corner_shot(self, event_v3_data: Path):
-        dataset = wyscout.load(
-            event_data=event_v3_data, data_version="V3", event_types=["shot"]
-        )
-        assert (
-            dataset.events[0].get_qualifier_value(SetPieceQualifier)
-            == SetPieceType.CORNER_KICK
-        )

@@ -106,6 +106,10 @@ class TestSecondSpectrumTracking:
         assert dataset.records[0].players_coordinates[home_player] == Point(
             x=0.4146981051733674, y=0.9144718866065965
         )
+        assert (
+            dataset.records[0].players_data[home_player].speed
+            == 6.578958220040129
+        )
 
         # Check normalised pitch dimensions
         pitch_dimensions = dataset.metadata.pitch_dimensions

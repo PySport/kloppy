@@ -8,6 +8,8 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     DatasetType,
+    DuelQualifier,
+    DuelType,
     Orientation,
     Period,
     Point,
@@ -22,6 +24,7 @@ from kloppy.domain.models.event import (
     CardType,
     PassQualifier,
     PassType,
+    EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
 )
@@ -52,7 +55,7 @@ class TestStatsBomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4025
+        assert len(dataset.events) == 4041
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -95,7 +98,7 @@ class TestStatsBomb:
         assert dataset.events[10].coordinates == Point(34.5, 20.5)
 
         assert (
-            dataset.events[792].get_qualifier_value(BodyPartQualifier)
+            dataset.events[794].get_qualifier_value(BodyPartQualifier)
             == BodyPart.HEAD
         )
 
@@ -109,46 +112,56 @@ class TestStatsBomb:
         )
 
         assert (
-            dataset.events[1433].get_qualifier_value(PassQualifier)
+            dataset.events[1438].get_qualifier_value(PassQualifier)
             == PassType.CROSS
         )
 
         assert (
-            dataset.events[1552].get_qualifier_value(PassQualifier)
+            dataset.events[1557].get_qualifier_value(PassQualifier)
             == PassType.THROUGH_BALL
         )
 
         assert (
-            dataset.events[443].get_qualifier_value(PassQualifier)
+            dataset.events[444].get_qualifier_value(PassQualifier)
             == PassType.SWITCH_OF_PLAY
         )
 
         assert (
-            dataset.events[3438].get_qualifier_value(PassQualifier)
+            dataset.events[101].get_qualifier_value(PassQualifier)
             == PassType.LONG_BALL
         )
 
         assert (
-            dataset.events[2266].get_qualifier_value(PassQualifier)
+            dataset.events[17].get_qualifier_value(PassQualifier)
             == PassType.HIGH_PASS
         )
 
         assert (
-            dataset.events[653].get_qualifier_value(PassQualifier)
+            dataset.events[654].get_qualifier_value(PassQualifier)
             == PassType.HEAD_PASS
         )
 
         assert (
-            dataset.events[3134].get_qualifier_value(PassQualifier)
+            dataset.events[3145].get_qualifier_value(PassQualifier)
             == PassType.HAND_PASS
         )
 
         assert (
-            dataset.events[3611].get_qualifier_value(PassQualifier)
+            dataset.events[3622].get_qualifier_value(PassQualifier)
             == PassType.ASSIST
         )
 
-        assert dataset.events[3392].get_qualifier_value(PassQualifier) is None
+        assert dataset.events[3400].get_qualifier_value(PassQualifier) is None
+
+        assert (
+            dataset.events[194].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[4032].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.GROUND
+        )
+        assert dataset.events[272].event_type == EventType.CLEARANCE
 
         assert (
             dataset.events[759].get_qualifier_value(GoalkeeperQualifier)

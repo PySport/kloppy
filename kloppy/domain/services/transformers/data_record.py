@@ -25,7 +25,6 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
         **named_columns: Union[str, Callable[[T], Any]],
     ):
         if not columns and not named_columns:
-
             converter = self.default_transformer()
         else:
             default = self.default_transformer()

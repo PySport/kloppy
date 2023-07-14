@@ -15,7 +15,12 @@ from kloppy.domain import (
     FormationType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
+    DuelQualifier,
+    DuelType,
+    CounterAttackQualifier,
 )
+
+from kloppy.domain.models.event import EventType
 
 from kloppy import opta
 
@@ -37,7 +42,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 26
+        assert len(dataset.events) == 28
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -94,6 +99,9 @@ class TestOpta:
         assert (
             dataset.events[19].qualifiers[0].value == CardType.RED
         )  # 2318695229
+        assert (
+            dataset.events[21].event_type == EventType.CLEARANCE
+        )  # 2498907287
 
         # Check receiver coordinates for incomplete passes
         assert dataset.events[6].receiver_coordinates.x == 45.5
@@ -128,6 +136,21 @@ class TestOpta:
         assert (
             dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
+        )
+
+        # Check counterattack
+        assert (
+            CounterAttackQualifier(value=True) in dataset.events[17].qualifiers
+        )  # 2318695229
+
+        # Check DuelQualifiers
+        assert (
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
+            == DuelType.GROUND
         )
 
     def test_correct_normalized_deserialization(

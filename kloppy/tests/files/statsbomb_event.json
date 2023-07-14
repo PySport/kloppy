@@ -170129,6 +170129,126 @@
     }
   }
 }, {
+  "id" : "d9152217-8772-454c-b461-9d1d66070859",
+  "index" : 1501,
+  "period" : 2,
+  "timestamp" : "00:48:01.770",
+  "minute" : 93,
+  "second" : 1,
+  "type" : {
+    "id" : 33,
+    "name" : "50/50"
+  },
+  "possession" : 144,
+  "possession_team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "play_pattern" : {
+    "id" : 1,
+    "name" : "Regular Play"
+  },
+  "team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "player" : {
+    "id" : 5503,
+    "name" : "Lionel Andrés Messi Cuccittini"
+  },
+  "position" : {
+    "id" : 17,
+    "name" : "Right Wing"
+  },
+  "location" : [ 47.4, 22.4 ],
+  "duration" : 0.0,
+  "under_pressure" : true,
+  "related_events" : [ "10bf8575-16df-43b2-b4b7-9854bb708944" ],
+  "50_50" : {
+    "outcome" : {
+      "id" : 3,
+      "name" : "Success To Team"
+    }
+  }
+}, {
+  "id" : "d9152217-8772-454c-b461-9d1d66070129",
+  "index" : 1501,
+  "period" : 2,
+  "timestamp" : "00:48:01.770",
+  "minute" : 93,
+  "second" : 1,
+  "type" : {
+    "id" : 9,
+    "name" : "Clearance"
+  },
+  "possession" : 144,
+  "possession_team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "play_pattern" : {
+    "id" : 1,
+    "name" : "Regular Play"
+  },
+  "team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "player" : {
+    "id" : 5503,
+    "name" : "Lionel Andrés Messi Cuccittini"
+  },
+  "position" : {
+    "id" : 17,
+    "name" : "Right Wing"
+  },
+  "location" : [ 47.4, 22.4 ],
+  "duration" : 0.0,
+  "under_pressure" : true,
+  "related_events" : [ "54a0f549-fba3-4baa-8695-0bd92a2039bb", "8096dfc1-4842-41e1-8090-aa4c7117a499" ],
+  "clearance" : {
+    "aerial_won" : true
+  }
+}, {
+  "id" : "d9152217-8772-454c-b461-9d1d42070129",
+  "index" : 1809,
+  "period" : 2,
+  "timestamp" : "00:48:01.770",
+  "minute" : 93,
+  "second" : 1,
+  "type" : {
+    "id" : 38,
+    "name" : "Miscontrol"
+  },
+  "possession" : 144,
+  "possession_team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "play_pattern" : {
+    "id" : 1,
+    "name" : "Regular Play"
+  },
+  "team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "player" : {
+    "id" : 5503,
+    "name" : "Lionel Andrés Messi Cuccittini"
+  },
+  "position" : {
+    "id" : 17,
+    "name" : "Right Wing"
+  },
+  "location" : [ 47.4, 22.4 ],
+  "duration" : 0.0,
+  "under_pressure" : true,
+  "related_events" : [ "09feb961-9f36-4c0e-a11d-9ab8eee9bf87" ],
+  "miscontrol" : {
+    "aerial_won" : true
+  }
+}, {
   "id" : "e1cc4d5e-ba55-4b6b-88cc-dae13311c1d9",
   "index" : 4001,
   "period" : 2,
@@ -170267,4 +170387,5 @@
       "name" : "Punch"
     }
   }
-} ]
+}
+]

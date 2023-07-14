@@ -133,6 +133,28 @@ class CarryResult(ResultType):
         return self == self.COMPLETE
 
 
+class DuelResult(ResultType):
+    """
+    DuelResult
+
+    Attributes:
+        WON (DuelResult): When winning the duel (player touching the ball first)
+        LOST (DuelResult): When losing the duel (opponent touches the ball first)
+        NEUTRAL (DuelResult): When neither player wins duel [Mainly for WyScout v2]
+    """
+
+    WON = "WON"
+    LOST = "LOST"
+    NEUTRAL = "NEUTRAL"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the duel was won
+        """
+        return self == self.WON
+
+
 class CardType(Enum):
     """
     CardType
@@ -156,6 +178,8 @@ class EventType(Enum):
         SHOT (EventType):
         TAKE_ON (EventType):
         CARRY (EventType):
+        CLEARANCE (EventType):
+        DUEL (EventType):
         SUBSTITUTION (EventType):
         CARD (EventType):
         PLAYER_ON (EventType):
@@ -173,6 +197,8 @@ class EventType(Enum):
     SHOT = "SHOT"
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
+    CLEARANCE = "CLEARANCE"
+    DUEL = "DUEL"
     SUBSTITUTION = "SUBSTITUTION"
     CARD = "CARD"
     PLAYER_ON = "PLAYER_ON"
@@ -401,6 +427,28 @@ class GoalkeeperQualifier(EnumQualifier):
     value: GoalkeeperActionType
 
 
+class DuelType(Enum):
+    """
+    DuelType
+
+    Attributes:
+        AERIAL (DuelType): A duel when the ball is in the air and loose.
+        GROUND (DuelType): A duel when the ball is on the ground.
+        LOOSE_BALL (DuelType): When the ball is not under the control of any particular player or team.
+        SLIDING_TACKLE (DuelType): A duel where the player slides on the ground to kick the ball away from an opponent.
+    """
+
+    AERIAL = "AERIAL"
+    GROUND = "GROUND"
+    LOOSE_BALL = "LOOSE_BALL"
+    SLIDING_TACKLE = "SLIDING_TACKLE"
+
+
+@dataclass
+class DuelQualifier(EnumQualifier):
+    value: DuelType
+
+
 @dataclass
 class CounterAttackQualifier(BoolQualifier):
     pass
@@ -469,6 +517,27 @@ class Event(DataRecord, ABC):
                 if isinstance(qualifier, qualifier_type):
                     return qualifier.value
         return None
+
+    def get_qualifier_values(self, qualifier_type: Type[Qualifier]):
+        """
+        Returns all Qualifiers of a certain type, or None if qualifier is not present.
+
+        Arguments:
+            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
+                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
+
+        Examples:
+            >>> from kloppy.domain import SetPieceQualifier
+            >>> pass_event.get_qualifier_value(SetPieceQualifier)
+            <SetPieceType.GOAL_KICK: 'GOAL_KICK'>
+        """
+        qualifiers = []
+        if self.qualifiers:
+            for qualifier in self.qualifiers:
+                if isinstance(qualifier, qualifier_type):
+                    qualifiers.append(qualifier)
+
+        return qualifiers
 
     def get_related_events(self) -> List["Event"]:
         if not self.dataset:
@@ -695,6 +764,37 @@ class CarryEvent(Event):
 
     event_type: EventType = EventType.CARRY
     event_name: str = "carry"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class ClearanceEvent(Event):
+    """
+    ClearanceEvent
+
+    Attributes:
+        event_type (EventType): `EventType.CLEARANCE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"clearance"`
+    """
+
+    event_type: EventType = EventType.CLEARANCE
+    event_name: str = "clearance"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class DuelEvent(Event):
+    """
+    DuelEvent
+
+    Attributes:
+        event_type (EventType): `EventType.DUEL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"duel"`
+
+    """
+
+    event_type: EventType = EventType.DUEL
+    event_name: str = "duel"
 
 
 @dataclass(repr=False)
@@ -927,6 +1027,7 @@ __all__ = [
     "PassEvent",
     "TakeOnEvent",
     "CarryEvent",
+    "ClearanceEvent",
     "SubstitutionEvent",
     "PlayerOnEvent",
     "PlayerOffEvent",
@@ -951,4 +1052,8 @@ __all__ = [
     "GoalkeeperAction",
     "GoalkeeperActionType",
     "CounterAttackQualifier",
+    "DuelEvent",
+    "DuelType",
+    "DuelQualifier",
+    "DuelResult",
 ]

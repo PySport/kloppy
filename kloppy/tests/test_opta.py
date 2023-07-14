@@ -14,7 +14,7 @@ from kloppy.domain import (
     CardType,
     FormationType,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
 )
 
 from kloppy import opta
@@ -111,23 +111,23 @@ class TestOpta:
         # Check goalkeeper qualifiers
         assert (
             dataset.events[21].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SAVE
+            == GoalkeeperActionType.SAVE
         )
         assert (
             dataset.events[22].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.CLAIM
+            == GoalkeeperActionType.CLAIM
         )
         assert (
             dataset.events[23].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.PUNCH
+            == GoalkeeperActionType.PUNCH
         )
         assert (
             dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.PICK_UP
+            == GoalkeeperActionType.PICK_UP
         )
         assert (
             dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SMOTHER
+            == GoalkeeperActionType.SMOTHER
         )
 
     def test_correct_normalized_deserialization(

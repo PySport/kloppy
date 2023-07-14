@@ -23,7 +23,7 @@ from kloppy.domain.models.event import (
     PassQualifier,
     PassType,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
 )
 
 
@@ -152,17 +152,17 @@ class TestStatsBomb:
 
         assert (
             dataset.events[759].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SAVE
+            == GoalkeeperActionType.SAVE
         )
 
         assert (
             dataset.events[4023].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SMOTHER
+            == GoalkeeperActionType.SMOTHER
         )
 
         assert (
             dataset.events[4024].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.PUNCH
+            == GoalkeeperActionType.PUNCH
         )
 
     def test_correct_normalized_deserialization(

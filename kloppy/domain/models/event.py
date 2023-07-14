@@ -346,19 +346,44 @@ class BodyPartQualifier(EnumQualifier):
     value: BodyPart
 
 
-class GoalkeeperType(Enum):
+class GoalkeeperAction(Enum):
     """
-    GoalkeeperType
+    GoalkeeperAction
 
     Attributes:
-        SAVE (GoalkeeperType): Goalkeeper faces shot and saves.
-        CLAIM (GoalkeeperType): Goalkeeper catches cross.
-        PUNCH (GoalkeeperType): Goalkeeper punches ball clear.
-        PICK_UP (GoalkeeperType): Goalkeeper picks up ball.
-        SMOTHER (GoalkeeperType): Goalkeeper coming out to dispossess a player,
+        SAVE (GoalkeeperAction): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperAction): Goalkeeper catches cross.
+        PUNCH (GoalkeeperAction): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperAction): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperAction): Goalkeeper coming out to dispossess a player,
                                   equivalent to a tackle for an outfield player.
-        REFLEX (GoalkeeperType): Goalkeeper performs a reflex to save a ball.
-        SAVE_ATTEMPT (GoalkeeperType): Goalkeeper attempting to save a shot.
+        REFLEX (GoalkeeperAction): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperAction): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = "SAVE"
+    CLAIM = "CLAIM"
+    PUNCH = "PUNCH"
+    PICK_UP = "PICK_UP"
+    SMOTHER = "SMOTHER"
+
+    REFLEX = "REFLEX"
+    SAVE_ATTEMPT = "SAVE_ATTEMPT"
+
+
+class GoalkeeperActionType(Enum):
+    """
+    GoalkeeperActionType
+
+    Attributes:
+        SAVE (GoalkeeperActionType): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperActionType): Goalkeeper catches cross.
+        PUNCH (GoalkeeperActionType): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperActionType): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperActionType): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperActionType): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperActionType): Goalkeeper attempting to save a shot.
     """
 
     SAVE = "SAVE"
@@ -373,7 +398,7 @@ class GoalkeeperType(Enum):
 
 @dataclass
 class GoalkeeperQualifier(EnumQualifier):
-    value: GoalkeeperType
+    value: GoalkeeperActionType
 
 
 @dataclass
@@ -923,6 +948,7 @@ __all__ = [
     "BodyPartQualifier",
     "GoalkeeperEvent",
     "GoalkeeperQualifier",
-    "GoalkeeperType",
+    "GoalkeeperAction",
+    "GoalkeeperActionType",
     "CounterAttackQualifier",
 ]

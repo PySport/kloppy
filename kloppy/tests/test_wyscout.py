@@ -6,7 +6,7 @@ from kloppy.domain import (
     SetPieceType,
     SetPieceQualifier,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
 )
 
 from kloppy import wyscout
@@ -32,7 +32,7 @@ class TestWyscout:
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
         assert (
             dataset.events[5].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SAVE
+            == GoalkeeperActionType.SAVE
         )
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
@@ -48,7 +48,7 @@ class TestWyscout:
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
         assert (
             dataset.events[291].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperType.SAVE
+            == GoalkeeperActionType.SAVE
         )
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):

@@ -14,7 +14,7 @@ from kloppy.domain import (
     FoulCommittedEvent,
     GenericEvent,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
     Ground,
     Metadata,
     Orientation,
@@ -103,8 +103,11 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     if next_event["eventId"] == wyscout_events.SAVE.EVENT:
         if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
-            qualifiers.append(GoalkeeperQualifier(GoalkeeperType.REFLEX))
-
+            qualifiers.append(GoalkeeperQualifier(GoalkeeperActionType.REFLEX))
+        if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
+            qualifiers.append(
+                GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
+            )
     return {
         "result": result,
         "result_coordinates": Point(
@@ -180,15 +183,15 @@ def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
     goalkeeper_qualifiers = []
     if not _has_tag(raw_event, wyscout_tags.GOAL):
         goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperType.SAVE)
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
         )
     else:
         goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperType.SAVE_ATTEMPT)
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT)
         )
     if raw_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
         goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperType.REFLEX)
+            GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
         )
     qualifiers.extend(goalkeeper_qualifiers)
     return {"result": None, "qualifiers": qualifiers}

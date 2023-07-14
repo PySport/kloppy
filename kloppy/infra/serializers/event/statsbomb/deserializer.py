@@ -20,7 +20,7 @@ from kloppy.domain import (
     Player,
     CardType,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
     SetPieceQualifier,
     SetPieceType,
     FormationType,
@@ -297,11 +297,11 @@ def _get_goalkeeper_qualifiers(
         type_id = goalkeeper_dict["type"]["id"]
         goalkeeper_qualifier = None
         if type_id in save_event_types:
-            goalkeeper_qualifier = GoalkeeperType.SAVE
+            goalkeeper_qualifier = GoalkeeperActionType.SAVE
         elif type_id == SB_GOALKEEPER_SMOTHER:
-            goalkeeper_qualifier = GoalkeeperType.SMOTHER
+            goalkeeper_qualifier = GoalkeeperActionType.SMOTHER
         elif type_id == SB_GOALKEEPER_PUNCH:
-            goalkeeper_qualifier = GoalkeeperType.PUNCH
+            goalkeeper_qualifier = GoalkeeperActionType.PUNCH
 
         if goalkeeper_qualifier:
             qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))

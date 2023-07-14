@@ -15,7 +15,7 @@ from kloppy.domain import (
     GenericEvent,
     GoalkeeperEvent,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
     Ground,
     Metadata,
     Orientation,
@@ -209,12 +209,12 @@ def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
     goalkeeper_qualifiers = []
     if "save" in raw_event["type"]["secondary"]:
         goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperType.SAVE)
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
         )
 
     if "save_with_reflex" == "save_with_reflex":
         goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperType.REFLEX)
+            GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
         )
     qualifiers.extend(goalkeeper_qualifiers)
 

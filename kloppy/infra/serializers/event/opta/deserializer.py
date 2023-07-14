@@ -41,7 +41,7 @@ from kloppy.domain import (
     PassType,
     PassQualifier,
     GoalkeeperQualifier,
-    GoalkeeperType,
+    GoalkeeperActionType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -479,15 +479,15 @@ def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
     qualifiers = []
     goalkeeper_qualifier = None
     if type_id == EVENT_TYPE_SAVE:
-        goalkeeper_qualifier = GoalkeeperType.SAVE
+        goalkeeper_qualifier = GoalkeeperActionType.SAVE
     elif type_id == EVENT_TYPE_CLAIM:
-        goalkeeper_qualifier = GoalkeeperType.CLAIM
+        goalkeeper_qualifier = GoalkeeperActionType.CLAIM
     elif type_id == EVENT_TYPE_PUNCH:
-        goalkeeper_qualifier = GoalkeeperType.PUNCH
+        goalkeeper_qualifier = GoalkeeperActionType.PUNCH
     elif type_id == EVENT_TYPE_KEEPER_PICK_UP:
-        goalkeeper_qualifier = GoalkeeperType.PICK_UP
+        goalkeeper_qualifier = GoalkeeperActionType.PICK_UP
     elif type_id == EVENT_TYPE_SMOTHER:
-        goalkeeper_qualifier = GoalkeeperType.SMOTHER
+        goalkeeper_qualifier = GoalkeeperActionType.SMOTHER
 
     if goalkeeper_qualifier:
         qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))

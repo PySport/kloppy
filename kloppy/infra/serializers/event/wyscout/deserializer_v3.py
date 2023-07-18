@@ -71,13 +71,6 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     return team
 
 
-def _has_tag(raw_event, tag_id) -> bool:
-    for tag in raw_event["tags"]:
-        if tag["id"] == tag_id:
-            return True
-    return False
-
-
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     qualifiers: List[Qualifier] = []
 

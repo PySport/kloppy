@@ -33,7 +33,9 @@ class TestSportecEventData:
         self, event_data: Path, meta_data: Path
     ):
         dataset = sportec.load_event(
-            event_data=event_data, meta_data=meta_data, coordinates="sportec"
+            event_data=event_data,
+            meta_data=meta_data,
+            coordinates="sportec",
         )
 
         assert dataset.metadata.provider == Provider.SPORTEC
@@ -107,7 +109,10 @@ class TestSportecTrackingData:
 
     def test_load_frames(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
-            raw_data=raw_data, meta_data=meta_data, coordinates="sportec"
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=False,
         )
         home_team, away_team = dataset.metadata.teams
 

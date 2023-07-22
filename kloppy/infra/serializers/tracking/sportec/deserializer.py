@@ -94,7 +94,7 @@ class SportecTrackingDataInputs(NamedTuple):
     raw_data: IO[bytes]
 
 
-class SportecTrackingDataSerializer(TrackingDataDeserializer):
+class SportecTrackingDataDeserializer(TrackingDataDeserializer):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -222,6 +222,3 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
             records=frames,
             metadata=metadata,
         )
-
-    def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:
-        raise NotImplementedError

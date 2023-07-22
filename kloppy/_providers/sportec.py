@@ -6,8 +6,8 @@ from kloppy.infra.serializers.event.sportec import (
     SportecEventDataDeserializer,
     SportecEvenDataInputs,
 )
-from kloppy.infra.serializers.tracking.sportec.deserializer import (
-    SportecTrackingDataSerializer,
+from kloppy.infra.serializers.tracking.sportec import (
+    SportecTrackingDataDeserializer,
     SportecTrackingDataInputs,
 )
 from kloppy.io import open_as_file, FileLike
@@ -55,7 +55,7 @@ def load_tracking(
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
-    deserializer = SportecTrackingDataSerializer(
+    deserializer = SportecTrackingDataDeserializer(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,

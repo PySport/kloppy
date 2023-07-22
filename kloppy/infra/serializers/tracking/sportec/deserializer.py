@@ -156,8 +156,15 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         if i % sample == 0:
                             yield Frame(
                                 frame_id=frame_id,
-                                timestamp=(frame_id / sportec_metadata.fps)
-                                - period.start_timestamp,
+                                timestamp=(
+                                    (
+                                        frame_id
+                                        # Do subtraction with integers to prevent floating errors
+                                        - period.start_timestamp
+                                        * sportec_metadata.fps
+                                    )
+                                    / sportec_metadata.fps
+                                ),
                                 ball_owning_team=home_team
                                 if ball_data["BallPossession"] == "1"
                                 else away_team,

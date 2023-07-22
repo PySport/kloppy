@@ -18,16 +18,12 @@ from kloppy.domain import (
 from kloppy import sportec
 
 
-class TestSportecEvent:
+class TestSportecEventData:
     """"""
 
     @pytest.fixture
     def event_data(self, base_dir) -> str:
         return base_dir / "files/sportec_events.xml"
-
-    @pytest.fixture
-    def raw_data(self, base_dir) -> str:
-        return base_dir / "files/sportec_positional.xml"
 
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
@@ -86,11 +82,33 @@ class TestSportecEvent:
 
         assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)
 
-    def test_load_tracking_data(self, raw_data: Path, meta_data: Path):
+
+class TestSportecTrackingData:
+    """
+    Tests for loading Sportec tracking data.
+    """
+
+    @pytest.fixture
+    def raw_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_positional.xml"
+
+    @pytest.fixture
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_meta.xml"
+
+    def test_load_metadata(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
             raw_data=raw_data, meta_data=meta_data, coordinates="sportec"
         )
 
+        assert dataset.metadata.provider == Provider.SPORTEC
+        assert dataset.dataset_type == DatasetType.TRACKING
+        assert len(dataset.metadata.periods) == 2
+
+    def test_load_frames(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data, meta_data=meta_data, coordinates="sportec"
+        )
         home_team, away_team = dataset.metadata.teams
 
         assert dataset.frames[0].ball_owning_team == away_team
@@ -118,7 +136,3 @@ class TestSportecEvent:
 
         # Contains all 3 players
         assert len(dataset.frames[35].players_data) == 3
-
-        assert dataset.metadata.provider == Provider.SPORTEC
-        assert dataset.dataset_type == DatasetType.TRACKING
-        assert len(dataset.metadata.periods) == 2

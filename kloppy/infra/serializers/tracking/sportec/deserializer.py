@@ -28,6 +28,7 @@ from kloppy.domain import (
 from kloppy.utils import Readable, performance_logging
 
 from ..deserializer import TrackingDataDeserializer
+from ...event.sportec.deserializer import _sportec_metadata_from_xml_elm
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,38 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
     def deserialize(
         self, inputs: SportecTrackingDataInputs
     ) -> TrackingDataset:
+        with performance_logging("load data", logger=logger):
+            match_root = objectify.fromstring(inputs.meta_data.read())
+
+        with performance_logging("parse data", logger=logger):
+            sportec_metadata = _sportec_metadata_from_xml_elm(match_root)
+            teams = sportec_metadata.teams
+            periods = sportec_metadata.periods
+            transformer = self.get_transformer(
+                length=sportec_metadata.x_max, width=sportec_metadata.y_max
+            )
+
+        orientation = (
+            Orientation.FIXED_HOME_AWAY
+            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
+            else Orientation.FIXED_AWAY_HOME
+        )
+
+        metadata = Metadata(
+            teams=teams,
+            periods=periods,
+            pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
+            score=sportec_metadata.score,
+            frame_rate=sportec_metadata.fps,
+            orientation=orientation,
+            provider=Provider.SPORTEC,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
+            coordinate_system=transformer.get_to_coordinate_system(),
+        )
+
         return TrackingDataset(
             records=[],
-            metadata=None,
+            metadata=metadata,
         )
 
     def serialize(self, dataset: TrackingDataset) -> Tuple[str, str]:

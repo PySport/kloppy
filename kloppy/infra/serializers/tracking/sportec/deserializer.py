@@ -48,18 +48,22 @@ def _read_section_data(data_root, period: Period) -> dict:
     Output format:
     {
         10_000: {
-            ('BALL', 'DFL-OBJ-0000XT'): {
-                'x': 20.92,
-                'y': 2.84,
-                'z': 0.08,
-                'speed': 4.91,
-                'ballPossession': 2,
-                'ballStatus': 1
+            'ball': {
+                'N': "10000",
+                'X': 20.92,
+                'Y': 2.84,
+                'Z': 0.08,
+                'S': 4.91,
+                'BallPossession': "2",
+                'BallStatus': "1"
+                [...]
             },
-            ('DFL-CLU-000004', 'DFL-OBJ-002G3I'): {
-                'x': 0.35,
-                'y': -25.26,
-                'speed': 0.00,
+            'DFL-OBJ-002G3I': {
+                'N': "10000",
+                'X': "0.35",
+                'Y': "-25.26",
+                'S': "0.00",
+                [...]
             },
             [....]
         },
@@ -84,22 +88,7 @@ def _read_section_data(data_root, period: Period) -> dict:
         for frame in frame_set.iterchildren("Frame"):
             attr = frame.attrib
             frame_id = int(attr["N"])
-
-            object_data = {
-                "x": float(attr["X"]),
-                "y": float(attr["Y"]),
-                "speed": float(attr["S"]),
-            }
-            if key == "ball":
-                object_data.update(
-                    {
-                        "z": float(attr["Z"]),
-                        "possession": int(attr["BallPossession"]),
-                        "state": int(attr["BallStatus"]),
-                    }
-                )
-
-            raw_frames[frame_id][key] = object_data
+            raw_frames[frame_id][key] = attr
 
     return raw_frames
 
@@ -139,7 +128,7 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
                 length=sportec_metadata.x_max, width=sportec_metadata.y_max
             )
 
-        with performance_logging("parse raw data", logger=None):
+        with performance_logging("parse raw data", logger=logger):
 
             def _iter():
                 player_map = {}
@@ -153,17 +142,19 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
                 for period in periods:
                     raw_frames = _read_section_data(data_root, period)
 
-                    # Since python 3.6 dict keep insertion order
+                    # Since python 3.6 dict keep insertion order. Don't need to sort
+                    # on frame ID as it's already sorted.
+                    # Ball FrameSet is always first and contains ALL frame ids. This
+                    # makes sure even with substitutes the data is on order.
                     for i, (frame_id, frame_data) in enumerate(
                         raw_frames.items()
                     ):
                         if "ball" not in frame_data:
                             # Frames without ball data are corrupt.
-                            print(frame_id, frame_data)
                             continue
 
                         ball_data = frame_data["ball"]
-                        if self.only_alive and ball_data["state"] != 1:
+                        if self.only_alive and ball_data["BallStatus"] != "1":
                             continue
 
                         if i % sample == 0:
@@ -172,28 +163,28 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
                                 timestamp=(frame_id / sportec_metadata.fps)
                                 - period.start_timestamp,
                                 ball_owning_team=home_team
-                                if ball_data["possession"] == 1
+                                if ball_data["BallPossession"] == '1'
                                 else away_team,
                                 ball_state=BallState.ALIVE
-                                if ball_data["state"] == 1
+                                if ball_data["BallStatus"] == '1'
                                 else BallState.DEAD,
                                 period=period,
                                 players_data={
                                     player_map[player_id]: PlayerData(
                                         coordinates=Point(
-                                            x=raw_player_data["x"],
-                                            y=raw_player_data["y"],
+                                            x=float(raw_player_data["X"]),
+                                            y=float(raw_player_data["Y"]),
                                         ),
-                                        speed=raw_player_data["speed"],
+                                        speed=float(raw_player_data["S"]),
                                     )
                                     for player_id, raw_player_data in frame_data.items()
                                     if player_id != "ball"
                                 },
                                 other_data={},
                                 ball_coordinates=Point3D(
-                                    x=ball_data["x"],
-                                    y=ball_data["y"],
-                                    z=ball_data["z"],
+                                    x=float(ball_data["X"]),
+                                    y=float(ball_data["Y"]),
+                                    z=float(ball_data["Z"]),
                                 ),
                             )
 
@@ -213,7 +204,6 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
                 if self.limit and n >= self.limit:
                     break
 
-        print(len(frames))
         orientation = (
             Orientation.FIXED_HOME_AWAY
             if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
@@ -233,7 +223,7 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
         )
 
         return TrackingDataset(
-            records=[],
+            records=frames,
             metadata=metadata,
         )
 

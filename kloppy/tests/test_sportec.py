@@ -137,7 +137,7 @@ class TestSportecTrackingData:
         # Appears first in 27th frame
         player_bensebaini = away_team.get_player_by_id("DFL-OBJ-002G5S")
         assert player_bensebaini not in dataset.frames[0].players_data
-        assert player_bensebaini in dataset.frames[26]
+        assert player_bensebaini in dataset.frames[26].players_data
 
         # Contains all 3 players
         assert len(dataset.frames[35].players_data) == 3

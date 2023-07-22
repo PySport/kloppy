@@ -78,7 +78,7 @@ class SportecMetadata(NamedTuple):
     fps: int
 
 
-def _sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
+def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     """
     Load metadata from Sportec XML element. This part is shared between event- and tracking data.
     In the future this might move to a common.sportec package that provides functionality for both
@@ -369,7 +369,7 @@ class SportecEventDataDeserializer(
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
-            sportec_metadata = _sportec_metadata_from_xml_elm(match_root)
+            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             transformer = self.get_transformer(
                 length=sportec_metadata.x_max, width=sportec_metadata.y_max

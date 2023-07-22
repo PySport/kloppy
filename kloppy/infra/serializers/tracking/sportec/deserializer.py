@@ -1,7 +1,6 @@
-import json
 import logging
 from collections import defaultdict
-from typing import Tuple, Dict, NamedTuple, Optional, Union, IO, Literal
+from typing import Tuple, NamedTuple, Optional, Union, IO
 
 from lxml import objectify
 
@@ -12,24 +11,21 @@ from kloppy.domain import (
     Frame,
     Point,
     Point3D,
-    Team,
     BallState,
     Period,
-    Provider,
     Orientation,
     attacking_direction_from_frame,
     Metadata,
-    Ground,
-    Player,
-    build_coordinate_system,
     Provider,
     PlayerData,
 )
 
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
-from ...event.sportec.deserializer import _sportec_metadata_from_xml_elm
+from kloppy.infra.serializers.event.sportec.deserializer import (
+    sportec_metadata_from_xml_elm,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +117,7 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
             data_root = objectify.fromstring(inputs.raw_data.read())
 
         with performance_logging("parse metadata", logger=logger):
-            sportec_metadata = _sportec_metadata_from_xml_elm(match_root)
+            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             periods = sportec_metadata.periods
             transformer = self.get_transformer(

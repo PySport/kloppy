@@ -141,3 +141,13 @@ class TestSportecTrackingData:
 
         # Contains all 3 players
         assert len(dataset.frames[35].players_data) == 3
+        assert len(dataset) == 202
+
+    def test_load_only_alive_frames(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+        )
+        assert len(dataset) == 199

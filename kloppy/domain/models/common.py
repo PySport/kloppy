@@ -838,6 +838,9 @@ class Dataset(ABC, Generic[T]):
     def __getitem__(self, item):
         return self.records[item]
 
+    def __len__(self):
+        return len(self.records)
+
     def __post_init__(self):
         for i, record in enumerate(self.records):
             record.set_refs(

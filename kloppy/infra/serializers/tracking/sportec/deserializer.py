@@ -163,10 +163,10 @@ class SportecTrackingDataSerializer(TrackingDataDeserializer):
                                 timestamp=(frame_id / sportec_metadata.fps)
                                 - period.start_timestamp,
                                 ball_owning_team=home_team
-                                if ball_data["BallPossession"] == '1'
+                                if ball_data["BallPossession"] == "1"
                                 else away_team,
                                 ball_state=BallState.ALIVE
-                                if ball_data["BallStatus"] == '1'
+                                if ball_data["BallStatus"] == "1"
                                 else BallState.DEAD,
                                 period=period,
                                 players_data={

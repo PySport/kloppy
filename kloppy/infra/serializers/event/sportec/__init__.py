@@ -1,1 +1,1 @@
-from .deserializer import SportecEventDataDeserializer, SportecEvenDataInputs
+from .deserializer import SportecEventDataDeserializer, SportecEventDataInputs

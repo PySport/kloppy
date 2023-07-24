@@ -4,7 +4,7 @@ from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.infra.serializers.event.sportec import (
     SportecEventDataDeserializer,
-    SportecEvenDataInputs,
+    SportecEventDataInputs,
 )
 from kloppy.infra.serializers.tracking.sportec import (
     SportecTrackingDataDeserializer,
@@ -41,7 +41,7 @@ def load_event(
         meta_data
     ) as meta_data_fp:
         return serializer.deserialize(
-            SportecEvenDataInputs(
+            SportecEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp
             )
         )

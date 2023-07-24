@@ -351,19 +351,19 @@ def _parse_coordinates(event_attributes: Dict) -> Point:
     )
 
 
-class SportecEvenDataInputs(NamedTuple):
+class SportecEventDataInputs(NamedTuple):
     meta_data: IO[bytes]
     event_data: IO[bytes]
 
 
 class SportecEventDataDeserializer(
-    EventDataDeserializer[SportecEvenDataInputs]
+    EventDataDeserializer[SportecEventDataInputs]
 ):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
 
-    def deserialize(self, inputs: SportecEvenDataInputs) -> EventDataset:
+    def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())

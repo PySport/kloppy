@@ -121,6 +121,7 @@ class TestSportecTrackingData:
         assert dataset.frames[0].ball_coordinates == Point3D(
             x=2.69, y=0.26, z=0.06
         )
+        assert dataset.frames[1].ball_speed == 65.59
 
         assert dataset.frames[1].ball_owning_team == home_team
         assert dataset.frames[1].ball_state == BallState.ALIVE

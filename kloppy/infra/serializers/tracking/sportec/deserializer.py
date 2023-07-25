@@ -189,6 +189,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     y=float(ball_data["Y"]),
                                     z=float(ball_data["Z"]),
                                 ),
+                                ball_speed=float(ball_data["S"]),
                             )
 
             frames = []

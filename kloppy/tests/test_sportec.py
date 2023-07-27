@@ -116,6 +116,7 @@ class TestSportecTrackingData:
         )
         home_team, away_team = dataset.metadata.teams
 
+        assert dataset.frames[0].timestamp == 0.0
         assert dataset.frames[0].ball_owning_team == away_team
         assert dataset.frames[0].ball_state == BallState.DEAD
         assert dataset.frames[0].ball_coordinates == Point3D(
@@ -143,6 +144,17 @@ class TestSportecTrackingData:
         # Contains all 3 players
         assert len(dataset.frames[35].players_data) == 3
         assert len(dataset) == 202
+
+        second_period = dataset.metadata.periods[1]
+        for frame in dataset:
+            if frame.period == second_period:
+                assert (
+                    frame.timestamp == 0
+                ), "First frame must start at timestamp 0.0"
+                break
+        else:
+            # No data found in second half
+            assert False
 
     def test_load_only_alive_frames(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(

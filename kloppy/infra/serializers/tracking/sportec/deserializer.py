@@ -143,7 +143,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                     # Ball FrameSet is always first and contains ALL frame ids. This
                     # makes sure even with substitutes the data is on order.
                     for i, (frame_id, frame_data) in enumerate(
-                        raw_frames.items()
+                        sorted(raw_frames.items())
                     ):
                         if "ball" not in frame_data:
                             # Frames without ball data are corrupt.

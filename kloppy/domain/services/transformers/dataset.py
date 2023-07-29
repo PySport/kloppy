@@ -471,7 +471,11 @@ class DatasetTransformerBuilder:
         dataset_type: DatasetType,
     ):
         from_coordinate_system = build_coordinate_system(
-            provider, length=length, width=width, dataset_type=dataset_type
+            # This comment forces black to keep the arguments as multi-line
+            provider,
+            length=length,
+            width=width,
+            dataset_type=dataset_type,
         )
 
         to_coordinate_system = build_coordinate_system(

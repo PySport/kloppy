@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, NamedTuple, Optional, Union, IO
+from typing import NamedTuple, Optional, Union, IO
 
 from lxml import objectify
 

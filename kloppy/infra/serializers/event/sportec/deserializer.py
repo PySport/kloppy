@@ -68,6 +68,12 @@ def _team_from_xml_elm(team_elm) -> Team:
 
 SPORTEC_FPS = 25
 
+"""Sportec uses fixed starting frame ids for each half"""
+SPORTEC_FIRST_HALF_STARTING_FRAME_ID = 10_000
+SPORTEC_SECOND_HALF_STARTING_FRAME_ID = 100_000
+SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID = 200_000
+SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID = 250_000
+
 
 class SportecMetadata(NamedTuple):
     score: Score
@@ -123,14 +129,15 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     periods = [
         Period(
             id=1,
-            start_timestamp=10_000 / SPORTEC_FPS,
-            end_timestamp=10_000 / SPORTEC_FPS
+            start_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS,
+            end_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
             + float(other_game_information["TotalTimeFirstHalf"]) / 1000,
         ),
         Period(
             id=2,
-            start_timestamp=100_000 / SPORTEC_FPS,
-            end_timestamp=100_000 / SPORTEC_FPS
+            start_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID
+            / SPORTEC_FPS,
+            end_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
             + float(other_game_information["TotalTimeSecondHalf"]) / 1000,
         ),
     ]
@@ -141,15 +148,19 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             [
                 Period(
                     id=3,
-                    start_timestamp=200_000 / SPORTEC_FPS,
-                    end_timestamp=200_000 / SPORTEC_FPS
+                    start_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS,
+                    end_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS
                     + float(other_game_information["TotalTimeFirstHalfExtra"])
                     / 1000,
                 ),
                 Period(
                     id=4,
-                    start_timestamp=250_000 / SPORTEC_FPS,
-                    end_timestamp=250_000 / SPORTEC_FPS
+                    start_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS,
+                    end_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS
                     + float(other_game_information["TotalTimeSecondHalfExtra"])
                     / 1000,
                 ),

@@ -1,4 +1,5 @@
 from dataclasses import fields, replace
+
 from kloppy.domain.models.tracking import PlayerData
 from typing import Union, Optional
 
@@ -15,6 +16,9 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
     CoordinateSystem,
+    Provider,
+    build_coordinate_system,
+    DatasetType,
 )
 from kloppy.domain.models.event import Event
 from kloppy.exceptions import KloppyError
@@ -431,3 +435,57 @@ class DatasetTransformer:
             )
         else:
             raise KloppyError("Unknown Dataset type")
+
+
+class DatasetTransformerBuilder:
+    def __init__(
+        self, to_coordinate_system: Optional[Union[str, Provider]] = None
+    ):
+        from kloppy.config import get_config
+
+        if not to_coordinate_system:
+            to_coordinate_system = get_config("coordinate_system")
+
+        if not to_coordinate_system:
+            to_coordinate_system = Provider.KLOPPY
+
+        to_dataset_type = None
+        if isinstance(to_coordinate_system, str):
+            if ":" in to_coordinate_system:
+                provider_name, dataset_type_name = to_coordinate_system.split(
+                    ":"
+                )
+                to_coordinate_system = Provider[provider_name.upper()]
+                to_dataset_type = DatasetType[dataset_type_name.upper()]
+            else:
+                to_coordinate_system = Provider[to_coordinate_system.upper()]
+
+        self.to_coordinate_system = to_coordinate_system
+        self.to_dataset_type = to_dataset_type
+
+    def build(
+        self,
+        length: float,
+        width: float,
+        provider: Provider,
+        dataset_type: DatasetType,
+    ):
+        from_coordinate_system = build_coordinate_system(
+            # This comment forces black to keep the arguments as multi-line
+            provider,
+            length=length,
+            width=width,
+            dataset_type=dataset_type,
+        )
+
+        to_coordinate_system = build_coordinate_system(
+            self.to_coordinate_system,
+            length=length,
+            width=width,
+            dataset_type=self.to_dataset_type or dataset_type,
+        )
+
+        return DatasetTransformer(
+            from_coordinate_system=from_coordinate_system,
+            to_coordinate_system=to_coordinate_system,
+        )

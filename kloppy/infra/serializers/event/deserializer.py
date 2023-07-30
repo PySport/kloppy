@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Generic, TypeVar, Union
 
-from kloppy.config import get_config
 from kloppy.domain import (
     EventDataset,
     Event,
     EventType,
     DatasetTransformer,
     Provider,
-    build_coordinate_system,
     EventFactory,
+    DatasetType,
+    DatasetTransformerBuilder,
 )
 
 T = TypeVar("T")
@@ -32,13 +32,7 @@ class EventDataDeserializer(ABC, Generic[T]):
             for event_type in event_types
         ]
 
-        if not coordinate_system:
-            coordinate_system = get_config("coordinate_system")
-
-        if isinstance(coordinate_system, str):
-            coordinate_system = Provider[coordinate_system.upper()]
-
-        self.coordinate_system = coordinate_system
+        self.transformer_builder = DatasetTransformerBuilder(coordinate_system)
 
         if not event_factory:
             event_factory = EventFactory()
@@ -50,23 +44,13 @@ class EventDataDeserializer(ABC, Generic[T]):
         return event.event_type in self.event_types
 
     def get_transformer(
-        self, length: float, width: float
+        self, length: float, width: float, provider: Optional[Provider] = None
     ) -> DatasetTransformer:
-        from_coordinate_system = build_coordinate_system(
-            self.provider,
+        return self.transformer_builder.build(
             length=length,
             width=width,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            self.coordinate_system,
-            length=length,
-            width=width,
-        )
-
-        return DatasetTransformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
+            provider=provider or self.provider,
+            dataset_type=DatasetType.EVENT,
         )
 
     @property

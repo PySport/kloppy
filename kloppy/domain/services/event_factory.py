@@ -44,6 +44,9 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     if "freeze_frame" not in kwargs:
         kwargs["freeze_frame"] = None
 
+    if 'qualifiers' not in kwargs:
+        kwargs['qualifiers'] = None
+
     all_kwargs = dict(**kwargs, **extra_kwargs)
 
     relevant_kwargs = {
@@ -55,7 +58,7 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
             and field.name not in all_kwargs
         )
     }
-
+    
     if len(relevant_kwargs) < len(all_kwargs):
         skipped_kwargs = set(all_kwargs.keys()) - set(relevant_kwargs.keys())
         warnings.warn(

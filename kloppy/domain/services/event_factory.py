@@ -44,9 +44,6 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     if "freeze_frame" not in kwargs:
         kwargs["freeze_frame"] = None
 
-    if 'qualifiers' not in kwargs:
-        kwargs['qualifiers'] = None
-
     all_kwargs = dict(**kwargs, **extra_kwargs)
 
     relevant_kwargs = {

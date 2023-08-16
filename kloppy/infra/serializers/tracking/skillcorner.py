@@ -4,6 +4,7 @@ from enum import Enum, Flag
 from collections import Counter
 import numpy as np
 import json
+from pathlib import Path
 
 from kloppy.domain import (
     attacking_direction_from_frame,
@@ -182,7 +183,14 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ].attacking_direction = AttackingDirection.NOT_SET
 
     def __load_json(self, file):
-        return json.load(file)
+        if Path(file.name).suffix == '.jsonl':
+            data = []
+            with open(file.name, 'r') as f:
+                for line in f:
+                    data.append(json.loads(line))
+            return data
+        else:
+            return json.load(file)
 
     @classmethod
     def __get_periods(cls, tracking):

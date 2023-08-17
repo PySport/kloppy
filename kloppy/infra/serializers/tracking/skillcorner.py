@@ -148,19 +148,15 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
     @classmethod
     def _timestamp_from_timestring(cls, timestring):
-        # Split the timestring into hours, minutes, and seconds
         parts = timestring.split(":")
 
-        # If there are only two parts, it's in the old format (MM:SS.ss)
-        if len(parts) == 2:  # "92:37.60"
+        if len(parts) == 2:
             m, s = parts
             return 60 * float(m) + float(s)
-        # If there are three parts, it's in the new format (HH:MM:SS.ss)
-        elif len(parts) == 3:  # "01:29:56.40"
+        elif len(parts) == 3:
             h, m, s = parts
             return 3600 * float(h) + 60 * float(m) + float(s)
         else:
-            # Invalid format
             raise ValueError("Invalid timestring format")
 
     @classmethod

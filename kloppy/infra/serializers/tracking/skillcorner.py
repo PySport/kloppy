@@ -137,7 +137,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_time,
+            timestamp=frame_time - periods[frame_period].start_timestamp,
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame_period],
@@ -148,8 +148,20 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
     @classmethod
     def _timestamp_from_timestring(cls, timestring):
-        m, s = timestring.split(":")
-        return 60 * float(m) + float(s)
+        # Split the timestring into hours, minutes, and seconds
+        parts = timestring.split(":")
+
+        # If there are only two parts, it's in the old format (MM:SS.ss)
+        if len(parts) == 2:  # "92:37.60"
+            m, s = parts
+            return 60 * float(m) + float(s)
+        # If there are three parts, it's in the new format (HH:MM:SS.ss)
+        elif len(parts) == 3:  # "01:29:56.40"
+            h, m, s = parts
+            return 3600 * float(h) + 60 * float(m) + float(s)
+        else:
+            # Invalid format
+            raise ValueError("Invalid timestring format")
 
     @classmethod
     def _set_skillcorner_attacking_directions(cls, frames, periods):
@@ -183,11 +195,15 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ].attacking_direction = AttackingDirection.NOT_SET
 
     def __load_json(self, file):
-        if Path(file.name).suffix == '.jsonl':
+        if Path(file.name).suffix == ".jsonl":
             data = []
-            with open(file.name, 'r') as f:
-                for line in f:
-                    data.append(json.loads(line))
+            with open(file.name, "r") as file:
+                for line in file:
+                    obj = json.loads(line)
+                    # for each line rename timestamp to time to make it compatible with existing loader
+                    if "timestamp" in obj:
+                        obj["time"] = obj.pop("timestamp")
+                    data.append(obj)
             return data
         else:
             return json.load(file)

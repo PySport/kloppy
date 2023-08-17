@@ -148,5 +148,3 @@ examples/pattern_matching/repository/*.json
 *.code-workspace
 
 .*
-
-testing.py

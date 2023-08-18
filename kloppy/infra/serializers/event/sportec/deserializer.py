@@ -112,10 +112,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (
-        home_score,
-        away_score,
-    ) = match_root.MatchInformation.General.attrib[
+    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
         "Result"
     ].split(":")
     score = Score(home=int(home_score), away=int(away_score))
@@ -538,30 +535,6 @@ class SportecEventDataDeserializer(
                         **generic_event_kwargs,
                     )
 
-                if events:
-                    previous_event = events[-1]
-                    if (
-                        previous_event.event_type == EventType.PASS
-                        and previous_event.result == PassResult.COMPLETE
-                    ):
-                        if "X-Source-Position" in event_chain["Event"]:
-                            previous_event.receiver_coordinates = (
-                                transformer.change_point_dimensions(
-                                    Point(
-                                        x=float(
-                                            event_chain["Event"][
-                                                "X-Source-Position"
-                                            ]
-                                        ),
-                                        y=float(
-                                            event_chain["Event"][
-                                                "Y-Source-Position"
-                                            ]
-                                        ),
-                                    )
-                                )
-                            )
-
                 if (
                     event.event_type == EventType.PASS
                     and event.get_qualifier_value(SetPieceQualifier)
@@ -598,6 +571,13 @@ class SportecEventDataDeserializer(
                     events.append(transformer.transform_event(out_event))
 
                 events.append(transformer.transform_event(event))
+
+        for i, event in enumerate(events[:-1]):
+            if (
+                event.event_type == EventType.PASS
+                and event.result == PassResult.COMPLETE
+            ):
+                event.receiver_coordinates = events[i + 1].coordinates
 
         events = list(
             filter(

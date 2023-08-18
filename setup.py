@@ -31,6 +31,7 @@ def setup_package():
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
             "License :: OSI Approved",
             "Topic :: Scientific/Engineering",
         ],
@@ -42,7 +43,7 @@ def setup_package():
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'mypy_extensions;python_version<"3.8"',
-            'typing_extensions;python_version<"3.8"',
+            'typing_extensions;python_version<"3.11"',
             "python-dateutil>=2.8.1,<3",
         ],
         extras_require={

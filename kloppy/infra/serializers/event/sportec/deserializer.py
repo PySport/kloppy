@@ -293,6 +293,8 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
         result = ShotResult.POST
     elif event_name == SPORTEC_EVENT_NAME_SHOT_GOAL:
         result = ShotResult.GOAL
+    elif event_name == SPORTEC_EVENT_NAME_OWN_GOAL:
+        result = ShotResult.OWN_GOAL
     elif event_name == SPORTEC_EVENT_NAME_SHOT_OTHER:
         result = None
     else:

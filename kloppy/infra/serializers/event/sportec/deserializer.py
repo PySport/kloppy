@@ -112,7 +112,10 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+    (
+        home_score,
+        away_score,
+    ) = match_root.MatchInformation.General.attrib[
         "Result"
     ].split(":")
     score = Score(home=int(home_score), away=int(away_score))
@@ -538,13 +541,21 @@ class SportecEventDataDeserializer(
                         and previous_event.result == PassResult.COMPLETE
                     ):
                         if "X-Source-Position" in event_chain["Event"]:
-                            previous_event.receiver_coordinates = Point(
-                                x=float(
-                                    event_chain["Event"]["X-Source-Position"]
-                                ),
-                                y=float(
-                                    event_chain["Event"]["Y-Source-Position"]
-                                ),
+                            previous_event.receiver_coordinates = (
+                                transformer.change_point_dimensions(
+                                    Point(
+                                        x=float(
+                                            event_chain["Event"][
+                                                "X-Source-Position"
+                                            ]
+                                        ),
+                                        y=float(
+                                            event_chain["Event"][
+                                                "Y-Source-Position"
+                                            ]
+                                        ),
+                                    )
+                                )
                             )
 
                 if (

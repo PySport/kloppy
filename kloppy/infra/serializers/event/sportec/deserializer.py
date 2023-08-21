@@ -411,6 +411,7 @@ class SportecEventDataDeserializer(
                         start_timestamp=timestamp,
                         end_timestamp=None,
                     )
+                    print(event_chain[SPORTEC_EVENT_NAME_KICKOFF])
                     if period_id == 1:
                         team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
                             "TeamLeft"
@@ -418,12 +419,12 @@ class SportecEventDataDeserializer(
                         if team_left == home_team.team_id:
                             # goal of home team is on the left side.
                             # this means they attack from left to right
-                            orientation = Orientation.FIXED_HOME_AWAY
+                            orientation = Orientation.HOME_TEAM
                             period.set_attacking_direction(
                                 AttackingDirection.HOME_AWAY
                             )
                         else:
-                            orientation = Orientation.FIXED_AWAY_HOME
+                            orientation = Orientation.AWAY_TEAM
                             period.set_attacking_direction(
                                 AttackingDirection.AWAY_HOME
                             )

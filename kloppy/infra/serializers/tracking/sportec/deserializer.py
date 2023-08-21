@@ -209,9 +209,9 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                     break
 
         orientation = (
-            Orientation.FIXED_HOME_AWAY
+            Orientation.HOME_TEAM
             if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
+            else Orientation.AWAY_TEAM
         )
 
         metadata = Metadata(

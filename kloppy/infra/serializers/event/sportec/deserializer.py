@@ -411,7 +411,6 @@ class SportecEventDataDeserializer(
                         start_timestamp=timestamp,
                         end_timestamp=None,
                     )
-                    print(event_chain[SPORTEC_EVENT_NAME_KICKOFF])
                     if period_id == 1:
                         team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
                             "TeamLeft"

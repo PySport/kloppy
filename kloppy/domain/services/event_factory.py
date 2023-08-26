@@ -19,6 +19,7 @@ from kloppy.domain import (
     FoulCommittedEvent,
     CardEvent,
     SubstitutionEvent,
+    OwnGoalAgainstEvent,
 )
 
 T = TypeVar("T")
@@ -110,3 +111,6 @@ class EventFactory:
 
     def build_substitution(self, **kwargs) -> SubstitutionEvent:
         return create_event(SubstitutionEvent, **kwargs)
+
+    def build_own_goal_against(self, **kwargs) -> OwnGoalAgainstEvent:
+        return create_event(OwnGoalAgainstEvent, **kwargs)

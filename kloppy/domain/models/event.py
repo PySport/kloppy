@@ -188,6 +188,7 @@ class EventType(Enum):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
         FORMATION_CHANGE (EventType):
+        OWN_GOAL_AGAINST (EventType):
     """
 
     GENERIC = "generic"
@@ -206,6 +207,7 @@ class EventType(Enum):
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    OWN_GOAL_AGAINST = "OWN_GOAL_AGAINST"
 
     def __repr__(self):
         return self.value
@@ -880,6 +882,22 @@ class FoulCommittedEvent(Event):
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class OwnGoalAgainstEvent(Event):
+    """
+    OwnGoalAgainstEvent
+
+    Attributes:
+        event_type (EventType): `EventType.OWN_GOAL_AGAINST` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"own_goal_against"`
+
+    """
+
+    event_type: EventType = EventType.OWN_GOAL_AGAINST
+    event_name: str = "own_goal_against"
+
+
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset
@@ -992,4 +1010,5 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "OwnGoalAgainstEvent",
 ]

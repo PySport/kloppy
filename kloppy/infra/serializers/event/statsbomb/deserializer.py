@@ -50,6 +50,7 @@ SB_EVENT_TYPE_DUEL = 4
 SB_EVENT_TYPE_CLEARANCE = 9
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_OWN_GOAL_AGAINST = 20
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
 SB_EVENT_TYPE_CARRY = 43
@@ -914,6 +915,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         )
                     )
                     new_events.append(formation_change_event)
+                elif event_type == SB_EVENT_OWN_GOAL_AGAINST:
+                    own_goal_event = self.event_factory.build_own_goal_against(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(own_goal_event)
                 # rest: generic
                 else:
                     generic_event = self.event_factory.build_generic(

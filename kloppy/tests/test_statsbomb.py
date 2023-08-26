@@ -53,7 +53,7 @@ class TestStatsBomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4039
+        assert len(dataset.events) == 4040
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -160,6 +160,7 @@ class TestStatsBomb:
             == DuelType.GROUND
         )
         assert dataset.events[272].event_type == EventType.CLEARANCE
+        assert dataset.events[4037].event_type == EventType.OWN_GOAL_AGAINST
 
     def test_correct_normalized_deserialization(
         self, lineup_data: Path, event_data: Path

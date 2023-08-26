@@ -170248,9 +170248,51 @@
   "miscontrol" : {
     "aerial_won" : true
   }
-}, {
+},{
+    "id" : "89dd4f4b-0a70-48d8-a0e7-ac4c",
+    "index" : 4001,
+    "period" : 2,
+    "timestamp" : "00:47:31.053",
+    "minute" : 92,
+    "second" : 31,
+    "type" : {
+      "id" : 20,
+      "name" : "Own Goal Against"
+    },
+    "possession" : 101,
+    "possession_team" : {
+      "id" : 217,
+      "name" : "Barcelona"
+    },
+    "play_pattern" : {
+      "id" : 2,
+      "name" : "From Corner"
+    },
+    "obv_for_after" : null,
+    "obv_for_before" : null,
+    "obv_for_net" : null,
+    "obv_against_after" : null,
+    "obv_against_before" : null,
+    "obv_against_net" : null,
+    "obv_total_net" : null,
+    "team" : {
+      "id" : 217,
+      "name" : "Barcelona"
+    },
+    "player" : {
+      "id" : 5503,
+      "name" : "Lionel Andrés Messi Cuccittini"
+    },
+    "position" : {
+      "id" : 24,
+      "name" : "Left Center Forward"
+    },
+    "location" : [ 4.4, 40.2 ],
+    "duration" : 0.0,
+    "related_events" : []
+  }, {
   "id" : "e1cc4d5e-ba55-4b6b-88cc-dae13311c1d9",
-  "index" : 4001,
+  "index" : 4002,
   "period" : 2,
   "timestamp" : "00:47:32.053",
   "minute" : 92,
@@ -170276,7 +170318,7 @@
   "related_events" : [ "cd767526-5f64-4600-acbf-e0a2608f0d00" ]
 }, {
   "id" : "cd767526-5f64-4600-acbf-e0a2608f0d00",
-  "index" : 4002,
+  "index" : 4003,
   "period" : 2,
   "timestamp" : "00:47:32.053",
   "minute" : 92,

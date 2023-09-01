@@ -18,6 +18,7 @@ from kloppy.utils import (
     removes_suffix,
     docstring_inherit_attributes,
     deprecated,
+    DeprecatedEnumValue,
 )
 
 from .common import DataRecord, Dataset, Player, Team
@@ -374,7 +375,7 @@ class BodyPartQualifier(EnumQualifier):
 
 class GoalkeeperAction(Enum):
     """
-    GoalkeeperAction
+    Deprecated: GoalkeeperAction has been renamed to GoalkeeperActionType.
 
     Attributes:
         SAVE (GoalkeeperAction): Goalkeeper faces shot and saves.
@@ -387,14 +388,13 @@ class GoalkeeperAction(Enum):
         SAVE_ATTEMPT (GoalkeeperAction): Goalkeeper attempting to save a shot.
     """
 
-    SAVE = "SAVE"
-    CLAIM = "CLAIM"
-    PUNCH = "PUNCH"
-    PICK_UP = "PICK_UP"
-    SMOTHER = "SMOTHER"
-
-    REFLEX = "REFLEX"
-    SAVE_ATTEMPT = "SAVE_ATTEMPT"
+    SAVE = DeprecatedEnumValue("SAVE")
+    CLAIM = DeprecatedEnumValue("CLAIM")
+    PUNCH = DeprecatedEnumValue("PUNCH")
+    PICK_UP = DeprecatedEnumValue("PICK_UP")
+    SMOTHER = DeprecatedEnumValue("SMOTHER")
+    REFLEX = DeprecatedEnumValue("REFLEX")
+    SAVE_ATTEMPT = DeprecatedEnumValue("SAVE_ATTEMPT")
 
 
 class GoalkeeperActionType(Enum):

@@ -58,7 +58,7 @@ class TestHelpers:
             pitch_dimensions=PitchDimensions(
                 x_dim=Dimension(0, 100), y_dim=Dimension(-50, 50)
             ),
-            orientation=Orientation.HOME_TEAM,
+            orientation=Orientation.HOME_AWAY,
             frame_rate=25,
             periods=periods,
             teams=teams,
@@ -108,7 +108,7 @@ class TestHelpers:
 
         # orientation change AND dimension scale
         transformed_dataset = tracking_data.transform(
-            to_orientation="AWAY_TEAM",
+            to_orientation="AWAY_HOME",
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
 
@@ -119,7 +119,7 @@ class TestHelpers:
             x=1, y=0, z=1
         )
         assert (
-            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
+            transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
         )
         assert transformed_dataset.metadata.coordinate_system is None
         assert (
@@ -153,11 +153,11 @@ class TestHelpers:
 
     def test_transform_to_orientation(self):
         # Create a dataset with the KLOPPY pitch dimensions
-        # and HOME_TEAM orientation
+        # and HOME_AWAY orientation
         original = self._get_tracking_dataset().transform(
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
-        assert original.metadata.orientation == Orientation.HOME_TEAM
+        assert original.metadata.orientation == Orientation.HOME_AWAY
         assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
         assert original.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
         # the frames should have the correct attacking direction
@@ -179,12 +179,12 @@ class TestHelpers:
             == AttackingDirection.AWAY_HOME
         )
 
-        # Transform to AWAY_TEAM orientation
+        # Transform to AWAY_HOME orientation
         transform1 = original.transform(
-            to_orientation=Orientation.AWAY_TEAM,
+            to_orientation=Orientation.AWAY_HOME,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
-        assert transform1.metadata.orientation == Orientation.AWAY_TEAM
+        assert transform1.metadata.orientation == Orientation.AWAY_HOME
         # all coordinates should be flipped
         assert transform1.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
         assert transform1.frames[1].ball_coordinates == Point3D(x=1, y=0, z=1)
@@ -265,9 +265,9 @@ class TestHelpers:
         for period in transform4.metadata.periods:
             assert period.attacking_direction == AttackingDirection.NOT_SET
 
-        # Transform back to the original HOME_TEAM orientation
+        # Transform back to the original HOME_AWAY orientation
         transform5 = transform4.transform(
-            to_orientation=Orientation.HOME_TEAM,
+            to_orientation=Orientation.HOME_AWAY,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
         # we should be back at the original

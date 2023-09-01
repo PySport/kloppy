@@ -294,8 +294,8 @@ class Orientation(Enum):
     ACTION_EXECUTING_TEAM = "action-executing-team"
 
     # changes during half-time
-    HOME_TEAM = "home-team"
-    AWAY_TEAM = "away-team"
+    HOME_AWAY = "home-away"
+    AWAY_HOME = "away-home"
 
     # won't change during match
     FIXED_HOME_AWAY = "fixed-home-away"
@@ -309,7 +309,7 @@ class Orientation(Enum):
             return AttackingDirection.HOME_AWAY
         if self == Orientation.FIXED_AWAY_HOME:
             return AttackingDirection.AWAY_HOME
-        if self == Orientation.HOME_TEAM:
+        if self == Orientation.HOME_AWAY:
             dirmap = {
                 1: AttackingDirection.HOME_AWAY,
                 2: AttackingDirection.AWAY_HOME,
@@ -317,7 +317,7 @@ class Orientation(Enum):
                 4: AttackingDirection.AWAY_HOME,
             }
             return dirmap.get(period.id, period.attacking_direction)
-        if self == Orientation.AWAY_TEAM:
+        if self == Orientation.AWAY_HOME:
             dirmap = {
                 1: AttackingDirection.AWAY_HOME,
                 2: AttackingDirection.HOME_AWAY,
@@ -339,7 +339,7 @@ class Orientation(Enum):
             return 1
         if self == Orientation.FIXED_AWAY_HOME:
             return -1
-        if self == Orientation.HOME_TEAM:
+        if self == Orientation.HOME_AWAY:
             if period.id == 1 or period.id == 3:
                 return 1
             if period.id == 2 or period.id == 4:
@@ -347,7 +347,7 @@ class Orientation(Enum):
             raise OrientationError(
                 f"AttackingDirection not defined for period with id {period.id}"
             )
-        if self == Orientation.AWAY_TEAM:
+        if self == Orientation.AWAY_HOME:
             if period.id == 1 or period.id == 3:
                 return -1
             if period.id == 2 or period.id == 4:

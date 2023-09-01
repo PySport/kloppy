@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Dict, List, NamedTuple, IO
 import logging
 from dateutil.parser import parse
 from lxml import objectify
@@ -12,9 +12,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PassEvent,
-    ShotEvent,
-    GenericEvent,
     PassResult,
     ShotResult,
     EventType,
@@ -29,12 +26,7 @@ from kloppy.domain import (
     BodyPartQualifier,
     BodyPart,
     Qualifier,
-    BallOutEvent,
-    RecoveryEvent,
-    SubstitutionEvent,
-    CardEvent,
     CardType,
-    FoulCommittedEvent,
     AttackingDirection,
 )
 from kloppy.exceptions import DeserializationError
@@ -72,6 +64,117 @@ def _team_from_xml_elm(team_elm) -> Team:
         for player_elm in team_elm.Players.iterchildren("Player")
     ]
     return team
+
+
+SPORTEC_FPS = 25
+
+"""Sportec uses fixed starting frame ids for each half"""
+SPORTEC_FIRST_HALF_STARTING_FRAME_ID = 10_000
+SPORTEC_SECOND_HALF_STARTING_FRAME_ID = 100_000
+SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID = 200_000
+SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID = 250_000
+
+
+class SportecMetadata(NamedTuple):
+    score: Score
+    teams: List[Team]
+    periods: List[Period]
+    x_max: float
+    y_max: float
+    fps: int
+
+
+def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
+    """
+    Load metadata from Sportec XML element. This part is shared between event- and tracking data.
+    In the future this might move to a common.sportec package that provides functionality for both
+    deserializers.
+    """
+    x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
+    y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
+
+    team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
+    team_elms = list(team_path.find(match_root).iterchildren("Team"))
+
+    home_team = away_team = None
+    for team_elm in team_elms:
+        if team_elm.attrib["Role"] == "home":
+            home_team = _team_from_xml_elm(team_elm)
+        elif team_elm.attrib["Role"] == "guest":
+            away_team = _team_from_xml_elm(team_elm)
+        else:
+            raise DeserializationError(
+                f"Unknown side: {team_elm.attrib['Role']}"
+            )
+
+    if not home_team:
+        raise DeserializationError("Home team is missing from metadata")
+    if not away_team:
+        raise DeserializationError("Away team is missing from metadata")
+
+    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+        "Result"
+    ].split(":")
+    score = Score(home=int(home_score), away=int(away_score))
+    teams = [home_team, away_team]
+
+    if len(home_team.players) == 0 or len(away_team.players) == 0:
+        raise DeserializationError("LineUp incomplete")
+
+    # The periods can be rebuild from event data. Therefore, the periods attribute
+    # from the metadata can be ignored. It is required for tracking data.
+    other_game_information = (
+        match_root.MatchInformation.OtherGameInformation.attrib
+    )
+    periods = [
+        Period(
+            id=1,
+            start_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS,
+            end_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            + float(other_game_information["TotalTimeFirstHalf"]) / 1000,
+        ),
+        Period(
+            id=2,
+            start_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID
+            / SPORTEC_FPS,
+            end_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            + float(other_game_information["TotalTimeSecondHalf"]) / 1000,
+        ),
+    ]
+
+    if "TotalTimeFirstHalfExtra" in other_game_information:
+        # Add two periods for extra time.
+        periods.extend(
+            [
+                Period(
+                    id=3,
+                    start_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS,
+                    end_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS
+                    + float(other_game_information["TotalTimeFirstHalfExtra"])
+                    / 1000,
+                ),
+                Period(
+                    id=4,
+                    start_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS,
+                    end_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                    / SPORTEC_FPS
+                    + float(other_game_information["TotalTimeSecondHalfExtra"])
+                    / 1000,
+                ),
+            ]
+        )
+
+    return SportecMetadata(
+        score=score,
+        teams=teams,
+        periods=periods,
+        x_max=x_max,
+        y_max=y_max,
+        fps=SPORTEC_FPS,
+    )
 
 
 def _event_chain_from_xml_elm(event_elm):
@@ -259,55 +362,29 @@ def _parse_coordinates(event_attributes: Dict) -> Point:
     )
 
 
-class SportecInputs(NamedTuple):
+class SportecEventDataInputs(NamedTuple):
     meta_data: IO[bytes]
     event_data: IO[bytes]
 
 
-class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
+class SportecEventDataDeserializer(
+    EventDataDeserializer[SportecEventDataInputs]
+):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
 
-    def deserialize(self, inputs: SportecInputs) -> EventDataset:
+    def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
-            x_max = float(
-                match_root.MatchInformation.Environment.attrib["PitchX"]
+            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
+            teams = home_team, away_team = sportec_metadata.teams
+            transformer = self.get_transformer(
+                length=sportec_metadata.x_max, width=sportec_metadata.y_max
             )
-            y_max = float(
-                match_root.MatchInformation.Environment.attrib["PitchY"]
-            )
-
-            transformer = self.get_transformer(length=x_max, width=y_max)
-
-            team_path = objectify.ObjectPath(
-                "PutDataRequest.MatchInformation.Teams"
-            )
-            team_elms = list(team_path.find(match_root).iterchildren("Team"))
-
-            for team_elm in team_elms:
-                if team_elm.attrib["Role"] == "home":
-                    home_team = _team_from_xml_elm(team_elm)
-                elif team_elm.attrib["Role"] == "guest":
-                    away_team = _team_from_xml_elm(team_elm)
-                else:
-                    raise DeserializationError(
-                        f"Unknown side: {team_elm.attrib['Role']}"
-                    )
-
-            (
-                home_score,
-                away_score,
-            ) = match_root.MatchInformation.General.attrib["Result"].split(":")
-            score = Score(home=int(home_score), away=int(away_score))
-            teams = [home_team, away_team]
-
-            if len(home_team.players) == 0 or len(away_team.players) == 0:
-                raise DeserializationError("LineUp incomplete")
 
             periods = []
             period_id = 0
@@ -518,7 +595,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
             teams=teams,
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            score=score,
+            score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

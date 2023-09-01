@@ -17,6 +17,7 @@ from typing import (
     Iterable,
 )
 
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
@@ -518,7 +519,7 @@ class OptaCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
-class SportecCoordinateSystem(CoordinateSystem):
+class SportecEventDataCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -536,6 +537,30 @@ class SportecCoordinateSystem(CoordinateSystem):
         return PitchDimensions(
             x_dim=Dimension(0, self.length),
             y_dim=Dimension(0, self.width),
+            length=self.length,
+            width=self.width,
+        )
+
+
+@dataclass
+class SportecTrackingDataCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SPORTEC
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return PitchDimensions(
+            x_dim=Dimension(-self.length / 2, self.length / 2),
+            y_dim=Dimension(-self.width / 2, self.width / 2),
             length=self.length,
             width=self.width,
         )
@@ -654,7 +679,27 @@ class StatsPerformCoordinateSystem(CoordinateSystem):
         )
 
 
-def build_coordinate_system(provider: Provider, **kwargs):
+class DatasetType(Enum):
+    """
+    DatasetType
+
+    Attributes:
+        TRACKING (DatasetType):
+        EVENT (DatasetType):
+        CODE (DatasetType):
+    """
+
+    TRACKING = "TRACKING"
+    EVENT = "EVENT"
+    CODE = "CODE"
+
+    def __repr__(self):
+        return self.value
+
+
+def build_coordinate_system(
+    provider: Provider, dataset_type: DatasetType = DatasetType.EVENT, **kwargs
+):
     if provider == Provider.TRACAB:
         return TracabCoordinateSystem(normalized=False, **kwargs)
 
@@ -668,7 +713,12 @@ def build_coordinate_system(provider: Provider, **kwargs):
         return OptaCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.SPORTEC:
-        return SportecCoordinateSystem(normalized=False, **kwargs)
+        if dataset_type == DatasetType.TRACKING:
+            return SportecTrackingDataCoordinateSystem(
+                normalized=False, **kwargs
+            )
+        else:
+            return SportecEventDataCoordinateSystem(normalized=False, **kwargs)
 
     if provider == Provider.STATSBOMB:
         return StatsBombCoordinateSystem(normalized=False, **kwargs)
@@ -795,24 +845,6 @@ class Metadata:
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
 
-class DatasetType(Enum):
-    """
-    DatasetType
-
-    Attributes:
-        TRACKING (DatasetType):
-        EVENT (DatasetType):
-        CODE (DatasetType):
-    """
-
-    TRACKING = "TRACKING"
-    EVENT = "EVENT"
-    CODE = "CODE"
-
-    def __repr__(self):
-        return self.value
-
-
 T = TypeVar("T", bound="DataRecord")
 
 
@@ -837,6 +869,9 @@ class Dataset(ABC, Generic[T]):
 
     def __getitem__(self, item):
         return self.records[item]
+
+    def __len__(self):
+        return len(self.records)
 
     def __post_init__(self):
         for i, record in enumerate(self.records):

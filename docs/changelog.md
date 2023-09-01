@@ -3,6 +3,18 @@
 
 Find out all changes between different kloppy versions
 
+## 3.12.0 (2023-07-30)
+
+Pull requests merged:
+
+- Add ClearanceEvent ([#195](https://github.com/PySport/kloppy/pull/195))
+- Fixed foot left/right typo in shot parsing for WyScout v3 ([#197](https://github.com/PySport/kloppy/pull/197))
+- Improvements to Opta and Wyscout deserializers ([#198](https://github.com/PySport/kloppy/pull/198))
+- Fix issue with automated tests on macos ([#199](https://github.com/PySport/kloppy/pull/199)) 
+- Add speed parsing for SecondSpectrum ([#201](https://github.com/PySport/kloppy/pull/201))
+- Add DuelEvent ([#204](https://github.com/PySport/kloppy/pull/204))
+- Sportec tracking deserializer ([#208](https://github.com/PySport/kloppy/pull/208))
+
 ## 3.11.0 (2023-06-05)
 
 Pull requests merged:

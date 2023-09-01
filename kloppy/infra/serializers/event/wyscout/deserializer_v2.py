@@ -102,6 +102,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
             qualifiers.append(
                 GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
             )
+
     return {
         "result": result,
         "result_coordinates": Point(

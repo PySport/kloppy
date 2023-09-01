@@ -163,8 +163,9 @@ class DeprecatedEnumValue:
         self.value = value
 
     def __get__(self, instance, owner):
-        warnings.warn(f"{owner.__name__} is deprecated. Use GoalkeeperActionType instead.",
-                      DeprecationWarning,
-                      stacklevel=2
-                      )
+        warnings.warn(
+            f"{owner.__name__} is deprecated. Use GoalkeeperActionType instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.value

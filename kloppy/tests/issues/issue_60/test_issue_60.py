@@ -11,6 +11,7 @@ class TestIssue60:
             f7_data=os.path.join(dir_path, "opta_f7.xml"),
             f24_data=os.path.join(dir_path, "opta_f24.xml"),
         )
+        df = event_dataset.to_df()
 
         assert deleted_event_id not in df["event_id"].to_list()
 

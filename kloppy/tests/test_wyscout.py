@@ -77,10 +77,6 @@ class TestWyscout:
             dataset.events[258].get_qualifier_values(DuelQualifier)[2].value
             == DuelType.SLIDING_TACKLE
         )
-        assert (
-            dataset.events[258].get_qualifier_values(DuelQualifier)[2].value
-            == DuelType.SLIDING_TACKLE
-        )
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")

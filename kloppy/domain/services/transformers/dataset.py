@@ -149,21 +149,22 @@ class DatasetTransformer:
             if action_executing_team is None:
                 action_executing_team = ball_owning_team
 
-            orientation_factor_from = (
-                self._from_orientation.get_orientation_factor(
-                    ball_owning_team=ball_owning_team,
-                    period=period,
-                    action_executing_team=action_executing_team,
-                )
+            attacking_direction_from = AttackingDirection.from_orientation(
+                self._from_orientation,
+                period=period,
+                ball_owning_team=ball_owning_team,
+                action_executing_team=action_executing_team,
             )
-            orientation_factor_to = (
-                self._to_orientation.get_orientation_factor(
-                    ball_owning_team=ball_owning_team,
-                    period=period,
-                    action_executing_team=action_executing_team,
-                )
+            attacking_direction_to = AttackingDirection.from_orientation(
+                self._to_orientation,
+                period=period,
+                ball_owning_team=ball_owning_team,
+                action_executing_team=action_executing_team,
             )
-            flip = orientation_factor_from != orientation_factor_to
+            flip = (
+                attacking_direction_from != attacking_direction_to
+                and attacking_direction_to != AttackingDirection.NOT_SET
+            )
         return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
@@ -182,8 +183,6 @@ class DatasetTransformer:
                 period=frame.period,
             ):
                 frame = self.__flip_frame(frame)
-
-            frame = self.__change_attacking_direction(frame)
 
         return frame
 
@@ -264,15 +263,6 @@ class DatasetTransformer:
         else:
             return Point(x=x, y=y)
 
-    def __change_attacking_direction(self, record: DataRecord):
-        new_attacking_direction = self._to_orientation.get_attacking_direction(
-            record.period
-        )
-        period = replace(
-            record.period, attacking_direction=new_attacking_direction
-        )
-        return replace(record, period=period)
-
     def __flip_frame(self, frame: Frame):
         players_data = {}
         for player, data in frame.players_data.items():
@@ -316,8 +306,6 @@ class DatasetTransformer:
 
             if event.freeze_frame:
                 event.freeze_frame = self.transform_frame(event.freeze_frame)
-
-            event = self.__change_attacking_direction(event)
 
         return event
 

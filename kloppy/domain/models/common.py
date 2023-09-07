@@ -232,24 +232,6 @@ class BallState(Enum):
         return self.value
 
 
-class AttackingDirection(Enum):
-    """
-    AttackingDirection
-
-    Attributes:
-        HOME_AWAY (AttackingDirection): Home team is playing from left to right
-        AWAY_HOME (AttackingDirection): Home team is playing from right to left
-        NOT_SET (AttackingDirection): not set yet
-    """
-
-    HOME_AWAY = "home-away"
-    AWAY_HOME = "away-home"
-    NOT_SET = "not-set"
-
-    def __repr__(self):
-        return self.value
-
-
 @dataclass
 class Period:
     """
@@ -260,23 +242,14 @@ class Period:
             `4` for second overtime, and `5` for penalty shootouts
         start_timestamp: timestamp given by provider (can be unix timestamp or relative)
         end_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
     """
 
     id: int
     start_timestamp: float
     end_timestamp: float
-    attacking_direction: AttackingDirection = AttackingDirection.NOT_SET
 
     def contains(self, timestamp: float):
         return self.start_timestamp <= timestamp <= self.end_timestamp
-
-    @property
-    def attacking_direction_set(self):
-        return self.attacking_direction != AttackingDirection.NOT_SET
-
-    def set_attacking_direction(self, attacking_direction: AttackingDirection):
-        self.attacking_direction = attacking_direction
 
     @property
     def duration(self):
@@ -287,6 +260,31 @@ class Period:
 
 
 class Orientation(Enum):
+    """
+    The attacking direction of each team in a dataset.
+
+    Attributes:
+        BALL_OWNING_TEAM: The team that is currently in possession of the ball
+            plays from left to right.
+        ACTION_EXECUTING_TEAM: The team that executes the action
+            plays from left to right. Used in event stream data only. Equivalent
+            to "BALL_OWNING_TEAM" for tracking data.
+        HOME_AWAY: The home team plays from left to right in the first period.
+            The away team plays from left to right in the second period.
+        AWAY_HOME: The away team plays from left to right in the first period.
+            The home team plays from left to right in the second period.
+        FIXED_HOME_AWAY: The home team plays from left to right in both periods.
+        FIXED_AWAY_HOME: The away team plays from left to right in both periods.
+        NOT_SET: The attacking direction is not defined.
+
+    Notes:
+        The attacking direction is not defined for penalty shootouts in the
+        `HOME_AWAY`, `AWAY_HOME`, `FIXED_HOME_AWAY`, and `FIXED_AWAY_HOME`
+        orientations. This period is ignored in orientation transforms
+        involving one of these orientations and keeps its original
+        attacking direction.
+    """
+
     # change when possession changes
     BALL_OWNING_TEAM = "ball-owning-team"
 
@@ -304,74 +302,109 @@ class Orientation(Enum):
     # Not set in dataset
     NOT_SET = "not-set"
 
-    def get_attacking_direction(self, period: Period) -> AttackingDirection:
-        if self == Orientation.FIXED_HOME_AWAY:
-            return AttackingDirection.HOME_AWAY
-        if self == Orientation.FIXED_AWAY_HOME:
-            return AttackingDirection.AWAY_HOME
-        if self == Orientation.HOME_AWAY:
-            dirmap = {
-                1: AttackingDirection.HOME_AWAY,
-                2: AttackingDirection.AWAY_HOME,
-                3: AttackingDirection.HOME_AWAY,
-                4: AttackingDirection.AWAY_HOME,
-            }
-            return dirmap.get(period.id, period.attacking_direction)
-        if self == Orientation.AWAY_HOME:
-            dirmap = {
-                1: AttackingDirection.AWAY_HOME,
-                2: AttackingDirection.HOME_AWAY,
-                3: AttackingDirection.AWAY_HOME,
-                4: AttackingDirection.HOME_AWAY,
-            }
-            return dirmap.get(period.id, period.attacking_direction)
-        return AttackingDirection.NOT_SET
+    def __repr__(self):
+        return self.value
 
-    def get_orientation_factor(
-        self,
-        period: Period,
-        ball_owning_team: Team,
-        action_executing_team: Team,
-    ) -> int:
-        if period.id == 5:
-            return 1  # the orientation of penalty shootouts is not transformed
-        if self == Orientation.FIXED_HOME_AWAY:
-            return 1
-        if self == Orientation.FIXED_AWAY_HOME:
-            return -1
-        if self == Orientation.HOME_AWAY:
-            if period.id == 1 or period.id == 3:
-                return 1
-            if period.id == 2 or period.id == 4:
-                return -1
+
+class AttackingDirection(Enum):
+    """
+    AttackingDirection
+
+    Attributes:
+        LTR (AttackingDirection): Home team is playing from left to right
+        RTL (AttackingDirection): Home team is playing from right to left
+        NOT_SET (AttackingDirection): not set yet
+    """
+
+    LTR = "left-to-right"
+    RTL = "right-to-left"
+    NOT_SET = "not-set"
+
+    @staticmethod
+    def from_orientation(
+        orientation: Orientation,
+        period: Optional[Period] = None,
+        ball_owning_team: Optional[Team] = None,
+        action_executing_team: Optional[Team] = None,
+    ) -> "AttackingDirection":
+        """Determines the attacking direction for a specific data record.
+
+        Args:
+            orientation: The orientation of the dataset.
+            period: The period of the data record.
+            ball_owning_team: The team that is in possession of the ball.
+            action_executing_team: The team that executes the action.
+
+        Raises:
+            OrientationError: If the attacking direction cannot be determined
+                from the given data.
+
+        Returns:
+            The attacking direction for the given data record.
+        """
+        if orientation == Orientation.FIXED_HOME_AWAY:
+            return AttackingDirection.LTR
+        if orientation == Orientation.FIXED_AWAY_HOME:
+            return AttackingDirection.RTL
+        if orientation == Orientation.HOME_AWAY:
+            if period is None:
+                raise OrientationError(
+                    "You must provide a period to determine the attacking direction"
+                )
+            dirmap = {
+                1: AttackingDirection.LTR,
+                2: AttackingDirection.RTL,
+                3: AttackingDirection.LTR,
+                4: AttackingDirection.RTL,
+            }
+            if period.id in dirmap:
+                return dirmap[period.id]
             raise OrientationError(
-                f"AttackingDirection not defined for period with id {period.id}"
+                "This orientation is not defined for period %s" % period.id
             )
-        if self == Orientation.AWAY_HOME:
-            if period.id == 1 or period.id == 3:
-                return -1
-            if period.id == 2 or period.id == 4:
-                return 1
+        if orientation == Orientation.AWAY_HOME:
+            if period is None:
+                raise OrientationError(
+                    "You must provide a period to determine the attacking direction"
+                )
+            dirmap = {
+                1: AttackingDirection.RTL,
+                2: AttackingDirection.LTR,
+                3: AttackingDirection.RTL,
+                4: AttackingDirection.LTR,
+            }
+            if period.id in dirmap:
+                return dirmap[period.id]
             raise OrientationError(
-                f"AttackingDirection not defined for period with id {period.id}"
+                "This orientation is not defined for period %s" % period.id
             )
-        if self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team.ground == Ground.HOME:
-                return 1
-            if ball_owning_team.ground == Ground.AWAY:
-                return -1
-            raise OrientationError(
-                f"Invalid ball_owning_team: {ball_owning_team}"
-            )
-        if self == Orientation.ACTION_EXECUTING_TEAM:
+        if orientation == Orientation.BALL_OWNING_TEAM:
+            if ball_owning_team is None:
+                raise OrientationError(
+                    "You must provide the ball owning team to determine the attacking direction"
+                )
+            if ball_owning_team is not None:
+                if ball_owning_team.ground == Ground.HOME:
+                    return AttackingDirection.LTR
+                if ball_owning_team.ground == Ground.AWAY:
+                    return AttackingDirection.RTL
+                raise OrientationError(
+                    "Invalid ball_owning_team: %s", ball_owning_team
+                )
+            return AttackingDirection.NOT_SET
+        if orientation == Orientation.ACTION_EXECUTING_TEAM:
+            if action_executing_team is None:
+                raise ValueError(
+                    "You must provide the action executing team to determine the attacking direction"
+                )
             if action_executing_team.ground == Ground.HOME:
-                return 1
+                return AttackingDirection.LTR
             if action_executing_team.ground == Ground.AWAY:
-                return -1
+                return AttackingDirection.RTL
             raise OrientationError(
-                f"Invalid action_executing_team: {action_executing_team}"
+                "Invalid action_executing_team: %s", action_executing_team
             )
-        raise OrientationError(f"Unknown orientation: {self}")
+        raise OrientationError("Unknown orientation: %s", orientation)
 
     def __repr__(self):
         return self.value
@@ -811,6 +844,23 @@ class DataRecord(ABC):
         self.prev_record = prev
         self.next_record = next_
 
+    @property
+    def attacking_direction(self):
+        if (
+            self.dataset
+            and self.dataset.metadata
+            and self.dataset.metadata.orientation is not None
+        ):
+            try:
+                return AttackingDirection.from_orientation(
+                    self.dataset.metadata.orientation,
+                    period=self.period,
+                    ball_owning_team=self.ball_owning_team,
+                )
+            except OrientationError:
+                return AttackingDirection.NOT_SET
+        return AttackingDirection.NOT_SET
+
     def matches(self, filter_) -> bool:
         if filter_ is None:
             return True
@@ -875,13 +925,6 @@ class Metadata:
         if self.coordinate_system is not None:
             # set the pitch dimensions from the coordinate system
             self.pitch_dimensions = self.coordinate_system.pitch_dimensions
-
-        if self.orientation is not None:
-            # set the attacking directions from the orientation
-            for period in self.periods:
-                period.attacking_direction = (
-                    self.orientation.get_attacking_direction(period)
-                )
 
 
 T = TypeVar("T", bound="DataRecord")

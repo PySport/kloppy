@@ -31,18 +31,16 @@ class TestMetricaCsvTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=0.04,
             end_timestamp=0.12,
-            attacking_direction=AttackingDirection.HOME_AWAY,
         )
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=5800.16,
             end_timestamp=5800.24,
-            attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
         # make sure data is loaded correctly (including flip y-axis)

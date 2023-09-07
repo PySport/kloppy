@@ -89,19 +89,16 @@ class TestOpta:
             id=1,
             start_timestamp=1537714933.608,
             end_timestamp=1537717701.222,
-            attacking_direction=AttackingDirection.NOT_SET,
         )
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=1537718728.873,
             end_timestamp=1537721737.788,
-            attacking_direction=AttackingDirection.NOT_SET,
         )
         assert dataset.metadata.periods[4] == Period(
             id=5,
             start_timestamp=1537729501.81,
             end_timestamp=1537730701.81,
-            attacking_direction=AttackingDirection.NOT_SET,
         )
 
         assert dataset.events[0].coordinates == Point(50.1, 49.4)

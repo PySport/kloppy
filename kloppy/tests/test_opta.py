@@ -115,9 +115,6 @@ class TestOpta:
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
-        assert (
-            dataset.events[23].event_type == EventType.MISCONTROL
-        )  # 250913217
 
         # Check goalkeeper qualifiers
         assert (
@@ -140,6 +137,9 @@ class TestOpta:
             dataset.events[27].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
         )
+        assert (
+            dataset.events[28].event_type == EventType.MISCONTROL
+        )  # 250913217
 
         # Check counterattack
         assert (

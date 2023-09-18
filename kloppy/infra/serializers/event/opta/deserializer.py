@@ -766,7 +766,8 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             raw_qualifiers, type_id
                         )
                         event = self.event_factory.build_goalkeeper_event(
-                            **goalkeeper_event_kwargs,
+                            **goalkeeper_event_kwargs, **generic_event_kwargs
+                        )
                     elif (type_id == EVENT_TYPE_BALL_TOUCH) & (outcome == 0):
                         event = self.event_factory.build_miscontrol(
                             result=None,

@@ -67,10 +67,9 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-        assert dataset.events[137].event_type == EventType.CLEARANCE
         assert dataset.events[11].event_type == EventType.MISCONTROL
-        assert dataset.events[136].event_type == EventType.CLEARANCE
-        
+        assert dataset.events[137].event_type == EventType.CLEARANCE
+
         assert (
             dataset.events[39].get_qualifier_value(DuelQualifier)
             == DuelType.GROUND

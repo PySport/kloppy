@@ -43,6 +43,8 @@ from kloppy.domain import (
     BodyPart,
     PassType,
     PassQualifier,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
     CounterAttackQualifier,
 )
 from kloppy.exceptions import DeserializationError
@@ -73,6 +75,19 @@ EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
 EVENT_TYPE_BALL_TOUCH = 61
+
+EVENT_TYPE_SAVE = 10
+EVENT_TYPE_CLAIM = 11
+EVENT_TYPE_PUNCH = 41
+EVENT_TYPE_KEEPER_PICK_UP = 52
+EVENT_TYPE_SMOTHER = 54
+KEEPER_EVENTS = [
+    EVENT_TYPE_SAVE,
+    EVENT_TYPE_CLAIM,
+    EVENT_TYPE_PUNCH,
+    EVENT_TYPE_KEEPER_PICK_UP,
+    EVENT_TYPE_SMOTHER,
+]
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
 DUEL_EVENTS = [EVENT_TYPE_TACKLE, EVENT_TYPE_AERIAL, EVENT_TYPE_50_50]
@@ -332,6 +347,14 @@ def _parse_shot(
     return dict(coordinates=coordinates, result=result, qualifiers=qualifiers)
 
 
+def _parse_goalkeeper_events(raw_qualifiers: List, type_id: int) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(type_id)
+    qualifiers.extend(goalkeeper_qualifiers)
+
+    return dict(result=None, qualifiers=qualifiers)
+
+
 def _parse_duel(raw_qualifiers: List, type_id: int, outcome: int) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
     if type_id == EVENT_TYPE_TACKLE:
@@ -498,6 +521,26 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(CardQualifier(value=CardType.FIRST_YELLOW))
     elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
+
+    return qualifiers
+
+
+def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
+    qualifiers = []
+    goalkeeper_qualifier = None
+    if type_id == EVENT_TYPE_SAVE:
+        goalkeeper_qualifier = GoalkeeperActionType.SAVE
+    elif type_id == EVENT_TYPE_CLAIM:
+        goalkeeper_qualifier = GoalkeeperActionType.CLAIM
+    elif type_id == EVENT_TYPE_PUNCH:
+        goalkeeper_qualifier = GoalkeeperActionType.PUNCH
+    elif type_id == EVENT_TYPE_KEEPER_PICK_UP:
+        goalkeeper_qualifier = GoalkeeperActionType.PICK_UP
+    elif type_id == EVENT_TYPE_SMOTHER:
+        goalkeeper_qualifier = GoalkeeperActionType.SMOTHER
+
+    if goalkeeper_qualifier:
+        qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))
 
     return qualifiers
 
@@ -717,6 +760,13 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = self.event_factory.build_duel(
                             **duel_event_kwargs,
                             **generic_event_kwargs,
+                        )
+                    elif type_id in KEEPER_EVENTS:
+                        goalkeeper_event_kwargs = _parse_goalkeeper_events(
+                            raw_qualifiers, type_id
+                        )
+                        event = self.event_factory.build_goalkeeper_event(
+                            **goalkeeper_event_kwargs, **generic_event_kwargs
                         )
                     elif (type_id == EVENT_TYPE_BALL_TOUCH) & (outcome == 0):
                         event = self.event_factory.build_miscontrol(

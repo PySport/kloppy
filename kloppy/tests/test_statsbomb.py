@@ -25,6 +25,8 @@ from kloppy.domain.models.event import (
     PassQualifier,
     PassType,
     EventType,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
 )
 
 
@@ -53,7 +55,7 @@ class TestStatsBomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4039
+        assert len(dataset.events) == 4041
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -161,6 +163,21 @@ class TestStatsBomb:
         )
         assert dataset.events[272].event_type == EventType.CLEARANCE
         assert dataset.events[68].event_type == EventType.MISCONTROL
+
+        assert (
+            dataset.events[761].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
+        )
+
+        assert (
+            dataset.events[4039].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SMOTHER
+        )
+
+        assert (
+            dataset.events[4040].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.PUNCH
+        )
 
     def test_correct_normalized_deserialization(
         self, lineup_data: Path, event_data: Path

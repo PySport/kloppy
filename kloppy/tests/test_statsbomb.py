@@ -162,6 +162,7 @@ class TestStatsBomb:
             == DuelType.GROUND
         )
         assert dataset.events[272].event_type == EventType.CLEARANCE
+        assert dataset.events[68].event_type == EventType.MISCONTROL
 
         assert (
             dataset.events[761].get_qualifier_value(GoalkeeperQualifier)

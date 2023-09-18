@@ -42,7 +42,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 28
+        assert len(dataset.events) == 29
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -115,6 +115,9 @@ class TestOpta:
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
+        assert (
+            dataset.events[23].event_type == EventType.MISCONTROL
+        )  # 250913217
 
         # Check goalkeeper qualifiers
         assert (

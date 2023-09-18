@@ -74,6 +74,7 @@ EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
+EVENT_TYPE_BALL_TOUCH = 61
 
 EVENT_TYPE_SAVE = 10
 EVENT_TYPE_CLAIM = 11
@@ -100,6 +101,7 @@ BALL_OWNING_EVENTS = (
     EVENT_TYPE_SHOT_SAVED,
     EVENT_TYPE_SHOT_GOAL,
     EVENT_TYPE_RECOVERY,
+    EVENT_TYPE_BALL_TOUCH,
 )
 
 EVENT_QUALIFIER_GOAL_KICK = 124
@@ -765,6 +767,10 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         )
                         event = self.event_factory.build_goalkeeper_event(
                             **goalkeeper_event_kwargs,
+                    elif (type_id == EVENT_TYPE_BALL_TOUCH) & (outcome == 0):
+                        event = self.event_factory.build_miscontrol(
+                            result=None,
+                            qualifiers=None,
                             **generic_event_kwargs,
                         )
                     elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (

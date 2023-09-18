@@ -186,6 +186,7 @@ class EventType(Enum):
         PLAYER_ON (EventType):
         PLAYER_OFF (EventType):
         RECOVERY (EventType):
+        MISCONTROL (EventType):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
         GOALKEEPER (EventType):
@@ -205,6 +206,7 @@ class EventType(Enum):
     PLAYER_ON = "PLAYER_ON"
     PLAYER_OFF = "PLAYER_OFF"
     RECOVERY = "RECOVERY"
+    MISCONTROL = "MISCONTROL"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
     GOALKEEPER = "GOALKEEPER"
@@ -913,6 +915,20 @@ class BallOutEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class MiscontrolEvent(Event):
+    """
+    MiscontrolEvent
+    Attributes:
+        event_type (EventType): `EventType.MISCONTROL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "miscontrol"
+    """
+
+    event_type: EventType = EventType.MISCONTROL
+    event_name: str = "miscontrol"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
     FoulCommittedEvent
@@ -1038,6 +1054,7 @@ __all__ = [
     "FormationChangeEvent",
     "EventDataset",
     "RecoveryEvent",
+    "MiscontrolEvent",
     "FoulCommittedEvent",
     "BallOutEvent",
     "SetPieceType",

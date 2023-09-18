@@ -443,6 +443,18 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             **clearance_event_args,
                             **generic_event_args,
                         )
+                    elif (
+                        raw_event["subEventId"]
+                        == wyscout_events.OTHERS_ON_BALL.TOUCH
+                    ) & (_has_tag(raw_event, wyscout_tags.MISSED_BALL)):
+                        miscontrol_event_args = {
+                            "result": None,
+                            "qualifiers": _generic_qualifiers(raw_event),
+                        }
+                        event = self.event_factory.build_miscontrol(
+                            **miscontrol_event_args,
+                            **generic_event_args,
+                        )
                     else:
                         recovery_event_args = _parse_recovery(raw_event)
                         event = self.event_factory.build_recovery(

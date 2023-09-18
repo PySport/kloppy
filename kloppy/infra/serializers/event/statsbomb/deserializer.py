@@ -52,6 +52,7 @@ SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
+SB_EVENT_TYPE_MISCONTROL = 38
 SB_EVENT_TYPE_CARRY = 43
 
 SB_EVENT_TYPE_HALF_START = 18
@@ -794,6 +795,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(clearance_event)
+                elif event_type == SB_EVENT_TYPE_MISCONTROL:
+                    miscontrol_event = self.event_factory.build_miscontrol(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(miscontrol_event)
                 # For dribble and carry the definitions
                 # are flipped between StatsBomb and kloppy
                 elif event_type == SB_EVENT_TYPE_DRIBBLE:

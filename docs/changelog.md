@@ -3,6 +3,13 @@
 
 Find out all changes between different kloppy versions
 
+## 3.13.0 (2023-09-29)
+
+Pull requests merged:
+
+- Add MiscontrolEvent ([#207](https://github.com/PySport/kloppy/pull/207))
+- Add GoalkeeperEvent ([#196](https://github.com/PySport/kloppy/pull/196))
+
 ## 3.12.0 (2023-07-30)
 
 Pull requests merged:

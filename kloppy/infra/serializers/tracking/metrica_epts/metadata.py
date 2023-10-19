@@ -227,20 +227,28 @@ def load_metadata(
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )
-    score_elm = score_path.find(metadata)
-    score = Score(
-        home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
-    )
-
-    _team_map = {
-        score_elm.attrib["idLocalTeam"]: Ground.HOME,
-        score_elm.attrib["idVisitingTeam"]: Ground.AWAY,
-    }
 
     _team_name_map = {
         team_elm.attrib["id"]: str(team_elm.find("Name"))
         for team_elm in metadata.find("Teams").iterchildren(tag="Team")
     }
+
+    if score_path.hasattr(metadata):
+        score_elm = score_path.find(metadata)
+        score = Score(
+            home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
+        )
+
+        _team_map = {
+            score_elm.attrib["idLocalTeam"]: Ground.HOME,
+            score_elm.attrib["idVisitingTeam"]: Ground.AWAY,
+        }
+    else:
+        score = Score(home=0, away=0)
+        _team_map = {
+            list(_team_name_map.keys())[0]: Ground.HOME,
+            list(_team_name_map.keys())[1]: Ground.AWAY,
+        }
 
     teams_metadata = {}
     for team_id, ground in _team_map.items():

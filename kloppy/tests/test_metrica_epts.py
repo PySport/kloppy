@@ -182,3 +182,9 @@ class TestMetricaEPTSTracking:
         # x,y coordinates of the first player are empty. Check if they are nan's
         assert first_player_x != first_player_x
         assert first_player_y != first_player_y
+
+    def test_read_metadata_withou_score_field(self, base_dir):
+        with open(
+            base_dir / "files/epts_metrica_metadata_without_score.xml", "rb"
+        ) as metadata_fp:
+            metadata = load_metadata(metadata_fp)

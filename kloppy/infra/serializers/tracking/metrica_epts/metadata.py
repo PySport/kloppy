@@ -245,9 +245,10 @@ def load_metadata(
         }
     else:
         score = Score(home=0, away=0)
+        home_team_id, away_team_id = list(_team_name_map.keys())
         _team_map = {
-            list(_team_name_map.keys())[0]: Ground.HOME,
-            list(_team_name_map.keys())[1]: Ground.AWAY,
+            home_team_id: Ground.HOME,
+            away_team_id: Ground.AWAY,
         }
 
     teams_metadata = {}

@@ -391,6 +391,8 @@ def _parse_shot(shot_dict: Dict) -> Dict:
         raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
     qualifiers = []
+    set_piece_qualifiers = _get_set_piece_qualifiers(shot_dict)
+    qualifiers.extend(set_piece_qualifiers)
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 

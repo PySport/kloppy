@@ -469,22 +469,10 @@ def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict, events: List) -> Dict:
+def _parse_clearance(clearance_dict: Dict) -> Dict:
     qualifiers = []
-    if "related_events" in raw_event:
-        for event in events[-20:][::-1]:
-            if event.event_id == raw_event["related_events"][0]:
-                found_event = event
-                body_part_qualifiers = []
-                if "pass" in found_event.raw_event:
-                    related_event_dict = found_event.raw_event["pass"]
-                    body_part_qualifiers = _get_body_part_qualifiers(
-                        related_event_dict
-                    )
-
-                qualifiers.extend(body_part_qualifiers)
-                break
-
+    body_part_qualifiers = _get_body_part_qualifiers(clearance_dict)
+    qualifiers.extend(body_part_qualifiers)
     return {"qualifiers": qualifiers}
 
 
@@ -858,7 +846,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     new_events.append(shot_event)
                 elif event_type == SB_EVENT_TYPE_CLEARANCE:
                     clearance_event_kwargs = _parse_clearance(
-                        raw_event=raw_event, events=events
+                        # Old versions of the data (< v1.1) don't define extra
+                        # attributes for clearances
+                        clearance_dict=raw_event.get("clearance", {}),
                     )
                     clearance_event = self.event_factory.build_clearance(
                         result=None,

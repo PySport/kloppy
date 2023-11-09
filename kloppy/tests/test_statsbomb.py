@@ -170,12 +170,12 @@ class TestStatsBomb:
         )
 
         assert (
-            dataset.events[4039].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[4040].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
         )
 
         assert (
-            dataset.events[4040].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[4041].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PUNCH
         )
 

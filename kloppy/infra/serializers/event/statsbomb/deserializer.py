@@ -53,6 +53,8 @@ SB_EVENT_TYPE_DUEL = 4
 SB_EVENT_TYPE_CLEARANCE = 9
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_TYPE_OWN_GOAL_AGAINST = 20
+SB_EVENT_TYPE_OWN_GOAL_FOR = 25
 SB_EVENT_TYPE_GOALKEEPER_EVENT = 23
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
@@ -856,6 +858,15 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_AGAINST:
+                    shot_event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=[],
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_FOR:
+                    pass
                 elif event_type == SB_EVENT_TYPE_CLEARANCE:
                     clearance_event_kwargs = _parse_clearance(
                         raw_event=raw_event, events=events
@@ -1063,7 +1074,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Last step is to add freeze_frame information
         for event in events:
             if event.event_type == EventType.SHOT:
-                if "freeze_frame" in event.raw_event["shot"]:
+                if "freeze_frame" in event.raw_event.get("shot", {}):
                     event.freeze_frame = transformer.transform_frame(
                         _parse_freeze_frame(
                             freeze_frame=event.raw_event["shot"][

@@ -15,8 +15,8 @@ from kloppy.domain import (
     Point,
     Provider,
     FormationType,
-    Frame,
     Position,
+    ShotResult,
 )
 
 from kloppy import statsbomb
@@ -55,7 +55,7 @@ class TestStatsBomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4041
+        assert len(dataset.events) == 4042
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -253,6 +253,36 @@ class TestStatsBomb:
                 assert foul.qualifiers is None
 
         assert len(dataset.events) == 23
+
+    def test_own_goal(self, lineup_data: Path, event_data: Path):
+        """
+        Test own goal events.
+
+        The StatsBomb "Own Goal For" (id = 25) and one "Own Goal Against" (id = 20) events
+        should be converted to a single shot event with ShotResult.OWN_GOAL.
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+        )
+
+        # The Own Goal For event should be removed
+        own_goal_for_event = [
+            event
+            for event in dataset.events
+            if event.event_id == "f942c5b5-df4b-4ee4-9e90-ed5f5"
+        ]
+        assert len(own_goal_for_event) == 0
+
+        # The Own Goal Against event should be converted to a shot event
+        own_goal_against_event = [
+            event
+            for event in dataset.events
+            if event.event_id == "89dd4f4b-0a70-48d8-a0e7-ac4c"
+        ]
+        assert len(own_goal_against_event) == 1
+        assert own_goal_against_event[0].event_type == EventType.SHOT
+        assert own_goal_against_event[0].result == ShotResult.OWN_GOAL
 
     def test_related_events(self, lineup_data: Path, event_data: Path):
         dataset = statsbomb.load(

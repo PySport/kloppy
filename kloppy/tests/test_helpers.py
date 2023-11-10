@@ -376,7 +376,7 @@ class TestHelpers:
         import polars as pl
 
         c = df.select(pl.col("event_id").count())[0, 0]
-        assert c == 4041
+        assert c == 4047
 
     def test_tracking_dataset_to_polars(self):
         """

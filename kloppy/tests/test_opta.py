@@ -42,7 +42,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 29
+        assert len(dataset.events) == 30
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -138,7 +138,10 @@ class TestOpta:
             == GoalkeeperActionType.SMOTHER
         )
         assert (
-            dataset.events[28].event_type == EventType.MISCONTROL
+            dataset.events[28].event_type == EventType.INTERCEPTION
+        )  # 2609934569
+        assert (
+            dataset.events[29].event_type == EventType.MISCONTROL
         )  # 250913217
 
         # Check counterattack

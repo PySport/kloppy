@@ -245,6 +245,14 @@ class TestStatsBomb:
             event_types=["foul_committed"],
         )
 
+        for foul in dataset.events:
+            if foul.event_id == "382879fa-47ac-487f-801c-587f75f6a9a4":
+                assert CardType.FIRST_YELLOW in [
+                    q.value for q in foul.qualifiers
+                ]
+            else:
+                assert foul.qualifiers is None
+
         assert len(dataset.events) == 23
 
     def test_related_events(self, lineup_data: Path, event_data: Path):

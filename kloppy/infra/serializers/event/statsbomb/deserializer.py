@@ -36,6 +36,7 @@ from kloppy.domain import (
     Point3D,
 )
 from kloppy.domain.models.event import (
+    CardQualifier,
     PassQualifier,
     PassType,
     EventType,
@@ -404,6 +405,8 @@ def _parse_shot(shot_dict: Dict) -> Dict:
         raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
     qualifiers = []
+    set_piece_qualifiers = _get_set_piece_qualifiers(shot_dict)
+    qualifiers.extend(set_piece_qualifiers)
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 
@@ -641,7 +644,13 @@ def _parse_bad_behaviour(bad_behaviour_dict: Dict) -> Dict:
 def _parse_foul_committed(foul_committed_dict: Dict) -> Dict:
     foul_committed = {}
     if "card" in foul_committed_dict:
-        foul_committed["card"] = _parse_card(foul_committed_dict["card"])
+        card_kwargs = _parse_card(foul_committed_dict["card"])
+        foul_committed["qualifiers"] = [
+            CardQualifier(value=card_kwargs["card_type"])
+        ]
+        foul_committed["card"] = card_kwargs
+    else:
+        foul_committed["qualifiers"] = None
 
     return foul_committed
 
@@ -1025,7 +1034,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     foul_committed_event = (
                         self.event_factory.build_foul_committed(
                             result=None,
-                            qualifiers=None,
+                            **foul_committed_kwargs,
                             **generic_event_kwargs,
                         )
                     )

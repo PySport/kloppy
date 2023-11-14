@@ -510,7 +510,8 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         **generic_event_args,
                     )
 
-                # If also an interception event, add this before other event (It is a tag on multiple wyscout_events)
+                # Since Interception is not an event in wyscout v2 but a tag for pass, touch and duel. Therefore,
+                # we convert those duels and touch events to an interception. And insert interception before passes.
                 if _has_tag(raw_event, wyscout_tags.INTERCEPTION):
                     interception_event_args = _parse_interception(
                         raw_event, next_event
@@ -520,13 +521,16 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         **generic_event_args,
                     )
 
-                    if event.event_type.name != "RECOVERY":
+                    if event.event_type.name == "DUEL":
+                        # when DuelEvent is interception, we need to overwrite this and the previous DuelEvent
+                        events = events[:-1]
+                        event = interception_event
+                    elif event.event_name in ["recovery", "miscontrol"]:
+                        event = interception_event
+                    elif event.event_name in ["pass", "clearance"]:
                         events.append(
                             transformer.transform_event(interception_event)
                         )
-                    else:
-                        # overwrite recovery event
-                        event = interception_event
 
                 if event and self.should_include_event(event):
                     events.append(transformer.transform_event(event))

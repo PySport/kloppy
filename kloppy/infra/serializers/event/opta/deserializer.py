@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Tuple, Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime
 import pytz
@@ -78,6 +78,7 @@ EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
 EVENT_TYPE_BALL_TOUCH = 61
+EVENT_TYPE_BLOCKED_PASS = 74
 
 EVENT_TYPE_SAVE = 10
 EVENT_TYPE_CLAIM = 11
@@ -391,7 +392,7 @@ def _parse_interception(
     qualifiers = _get_event_qualifiers(raw_qualifiers)
     result = InterceptionResult.SUCCESS
 
-    if next_event:
+    if next_event is not None:
         next_event_type_id = int(next_event.attrib["type_id"])
         if next_event_type_id in BALL_OUT_EVENTS:
             result = InterceptionResult.OUT
@@ -642,7 +643,11 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             ]
             possession_team = None
             events = []
-            events_list = list(game_elm.iterchildren("Event"))
+            events_list = [
+                event
+                for event in list(game_elm.iterchildren("Event"))
+                if int(event.attrib["type_id"]) != EVENT_TYPE_DELETED_EVENT
+            ]
             for idx, event_elm in enumerate(events_list):
                 next_event_elm = (
                     events_list[idx + 1]
@@ -672,11 +677,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         f"Set end of period {period.id} to {timestamp}"
                     )
                     period.end_timestamp = timestamp
-                elif type_id == EVENT_TYPE_DELETED_EVENT:
-                    logger.debug(
-                        f"Skipping event {event_id} because it is a deleted event (type id - {type_id})"
-                    )
-                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet
@@ -792,7 +792,10 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_INTERCEPTION:
+                    elif type_id in (
+                        EVENT_TYPE_INTERCEPTION,
+                        EVENT_TYPE_BLOCKED_PASS,
+                    ):
                         interception_event_kwargs = _parse_interception(
                             raw_qualifiers, team, next_event_elm
                         )

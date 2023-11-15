@@ -27,4 +27,9 @@ class ScoreStateBuilder(StateBuilder):
                     state = replace(state, home=state.home + 1)
                 else:
                     state = replace(state, away=state.away + 1)
+            elif event.result == ShotResult.OWN_GOAL:
+                if event.team.ground == Ground.HOME:
+                    state = replace(state, away=state.away + 1)
+                else:
+                    state = replace(state, home=state.home + 1)
         return state

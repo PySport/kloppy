@@ -6,3 +6,4 @@ pytest
 pandas>=1.0.0
 polars>=0.16.6
 pre-commit
+ipython_genutils

@@ -32,7 +32,8 @@ class TestStateBuilder:
             "0-0": 2914,
             "1-0": 718,
             "2-0": 405,
-            "3-0": 10,
+            "3-0": 7,
+            "3-1": 4,
         }
 
     def test_sequence_state_builder(self, base_dir):
@@ -93,7 +94,7 @@ class TestStateBuilder:
 
         # inspect FormationChangeEvent usage and formation state_builder
         assert events_per_formation_change["4-1-4-1"] == 3090
-        assert events_per_formation_change["4-4-2"] == 957
+        assert events_per_formation_change["4-4-2"] == 958
 
         assert dataset.metadata.teams[0].starting_formation == FormationType(
             "4-4-2"

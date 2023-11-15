@@ -55,6 +55,8 @@ SB_EVENT_TYPE_CLEARANCE = 9
 SB_EVENT_TYPE_INTERCEPTION = 10
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_TYPE_OWN_GOAL_AGAINST = 20
+SB_EVENT_TYPE_OWN_GOAL_FOR = 25
 SB_EVENT_TYPE_GOALKEEPER_EVENT = 23
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
@@ -518,22 +520,10 @@ def _parse_interception(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
-def _parse_clearance(raw_event: Dict, events: List) -> Dict:
+def _parse_clearance(clearance_dict: Dict) -> Dict:
     qualifiers = []
-    if "related_events" in raw_event:
-        for event in events[-20:][::-1]:
-            if event.event_id == raw_event["related_events"][0]:
-                found_event = event
-                body_part_qualifiers = []
-                if "pass" in found_event.raw_event:
-                    related_event_dict = found_event.raw_event["pass"]
-                    body_part_qualifiers = _get_body_part_qualifiers(
-                        related_event_dict
-                    )
-
-                qualifiers.extend(body_part_qualifiers)
-                break
-
+    body_part_qualifiers = _get_body_part_qualifiers(clearance_dict)
+    qualifiers.extend(body_part_qualifiers)
     return {"qualifiers": qualifiers}
 
 
@@ -928,9 +918,20 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(interception_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_AGAINST:
+                    shot_event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=[],
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_FOR:
+                    pass
                 elif event_type == SB_EVENT_TYPE_CLEARANCE:
                     clearance_event_kwargs = _parse_clearance(
-                        raw_event=raw_event, events=events
+                        # Old versions of the data (< v1.1) don't define extra
+                        # attributes for clearances
+                        clearance_dict=raw_event.get("clearance", {}),
                     )
                     clearance_event = self.event_factory.build_clearance(
                         result=None,
@@ -1135,7 +1136,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Last step is to add freeze_frame information
         for event in events:
             if event.event_type == EventType.SHOT:
-                if "freeze_frame" in event.raw_event["shot"]:
+                if "freeze_frame" in event.raw_event.get("shot", {}):
                     event.freeze_frame = transformer.transform_frame(
                         _parse_freeze_frame(
                             freeze_frame=event.raw_event["shot"][

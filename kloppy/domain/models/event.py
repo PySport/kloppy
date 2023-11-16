@@ -18,6 +18,7 @@ from kloppy.utils import (
     removes_suffix,
     docstring_inherit_attributes,
     deprecated,
+    DeprecatedEnumValue,
 )
 
 from .common import DataRecord, Dataset, Player, Team
@@ -155,6 +156,28 @@ class DuelResult(ResultType):
         return self == self.WON
 
 
+class InterceptionResult(ResultType):
+    """
+    InterceptionResult
+
+    Attributes:
+        SUCCESS (InterceptionResult): An interception that gains possession of the ball (without going out of bounds)
+        LOST (InterceptionResult): An interception by the defending team that knocked the ball to an attacker
+        OUT (InterceptionResult): An interception that knocked the ball out of bounds
+    """
+
+    SUCCESS = "SUCCESS"
+    LOST = "LOST"
+    OUT = "OUT"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the interception was successful
+        """
+        return self == self.SUCCESS
+
+
 class CardType(Enum):
     """
     CardType
@@ -179,14 +202,17 @@ class EventType(Enum):
         TAKE_ON (EventType):
         CARRY (EventType):
         CLEARANCE (EventType):
+        INTERCEPTION (EventType):
         DUEL (EventType):
         SUBSTITUTION (EventType):
         CARD (EventType):
         PLAYER_ON (EventType):
         PLAYER_OFF (EventType):
         RECOVERY (EventType):
+        MISCONTROL (EventType):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
+        GOALKEEPER (EventType):
         FORMATION_CHANGE (EventType):
     """
 
@@ -197,14 +223,17 @@ class EventType(Enum):
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
     CLEARANCE = "CLEARANCE"
+    INTERCEPTION = "INTERCEPTION"
     DUEL = "DUEL"
     SUBSTITUTION = "SUBSTITUTION"
     CARD = "CARD"
     PLAYER_ON = "PLAYER_ON"
     PLAYER_OFF = "PLAYER_OFF"
     RECOVERY = "RECOVERY"
+    MISCONTROL = "MISCONTROL"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+    GOALKEEPER = "GOALKEEPER"
     FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
@@ -337,7 +366,7 @@ class BodyPart(Enum):
 
     Attributes:
         RIGHT_FOOT (BodyPart): Pass or Shot with right foot, save with right foot (for goalkeepers).
-        LEFT_FOOT (BodyPart): Pass or Shot with leftt foot, save with left foot (for goalkeepers).
+        LEFT_FOOT (BodyPart): Pass or Shot with left foot, save with left foot (for goalkeepers).
         HEAD (BodyPart): Pass or Shot with head, save with head (for goalkeepers).
         BOTH_HANDS (BodyPart): Goalkeeper only. Save with both hands.
         CHEST (BodyPart): Goalkeeper only. Save with chest.
@@ -371,13 +400,57 @@ class BodyPartQualifier(EnumQualifier):
 
 
 class GoalkeeperAction(Enum):
+    """
+    Deprecated: GoalkeeperAction has been renamed to GoalkeeperActionType.
+
+    Attributes:
+        SAVE (GoalkeeperAction): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperAction): Goalkeeper catches cross.
+        PUNCH (GoalkeeperAction): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperAction): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperAction): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperAction): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperAction): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = DeprecatedEnumValue("SAVE")
+    CLAIM = DeprecatedEnumValue("CLAIM")
+    PUNCH = DeprecatedEnumValue("PUNCH")
+    PICK_UP = DeprecatedEnumValue("PICK_UP")
+    SMOTHER = DeprecatedEnumValue("SMOTHER")
+    REFLEX = DeprecatedEnumValue("REFLEX")
+    SAVE_ATTEMPT = DeprecatedEnumValue("SAVE_ATTEMPT")
+
+
+class GoalkeeperActionType(Enum):
+    """
+    GoalkeeperActionType
+
+    Attributes:
+        SAVE (GoalkeeperActionType): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperActionType): Goalkeeper catches cross.
+        PUNCH (GoalkeeperActionType): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperActionType): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperActionType): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperActionType): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperActionType): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = "SAVE"
+    CLAIM = "CLAIM"
+    PUNCH = "PUNCH"
+    PICK_UP = "PICK_UP"
+    SMOTHER = "SMOTHER"
+
     REFLEX = "REFLEX"
     SAVE_ATTEMPT = "SAVE_ATTEMPT"
 
 
 @dataclass
-class GoalkeeperActionQualifier(EnumQualifier):
-    value: GoalkeeperAction
+class GoalkeeperQualifier(EnumQualifier):
+    value: GoalkeeperActionType
 
 
 class DuelType(Enum):
@@ -721,6 +794,21 @@ class CarryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class InterceptionEvent(Event):
+    """
+    InterceptionEvent
+
+    Attributes:
+        event_type (EventType): `EventType.INTERCEPTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"interception"`
+    """
+
+    event_type: EventType = EventType.INTERCEPTION
+    event_name: str = "interception"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class ClearanceEvent(Event):
     """
     ClearanceEvent
@@ -866,6 +954,20 @@ class BallOutEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class MiscontrolEvent(Event):
+    """
+    MiscontrolEvent
+    Attributes:
+        event_type (EventType): `EventType.MISCONTROL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "miscontrol"
+    """
+
+    event_type: EventType = EventType.MISCONTROL
+    event_name: str = "miscontrol"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
     FoulCommittedEvent
@@ -877,6 +979,21 @@ class FoulCommittedEvent(Event):
 
     event_type: EventType = EventType.FOUL_COMMITTED
     event_name: str = "foul_committed"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class GoalkeeperEvent(Event):
+    """
+    GoalkeeperEvent
+
+    Attributes:
+        event_type (EventType): `EventType.GOALKEEPER` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "goalkeeper"
+    """
+
+    event_type: EventType = EventType.GOALKEEPER
+    event_name: str = "goalkeeper"
 
 
 @dataclass(repr=False)
@@ -966,6 +1083,8 @@ __all__ = [
     "TakeOnEvent",
     "CarryEvent",
     "ClearanceEvent",
+    "InterceptionEvent",
+    "InterceptionResult",
     "SubstitutionEvent",
     "PlayerOnEvent",
     "PlayerOffEvent",
@@ -976,6 +1095,7 @@ __all__ = [
     "FormationChangeEvent",
     "EventDataset",
     "RecoveryEvent",
+    "MiscontrolEvent",
     "FoulCommittedEvent",
     "BallOutEvent",
     "SetPieceType",
@@ -985,8 +1105,10 @@ __all__ = [
     "PassType",
     "BodyPart",
     "BodyPartQualifier",
+    "GoalkeeperEvent",
+    "GoalkeeperQualifier",
     "GoalkeeperAction",
-    "GoalkeeperActionQualifier",
+    "GoalkeeperActionType",
     "CounterAttackQualifier",
     "DuelEvent",
     "DuelType",

@@ -29,7 +29,7 @@ class TestToRecords:
 
     def test_default_columns(self, dataset: EventDataset):
         records = dataset.to_records()
-        assert len(records) == 4039
+        assert len(records) == 4048
         assert list(records[0].keys()) == [
             "event_id",
             "event_type",

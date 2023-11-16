@@ -8,6 +8,8 @@ from kloppy.domain import (
     DuelQualifier,
     DuelType,
     EventType,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
 )
 
 from kloppy import wyscout
@@ -30,8 +32,11 @@ class TestWyscout:
             coordinates="wyscout",
             data_version="V3",
         )
-        df = dataset.to_df()
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
+        assert (
+            dataset.events[10].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
+        )
         assert (
             dataset.events[4].get_qualifier_value(SetPieceQualifier)
             == SetPieceType.CORNER_KICK
@@ -50,6 +55,7 @@ class TestWyscout:
             == DuelType.SLIDING_TACKLE
         )
         assert dataset.events[9].event_type == EventType.CLEARANCE
+        assert dataset.events[12].event_type == EventType.INTERCEPTION
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
@@ -62,7 +68,9 @@ class TestWyscout:
             data_version="V2",
         )
         assert dataset.records[2].coordinates == Point(29.0, 6.0)
-        assert dataset.events[136].event_type == EventType.CLEARANCE
+        assert dataset.events[11].event_type == EventType.MISCONTROL
+        assert dataset.events[34].event_type == EventType.INTERCEPTION
+        assert dataset.events[143].event_type == EventType.CLEARANCE
 
         assert (
             dataset.events[39].get_qualifier_value(DuelQualifier)
@@ -73,8 +81,12 @@ class TestWyscout:
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[258].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[268].get_qualifier_values(DuelQualifier)[2].value
             == DuelType.SLIDING_TACKLE
+        )
+        assert (
+            dataset.events[301].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
         )
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):

@@ -16,12 +16,15 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     DuelResult,
+    InterceptionResult,
     DuelQualifier,
     DuelType,
     Metadata,
     Ground,
     Player,
     CardType,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
     SetPieceQualifier,
     SetPieceType,
     FormationType,
@@ -33,6 +36,7 @@ from kloppy.domain import (
     Point3D,
 )
 from kloppy.domain.models.event import (
+    CardQualifier,
     PassQualifier,
     PassType,
     EventType,
@@ -48,10 +52,15 @@ logger = logging.getLogger(__name__)
 SB_EVENT_TYPE_RECOVERY = 2
 SB_EVENT_TYPE_DUEL = 4
 SB_EVENT_TYPE_CLEARANCE = 9
+SB_EVENT_TYPE_INTERCEPTION = 10
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_TYPE_OWN_GOAL_AGAINST = 20
+SB_EVENT_TYPE_OWN_GOAL_FOR = 25
+SB_EVENT_TYPE_GOALKEEPER_EVENT = 23
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
+SB_EVENT_TYPE_MISCONTROL = 38
 SB_EVENT_TYPE_CARRY = 43
 
 SB_EVENT_TYPE_HALF_START = 18
@@ -72,6 +81,8 @@ SB_PASS_OUTCOME_OUT = 75
 SB_PASS_OUTCOME_OFFSIDE = 76
 SB_PASS_OUTCOME_UNKNOWN = 77
 
+SB_PASS_TYPE_ONE_TOUCH_INTERCEPTION = 64
+
 SB_PASS_HEIGHT_GROUND = 1
 SB_PASS_HEIGHT_LOW = 2
 SB_PASS_HEIGHT_HIGH = 3
@@ -85,8 +96,17 @@ SB_SHOT_OUTCOME_OFF_WAYWARD = 101
 SB_SHOT_OUTCOME_SAVED_OFF_TARGET = 115
 SB_SHOT_OUTCOME_SAVED_TO_POST = 116
 
-SB_EVENT_TYPE_AERIAL_LOST = 10
-SB_EVENT_TYPE_TACKLE = 11
+SB_DUEL_TYPE_AERIAL_LOST = 10
+SB_DUEL_TYPE_TACKLE = 11
+
+SB_INTERCEPTION_OUTCOME_LOST = 1
+SB_INTERCEPTION_OUTCOME_WON = 4
+SB_INTERCEPTION_OUTCOME_LOST_IN_PLAY = 13
+SB_INTERCEPTION_OUTCOME_LOST_OUT = 14
+SB_INTERCEPTION_OUTCOME_SUCCESS = 15
+SB_INTERCEPTION_OUTCOME_SUCCESS_IN_PLAY = 16
+SB_INTERCEPTION_OUTCOME_SUCCESS_OUT = 17
+
 
 DUEL_WON_NAMES = [
     "Won",
@@ -116,6 +136,29 @@ SB_BODYPART_DROP_KICK = 68
 SB_BODYPART_KEEPER_ARM = 69
 SB_BODYPART_OTHER = 70
 SB_BODYPART_NO_TOUCH = 106
+
+SB_GOALKEEPER_COLLECTED = 25
+SB_GOALKEEPER_GOAL_CONCEDED = 26
+SB_GOALKEEPER_KEEPER_SWEEPER = 27
+SB_GOALKEEPER_PENALTY_CONCEDED = 28
+SB_GOALKEEPER_PENALTY_SAVED = 29
+SB_GOALKEEPER_PUNCH = 30
+SB_GOALKEEPER_SAVE = 31
+SB_GOALKEEPER_SHOT_FACED = 32
+SB_GOALKEEPER_SHOT_SAVED = 33
+SB_GOALKEEPER_SMOTHER = 34
+
+SB_GOALKEEPER_PENALTY_SAVED_TO_POST = 109
+SB_GOALKEEPER_SAVED_TO_POST = (
+    110  # A save by the goalkeeper that hits the post
+)
+SB_GOALKEEPER_SHOT_SAVED_OFF_TARGET = 113
+SB_GOALKEEPER_SHOT_SAVED_TO_POST = (
+    114  # A shot saved by the goalkeeper that hits the post
+)
+
+SB_GOALKEEPER_CLAIM = 47
+SB_GOALKEEPER_CLEAR = 48
 
 SB_TECHNIQUE_THROUGH_BALL = 108
 
@@ -273,6 +316,33 @@ def _get_set_piece_qualifiers(pass_dict: Dict) -> List[SetPieceQualifier]:
     return qualifiers
 
 
+def _get_goalkeeper_qualifiers(
+    goalkeeper_dict: Dict,
+) -> List[SetPieceQualifier]:
+    qualifiers = []
+    save_event_types = [
+        SB_GOALKEEPER_SHOT_SAVED,
+        SB_GOALKEEPER_PENALTY_SAVED_TO_POST,
+        SB_GOALKEEPER_SAVED_TO_POST,
+        SB_GOALKEEPER_SHOT_SAVED_OFF_TARGET,
+        SB_GOALKEEPER_SHOT_SAVED_TO_POST,
+    ]
+    if "type" in goalkeeper_dict:
+        type_id = goalkeeper_dict["type"]["id"]
+        goalkeeper_qualifier = None
+        if type_id in save_event_types:
+            goalkeeper_qualifier = GoalkeeperActionType.SAVE
+        elif type_id == SB_GOALKEEPER_SMOTHER:
+            goalkeeper_qualifier = GoalkeeperActionType.SMOTHER
+        elif type_id == SB_GOALKEEPER_PUNCH:
+            goalkeeper_qualifier = GoalkeeperActionType.PUNCH
+
+        if goalkeeper_qualifier:
+            qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))
+
+    return qualifiers
+
+
 def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     if "outcome" in pass_dict:
         outcome_id = pass_dict["outcome"]["id"]
@@ -337,6 +407,8 @@ def _parse_shot(shot_dict: Dict) -> Dict:
         raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
     qualifiers = []
+    set_piece_qualifiers = _get_set_piece_qualifiers(shot_dict)
+    qualifiers.extend(set_piece_qualifiers)
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 
@@ -412,23 +484,56 @@ def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict, events: List) -> Dict:
+def _parse_interception(raw_event: Dict) -> Dict:
+    event_type = raw_event["type"]["id"]
+    # Note: passes with interception qualifier, are always successful. Otherwise, interception that is LOST or OUT
+    result = InterceptionResult.SUCCESS
+
+    if event_type == SB_EVENT_TYPE_INTERCEPTION:
+        outcome = raw_event.get("interception", {}).get("outcome", {})
+        outcome_id = outcome.get("id")
+        if outcome_id in [
+            SB_INTERCEPTION_OUTCOME_LOST_OUT,
+            SB_INTERCEPTION_OUTCOME_SUCCESS_OUT,
+        ]:
+            result = InterceptionResult.OUT
+        elif outcome_id in [
+            SB_INTERCEPTION_OUTCOME_WON,
+            SB_INTERCEPTION_OUTCOME_SUCCESS,
+            SB_INTERCEPTION_OUTCOME_SUCCESS_IN_PLAY,
+        ]:
+            result = InterceptionResult.SUCCESS
+        elif outcome_id in [
+            SB_INTERCEPTION_OUTCOME_LOST,
+            SB_INTERCEPTION_OUTCOME_LOST_IN_PLAY,
+        ]:
+            result = InterceptionResult.LOST
+        else:
+            raise DeserializationError(
+                f"Unknown interception outcome: {raw_event['outcome']['name']}({outcome_id})"
+            )
+
     qualifiers = []
-    if "related_events" in raw_event:
-        for event in events[-20:][::-1]:
-            if event.event_id == raw_event["related_events"][0]:
-                found_event = event
-                body_part_qualifiers = []
-                if "pass" in found_event.raw_event:
-                    related_event_dict = found_event.raw_event["pass"]
-                    body_part_qualifiers = _get_body_part_qualifiers(
-                        related_event_dict
-                    )
+    body_part_qualifiers = _get_body_part_qualifiers(raw_event)
+    qualifiers.extend(body_part_qualifiers)
 
-                qualifiers.extend(body_part_qualifiers)
-                break
+    return {"result": result, "qualifiers": qualifiers}
 
+
+def _parse_clearance(clearance_dict: Dict) -> Dict:
+    qualifiers = []
+    body_part_qualifiers = _get_body_part_qualifiers(clearance_dict)
+    qualifiers.extend(body_part_qualifiers)
     return {"qualifiers": qualifiers}
+
+
+def _parse_goalkeeper_event(goalkeeper_dict: Dict) -> Dict:
+    qualifiers = []
+    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(goalkeeper_dict)
+    qualifiers.extend(goalkeeper_qualifiers)
+    body_part_qualifiers = _get_body_part_qualifiers(goalkeeper_dict)
+    qualifiers.extend(body_part_qualifiers)
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_take_on(take_on_dict: Dict) -> Dict:
@@ -462,12 +567,12 @@ def _parse_duel(
     if event_type == SB_EVENT_TYPE_DUEL:
         duel_dict = raw_event.get("duel", {})
         type_id = duel_dict.get("type", {}).get("id")
-        if type_id == SB_EVENT_TYPE_AERIAL_LOST:
+        if type_id == SB_DUEL_TYPE_AERIAL_LOST:
             duel_qualifiers = [
                 DuelQualifier(value=DuelType.LOOSE_BALL),
                 DuelQualifier(value=DuelType.AERIAL),
             ]
-        elif type_id == SB_EVENT_TYPE_TACKLE:
+        elif type_id == SB_DUEL_TYPE_TACKLE:
             duel_qualifiers = [DuelQualifier(value=DuelType.GROUND)]
     elif event_type == SB_EVENT_TYPE_50_50:
         duel_dict = raw_event.get("50_50", {})
@@ -529,7 +634,13 @@ def _parse_bad_behaviour(bad_behaviour_dict: Dict) -> Dict:
 def _parse_foul_committed(foul_committed_dict: Dict) -> Dict:
     foul_committed = {}
     if "card" in foul_committed_dict:
-        foul_committed["card"] = _parse_card(foul_committed_dict["card"])
+        card_kwargs = _parse_card(foul_committed_dict["card"])
+        foul_committed["qualifiers"] = [
+            CardQualifier(value=card_kwargs["card_type"])
+        ]
+        foul_committed["card"] = card_kwargs
+    else:
+        foul_committed["qualifiers"] = None
 
     return foul_committed
 
@@ -774,6 +885,20 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    # if pass is an interception, insert interception prior to pass event
+                    if "type" in raw_event["pass"]:
+                        type_id = raw_event["pass"]["type"]["id"]
+                        if type_id == SB_PASS_TYPE_ONE_TOUCH_INTERCEPTION:
+                            interception_event_kwargs = _parse_interception(
+                                raw_event=raw_event
+                            )
+                            interception_event = (
+                                self.event_factory.build_interception(
+                                    **interception_event_kwargs,
+                                    **generic_event_kwargs,
+                                )
+                            )
+                            new_events.append(interception_event)
                     new_events.append(pass_event)
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
@@ -784,9 +909,29 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_INTERCEPTION:
+                    interception_event_kwargs = _parse_interception(
+                        raw_event=raw_event
+                    )
+                    interception_event = self.event_factory.build_interception(
+                        **interception_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(interception_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_AGAINST:
+                    shot_event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=[],
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_FOR:
+                    pass
                 elif event_type == SB_EVENT_TYPE_CLEARANCE:
                     clearance_event_kwargs = _parse_clearance(
-                        raw_event=raw_event, events=events
+                        # Old versions of the data (< v1.1) don't define extra
+                        # attributes for clearances
+                        clearance_dict=raw_event.get("clearance", {}),
                     )
                     clearance_event = self.event_factory.build_clearance(
                         result=None,
@@ -794,6 +939,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(clearance_event)
+                elif event_type == SB_EVENT_TYPE_MISCONTROL:
+                    miscontrol_event = self.event_factory.build_miscontrol(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(miscontrol_event)
                 # For dribble and carry the definitions
                 # are flipped between StatsBomb and kloppy
                 elif event_type == SB_EVENT_TYPE_DRIBBLE:
@@ -828,7 +980,26 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(duel_event)
-
+                elif event_type == SB_EVENT_TYPE_GOALKEEPER_EVENT:
+                    goalkeeper_event_kwargs = _parse_goalkeeper_event(
+                        goalkeeper_dict=raw_event["goalkeeper"],
+                    )
+                    if goalkeeper_event_kwargs["qualifiers"]:
+                        goalkeeper_event = (
+                            self.event_factory.build_goalkeeper_event(
+                                **goalkeeper_event_kwargs,
+                                **generic_event_kwargs,
+                            )
+                        )
+                        new_events.append(goalkeeper_event)
+                    else:
+                        generic_event = self.event_factory.build_generic(
+                            result=None,
+                            qualifiers=None,
+                            event_name=raw_event["type"]["name"],
+                            **generic_event_kwargs,
+                        )
+                        new_events.append(generic_event)
                 # lineup affecting events
                 elif event_type == SB_EVENT_TYPE_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
@@ -864,7 +1035,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     foul_committed_event = (
                         self.event_factory.build_foul_committed(
                             result=None,
-                            qualifiers=None,
+                            **foul_committed_kwargs,
                             **generic_event_kwargs,
                         )
                     )
@@ -892,7 +1063,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(player_off_event)
-
                 elif event_type == SB_EVENT_TYPE_RECOVERY:
                     recovery_event = self.event_factory.build_recovery(
                         result=None,
@@ -900,7 +1070,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(recovery_event)
-
                 elif event_type == SB_EVENT_TYPE_FORMATION_CHANGE:
                     formation_change_event_kwargs = _parse_formation_change(
                         raw_event["tactics"]["formation"]
@@ -923,7 +1092,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(generic_event)
-
                 # Add possible aerial won - Applicable to multiple event types
                 for type_name in ["shot", "clearance", "miscontrol", "pass"]:
                     if (
@@ -968,7 +1136,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Last step is to add freeze_frame information
         for event in events:
             if event.event_type == EventType.SHOT:
-                if "freeze_frame" in event.raw_event["shot"]:
+                if "freeze_frame" in event.raw_event.get("shot", {}):
                     event.freeze_frame = transformer.transform_frame(
                         _parse_freeze_frame(
                             freeze_frame=event.raw_event["shot"][

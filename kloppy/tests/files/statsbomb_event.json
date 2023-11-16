@@ -170249,6 +170249,82 @@
     "aerial_won" : true
   }
 }, {
+    "id" : "f942c5b5-df4b-4ee4-9e90-ed5f5",
+    "index" : 4005,
+    "period" : 2,
+    "timestamp" : "00:44:51.456",
+    "minute" : 44,
+    "second" : 51,
+    "type" : {
+      "id" : 25,
+      "name" : "Own Goal For"
+    },
+    "possession" : 101,
+    "possession_team" : {
+      "id" : 206,
+      "name" : "Deportivo Alavés"
+    },
+    "play_pattern" : {
+      "id" : 2,
+      "name" : "From Corner"
+    },
+    "obv_for_after" : null,
+    "obv_for_before" : null,
+    "obv_for_net" : null,
+    "obv_against_after" : null,
+    "obv_against_before" : null,
+    "obv_against_net" : null,
+    "obv_total_net" : null,
+    "team" : {
+      "id" : 206,
+      "name" : "Deportivo Alavés"
+    },
+    "location" : [ 115.7, 39.9 ],
+    "duration" : 0.0,
+    "related_events" : [ "89dd4f4b-0a70-48d8-a0e7-ac4c" ]
+  }, {
+    "id" : "89dd4f4b-0a70-48d8-a0e7-ac4c",
+    "index" : 4006,
+    "period" : 2,
+    "timestamp" : "00:44:51.456",
+    "minute" : 44,
+    "second" : 51,
+    "type" : {
+      "id" : 20,
+      "name" : "Own Goal Against"
+    },
+    "possession" : 101,
+    "possession_team" : {
+      "id" : 206,
+      "name" : "Deportivo Alavés"
+    },
+    "play_pattern" : {
+      "id" : 2,
+      "name" : "From Corner"
+    },
+    "obv_for_after" : null,
+    "obv_for_before" : null,
+    "obv_for_net" : null,
+    "obv_against_after" : null,
+    "obv_against_before" : null,
+    "obv_against_net" : null,
+    "obv_total_net" : null,
+    "team" : {
+      "id" : 217,
+      "name" : "Barcelona"
+    },
+    "player" : {
+      "id" : 6629,
+      "name" : "Fernando Pacheco Flores"
+    },
+    "position" : {
+      "id" : 5,
+      "name" : "Left Center Back"
+    },
+    "location" : [ 4.4, 40.2 ],
+    "duration" : 0.0,
+    "related_events" : [ "f942c5b5-df4b-4ee4-9e90-ed5f5" ]
+  }, {
   "id" : "e1cc4d5e-ba55-4b6b-88cc-dae13311c1d9",
   "index" : 4001,
   "period" : 2,
@@ -170300,5 +170376,92 @@
   },
   "duration" : 0.0,
   "related_events" : [ "e1cc4d5e-ba55-4b6b-88cc-dae13311c1d9" ]
+}, {
+  "id" : "f93a1612-e2de-4efe-b202-6c4a178eebad",
+  "index" : 4003,
+  "period" : 2,
+  "timestamp" : "00:47:32.053",
+  "minute" : 93,
+  "second" : 43,
+  "type" : {
+    "id" : 23,
+    "name" : "Goal Keeper"
+  },
+  "possession" : 144,
+  "possession_team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "play_pattern" : {
+    "id" : 1,
+    "name" : "Regular Play"
+  },
+  "team" : {
+    "id" : 206,
+    "name" : "Deportivo Alavés"
+  },
+  "player" : {
+    "id" : 6629,
+    "name" : "Fernando Pacheco Flores"
+  },
+  "position" : {
+    "id" : 1,
+    "name" : "Goalkeeper"
+  },
+  "location" : [ 3.0, 43.3 ],
+  "duration" : 0.0,
+  "related_events" : [ "55d71847-9511-4417-aea9-6f415e279011" ],
+  "goalkeeper" : {
+    "type" : {
+      "id" : 34,
+      "name" : "Smother"
+    }
+  }
+}, {
+  "id" : "f93a1612-e2de-4efe-b202-6c4a178eebad",
+  "index" : 4004,
+  "period" : 2,
+  "timestamp" : "00:47:32.053",
+  "minute" : 93,
+  "second" : 43,
+  "type" : {
+    "id" : 23,
+    "name" : "Goal Keeper"
+  },
+  "possession" : 144,
+  "possession_team" : {
+    "id" : 217,
+    "name" : "Barcelona"
+  },
+  "play_pattern" : {
+    "id" : 1,
+    "name" : "Regular Play"
+  },
+  "team" : {
+    "id" : 206,
+    "name" : "Deportivo Alavés"
+  },
+  "player" : {
+    "id" : 6629,
+    "name" : "Fernando Pacheco Flores"
+  },
+  "position" : {
+    "id" : 1,
+    "name" : "Goalkeeper"
+  },
+  "location" : [ 3.0, 43.3 ],
+  "duration" : 0.0,
+  "related_events" : [ "55d71847-9511-4417-aea9-6f415e279011" ],
+  "goalkeeper" : {
+    "outcome" : {
+      "id" : 117,
+      "name" : "Punched out"
+    },
+    "punched_out" : true,
+    "type" : {
+      "id" : 30,
+      "name" : "Punch"
+    }
+  }
 }
 ]

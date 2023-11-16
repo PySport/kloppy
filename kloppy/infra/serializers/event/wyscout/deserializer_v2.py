@@ -12,9 +12,10 @@ from kloppy.domain import (
     DuelQualifier,
     DuelType,
     EventDataset,
-    GoalkeeperAction,
-    GoalkeeperActionQualifier,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
     Ground,
+    InterceptionResult,
     Metadata,
     Orientation,
     PassQualifier,
@@ -97,12 +98,10 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     if next_event["eventId"] == wyscout_events.SAVE.EVENT:
         if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
-            qualifiers.append(
-                GoalkeeperActionQualifier(GoalkeeperAction.REFLEX)
-            )
+            qualifiers.append(GoalkeeperQualifier(GoalkeeperActionType.REFLEX))
         if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
             qualifiers.append(
-                GoalkeeperActionQualifier(GoalkeeperAction.SAVE_ATTEMPT)
+                GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
             )
 
     return {
@@ -181,6 +180,25 @@ def _parse_clearance(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers}
 
 
+def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
+    qualifiers = _generic_qualifiers(raw_event)
+    goalkeeper_qualifiers = []
+    if not _has_tag(raw_event, wyscout_tags.GOAL):
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+        )
+    else:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT)
+        )
+    if raw_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
+        )
+    qualifiers.extend(goalkeeper_qualifiers)
+    return {"result": None, "qualifiers": qualifiers}
+
+
 def _parse_foul(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
@@ -243,6 +261,38 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
 
     result["qualifiers"] = qualifiers
     return result
+
+
+def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    result = InterceptionResult.SUCCESS
+    ball_owning_events = (
+        wyscout_events.PASS.EVENT,
+        wyscout_events.SHOT.EVENT,
+    )
+
+    if next_event is not None:
+        if next_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
+            if (
+                next_event["subEventId"]
+                == wyscout_events.INTERRUPTION.BALL_OUT
+            ):
+                result = InterceptionResult.OUT
+        elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
+            result = (
+                InterceptionResult.LOST
+                if _has_tag(raw_event, wyscout_tags.NOT_ACCURATE) is True
+                else InterceptionResult.SUCCESS
+            )
+        # check whether team keeps ball possession
+        elif next_event["eventId"] in ball_owning_events:
+            if raw_event["teamId"] != next_event["teamId"]:
+                result = InterceptionResult.LOST
+
+    return {
+        "result": result,
+        "qualifiers": qualifiers,
+    }
 
 
 def _parse_duel(raw_event: Dict) -> Dict:
@@ -390,6 +440,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_ball_out(
                         **ball_out_event_args, **generic_event_args
                     )
+                elif raw_event["eventId"] == wyscout_events.SAVE.EVENT:
+                    goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
+                    event = self.event_factory.build_goalkeeper_event(
+                        **goalkeeper_save_args, **generic_event_args
+                    )
                 elif raw_event["eventId"] == wyscout_events.FREE_KICK.EVENT:
                     set_piece_event_args = _parse_set_piece(
                         raw_event, next_event
@@ -421,6 +476,18 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             **clearance_event_args,
                             **generic_event_args,
                         )
+                    elif (
+                        raw_event["subEventId"]
+                        == wyscout_events.OTHERS_ON_BALL.TOUCH
+                    ) & (_has_tag(raw_event, wyscout_tags.MISSED_BALL)):
+                        miscontrol_event_args = {
+                            "result": None,
+                            "qualifiers": _generic_qualifiers(raw_event),
+                        }
+                        event = self.event_factory.build_miscontrol(
+                            **miscontrol_event_args,
+                            **generic_event_args,
+                        )
                     else:
                         recovery_event_args = _parse_recovery(raw_event)
                         event = self.event_factory.build_recovery(
@@ -442,6 +509,28 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         qualifiers=qualifiers,
                         **generic_event_args,
                     )
+
+                # Since Interception is not an event in wyscout v2 but a tag for pass, touch and duel. Therefore,
+                # we convert those duels and touch events to an interception. And insert interception before passes.
+                if _has_tag(raw_event, wyscout_tags.INTERCEPTION):
+                    interception_event_args = _parse_interception(
+                        raw_event, next_event
+                    )
+                    interception_event = self.event_factory.build_interception(
+                        **interception_event_args,
+                        **generic_event_args,
+                    )
+
+                    if event.event_type.name == "DUEL":
+                        # when DuelEvent is interception, we need to overwrite this and the previous DuelEvent
+                        events = events[:-1]
+                        event = interception_event
+                    elif event.event_name in ["recovery", "miscontrol"]:
+                        event = interception_event
+                    elif event.event_name in ["pass", "clearance"]:
+                        events.append(
+                            transformer.transform_event(interception_event)
+                        )
 
                 if event and self.should_include_event(event):
                     events.append(transformer.transform_event(event))

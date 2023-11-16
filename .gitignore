@@ -148,3 +148,5 @@ examples/pattern_matching/repository/*.json
 *.code-workspace
 
 .*
+
+scratchpad

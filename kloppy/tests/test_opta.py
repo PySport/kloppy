@@ -13,6 +13,8 @@ from kloppy.domain import (
     DatasetType,
     CardType,
     FormationType,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
     DuelQualifier,
     DuelType,
     CounterAttackQualifier,
@@ -40,7 +42,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 23
+        assert len(dataset.events) == 30
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -113,6 +115,34 @@ class TestOpta:
         assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
         assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
+
+        # Check goalkeeper qualifiers
+        assert (
+            dataset.events[23].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
+        )
+        assert (
+            dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.CLAIM
+        )
+        assert (
+            dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.PUNCH
+        )
+        assert (
+            dataset.events[26].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.PICK_UP
+        )
+        assert (
+            dataset.events[27].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SMOTHER
+        )
+        assert (
+            dataset.events[28].event_type == EventType.INTERCEPTION
+        )  # 2609934569
+        assert (
+            dataset.events[29].event_type == EventType.MISCONTROL
+        )  # 250913217
 
         # Check counterattack
         assert (

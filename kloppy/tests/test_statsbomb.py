@@ -15,8 +15,8 @@ from kloppy.domain import (
     Point,
     Provider,
     FormationType,
-    Frame,
     Position,
+    ShotResult,
 )
 
 from kloppy import statsbomb
@@ -25,6 +25,8 @@ from kloppy.domain.models.event import (
     PassQualifier,
     PassType,
     EventType,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
 )
 
 
@@ -53,7 +55,7 @@ class TestStatsBomb:
 
         assert dataset.metadata.provider == Provider.STATSBOMB
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 4039
+        assert len(dataset.events) == 4048
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
@@ -96,12 +98,12 @@ class TestStatsBomb:
         assert dataset.events[10].coordinates == Point(34.5, 20.5)
 
         assert (
-            dataset.events[794].get_qualifier_value(BodyPartQualifier)
+            dataset.events[796].get_qualifier_value(BodyPartQualifier)
             == BodyPart.HEAD
         )
 
         assert (
-            dataset.events[2232].get_qualifier_value(BodyPartQualifier)
+            dataset.events[2236].get_qualifier_value(BodyPartQualifier)
             == BodyPart.RIGHT_FOOT
         )
 
@@ -110,17 +112,17 @@ class TestStatsBomb:
         )
 
         assert (
-            dataset.events[1438].get_qualifier_value(PassQualifier)
+            dataset.events[1441].get_qualifier_value(PassQualifier)
             == PassType.CROSS
         )
 
         assert (
-            dataset.events[1557].get_qualifier_value(PassQualifier)
+            dataset.events[1560].get_qualifier_value(PassQualifier)
             == PassType.THROUGH_BALL
         )
 
         assert (
-            dataset.events[444].get_qualifier_value(PassQualifier)
+            dataset.events[445].get_qualifier_value(PassQualifier)
             == PassType.SWITCH_OF_PLAY
         )
 
@@ -135,31 +137,48 @@ class TestStatsBomb:
         )
 
         assert (
-            dataset.events[654].get_qualifier_value(PassQualifier)
+            dataset.events[656].get_qualifier_value(PassQualifier)
             == PassType.HEAD_PASS
         )
 
         assert (
-            dataset.events[3145].get_qualifier_value(PassQualifier)
+            dataset.events[3150].get_qualifier_value(PassQualifier)
             == PassType.HAND_PASS
         )
 
         assert (
-            dataset.events[3622].get_qualifier_value(PassQualifier)
+            dataset.events[3628].get_qualifier_value(PassQualifier)
             == PassType.ASSIST
         )
 
-        assert dataset.events[3400].get_qualifier_value(PassQualifier) is None
+        assert dataset.events[4].get_qualifier_value(PassQualifier) is None
 
         assert (
             dataset.events[194].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[4032].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[307].get_qualifier_values(DuelQualifier)[0].value
             == DuelType.GROUND
         )
         assert dataset.events[272].event_type == EventType.CLEARANCE
+        assert dataset.events[68].event_type == EventType.MISCONTROL
+        assert dataset.events[343].event_type == EventType.INTERCEPTION
+
+        assert (
+            dataset.events[763].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
+        )
+
+        assert (
+            dataset.events[4046].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SMOTHER
+        )
+
+        assert (
+            dataset.events[4047].get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.PUNCH
+        )
 
     def test_correct_normalized_deserialization(
         self, lineup_data: Path, event_data: Path
@@ -226,7 +245,45 @@ class TestStatsBomb:
             event_types=["foul_committed"],
         )
 
+        for foul in dataset.events:
+            if foul.event_id == "382879fa-47ac-487f-801c-587f75f6a9a4":
+                assert CardType.FIRST_YELLOW in [
+                    q.value for q in foul.qualifiers
+                ]
+            else:
+                assert foul.qualifiers is None
+
         assert len(dataset.events) == 23
+
+    def test_own_goal(self, lineup_data: Path, event_data: Path):
+        """
+        Test own goal events.
+
+        The StatsBomb "Own Goal For" (id = 25) and one "Own Goal Against" (id = 20) events
+        should be converted to a single shot event with ShotResult.OWN_GOAL.
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+        )
+
+        # The Own Goal For event should be removed
+        own_goal_for_event = [
+            event
+            for event in dataset.events
+            if event.event_id == "f942c5b5-df4b-4ee4-9e90-ed5f5"
+        ]
+        assert len(own_goal_for_event) == 0
+
+        # The Own Goal Against event should be converted to a shot event
+        own_goal_against_event = [
+            event
+            for event in dataset.events
+            if event.event_id == "89dd4f4b-0a70-48d8-a0e7-ac4c"
+        ]
+        assert len(own_goal_against_event) == 1
+        assert own_goal_against_event[0].event_type == EventType.SHOT
+        assert own_goal_against_event[0].result == ShotResult.OWN_GOAL
 
     def test_related_events(self, lineup_data: Path, event_data: Path):
         dataset = statsbomb.load(

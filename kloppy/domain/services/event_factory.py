@@ -9,8 +9,10 @@ from kloppy.domain import (
     GenericEvent,
     TakeOnEvent,
     RecoveryEvent,
+    MiscontrolEvent,
     CarryEvent,
     DuelEvent,
+    InterceptionEvent,
     ClearanceEvent,
     FormationChangeEvent,
     BallOutEvent,
@@ -19,6 +21,7 @@ from kloppy.domain import (
     FoulCommittedEvent,
     CardEvent,
     SubstitutionEvent,
+    GoalkeeperEvent,
 )
 
 T = TypeVar("T")
@@ -78,11 +81,17 @@ class EventFactory:
     def build_recovery(self, **kwargs) -> RecoveryEvent:
         return create_event(RecoveryEvent, **kwargs)
 
+    def build_miscontrol(self, **kwargs) -> MiscontrolEvent:
+        return create_event(MiscontrolEvent, **kwargs)
+
     def build_take_on(self, **kwargs) -> TakeOnEvent:
         return create_event(TakeOnEvent, **kwargs)
 
     def build_carry(self, **kwargs) -> CarryEvent:
         return create_event(CarryEvent, **kwargs)
+
+    def build_interception(self, **kwargs) -> InterceptionEvent:
+        return create_event(InterceptionEvent, **kwargs)
 
     def build_clearance(self, **kwargs) -> ClearanceEvent:
         return create_event(ClearanceEvent, **kwargs)
@@ -110,3 +119,6 @@ class EventFactory:
 
     def build_substitution(self, **kwargs) -> SubstitutionEvent:
         return create_event(SubstitutionEvent, **kwargs)
+
+    def build_goalkeeper_event(self, **kwargs) -> GoalkeeperEvent:
+        return create_event(GoalkeeperEvent, **kwargs)

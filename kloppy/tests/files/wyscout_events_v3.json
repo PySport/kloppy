@@ -786,6 +786,215 @@
             },
             "attack": null
         }
+    },
+    {
+      "id": 1331979498,
+      "matchId": 5352285,
+      "matchPeriod": "2H",
+      "minute": 1,
+      "second": 0,
+      "matchTimestamp": "00:1:00.585",
+      "videoTimestamp": "60.585284",
+      "relatedEventId": 82914010,
+      "type": {
+        "primary": "shot_against",
+        "secondary": [
+          "save",
+          "save_with_reflex"
+        ]
+      },
+      "location": {
+        "x": 1,
+        "y": 49
+      },
+      "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 99430,
+        "name": "Ł. Skorupski",
+        "position": "GK"
+      },
+      "pass": null,
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": null,
+      "possession": null
+    },
+    {
+      "id": 1331979079,
+      "matchId": 5352285,
+      "matchPeriod": "2H",
+      "minute": 1,
+      "second": 2,
+      "matchTimestamp": "01:00:02.254",
+      "videoTimestamp": "62.254",
+      "relatedEventId": 13319790709,
+      "type": {
+        "primary": "shot_against",
+        "secondary": [
+          "conceded_goal"
+        ]
+      },
+      "location": {
+        "x": 0,
+        "y": 50
+      },
+      "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 99430,
+        "name": "Ł. Skorupski",
+        "position": "GK"
+      },
+      "pass": null,
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": null,
+      "possession": null
+    },
+    {
+      "id": 1397082780,
+      "matchId": 5352624,
+      "matchPeriod": "2H",
+      "minute": 9,
+      "second": 10,
+      "matchTimestamp": "00:09:10.480",
+      "videoTimestamp": "551.480239",
+      "relatedEventId": 1397083059,
+      "type": {
+        "primary": "interception",
+        "secondary": [
+          "loss",
+          "pass",
+          "progressive_pass",
+          "short_or_medium_pass"
+        ]
+      },
+      "location": {
+        "x": 44,
+        "y": 12
+      },
+      "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 99430,
+        "name": "Ł. Skorupski",
+        "position": "GK"
+      },
+      "possession": null,
+      "pass": {
+        "accurate": false,
+        "angle": 99,
+        "height": null,
+        "length": 12,
+        "recipient": {
+          "id": 644493,
+          "name": "Ł. Skorupski",
+          "position": "RCMF"
+        },
+        "endLocation": {
+          "x": 42,
+          "y": 29
+        }
+      }
+    },
+    {
+      "id": 139700000,
+      "matchId": 5352524,
+      "matchPeriod": "2H",
+      "minute": 50,
+      "second": 27,
+      "matchTimestamp": "00:50:27.129",
+      "videoTimestamp": "3070.129596",
+      "relatedEventId": 1397089017,
+      "type": {
+        "primary": "interception",
+        "secondary": [
+          "recovery"
+        ]
+      },
+      "location": {
+        "x": 9,
+        "y": 90
+      },
+      "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 99430,
+        "name": "Ł. Skorupski",
+        "position": "GK"
+      },
+      "pass": null,
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": null,
+      "possession": {
+        "id": 13970000,
+        "duration": "21.63938",
+        "types": [
+          "attack"
+        ],
+        "eventsNumber": 12,
+        "eventIndex": 11,
+        "startLocation": {
+          "x": 34,
+          "y": 67
+        },
+        "endLocation": {
+          "x": 91,
+          "y": 10
+        },
+        "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+        "attack": {
+          "withShot": false,
+          "withShotOnGoal": false,
+          "withGoal": false,
+          "flank": "left",
+          "xg": 0
+        }
+      }
     }
   ],
   "formations": {

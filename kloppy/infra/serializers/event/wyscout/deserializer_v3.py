@@ -19,6 +19,7 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     GoalkeeperActionType,
     Ground,
+    InterceptionResult,
     Metadata,
     Orientation,
     PassEvent,
@@ -151,7 +152,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
         if next_event["type"]["primary"] == "offside":
             pass_result = PassResult.OFFSIDE
         if next_event["type"]["primary"] == "game_interruption":
-            if next_event["type"]["secondary"] == "ball_out":
+            if "ball_out" in next_event["type"]["secondary"]:
                 pass_result = PassResult.OUT
 
     return {
@@ -199,6 +200,37 @@ def _parse_clearance(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
+        "qualifiers": qualifiers,
+    }
+
+
+def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    result = InterceptionResult.SUCCESS
+
+    if next_event is not None:
+        is_game_interruption = (
+            next_event["type"]["primary"] == "game_interruption"
+        )
+        is_ball_out = "ball_out" in next_event["type"]["secondary"]
+        is_loss = "loss" in raw_event["type"]["secondary"]
+        is_pass_loss = (
+            "pass" in raw_event["type"]["secondary"]
+            and raw_event["pass"]["accurate"] is False
+        )
+        is_possession_loss = (
+            next_event["possession"] is not None
+            and raw_event["team"]["id"]
+            != next_event["possession"]["team"]["id"]
+        )
+
+        if is_game_interruption and is_ball_out:
+            result = InterceptionResult.OUT
+        elif is_loss or is_pass_loss or is_possession_loss:
+            result = InterceptionResult.LOST
+
+    return {
+        "result": result,
         "qualifiers": qualifiers,
     }
 
@@ -438,6 +470,13 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     clearance_event_args = _parse_clearance(raw_event)
                     event = self.event_factory.build_clearance(
                         **clearance_event_args, **generic_event_args
+                    )
+                elif primary_event_type == "interception":
+                    interception_event_args = _parse_interception(
+                        raw_event, next_event
+                    )
+                    event = self.event_factory.build_interception(
+                        **interception_event_args, **generic_event_args
                     )
                 elif (primary_event_type == "shot_against") & (
                     "save" in raw_event["type"]["secondary"]

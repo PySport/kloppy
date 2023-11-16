@@ -156,6 +156,28 @@ class DuelResult(ResultType):
         return self == self.WON
 
 
+class InterceptionResult(ResultType):
+    """
+    InterceptionResult
+
+    Attributes:
+        SUCCESS (InterceptionResult): An interception that gains possession of the ball (without going out of bounds)
+        LOST (InterceptionResult): An interception by the defending team that knocked the ball to an attacker
+        OUT (InterceptionResult): An interception that knocked the ball out of bounds
+    """
+
+    SUCCESS = "SUCCESS"
+    LOST = "LOST"
+    OUT = "OUT"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the interception was successful
+        """
+        return self == self.SUCCESS
+
+
 class CardType(Enum):
     """
     CardType
@@ -180,6 +202,7 @@ class EventType(Enum):
         TAKE_ON (EventType):
         CARRY (EventType):
         CLEARANCE (EventType):
+        INTERCEPTION (EventType):
         DUEL (EventType):
         SUBSTITUTION (EventType):
         CARD (EventType):
@@ -200,6 +223,7 @@ class EventType(Enum):
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
     CLEARANCE = "CLEARANCE"
+    INTERCEPTION = "INTERCEPTION"
     DUEL = "DUEL"
     SUBSTITUTION = "SUBSTITUTION"
     CARD = "CARD"
@@ -770,6 +794,21 @@ class CarryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class InterceptionEvent(Event):
+    """
+    InterceptionEvent
+
+    Attributes:
+        event_type (EventType): `EventType.INTERCEPTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"interception"`
+    """
+
+    event_type: EventType = EventType.INTERCEPTION
+    event_name: str = "interception"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class ClearanceEvent(Event):
     """
     ClearanceEvent
@@ -1044,6 +1083,8 @@ __all__ = [
     "TakeOnEvent",
     "CarryEvent",
     "ClearanceEvent",
+    "InterceptionEvent",
+    "InterceptionResult",
     "SubstitutionEvent",
     "PlayerOnEvent",
     "PlayerOffEvent",

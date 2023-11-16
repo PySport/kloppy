@@ -1,8 +1,9 @@
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Tuple, Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime
 import pytz
 from lxml import objectify
+from lxml.objectify import ObjectifiedElement
 
 from kloppy.domain import (
     EventDataset,
@@ -28,6 +29,7 @@ from kloppy.domain import (
     Metadata,
     Player,
     Position,
+    InterceptionResult,
     RecoveryEvent,
     BallOutEvent,
     FoulCommittedEvent,
@@ -63,6 +65,7 @@ EVENT_TYPE_TAKE_ON = 3
 EVENT_TYPE_TACKLE = 7
 EVENT_TYPE_AERIAL = 44
 EVENT_TYPE_50_50 = 67
+EVENT_TYPE_INTERCEPTION = 8
 EVENT_TYPE_CLEARANCE = 12
 EVENT_TYPE_SHOT_MISS = 13
 EVENT_TYPE_SHOT_POST = 14
@@ -75,6 +78,7 @@ EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
 EVENT_TYPE_BALL_TOUCH = 61
+EVENT_TYPE_BLOCKED_PASS = 74
 
 EVENT_TYPE_SAVE = 10
 EVENT_TYPE_CLAIM = 11
@@ -382,6 +386,27 @@ def _parse_duel(raw_qualifiers: List, type_id: int, outcome: int) -> Dict:
     )
 
 
+def _parse_interception(
+    raw_qualifiers: List, team: Team, next_event: ObjectifiedElement
+) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    result = InterceptionResult.SUCCESS
+
+    if next_event is not None:
+        next_event_type_id = int(next_event.attrib["type_id"])
+        if next_event_type_id in BALL_OUT_EVENTS:
+            result = InterceptionResult.OUT
+        elif (next_event_type_id in BALL_OWNING_EVENTS) and (
+            next_event.attrib["team_id"] != team.team_id
+        ):
+            result = InterceptionResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=qualifiers,
+    )
+
+
 def _parse_team_players(
     f7_root, team_ref: str
 ) -> Tuple[str, Dict[str, Dict[str, str]]]:
@@ -618,7 +643,17 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             ]
             possession_team = None
             events = []
-            for event_elm in game_elm.iterchildren("Event"):
+            events_list = [
+                event
+                for event in list(game_elm.iterchildren("Event"))
+                if int(event.attrib["type_id"]) != EVENT_TYPE_DELETED_EVENT
+            ]
+            for idx, event_elm in enumerate(events_list):
+                next_event_elm = (
+                    events_list[idx + 1]
+                    if (idx + 1) < len(events_list)
+                    else None
+                )
                 event_id = event_elm.attrib["id"]
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
@@ -642,11 +677,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         f"Set end of period {period.id} to {timestamp}"
                     )
                     period.end_timestamp = timestamp
-                elif type_id == EVENT_TYPE_DELETED_EVENT:
-                    logger.debug(
-                        f"Skipping event {event_id} because it is a deleted event (type id - {type_id})"
-                    )
-                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet
@@ -712,6 +742,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         event = self.event_factory.build_take_on(
                             **take_on_event_kwargs,
                             **generic_event_kwargs,
+                            qualifiers=None,
                         )
                     elif type_id in (
                         EVENT_TYPE_SHOT_MISS,
@@ -759,6 +790,17 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         )
                         event = self.event_factory.build_duel(
                             **duel_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+                    elif type_id in (
+                        EVENT_TYPE_INTERCEPTION,
+                        EVENT_TYPE_BLOCKED_PASS,
+                    ):
+                        interception_event_kwargs = _parse_interception(
+                            raw_qualifiers, team, next_event_elm
+                        )
+                        event = self.event_factory.build_interception(
+                            **interception_event_kwargs,
                             **generic_event_kwargs,
                         )
                     elif type_id in KEEPER_EVENTS:

@@ -577,7 +577,36 @@ class SportecEventDataDeserializer(
                 event.event_type == EventType.PASS
                 and event.result == PassResult.COMPLETE
             ):
-                event.receiver_coordinates = events[i + 1].coordinates
+                # Sportec uses X/Y-Source-Position to define the start coordinates of
+                # an event and X/Y-Position to define the end of an event. There can/will
+                # be quite a distance between the start and the end of an event.
+                # When we want to set the receiver_coordinates we need to use
+                # the start of the event.
+                # How to solve this:
+                # 1. Create a copy of an event
+                # 2. Set the coordinates based on X/Y-Source-Position
+                # 3. Pass through the transformer
+                # 4. Update the receiver coordinates
+                if "X-Source-Position" in events[i + 1].raw_event:
+                    updated_event = transformer.transform_event(
+                        events[i + 1].replace(
+                            coordinates=Point(
+                                x=float(
+                                    events[i + 1].raw_event[
+                                        "X-Source-Position"
+                                    ]
+                                ),
+                                y=float(
+                                    events[i + 1].raw_event[
+                                        "Y-Source-Position"
+                                    ]
+                                ),
+                            )
+                        )
+                    )
+                    event.receiver_coordinates = updated_event.coordinates
+                else:
+                    event.receiver_coordinates = events[i + 1].coordinates
 
         events = list(
             filter(

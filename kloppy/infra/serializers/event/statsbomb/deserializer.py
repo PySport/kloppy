@@ -217,10 +217,21 @@ def _parse_coordinates(
     # +-----+------+
     cell_side = 0.1 if fidelity_version == 2 else 1.0
     cell_relative_center = cell_side / 2
-    return Point(
-        x=coordinates[0] - cell_relative_center,
-        y=coordinates[1] - cell_relative_center,
-    )
+    if len(coordinates) == 2:
+        return Point(
+            x=coordinates[0] - cell_relative_center,
+            y=coordinates[1] - cell_relative_center,
+        )
+    elif len(coordinates) == 3:
+        return Point3D(
+            x=coordinates[0] - cell_relative_center,
+            y=coordinates[1] - cell_relative_center,
+            z=coordinates[2],
+        )
+    else:
+        raise DeserializationError(
+            f"Unknown coordinates format: {coordinates}"
+        )
 
 
 def _get_body_part_qualifiers(

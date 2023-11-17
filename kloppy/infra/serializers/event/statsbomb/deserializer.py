@@ -385,7 +385,7 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     }
 
 
-def _parse_shot(shot_dict: Dict) -> Dict:
+def _parse_shot(shot_dict: Dict, fidelity_version: int) -> Dict:
     outcome_id = shot_dict["outcome"]["id"]
     if outcome_id == SB_SHOT_OUTCOME_OFF_TARGET:
         result = ShotResult.OFF_TARGET
@@ -412,7 +412,14 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 
-    return {"result": result, "qualifiers": qualifiers}
+    return {
+        "result": result,
+        "qualifiers": qualifiers,
+        "result_coordinates": _parse_coordinates(
+            shot_dict["end_location"],
+            fidelity_version,
+        ),
+    }
 
 
 def _parse_freeze_frame(
@@ -903,6 +910,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
                         shot_dict=raw_event["shot"],
+                        fidelity_version=shot_fidelity_version,
                     )
                     shot_event = self.event_factory.build_shot(
                         **shot_event_kwargs,

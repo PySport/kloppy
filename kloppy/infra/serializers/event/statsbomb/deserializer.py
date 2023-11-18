@@ -226,7 +226,7 @@ def _parse_coordinates(
         return Point3D(
             x=coordinates[0] - cell_relative_center,
             y=coordinates[1] - cell_relative_center,
-            z=coordinates[2],
+            z=coordinates[2] - cell_relative_center,
         )
     else:
         raise DeserializationError(

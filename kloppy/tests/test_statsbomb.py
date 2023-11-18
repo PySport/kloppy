@@ -275,7 +275,7 @@ class TestStatsBomb:
         # A shot event should have a result
         assert shot.result == ShotResult.POST
         # A shot event should have end coordinates
-        assert shot.result_coordinates == Point3D(119.95, 42.95, 2.8)
+        assert shot.result_coordinates == Point3D(119.95, 42.95, 2.75)
         # A shot event should have a body part
         assert (
             shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT

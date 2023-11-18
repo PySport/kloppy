@@ -366,7 +366,9 @@ def _parse_shot(
     )
 
 
-def _parse_goalkeeper_events(raw_qualifiers: Dict[int, str], type_id: int) -> Dict:
+def _parse_goalkeeper_events(
+    raw_qualifiers: Dict[int, str], type_id: int
+) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
     goalkeeper_qualifiers = _get_goalkeeper_qualifiers(type_id)
     qualifiers.extend(goalkeeper_qualifiers)
@@ -374,7 +376,9 @@ def _parse_goalkeeper_events(raw_qualifiers: Dict[int, str], type_id: int) -> Di
     return dict(result=None, qualifiers=qualifiers)
 
 
-def _parse_duel(raw_qualifiers: Dict[int, str], type_id: int, outcome: int) -> Dict:
+def _parse_duel(
+    raw_qualifiers: Dict[int, str], type_id: int, outcome: int
+) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
     if type_id == EVENT_TYPE_TACKLE:
         qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
@@ -488,7 +492,6 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
 
 
 def _get_end_coordinates(raw_qualifiers: Dict[int, str]) -> Optional[Point]:
-    print(raw_qualifiers)
     x, y, z = None, None, None
     # pass
     if 140 in raw_qualifiers:

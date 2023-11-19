@@ -223,10 +223,13 @@ def _parse_coordinates(
             y=coordinates[1] - cell_relative_center,
         )
     elif len(coordinates) == 3:
+        # A coordinate in the goal frame, only used for the end location of
+        # Shot events. The y-coordinates and z-coordinates are always detailed
+        # to a tenth of a yard.
         return Point3D(
             x=coordinates[0] - cell_relative_center,
-            y=coordinates[1] - cell_relative_center,
-            z=coordinates[2] - cell_relative_center,
+            y=coordinates[1] - 0.05,
+            z=coordinates[2] - 0.05,
         )
     else:
         raise DeserializationError(

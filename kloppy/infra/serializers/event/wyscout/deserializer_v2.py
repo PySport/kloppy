@@ -46,12 +46,12 @@ INVALID_PLAYER = "0"
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     team = Team(
         team_id=wyId,
-        name=raw_events["teams"][wyId]["officialName"],
+        name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
     )
     team.players = [
         Player(
-            player_id=str(player["playerId"]),
+            player_id=str(player["player"]["wyId"]),
             team=team,
             jersey_no=None,
             first_name=player["player"]["firstName"],

@@ -46690,6 +46690,7 @@
     ],
     "teams": {
         "1612": {
+          "team": {
             "wyId": 1612,
             "gsmId": 663,
             "name": "Liverpool",
@@ -46704,8 +46705,10 @@
             "type": "club",
             "category": "default",
             "gender": "male"
+          }
         },
         "1631": {
+          "team": {
             "wyId": 1631,
             "gsmId": 682,
             "name": "Leicester City",
@@ -46720,12 +46723,12 @@
             "type": "club",
             "category": "default",
             "gender": "male"
+          }
         }
     },
     "players": {
         "1612": [
             {
-                "playerId": 15808,
                 "player": {
                     "wyId": 15808,
                     "gsmId": 103265,
@@ -46760,7 +46763,6 @@
                 }
             },
             {
-                "playerId": 18550,
                 "player": {
                     "wyId": 18550,
                     "gsmId": 159872,
@@ -46795,7 +46797,6 @@
                 }
             },
             {
-                "playerId": 3802,
                 "player": {
                     "wyId": 3802,
                     "gsmId": 82507,
@@ -46830,7 +46831,6 @@
                 }
             },
             {
-                "playerId": 25393,
                 "player": {
                     "wyId": 25393,
                     "gsmId": 55819,
@@ -46865,7 +46865,6 @@
                 }
             },
             {
-                "playerId": 14870,
                 "player": {
                     "wyId": 14870,
                     "gsmId": 101189,
@@ -46900,7 +46899,6 @@
                 }
             },
             {
-                "playerId": 116,
                 "player": {
                     "wyId": 116,
                     "gsmId": 8828,
@@ -46935,7 +46933,6 @@
                 }
             },
             {
-                "playerId": 257899,
                 "player": {
                     "wyId": 257899,
                     "gsmId": 290182,
@@ -46970,7 +46967,6 @@
                 }
             },
             {
-                "playerId": 7964,
                 "player": {
                     "wyId": 7964,
                     "gsmId": 48010,
@@ -47005,7 +47001,6 @@
                 }
             },
             {
-                "playerId": 8514,
                 "player": {
                     "wyId": 8514,
                     "gsmId": 13465,
@@ -47040,7 +47035,6 @@
                 }
             },
             {
-                "playerId": 120353,
                 "player": {
                     "wyId": 120353,
                     "gsmId": 138653,
@@ -47075,7 +47069,6 @@
                 }
             },
             {
-                "playerId": 4908,
                 "player": {
                     "wyId": 4908,
                     "gsmId": 192742,
@@ -47110,7 +47103,6 @@
                 }
             },
             {
-                "playerId": 74,
                 "player": {
                     "wyId": 74,
                     "gsmId": 2324,
@@ -47145,7 +47137,6 @@
                 }
             },
             {
-                "playerId": 286831,
                 "player": {
                     "wyId": 286831,
                     "gsmId": 320283,
@@ -47180,7 +47171,6 @@
                 }
             },
             {
-                "playerId": 346101,
                 "player": {
                     "wyId": 346101,
                     "gsmId": 376875,
@@ -47215,7 +47205,6 @@
                 }
             },
             {
-                "playerId": 15175,
                 "player": {
                     "wyId": 15175,
                     "gsmId": 205201,
@@ -47250,7 +47239,6 @@
                 }
             },
             {
-                "playerId": 8319,
                 "player": {
                     "wyId": 8319,
                     "gsmId": 2899,
@@ -47285,7 +47273,6 @@
                 }
             },
             {
-                "playerId": 7907,
                 "player": {
                     "wyId": 7907,
                     "gsmId": 5206,
@@ -47320,7 +47307,6 @@
                 }
             },
             {
-                "playerId": 7868,
                 "player": {
                     "wyId": 7868,
                     "gsmId": 120695,
@@ -47357,7 +47343,6 @@
         ],
         "1631": [
             {
-                "playerId": 26150,
                 "player": {
                     "wyId": 26150,
                     "gsmId": 156662,
@@ -47392,7 +47377,6 @@
                 }
             },
             {
-                "playerId": 14763,
                 "player": {
                     "wyId": 14763,
                     "gsmId": 5724,
@@ -47427,7 +47411,6 @@
                 }
             },
             {
-                "playerId": 8013,
                 "player": {
                     "wyId": 8013,
                     "gsmId": 73931,
@@ -47462,7 +47445,6 @@
                 }
             },
             {
-                "playerId": 8480,
                 "player": {
                     "wyId": 8480,
                     "gsmId": 2841,
@@ -47497,7 +47479,6 @@
                 }
             },
             {
-                "playerId": 8653,
                 "player": {
                     "wyId": 8653,
                     "gsmId": 182047,
@@ -47532,7 +47513,6 @@
                 }
             },
             {
-                "playerId": 149019,
                 "player": {
                     "wyId": 149019,
                     "gsmId": 20278,
@@ -47567,7 +47547,6 @@
                 }
             },
             {
-                "playerId": 8498,
                 "player": {
                     "wyId": 8498,
                     "gsmId": 20816,
@@ -47602,7 +47581,6 @@
                 }
             },
             {
-                "playerId": 8488,
                 "player": {
                     "wyId": 8488,
                     "gsmId": 47493,
@@ -47637,7 +47615,6 @@
                 }
             },
             {
-                "playerId": 265366,
                 "player": {
                     "wyId": 265366,
                     "gsmId": 298168,
@@ -47672,7 +47649,6 @@
                 }
             },
             {
-                "playerId": 350976,
                 "player": {
                     "wyId": 350976,
                     "gsmId": 383419,
@@ -47707,7 +47683,6 @@
                 }
             },
             {
-                "playerId": 12829,
                 "player": {
                     "wyId": 12829,
                     "gsmId": 159732,
@@ -47742,7 +47717,6 @@
                 }
             },
             {
-                "playerId": 14853,
                 "player": {
                     "wyId": 14853,
                     "gsmId": 11180,
@@ -47777,7 +47751,6 @@
                 }
             },
             {
-                "playerId": 217078,
                 "player": {
                     "wyId": 217078,
                     "gsmId": 250541,
@@ -47812,7 +47785,6 @@
                 }
             },
             {
-                "playerId": 3928,
                 "player": {
                     "wyId": 3928,
                     "gsmId": 21190,
@@ -47847,7 +47819,6 @@
                 }
             },
             {
-                "playerId": 8066,
                 "player": {
                     "wyId": 8066,
                     "gsmId": 50408,
@@ -47882,7 +47853,6 @@
                 }
             },
             {
-                "playerId": 119630,
                 "player": {
                     "wyId": 119630,
                     "gsmId": 89404,
@@ -47917,7 +47887,6 @@
                 }
             },
             {
-                "playerId": 285508,
                 "player": {
                     "wyId": 285508,
                     "gsmId": 319119,
@@ -47952,7 +47921,6 @@
                 }
             },
             {
-                "playerId": 283142,
                 "player": {
                     "wyId": 283142,
                     "gsmId": 317144,

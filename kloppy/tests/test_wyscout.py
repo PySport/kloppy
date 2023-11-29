@@ -56,6 +56,7 @@ class TestWyscout:
         )
         assert dataset.events[9].event_type == EventType.CLEARANCE
         assert dataset.events[12].event_type == EventType.INTERCEPTION
+        assert dataset.events[14].event_type == EventType.TAKE_ON
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")

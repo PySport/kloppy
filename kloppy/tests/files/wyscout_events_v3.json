@@ -995,6 +995,99 @@
           "xg": 0
         }
       }
+    },
+    {
+      "id": 139800000,
+      "matchId": 5352524,
+      "matchPeriod": "2H",
+      "minute": 50,
+      "second": 30,
+      "matchTimestamp": "00:50:30.129",
+      "videoTimestamp": "3073.129596",
+      "relatedEventId": null,
+      "type": {
+        "primary": "duel",
+        "secondary": [
+          "dribble",
+          "ground_duel",
+          "offensive_duel",
+          "carry"
+        ]
+      },
+      "location": {
+        "x": 46,
+        "y": 16
+      },
+      "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+      "opponentTeam": {
+        "formation": "3-4-3",
+        "id": 3185,
+        "name": "Torino"
+      },
+      "player": {
+        "id": 99430,
+        "name": "Ł. Skorupski",
+        "position": "GK"
+      },
+      "pass": null,
+      "shot": null,
+      "groundDuel": {
+        "opponent": {
+          "id": 403169,
+          "name": "R. Mulders",
+          "position": "RB"
+        },
+        "duelType": "dribble",
+        "keptPossession": true,
+        "progressedWithBall": true,
+        "stoppedProgress": null,
+        "recoveredPossession": null,
+        "takeOn": true,
+        "side": "left",
+        "relatedDuelId": 1343787878
+      },
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": {
+        "progression": 13.88,
+        "endLocation": {
+          "x": 59,
+          "y": 21
+        }
+      },
+      "possession": {
+        "id": 13970000,
+        "duration": "21.63938",
+        "types": [
+          "attack"
+        ],
+        "eventsNumber": 12,
+        "eventIndex": 11,
+        "startLocation": {
+          "x": 34,
+          "y": 67
+        },
+        "endLocation": {
+          "x": 91,
+          "y": 10
+        },
+        "team": {
+          "formation": "4-2-3-1",
+          "id": 3166,
+          "name": "Bologna"
+        },
+        "attack": {
+          "withShot": false,
+          "withShotOnGoal": false,
+          "withGoal": false,
+          "flank": "left",
+          "xg": 0
+        }
+      }
     }
   ],
   "formations": {

@@ -133,6 +133,9 @@ EVENT_QUALIFIER_SWITCH_OF_PLAY = 196
 EVENT_QUALIFIER_ASSIST = 210
 EVENT_QUALIFIER_ASSIST_2ND = 218
 
+EVENT_QUALIFIER_DEFENSIVE_DUEL = 285
+EVENT_QUALIFIER_OFFENSIVE_DUEL = 286
+
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
 EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
 EVENT_QUALIFIER_RED_CARD = 33
@@ -396,6 +399,11 @@ def _parse_duel(
         )
 
     result = DuelResult.WON if outcome else DuelResult.LOST
+
+    if EVENT_QUALIFIER_OFFENSIVE_DUEL in raw_qualifiers:
+        qualifiers.append(DuelQualifier(value=DuelType.OFFENSIVE))
+    elif EVENT_QUALIFIER_DEFENSIVE_DUEL in raw_qualifiers:
+        qualifiers.append(DuelQualifier(value=DuelType.DEFENSIVE))
 
     return dict(
         result=result,

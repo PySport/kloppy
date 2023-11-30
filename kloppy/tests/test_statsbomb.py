@@ -157,6 +157,12 @@ class TestStatsBomb:
             dataset.events[194].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.AERIAL
         )
+        assert DuelQualifier(value=DuelType.DEFENSIVE) in dataset.events[
+            194
+        ].get_qualifier_values(DuelQualifier)
+        assert DuelQualifier(value=DuelType.OFFENSIVE) in dataset.events[
+            195
+        ].get_qualifier_values(DuelQualifier)
         assert (
             dataset.events[307].get_qualifier_values(DuelQualifier)[0].value
             == DuelType.GROUND

@@ -303,6 +303,7 @@ def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     duel_qualifiers = []
     secondary_types = raw_event["type"]["secondary"]
+    result = DuelResult.LOST
 
     if "ground_duel" in secondary_types:
         duel_qualifiers.append(DuelQualifier(value=DuelType.GROUND))
@@ -313,6 +314,10 @@ def _parse_duel(raw_event: Dict) -> Dict:
                 DuelQualifier(value=DuelType.AERIAL),
             ]
         )
+        if raw_event["aerialDuel"]["firstTouch"]:
+            result = DuelResult.WON
+        else:
+            result = DuelResult.LOST
     else:
         if (
             "loose_ball_duel" in secondary_types
@@ -340,25 +345,20 @@ def _parse_duel(raw_event: Dict) -> Dict:
                 ]
             )
 
-    qualifiers.extend(duel_qualifiers)
+    if "offensive_duel" in secondary_types:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.OFFENSIVE))
+        if raw_event["groundDuel"]["keptPossession"]:
+            result = DuelResult.WON
+        else:
+            result = DuelResult.LOST
+    elif "defensive_duel" in secondary_types:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.DEFENSIVE))
+        if raw_event["groundDuel"]["recoveredPossession"]:
+            result = DuelResult.WON
+        else:
+            result = DuelResult.LOST
 
-    if (
-        "offensive_duel" in secondary_types
-        and raw_event["groundDuel"]["keptPossession"]
-    ):
-        result = DuelResult.WON
-    elif (
-        "defensive_duel" in secondary_types
-        and raw_event["groundDuel"]["recoveredPossession"]
-    ):
-        result = DuelResult.WON
-    elif (
-        "aerial_duel" in secondary_types
-        and raw_event["aerialDuel"]["firstTouch"]
-    ):
-        result = DuelResult.WON
-    else:
-        result = DuelResult.LOST
+    qualifiers.extend(duel_qualifiers)
 
     return {"result": result, "qualifiers": qualifiers}
 

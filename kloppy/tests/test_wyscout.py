@@ -46,6 +46,9 @@ class TestWyscout:
             dataset.events[6].get_qualifier_value(DuelQualifier)
             == DuelType.GROUND
         )
+        assert DuelQualifier(value=DuelType.OFFENSIVE) in dataset.events[
+            6
+        ].get_qualifier_values(DuelQualifier)
         assert (
             dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.AERIAL

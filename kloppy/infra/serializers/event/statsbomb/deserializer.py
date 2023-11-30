@@ -581,6 +581,11 @@ def _parse_duel(
             DuelQualifier(value=DuelType.GROUND),
         ]
 
+    if raw_event["possession_team"]["id"] == raw_event["team"]["id"]:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.OFFENSIVE))
+    else:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.DEFENSIVE))
+
     qualifiers = duel_qualifiers + _get_body_part_qualifiers(duel_dict)
 
     outcome_name = duel_dict.get("outcome", {}).get("name") or duel_dict.get(
@@ -600,6 +605,12 @@ def _parse_aerial_won_duel(raw_event: dict, type_name: str) -> Dict:
         DuelQualifier(value=DuelType.LOOSE_BALL),
         DuelQualifier(value=DuelType.AERIAL),
     ]
+
+    if raw_event["possession_team"]["id"] == raw_event["team"]["id"]:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.OFFENSIVE))
+    else:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.DEFENSIVE))
+
     qualifiers = duel_qualifiers + _get_body_part_qualifiers(aerial_won_dict)
 
     result = DuelResult.WON

@@ -468,6 +468,8 @@ class DuelType(Enum):
     GROUND = "GROUND"
     LOOSE_BALL = "LOOSE_BALL"
     SLIDING_TACKLE = "SLIDING_TACKLE"
+    OFFENSIVE = "OFFENSIVE"
+    DEFENSIVE = "DEFENSIVE"
 
 
 @dataclass

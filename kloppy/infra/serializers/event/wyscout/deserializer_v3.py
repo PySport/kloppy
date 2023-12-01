@@ -447,6 +447,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         + (raw_event["minute"] * 60)
                         - (60 * 45)
                     ),
+                    "formation": raw_event["team"]["formation"],
+                    "opponent_formation": raw_event["OpponentTeam"][
+                        "formation"
+                    ],
                 }
 
                 primary_event_type = raw_event["type"]["primary"]

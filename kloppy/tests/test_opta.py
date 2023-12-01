@@ -24,7 +24,7 @@ from kloppy.domain import (
     Point3D,
 )
 
-from kloppy.domain.models.event import EventType
+from kloppy.domain.models.event import EventType, FormationType
 
 from kloppy import opta
 
@@ -161,6 +161,18 @@ class TestOpta:
         assert (
             dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.GROUND
+        )
+
+        # Check event formations
+        assert (
+            dataset.events[5].formation == FormationType.FOUR_FOUR_TWO
+            and dataset.events[5].opponent_formation
+            == FormationType.FOUR_THREE_THREE
+        )
+        assert (
+            dataset.events[6].formation == FormationType.FOUR_THREE_THREE
+            and dataset.events[6].opponent_formation
+            == FormationType.FOUR_FOUR_TWO
         )
 
     def test_shot(self, f7_data: str, f24_data: str):

@@ -76,6 +76,7 @@ EVENT_TYPE_BALL_OUT = 5
 EVENT_TYPE_CORNER_AWARDED = 6
 EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
+EVENT_TYPE_TEAM_SET_UP = 34
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
 EVENT_TYPE_BALL_TOUCH = 61
@@ -698,6 +699,8 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                 for event in list(game_elm.iterchildren("Event"))
                 if int(event.attrib["type_id"]) != EVENT_TYPE_DELETED_EVENT
             ]
+            current_home_team_formation = None
+            current_away_team_formation = None
             for idx, event_elm in enumerate(events_list):
                 next_event_elm = (
                     events_list[idx + 1]
@@ -708,8 +711,17 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
                 period_id = int(event_elm.attrib["period_id"])
+                raw_qualifiers = {
+                    int(
+                        qualifier_elm.attrib["qualifier_id"]
+                    ): qualifier_elm.attrib.get("value")
+                    for qualifier_elm in event_elm.iterchildren("Q")
+                }
                 for period in periods:
-                    if period.id == period_id:
+                    if (
+                        period.id == period_id
+                        or type_id == EVENT_TYPE_TEAM_SET_UP
+                    ):
                         break
                 else:
                     logger.debug(
@@ -717,7 +729,21 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
                     continue
 
-                if type_id == EVENT_TYPE_START_PERIOD:
+                if type_id == EVENT_TYPE_TEAM_SET_UP:
+                    if event_elm.attrib["team_id"] == home_team.team_id:
+                        current_home_team_formation = formations[
+                            int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
+                        ]
+                    elif event_elm.attrib["team_id"] == away_team.team_id:
+                        current_away_team_formation = formations[
+                            int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
+                        ]
+                    else:
+                        raise DeserializationError(
+                            f"Unknown team_id {event_elm.attrib['team_id']}"
+                        )
+                    continue
+                elif type_id == EVENT_TYPE_START_PERIOD:
                     logger.debug(
                         f"Set start of period {period.id} to {timestamp}"
                     )
@@ -734,8 +760,16 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
 
                     if event_elm.attrib["team_id"] == home_team.team_id:
                         team = teams[0]
+                        current_formation = current_home_team_formation
+                        current_opponent_formation = (
+                            current_away_team_formation
+                        )
                     elif event_elm.attrib["team_id"] == away_team.team_id:
                         team = teams[1]
+                        current_formation = current_away_team_formation
+                        current_opponent_formation = (
+                            current_home_team_formation
+                        )
                     else:
                         raise DeserializationError(
                             f"Unknown team_id {event_elm.attrib['team_id']}"
@@ -744,12 +778,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     x = float(event_elm.attrib["x"])
                     y = float(event_elm.attrib["y"])
                     outcome = int(event_elm.attrib["outcome"])
-                    raw_qualifiers = {
-                        int(
-                            qualifier_elm.attrib["qualifier_id"]
-                        ): qualifier_elm.attrib.get("value")
-                        for qualifier_elm in event_elm.iterchildren("Q")
-                    }
                     player = None
                     if "player_id" in event_elm.attrib:
                         player = team.get_player_by_id(
@@ -771,6 +799,8 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         player=player,
                         coordinates=Point(x=x, y=y),
                         raw_event=event_elm,
+                        formation=current_formation,
+                        opponent_formation=current_opponent_formation,
                     )
 
                     if type_id == EVENT_TYPE_PASS:
@@ -891,6 +921,27 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **formation_change_event_kwargs,
                             **generic_event_kwargs,
                         )
+                        if event_elm.attrib["team_id"] == home_team.team_id:
+                            current_home_team_formation = formations[
+                                int(
+                                    raw_qualifiers[
+                                        EVENT_QUALIFIER_TEAM_FORMATION
+                                    ]
+                                )
+                            ]
+                        elif event_elm.attrib["team_id"] == away_team.team_id:
+                            current_away_team_formation = formations[
+                                int(
+                                    raw_qualifiers[
+                                        EVENT_QUALIFIER_TEAM_FORMATION
+                                    ]
+                                )
+                            ]
+                        else:
+                            raise DeserializationError(
+                                f"Unknown team_id {event_elm.attrib['team_id']}"
+                            )
+
                     elif type_id == EVENT_TYPE_CARD:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_qualifiers)

@@ -506,6 +506,8 @@ class Event(DataRecord, ABC):
     raw_event: Dict
     state: Dict[str, Any]
     related_event_ids: List[str]
+    formation: Optional[FormationType]
+    opponent_formation: Optional[FormationType]
 
     qualifiers: List[Qualifier]
 

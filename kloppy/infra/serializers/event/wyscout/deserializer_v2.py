@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Tuple, NamedTuple, IO
+from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BodyPart,
@@ -80,6 +80,62 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
+def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags."""
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_CENTER)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_CENTER)
+    ):
+        return Point(100.0, 50.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_RIGHT)
+    ):
+        return Point(100.0, 55.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_LEFT)
+    ):
+        return Point(100.0, 45.0)
+    if _has_tag(raw_event, wyscout_tags.OUT_HIGH_CENTER) or _has_tag(
+        raw_event, wyscout_tags.POST_HIGH_CENTER
+    ):
+        return Point(100.0, 50.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.OUT_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.OUT_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.OUT_HIGH_RIGHT)
+    ):
+        return Point(100.0, 60.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.OUT_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.OUT_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.OUT_HIGH_LEFT)
+    ):
+        return Point(100.0, 40.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.POST_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.POST_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.POST_HIGH_LEFT)
+    ):
+        return Point(100.0, 55.38)
+    if (
+        _has_tag(raw_event, wyscout_tags.POST_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.POST_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.POST_HIGH_RIGHT)
+    ):
+        return Point(100.0, 44.62)
+    if _has_tag(raw_event, wyscout_tags.BLOCKED):
+        return Point(
+            x=float(raw_event["positions"][0]["x"]),
+            y=float(raw_event["positions"][0]["y"]),
+        )
+    return None
+
+
 def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
     result = None
     qualifiers = _generic_qualifiers(raw_event)
@@ -106,12 +162,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     return {
         "result": result,
-        "result_coordinates": Point(
-            x=float(raw_event["positions"][1]["x"]),
-            y=float(raw_event["positions"][1]["y"]),
-        )
-        if len(raw_event["positions"]) > 1
-        else None,
+        "result_coordinates": _create_shot_result_coordinates(raw_event),
         "qualifiers": qualifiers,
     }
 

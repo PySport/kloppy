@@ -140,6 +140,13 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     elif _has_tag(raw_event, wyscout_tags.RIGHT_FOOT):
         qualifiers.append(BodyPartQualifier(BodyPart.RIGHT_FOOT))
 
+    if _has_tag(raw_event, wyscout_tags.HIGH):
+        qualifiers.append(PassQualifier(PassType.HIGH_PASS))
+    if _has_tag(raw_event, wyscout_tags.THROUGH):
+        qualifiers.append(PassQualifier(PassType.THROUGH_BALL))
+    if _has_tag(raw_event, wyscout_tags.ASSIST):
+        qualifiers.append(PassQualifier(PassType.ASSIST))
+
     return qualifiers
 
 
@@ -234,32 +241,41 @@ def _parse_ball_out(raw_event: Dict) -> Dict:
 
 
 def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
-    qualifiers = _generic_qualifiers(raw_event)
-
     result = {}
-
     if raw_event["subEventId"] in wyscout_events.FREE_KICK.PASS_TYPES:
         result = _parse_pass(raw_event, next_event)
         if raw_event["subEventId"] == wyscout_events.FREE_KICK.GOAL_KICK:
-            qualifiers.append(SetPieceQualifier(SetPieceType.GOAL_KICK))
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.GOAL_KICK)
+            )
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.THROW_IN:
-            qualifiers.append(SetPieceQualifier(SetPieceType.THROW_IN))
-            qualifiers.append(PassQualifier(PassType.HAND_PASS))
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.THROW_IN)
+            )
+            result["qualifiers"].append(PassQualifier(PassType.HAND_PASS))
         elif raw_event["subEventId"] in [
             wyscout_events.FREE_KICK.FREE_KICK,
             wyscout_events.FREE_KICK.FREE_KICK_CROSS,
         ]:
-            qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.FREE_KICK)
+            )
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.CORNER:
-            qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.CORNER_KICK)
+            )
     elif raw_event["subEventId"] in wyscout_events.FREE_KICK.SHOT_TYPES:
         result = _parse_shot(raw_event, next_event)
         if raw_event["subEventId"] == wyscout_events.FREE_KICK.FREE_KICK_SHOT:
-            qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.FREE_KICK)
+            )
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.PENALTY:
-            qualifiers.append(SetPieceQualifier(SetPieceType.PENALTY))
-
-    result["qualifiers"] = qualifiers
+            result["qualifiers"].append(
+                SetPieceQualifier(SetPieceType.PENALTY)
+            )
+    else:
+        result["qualifiers"] = _generic_qualifiers(raw_event)
     return result
 
 

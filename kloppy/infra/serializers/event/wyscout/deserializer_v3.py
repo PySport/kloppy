@@ -405,7 +405,7 @@ def get_home_away_team_formation(event, team):
     return current_home_team_formation, current_away_team_formation
 
 
-def identify_artificial_formation_change_event(
+def identify_synthetic_formation_change_event(
     raw_event, raw_next_event, teams, home_team, away_team
 ):
     current_event_team = teams[str(raw_event["team"]["id"])]
@@ -624,7 +624,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 if next_event:
                     event_formation_change_info = (
-                        identify_artificial_formation_change_event(
+                        identify_synthetic_formation_change_event(
                             raw_event, next_event, teams, home_team, away_team
                         )
                     )
@@ -634,7 +634,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     ) in event_formation_change_info.items():
                         generic_event_args.update(
                             {
-                                "event_id": None,
+                                "event_id": f"synthetic-{raw_event['id']}",
                                 "raw_event": None,
                                 "coordinates": None,
                                 "player": None,

@@ -299,7 +299,7 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_take_on(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = None
     if "offensive_duel" in raw_event["type"]["secondary"]:
@@ -485,7 +485,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     )
                 elif primary_event_type == "duel":
                     if "dribble" in secondary_event_types:
-                        takeon_event_args = _parse_takeon(raw_event)
+                        takeon_event_args = _parse_take_on(raw_event)
                         event = self.event_factory.build_take_on(
                             **takeon_event_args, **generic_event_args
                         )

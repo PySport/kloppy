@@ -384,7 +384,7 @@ def _parse_duel(
     raw_qualifiers: Dict[int, str], type_id: int, outcome: int
 ) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
-    if type_id in [EVENT_TYPE_TACKLE, EVENT_TYPE_CHALLENGE]:
+    if type_id in (EVENT_TYPE_TACKLE, EVENT_TYPE_CHALLENGE):
         qualifiers.extend(
             [
                 DuelQualifier(value=DuelType.GROUND),

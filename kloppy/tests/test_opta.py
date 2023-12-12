@@ -17,7 +17,11 @@ from kloppy.domain import (
     GoalkeeperActionType,
     DuelQualifier,
     DuelType,
+    ShotResult,
+    SetPieceQualifier,
     CounterAttackQualifier,
+    BodyPartQualifier,
+    Point3D,
 )
 
 from kloppy.domain.models.event import EventType
@@ -42,7 +46,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 29
+        assert len(dataset.events) == 30
         assert len(dataset.metadata.periods) == 2
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -138,7 +142,10 @@ class TestOpta:
             == GoalkeeperActionType.SMOTHER
         )
         assert (
-            dataset.events[28].event_type == EventType.MISCONTROL
+            dataset.events[28].event_type == EventType.INTERCEPTION
+        )  # 2609934569
+        assert (
+            dataset.events[29].event_type == EventType.MISCONTROL
         )  # 250913217
 
         # Check counterattack
@@ -155,6 +162,38 @@ class TestOpta:
             dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.GROUND
         )
+
+    def test_shot(self, f7_data: str, f24_data: str):
+        dataset = opta.load(
+            f24_data=f24_data,
+            f7_data=f7_data,
+            event_types=["shot"],
+            coordinates="opta",
+        )
+        assert len(dataset.events) == 2
+
+        shot = dataset.get_event_by_id("2318695229")
+        # A shot event should have a result
+        assert shot.result == ShotResult.GOAL
+        # A shot event should have end coordinates
+        assert shot.result_coordinates == Point3D(100.0, 47.8, 2.5)
+        # A shot event should have a body part
+        assert (
+            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
+        )
+
+    def test_own_goal(self, f7_data: str, f24_data: str):
+        dataset = opta.load(
+            f24_data=f24_data,
+            f7_data=f7_data,
+            event_types=["shot"],
+            coordinates="opta",
+        )
+
+        own_goal = dataset.get_event_by_id("2318697001")
+        assert own_goal.result == ShotResult.OWN_GOAL
+        # Use the inverse coordinates of the goal location
+        assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
 
     def test_correct_normalized_deserialization(
         self, f7_data: str, f24_data: str

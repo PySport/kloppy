@@ -9,6 +9,7 @@ from kloppy.domain import (
     Orientation,
     Point,
     SetPieceType,
+    ShotResult,
     BodyPart,
     DatasetType,
     BallState,
@@ -45,7 +46,9 @@ class TestSportecEventData:
         # raw_event must be flattened dict
         assert isinstance(dataset.events[0].raw_event, dict)
 
-        assert len(dataset.events) == 28
+        assert len(dataset.events) == 29
+        assert dataset.events[28].result == ShotResult.OWN_GOAL
+
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
         assert dataset.metadata.periods[0] == Period(
             id=1,
@@ -83,6 +86,20 @@ class TestSportecEventData:
         )
 
         assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)
+
+    def test_pass_receiver_coordinates(
+        self, event_data: Path, meta_data: Path
+    ):
+        """Pass receiver_coordinates must match the X/Y-Source-Position of next event"""
+        dataset = sportec.load_event(
+            event_data=event_data, meta_data=meta_data
+        )
+
+        first_pass = dataset.find("pass")
+        assert first_pass.receiver_coordinates != first_pass.next().coordinates
+        assert first_pass.receiver_coordinates == Point(
+            x=0.7775, y=0.569264705882353
+        )
 
 
 class TestSportecTrackingData:

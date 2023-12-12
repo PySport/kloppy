@@ -12,6 +12,7 @@ from kloppy.domain import (
     MiscontrolEvent,
     CarryEvent,
     DuelEvent,
+    InterceptionEvent,
     ClearanceEvent,
     FormationChangeEvent,
     BallOutEvent,
@@ -88,6 +89,9 @@ class EventFactory:
 
     def build_carry(self, **kwargs) -> CarryEvent:
         return create_event(CarryEvent, **kwargs)
+
+    def build_interception(self, **kwargs) -> InterceptionEvent:
+        return create_event(InterceptionEvent, **kwargs)
 
     def build_clearance(self, **kwargs) -> ClearanceEvent:
         return create_event(ClearanceEvent, **kwargs)

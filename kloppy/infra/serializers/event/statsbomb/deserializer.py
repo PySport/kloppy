@@ -16,6 +16,7 @@ from kloppy.domain import (
     TakeOnResult,
     CarryResult,
     DuelResult,
+    InterceptionResult,
     DuelQualifier,
     DuelType,
     Metadata,
@@ -51,8 +52,11 @@ logger = logging.getLogger(__name__)
 SB_EVENT_TYPE_RECOVERY = 2
 SB_EVENT_TYPE_DUEL = 4
 SB_EVENT_TYPE_CLEARANCE = 9
+SB_EVENT_TYPE_INTERCEPTION = 10
 SB_EVENT_TYPE_DRIBBLE = 14
 SB_EVENT_TYPE_SHOT = 16
+SB_EVENT_TYPE_OWN_GOAL_AGAINST = 20
+SB_EVENT_TYPE_OWN_GOAL_FOR = 25
 SB_EVENT_TYPE_GOALKEEPER_EVENT = 23
 SB_EVENT_TYPE_PASS = 30
 SB_EVENT_TYPE_50_50 = 33
@@ -77,6 +81,8 @@ SB_PASS_OUTCOME_OUT = 75
 SB_PASS_OUTCOME_OFFSIDE = 76
 SB_PASS_OUTCOME_UNKNOWN = 77
 
+SB_PASS_TYPE_ONE_TOUCH_INTERCEPTION = 64
+
 SB_PASS_HEIGHT_GROUND = 1
 SB_PASS_HEIGHT_LOW = 2
 SB_PASS_HEIGHT_HIGH = 3
@@ -90,8 +96,17 @@ SB_SHOT_OUTCOME_OFF_WAYWARD = 101
 SB_SHOT_OUTCOME_SAVED_OFF_TARGET = 115
 SB_SHOT_OUTCOME_SAVED_TO_POST = 116
 
-SB_EVENT_TYPE_AERIAL_LOST = 10
-SB_EVENT_TYPE_TACKLE = 11
+SB_DUEL_TYPE_AERIAL_LOST = 10
+SB_DUEL_TYPE_TACKLE = 11
+
+SB_INTERCEPTION_OUTCOME_LOST = 1
+SB_INTERCEPTION_OUTCOME_WON = 4
+SB_INTERCEPTION_OUTCOME_LOST_IN_PLAY = 13
+SB_INTERCEPTION_OUTCOME_LOST_OUT = 14
+SB_INTERCEPTION_OUTCOME_SUCCESS = 15
+SB_INTERCEPTION_OUTCOME_SUCCESS_IN_PLAY = 16
+SB_INTERCEPTION_OUTCOME_SUCCESS_OUT = 17
+
 
 DUEL_WON_NAMES = [
     "Won",
@@ -469,22 +484,46 @@ def _parse_carry(carry_dict: Dict, fidelity_version: int) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict, events: List) -> Dict:
+def _parse_interception(raw_event: Dict) -> Dict:
+    event_type = raw_event["type"]["id"]
+    # Note: passes with interception qualifier, are always successful. Otherwise, interception that is LOST or OUT
+    result = InterceptionResult.SUCCESS
+
+    if event_type == SB_EVENT_TYPE_INTERCEPTION:
+        outcome = raw_event.get("interception", {}).get("outcome", {})
+        outcome_id = outcome.get("id")
+        if outcome_id in [
+            SB_INTERCEPTION_OUTCOME_LOST_OUT,
+            SB_INTERCEPTION_OUTCOME_SUCCESS_OUT,
+        ]:
+            result = InterceptionResult.OUT
+        elif outcome_id in [
+            SB_INTERCEPTION_OUTCOME_WON,
+            SB_INTERCEPTION_OUTCOME_SUCCESS,
+            SB_INTERCEPTION_OUTCOME_SUCCESS_IN_PLAY,
+        ]:
+            result = InterceptionResult.SUCCESS
+        elif outcome_id in [
+            SB_INTERCEPTION_OUTCOME_LOST,
+            SB_INTERCEPTION_OUTCOME_LOST_IN_PLAY,
+        ]:
+            result = InterceptionResult.LOST
+        else:
+            raise DeserializationError(
+                f"Unknown interception outcome: {raw_event['outcome']['name']}({outcome_id})"
+            )
+
     qualifiers = []
-    if "related_events" in raw_event:
-        for event in events[-20:][::-1]:
-            if event.event_id == raw_event["related_events"][0]:
-                found_event = event
-                body_part_qualifiers = []
-                if "pass" in found_event.raw_event:
-                    related_event_dict = found_event.raw_event["pass"]
-                    body_part_qualifiers = _get_body_part_qualifiers(
-                        related_event_dict
-                    )
+    body_part_qualifiers = _get_body_part_qualifiers(raw_event)
+    qualifiers.extend(body_part_qualifiers)
 
-                qualifiers.extend(body_part_qualifiers)
-                break
+    return {"result": result, "qualifiers": qualifiers}
 
+
+def _parse_clearance(clearance_dict: Dict) -> Dict:
+    qualifiers = []
+    body_part_qualifiers = _get_body_part_qualifiers(clearance_dict)
+    qualifiers.extend(body_part_qualifiers)
     return {"qualifiers": qualifiers}
 
 
@@ -528,12 +567,12 @@ def _parse_duel(
     if event_type == SB_EVENT_TYPE_DUEL:
         duel_dict = raw_event.get("duel", {})
         type_id = duel_dict.get("type", {}).get("id")
-        if type_id == SB_EVENT_TYPE_AERIAL_LOST:
+        if type_id == SB_DUEL_TYPE_AERIAL_LOST:
             duel_qualifiers = [
                 DuelQualifier(value=DuelType.LOOSE_BALL),
                 DuelQualifier(value=DuelType.AERIAL),
             ]
-        elif type_id == SB_EVENT_TYPE_TACKLE:
+        elif type_id == SB_DUEL_TYPE_TACKLE:
             duel_qualifiers = [DuelQualifier(value=DuelType.GROUND)]
     elif event_type == SB_EVENT_TYPE_50_50:
         duel_dict = raw_event.get("50_50", {})
@@ -846,6 +885,20 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **pass_event_kwargs,
                         **generic_event_kwargs,
                     )
+                    # if pass is an interception, insert interception prior to pass event
+                    if "type" in raw_event["pass"]:
+                        type_id = raw_event["pass"]["type"]["id"]
+                        if type_id == SB_PASS_TYPE_ONE_TOUCH_INTERCEPTION:
+                            interception_event_kwargs = _parse_interception(
+                                raw_event=raw_event
+                            )
+                            interception_event = (
+                                self.event_factory.build_interception(
+                                    **interception_event_kwargs,
+                                    **generic_event_kwargs,
+                                )
+                            )
+                            new_events.append(interception_event)
                     new_events.append(pass_event)
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
@@ -856,9 +909,29 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         **generic_event_kwargs,
                     )
                     new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_INTERCEPTION:
+                    interception_event_kwargs = _parse_interception(
+                        raw_event=raw_event
+                    )
+                    interception_event = self.event_factory.build_interception(
+                        **interception_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(interception_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_AGAINST:
+                    shot_event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=[],
+                        **generic_event_kwargs,
+                    )
+                    new_events.append(shot_event)
+                elif event_type == SB_EVENT_TYPE_OWN_GOAL_FOR:
+                    pass
                 elif event_type == SB_EVENT_TYPE_CLEARANCE:
                     clearance_event_kwargs = _parse_clearance(
-                        raw_event=raw_event, events=events
+                        # Old versions of the data (< v1.1) don't define extra
+                        # attributes for clearances
+                        clearance_dict=raw_event.get("clearance", {}),
                     )
                     clearance_event = self.event_factory.build_clearance(
                         result=None,
@@ -1063,7 +1136,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Last step is to add freeze_frame information
         for event in events:
             if event.event_type == EventType.SHOT:
-                if "freeze_frame" in event.raw_event["shot"]:
+                if "freeze_frame" in event.raw_event.get("shot", {}):
                     event.freeze_frame = transformer.transform_frame(
                         _parse_freeze_frame(
                             freeze_frame=event.raw_event["shot"][

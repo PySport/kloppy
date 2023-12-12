@@ -23,6 +23,10 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from .pitch import PitchDimensions, Point, Dimension
 from .formation import FormationType
@@ -792,7 +796,7 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(self, filter_=None) -> Optional["DataRecord"]:
+    def prev(self, filter_=None) -> Optional[Self]:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -800,7 +804,7 @@ class DataRecord(ABC):
                     return prev_record
                 prev_record = prev_record.prev_record
 
-    def next(self, filter_=None) -> Optional["DataRecord"]:
+    def next(self, filter_=None) -> Optional[Self]:
         if self.next_record:
             next_record = self.next_record
             while next_record:

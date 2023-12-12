@@ -197,6 +197,7 @@ SPORTEC_EVENT_NAME_SHOT_BLOCKED = "BlockedShot"
 SPORTEC_EVENT_NAME_SHOT_WOODWORK = "ShotWoodWork"
 SPORTEC_EVENT_NAME_SHOT_OTHER = "OtherShot"
 SPORTEC_EVENT_NAME_SHOT_GOAL = "SuccessfulShot"
+SPORTEC_EVENT_NAME_OWN_GOAL = "OwnGoal"
 SPORTEC_SHOT_EVENT_NAMES = (
     SPORTEC_EVENT_NAME_SHOT_WIDE,
     SPORTEC_EVENT_NAME_SHOT_SAVED,
@@ -204,6 +205,7 @@ SPORTEC_SHOT_EVENT_NAMES = (
     SPORTEC_EVENT_NAME_SHOT_WOODWORK,
     SPORTEC_EVENT_NAME_SHOT_OTHER,
     SPORTEC_EVENT_NAME_SHOT_GOAL,
+    SPORTEC_EVENT_NAME_OWN_GOAL,
 )
 
 SPORTEC_EVENT_NAME_PASS = "Pass"
@@ -288,6 +290,8 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
         result = ShotResult.POST
     elif event_name == SPORTEC_EVENT_NAME_SHOT_GOAL:
         result = ShotResult.GOAL
+    elif event_name == SPORTEC_EVENT_NAME_OWN_GOAL:
+        result = ShotResult.OWN_GOAL
     elif event_name == SPORTEC_EVENT_NAME_SHOT_OTHER:
         result = None
     else:
@@ -531,22 +535,6 @@ class SportecEventDataDeserializer(
                         **generic_event_kwargs,
                     )
 
-                if events:
-                    previous_event = events[-1]
-                    if (
-                        previous_event.event_type == EventType.PASS
-                        and previous_event.result == PassResult.COMPLETE
-                    ):
-                        if "X-Source-Position" in event_chain["Event"]:
-                            previous_event.receiver_coordinates = Point(
-                                x=float(
-                                    event_chain["Event"]["X-Source-Position"]
-                                ),
-                                y=float(
-                                    event_chain["Event"]["Y-Source-Position"]
-                                ),
-                            )
-
                 if (
                     event.event_type == EventType.PASS
                     and event.get_qualifier_value(SetPieceQualifier)
@@ -583,6 +571,42 @@ class SportecEventDataDeserializer(
                     events.append(transformer.transform_event(out_event))
 
                 events.append(transformer.transform_event(event))
+
+        for i, event in enumerate(events[:-1]):
+            if (
+                event.event_type == EventType.PASS
+                and event.result == PassResult.COMPLETE
+            ):
+                # Sportec uses X/Y-Source-Position to define the start coordinates of
+                # an event and X/Y-Position to define the end of an event. There can/will
+                # be quite a distance between the start and the end of an event.
+                # When we want to set the receiver_coordinates we need to use
+                # the start of the event.
+                # How to solve this:
+                # 1. Create a copy of an event
+                # 2. Set the coordinates based on X/Y-Source-Position
+                # 3. Pass through the transformer
+                # 4. Update the receiver coordinates
+                if "X-Source-Position" in events[i + 1].raw_event:
+                    updated_event = transformer.transform_event(
+                        events[i + 1].replace(
+                            coordinates=Point(
+                                x=float(
+                                    events[i + 1].raw_event[
+                                        "X-Source-Position"
+                                    ]
+                                ),
+                                y=float(
+                                    events[i + 1].raw_event[
+                                        "Y-Source-Position"
+                                    ]
+                                ),
+                            )
+                        )
+                    )
+                    event.receiver_coordinates = updated_event.coordinates
+                else:
+                    event.receiver_coordinates = events[i + 1].coordinates
 
         events = list(
             filter(

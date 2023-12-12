@@ -4,10 +4,24 @@ from typing import IO, Any, Dict, List, NamedTuple, Optional, Union
 
 from lxml import objectify
 
-from kloppy.domain import (AttackingDirection, BallState, DatasetFlag, Frame,
-                           Ground, Metadata, Orientation, Period, Player,
-                           PlayerData, Point, Point3D, Provider, Team,
-                           TrackingDataset, attacking_direction_from_frame)
+from kloppy.domain import (
+    AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Frame,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    PlayerData,
+    Point,
+    Point3D,
+    Provider,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
+)
 from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer

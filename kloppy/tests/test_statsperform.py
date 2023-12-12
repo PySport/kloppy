@@ -3,8 +3,14 @@ from pathlib import Path
 import pytest
 
 from kloppy import statsperform
-from kloppy.domain import (AttackingDirection, DatasetType, Orientation, Point,
-                           Point3D, Provider)
+from kloppy.domain import (
+    AttackingDirection,
+    DatasetType,
+    Orientation,
+    Point,
+    Point3D,
+    Provider,
+)
 
 
 @pytest.fixture

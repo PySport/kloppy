@@ -2,7 +2,9 @@ from typing import Optional
 
 from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.statsperform import (
-    StatsPerformDeserializer, StatsPerformInputs)
+    StatsPerformDeserializer,
+    StatsPerformInputs,
+)
 from kloppy.io import FileLike, open_as_file
 
 

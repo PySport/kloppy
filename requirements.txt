@@ -3,6 +3,7 @@ lxml>=4.4.0
 requests>=2.0.0
 networkx>=2.4
 pytest
+pytest-lazy-fixture
 pandas>=1.0.0
 polars>=0.16.6
 pre-commit

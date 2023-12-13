@@ -9,7 +9,7 @@ from kloppy.io import FileLike, open_as_file
 
 
 def load(
-    meta_data: FileLike,  # Stats Perform MA1 file - xml - single game, live data & lineups
+    meta_data: FileLike,  # Stats Perform MA1 file - xml or json - single game, live data & lineups
     raw_data: FileLike,  # Stats Perform MA25 file - txt - tracking data
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,

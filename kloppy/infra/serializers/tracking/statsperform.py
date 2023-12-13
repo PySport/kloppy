@@ -1,27 +1,28 @@
+import json
 import logging
-from typing import Dict, Optional, Union, NamedTuple, IO
+from typing import IO, Any, Dict, List, NamedTuple, Optional, Union
+
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
     Frame,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    PlayerData,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
-    Ground,
-    Player,
     Provider,
-    PlayerData,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
-
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
@@ -147,69 +148,149 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         )
 
     @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
-        if "xml_metadata" not in inputs:
-            raise ValueError("Please specify a value for 'xml_metadata'")
-        if "raw_data" not in inputs:
-            raise ValueError("Please specify a value for 'raw_data'")
+    def __parse_teams_from_xml(match: Any) -> List[Dict[str, Any]]:
+        parsed_teams = []
+        match_info = match.matchInfo
+        teams = match_info.contestants.iterchildren(tag="contestant")
+        for team in teams:
+            team_attributes = team.attrib
+            team_id = team_attributes["id"]
+            parsed_teams.append(
+                {
+                    "team_id": team_id,
+                    "name": team_attributes["name"],
+                    "ground": team_attributes["position"],
+                }
+            )
+        return parsed_teams
+
+    @staticmethod
+    def __parse_players_from_xml(match: Any) -> List[Dict[str, Any]]:
+        parsed_players = []
+        live_data = match.liveData
+        line_ups = live_data.iterchildren(tag="lineUp")
+        for line_up in line_ups:
+            team_id = line_up.get("contestantId")
+            players = line_up.iterchildren(tag="player")
+            for player in players:
+                player_attributes = player.attrib
+                player_id = player_attributes["playerId"]
+                parsed_players.append(
+                    {
+                        "player_id": player_id,
+                        "team_id": team_id,
+                        "jersey_no": int(player_attributes["shirtNumber"]),
+                        "name": player_attributes["matchName"],
+                        "first_name": player_attributes["shortFirstName"],
+                        "last_name": player_attributes["shortLastName"],
+                        "starting": player_attributes["position"]
+                        != "Substitute",
+                        "position": player_attributes["position"],
+                    }
+                )
+        return parsed_players
+
+    @staticmethod
+    def __parse_teams_from_json(match: Dict[str, Any]) -> List[Dict[str, Any]]:
+        parsed_teams = []
+        match_info = match["matchInfo"]
+        teams = match_info["contestant"]
+        for team in teams:
+            team_id = team["id"]
+            parsed_teams.append(
+                {
+                    "team_id": team_id,
+                    "name": team["name"],
+                    "ground": team["position"],
+                }
+            )
+        return parsed_teams
+
+    @staticmethod
+    def __parse_players_from_json(
+        match: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        parsed_players = []
+        live_data = match["liveData"]
+        line_ups = live_data["lineUp"]
+        for line_up in line_ups:
+            team_id = line_up["contestantId"]
+            players = line_up["player"]
+            for player in players:
+                player_id = player["playerId"]
+                parsed_players.append(
+                    {
+                        "player_id": player_id,
+                        "team_id": team_id,
+                        "jersey_no": player["shirtNumber"],
+                        "name": player["matchName"],
+                        "first_name": player["shortFirstName"],
+                        "last_name": player["shortLastName"],
+                        "starting": player["position"] != "Substitute",
+                        "position": player["position"],
+                    }
+                )
+        return parsed_players
 
     def deserialize(self, inputs: StatsPerformInputs) -> TrackingDataset:
-        tracking = inputs.raw_data.read().decode("ascii").splitlines()
-        metadata = inputs.meta_data.read()
+        tracking_data = inputs.raw_data.read().decode("ascii").splitlines()
+        meta_data = inputs.meta_data.read()
 
-        with performance_logging("Loading XML metadata", logger=logger):
-            match = objectify.fromstring(metadata).matchInfo
+        with performance_logging("Loading meta data", logger=logger):
+            if meta_data.decode("utf-8")[0] == "<":
+                match = objectify.fromstring(meta_data)
+                parsed_teams = self.__parse_teams_from_xml(match)
+                parsed_players = self.__parse_players_from_xml(match)
+            else:
+                match = json.loads(meta_data)
+                parsed_teams = self.__parse_teams_from_json(match)
+                parsed_players = self.__parse_players_from_json(match)
+
             teams = {}
-            for team_info in match.contestants.iterchildren(tag="contestant"):
-                if team_info.attrib["position"] == "home":
-                    ground = Ground.HOME
-                else:
-                    ground = Ground.AWAY
-                team_id = team_info.attrib["id"]
+            for parsed_team in parsed_teams:
+                team_id = parsed_team["team_id"]
                 teams[team_id] = Team(
                     team_id=team_id,
-                    name=team_info.attrib["name"],
-                    ground=ground,
+                    name=parsed_team["name"],
+                    ground=Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY,
                 )
 
-            # Get Frame Rate - Either 10FPS or 25FPS
-            frame_rate = self.__get_frame_rate(tracking)
+            for parsed_player in parsed_players:
+                player_id = parsed_player["player_id"]
+                team_id = parsed_player["team_id"]
+                team = teams[team_id]
+                player = Player(
+                    player_id=player_id,
+                    team=team,
+                    jersey_no=parsed_player["jersey_no"],
+                    name=parsed_player["name"],
+                    first_name=parsed_player["first_name"],
+                    last_name=parsed_player["last_name"],
+                    starting=parsed_player["starting"],
+                    position=parsed_player["position"],
+                )
+                team.players.append(player)
+            teams_list = list(teams.values())
+
+        with performance_logging("Loading tracking data", logger=logger):
+            frame_rate = self.__get_frame_rate(tracking_data)
             pitch_size_length = 100
             pitch_size_width = 100
 
-            periods = self.__get_periods(tracking)
-            # Get Player Info:
-            for line_up in objectify.fromstring(
-                metadata
-            ).liveData.iterchildren(tag="lineUp"):
-                team_id = line_up.get("contestantId")
-                team = teams[team_id]
+            periods = self.__get_periods(tracking_data)
 
-                for player in line_up.iterchildren(tag="player"):
-                    player = player.attrib
-                    player = Player(
-                        player_id=player["playerId"],
-                        name=player["matchName"],
-                        starting=player["position"] == "substitute",
-                        position=player["position"],
-                        team=team,
-                        jersey_no=player["shirtNumber"],
-                        attributes={},
-                    )
-                    teams[team_id].players.append(player)
-
-            teams_list = list(teams.values())
-        # Handles the tracking frame data
-        with performance_logging("Loading raw data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                length=pitch_size_length,
+                width=pitch_size_width,
             )
 
             def _iter():
                 n = 0
                 sample = 1.0 / self.sample_rate
 
-                for line_ in tracking:
+                for line_ in tracking_data:
                     splits = line_.split(";")[1].split(",")
                     frame_id = int(splits[0])
                     period_id = int(splits[1])
@@ -244,7 +325,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             else Orientation.FIXED_AWAY_HOME
         )
 
-        metadata = Metadata(
+        meta_data = Metadata(
             teams=teams_list,
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
@@ -258,5 +339,5 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
 
         return TrackingDataset(
             records=frames,
-            metadata=metadata,
+            metadata=meta_data,
         )

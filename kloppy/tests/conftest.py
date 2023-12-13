@@ -6,5 +6,5 @@ import pytest
 
 
 @pytest.fixture
-def base_dir():
+def base_dir() -> Path:
     return Path(__file__).parent

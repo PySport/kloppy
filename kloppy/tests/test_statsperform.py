@@ -1,27 +1,41 @@
-import pytest
 from pathlib import Path
 
-from kloppy.domain import (
-    AttackingDirection,
-    Orientation,
-    Provider,
-    Point,
-    Point3D,
-    DatasetType,
-)
+import pytest
 
 from kloppy import statsperform
+from kloppy.domain import (
+    AttackingDirection,
+    DatasetType,
+    Orientation,
+    Point,
+    Point3D,
+    Provider,
+)
 
 
+@pytest.fixture
+def meta_data_xml(base_dir) -> Path:
+    return base_dir / "files/statsperform_ma1_metadata.xml"
+
+
+@pytest.fixture
+def meta_data_json(base_dir) -> Path:
+    return base_dir / "files/statsperform_ma1_metadata.json"
+
+
+@pytest.fixture
+def raw_data(base_dir) -> Path:
+    return base_dir / "files/statsperform_ma25_tracking.txt"
+
+
+@pytest.mark.parametrize(
+    "meta_data",
+    [
+        pytest.lazy_fixture("meta_data_xml"),
+        pytest.lazy_fixture("meta_data_json"),
+    ],
+)
 class TestStatsPerformTracking:
-    @pytest.fixture
-    def meta_data(self, base_dir) -> str:
-        return base_dir / "files/statsperform_ma1_metadata.xml"
-
-    @pytest.fixture
-    def raw_data(self, base_dir) -> str:
-        return base_dir / "files/statsperform_ma25_tracking.txt"
-
     def test_correct_deserialization(self, meta_data: Path, raw_data: Path):
         dataset = statsperform.load(
             meta_data=meta_data,
@@ -30,14 +44,14 @@ class TestStatsPerformTracking:
             coordinates="statsperform",
         )
 
-        # Check provider, type, shape, etc
+        # Check provider, type, shape, orientation
         assert dataset.metadata.provider == Provider.STATSPERFORM
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 92
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.FIXED_AWAY_HOME
 
-        # Check the Periods
+        # Check the periods
         assert dataset.metadata.periods[1].id == 1
         assert dataset.metadata.periods[1].start_timestamp == 0
         assert dataset.metadata.periods[1].end_timestamp == 2500
@@ -59,17 +73,33 @@ class TestStatsPerformTracking:
         assert dataset.records[20].timestamp == 2.0  # Later frame
 
         # Check some players
-        home_player = dataset.metadata.teams[0].players[2]
+        home_team = dataset.metadata.teams[0]
+        home_player = home_team.players[2]
         assert home_player.player_id == "5g5wwp5luxo1rz1kp6chvz0x6"
         assert dataset.records[0].players_coordinates[home_player] == Point(
             x=68.689, y=39.75
         )
+        assert home_player.position == "Defender"
+        assert home_player.jersey_no == 32
+        assert home_player.starting
+        assert home_player.team == home_team
 
-        away_player = dataset.metadata.teams[1].players[3]
+        away_team = dataset.metadata.teams[1]
+        away_player = away_team.players[3]
         assert away_player.player_id == "72d5uxwcmvhd6mzthxuvev1sl"
         assert dataset.records[0].players_coordinates[away_player] == Point(
             x=30.595, y=44.022
         )
+        assert away_player.position == "Defender"
+        assert away_player.jersey_no == 2
+        assert away_player.starting
+        assert away_player.team == away_team
+
+        away_substitute = away_team.players[15]
+        assert away_substitute.jersey_no == 18
+        assert away_substitute.position == "Substitute"
+        assert not away_substitute.starting
+        assert away_substitute.team == away_team
 
         # Check the ball
         assert dataset.records[1].ball_coordinates == Point3D(

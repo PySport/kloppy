@@ -13,8 +13,11 @@ from kloppy.domain import (
     Orientation,
     Period,
     Point,
+    Point3D,
     Provider,
     FormationType,
+    SetPieceQualifier,
+    SetPieceType,
     Position,
     ShotResult,
 )
@@ -254,6 +257,34 @@ class TestStatsBomb:
                 assert foul.qualifiers is None
 
         assert len(dataset.events) == 23
+
+    def test_shot(self, lineup_data: Path, event_data: Path):
+        """
+        Test shot events
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            event_types=["shot"],
+            coordinates="statsbomb",
+        )
+
+        assert len(dataset.events) == 29
+
+        shot = dataset.get_event_by_id("39f231e5-0072-461c-beb0-a9bedb420f83")
+        # A shot event should have a result
+        assert shot.result == ShotResult.POST
+        # A shot event should have end coordinates
+        assert shot.result_coordinates == Point3D(119.95, 42.95, 2.75)
+        # A shot event should have a body part
+        assert (
+            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
+        )
+        # A shot event can have set piece qualifiers
+        assert (
+            shot.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.FREE_KICK
+        )
 
     def test_own_goal(self, lineup_data: Path, event_data: Path):
         """

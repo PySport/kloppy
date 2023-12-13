@@ -263,7 +263,10 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     else:
         result = PassResult.INCOMPLETE
     receiver_coordinates = _get_end_coordinates(raw_qualifiers)
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
+
+    qualifiers = pass_qualifiers + overall_qualifiers
 
     return dict(
         result=result,
@@ -275,7 +278,11 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
 
 
 def _parse_offside_pass(raw_qualifiers: Dict[int, str]) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
+
+    qualifiers = pass_qualifiers + overall_qualifiers
+
     return dict(
         result=PassResult.OFFSIDE,
         receiver_coordinates=_get_end_coordinates(raw_qualifiers),
@@ -518,32 +525,30 @@ def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     qualifiers = []
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
-    qualifiers.extend(_get_event_pass_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_card_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_counter_attack_qualifiers(raw_qualifiers))
     return qualifiers
 
 
-def _get_event_pass_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     qualifiers = []
-    if EVENT_QUALIFIER_CROSS in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.CROSS))
-    elif EVENT_QUALIFIER_LONG_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.LONG_BALL))
-    elif EVENT_QUALIFIER_CHIPPED_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.CHIPPED_PASS))
-    elif EVENT_QUALIFIER_THROUGH_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.THROUGH_BALL))
-    elif EVENT_QUALIFIER_LAUNCH in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.LAUNCH))
-    elif EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.FLICK_ON))
-    elif EVENT_QUALIFIER_ASSIST in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST))
-    elif EVENT_QUALIFIER_ASSIST_2ND in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST_2ND))
+    pass_qualifier_mapping = {
+        EVENT_QUALIFIER_CROSS: PassType.CROSS,
+        EVENT_QUALIFIER_LONG_BALL: PassType.LONG_BALL,
+        EVENT_QUALIFIER_CHIPPED_BALL: PassType.CHIPPED_PASS,
+        EVENT_QUALIFIER_THROUGH_BALL: PassType.THROUGH_BALL,
+        EVENT_QUALIFIER_LAUNCH: PassType.LAUNCH,
+        EVENT_QUALIFIER_FLICK_ON: PassType.FLICK_ON,
+        EVENT_QUALIFIER_ASSIST: PassType.ASSIST,
+        EVENT_QUALIFIER_ASSIST_2ND: PassType.ASSIST_2ND,
+    }
+    for (
+        sp_pass_qualifier,
+        pass_qualifier_value,
+    ) in pass_qualifier_mapping.items():
+        if sp_pass_qualifier in raw_qualifiers:
+            qualifiers.append(PassQualifier(value=pass_qualifier_value))
+
     return qualifiers
 
 

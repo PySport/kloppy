@@ -299,6 +299,28 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
+def _parse_take_on(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    result = None
+    if "offensive_duel" in raw_event["type"]["secondary"]:
+        if raw_event["groundDuel"]["keptPossession"]:
+            result = TakeOnResult.COMPLETE
+        else:
+            result = TakeOnResult.INCOMPLETE
+    elif "defensive_duel" in raw_event["type"]["secondary"]:
+        if raw_event["groundDuel"]["recoveredPossession"]:
+            result = TakeOnResult.COMPLETE
+        else:
+            result = TakeOnResult.INCOMPLETE
+    elif "aerial_duel" in raw_event["type"]["secondary"]:
+        if raw_event["aerialDuel"]["firstTouch"]:
+            result = TakeOnResult.COMPLETE
+        else:
+            result = TakeOnResult.INCOMPLETE
+
+    return {"result": result, "qualifiers": qualifiers}
+
+
 def _parse_duel(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     duel_qualifiers = []
@@ -462,10 +484,16 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **pass_event_args, **generic_event_args
                     )
                 elif primary_event_type == "duel":
-                    duel_event_args = _parse_duel(raw_event)
-                    event = self.event_factory.build_duel(
-                        **duel_event_args, **generic_event_args
-                    )
+                    if "dribble" in secondary_event_types:
+                        takeon_event_args = _parse_take_on(raw_event)
+                        event = self.event_factory.build_take_on(
+                            **takeon_event_args, **generic_event_args
+                        )
+                    else:
+                        duel_event_args = _parse_duel(raw_event)
+                        event = self.event_factory.build_duel(
+                            **duel_event_args, **generic_event_args
+                        )
                 elif primary_event_type == "clearance":
                     clearance_event_args = _parse_clearance(raw_event)
                     event = self.event_factory.build_clearance(

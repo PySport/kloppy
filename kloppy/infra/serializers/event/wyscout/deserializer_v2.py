@@ -81,7 +81,26 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
 
 
 def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
-    """Estimate the shot end location from the Wyscout tags."""
+    """Estimate the shot end location from the Wyscout tags.
+
+    Wyscout does not provide end-coordinates of shots. Instead shots on goal
+    are tagged with a zone. This function maps each of these zones to
+    a coordinate. The zones and corresponding y-coordinate are depicted below.
+
+
+        ohl      | ohc |      ohr
+     --------------------------------
+          ||=================||
+     -------------------------------
+          || ghl | ghc | ghr ||
+     --------------------------------
+      ocl || gcl | gc  | gcr || ocr
+     --------------------------------
+      oll || gll | glc | glr || olr
+
+      40     45    50    55     60    (y-coordinate of zone)
+        44.62               55.38     (y-coordiante of post)
+    """
     if (
         _has_tag(raw_event, wyscout_tags.GOAL_LOW_CENTER)
         or _has_tag(raw_event, wyscout_tags.GOAL_CENTER)

@@ -24,7 +24,11 @@ from kloppy.domain import (
     Point3D,
 )
 
-from kloppy.domain.models.event import EventType
+from kloppy.domain.models.event import (
+    EventType,
+    PassQualifier,
+    BodyPartQualifier,
+)
 
 from kloppy import opta
 
@@ -95,7 +99,12 @@ class TestOpta:
             dataset.events[0].qualifiers[0].value == SetPieceType.KICK_OFF
         )  # 1510681159
         assert (
-            dataset.events[6].qualifiers[0].value == BodyPart.HEAD
+            BodyPartQualifier(value=BodyPart.HEAD)
+            in dataset.events[6].qualifiers
+        )  # 1101592119
+        assert (
+            PassQualifier(value=PassType.THROUGH_BALL)
+            in dataset.events[6].qualifiers
         )  # 1101592119
         assert (
             dataset.events[5].qualifiers[0].value == PassType.CHIPPED_PASS
@@ -154,10 +163,9 @@ class TestOpta:
         )  # 2318695229
 
         # Check DuelQualifiers
-        assert (
-            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
-            == DuelType.AERIAL
-        )
+        assert DuelQualifier(value=DuelType.AERIAL) in dataset.events[
+            7
+        ].get_qualifier_values(DuelQualifier)
         assert (
             dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.GROUND

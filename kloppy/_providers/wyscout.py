@@ -54,7 +54,7 @@ def load_open_data(
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     return load(
-        event_data=f"https://raw.githubusercontent.com/koenvo/wyscout-soccer-match-event-dataset/main/processed/files/{match_id}.json",
+        event_data=f"https://raw.githubusercontent.com/koenvo/wyscout-soccer-match-event-dataset/main/processed-v2/files/{match_id}.json",
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,

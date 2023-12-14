@@ -56,6 +56,7 @@ class TestWyscout:
         )
         assert dataset.events[9].event_type == EventType.CLEARANCE
         assert dataset.events[12].event_type == EventType.INTERCEPTION
+        assert dataset.events[14].event_type == EventType.TAKE_ON
         assert (
             dataset.events[13].event_type == EventType.FORMATION_CHANGE
             and dataset.events[14].event_type == EventType.FORMATION_CHANGE

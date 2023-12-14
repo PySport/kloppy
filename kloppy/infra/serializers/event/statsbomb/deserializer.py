@@ -217,10 +217,24 @@ def _parse_coordinates(
     # +-----+------+
     cell_side = 0.1 if fidelity_version == 2 else 1.0
     cell_relative_center = cell_side / 2
-    return Point(
-        x=coordinates[0] - cell_relative_center,
-        y=coordinates[1] - cell_relative_center,
-    )
+    if len(coordinates) == 2:
+        return Point(
+            x=coordinates[0] - cell_relative_center,
+            y=coordinates[1] - cell_relative_center,
+        )
+    elif len(coordinates) == 3:
+        # A coordinate in the goal frame, only used for the end location of
+        # Shot events. The y-coordinates and z-coordinates are always detailed
+        # to a tenth of a yard.
+        return Point3D(
+            x=coordinates[0] - cell_relative_center,
+            y=coordinates[1] - 0.05,
+            z=coordinates[2] - 0.05,
+        )
+    else:
+        raise DeserializationError(
+            f"Unknown coordinates format: {coordinates}"
+        )
 
 
 def _get_body_part_qualifiers(
@@ -385,7 +399,7 @@ def _parse_pass(pass_dict: Dict, team: Team, fidelity_version: int) -> Dict:
     }
 
 
-def _parse_shot(shot_dict: Dict) -> Dict:
+def _parse_shot(shot_dict: Dict, fidelity_version: int) -> Dict:
     outcome_id = shot_dict["outcome"]["id"]
     if outcome_id == SB_SHOT_OUTCOME_OFF_TARGET:
         result = ShotResult.OFF_TARGET
@@ -412,7 +426,14 @@ def _parse_shot(shot_dict: Dict) -> Dict:
     body_part_qualifiers = _get_body_part_qualifiers(shot_dict)
     qualifiers.extend(body_part_qualifiers)
 
-    return {"result": result, "qualifiers": qualifiers}
+    return {
+        "result": result,
+        "qualifiers": qualifiers,
+        "result_coordinates": _parse_coordinates(
+            shot_dict["end_location"],
+            fidelity_version,
+        ),
+    }
 
 
 def _parse_freeze_frame(
@@ -903,6 +924,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                 elif event_type == SB_EVENT_TYPE_SHOT:
                     shot_event_kwargs = _parse_shot(
                         shot_dict=raw_event["shot"],
+                        fidelity_version=shot_fidelity_version,
                     )
                     shot_event = self.event_factory.build_shot(
                         **shot_event_kwargs,

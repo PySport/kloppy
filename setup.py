@@ -1,7 +1,7 @@
-import setuptools
 import builtins
 from distutils.core import setup
 
+import setuptools
 
 builtins.__KLOPPY_SETUP__ = True
 import kloppy
@@ -57,6 +57,7 @@ def setup_package():
                 # python 3.7. But the python 3.7 compatible version
                 # of Pandas (1.3) does not support pyarrow
                 'pyarrow==11.0.0;python_version>"3.7"',
+                "pytest-lazy-fixture",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

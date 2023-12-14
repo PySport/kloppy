@@ -532,10 +532,11 @@ def _get_end_coordinates(
             z = z_proj / adj_proj * adj_block
 
     # passed the goal line
-    elif 102 in raw_qualifiers and 103 in raw_qualifiers:
+    elif 102 in raw_qualifiers:
         x = float(100)
         y = float(raw_qualifiers[102])
-        z = float(raw_qualifiers[103])
+        if 103 in raw_qualifiers:
+            z = float(raw_qualifiers[103])
 
     if x is not None and y is not None and z is not None:
         return Point3D(x=x, y=y, z=z)

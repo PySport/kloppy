@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 from kloppy.domain import (
+    BodyPart,
+    BodyPartQualifier,
     Point,
     SetPieceType,
     SetPieceQualifier,
@@ -80,6 +82,10 @@ class TestWyscout:
         assert (
             dataset.events[43].get_qualifier_values(DuelQualifier)[1].value
             == DuelType.AERIAL
+        )
+        assert (
+            dataset.events[118].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
         )
         assert (
             dataset.events[268].get_qualifier_values(DuelQualifier)[2].value

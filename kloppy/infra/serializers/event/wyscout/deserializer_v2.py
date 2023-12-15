@@ -152,11 +152,24 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
 
 def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
     pass_result = None
-
     if _has_tag(raw_event, wyscout_tags.ACCURATE):
         pass_result = PassResult.COMPLETE
     elif _has_tag(raw_event, wyscout_tags.NOT_ACCURATE):
         pass_result = PassResult.INCOMPLETE
+
+    receiver_coordinates = None
+    if _has_tag(raw_event, wyscout_tags.BLOCKED):
+        # blocked passes do not have end coordinates; the start coordinates
+        # are used instead
+        receiver_coordinates = Point(
+            x=float(raw_event["positions"][0]["x"]),
+            y=float(raw_event["positions"][0]["y"]),
+        )
+    elif len(raw_event["positions"]) > 1:
+        receiver_coordinates = Point(
+            x=float(raw_event["positions"][1]["x"]),
+            y=float(raw_event["positions"][1]["y"]),
+        )
 
     if next_event:
         if next_event["eventId"] == wyscout_events.OFFSIDE.EVENT:
@@ -173,12 +186,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": None,
-        "receiver_coordinates": Point(
-            x=float(raw_event["positions"][1]["x"]),
-            y=float(raw_event["positions"][1]["y"]),
-        )
-        if len(raw_event["positions"]) > 1
-        else None,
+        "receiver_coordinates": receiver_coordinates,
     }
 
 

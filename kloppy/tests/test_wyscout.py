@@ -89,6 +89,7 @@ class TestWyscout:
             dataset.events[301].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
+        assert dataset.events[301].coordinates == Point(86.0, 73.0)
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")

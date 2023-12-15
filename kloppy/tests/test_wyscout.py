@@ -86,7 +86,7 @@ class TestWyscout:
             == DuelType.SLIDING_TACKLE
         )
         assert (
-            dataset.events[301].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[302].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
 

@@ -555,14 +555,14 @@ class Event(DataRecord, ABC):
 
         Examples:
             >>> from kloppy.domain import SetPieceQualifier
-            >>> pass_event.get_qualifier_value(SetPieceQualifier)
-            <SetPieceType.GOAL_KICK: 'GOAL_KICK'>
+            >>> pass_event.get_qualifier_values(SetPieceQualifier)
+            [<SetPieceType.GOAL_KICK: 'GOAL_KICK'>]
         """
         qualifiers = []
         if self.qualifiers:
             for qualifier in self.qualifiers:
                 if isinstance(qualifier, qualifier_type):
-                    qualifiers.append(qualifier)
+                    qualifiers.append(qualifier.value)
 
         return qualifiers
 

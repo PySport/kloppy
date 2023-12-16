@@ -163,11 +163,9 @@ class TestOpta:
         )  # 2318695229
 
         # Check DuelQualifiers
-        assert DuelQualifier(value=DuelType.AERIAL) in dataset.events[
-            7
-        ].get_qualifier_values(DuelQualifier)
+        assert DuelType.AERIAL in dataset.events[7].get_qualifier_values(DuelQualifier)
         assert (
-            dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[8].get_qualifier_values(DuelQualifier)[1]
             == DuelType.GROUND
         )
 

@@ -47,11 +47,11 @@ class TestWyscout:
             == DuelType.GROUND
         )
         assert (
-            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1]
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[8].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[8].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
         assert dataset.events[9].event_type == EventType.CLEARANCE
@@ -78,11 +78,11 @@ class TestWyscout:
             == DuelType.GROUND
         )
         assert (
-            dataset.events[43].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[43].get_qualifier_values(DuelQualifier)[1]
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[268].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[268].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
         assert (

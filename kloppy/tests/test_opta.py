@@ -184,7 +184,7 @@ class TestOpta:
             event_types=["shot"],
             coordinates="opta",
         )
-        assert len(dataset.events) == 2
+        assert len(dataset.events) == 3
 
         shot = dataset.get_event_by_id("2318695229")
         # A shot event should have a result

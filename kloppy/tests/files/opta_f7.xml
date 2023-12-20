@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?><SoccerFeed>
   <SoccerDocument>
     <MatchData>
+      <MatchInfo MatchType="Regular" Period="FullTime" PostMatch="1" TimeFrameLengthId="1" TimeStamp="20180923T165537+0100">
+        <Attendance>4811</Attendance>
+        <Date>20180923T150000+0100</Date>
+        <Result Type="PenaltyShootout" Winner="t569" />
+      </MatchInfo>
       <Stat Type="match_time">96</Stat>
       <Stat Type="first_half_start">20180923T150213+0100</Stat>
       <Stat Type="first_half_time">47</Stat>

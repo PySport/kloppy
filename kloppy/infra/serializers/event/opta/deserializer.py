@@ -263,6 +263,58 @@ def _parse_f24_datetime(dt_str: str) -> float:
     )
 
 
+def _create_periods(match_result_type: str) -> List[Period]:
+    periods = [
+        Period(
+            id=1,
+            start_timestamp=None,
+            end_timestamp=None,
+        ),
+        Period(
+            id=2,
+            start_timestamp=None,
+            end_timestamp=None,
+        ),
+    ]
+    if match_result_type == "AfterExtraTime":
+        periods.extend(
+            [
+                Period(
+                    id=3,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+                Period(
+                    id=4,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+            ]
+        )
+    elif match_result_type == "PenaltyShootout":
+        periods.extend(
+            [
+                Period(
+                    id=3,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+                Period(
+                    id=4,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+                Period(
+                    id=5,
+                    start_timestamp=None,
+                    end_timestamp=None,
+                ),
+            ]
+        )
+
+    return periods
+
+
 def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     if outcome:
         result = PassResult.COMPLETE
@@ -666,6 +718,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             matchdata_path = objectify.ObjectPath(
                 "SoccerFeed.SoccerDocument.MatchData"
             )
+            match_result_path = objectify.ObjectPath(
+                "SoccerFeed.SoccerDocument.MatchData.MatchInfo.Result"
+            )
             team_elms = list(
                 matchdata_path.find(f7_root).iterchildren("TeamData")
             )
@@ -685,23 +740,16 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
+            match_result_type = list(match_result_path.find(f7_root))[
+                0
+            ].attrib["Type"]
+            periods = _create_periods(match_result_type)
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
                 raise DeserializationError("LineUp incomplete")
 
             game_elm = f24_root.find("Game")
-            periods = [
-                Period(
-                    id=1,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=2,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-            ]
+
             possession_team = None
             events = []
             events_list = [

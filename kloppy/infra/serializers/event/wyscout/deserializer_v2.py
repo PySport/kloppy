@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Tuple, NamedTuple, IO
+from typing import Dict, List, NamedTuple, IO
 
 from kloppy.domain import (
     BodyPart,
@@ -8,7 +8,6 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     CounterAttackQualifier,
-    Dimension,
     DuelResult,
     DuelQualifier,
     DuelType,
@@ -31,7 +30,6 @@ from kloppy.domain import (
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
-    TakeOnResult,
     Team,
 )
 from kloppy.utils import performance_logging
@@ -422,7 +420,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     )
 
                 generic_event_args = {
-                    "event_id": raw_event["id"],
+                    "event_id": str(raw_event["id"]),
                     "raw_event": raw_event,
                     "coordinates": Point(
                         x=float(raw_event["positions"][0]["x"]),
@@ -461,8 +459,15 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         (_has_tag(raw_event, tag) for tag in wyscout_tags.CARD)
                     ):
                         card_event_args = _parse_card(raw_event)
+                        card_event_id = (
+                            f"card-{generic_event_args['event_id']}"
+                        )
                         card_event = self.event_factory.build_card(
-                            **card_event_args, **generic_event_args
+                            **card_event_args,
+                            **{
+                                **generic_event_args,
+                                "event_id": card_event_id,
+                            },
                         )
                         new_events.append(card_event)
                 elif raw_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
@@ -559,34 +564,48 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     interception_event_args = _parse_interception(
                         raw_event, next_event
                     )
-                    interception_event = self.event_factory.build_interception(
-                        **interception_event_args,
-                        **generic_event_args,
-                    )
 
                     for i, new_event in enumerate(list(new_events)):
                         if new_event.event_type == EventType.DUEL:
                             # when DuelEvent is interception, we need to
                             # overwrite this and the previous DuelEvent
                             events = events[:-1]
-                            new_events[i] = interception_event
+                            new_events[
+                                i
+                            ] = self.event_factory.build_interception(
+                                **interception_event_args,
+                                **generic_event_args,
+                            )
                         elif new_event.event_type in [
                             EventType.RECOVERY,
                             EventType.MISCONTROL,
                         ]:
                             # replace touch events
-                            new_events[i] = interception_event
+                            new_events[
+                                i
+                            ] = self.event_factory.build_interception(
+                                **interception_event_args,
+                                **generic_event_args,
+                            )
                         elif new_event.event_type in [
                             EventType.PASS,
                             EventType.CLEARANCE,
                         ]:
                             # insert an interception event before interception passes
+                            generic_event_args[
+                                "event_id"
+                            ] = f"interception-{generic_event_args['event_id']}"
+                            interception_event = (
+                                self.event_factory.build_interception(
+                                    **interception_event_args,
+                                    **generic_event_args,
+                                )
+                            )
                             new_events.insert(i, interception_event)
 
                 for new_event in new_events:
                     if self.should_include_event(new_event):
                         events.append(transformer.transform_event(new_event))
-                new_events = []
 
         metadata = Metadata(
             teams=[home_team, away_team],

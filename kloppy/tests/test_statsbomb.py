@@ -88,9 +88,9 @@ def test_get_enum_type():
     # retrieve by id + name dict
     assert SB.EVENT_TYPE({"id": 30, "name": "pass"}) == SB.EVENT_TYPE.PASS
     with pytest.raises(
-        DeserializationError, match="Unknown StatsBomb Event Type: 0/unkown"
+        DeserializationError, match="Unknown StatsBomb Event Type: 0/unknown"
     ):
-        SB.EVENT_TYPE({"id": 0, "name": "unkown"})
+        SB.EVENT_TYPE({"id": 0, "name": "unknown"})
     # the exception message should contain the fully qualified name of the enum
     with pytest.raises(
         DeserializationError,

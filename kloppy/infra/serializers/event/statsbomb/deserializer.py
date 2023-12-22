@@ -66,7 +66,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Create events
         with performance_logging("parse events", logger=logger):
             events = []
-            for _, raw_event in raw_events.items():
+            for raw_event in raw_events.values():
                 new_events = (
                     raw_event.set_version(data_version)
                     .set_refs(periods, teams, raw_events)
@@ -133,9 +133,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                 # find out if x and y are integers disguised as floats
                 if not (x.is_integer() and y.is_integer()):
                     event_type = SB.EVENT_TYPE(event["type"])
-                    if event_type in [
-                        SB.EVENT_TYPE.SHOT,
-                    ]:
+                    if event_type in (SB.EVENT_TYPE.SHOT,):
                         shot_fidelity_version = 2
                     elif event_type in (
                         SB.EVENT_TYPE.CARRY,
@@ -220,7 +218,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def create_periods(self, raw_events):
         half_start_and_end_events = [
             event.raw_event
-            for _, event in raw_events.items()
+            for event in raw_events.values()
             if SB.EVENT_TYPE(event.raw_event["type"])
             in [
                 SB.EVENT_TYPE.HALF_START,

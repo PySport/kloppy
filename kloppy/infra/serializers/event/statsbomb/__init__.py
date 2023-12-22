@@ -1,2 +1,2 @@
-"""Convert StatsBomb event stream data to a Kloppy EventDataset."""
+"""Convert StatsBomb event stream data to a kloppy EventDataset."""
 from .deserializer import StatsBombDeserializer, StatsBombInputs

@@ -42,16 +42,16 @@ def parse_coordinates(
 ) -> Point:
     """Parse coordinates into a kloppy Point.
 
-    Coordinates are cell-based, so 1,1 (high-granularity) or 0.1,0.1
+    Coordinates are cell-based, so 1,1 (low-granularity) or 0.1,0.1
     (high-granularity) is the top-left square 'yard' of the field (in
     landscape), even though 0,0 is the true coordinate of the corner flag.
 
     [1, 120] x [1, 80]
-    +-----+------+
-    | 1,1 | 2, 1 |
-    +-----+------+
-    | 1,2 | 2,2  |
-    +-----+------+
+    +-----+-----+
+    | 1,1 | 2,1 |
+    +-----+-----+
+    | 1,2 | 2,2 |
+    +-----+-----+
     """
     cell_side = 0.1 if fidelity_version == 2 else 1.0
     cell_relative_center = cell_side / 2
@@ -86,7 +86,7 @@ def parse_freeze_frame(
     """Parse a freeze frame into a kloppy Frame."""
     players_data = {}
 
-    def get_player_from_freeze_frame(player_data, team):
+    def get_player_from_freeze_frame(player_data, team, i):
         if "player" in player_data:
             return team.get_player_by_id(player_data["player"]["id"])
         elif player_data.get("actor"):
@@ -107,7 +107,7 @@ def parse_freeze_frame(
         freeze_frame_team = home_team if is_teammate else away_team
 
         player = get_player_from_freeze_frame(
-            freeze_frame_player, freeze_frame_team
+            freeze_frame_player, freeze_frame_team, i
         )
 
         players_data[player] = PlayerData(

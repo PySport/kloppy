@@ -37,7 +37,7 @@ from kloppy.infra.serializers.event.statsbomb.helpers import (
 class Version(NamedTuple):
     """StatsBomb data version.
 
-    StatsBomb mantains two levels of accuracy for coordinates in their data.
+    StatsBomb maintains two levels of accuracy for coordinates in their data.
     This level can differ between Shot events and all other events.
 
 
@@ -344,7 +344,7 @@ class PASS(EVENT):
 
     class TECHNIQUE(Enum, metaclass=TypesEnumMeta):
         THROUGH_BALL = 108
-        INSWSINGING = 104
+        INSWINGING = 104
         OUTSWINGING = 105
         STRAIGHT = 107
 

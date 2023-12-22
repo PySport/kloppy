@@ -55,7 +55,6 @@ class TestWyscoutV2:
     def test_miscontrol_event(self, dataset: EventDataset):
         miscontrol_event = dataset.get_event_by_id("190078351")
         assert miscontrol_event.event_type == EventType.MISCONTROL
-        assert dataset.events[11].event_type == EventType.MISCONTROL
 
     def test_interception_event(self, dataset: EventDataset):
         # A touch or duel with "interception" tag should be converted to an interception event

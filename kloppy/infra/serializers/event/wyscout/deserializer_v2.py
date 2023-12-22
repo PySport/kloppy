@@ -556,8 +556,8 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     )
                     new_events.append(generic_event)
 
-                # Wyscout v2 does not have a seperate event type for
-                # interceptions. Interceptions are recored by adding a tag to
+                # Wyscout v2 does not have a separate event type for
+                # interceptions. Interceptions are recorded by adding a tag to
                 # the next pass, touch or duel. Therefore, we convert events
                 # with this tag to an interception.
                 if _has_tag(raw_event, wyscout_tags.INTERCEPTION):

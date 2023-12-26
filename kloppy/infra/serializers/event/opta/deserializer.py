@@ -1,3 +1,4 @@
+import math
 from typing import Tuple, Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime
@@ -355,7 +356,9 @@ def _parse_shot(
         result = None
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
-    result_coordinates = _get_end_coordinates(raw_qualifiers)
+    result_coordinates = _get_end_coordinates(
+        raw_qualifiers, start_coordinates=coordinates
+    )
     if result == ShotResult.OWN_GOAL:
         if isinstance(result_coordinates, Point3D):
             result_coordinates = Point3D(
@@ -502,28 +505,44 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     return team
 
 
-def _get_end_coordinates(raw_qualifiers: Dict[int, str]) -> Optional[Point]:
+def _get_end_coordinates(
+    raw_qualifiers: Dict[int, str], start_coordinates: Optional[Point] = None
+) -> Optional[Point]:
     x, y, z = None, None, None
+
     # pass
-    if 140 in raw_qualifiers:
+    if 140 in raw_qualifiers and 141 in raw_qualifiers:
         x = float(raw_qualifiers[140])
-    if 141 in raw_qualifiers:
         y = float(raw_qualifiers[141])
+
     # blocked shot
-    if 146 in raw_qualifiers:
+    elif 146 in raw_qualifiers and 147 in raw_qualifiers:
         x = float(raw_qualifiers[146])
-    if 147 in raw_qualifiers:
         y = float(raw_qualifiers[147])
+        if 102 in raw_qualifiers and 103 in raw_qualifiers:
+            # the goal mouth z-coordinate is projected back to the location
+            # where the shot was blocked
+            assert start_coordinates is not None
+            x0, y0 = start_coordinates.x, start_coordinates.y
+            x_proj = float(100)
+            y_proj = float(raw_qualifiers[102])
+            z_proj = float(raw_qualifiers[103])
+            adj_proj = math.sqrt((x_proj - x0) ** 2 + (y_proj - y0) ** 2)
+            adj_block = math.sqrt((x - x0) ** 2 + (y - y0) ** 2)
+            z = z_proj / adj_proj * adj_block
+
     # passed the goal line
-    if 102 in raw_qualifiers:
+    elif 102 in raw_qualifiers:
         x = float(100)
         y = float(raw_qualifiers[102])
-    if 103 in raw_qualifiers:
-        z = float(raw_qualifiers[103])
+        if 103 in raw_qualifiers:
+            z = float(raw_qualifiers[103])
+
     if x is not None and y is not None and z is not None:
         return Point3D(x=x, y=y, z=z)
     if x is not None and y is not None:
         return Point(x=x, y=y)
+
     return None
 
 

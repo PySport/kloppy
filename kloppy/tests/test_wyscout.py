@@ -49,16 +49,20 @@ class TestWyscout:
             == DuelType.GROUND
         )
         assert (
-            dataset.events[7].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[7].get_qualifier_values(DuelQualifier)[1]
             == DuelType.AERIAL
         )
         assert (
-            dataset.events[8].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[8].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
         assert dataset.events[9].event_type == EventType.CLEARANCE
         assert dataset.events[12].event_type == EventType.INTERCEPTION
-        assert dataset.events[14].event_type == EventType.TAKE_ON
+        assert (
+            dataset.events[13].event_type == EventType.FORMATION_CHANGE
+            and dataset.events[14].event_type == EventType.FORMATION_CHANGE
+        )
+        assert dataset.events[18].event_type == EventType.TAKE_ON
 
     def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
@@ -80,7 +84,7 @@ class TestWyscout:
             == DuelType.GROUND
         )
         assert (
-            dataset.events[43].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[43].get_qualifier_values(DuelQualifier)[1]
             == DuelType.AERIAL
         )
         assert (
@@ -88,13 +92,14 @@ class TestWyscout:
             == BodyPart.RIGHT_FOOT
         )
         assert (
-            dataset.events[268].get_qualifier_values(DuelQualifier)[2].value
+            dataset.events[268].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
         assert (
             dataset.events[301].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
+        assert dataset.events[301].coordinates == Point(86.0, 73.0)
 
     def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")

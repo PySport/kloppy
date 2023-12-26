@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from kloppy.domain import (
@@ -21,6 +23,7 @@ from kloppy.domain import (
     SetPieceQualifier,
     CounterAttackQualifier,
     BodyPartQualifier,
+    Point,
     Point3D,
 )
 
@@ -31,6 +34,9 @@ from kloppy.domain.models.event import (
 )
 
 from kloppy import opta
+from kloppy.infra.serializers.event.opta.deserializer import (
+    _get_end_coordinates,
+)
 
 
 class TestOpta:
@@ -163,11 +169,11 @@ class TestOpta:
         )  # 2318695229
 
         # Check DuelQualifiers
-        assert DuelQualifier(value=DuelType.AERIAL) in dataset.events[
-            7
-        ].get_qualifier_values(DuelQualifier)
+        assert DuelType.AERIAL in dataset.events[7].get_qualifier_values(
+            DuelQualifier
+        )
         assert (
-            dataset.events[8].get_qualifier_values(DuelQualifier)[1].value
+            dataset.events[8].get_qualifier_values(DuelQualifier)[1]
             == DuelType.GROUND
         )
 
@@ -189,6 +195,80 @@ class TestOpta:
         assert (
             shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
         )
+
+    def test_shot_end_coordinates(self):
+        """Shots should receive the correct end coordinates."""
+        # When no end coordinates are available, we return None
+        assert _get_end_coordinates({}) is None
+
+        # When a shot was not blocked, the goalmouth coordinates should be used.
+        # The y- and z-coordinate are specified by qualifiers; the
+        # x-coordinate is 100.0 (i.e., the goal line)
+        shot_on_target_qualifiers = {
+            102: "52.1",  # goal mouth y-coordinate
+            103: "18.4",  # goal mouth z-coordinate
+        }
+        assert _get_end_coordinates(shot_on_target_qualifiers) == Point3D(
+            x=100.0, y=52.1, z=18.4
+        )
+
+        # When the z-coordinate is missing, we return 2D coordinates
+        incomplete_shot_qualifiers = {
+            102: "52.1",  # goal mouth y-coordinate
+        }
+        assert _get_end_coordinates(incomplete_shot_qualifiers) == Point(
+            x=100, y=52.1
+        )
+
+        # When the y-coordinate is missing, we return None
+        incomplete_shot_qualifiers = {
+            103: "18.4",  # goal mouth z-coordinate
+        }
+        assert _get_end_coordinates(incomplete_shot_qualifiers) is None
+
+        # When a shot is blocked, the end coordinates should correspond to the
+        # location where the shot was blocked.
+        blocked_shot_qualifiers = {
+            146: "99.1",  # blocked x-coordiante
+            147: "52.5",  # blocked y-coordinate
+        }
+        assert _get_end_coordinates(blocked_shot_qualifiers) == Point(
+            x=99.1, y=52.5
+        )
+
+        # When a shot was blocked and goal mouth locations are provided too,
+        # the z-coordinate of the goal mouth coordinates should be inversely
+        # projected on the location where the shot was blocked
+        blocked_shot_on_target_qualifiers = {
+            **shot_on_target_qualifiers,
+            **blocked_shot_qualifiers,
+        }
+        start_coordinates = Point(x=92.6, y=57.9)
+        # This requires some trigonometry. We can define two
+        # right-angle triangles:
+        #   - a large triangle between the start coordinates and goal mouth
+        #     coordinates.
+        #   - an enclosed smaller triangle between the start coordinates and
+        #     the location where the shot was blocked.
+        # We need to compute the length of the opposite side of the small
+        # triangle. Therefore, we compute:
+        #   - the length of the adjacent side of the large triangle
+        adj_large = math.sqrt(
+            (100 - start_coordinates.x) ** 2
+            + (52.1 - start_coordinates.y) ** 2
+        )
+        #   - the length of the adjacent side of the small triangle
+        adj_small = math.sqrt(
+            (99.1 - start_coordinates.x) ** 2
+            + (52.5 - start_coordinates.y) ** 2
+        )
+        #   - the angle of the large triangle (== the angle of the small triangle)
+        alpha_large = math.atan2(18.4, adj_large)
+        #  - the opposite side of the small triangle
+        opp_small = math.tan(alpha_large) * adj_small
+        assert _get_end_coordinates(
+            blocked_shot_on_target_qualifiers, start_coordinates
+        ) == Point3D(x=99.1, y=52.5, z=opp_small)
 
     def test_own_goal(self, f7_data: str, f24_data: str):
         dataset = opta.load(

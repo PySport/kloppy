@@ -725,7 +725,7 @@ class TestStatsBombClearanceEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all clearance events"""
         events = dataset.find_all("clearance")
-        assert len(events) == 35
+        assert len(events) == 35 + 1  # clearances + keeper sweeper
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of clearances"""
@@ -867,10 +867,8 @@ class TestStatsBombDuelEvent:
 class TestStatsBombGoalkeeperEvent:
     """Tests related to deserializing 30/Goalkeeper events"""
 
-    @pytest.mark.xfail
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all goalkeeper events"""
-        # TODO: not yet fully implemented, see #225
         events = dataset.find_all("goalkeeper")
         assert (
             len(events) == 32 - 24 - 1 - 1
@@ -901,10 +899,8 @@ class TestStatsBombGoalkeeperEvent:
         """It should deserialize goalkeeper smothers"""
         assert True  # no example in the dataset
 
-    @pytest.mark.xfail
     def test_collected(self, dataset: EventDataset):
         """It should deserialize goalkeeper collections"""
-        # TODO: not yet implemented, see #225
         collected = dataset.get_event_by_id(
             "5156545b-7add-4b6a-a8e4-c68672267464"
         )
@@ -912,18 +908,16 @@ class TestStatsBombGoalkeeperEvent:
             GoalkeeperActionType.CLAIM
         )
 
-    @pytest.mark.xfail
     def test_keeper_sweeper(self, dataset: EventDataset):
         """It should deserialize keeper sweeper actions"""
-        # TODO: not yet implemented, see #225
         # keeper sweeper with outcome 'clear' should be deserialized as
-        # as a clearance event
+        # as a clearance event if the keeper uses his feet or head
         sweeper_clear = dataset.get_event_by_id(
             "6c84a193-d45b-4d6e-97bc-3f07af9001db"
         )
         assert sweeper_clear.event_type == EventType.CLEARANCE
         # keeper sweeper with outcome 'claim' should be deserialized as
-        # a goalkeeper pick-up event
+        # a goalkeeper pick-up event if the keeper uses his hands
         sweeper_claim = dataset.get_event_by_id(
             "460f558e-c951-4262-b467-e078ea1faefc"
         )

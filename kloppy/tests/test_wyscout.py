@@ -168,9 +168,7 @@ class TestWyscoutV3:
         sliding_tackle_duel_event = dataset.get_event_by_id(663291842)
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
         assert (
-            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[
-                2
-            ]
+            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
 

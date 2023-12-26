@@ -29,11 +29,11 @@ class TestStateBuilder:
             events_per_score[str(score)] = len(events)
 
         assert events_per_score == {
-            "0-0": 2914,
-            "1-0": 718,
+            "0-0": 2928,
+            "1-0": 719,
             "2-0": 405,
             "3-0": 7,
-            "3-1": 4,
+            "3-1": 2,
         }
 
     def test_sequence_state_builder(self, base_dir):
@@ -51,7 +51,7 @@ class TestStateBuilder:
             events_per_sequence[sequence_id] = len(events)
 
         assert events_per_sequence[0] == 4
-        assert events_per_sequence[51] == 14
+        assert events_per_sequence[51] == 6
 
     def test_lineup_state_builder(self, base_dir):
         dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")
@@ -93,8 +93,8 @@ class TestStateBuilder:
             events_per_formation_change[str(formation)] = len(events)
 
         # inspect FormationChangeEvent usage and formation state_builder
-        assert events_per_formation_change["4-1-4-1"] == 3090
-        assert events_per_formation_change["4-4-2"] == 958
+        assert events_per_formation_change["4-1-4-1"] == 3104
+        assert events_per_formation_change["4-4-2"] == 957
 
         assert dataset.metadata.teams[0].starting_formation == FormationType(
             "4-4-2"

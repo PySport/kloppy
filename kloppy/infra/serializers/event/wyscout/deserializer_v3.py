@@ -40,7 +40,9 @@ from kloppy.domain import (
     TakeOnEvent,
     TakeOnResult,
     Team,
+    FormationType,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
@@ -51,6 +53,29 @@ logger = logging.getLogger(__name__)
 
 
 INVALID_PLAYER = "0"
+
+formations = {
+    "4-4-2": FormationType.FOUR_FOUR_TWO,
+    "4-4-1-1": FormationType.FOUR_FOUR_ONE_ONE,
+    "4-3-2-1": FormationType.FOUR_THREE_TWO_ONE,
+    "4-2-3-1": FormationType.FOUR_TWO_THREE_ONE,
+    "4-1-4-1": FormationType.FOUR_ONE_FOUR_ONE,
+    "4-1-3-2": FormationType.FOUR_ONE_THREE_TWO,
+    "4-3-1-2": FormationType.FOUR_THREE_ONE_TWO,
+    "4-3-3": FormationType.FOUR_THREE_THREE,
+    "4-5-1": FormationType.FOUR_FIVE_ONE,
+    "4-2-2-2": FormationType.FOUR_TWO_TWO_TWO,
+    "4-2-1-3": FormationType.FOUR_TWO_ONE_THREE,
+    "3-4-3": FormationType.THREE_FOUR_THREE,
+    "3-4-1-2": FormationType.THREE_FOUR_ONE_TWO,
+    "3-4-2-1": FormationType.THREE_FOUR_TWO_ONE,
+    "3-5-2": FormationType.THREE_FIVE_TWO,
+    "3-5-1-1": FormationType.THREE_FIVE_ONE_ONE,
+    "5-3-2": FormationType.FIVE_THREE_TWO,
+    "5-4-1": FormationType.FIVE_FOUR_ONE,
+    "3-3-3-1": FormationType.THREE_THREE_THREE_ONE,
+    "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
+}
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -385,6 +410,50 @@ def _parse_duel(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
+def get_home_away_team_formation(event, team):
+    if team.ground == Ground.HOME:
+        current_home_team_formation = formations[event["team"]["formation"]]
+        current_away_team_formation = formations[
+            event["opponentTeam"]["formation"]
+        ]
+    elif team.ground == Ground.AWAY:
+        current_away_team_formation = formations[event["team"]["formation"]]
+        current_home_team_formation = formations[
+            event["opponentTeam"]["formation"]
+        ]
+    else:
+        raise DeserializationError(f"Unknown team_id {team.team_id}")
+
+    return current_home_team_formation, current_away_team_formation
+
+
+def identify_synthetic_formation_change_event(
+    raw_event, raw_next_event, teams, home_team, away_team
+):
+    current_event_team = teams[str(raw_event["team"]["id"])]
+    next_event_team = teams[str(raw_next_event["team"]["id"])]
+    event_formation_change_info = {}
+    (
+        current_home_team_formation,
+        current_away_team_formation,
+    ) = get_home_away_team_formation(raw_event, current_event_team)
+    (
+        next_home_team_formation,
+        next_away_team_formation,
+    ) = get_home_away_team_formation(raw_next_event, next_event_team)
+    if next_home_team_formation != current_home_team_formation:
+        event_formation_change_info[home_team] = {
+            "formation_type": next_home_team_formation
+        }
+
+    if next_away_team_formation != current_away_team_formation:
+        event_formation_change_info[away_team] = {
+            "formation_type": next_away_team_formation
+        }
+
+    return event_formation_change_info
+
+
 def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
@@ -575,11 +644,39 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         result=None,
                         qualifiers=_generic_qualifiers(raw_event),
                         event_name=raw_event["type"]["primary"],
-                        **generic_event_args
+                        **generic_event_args,
                     )
 
                 if event and self.should_include_event(event):
                     events.append(transformer.transform_event(event))
+
+                if next_event:
+                    event_formation_change_info = (
+                        identify_synthetic_formation_change_event(
+                            raw_event, next_event, teams, home_team, away_team
+                        )
+                    )
+                    for (
+                        formation_change_team,
+                        formation_change_event_kwargs,
+                    ) in event_formation_change_info.items():
+                        generic_event_args.update(
+                            {
+                                "event_id": f"synthetic-{raw_event['id']}",
+                                "raw_event": None,
+                                "coordinates": None,
+                                "player": None,
+                                "team": formation_change_team,
+                            }
+                        )
+                        event = self.event_factory.build_formation_change(
+                            result=None,
+                            qualifiers=None,
+                            **formation_change_event_kwargs,
+                            **generic_event_args,
+                        )
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=[home_team, away_team],

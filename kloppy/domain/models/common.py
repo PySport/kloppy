@@ -840,12 +840,12 @@ class Metadata:
     teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
-    score: Score
-    frame_rate: float
     orientation: Orientation
     flags: DatasetFlag
     provider: Provider
     coordinate_system: CoordinateSystem
+    score: Optional[Score] = None
+    frame_rate: Optional[float] = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
 

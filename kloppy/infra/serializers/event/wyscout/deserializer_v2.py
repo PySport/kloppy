@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, NamedTuple, IO
+from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BodyPart,
@@ -80,6 +80,81 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
+def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags.
+
+    Wyscout does not provide end-coordinates of shots. Instead shots on goal
+    are tagged with a zone. This function maps each of these zones to
+    a coordinate. The zones and corresponding y-coordinate are depicted below.
+
+
+        ohl      | ohc |      ohr
+     --------------------------------
+          ||=================||
+     -------------------------------
+          || ghl | ghc | ghr ||
+     --------------------------------
+      ocl || gcl | gc  | gcr || ocr
+     --------------------------------
+      oll || gll | glc | glr || olr
+
+      40     45    50    55     60    (y-coordinate of zone)
+        44.62               55.38     (y-coordiante of post)
+    """
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_CENTER)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_CENTER)
+    ):
+        return Point(100.0, 50.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_RIGHT)
+    ):
+        return Point(100.0, 55.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.GOAL_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_LEFT)
+    ):
+        return Point(100.0, 45.0)
+    if _has_tag(raw_event, wyscout_tags.OUT_HIGH_CENTER) or _has_tag(
+        raw_event, wyscout_tags.POST_HIGH_CENTER
+    ):
+        return Point(100.0, 50.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.OUT_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.OUT_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.OUT_HIGH_RIGHT)
+    ):
+        return Point(100.0, 60.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.OUT_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.OUT_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.OUT_HIGH_LEFT)
+    ):
+        return Point(100.0, 40.0)
+    if (
+        _has_tag(raw_event, wyscout_tags.POST_LOW_LEFT)
+        or _has_tag(raw_event, wyscout_tags.POST_CENTER_LEFT)
+        or _has_tag(raw_event, wyscout_tags.POST_HIGH_LEFT)
+    ):
+        return Point(100.0, 55.38)
+    if (
+        _has_tag(raw_event, wyscout_tags.POST_LOW_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.POST_CENTER_RIGHT)
+        or _has_tag(raw_event, wyscout_tags.POST_HIGH_RIGHT)
+    ):
+        return Point(100.0, 44.62)
+    if _has_tag(raw_event, wyscout_tags.BLOCKED):
+        return Point(
+            x=float(raw_event["positions"][0]["x"]),
+            y=float(raw_event["positions"][0]["y"]),
+        )
+    return None
+
+
 def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
     result = None
     qualifiers = _generic_qualifiers(raw_event)
@@ -106,12 +181,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
 
     return {
         "result": result,
-        "result_coordinates": Point(
-            x=float(raw_event["positions"][1]["x"]),
-            y=float(raw_event["positions"][1]["y"]),
-        )
-        if len(raw_event["positions"]) > 1
-        else None,
+        "result_coordinates": _create_shot_result_coordinates(raw_event),
         "qualifiers": qualifiers,
     }
 
@@ -152,11 +222,24 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
 
 def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
     pass_result = None
-
     if _has_tag(raw_event, wyscout_tags.ACCURATE):
         pass_result = PassResult.COMPLETE
     elif _has_tag(raw_event, wyscout_tags.NOT_ACCURATE):
         pass_result = PassResult.INCOMPLETE
+
+    receiver_coordinates = None
+    if _has_tag(raw_event, wyscout_tags.BLOCKED):
+        # blocked passes do not have end coordinates; the start coordinates
+        # are used instead
+        receiver_coordinates = Point(
+            x=float(raw_event["positions"][0]["x"]),
+            y=float(raw_event["positions"][0]["y"]),
+        )
+    elif len(raw_event["positions"]) > 1:
+        receiver_coordinates = Point(
+            x=float(raw_event["positions"][1]["x"]),
+            y=float(raw_event["positions"][1]["y"]),
+        )
 
     if next_event:
         if next_event["eventId"] == wyscout_events.OFFSIDE.EVENT:
@@ -173,12 +256,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": None,
-        "receiver_coordinates": Point(
-            x=float(raw_event["positions"][1]["x"]),
-            y=float(raw_event["positions"][1]["y"]),
-        )
-        if len(raw_event["positions"]) > 1
-        else None,
+        "receiver_coordinates": receiver_coordinates,
     }
 
 
@@ -203,7 +281,15 @@ def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
             GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
         )
     qualifiers.extend(goalkeeper_qualifiers)
-    return {"result": None, "qualifiers": qualifiers}
+    return {
+        "result": None,
+        "qualifiers": qualifiers,
+        # start coordinates are stored as inverted end coordinates
+        "coordinates": Point(
+            x=100.0 - float(raw_event["positions"][1]["x"]),
+            y=100.0 - float(raw_event["positions"][1]["y"]),
+        ),
+    }
 
 
 def _parse_foul(raw_event: Dict) -> Dict:
@@ -480,7 +566,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
                     goalkeeper_save_event = (
                         self.event_factory.build_goalkeeper_event(
-                            **goalkeeper_save_args, **generic_event_args
+                            **{**goalkeeper_save_args, **generic_event_args}
                         )
                     )
                     new_events.append(goalkeeper_save_event)

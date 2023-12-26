@@ -281,7 +281,15 @@ def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
             GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
         )
     qualifiers.extend(goalkeeper_qualifiers)
-    return {"result": None, "qualifiers": qualifiers}
+    return {
+        "result": None,
+        "qualifiers": qualifiers,
+        # start coordinates are stored as inverted end coordinates
+        "coordinates": Point(
+            x=100.0 - float(raw_event["positions"][1]["x"]),
+            y=100.0 - float(raw_event["positions"][1]["y"]),
+        ),
+    }
 
 
 def _parse_foul(raw_event: Dict) -> Dict:
@@ -537,7 +545,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 elif raw_event["eventId"] == wyscout_events.SAVE.EVENT:
                     goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
                     event = self.event_factory.build_goalkeeper_event(
-                        **goalkeeper_save_args, **generic_event_args
+                        **{**generic_event_args, **goalkeeper_save_args}
                     )
                 elif raw_event["eventId"] == wyscout_events.FREE_KICK.EVENT:
                     set_piece_event_args = _parse_set_piece(

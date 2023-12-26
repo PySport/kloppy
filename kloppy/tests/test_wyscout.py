@@ -76,15 +76,13 @@ class TestWyscoutV2:
         aerial_duel_event = dataset.get_event_by_id("190078381")
         assert aerial_duel_event.event_type == EventType.DUEL
         assert (
-            aerial_duel_event.get_qualifier_values(DuelQualifier)[1].value
+            aerial_duel_event.get_qualifier_values(DuelQualifier)[1]
             == DuelType.AERIAL
         )
         sliding_tackle_duel_event = dataset.get_event_by_id("190079260")
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
         assert (
-            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[
-                2
-            ].value
+            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
 

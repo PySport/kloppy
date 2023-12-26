@@ -1,31 +1,22 @@
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Dict, List, NamedTuple, IO, Optional
 import logging
 import json
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Point,
     BallState,
-    Provider,
-    PassEvent,
-    ShotEvent,
-    TakeOnEvent,
-    CarryEvent,
-    RecoveryEvent,
-    FoulCommittedEvent,
-    BallOutEvent,
-    GenericEvent,
-    PassResult,
-    ShotResult,
-    TakeOnResult,
-    CarryResult,
-    EventType,
-    SetPieceType,
-    SetPieceQualifier,
     BodyPart,
     BodyPartQualifier,
+    CarryResult,
+    EventDataset,
+    PassResult,
+    Point,
+    Provider,
     Qualifier,
+    SetPieceQualifier,
+    SetPieceType,
+    ShotResult,
+    TakeOnResult,
+    Team,
 )
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 
@@ -93,10 +84,10 @@ MS_EVENT_TYPE_CARD = 8
 OUT_EVENT_RESULTS = [PassResult.OUT]
 
 
-def _parse_coordinates(event_start_or_end: dict) -> Point:
+def _parse_coordinates(event_start_or_end: dict) -> Optional[Point]:
     x = event_start_or_end["x"]
     y = event_start_or_end["y"]
-    if x is None:
+    if x is None or y is None:
         return None
 
     return Point(
@@ -106,13 +97,11 @@ def _parse_coordinates(event_start_or_end: dict) -> Point:
 
 
 def _parse_subtypes(event: dict) -> List:
-    if event["subtypes"]:
-        if isinstance(event["subtypes"], list):
-            return [subtype["id"] for subtype in event["subtypes"]]
-        else:
-            return [event["subtypes"]["id"]]
-    else:
-        return None
+    if event["subtypes"] is None:
+        return []
+    elif isinstance(event["subtypes"], list):
+        return [subtype["id"] for subtype in event["subtypes"]]
+    return [event["subtypes"]["id"]]
 
 
 def _parse_pass(
@@ -209,7 +198,9 @@ def _parse_shot(event: Dict, previous_event: Dict, subtypes: List) -> Dict:
     elif MS_SHOT_OUTCOME_GOAL in subtypes:
         result = ShotResult.GOAL
     else:
-        raise DeserializationError(f"Unknown shot outcome")
+        raise DeserializationError(
+            f"Unknown shot outcome: {', '.join(subtypes)}"
+        )
 
     qualifiers = _get_event_qualifiers(event, previous_event, subtypes)
 
@@ -233,7 +224,7 @@ def _parse_take_on(subtypes: List) -> Dict:
     return dict(result=result)
 
 
-def _parse_ball_owning_team(event_type: int, team: Team) -> Team:
+def _parse_ball_owning_team(event_type: int, team: Team) -> Optional[Team]:
     if event_type not in [
         MS_EVENT_TYPE_CHALLENGE,
         MS_EVENT_TYPE_CARD,
@@ -269,7 +260,9 @@ class MetricaJsonEventDataDeserializer(
 
         with performance_logging("parse data", logger=logger):
             events = []
-            for i, raw_event in enumerate(raw_events["data"]):
+            for previous_event, raw_event in zip(
+                [None] + raw_events["data"], raw_events["data"]
+            ):
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
                 elif raw_event["team"]["id"] == metadata.teams[1].team_id:
@@ -287,7 +280,6 @@ class MetricaJsonEventDataDeserializer(
                     for period in metadata.periods
                     if period.id == raw_event["period"]
                 ][0]
-                previous_event = raw_events["data"][i - 1]
 
                 generic_event_kwargs = dict(
                     # from DataRecord
@@ -296,16 +288,17 @@ class MetricaJsonEventDataDeserializer(
                     ball_owning_team=_parse_ball_owning_team(event_type, team),
                     ball_state=BallState.ALIVE,
                     # from Event
-                    event_id=None,
+                    event_id=str(raw_event["index"]),
                     team=team,
                     player=player,
                     coordinates=(_parse_coordinates(raw_event["start"])),
                     raw_event=raw_event,
                 )
 
-                iteration_events = []
-
-                if event_type in MS_PASS_TYPES:
+                if event_type == MS_SET_PIECE:
+                    # set-piece events are integrated in the next pass or shot event
+                    continue
+                elif event_type in MS_PASS_TYPES:
                     pass_event_kwargs = _parse_pass(
                         event=raw_event,
                         previous_event=previous_event,
@@ -338,9 +331,7 @@ class MetricaJsonEventDataDeserializer(
                     )
 
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(
-                        event=raw_event,
-                    )
+                    carry_event_kwargs = _parse_carry(event=raw_event)
                     event = self.event_factory.build_carry(
                         qualifiers=None,
                         **carry_event_kwargs,

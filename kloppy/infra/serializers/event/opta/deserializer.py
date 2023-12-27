@@ -264,53 +264,21 @@ def _parse_f24_datetime(dt_str: str) -> float:
 
 
 def _create_periods(match_result_type: str) -> List[Period]:
+    if match_result_type == "AfterExtraTime":
+        num_periods = 4
+    elif match_result_type == "PenaltyShootout":
+        num_periods = 5
+    else:
+        num_periods = 2
+
     periods = [
         Period(
-            id=1,
+            id=period_id,
             start_timestamp=None,
             end_timestamp=None,
-        ),
-        Period(
-            id=2,
-            start_timestamp=None,
-            end_timestamp=None,
-        ),
+        )
+        for period_id in range(1, num_periods + 1)
     ]
-    if match_result_type == "AfterExtraTime":
-        periods.extend(
-            [
-                Period(
-                    id=3,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=4,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-            ]
-        )
-    elif match_result_type == "PenaltyShootout":
-        periods.extend(
-            [
-                Period(
-                    id=3,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=4,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=5,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-            ]
-        )
 
     return periods
 

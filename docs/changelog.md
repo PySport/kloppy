@@ -3,6 +3,40 @@
 
 Find out all changes between different kloppy versions
 
+## 3.14.0 (2023-12-29)
+
+Pull requests merged:
+
+- Add SetPieceQualifiers for StatsBomb Shot event ([#223](https://github.com/PySport/kloppy/pull/223))
+- Add CardQualifiers for StatsBomb FoulCommited event ([#221](https://github.com/PySport/kloppy/pull/221))
+- Run build docs ([#231](https://github.com/PySport/kloppy/pull/231))
+- Fixing epts metrica loader when score is not on the metadata file ([#227](https://github.com/PySport/kloppy/pull/227))
+- Fix Bodypart qualifiers in StatsBomb clearance event ([#228](https://github.com/PySport/kloppy/pull/228))
+- Add own goals in StatsBomb deserializer ([#229](https://github.com/PySport/kloppy/pull/229))
+- Add InterceptionEvent ([#230](https://github.com/PySport/kloppy/pull/230))
+- Add Opta shot result coordinates ([#233](https://github.com/PySport/kloppy/pull/233))
+- Fix Wyscout deserialization of teams and players ([#235](https://github.com/PySport/kloppy/pull/235))
+- Fix sportec current ([#217](https://github.com/PySport/kloppy/pull/217))
+- Add StatsBomb shot result coordinates ([#232](https://github.com/PySport/kloppy/pull/232))
+- Recognize take on event for Wyscout ([#238](https://github.com/PySport/kloppy/pull/238))
+- Fix multiple pass qualifiers per pass event ([#241](https://github.com/PySport/kloppy/pull/241))
+- Add tackle as duel type and recognize StatsPerform challenge event ([#242](https://github.com/PySport/kloppy/pull/242))
+- Fix Wyscout v2 set-piece qualifiers ([#245](https://github.com/PySport/kloppy/pull/245))
+- Use new Wyscout open data format.  ([#248](https://github.com/PySport/kloppy/pull/248))
+- Support JSON meta data in Stats Perform tracking data deserializer ([#255](https://github.com/PySport/kloppy/pull/255))
+- Remove duplicate Metrica set-piece events ([#264](https://github.com/PySport/kloppy/pull/264))
+- Add artificial formation change event in Wyscout deserializer ([#250](https://github.com/PySport/kloppy/pull/250))
+- Estimate Wyscout v2 shot result coordinates ([#246](https://github.com/PySport/kloppy/pull/246))
+- Fix shot end coordinates for Opta deserializer ([#247](https://github.com/PySport/kloppy/pull/247))
+- Fix receiver_coordinates of passes for Wyscout v2 ([#259](https://github.com/PySport/kloppy/pull/259))
+- Fix GoalKeeperActionType.SAVE coordinates for Wyscout v2 ([#260](https://github.com/PySport/kloppy/pull/260))
+- Refactor StatsBomb deserializer ([#262](https://github.com/PySport/kloppy/pull/262))
+- Implement GoalkeeperActionType.PICK_UP and GoalkeeperActionType.CLAIM for StatsBomb ([#224](https://github.com/PySport/kloppy/pull/224))
+- Add shot body part qualifiers for Wyscout v2 ([#258](https://github.com/PySport/kloppy/pull/258))
+- Add Opta support for extra time & penalty shootouts ([#263](https://github.com/PySport/kloppy/pull/263))
+- Fix FoulComitted + Card for Wyscout v2 ([#261](https://github.com/PySport/kloppy/pull/261))
+- Revert changes to duel parsing logic in Opta deserializer ([#273](https://github.com/PySport/kloppy/pull/273))
+
 ## 3.13.0 (2023-09-29)
 
 Pull requests merged:

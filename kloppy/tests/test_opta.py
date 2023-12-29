@@ -56,8 +56,8 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 30
-        assert len(dataset.metadata.periods) == 2
+        assert len(dataset.events) == 33
+        assert len(dataset.metadata.periods) == 5
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
         )  # 1594254267
@@ -95,6 +95,12 @@ class TestOpta:
             id=2,
             start_timestamp=1537718728.873,
             end_timestamp=1537721737.788,
+            attacking_direction=AttackingDirection.NOT_SET,
+        )
+        assert dataset.metadata.periods[4] == Period(
+            id=5,
+            start_timestamp=1537729501.81,
+            end_timestamp=1537730701.81,
             attacking_direction=AttackingDirection.NOT_SET,
         )
 
@@ -184,7 +190,7 @@ class TestOpta:
             event_types=["shot"],
             coordinates="opta",
         )
-        assert len(dataset.events) == 2
+        assert len(dataset.events) == 3
 
         shot = dataset.get_event_by_id("2318695229")
         # A shot event should have a result

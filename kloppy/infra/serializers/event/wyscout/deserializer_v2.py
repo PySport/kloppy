@@ -80,6 +80,17 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
+def _bodypart_qualifiers(raw_event: Dict) -> List[Qualifier]:
+    qualifiers = []
+    if _has_tag(raw_event, wyscout_tags.LEFT_FOOT):
+        qualifiers.append(BodyPartQualifier(BodyPart.LEFT_FOOT))
+    elif _has_tag(raw_event, wyscout_tags.RIGHT_FOOT):
+        qualifiers.append(BodyPartQualifier(BodyPart.RIGHT_FOOT))
+    elif _has_tag(raw_event, wyscout_tags.HEAD_BODY):
+        qualifiers.append(BodyPartQualifier(BodyPart.HEAD_OTHER))
+    return qualifiers
+
+
 def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
     """Estimate the shot end location from the Wyscout tags.
 
@@ -156,8 +167,10 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
 
 
 def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
-    result = None
     qualifiers = _generic_qualifiers(raw_event)
+    qualifiers.extend(_bodypart_qualifiers(raw_event))
+
+    result = None
     if _has_tag(raw_event, 101):
         result = ShotResult.GOAL
     elif _has_tag(raw_event, 2101):
@@ -193,6 +206,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         qualifiers.append(PassQualifier(PassType.CROSS))
     elif raw_event["subEventId"] == wyscout_events.PASS.HAND:
         qualifiers.append(PassQualifier(PassType.HAND_PASS))
+        qualifiers.append(BodyPartQualifier(BodyPart.KEEPER_ARM))
     elif raw_event["subEventId"] == wyscout_events.PASS.HEAD:
         qualifiers.append(PassQualifier(PassType.HEAD_PASS))
         qualifiers.append(BodyPartQualifier(BodyPart.HEAD))
@@ -205,10 +219,9 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     elif raw_event["subEventId"] == wyscout_events.PASS.SMART:
         qualifiers.append(PassQualifier(PassType.SMART_PASS))
 
-    if _has_tag(raw_event, wyscout_tags.LEFT_FOOT):
-        qualifiers.append(BodyPartQualifier(BodyPart.LEFT_FOOT))
-    elif _has_tag(raw_event, wyscout_tags.RIGHT_FOOT):
-        qualifiers.append(BodyPartQualifier(BodyPart.RIGHT_FOOT))
+    # If the subevent type did not define the bodypart, we infer it from the tags
+    if not any(isinstance(q, BodyPartQualifier) for q in qualifiers):
+        qualifiers.extend(_bodypart_qualifiers(raw_event))
 
     if _has_tag(raw_event, wyscout_tags.HIGH):
         qualifiers.append(PassQualifier(PassType.HIGH_PASS))

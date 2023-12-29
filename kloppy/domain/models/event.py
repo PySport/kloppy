@@ -368,13 +368,15 @@ class BodyPart(Enum):
         RIGHT_FOOT (BodyPart): Pass or Shot with right foot, save with right foot (for goalkeepers).
         LEFT_FOOT (BodyPart): Pass or Shot with left foot, save with left foot (for goalkeepers).
         HEAD (BodyPart): Pass or Shot with head, save with head (for goalkeepers).
+        OTHER (BodyPart): Other body part (chest, back, etc.), for Pass and Shot.
+        HEAD_OTHER (BodyPart): Pass or Shot with head or other body part. Only used when the
+                               data provider does not distinguish between HEAD and OTHER.
         BOTH_HANDS (BodyPart): Goalkeeper only. Save with both hands.
         CHEST (BodyPart): Goalkeeper only. Save with chest.
         LEFT_HAND (BodyPart): Goalkeeper only. Save with left hand.
         RIGHT_HAND (BodyPart): Goalkeeper only. Save with right hand.
         DROP_KICK (BodyPart): Pass is a keeper drop kick.
         KEEPER_ARM (BodyPart): Pass thrown from keepers hands.
-        OTHER (BodyPart): Other body part (chest, back, etc.), for Pass and Shot.
         NO_TOUCH (BodyPart): Pass only. A player deliberately let the pass go past him
                              instead of receiving it to deliver to a teammate behind him.
                              (Also known as a "dummy").
@@ -383,6 +385,8 @@ class BodyPart(Enum):
     RIGHT_FOOT = "RIGHT_FOOT"
     LEFT_FOOT = "LEFT_FOOT"
     HEAD = "HEAD"
+    OTHER = "OTHER"
+    HEAD_OTHER = "HEAD_OTHER"
 
     BOTH_HANDS = "BOTH_HANDS"
     CHEST = "CHEST"
@@ -390,7 +394,7 @@ class BodyPart(Enum):
     RIGHT_HAND = "RIGHT_HAND"
     DROP_KICK = "DROP_KICK"
     KEEPER_ARM = "KEEPER_ARM"
-    OTHER = "OTHER"
+
     NO_TOUCH = "NO_TOUCH"
 
 

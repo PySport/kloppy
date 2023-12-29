@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 from kloppy.domain import (
+    BodyPart,
+    BodyPartQualifier,
     Point,
     EventDataset,
     SetPieceType,
@@ -167,6 +169,11 @@ class TestWyscoutV3:
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
         assert (
             sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
+            dataset.events[118].get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
+        )
+        assert (
+            dataset.events[268].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
 

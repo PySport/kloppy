@@ -859,19 +859,104 @@ class GOALKEEPER(EVENT):
         class OUTCOME(Enum, metaclass=TypesEnumMeta):
             CLAIM = 47
             CLEAR = 48
+            WON = 4
+            SUCCESS = 15
 
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
+        goalkeeper_dict = self.raw_event["goalkeeper"]
         generic_event_kwargs = self._parse_generic_kwargs()
-        qualifiers = _get_goalkeeper_qualifiers(
-            self.raw_event["goalkeeper"]
-        ) + _get_body_part_qualifiers(self.raw_event["goalkeeper"])
+
+        # parse body part
+        body_part_qualifiers = _get_body_part_qualifiers(goalkeeper_dict)
+        hands_used = any(
+            q.value
+            in [
+                BodyPart.LEFT_HAND,
+                BodyPart.RIGHT_HAND,
+                BodyPart.BOTH_HANDS,
+            ]
+            for q in body_part_qualifiers
+        )
+        head_or_foot_used = any(
+            q.value
+            in [
+                BodyPart.LEFT_FOOT,
+                BodyPart.RIGHT_FOOT,
+                BodyPart.HEAD,
+            ]
+            for q in body_part_qualifiers
+        )
+        bodypart_missing = len(body_part_qualifiers) == 0
+
+        # parse action type qualifiers
+        save_event_types = [
+            GOALKEEPER.TYPE.SHOT_SAVED,
+            GOALKEEPER.TYPE.PENALTY_SAVED_TO_POST,
+            GOALKEEPER.TYPE.SAVED_TO_POST,
+            GOALKEEPER.TYPE.SHOT_SAVED_OFF_TARGET,
+            GOALKEEPER.TYPE.SHOT_SAVED_TO_POST,
+        ]
+        type_id = GOALKEEPER.TYPE(goalkeeper_dict.get("type", {}).get("id"))
+        outcome_id = goalkeeper_dict.get("outcome", {}).get("id")
+        qualifiers = []
+        if type_id in save_event_types:
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+            )
+        elif type_id == GOALKEEPER.TYPE.SMOTHER:
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER)
+            )
+        elif type_id == GOALKEEPER.TYPE.PUNCH:
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.PUNCH)
+            )
+        elif type_id == GOALKEEPER.TYPE.COLLECTED:
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM)
+            )
+        elif type_id == GOALKEEPER.TYPE.KEEPER_SWEEPER:
+            outcome_id = GOALKEEPER.KEEPER_SWEEPER.OUTCOME(
+                goalkeeper_dict.get("outcome", {}).get("id")
+            )
+            if outcome_id == GOALKEEPER.KEEPER_SWEEPER.OUTCOME.CLAIM:
+                # a goalkeeper can only pick up the ball with his hands
+                if hands_used or bodypart_missing:
+                    qualifiers.append(
+                        GoalkeeperQualifier(value=GoalkeeperActionType.PICK_UP)
+                    )
+                # otherwise it's a recovery
+                else:
+                    recovery = event_factory.build_recovery(
+                        result=None,
+                        qualifiers=body_part_qualifiers,
+                        **generic_event_kwargs,
+                    )
+                    return [recovery]
+            elif outcome_id in [
+                GOALKEEPER.KEEPER_SWEEPER.OUTCOME.CLEAR,
+                GOALKEEPER.KEEPER_SWEEPER.OUTCOME.SUCCESS,
+            ]:
+                # if the goalkeeper uses his foot or head, it's a clearance
+                if head_or_foot_used:
+                    clearance = event_factory.build_clearance(
+                        result=None,
+                        qualifiers=body_part_qualifiers,
+                        **generic_event_kwargs,
+                    )
+                    return [clearance]
+                # otherwise, it's a save
+                else:
+                    qualifiers.append(
+                        GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                    )
 
         if qualifiers:
             goalkeeper_event = event_factory.build_goalkeeper_event(
                 result=None,
-                qualifiers=qualifiers,
+                qualifiers=qualifiers + body_part_qualifiers,
                 **generic_event_kwargs,
             )
             return [goalkeeper_event]
@@ -1170,27 +1255,6 @@ def _get_set_piece_qualifiers(
         if type_id in sb_to_kloppy_set_piece_mapping:
             set_piece_type = sb_to_kloppy_set_piece_mapping[type_id]
             return [SetPieceQualifier(value=set_piece_type)]
-
-    return []
-
-
-def _get_goalkeeper_qualifiers(
-    goalkeeper_dict: Dict,
-) -> List[GoalkeeperQualifier]:
-    sb_to_kloppy_goalkeeper_mapping = {
-        GOALKEEPER.TYPE.SHOT_SAVED: GoalkeeperActionType.SAVE,
-        GOALKEEPER.TYPE.PENALTY_SAVED_TO_POST: GoalkeeperActionType.SAVE,
-        GOALKEEPER.TYPE.SAVED_TO_POST: GoalkeeperActionType.SAVE,
-        GOALKEEPER.TYPE.SHOT_SAVED_OFF_TARGET: GoalkeeperActionType.SAVE,
-        GOALKEEPER.TYPE.SHOT_SAVED_TO_POST: GoalkeeperActionType.SAVE,
-        GOALKEEPER.TYPE.SMOTHER: GoalkeeperActionType.SMOTHER,
-        GOALKEEPER.TYPE.PUNCH: GoalkeeperActionType.PUNCH,
-    }
-    if "type" in goalkeeper_dict:
-        type_id = GOALKEEPER.TYPE(goalkeeper_dict["type"])
-        if type_id in sb_to_kloppy_goalkeeper_mapping:
-            kloppy_event_type = sb_to_kloppy_goalkeeper_mapping[type_id]
-            return [GoalkeeperQualifier(value=kloppy_event_type)]
 
     return []
 

@@ -5,102 +5,188 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     Point,
+    EventDataset,
     SetPieceType,
     SetPieceQualifier,
+    DatasetType,
     DuelQualifier,
     DuelType,
     EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
+    CardQualifier,
+    CardType,
 )
 
 from kloppy import wyscout
 
 
-class TestWyscout:
-    """"""
+@pytest.fixture(scope="session")
+def event_v2_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "wyscout_events_v2.json"
 
-    @pytest.fixture
-    def event_v3_data(self, base_dir):
-        return base_dir / "files/wyscout_events_v3.json"
 
-    @pytest.fixture
-    def event_v2_data(self, base_dir):
-        return base_dir / "files/wyscout_events_v2.json"
+@pytest.fixture(scope="session")
+def event_v3_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "wyscout_events_v3.json"
 
-    def test_correct_v3_deserialization(self, event_v3_data: Path):
-        dataset = wyscout.load(
-            event_data=event_v3_data,
-            coordinates="wyscout",
-            data_version="V3",
-        )
-        assert dataset.records[2].coordinates == Point(36.0, 78.0)
-        assert (
-            dataset.events[10].get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.SAVE
-        )
-        assert (
-            dataset.events[4].get_qualifier_value(SetPieceQualifier)
-            == SetPieceType.CORNER_KICK
-        )
-        assert dataset.events[5].event_type == EventType.FOUL_COMMITTED
-        assert (
-            dataset.events[6].get_qualifier_value(DuelQualifier)
-            == DuelType.GROUND
-        )
-        assert (
-            dataset.events[7].get_qualifier_values(DuelQualifier)[1]
-            == DuelType.AERIAL
-        )
-        assert (
-            dataset.events[8].get_qualifier_values(DuelQualifier)[2]
-            == DuelType.SLIDING_TACKLE
-        )
-        assert dataset.events[9].event_type == EventType.CLEARANCE
-        assert dataset.events[12].event_type == EventType.INTERCEPTION
-        assert (
-            dataset.events[13].event_type == EventType.FORMATION_CHANGE
-            and dataset.events[14].event_type == EventType.FORMATION_CHANGE
-        )
-        assert dataset.events[18].event_type == EventType.TAKE_ON
 
-    def test_correct_normalized_v3_deserialization(self, event_v3_data: Path):
-        dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
-        assert dataset.records[2].coordinates == Point(0.36, 0.78)
+def test_correct_auto_recognize_deserialization(
+    event_v2_data: Path, event_v3_data: Path
+):
+    dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
+    assert dataset.records[2].coordinates == Point(29.0, 6.0)
+    dataset = wyscout.load(event_data=event_v3_data, coordinates="wyscout")
+    assert dataset.records[2].coordinates == Point(36.0, 78.0)
 
-    def test_correct_v2_deserialization(self, event_v2_data: Path):
+
+class TestWyscoutV2:
+    """Tests related to deserialization of Wyscout V2 data."""
+
+    @pytest.fixture(scope="class")
+    def dataset(self, event_v2_data) -> EventDataset:
+        """Load Wyscout V2 event dataset"""
         dataset = wyscout.load(
             event_data=event_v2_data,
             coordinates="wyscout",
             data_version="V2",
         )
-        assert dataset.records[2].coordinates == Point(29.0, 6.0)
-        assert dataset.events[11].event_type == EventType.MISCONTROL
-        assert dataset.events[34].event_type == EventType.INTERCEPTION
-        assert dataset.events[143].event_type == EventType.CLEARANCE
+        assert dataset.dataset_type == DatasetType.EVENT
+        return dataset
 
+    def test_shot_event(self, dataset: EventDataset):
+        shot_event = dataset.get_event_by_id("190079151")
         assert (
-            dataset.events[39].get_qualifier_value(DuelQualifier)
-            == DuelType.GROUND
-        )
-        assert (
-            dataset.events[43].get_qualifier_values(DuelQualifier)[1]
-            == DuelType.AERIAL
-        )
-        assert (
-            dataset.events[118].get_qualifier_value(BodyPartQualifier)
+            shot_event.get_qualifier_value(BodyPartQualifier)
             == BodyPart.RIGHT_FOOT
         )
+
+    def test_miscontrol_event(self, dataset: EventDataset):
+        miscontrol_event = dataset.get_event_by_id("190078351")
+        assert miscontrol_event.event_type == EventType.MISCONTROL
+
+    def test_interception_event(self, dataset: EventDataset):
+        # A touch or duel with "interception" tag should be converted to an interception event
+        interception_event = dataset.get_event_by_id("190079090")
+        assert interception_event.event_type == EventType.INTERCEPTION
+        # Other events with "interception" tag should be split in two events
+        clearance_event = dataset.get_event_by_id("190079171")
+        assert clearance_event.event_type == EventType.CLEARANCE
+        interception_event = dataset.get_event_by_id("interception-190079171")
+        assert interception_event.event_type == EventType.INTERCEPTION
+
+    def test_duel_event(self, dataset: EventDataset):
+        ground_duel_event = dataset.get_event_by_id("190078379")
+        assert ground_duel_event.event_type == EventType.DUEL
         assert (
-            dataset.events[268].get_qualifier_values(DuelQualifier)[2]
+            ground_duel_event.get_qualifier_value(DuelQualifier)
+            == DuelType.GROUND
+        )
+        aerial_duel_event = dataset.get_event_by_id("190078381")
+        assert aerial_duel_event.event_type == EventType.DUEL
+        assert (
+            aerial_duel_event.get_qualifier_values(DuelQualifier)[1]
+            == DuelType.AERIAL
+        )
+        sliding_tackle_duel_event = dataset.get_event_by_id("190079260")
+        assert sliding_tackle_duel_event.event_type == EventType.DUEL
+        assert (
+            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
+
+    def test_goalkeeper_event(self, dataset: EventDataset):
+        goalkeeper_event = dataset.get_event_by_id("190079010")
+        assert goalkeeper_event.event_type == EventType.GOALKEEPER
         assert (
-            dataset.events[301].get_qualifier_value(GoalkeeperQualifier)
+            goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
-        assert dataset.events[301].coordinates == Point(86.0, 73.0)
 
-    def test_correct_auto_recognize_deserialization(self, event_v2_data: Path):
-        dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
-        assert dataset.records[2].coordinates == Point(29.0, 6.0)
+    def test_foul_committed_event(self, dataset: EventDataset):
+        foul_committed_event = dataset.get_event_by_id("190079289")
+        assert foul_committed_event.event_type == EventType.FOUL_COMMITTED
+        assert (
+            foul_committed_event.get_qualifier_value(CardQualifier)
+            == CardType.FIRST_YELLOW
+        )
+        card_event = dataset.get_event_by_id("card-190079289")
+        assert card_event.event_type == EventType.CARD
+
+    def test_correct_normalized_deserialization(self, event_v2_data: Path):
+        dataset = wyscout.load(event_data=event_v2_data, data_version="V2")
+        assert dataset.records[2].coordinates == Point(0.29, 0.06)
+
+
+class TestWyscoutV3:
+    """Tests related to deserialization of Wyscout V3 data."""
+
+    @pytest.fixture(scope="class")
+    def dataset(self, event_v3_data: Path) -> EventDataset:
+        """Load Wyscout V3 event dataset"""
+        dataset = wyscout.load(
+            event_data=event_v3_data,
+            coordinates="wyscout",
+            data_version="V3",
+        )
+        assert dataset.dataset_type == DatasetType.EVENT
+        return dataset
+
+    def test_coordinates(self, dataset: EventDataset):
+        assert dataset.records[2].coordinates == Point(36.0, 78.0)
+
+    def test_normalized_deserialization(self, event_v3_data: Path):
+        dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
+        assert dataset.records[2].coordinates == Point(0.36, 0.78)
+
+    def test_goalkeeper_event(self, dataset: EventDataset):
+        goalkeeper_event = dataset.get_event_by_id(1331979498)
+        assert goalkeeper_event.event_type == EventType.GOALKEEPER
+        assert (
+            goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
+            == GoalkeeperActionType.SAVE
+        )
+
+    def test_shot_event(self, dataset: EventDataset):
+        shot_event = dataset.get_event_by_id(663291840)
+        assert shot_event.event_type == EventType.SHOT
+        assert (
+            shot_event.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.CORNER_KICK
+        )
+
+    def test_foul_committed_event(self, dataset: EventDataset):
+        foul_committed_event = dataset.get_event_by_id(1343788476)
+        assert foul_committed_event.event_type == EventType.FOUL_COMMITTED
+
+    def test_duel_event(self, dataset: EventDataset):
+        ground_duel_event = dataset.get_event_by_id(663291421)
+        assert ground_duel_event.event_type == EventType.DUEL
+        assert (
+            ground_duel_event.get_qualifier_value(DuelQualifier)
+            == DuelType.GROUND
+        )
+        aerial_duel_event = dataset.get_event_by_id(663291841)
+        assert aerial_duel_event.event_type == EventType.DUEL
+        assert (
+            aerial_duel_event.get_qualifier_values(DuelQualifier)[1]
+            == DuelType.AERIAL
+        )
+        sliding_tackle_duel_event = dataset.get_event_by_id(663291842)
+        assert sliding_tackle_duel_event.event_type == EventType.DUEL
+        assert (
+            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
+            == DuelType.SLIDING_TACKLE
+        )
+
+    def test_clearance_event(self, dataset: EventDataset):
+        clearance_event = dataset.get_event_by_id(663291843)
+        assert clearance_event.event_type == EventType.CLEARANCE
+
+    def test_interception_event(self, dataset: EventDataset):
+        interception_event = dataset.get_event_by_id(1397082780)
+        assert interception_event.event_type == EventType.INTERCEPTION
+
+    def test_take_on_event(self, dataset: EventDataset):
+        take_on_event = dataset.get_event_by_id(139800000)
+        assert take_on_event.event_type == EventType.TAKE_ON

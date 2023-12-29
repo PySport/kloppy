@@ -15,10 +15,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PassEvent,
-    ShotEvent,
-    TakeOnEvent,
-    GenericEvent,
     PassResult,
     ShotResult,
     TakeOnResult,
@@ -32,12 +28,7 @@ from kloppy.domain import (
     Player,
     Position,
     InterceptionResult,
-    RecoveryEvent,
-    BallOutEvent,
-    FoulCommittedEvent,
-    FormationChangeEvent,
     FormationType,
-    CardEvent,
     CardType,
     CardQualifier,
     Qualifier,
@@ -66,7 +57,6 @@ EVENT_TYPE_OFFSIDE_PASS = 2
 EVENT_TYPE_TAKE_ON = 3
 EVENT_TYPE_TACKLE = 7
 EVENT_TYPE_AERIAL = 44
-EVENT_TYPE_CHALLENGE = 45
 EVENT_TYPE_50_50 = 67
 EVENT_TYPE_INTERCEPTION = 8
 EVENT_TYPE_CLEARANCE = 12
@@ -101,7 +91,6 @@ DUEL_EVENTS = [
     EVENT_TYPE_TACKLE,
     EVENT_TYPE_AERIAL,
     EVENT_TYPE_50_50,
-    EVENT_TYPE_CHALLENGE,
 ]
 
 BALL_OWNING_EVENTS = (
@@ -414,15 +403,15 @@ def _parse_duel(
     raw_qualifiers: Dict[int, str], type_id: int, outcome: int
 ) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
-    if type_id in (EVENT_TYPE_TACKLE, EVENT_TYPE_CHALLENGE):
+    if type_id == EVENT_TYPE_TACKLE:
+        qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif type_id == EVENT_TYPE_AERIAL:
         qualifiers.extend(
             [
-                DuelQualifier(value=DuelType.GROUND),
-                DuelQualifier(value=DuelType.TACKLE),
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
             ]
         )
-    elif type_id == EVENT_TYPE_AERIAL:
-        qualifiers.append(DuelQualifier(value=DuelType.AERIAL))
     elif type_id == EVENT_TYPE_50_50:
         qualifiers.extend(
             [

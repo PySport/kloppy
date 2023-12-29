@@ -54,6 +54,13 @@ class TestWyscoutV2:
         assert dataset.dataset_type == DatasetType.EVENT
         return dataset
 
+    def test_shot_event(self, dataset: EventDataset):
+        shot_event = dataset.get_event_by_id("190079151")
+        assert (
+            shot_event.get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
+        )
+
     def test_miscontrol_event(self, dataset: EventDataset):
         miscontrol_event = dataset.get_event_by_id("190078351")
         assert miscontrol_event.event_type == EventType.MISCONTROL
@@ -169,11 +176,6 @@ class TestWyscoutV3:
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
         assert (
             sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
-            dataset.events[118].get_qualifier_value(BodyPartQualifier)
-            == BodyPart.RIGHT_FOOT
-        )
-        assert (
-            dataset.events[268].get_qualifier_values(DuelQualifier)[2]
             == DuelType.SLIDING_TACKLE
         )
 

@@ -193,13 +193,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
     def __load_json(self, file):
         if Path(file.name).suffix == ".jsonl":
             data = []
-            with open(file.name, "r") as file:
-                for line in file:
-                    obj = json.loads(line)
-                    # for each line rename timestamp to time to make it compatible with existing loader
-                    if "timestamp" in obj:
-                        obj["time"] = obj.pop("timestamp")
-                    data.append(obj)
+            for line in file:
+                obj = json.loads(line)
+                # for each line rename timestamp to time to make it compatible with existing loader
+                if "timestamp" in obj:
+                    obj["time"] = obj.pop("timestamp")
+                data.append(obj)
             return data
         else:
             return json.load(file)

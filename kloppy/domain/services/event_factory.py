@@ -55,7 +55,7 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
             and field.name not in all_kwargs
         )
     }
-    
+
     if len(relevant_kwargs) < len(all_kwargs):
         skipped_kwargs = set(all_kwargs.keys()) - set(relevant_kwargs.keys())
         warnings.warn(

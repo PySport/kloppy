@@ -50,6 +50,9 @@ class TestSkillCornerTracking:
         # are frames with wrong camera views and pregame skipped?
         assert dataset.records[0].timestamp == 11.2
 
+        # make sure skillcorner ID is used as player ID
+        assert dataset.metadata.teams[0].players[0].player_id == "10247"
+
         # make sure data is loaded correctly
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_data[

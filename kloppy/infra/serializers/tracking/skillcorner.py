@@ -280,7 +280,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 metadata["away_team"].get("id"): "away_team",
             }
 
-            player_id_to_team_dict = {
+            player_to_team_dict = {
                 player["trackable_object"]: player["team_id"]
                 for player in metadata["players"]
             }
@@ -321,8 +321,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
             teams = [home_team, away_team]
 
-            for player_id in player_dict.keys():
-                player = player_dict.get(player_id)
+            for player_track_obj_id, player in player_dict.items():
                 team_id = player["team_id"]
 
                 if team_id == home_team_id:
@@ -332,8 +331,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     team_string = "AWAY"
                     team = away_team
 
-                players[team_string][player_id] = Player(
-                    player_id=f"{team.ground}_{player['number']}",
+                players[team_string][player_track_obj_id] = Player(
+                    player_id=f"{player['id']}",
                     team=team,
                     jersey_no=player["number"],
                     name=f"{player['first_name']} {player['last_name']}",
@@ -378,7 +377,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     teams,
                     teamdict,
                     players,
-                    player_id_to_team_dict,
+                    player_to_team_dict,
                     periods,
                     player_dict,
                     anon_players,

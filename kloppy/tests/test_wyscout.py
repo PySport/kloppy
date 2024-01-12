@@ -16,6 +16,7 @@ from kloppy.domain import (
     GoalkeeperActionType,
     CardQualifier,
     CardType,
+    Orientation,
 )
 
 from kloppy import wyscout
@@ -52,6 +53,9 @@ class TestWyscoutV2:
             data_version="V2",
         )
         assert dataset.dataset_type == DatasetType.EVENT
+        assert (
+            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
         return dataset
 
     def test_shot_event(self, dataset: EventDataset):
@@ -130,6 +134,9 @@ class TestWyscoutV3:
             data_version="V3",
         )
         assert dataset.dataset_type == DatasetType.EVENT
+        assert (
+            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
         return dataset
 
     def test_coordinates(self, dataset: EventDataset):

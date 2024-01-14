@@ -273,13 +273,13 @@ class Orientation(Enum):
             The away team plays from left to right in the second period.
         AWAY_HOME: The away team plays from left to right in the first period.
             The home team plays from left to right in the second period.
-        FIXED_HOME_AWAY: The home team plays from left to right in both periods.
-        FIXED_AWAY_HOME: The away team plays from left to right in both periods.
+        STATIC_HOME_AWAY: The home team plays from left to right in both periods.
+        STATIC_AWAY_HOME: The away team plays from left to right in both periods.
         NOT_SET: The attacking direction is not defined.
 
     Notes:
         The attacking direction is not defined for penalty shootouts in the
-        `HOME_AWAY`, `AWAY_HOME`, `FIXED_HOME_AWAY`, and `FIXED_AWAY_HOME`
+        `HOME_AWAY`, `AWAY_HOME`, `STATIC_HOME_AWAY`, and `STATIC_AWAY_HOME`
         orientations. This period is ignored in orientation transforms
         involving one of these orientations and keeps its original
         attacking direction.
@@ -296,8 +296,8 @@ class Orientation(Enum):
     AWAY_HOME = "away-home"
 
     # won't change during match
-    FIXED_HOME_AWAY = "fixed-home-away"
-    FIXED_AWAY_HOME = "fixed-away-home"
+    STATIC_HOME_AWAY = "fixed-home-away"
+    STATIC_AWAY_HOME = "fixed-away-home"
 
     # Not set in dataset
     NOT_SET = "not-set"
@@ -342,9 +342,9 @@ class AttackingDirection(Enum):
         Returns:
             The attacking direction for the given data record.
         """
-        if orientation == Orientation.FIXED_HOME_AWAY:
+        if orientation == Orientation.STATIC_HOME_AWAY:
             return AttackingDirection.LTR
-        if orientation == Orientation.FIXED_AWAY_HOME:
+        if orientation == Orientation.STATIC_AWAY_HOME:
             return AttackingDirection.RTL
         if orientation == Orientation.HOME_AWAY:
             if period is None:

@@ -179,12 +179,12 @@ class TestHelpers:
             transform1.frames[1].attacking_direction == AttackingDirection.LTR
         )
 
-        # Transform to FIXED_AWAY_HOME orientation
+        # Transform to STATIC_AWAY_HOME orientation
         transform2 = transform1.transform(
-            to_orientation=Orientation.FIXED_AWAY_HOME,
+            to_orientation=Orientation.STATIC_AWAY_HOME,
             to_pitch_dimensions=[[0, 1], [0, 1]],
         )
-        assert transform2.metadata.orientation == Orientation.FIXED_AWAY_HOME
+        assert transform2.metadata.orientation == Orientation.STATIC_AWAY_HOME
         # all coordintes in the second half should be flipped
         assert transform2.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
         assert transform2.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
@@ -296,7 +296,7 @@ class TestHelpers:
         assert receipt_event.ball_owning_team == home_team
 
         transformed_dataset = dataset.transform(
-            to_orientation="fixed_home_away"
+            to_orientation="static_home_away"
         )
         transformed_pressure_event = transformed_dataset.get_event_by_id(
             pressure_event.event_id
@@ -336,7 +336,7 @@ class TestHelpers:
             "65f16e50-7c5d-4293-b2fc-d20887a772f9"
         )
         transformed_dataset = dataset.transform(
-            to_orientation="fixed_away_home"
+            to_orientation="static_away_home"
         )
         shot_event_transformed = transformed_dataset.get_event_by_id(
             shot_event.event_id

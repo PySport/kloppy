@@ -41,10 +41,6 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
        but we filter those arguments out.
     """
     extra_kwargs = {"state": {}}
-
-    if "qualifiers" not in kwargs:
-        kwargs["qualifiers"] = None
-
     if "related_event_ids" not in kwargs:
         extra_kwargs["related_event_ids"] = []
 

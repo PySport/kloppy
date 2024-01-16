@@ -473,6 +473,7 @@ class DuelType(Enum):
     LOOSE_BALL = "LOOSE_BALL"
     SLIDING_TACKLE = "SLIDING_TACKLE"
     TACKLE = "TACKLE"
+    DRIBBLED_PAST = "DRIBBLED_PAST"
 
 
 @dataclass

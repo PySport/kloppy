@@ -56,7 +56,7 @@ class TestOpta:
         )
         assert dataset.metadata.provider == Provider.OPTA
         assert dataset.dataset_type == DatasetType.EVENT
-        assert len(dataset.events) == 33
+        assert len(dataset.events) == 34
         assert len(dataset.metadata.periods) == 5
         assert (
             dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
@@ -121,11 +121,15 @@ class TestOpta:
         assert (
             dataset.events[5].qualifiers[0].value == PassType.CHIPPED_PASS
         )  # 1444075194
+        assert dataset.events[17].get_qualifier_values(PassQualifier) == [
+            PassType.SHOT_ASSIST,
+            PassType.ASSIST,
+        ]  # 1666666666
         assert (
-            dataset.events[19].qualifiers[0].value == CardType.RED
+            dataset.events[20].qualifiers[0].value == CardType.RED
         )  # 2318695229
         assert (
-            dataset.events[21].event_type == EventType.CLEARANCE
+            dataset.events[22].event_type == EventType.CLEARANCE
         )  # 2498907287
 
         # Check receiver coordinates for incomplete passes
@@ -133,45 +137,45 @@ class TestOpta:
         assert dataset.events[6].receiver_coordinates.y == 68.2
 
         # Check timestamp from qualifier in case of goal
-        assert dataset.events[17].timestamp == 139.65200018882751  # 2318695229
+        assert dataset.events[18].timestamp == 139.65200018882751  # 2318695229
         # assert dataset.events[17].coordinates_y == 12
 
         # Check Own goal
-        assert dataset.events[18].result.value == "OWN_GOAL"  # 2318697001
+        assert dataset.events[19].result.value == "OWN_GOAL"  # 2318697001
         # Check OFFSIDE pass has end_coordinates
-        assert dataset.events[20].receiver_coordinates.x == 89.3  # 2360555167
+        assert dataset.events[21].receiver_coordinates.x == 89.3  # 2360555167
 
         # Check goalkeeper qualifiers
         assert (
-            dataset.events[23].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
         )
         assert (
-            dataset.events[24].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.CLAIM
         )
         assert (
-            dataset.events[25].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[26].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PUNCH
         )
         assert (
-            dataset.events[26].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[27].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.PICK_UP
         )
         assert (
-            dataset.events[27].get_qualifier_value(GoalkeeperQualifier)
+            dataset.events[28].get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SMOTHER
         )
         assert (
-            dataset.events[28].event_type == EventType.INTERCEPTION
+            dataset.events[29].event_type == EventType.INTERCEPTION
         )  # 2609934569
         assert (
-            dataset.events[29].event_type == EventType.MISCONTROL
+            dataset.events[30].event_type == EventType.MISCONTROL
         )  # 250913217
 
         # Check counterattack
         assert (
-            CounterAttackQualifier(value=True) in dataset.events[17].qualifiers
+            CounterAttackQualifier(value=True) in dataset.events[18].qualifiers
         )  # 2318695229
 
         # Check DuelQualifiers

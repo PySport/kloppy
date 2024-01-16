@@ -599,6 +599,7 @@ class TestStatsBombPassEvent:
             PassType.CROSS,
             PassType.HIGH_PASS,
             PassType.LONG_BALL,
+            PassType.SHOT_ASSIST,
         ]
 
     def test_set_piece(self, dataset: EventDataset):

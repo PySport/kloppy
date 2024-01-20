@@ -161,7 +161,6 @@ class TestOptaMetadata:
             Provider.OPTA, width=100, length=100
         )
 
-    @pytest.mark.xfail
     def test_score(self, dataset):
         """It should set the correct score"""
         assert dataset.metadata.score == Score(home=2, away=1)

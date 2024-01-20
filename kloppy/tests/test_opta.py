@@ -166,7 +166,6 @@ class TestOptaMetadata:
         """It should set the correct score"""
         assert dataset.metadata.score == Score(home=2, away=1)
 
-    @pytest.mark.xfail
     def test_flags(self, dataset):
         """It should set the correct flags"""
         assert (

@@ -952,7 +952,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
-            flags=DatasetFlag.BALL_OWNING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             provider=Provider.OPTA,
             coordinate_system=transformer.get_to_coordinate_system(),
         )

@@ -4,6 +4,7 @@ from enum import Enum, Flag
 from collections import Counter
 import numpy as np
 import json
+from pathlib import Path
 
 from kloppy.domain import (
     attacking_direction_from_frame,
@@ -136,7 +137,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_time,
+            timestamp=frame_time - periods[frame_period].start_timestamp,
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame_period],
@@ -147,8 +148,16 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
     @classmethod
     def _timestamp_from_timestring(cls, timestring):
-        m, s = timestring.split(":")
-        return 60 * float(m) + float(s)
+        parts = timestring.split(":")
+
+        if len(parts) == 2:
+            m, s = parts
+            return 60 * float(m) + float(s)
+        elif len(parts) == 3:
+            h, m, s = parts
+            return 3600 * float(h) + 60 * float(m) + float(s)
+        else:
+            raise ValueError("Invalid timestring format")
 
     @classmethod
     def _set_skillcorner_attacking_directions(cls, frames, periods):
@@ -182,7 +191,17 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ].attacking_direction = AttackingDirection.NOT_SET
 
     def __load_json(self, file):
-        return json.load(file)
+        if Path(file.name).suffix == ".jsonl":
+            data = []
+            for line in file:
+                obj = json.loads(line)
+                # for each line rename timestamp to time to make it compatible with existing loader
+                if "timestamp" in obj:
+                    obj["time"] = obj.pop("timestamp")
+                data.append(obj)
+            return data
+        else:
+            return json.load(file)
 
     @classmethod
     def __get_periods(cls, tracking):
@@ -261,7 +280,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 metadata["away_team"].get("id"): "away_team",
             }
 
-            player_id_to_team_dict = {
+            player_to_team_dict = {
                 player["trackable_object"]: player["team_id"]
                 for player in metadata["players"]
             }
@@ -302,8 +321,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
             teams = [home_team, away_team]
 
-            for player_id in player_dict.keys():
-                player = player_dict.get(player_id)
+            for player_track_obj_id, player in player_dict.items():
                 team_id = player["team_id"]
 
                 if team_id == home_team_id:
@@ -313,8 +331,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     team_string = "AWAY"
                     team = away_team
 
-                players[team_string][player_id] = Player(
-                    player_id=f"{team.ground}_{player['number']}",
+                players[team_string][player_track_obj_id] = Player(
+                    player_id=f"{player['id']}",
                     team=team,
                     jersey_no=player["number"],
                     name=f"{player['first_name']} {player['last_name']}",
@@ -359,7 +377,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     teams,
                     teamdict,
                     players,
-                    player_id_to_team_dict,
+                    player_to_team_dict,
                     periods,
                     player_dict,
                     anon_players,

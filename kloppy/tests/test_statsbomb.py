@@ -45,6 +45,7 @@ from kloppy.domain.models.event import (
     EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
+    CounterAttackQualifier,
 )
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     parse_str_ts,
@@ -862,6 +863,10 @@ class TestStatsBombDuelEvent:
             DuelType.LOOSE_BALL,
             DuelType.GROUND,
         ]
+
+    def test_counter_attack_qualifier(self, dataset: EventDataset):
+        duel = dataset.get_event_by_id("9e5281ac-1fee-4a51-b6a5-78e99c22397e")
+        assert duel.get_qualifier_value(CounterAttackQualifier) is True
 
 
 class TestStatsBombGoalkeeperEvent:

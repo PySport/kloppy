@@ -705,10 +705,10 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             away_score = None
             for team_elm in team_elms:
                 if team_elm.attrib["Side"] == "Home":
-                    home_score = team_elm.attrib["Score"]
+                    home_score = int(team_elm.attrib["Score"])
                     home_team = _team_from_xml_elm(team_elm, f7_root)
                 elif team_elm.attrib["Side"] == "Away":
-                    away_score = team_elm.attrib["Score"]
+                    away_score = int(team_elm.attrib["Score"])
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise DeserializationError(

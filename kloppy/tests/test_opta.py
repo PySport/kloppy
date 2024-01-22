@@ -56,7 +56,6 @@ def dataset(base_dir) -> EventDataset:
     return dataset
 
 
-@pytest.mark.xfail
 def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision

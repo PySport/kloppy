@@ -1,6 +1,7 @@
-from typing import Dict, List, NamedTuple, IO, Optional
 import logging
 import json
+from dataclasses import replace
+from typing import Dict, List, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BallState,
@@ -384,6 +385,10 @@ class MetricaJsonEventDataDeserializer(
                             events.append(transformer.transform_event(event))
 
         return EventDataset(
-            metadata=metadata,
+            metadata=replace(
+                metadata,
+                pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
+                coordinate_system=transformer.get_to_coordinate_system(),
+            ),
             records=events,
         )

@@ -246,6 +246,11 @@ formations = {
 
 
 def _parse_f24_datetime(dt_str: str) -> float:
+    def zero_pad_milliseconds(timestamp):
+        parts = timestamp.split(".")
+        return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
+
+    dt_str = zero_pad_milliseconds(dt_str)
     return (
         datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
         .replace(tzinfo=pytz.utc)
@@ -712,10 +717,10 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             away_score = None
             for team_elm in team_elms:
                 if team_elm.attrib["Side"] == "Home":
-                    home_score = team_elm.attrib["Score"]
+                    home_score = int(team_elm.attrib["Score"])
                     home_team = _team_from_xml_elm(team_elm, f7_root)
                 elif team_elm.attrib["Side"] == "Away":
-                    away_score = team_elm.attrib["Score"]
+                    away_score = int(team_elm.attrib["Score"])
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise DeserializationError(
@@ -959,7 +964,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
-            flags=DatasetFlag.BALL_OWNING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             provider=Provider.OPTA,
             coordinate_system=transformer.get_to_coordinate_system(),
         )

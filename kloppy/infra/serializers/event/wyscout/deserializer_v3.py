@@ -1,5 +1,7 @@
 import json
 import logging
+from dataclasses import replace
+from datetime import timedelta
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
@@ -490,8 +492,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
+                next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
+                    next_period_id = int(
+                        next_event["matchPeriod"].replace("H", "")
+                    )
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
@@ -502,9 +508,22 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=0,
-                            end_timestamp=0,
+                            start_timestamp=timedelta(seconds=0)
+                            if len(periods) == 0
+                            else periods[-1].end_timestamp,
+                            end_timestamp=None,
                         )
+                    )
+
+                if next_period_id != period_id:
+                    periods[-1] = replace(
+                        periods[-1],
+                        end_timestamp=periods[-1].start_timestamp
+                        + timedelta(
+                            seconds=float(
+                                raw_event["second"] + raw_event["minute"] * 60
+                            )
+                        ),
                     )
 
                 ball_owning_team = None
@@ -529,14 +548,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],
-                    "timestamp": float(
-                        raw_event["second"] + raw_event["minute"] * 60
-                    )
-                    if period_id == 1
-                    else float(
-                        raw_event["second"]
-                        + (raw_event["minute"] * 60)
-                        - (60 * 45)
+                    "timestamp": timedelta(
+                        seconds=float(
+                            raw_event["second"] + raw_event["minute"] * 60
+                        )
                     ),
                 }
 

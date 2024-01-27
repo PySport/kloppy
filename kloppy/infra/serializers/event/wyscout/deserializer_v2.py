@@ -1,5 +1,7 @@
 import json
 import logging
+from dataclasses import replace
+from datetime import timedelta
 from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
@@ -502,8 +504,12 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
 
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
+                next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
+                    next_period_id = int(
+                        next_event["matchPeriod"].replace("H", "")
+                    )
 
                 team_id = str(raw_event["teamId"])
                 player_id = str(raw_event["playerId"])
@@ -513,9 +519,17 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=0,
-                            end_timestamp=0,
+                            start_timestamp=timedelta(seconds=0)
+                            if len(periods) == 0
+                            else periods[-1].end_timestamp,
+                            end_timestamp=None,
                         )
+                    )
+                if next_period_id != period_id:
+                    periods[-1] = replace(
+                        periods[-1],
+                        end_timestamp=periods[-1].start_timestamp
+                        + timedelta(seconds=raw_event["eventSec"]),
                     )
 
                 generic_event_args = {
@@ -532,7 +546,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     "ball_owning_team": None,
                     "ball_state": None,
                     "period": periods[-1],
-                    "timestamp": raw_event["eventSec"],
+                    "timestamp": timedelta(seconds=raw_event["eventSec"]),
                 }
 
                 new_events = []

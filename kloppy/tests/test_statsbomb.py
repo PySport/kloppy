@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict
+from datetime import timedelta
 from pathlib import Path
 from typing import cast
 
@@ -151,7 +152,9 @@ class TestStatsBombMetadata:
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == 0.0
+        assert dataset.metadata.periods[0].start_timestamp == parse_str_ts(
+            "00:00:00.000"
+        )
         assert dataset.metadata.periods[0].end_timestamp == parse_str_ts(
             "00:47:38.122"
         )
@@ -216,6 +219,17 @@ class TestStatsBombEvent:
         assert event.period.id == 1
         assert event.timestamp == parse_str_ts("00:41:31.122")
         assert event.ball_state == BallState.ALIVE
+
+    def test_timestamp(self, dataset):
+        """It should set the correct timestamp, reset to zero after each period"""
+        kickoff_p1 = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kickoff_p1.timestamp == parse_str_ts("00:00:00.840")
+        kickoff_p2 = dataset.get_event_by_id(
+            "b3199171-507c-42a3-b4c4-9e609d7a98f6"
+        )
+        assert kickoff_p2.timestamp == parse_str_ts("00:00:00.848")
 
     def test_related_events(self, dataset: EventDataset):
         """Test whether related events are properly linked"""
@@ -571,10 +585,9 @@ class TestStatsBombPassEvent:
         # A pass should have end coordinates
         assert pass_event.receiver_coordinates == Point(86.15, 53.35)
         # A pass should have an end timestamp
-        assert (
-            pass_event.receive_timestamp
-            == parse_str_ts("00:35:21.533") + 0.634066
-        )
+        assert pass_event.receive_timestamp == parse_str_ts(
+            "00:35:21.533"
+        ) + timedelta(seconds=0.634066)
         # A pass should have a receiver
         assert (
             pass_event.receiver_player.name
@@ -819,7 +832,9 @@ class TestStatsBombCarryEvent:
         # A carry should have an end location
         assert carry.end_coordinates == Point(21.65, 54.85)
         # A carry should have an end timestamp
-        assert carry.end_timestamp == parse_str_ts("00:20:11.457") + 1.365676
+        assert carry.end_timestamp == parse_str_ts("00:20:11.457") + timedelta(
+            seconds=1.365676
+        )
 
 
 class TestStatsBombDuelEvent:

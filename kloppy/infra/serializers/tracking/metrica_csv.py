@@ -1,5 +1,6 @@
 import logging
 from collections import namedtuple
+from datetime import timedelta
 from typing import Tuple, Dict, Iterator, IO, NamedTuple
 
 from kloppy.domain import (
@@ -89,12 +90,16 @@ class MetricaCSVTrackingDataDeserializer(
                 if period is None or period.id != period_id:
                     period = Period(
                         id=period_id,
-                        start_timestamp=frame_id / frame_rate,
-                        end_timestamp=frame_id / frame_rate,
+                        start_timestamp=timedelta(
+                            seconds=(frame_id - 1) / frame_rate
+                        ),
+                        end_timestamp=timedelta(seconds=frame_id / frame_rate),
                     )
                 else:
                     # consider not update this every frame for performance reasons
-                    period.end_timestamp = frame_id / frame_rate
+                    period.end_timestamp = timedelta(
+                        seconds=frame_id / frame_rate
+                    )
 
                 if frame_idx % frame_sample == 0:
                     yield self.__PartialFrame(
@@ -188,7 +193,8 @@ class MetricaCSVTrackingDataDeserializer(
 
                 frame = Frame(
                     frame_id=frame_id,
-                    timestamp=frame_id / frame_rate - period.start_timestamp,
+                    timestamp=timedelta(seconds=frame_id / frame_rate)
+                    - period.start_timestamp,
                     ball_coordinates=home_partial_frame.ball_coordinates,
                     players_data=players_data,
                     period=period,

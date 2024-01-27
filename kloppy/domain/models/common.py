@@ -2,6 +2,7 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
     Dict,
@@ -34,6 +35,7 @@ from ...exceptions import (
     OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    KloppyError,
 )
 
 
@@ -331,31 +333,42 @@ class Period:
     Period
 
     Attributes:
-        id: `1` for first half, `2` for second half
-        start_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        end_timestamp: timestamp given by provider (can be unix timestamp or relative)
+        id: `1` for first half, `2` for second half, `3` for first half of
+            overtime, `4` for second half of overtime, `5` for penalty shootout
+        start_timestamp: The UTC datetime of the kick-off or, if the
+            absolute datetime is not available, the offset between the start
+            of the data feed and the period's kick-off
+        end_timestamp: The UTC datetime of the final whistle or, if the
+            absolute datetime is not available, the offset between the start
+            of the data feed and the period's final whistle
         attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
     """
 
     id: int
-    start_timestamp: float
-    end_timestamp: float
-    attacking_direction: Optional[
-        AttackingDirection
-    ] = AttackingDirection.NOT_SET
+    start_timestamp: Union[datetime, timedelta]
+    end_timestamp: Union[datetime, timedelta]
+    attacking_direction: AttackingDirection = AttackingDirection.NOT_SET
 
-    def contains(self, timestamp: float):
-        return self.start_timestamp <= timestamp <= self.end_timestamp
+    def contains(self, timestamp: datetime):
+        if isinstance(self.start_timestamp, datetime) and isinstance(
+            self.end_timestamp, datetime
+        ):
+            return self.start_timestamp <= timestamp <= self.end_timestamp
+        raise KloppyError(
+            "This method can only be used when start_timestamp and end_timmestamp are a datetime"
+        )
 
     @property
-    def attacking_direction_set(self):
+    def attacking_direction_set(self) -> bool:
         return self.attacking_direction != AttackingDirection.NOT_SET
 
-    def set_attacking_direction(self, attacking_direction: AttackingDirection):
+    def set_attacking_direction(
+        self, attacking_direction: AttackingDirection
+    ) -> None:
         self.attacking_direction = attacking_direction
 
     @property
-    def duration(self):
+    def duration(self) -> timedelta:
         return self.end_timestamp - self.start_timestamp
 
     def __eq__(self, other):
@@ -755,7 +768,7 @@ class DataRecord(ABC):
 
     Attributes:
         period: See [`Period`][kloppy.domain.models.common.Period]
-        timestamp: Timestamp of occurrence
+        timestamp: Timestamp of occurrence, relative to the period kick-off
         ball_owning_team: See [`Team`][kloppy.domain.models.common.Team]
         ball_state: See [`Team`][kloppy.domain.models.common.BallState]
     """
@@ -764,7 +777,7 @@ class DataRecord(ABC):
     prev_record: Optional["DataRecord"] = field(init=False)
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
-    timestamp: float
+    timestamp: timedelta
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 

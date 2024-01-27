@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, timedelta
 from typing import IO, Any, Dict, List, NamedTuple, Optional, Union
 
 from lxml import objectify
@@ -50,29 +51,6 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         return Provider.STATSPERFORM
 
     @classmethod
-    def __get_periods(cls, tracking):
-        """Gets the Periods contained in the tracking data."""
-        period_data = {}
-        for line in tracking:
-            time_info = line.split(";")[1].split(",")
-            period_id = int(time_info[1])
-            frame_id = int(time_info[0])
-            if period_id not in period_data:
-                period_data[period_id] = set()
-            period_data[period_id].add(frame_id)
-
-        periods = {
-            period_id: Period(
-                id=period_id,
-                start_timestamp=min(frame_ids),
-                end_timestamp=max(frame_ids),
-            )
-            for period_id, frame_ids in period_data.items()
-        }
-
-        return periods
-
-    @classmethod
     def __get_frame_rate(cls, tracking):
         """gets the frame rate of the tracking data"""
 
@@ -96,7 +74,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         frame_info = components[0].split(";")
 
         frame_id = int(frame_info[0])
-        frame_timestamp = int(frame_info[1].split(",")[0]) / 1000
+        frame_timestamp = timedelta(
+            seconds=int(frame_info[1].split(",")[0]) / 1000
+        )
         match_status = int(frame_info[1].split(",")[2])
 
         ball_state = BallState.ALIVE if match_status == 0 else BallState.DEAD
@@ -148,6 +128,26 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         )
 
     @staticmethod
+    def __parse_periods_from_xml(match: Any) -> List[Dict[str, Any]]:
+        parsed_periods = []
+        live_data = match.liveData
+        match_details = live_data.matchDetails
+        periods = match_details.periods
+        for period in periods.iterchildren(tag="period"):
+            parsed_periods.append(
+                {
+                    "id": int(period.get("id")),
+                    "start_timestamp": datetime.strptime(
+                        period.get("start"), "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                    "end_timestamp": datetime.strptime(
+                        period.get("end"), "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                }
+            )
+        return parsed_periods
+
+    @staticmethod
     def __parse_teams_from_xml(match: Any) -> List[Dict[str, Any]]:
         parsed_teams = []
         match_info = match.matchInfo
@@ -189,6 +189,28 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     }
                 )
         return parsed_players
+
+    @staticmethod
+    def __parse_periods_from_json(
+        match: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        parsed_periods = []
+        live_data = match["liveData"]
+        match_details = live_data["matchDetails"]
+        periods = match_details["period"]
+        for period in periods:
+            parsed_periods.append(
+                {
+                    "id": period["id"],
+                    "start_timestamp": datetime.strptime(
+                        period["start"], "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                    "end_timestamp": datetime.strptime(
+                        period["end"], "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                }
+            )
+        return parsed_periods
 
     @staticmethod
     def __parse_teams_from_json(match: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -239,12 +261,23 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         with performance_logging("Loading meta data", logger=logger):
             if meta_data.decode("utf-8")[0] == "<":
                 match = objectify.fromstring(meta_data)
+                parsed_periods = self.__parse_periods_from_xml(match)
                 parsed_teams = self.__parse_teams_from_xml(match)
                 parsed_players = self.__parse_players_from_xml(match)
             else:
                 match = json.loads(meta_data)
+                parsed_periods = self.__parse_periods_from_json(match)
                 parsed_teams = self.__parse_teams_from_json(match)
                 parsed_players = self.__parse_players_from_json(match)
+
+            periods = {}
+            for parsed_period in parsed_periods:
+                period_id = parsed_period["id"]
+                periods[period_id] = Period(
+                    id=period_id,
+                    start_timestamp=parsed_period["start_timestamp"],
+                    end_timestamp=parsed_period["end_timestamp"],
+                )
 
             teams = {}
             for parsed_team in parsed_teams:
@@ -279,8 +312,6 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             pitch_size_length = 100
             pitch_size_width = 100
 
-            periods = self.__get_periods(tracking_data)
-
             transformer = self.get_transformer(
                 length=pitch_size_length,
                 width=pitch_size_width,
@@ -292,13 +323,11 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
 
                 for line_ in tracking_data:
                     splits = line_.split(";")[1].split(",")
-                    frame_id = int(splits[0])
                     period_id = int(splits[1])
                     period_ = periods[period_id]
-                    if period_.contains(frame_id / frame_rate):
-                        if n % sample == 0:
-                            yield period_, line_
-                        n += 1
+                    if n % sample == 0:
+                        yield period_, line_
+                    n += 1
 
             frames = []
             for n, frame_data in enumerate(_iter(), start=1):

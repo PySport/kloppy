@@ -1,5 +1,6 @@
 import re
 from typing import List, Tuple, Set, Iterator, IO
+from datetime import timedelta
 
 from kloppy.utils import Readable
 
@@ -92,7 +93,7 @@ def read_raw_data(
         }
         frame_id = int(row[frame_name])
         if frame_id <= end_frame_id:
-            timestamp = frame_id / metadata.frame_rate
+            timestamp = timedelta(seconds=frame_id / metadata.frame_rate)
 
             del row[frame_name]
             row["frame_id"] = frame_id
@@ -102,6 +103,7 @@ def read_raw_data(
             for period in periods:
                 if period.start_timestamp <= timestamp <= period.end_timestamp:
                     row["period_id"] = period.id
+                    row["timestamp"] -= period.start_timestamp
                     break
 
             yield row

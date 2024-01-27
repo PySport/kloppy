@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 import pytest
 
@@ -35,25 +36,42 @@ class TestTracabTracking:
             only_alive=False,
         )
 
+        # Check metadata
         assert dataset.metadata.provider == Provider.TRACAB
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=4.0,
-            end_timestamp=4.08,
-            attacking_direction=AttackingDirection.HOME_AWAY,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=100 / 25
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=102 / 25
+        )
+        assert (
+            dataset.metadata.periods[0].attacking_direction
+            == AttackingDirection.HOME_AWAY
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=200 / 25
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=202 / 25
+        )
+        assert (
+            dataset.metadata.periods[1].attacking_direction
+            == AttackingDirection.AWAY_HOME
         )
 
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=8.0,
-            end_timestamp=8.08,
-            attacking_direction=AttackingDirection.AWAY_HOME,
-        )
+        # Check frame ids and timestamps
+        assert dataset.records[0].frame_id == 100
+        assert dataset.records[0].timestamp == timedelta(seconds=0)
+        assert dataset.records[3].frame_id == 200
+        assert dataset.records[3].timestamp == timedelta(seconds=0)
 
+        # Check frame data
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
             19
         )

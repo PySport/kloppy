@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -53,24 +54,39 @@ class TestStatsPerformTracking:
 
         # Check the periods
         assert dataset.metadata.periods[1].id == 1
-        assert dataset.metadata.periods[1].start_timestamp == 0
-        assert dataset.metadata.periods[1].end_timestamp == 2500
+        assert dataset.metadata.periods[1].start_timestamp == datetime(
+            2020, 8, 23, 11, 0, 10
+        )
+        assert dataset.metadata.periods[1].end_timestamp == datetime(
+            2020, 8, 23, 11, 48, 15
+        )
         assert (
             dataset.metadata.periods[1].attacking_direction
             == AttackingDirection.AWAY_HOME
         )
 
         assert dataset.metadata.periods[2].id == 2
-        assert dataset.metadata.periods[2].start_timestamp == 0
-        assert dataset.metadata.periods[2].end_timestamp == 6500
+        assert dataset.metadata.periods[2].start_timestamp == datetime(
+            2020, 8, 23, 12, 6, 22
+        )
+        assert dataset.metadata.periods[2].end_timestamp == datetime(
+            2020, 8, 23, 12, 56, 30
+        )
         assert (
             dataset.metadata.periods[2].attacking_direction
             == AttackingDirection.HOME_AWAY
         )
 
         # Check some timestamps
-        assert dataset.records[0].timestamp == 0  # First frame
-        assert dataset.records[20].timestamp == 2.0  # Later frame
+        assert dataset.records[0].timestamp == timedelta(
+            seconds=0
+        )  # First frame
+        assert dataset.records[20].timestamp == timedelta(
+            seconds=2.0
+        )  # Later frame
+        assert dataset.records[26].timestamp == timedelta(
+            seconds=0
+        )  # Second period
 
         # Check some players
         home_team = dataset.metadata.teams[0]

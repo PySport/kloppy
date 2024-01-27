@@ -475,6 +475,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     event["id"] = event["type"]["primary"]
 
         periods = []
+        # start timestamps are fixed
+        start_ts = {
+            1: timedelta(minutes=0),
+            2: timedelta(minutes=45),
+            3: timedelta(minutes=90),
+            4: timedelta(minutes=105),
+            5: timedelta(minutes=120),
+        }
 
         with performance_logging("parse data", logger=logger):
             home_team_id, away_team_id = raw_events["teams"].keys()
@@ -552,7 +560,8 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         seconds=float(
                             raw_event["second"] + raw_event["minute"] * 60
                         )
-                    ),
+                    )
+                    - start_ts[period_id],
                 }
 
                 primary_event_type = raw_event["type"]["primary"]

@@ -230,9 +230,9 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     break
 
         orientation = (
-            Orientation.HOME_TEAM
-            if periods[1].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.AWAY_TEAM
+            Orientation.FIXED_HOME_AWAY
+            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
+            else Orientation.FIXED_AWAY_HOME
         )
 
         metadata = Metadata(

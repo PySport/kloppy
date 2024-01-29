@@ -75,13 +75,13 @@ class TestTracabJSONTracking:
             end_timestamp=76656.32,
             attacking_direction=AttackingDirection.AWAY_HOME,
         )
-
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=77684.56,
             end_timestamp=80717.32,
             attacking_direction=AttackingDirection.HOME_AWAY,
         )
+        assert dataset.metadata.orientation == Orientation.FIXED_AWAY_HOME
 
         player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
             1

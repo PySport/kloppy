@@ -47,7 +47,7 @@ def test_correct_auto_recognize_deserialization(
     dataset = tracab.load(
         meta_data=json_meta_data, raw_data=json_raw_data, only_alive=False
     )
-    assert len(dataset.records) == 5
+    assert len(dataset.records) == 7
     dataset = tracab.load(
         meta_data=xml_meta_data, raw_data=dat_raw_data, only_alive=False
     )
@@ -67,7 +67,7 @@ class TestTracabJSONTracking:
         )
         assert dataset.metadata.provider == Provider.TRACAB
         assert dataset.dataset_type == DatasetType.TRACKING
-        assert len(dataset.records) == 5
+        assert len(dataset.records) == 7
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.periods[0] == Period(
             id=1,
@@ -110,7 +110,7 @@ class TestTracabJSONTracking:
         ]
         assert "12170" not in [
             player.player_id
-            for player in dataset.records[4].players_data.keys()
+            for player in dataset.records[6].players_data.keys()
         ]
 
     def test_correct_normalized_deserialization(

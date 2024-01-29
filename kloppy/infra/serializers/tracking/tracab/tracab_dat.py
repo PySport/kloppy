@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, Dict, NamedTuple, IO, Optional, Union
+from typing import Dict, Optional, Union
 
 from lxml import objectify
 
@@ -25,17 +25,13 @@ from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from .deserializer import TrackingDataDeserializer
+from .common import TRACABInputs
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
 
-class TRACABInputs(NamedTuple):
-    meta_data: IO[bytes]
-    raw_data: IO[bytes]
-
-
-class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
+class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,

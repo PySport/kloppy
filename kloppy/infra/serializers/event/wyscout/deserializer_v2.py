@@ -712,7 +712,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=None,
-            orientation=Orientation.BALL_OWNING_TEAM,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),

@@ -33,18 +33,16 @@ class TestSkillCornerTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 34783
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.AWAY_TEAM
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
         assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=0.0,
             end_timestamp=2753.3,
-            attacking_direction=AttackingDirection.AWAY_HOME,
         )
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=2700.0,
             end_timestamp=5509.7,
-            attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
         # are frames with wrong camera views and pregame skipped?

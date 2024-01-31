@@ -39,19 +39,17 @@ class TestTracabTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=4.0,
             end_timestamp=4.08,
-            attacking_direction=AttackingDirection.HOME_AWAY,
         )
 
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=8.0,
             end_timestamp=8.08,
-            attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(

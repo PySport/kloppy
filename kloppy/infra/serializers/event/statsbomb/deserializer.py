@@ -228,7 +228,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             ::2
         ]  # recorded for each team, take every other
         periods = []
-        for (start_event, end_event) in zip_longest(
+        for start_event, end_event in zip_longest(
             half_start_and_end_events[::2], half_start_and_end_events[1::2]
         ):
             if (

@@ -63,33 +63,26 @@ def _load_periods(
     ]
 
     periods = []
+    start_attacking_direction = AttackingDirection.NOT_SET
 
     for idx, period_name in enumerate(period_names):
         # the attacking direction is only defined for the first period
         # and alternates between periods
-        invert = idx % 2
-        if (
-            provider_teams_params[Ground.HOME].get(
-                "attack_direction_first_half"
-            )
-            == "left_to_right"
-        ):
-            attacking_direction = [
-                AttackingDirection.HOME_AWAY,
-                AttackingDirection.AWAY_HOME,
-            ][invert]
-        elif (
-            provider_teams_params[Ground.HOME].get(
-                "attack_direction_first_half"
-            )
-            == "right_to_left"
-        ):
-            attacking_direction = [
-                AttackingDirection.AWAY_HOME,
-                AttackingDirection.HOME_AWAY,
-            ][invert]
-        else:
-            attacking_direction = AttackingDirection.NOT_SET
+        if idx == 0:
+            if (
+                provider_teams_params[Ground.HOME].get(
+                    "attack_direction_first_half"
+                )
+                == "left_to_right"
+            ):
+                start_attacking_direction = AttackingDirection.LTR
+            elif (
+                provider_teams_params[Ground.HOME].get(
+                    "attack_direction_first_half"
+                )
+                == "right_to_left"
+            ):
+                start_attacking_direction = AttackingDirection.RTL
 
         start_key = f"{period_name}_start"
         end_key = f"{period_name}_end"
@@ -103,14 +96,13 @@ def _load_periods(
                     end_timestamp=timedelta(
                         seconds=float(provider_params[end_key]) / frame_rate
                     ),
-                    attacking_direction=attacking_direction,
                 )
             )
         else:
             # done
             break
 
-    return periods
+    return periods, start_attacking_direction
 
 
 def _load_players(players_elm, team: Team) -> List[Player]:
@@ -297,24 +289,21 @@ def load_metadata(
 
     frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
     pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
-    periods = _load_periods(metadata, _team_map, frame_rate)
-
-    if periods:
-        start_attacking_direction = periods[0].attacking_direction
-    else:
-        start_attacking_direction = None
-
-    orientation = (
-        (
-            Orientation.HOME_TEAM
-            if start_attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.AWAY_TEAM
-        )
-        if start_attacking_direction != AttackingDirection.NOT_SET
-        else Orientation.NOT_SET
+    periods, start_attacking_direction = _load_periods(
+        metadata, _team_map, frame_rate
     )
 
-    metadata.orientation = orientation
+    if start_attacking_direction != AttackingDirection.NOT_SET:
+        orientation = (
+            Orientation.HOME_AWAY
+            if start_attacking_direction == AttackingDirection.LTR
+            else Orientation.AWAY_HOME
+        )
+    else:
+        warnings.warn(
+            "Could not determine orientation of dataset, defaulting to NOT_SET"
+        )
+        orientation = Orientation.NOT_SET
 
     if provider and pitch_dimensions:
         from_coordinate_system = build_coordinate_system(

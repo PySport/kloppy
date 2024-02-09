@@ -50,7 +50,7 @@ class TestSportecEventData:
         assert len(dataset.events) == 29
         assert dataset.events[28].result == ShotResult.OWN_GOAL
 
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == datetime(
             2020, 6, 5, 18, 30, 0, 210000, tzinfo=timezone.utc
@@ -58,20 +58,12 @@ class TestSportecEventData:
         assert dataset.metadata.periods[0].end_timestamp == datetime(
             2020, 6, 5, 19, 16, 24, 0, tzinfo=timezone.utc
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == datetime(
             2020, 6, 5, 19, 33, 27, 10000, tzinfo=timezone.utc
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime(
             2020, 6, 5, 20, 23, 18, 0, tzinfo=timezone.utc
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
         )
 
         # Check the timestamps
@@ -146,20 +138,12 @@ class TestSportecTrackingData:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=400 + 2786.2
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             seconds=4000
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=4000 + 2996.68
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
         )
 
     def test_load_frames(self, raw_data: Path, meta_data: Path):

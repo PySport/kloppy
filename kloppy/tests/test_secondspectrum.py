@@ -45,7 +45,7 @@ class TestSecondSpectrumTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 376
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_AWAY_HOME
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
 
         # Check the Periods
         assert dataset.metadata.periods[0].id == 1
@@ -55,10 +55,6 @@ class TestSecondSpectrumTracking:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=2982240 / 25
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
 
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
@@ -66,10 +62,6 @@ class TestSecondSpectrumTracking:
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=6927840 / 25
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.HOME_AWAY
         )
 
         # Check some timestamps

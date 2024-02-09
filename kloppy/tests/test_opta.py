@@ -140,7 +140,6 @@ class TestOptaMetadata:
             assert period.id == i + 1
             assert period.start_timestamp == period_starts[i]
             assert period.end_timestamp == period_ends[i]
-            assert period.attacking_direction == AttackingDirection.NOT_SET
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""

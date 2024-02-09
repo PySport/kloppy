@@ -12,7 +12,11 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from kloppy.domain.models.common import DatasetType
+from kloppy.domain.models.common import (
+    DatasetType,
+    AttackingDirection,
+    OrientationError,
+)
 from kloppy.utils import (
     camelcase_to_snakecase,
     removes_suffix,
@@ -529,6 +533,24 @@ class Event(DataRecord, ABC):
     @abstractmethod
     def event_name(self) -> str:
         raise NotImplementedError
+
+    @property
+    def attacking_direction(self):
+        if (
+            self.dataset
+            and self.dataset.metadata
+            and self.dataset.metadata.orientation is not None
+        ):
+            try:
+                return AttackingDirection.from_orientation(
+                    self.dataset.metadata.orientation,
+                    period=self.period,
+                    ball_owning_team=self.ball_owning_team,
+                    action_executing_team=self.team,
+                )
+            except OrientationError:
+                return AttackingDirection.NOT_SET
+        return AttackingDirection.NOT_SET
 
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
         """

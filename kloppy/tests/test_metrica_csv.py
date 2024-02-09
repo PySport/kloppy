@@ -33,7 +33,7 @@ class TestMetricaCsvTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == timedelta(
             seconds=0.0
@@ -41,20 +41,12 @@ class TestMetricaCsvTracking:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=0.12
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             seconds=5800.12
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=5800.24
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
         )
 
         # check timestamps

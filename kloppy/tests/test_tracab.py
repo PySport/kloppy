@@ -41,7 +41,7 @@ class TestTracabTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == timedelta(
             seconds=100 / 25
@@ -49,20 +49,12 @@ class TestTracabTracking:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=102 / 25
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             seconds=200 / 25
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=202 / 25
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
         )
 
         # Check frame ids and timestamps

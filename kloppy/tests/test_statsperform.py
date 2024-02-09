@@ -50,7 +50,7 @@ class TestStatsPerformTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 92
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.FIXED_AWAY_HOME
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
 
         # Check the periods
         assert dataset.metadata.periods[1].id == 1
@@ -60,10 +60,6 @@ class TestStatsPerformTracking:
         assert dataset.metadata.periods[1].end_timestamp == datetime(
             2020, 8, 23, 11, 48, 15
         )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
 
         assert dataset.metadata.periods[2].id == 2
         assert dataset.metadata.periods[2].start_timestamp == datetime(
@@ -71,10 +67,6 @@ class TestStatsPerformTracking:
         )
         assert dataset.metadata.periods[2].end_timestamp == datetime(
             2020, 8, 23, 12, 56, 30
-        )
-        assert (
-            dataset.metadata.periods[2].attacking_direction
-            == AttackingDirection.HOME_AWAY
         )
 
         # Check some timestamps

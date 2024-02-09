@@ -37,7 +37,7 @@ class TestMetricaEvents:
         """It should parse the metadata correctly."""
         assert dataset.metadata.provider == Provider.METRICA
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation is Orientation.HOME_TEAM
+        assert dataset.metadata.orientation is Orientation.HOME_AWAY
         assert dataset.metadata.teams[0].name == "Team A"
         assert dataset.metadata.teams[1].name == "Team B"
         player = dataset.metadata.teams[0].players[10]
@@ -53,20 +53,12 @@ class TestMetricaEvents:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=19.96
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.HOME_AWAY
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             seconds=26
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=27.96
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.AWAY_HOME
         )
 
     def test_timestamps(self, dataset: EventDataset):

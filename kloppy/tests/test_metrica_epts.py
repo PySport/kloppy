@@ -130,7 +130,7 @@ class TestMetricaEPTSTracking:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=27.96
         )
-        assert dataset.metadata.orientation is Orientation.HOME_TEAM
+        assert dataset.metadata.orientation is Orientation.HOME_AWAY
 
         assert dataset.records[0].frame_id == 450
         assert dataset.records[0].timestamp == timedelta(

@@ -37,7 +37,7 @@ class TestSkillCornerTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 55632
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.AWAY_TEAM
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == timedelta(
             seconds=1411 / 10
@@ -45,20 +45,12 @@ class TestSkillCornerTracking:
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
             seconds=28944 / 10
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.AWAY_HOME
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             seconds=39979 / 10
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=68076 / 10
-        )
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.HOME_AWAY
         )
 
         assert dataset.records[0].frame_id == 1411

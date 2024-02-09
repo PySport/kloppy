@@ -1,4 +1,5 @@
 import logging
+import warnings
 from collections import namedtuple
 from datetime import timedelta
 from typing import Tuple, Dict, Iterator, IO, NamedTuple
@@ -210,13 +211,6 @@ class MetricaCSVTrackingDataDeserializer(
                 if not periods or period.id != periods[-1].id:
                     periods.append(period)
 
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(
-                            frame
-                        )
-                    )
-
                 if n == 0:
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
@@ -224,11 +218,21 @@ class MetricaCSVTrackingDataDeserializer(
                 if self.limit and n >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

@@ -443,9 +443,6 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         id=half,
                         start_timestamp=timestamp,
                         end_timestamp=None,
-                        attacking_direction=AttackingDirection.HOME_AWAY
-                        if half % 2 == 1
-                        else AttackingDirection.AWAY_HOME,
                     )
                 elif status_update["type"] in end_event_types:
                     if half not in periods:
@@ -611,7 +608,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             periods=sorted(periods.values(), key=lambda p: p.id),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
-            orientation=Orientation.HOME_TEAM,
+            orientation=Orientation.HOME_AWAY,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=score,
             provider=Provider.DATAFACTORY,

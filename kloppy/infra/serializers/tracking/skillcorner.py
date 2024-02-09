@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+import warnings
 from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
 from enum import Enum, Flag
 from collections import Counter
@@ -180,35 +181,33 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             raise ValueError("Invalid timestring format")
 
     @classmethod
-    def _set_skillcorner_attacking_directions(cls, frames, periods):
+    def _get_skillcorner_attacking_directions(cls, frames, periods):
         """
         with only partial tracking data we cannot rely on a single frame to
         infer the attacking directions as a simple average of only some players
         x-coords might not reflect the attacking direction.
         """
-        attacking_directions = []
+        attacking_directions = {}
+        frame_period_ids = np.array([_frame.period.id for _frame in frames])
+        frame_attacking_directions = np.array(
+            [
+                attacking_direction_from_frame(frame)
+                if len(frame.players_data) > 0
+                else AttackingDirection.NOT_SET
+                for frame in frames
+            ]
+        )
 
-        for frame in frames:
-            if len(frame.players_data) > 0:
-                attacking_directions.append(
-                    attacking_direction_from_frame(frame)
-                )
-            else:
-                attacking_directions.append(AttackingDirection.NOT_SET)
-
-        frame_periods = np.array([_frame.period.id for _frame in frames])
-
-        for period in periods.keys():
-            if period in frame_periods:
+        for period_id in periods.keys():
+            if period_id in frame_period_ids:
                 count = Counter(
-                    np.array(attacking_directions)[frame_periods == period]
+                    frame_attacking_directions[frame_period_ids == period_id]
                 )
-                att_direction = count.most_common()[0][0]
-                periods[period].attacking_direction = att_direction
+                attacking_directions[period_id] = count.most_common()[0][0]
             else:
-                periods[
-                    period
-                ].attacking_direction = AttackingDirection.NOT_SET
+                attacking_directions[period_id] = AttackingDirection.NOT_SET
+
+        return attacking_directions
 
     def __load_json(self, file):
         if Path(file.name).suffix == ".jsonl":
@@ -414,13 +413,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 if self.limit and n_frames >= self.limit:
                     break
 
-        self._set_skillcorner_attacking_directions(frames, periods)
-
-        orientation = (
-            Orientation.HOME_TEAM
-            if periods[1].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.AWAY_TEAM
+        attacking_directions = self._get_skillcorner_attacking_directions(
+            frames, periods
         )
+        if attacking_directions[1] == AttackingDirection.LTR:
+            orientation = Orientation.HOME_AWAY
+        elif attacking_directions[1] == AttackingDirection.RTL:
+            orientation = Orientation.AWAY_HOME
+        else:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,
@@ -430,7 +434,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 home=metadata["home_team_score"],
                 away=metadata["away_team_score"],
             ),
-            frame_rate=frame_rate,
+            frame_rate=10,
             orientation=orientation,
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

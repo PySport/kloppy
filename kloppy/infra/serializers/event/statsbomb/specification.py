@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import Enum, EnumMeta
 from typing import List, Dict, Optional, NamedTuple, Union
 
@@ -361,7 +362,9 @@ class PASS(EVENT):
             pass_dict["end_location"],
             self.fidelity_version,
         )
-        receive_timestamp = timestamp + self.raw_event.get("duration", 0.0)
+        receive_timestamp = timestamp + timedelta(
+            seconds=self.raw_event.get("duration", 0.0)
+        )
 
         if "outcome" in pass_dict:
             outcome_id = pass_dict["outcome"]["id"]
@@ -707,7 +710,8 @@ class CARRY(EVENT):
         carry_dict = self.raw_event["carry"]
         carry_event = event_factory.build_carry(
             qualifiers=None,
-            end_timestamp=timestamp + self.raw_event.get("duration", 0),
+            end_timestamp=timestamp
+            + timedelta(seconds=self.raw_event.get("duration", 0)),
             result=CarryResult.COMPLETE,
             end_coordinates=parse_coordinates(
                 carry_dict["end_location"],

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from dataclasses import dataclass, field
 from typing import List, Dict, Callable, Union, Any
 
@@ -26,7 +27,7 @@ class Code(DataRecord):
 
     code_id: str
     code: str
-    end_timestamp: float
+    end_timestamp: timedelta
     labels: Dict[str, Union[bool, str]] = field(default_factory=dict)
 
     @property

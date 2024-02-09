@@ -245,16 +245,14 @@ formations = {
 }
 
 
-def _parse_f24_datetime(dt_str: str) -> float:
+def _parse_f24_datetime(dt_str: str) -> datetime:
     def zero_pad_milliseconds(timestamp):
         parts = timestamp.split(".")
         return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
 
     dt_str = zero_pad_milliseconds(dt_str)
-    return (
-        datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
-        .replace(tzinfo=pytz.utc)
-        .timestamp()
+    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").replace(
+        tzinfo=pytz.utc
     )
 
 

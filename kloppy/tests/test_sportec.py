@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -50,16 +51,25 @@ class TestSportecEventData:
         assert dataset.events[28].result == ShotResult.OWN_GOAL
 
         assert dataset.metadata.orientation == Orientation.HOME_AWAY
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=1591381800.21,
-            end_timestamp=1591384584.0,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == datetime(
+            2020, 6, 5, 18, 30, 0, 210000, tzinfo=timezone.utc
         )
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=1591385607.01,
-            end_timestamp=1591388598.0,
+        assert dataset.metadata.periods[0].end_timestamp == datetime(
+            2020, 6, 5, 19, 16, 24, 0, tzinfo=timezone.utc
         )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == datetime(
+            2020, 6, 5, 19, 33, 27, 10000, tzinfo=timezone.utc
+        )
+        assert dataset.metadata.periods[1].end_timestamp == datetime(
+            2020, 6, 5, 20, 23, 18, 0, tzinfo=timezone.utc
+        )
+
+        # Check the timestamps
+        assert dataset.events[0].timestamp == timedelta(seconds=0)
+        assert dataset.events[1].timestamp == timedelta(seconds=3.123)
+        assert dataset.events[25].timestamp == timedelta(seconds=0)
 
         player = dataset.metadata.teams[0].players[0]
         assert player.player_id == "DFL-OBJ-00001D"
@@ -121,6 +131,20 @@ class TestSportecTrackingData:
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=400
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=400 + 2786.2
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=4000
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=4000 + 2996.68
+        )
 
     def test_load_frames(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
@@ -131,7 +155,7 @@ class TestSportecTrackingData:
         )
         home_team, away_team = dataset.metadata.teams
 
-        assert dataset.frames[0].timestamp == 0.0
+        assert dataset.frames[0].timestamp == timedelta(seconds=0)
         assert dataset.frames[0].ball_owning_team == away_team
         assert dataset.frames[0].ball_state == BallState.DEAD
         assert dataset.frames[0].ball_coordinates == Point3D(
@@ -163,8 +187,8 @@ class TestSportecTrackingData:
         second_period = dataset.metadata.periods[1]
         for frame in dataset:
             if frame.period == second_period:
-                assert (
-                    frame.timestamp == 0
+                assert frame.timestamp == timedelta(
+                    seconds=0
                 ), "First frame must start at timestamp 0.0"
                 break
         else:

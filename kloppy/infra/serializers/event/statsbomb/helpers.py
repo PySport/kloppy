@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List, Dict, Optional
 
 from kloppy.domain import (
@@ -16,7 +17,7 @@ from kloppy.exceptions import DeserializationError
 def parse_str_ts(timestamp: str) -> float:
     """Parse a HH:mm:ss string timestamp into number of seconds."""
     h, m, s = timestamp.split(":")
-    return int(h) * 3600 + int(m) * 60 + float(s)
+    return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
 
 
 def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
@@ -121,7 +122,8 @@ def parse_freeze_frame(
 
     FREEZE_FRAME_FPS = 25
     frame_id = int(
-        event.period.start_timestamp + event.timestamp * FREEZE_FRAME_FPS
+        event.period.start_timestamp.total_seconds()
+        + event.timestamp.total_seconds() * FREEZE_FRAME_FPS
     )
 
     return Frame(

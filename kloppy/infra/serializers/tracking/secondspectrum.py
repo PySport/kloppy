@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import timedelta
 import warnings
 from typing import Tuple, Dict, Optional, Union, NamedTuple, IO
 
@@ -57,7 +58,7 @@ class SecondSpectrumDeserializer(
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
         frame_id = frame_data["frameIdx"]
-        frame_timestamp = frame_data["gameClock"]
+        frame_timestamp = timedelta(seconds=frame_data["gameClock"])
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
@@ -138,8 +139,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period["number"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
             else:
@@ -159,8 +164,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period.attrib["iId"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
 

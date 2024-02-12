@@ -58,7 +58,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 team = teams[0]
             elif player_data["Team"] == 0:
                 team = teams[1]
-            elif player_data["Team"] in (-1, 4):
+            elif player_data["Team"] in (-1, 3, 4):
                 continue
             else:
                 raise DeserializationError(

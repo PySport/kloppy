@@ -73,7 +73,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             player = team.get_player_by_jersey_number(jersey_no)
             if player:
                 players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y)), speed=float(speed)
+                    coordinates=Point(x, y), speed=speed
                 )
             else:
                 # continue
@@ -105,9 +105,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         return Frame(
             frame_id=frame_id,
             timestamp=frame_id / frame_rate - period.start_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
+            ball_coordinates=Point3D(ball_x, ball_y, ball_z),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             ball_speed=ball_speed,
@@ -174,7 +172,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             pitch_size_length = meta_data["PitchLongSide"] / 100
 
             periods = []
-            for period_id in [1, 2, 3, 4]:
+            for period_id in (1, 2, 3, 4):
                 period_start_frame = meta_data[f"Phase{period_id}StartFrame"]
                 period_end_frame = meta_data[f"Phase{period_id}EndFrame"]
                 if period_start_frame != 0 or period_end_frame != 0:

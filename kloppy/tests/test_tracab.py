@@ -2,6 +2,11 @@ from pathlib import Path
 
 import pytest
 
+from kloppy._providers.tracab import (
+    identify_deserializer,
+    TRACABJSONDeserializer,
+    TRACABDatDeserializer,
+)
 from kloppy.domain import (
     Period,
     AttackingDirection,
@@ -44,14 +49,14 @@ def test_correct_auto_recognize_deserialization(
     xml_meta_data: Path,
     dat_raw_data: Path,
 ):
-    dataset = tracab.load(
-        meta_data=json_meta_data, raw_data=json_raw_data, only_alive=False
+    tracab_json_deserializer = identify_deserializer(
+        meta_data=json_meta_data, raw_data=json_raw_data
     )
-    assert len(dataset.records) == 7
-    dataset = tracab.load(
-        meta_data=xml_meta_data, raw_data=dat_raw_data, only_alive=False
+    assert tracab_json_deserializer == TRACABJSONDeserializer
+    tracab_dat_deserializer = identify_deserializer(
+        meta_data=xml_meta_data, raw_data=dat_raw_data
     )
-    assert len(dataset.records) == 6
+    assert tracab_dat_deserializer == TRACABDatDeserializer
 
 
 class TestTracabJSONTracking:

@@ -45,6 +45,7 @@ from kloppy.domain.models.event import (
     EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
+    UnderPressureQualifier,
 )
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     parse_str_ts,
@@ -916,6 +917,13 @@ class TestStatsBombGoalkeeperEvent:
         assert sweeper_claim.get_qualifier_value(GoalkeeperQualifier) == (
             GoalkeeperActionType.PICK_UP
         )
+
+    def test_under_pressure(self, dataset: EventDataset):
+        """It should add the under pressure qualifier"""
+        under_pressure = dataset.get_event_by_id(
+            "c2a03c46-c936-4f7b-9b26-72d470a892ef"
+        )
+        assert under_pressure.get_qualifier_value(UnderPressureQualifier)
 
 
 class TestStatsBombSubstitutionEvent:

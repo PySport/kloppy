@@ -490,6 +490,11 @@ class CounterAttackQualifier(BoolQualifier):
 
 
 @dataclass
+class UnderPressureQualifier(BoolQualifier):
+    pass
+
+
+@dataclass
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
     """

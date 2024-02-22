@@ -25,6 +25,7 @@ from kloppy.domain import (
     TakeOnResult,
     FormationType,
 )
+from kloppy.domain.models.event import UnderPressureQualifier
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     parse_str_ts,
@@ -234,7 +235,7 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        return (
+        events = (
             self._create_aerial_won_event(
                 event_factory, **generic_event_kwargs
             )
@@ -243,6 +244,9 @@ class EVENT:
                 event_factory, **generic_event_kwargs
             )
         )
+        for event in events:
+            self._add_under_pressure_qualifier(event)
+        return events
 
     def _parse_generic_kwargs(self) -> Dict:
         return {
@@ -304,6 +308,17 @@ class EVENT:
             )
             return [ball_out_event]
         return []
+
+    def _add_under_pressure_qualifier(self, event: Event) -> Event:
+        if ("under_pressure" in self.raw_event) and (
+            self.raw_event["under_pressure"]
+        ):
+            if event.qualifiers:
+                event.qualifiers.append(UnderPressureQualifier(True))
+            else:
+                event.qualifiers = [UnderPressureQualifier(True)]
+
+        return event
 
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs

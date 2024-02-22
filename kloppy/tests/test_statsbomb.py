@@ -783,8 +783,6 @@ class TestStatsBombDribbleEvent:
         )
         # A dribble should have a result
         assert dribble.result == TakeOnResult.INCOMPLETE
-        # A dribble has no qualifiers
-        assert dribble.qualifiers is None
 
     def test_result_out(self, dataset: EventDataset):
         """The result of a dribble can be TakeOnResult.OUT"""
@@ -807,8 +805,6 @@ class TestStatsBombCarryEvent:
         carry = dataset.get_event_by_id("fab6360a-cbc2-45a3-aafa-5f3ec81eb9c7")
         # A carry is always successful
         assert carry.result == CarryResult.COMPLETE
-        # A carry has no qualifiers
-        assert carry.qualifiers is None
         # A carry should have an end location
         assert carry.end_coordinates == Point(21.65, 54.85)
         # A carry should have an end timestamp

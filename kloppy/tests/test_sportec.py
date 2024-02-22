@@ -49,18 +49,16 @@ class TestSportecEventData:
         assert len(dataset.events) == 29
         assert dataset.events[28].result == ShotResult.OWN_GOAL
 
-        assert dataset.metadata.orientation == Orientation.FIXED_HOME_AWAY
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0] == Period(
             id=1,
             start_timestamp=1591381800.21,
             end_timestamp=1591384584.0,
-            attacking_direction=AttackingDirection.HOME_AWAY,
         )
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=1591385607.01,
             end_timestamp=1591388598.0,
-            attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
         player = dataset.metadata.teams[0].players[0]

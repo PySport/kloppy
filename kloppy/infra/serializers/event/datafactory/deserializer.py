@@ -416,9 +416,6 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     id=half,
                     start_timestamp=start_ts[half],
                     end_timestamp=end_ts,
-                    attacking_direction=AttackingDirection.HOME_AWAY
-                    if half % 2 == 1
-                    else AttackingDirection.AWAY_HOME,
                 )
 
             # exclude goals, already listed as shots too
@@ -576,7 +573,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             periods=sorted(periods.values(), key=lambda p: p.id),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
-            orientation=Orientation.HOME_TEAM,
+            orientation=Orientation.HOME_AWAY,
             flags=DatasetFlag.BALL_OWNING_TEAM,
             score=score,
             provider=Provider.DATAFACTORY,

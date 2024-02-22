@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, Optional, Union
+import warnings
+from typing import Tuple, Dict, NamedTuple, IO, Optional, Union
 
 from lxml import objectify
 
@@ -180,24 +181,26 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 frame = self._frame_from_line(teams, period, line, frame_rate)
 
                 frame = transformer.transform_frame(frame)
-
                 frames.append(frame)
-
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(
-                            frame
-                        )
-                    )
 
                 if self.limit and n >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

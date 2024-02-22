@@ -1142,6 +1142,7 @@ __all__ = [
     "GoalkeeperAction",
     "GoalkeeperActionType",
     "CounterAttackQualifier",
+    "UnderPressureQualifier",
     "DuelEvent",
     "DuelType",
     "DuelQualifier",

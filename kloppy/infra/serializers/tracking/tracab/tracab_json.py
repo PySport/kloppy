@@ -1,4 +1,5 @@
 import logging
+import warnings
 import json
 import html
 from typing import Dict, Optional, Union
@@ -20,6 +21,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
     Position,
+    attacking_direction_from_frame,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -181,9 +183,6 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                             id=period_id,
                             start_timestamp=period_start_frame / frame_rate,
                             end_timestamp=period_end_frame / frame_rate,
-                            attacking_direction=AttackingDirection.HOME_AWAY
-                            if meta_data[f"Phase{period_id}HomeGKLeft"]
-                            else AttackingDirection.AWAY_HOME,
                         )
                     )
 
@@ -227,11 +226,21 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 if self.limit and n >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

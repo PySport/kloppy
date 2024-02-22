@@ -20,11 +20,11 @@ def load(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = True,
-    data_version: Optional[str] = None,
+    file_format: Optional[str] = None,
 ) -> TrackingDataset:
-    if data_version == "dat":
+    if file_format == "dat":
         deserializer_class = TRACABDatDeserializer
-    elif data_version == "json":
+    elif file_format == "json":
         deserializer_class = TRACABJSONDeserializer
     else:
         deserializer_class = identify_deserializer(meta_data, raw_data)
@@ -55,7 +55,7 @@ def identify_deserializer(
 
     if deserializer is None:
         raise ValueError(
-            "Tracab data version could not be recognized, please specify"
+            "Tracab file format could not be recognized, please specify"
         )
 
     return deserializer

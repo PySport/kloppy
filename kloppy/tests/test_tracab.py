@@ -68,7 +68,7 @@ class TestTracabJSONTracking:
             raw_data=json_raw_data,
             coordinates="tracab",
             only_alive=False,
-            data_version="json",
+            file_format="json",
         )
         assert dataset.metadata.provider == Provider.TRACAB
         assert dataset.dataset_type == DatasetType.TRACKING

@@ -25,7 +25,7 @@ from kloppy.domain import (
     Orientation,
     PassQualifier,
     PassType,
-    PitchDimensions,
+    OptaPitchDimensions,
     Point,
     Point,
     Point3D,
@@ -149,9 +149,7 @@ class TestOptaMetadata:
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""
-        assert dataset.metadata.pitch_dimensions == PitchDimensions(
-            x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
-        )
+        assert dataset.metadata.pitch_dimensions == OptaPitchDimensions()
 
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""

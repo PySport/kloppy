@@ -102,16 +102,10 @@ class DatasetTransformer:
         if point is None:
             return None
 
-        x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
-        y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
+        point_base = self._from_pitch_dimensions.to_base(point)
+        point_to = self._to_pitch_dimensions.from_base(point_base)
 
-        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
-        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
-
-        if isinstance(point, Point3D):
-            return Point3D(x=x, y=y, z=point.z)
-        else:
-            return Point(x=x, y=y)
+        return point_to
 
     def flip_point(
         self, point: Union[Point, Point3D, None]

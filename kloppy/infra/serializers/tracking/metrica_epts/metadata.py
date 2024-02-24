@@ -6,6 +6,7 @@ import warnings
 from kloppy.domain import (
     Period,
     PitchDimensions,
+    NormalizedPitchDimensions,
     Dimension,
     Score,
     Ground,
@@ -170,11 +171,11 @@ def _load_pitch_dimensions(
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
     if field_size_elm is not None and normalized:
-        return PitchDimensions(
+        return NormalizedPitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
-            length=int(field_size_elm.find("Width")),
-            width=int(field_size_elm.find("Height")),
+            pitch_length=int(field_size_elm.find("Width")),
+            pitch_width=int(field_size_elm.find("Height")),
         )
     else:
         return None
@@ -304,8 +305,8 @@ def load_metadata(
     if provider and pitch_dimensions:
         from_coordinate_system = build_coordinate_system(
             provider,
-            length=pitch_dimensions.length,
-            width=pitch_dimensions.width,
+            length=pitch_dimensions.pitch_length,
+            width=pitch_dimensions.pitch_width,
         )
     else:
         from_coordinate_system = None

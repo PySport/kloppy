@@ -11,7 +11,7 @@ from kloppy.domain import (
     TakeOnResult,
     Dimension,
     BallState,
-    PitchDimensions,
+    ImperialPitchDimensions,
     CardQualifier,
     DatasetFlag,
     CarryResult,
@@ -165,8 +165,8 @@ class TestStatsBombMetadata:
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""
-        assert dataset.metadata.pitch_dimensions == PitchDimensions(
-            x_dim=Dimension(0, 120), y_dim=Dimension(0, 80)
+        assert dataset.metadata.pitch_dimensions == ImperialPitchDimensions(
+            x_dim=Dimension(0, 120), y_dim=Dimension(0, 80), standardized=True
         )
 
     def test_coordinate_system(self, dataset):

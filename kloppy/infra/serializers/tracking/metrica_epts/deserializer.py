@@ -99,8 +99,8 @@ class MetricaEPTSTrackingDataDeserializer(
 
             if metadata.provider and metadata.pitch_dimensions:
                 transformer = self.get_transformer(
-                    length=metadata.pitch_dimensions.length,
-                    width=metadata.pitch_dimensions.width,
+                    length=metadata.pitch_dimensions.pitch_length,
+                    width=metadata.pitch_dimensions.pitch_width,
                     provider=metadata.coordinate_system.provider,
                 )
             else:

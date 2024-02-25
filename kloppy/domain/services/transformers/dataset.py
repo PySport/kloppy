@@ -239,23 +239,20 @@ class DatasetTransformer:
         if not point:
             return None
 
-        x = self._from_pitch_dimensions.x_dim.to_base(point.x)
-        y = self._from_pitch_dimensions.y_dim.to_base(point.y)
+        point_base = self._from_pitch_dimensions.to_base(point)
 
         if (
             self._from_coordinate_system.vertical_orientation
             != self._to_coordinate_system.vertical_orientation
         ):
-            y = 1 - y
+            point_base = replace(
+                point_base,
+                y=68 - point_base.y,
+            )
 
-        if not self._to_coordinate_system.normalized:
-            x = self._to_pitch_dimensions.x_dim.from_base(x)
-            y = self._to_pitch_dimensions.y_dim.from_base(y)
+        point_to = self._to_pitch_dimensions.from_base(point_base)
 
-        if isinstance(point, Point3D):
-            return Point3D(x=x, y=y, z=point.z)
-        else:
-            return Point(x=x, y=y)
+        return point_to
 
     def __flip_frame(self, frame: Frame):
         players_data = {}
@@ -470,24 +467,24 @@ class DatasetTransformerBuilder:
 
     def build(
         self,
-        length: float,
-        width: float,
         provider: Provider,
         dataset_type: DatasetType,
+        pitch_length: Optional[float] = None,
+        pitch_width: Optional[float] = None,
     ):
         from_coordinate_system = build_coordinate_system(
             # This comment forces black to keep the arguments as multi-line
             provider,
-            length=length,
-            width=width,
             dataset_type=dataset_type,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
         to_coordinate_system = build_coordinate_system(
             self.to_coordinate_system,
-            length=length,
-            width=width,
             dataset_type=self.to_dataset_type or dataset_type,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
         return DatasetTransformer(

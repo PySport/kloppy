@@ -40,6 +40,20 @@ class TestPitchdimensions:
         assert round(ifab_point.x, 2) == 62.78
         assert round(ifab_point.y, 2) == 41.72
 
+    def test_to_base_dimensions_out_of_bounds(self):
+        pitch = NormalizedPitchDimensions(
+            x_dim=Dimension(-100, 100),
+            y_dim=Dimension(-50, 50),
+            pitch_length=120,
+            pitch_width=80,
+        )
+        ifab_point = pitch.to_base(Point(-100, 0))
+        assert ifab_point == Point(0, 34)
+        ifab_point = pitch.to_base(Point(-105, 0))
+        assert ifab_point == Point(-2.625, 34)
+        ifab_point = pitch.to_base(Point(105, 0))
+        assert ifab_point == Point(107.625, 34)
+
     def test_from_base_dimensions(self):
         pitch = OptaPitchDimensions()
 
@@ -54,6 +68,20 @@ class TestPitchdimensions:
         )
         assert round(ifab_point.x, 2) == 60
         assert round(ifab_point.y, 2) == 61
+
+    def test_from_base_dimensions_out_of_bounds(self):
+        pitch = NormalizedPitchDimensions(
+            x_dim=Dimension(-100, 100),
+            y_dim=Dimension(-50, 50),
+            pitch_length=120,
+            pitch_width=80,
+        )
+        point = pitch.from_base(Point(0, 34))
+        assert point == Point(-100, 0)
+        point = pitch.from_base(Point(-2.625, 34))
+        assert point == Point(-105, 0)
+        point = pitch.from_base(Point(107.625, 34))
+        assert point == Point(105, 0)
 
     def test_distance_between(self):
         pitch = OptaPitchDimensions(pitch_length=105, pitch_width=68)

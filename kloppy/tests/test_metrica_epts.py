@@ -121,9 +121,8 @@ class TestMetricaEPTSTracking:
             first_player
         ].coordinates == Point(x=0.30602, y=0.97029)
 
-        assert dataset.records[0].ball_coordinates == Point3D(
-            x=0.52867, y=0.7069, z=None
-        )
+        assert dataset.records[0].ball_coordinates.x == pytest.approx(0.52867)
+        assert dataset.records[0].ball_coordinates.y == pytest.approx(0.7069)
 
     def test_other_data_deserialization(self, meta_data: str, raw_data: str):
         dataset = metrica.load_tracking_epts(

@@ -4,6 +4,8 @@ from enum import Enum
 from math import sqrt
 from typing import Optional
 
+from kloppy.exceptions import KloppyError
+
 
 class Unit(Enum):
     """Unit to measure distances on a pitch."""
@@ -14,15 +16,12 @@ class Unit(Enum):
     FEET = "ft"
     NORMED = "normed"
 
-    def convert(
-        self, to_unit: "Unit", value: float, base: Optional[float] = None
-    ) -> float:
+    def convert(self, to_unit: "Unit", value: float) -> float:
         """Converts a value from one unit to another.
 
         Arguments:
             to_unit: The unit to convert to
             value: The value to convert
-            base: The base value, required when converting to or from a normed unit
         Returns:
             The value converted to the target unit
         """
@@ -34,14 +33,9 @@ class Unit(Enum):
         }
         if self == to_unit:
             return value
-        elif self == Unit.NORMED:
-            if base is None:
-                raise ValueError("Base value is required for a normed unit")
-            return value * base
-        elif to_unit == Unit.NORMED:
-            if base is None:
-                raise ValueError("Base value is required for a normed unit")
-            return value / base
+        elif self == Unit.NORMED or to_unit == Unit.NORMED:
+            raise ValueError("Cannot convert to or from a normed unit")
+
         factor_to_meter = conversion_factors.get((Unit.METERS, self))
         factor_from_meter = conversion_factors.get((Unit.METERS, to_unit))
         assert (
@@ -90,19 +84,30 @@ class Point3D(Point):
 
 @dataclass(frozen=True)
 class Dimension:
-    """
+    """Limits of pitch boundaries along a single axis.
+
     Attributes:
         min: Minimal possible value within this dimension
         max: Maximal possible value within this dimension
     """
 
-    min: float
-    max: float
+    min: Optional[float] = None
+    max: Optional[float] = None
 
     def to_base(self, value: float) -> float:
+        """Map a value from this dimension to [0, 1]."""
+        if self.min is None or self.max is None:
+            raise KloppyError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
         return (value - self.min) / (self.max - self.min)
 
     def from_base(self, value: float) -> float:
+        """Map a value from [0, 1] to this dimension."""
+        if self.min is None or self.max is None:
+            raise KloppyError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
         return value * (self.max - self.min) + self.min
 
 
@@ -164,12 +169,20 @@ class PitchDimensions:
         """
         return PitchDimensions(
             x_dim=Dimension(
-                min=self.unit.convert(to_unit, self.x_dim.min),
-                max=self.unit.convert(to_unit, self.x_dim.max),
+                min=self.unit.convert(to_unit, self.x_dim.min)
+                if self.x_dim.min is not None
+                else None,
+                max=self.unit.convert(to_unit, self.x_dim.max)
+                if self.x_dim.max is not None
+                else None,
             ),
             y_dim=Dimension(
-                min=self.unit.convert(to_unit, self.y_dim.min),
-                max=self.unit.convert(to_unit, self.y_dim.max),
+                min=self.unit.convert(to_unit, self.y_dim.min)
+                if self.y_dim.min is not None
+                else None,
+                max=self.unit.convert(to_unit, self.y_dim.max)
+                if self.y_dim.max is not None
+                else None,
             ),
             standardized=self.standardized,
             unit=to_unit,
@@ -198,6 +211,7 @@ class PitchDimensions:
         )
 
     def _transformation_zones_x(self, length: float):
+        assert self.x_dim.min is not None
         penalty_arc = self.penalty_spot_distance + self.penalty_arc_radius
         return [
             # goal line to 6 yard box
@@ -230,6 +244,7 @@ class PitchDimensions:
         ]
 
     def _transformation_zones_y(self, width: float):
+        assert self.y_dim.min is not None
         return [
             # side line to penalty area
             (
@@ -268,6 +283,16 @@ class PitchDimensions:
         Returns:
             The point in the IFAB pitch dimensions
         """
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise KloppyError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
+
         ifab_dims = MetricPitchDimensions(
             x_dim=Dimension(0, pitch_length),
             y_dim=Dimension(0, pitch_width),
@@ -290,21 +315,27 @@ class PitchDimensions:
                 v = from_length - (v - from_zones[0][0]) + from_zones[0][0]
                 mirror = True
             # find the zone the v coordinate is in
-            zone = next(
-                (
-                    idx
-                    for idx, zone in enumerate(from_zones)
-                    if zone[0] <= v <= zone[1]
+            try:
+                zone = next(
+                    (
+                        idx
+                        for idx, zone in enumerate(from_zones)
+                        if zone[0] <= v <= zone[1]
+                    )
                 )
-            )
-            scale = (
-                # length of the zone in IFAB dimensions
-                (ifab_zones[zone][1] - ifab_zones[zone][0])
-                # length of the zone in the original dimensions
-                / (from_zones[zone][1] - from_zones[zone][0])
-            )
-            # ifab = smallest IFAB value of the zone + (v - smallest v value of the zone) * scaling factor of the zone
-            ifab = ifab_zones[zone][0] + (v - from_zones[zone][0]) * scale
+                scale = (
+                    # length of the zone in IFAB dimensions
+                    (ifab_zones[zone][1] - ifab_zones[zone][0])
+                    # length of the zone in the original dimensions
+                    / (from_zones[zone][1] - from_zones[zone][0])
+                )
+                # ifab = smallest IFAB value of the zone + (v - smallest v value of the zone) * scaling factor of the zone
+                ifab = ifab_zones[zone][0] + (v - from_zones[zone][0]) * scale
+            except StopIteration:
+                # value is outside of the pitch dimensions
+                ifab = ifab_zones[0][0] + (v - from_zones[0][0]) * (
+                    ifab_length / from_length
+                )
             if mirror:
                 ifab = ifab_length - ifab
             return ifab
@@ -325,9 +356,13 @@ class PitchDimensions:
                     y_ifab_zones,
                     pitch_width,
                 ),
-                z=point.z * 2.44 / self.goal_height
-                if self.goal_height is not None
-                else point.z,
+                z=(
+                    point.z * 2.44 / self.goal_height
+                    if self.goal_height is not None
+                    else point.z
+                )
+                if point.z is not None
+                else None,
             )
         else:
             return Point(
@@ -362,6 +397,16 @@ class PitchDimensions:
         Returns:
             The point in the regular pitch dimensions
         """
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise KloppyError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
+
         ifab_dims = MetricPitchDimensions(
             x_dim=Dimension(0, pitch_length),
             y_dim=Dimension(0, pitch_width),
@@ -384,23 +429,29 @@ class PitchDimensions:
                 v = ifab_length - v
                 mirror = True
             # find the zone the v coordinate is in
-            zone = next(
-                (
-                    idx
-                    for idx, zone in enumerate(ifab_zones)
-                    if zone[0] <= v <= zone[1]
+            try:
+                zone = next(
+                    (
+                        idx
+                        for idx, zone in enumerate(ifab_zones)
+                        if zone[0] <= v <= zone[1]
+                    )
                 )
-            )
-            scale = (
-                # length of the zone in the original dimensions
-                (to_zones[zone][1] - to_zones[zone][0])
-                # length of the zone in IFAB dimensions
-                / (ifab_zones[zone][1] - ifab_zones[zone][0])
-            )
-            # ifab = smallest IFAB value of the zone + (v - smallest v value of the zone) * scaling factor of the zone
-            v = to_zones[zone][0] + (v - ifab_zones[zone][0]) * scale
+                scale = (
+                    # length of the zone in the original dimensions
+                    (to_zones[zone][1] - to_zones[zone][0])
+                    # length of the zone in IFAB dimensions
+                    / (ifab_zones[zone][1] - ifab_zones[zone][0])
+                )
+                # ifab = smallest IFAB value of the zone + (v - smallest v value of the zone) * scaling factor of the zone
+                v = to_zones[zone][0] + (v - ifab_zones[zone][0]) * scale
+            except StopIteration:
+                # value is outside of the pitch dimensions
+                v = to_zones[0][0] + (v - ifab_zones[0][0]) * (
+                    to_length / ifab_length
+                )
             if mirror:
-                v = to_length - v
+                v = (to_length + to_zones[0][0] - v) + to_zones[0][0]
             return v
 
         if isinstance(point, Point3D):
@@ -419,9 +470,13 @@ class PitchDimensions:
                     y_ifab_zones,
                     pitch_width,
                 ),
-                z=point.z * self.goal_height / 2.44
-                if self.goal_height is not None
-                else point.z,
+                z=(
+                    point.z * self.goal_height / 2.44
+                    if self.goal_height is not None
+                    else point.z
+                )
+                if point.z is not None
+                else None,
             )
         else:
             return Point(

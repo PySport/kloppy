@@ -280,8 +280,9 @@ class TrackingDataset(Dataset[Frame]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import \
-                DefaultFrameTransformer
+            from ..services.transformers.attribute import (
+                DefaultFrameTransformer,
+            )
 
             record_converter = DefaultFrameTransformer()
 

@@ -387,7 +387,8 @@ class SportecEventDataDeserializer(
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             transformer = self.get_transformer(
-                length=sportec_metadata.x_max, width=sportec_metadata.y_max
+                pitch_length=sportec_metadata.x_max,
+                pitch_width=sportec_metadata.y_max,
             )
 
             periods = []

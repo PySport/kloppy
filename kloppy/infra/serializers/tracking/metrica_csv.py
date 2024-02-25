@@ -146,14 +146,10 @@ class MetricaCSVTrackingDataDeserializer(
     def deserialize(
         self, inputs: MetricaCSVTrackingDataInputs
     ) -> TrackingDataset:
-        # TODO: consider passing this in __init__
-        length = 105
-        width = 68
-
         # consider reading this from data
         frame_rate = 25
 
-        transformer = self.get_transformer(length=length, width=width)
+        transformer = self.get_transformer()
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(

@@ -154,7 +154,7 @@ class TestOptaMetadata:
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
         assert dataset.metadata.coordinate_system == build_coordinate_system(
-            Provider.OPTA, width=100, length=100
+            Provider.OPTA
         )
 
     def test_score(self, dataset):
@@ -196,7 +196,8 @@ class TestOptaEvent:
             f24_data=base_dir / "files" / "opta_f24.xml",
         )
         event = dataset.get_event_by_id("1510681159")
-        assert event.coordinates == Point(0.501, 0.506)
+        assert event.coordinates.x == pytest.approx(0.501, 0.001)
+        assert event.coordinates.y == pytest.approx(0.50672, 0.001)
 
     def test_ball_owning_team(self, dataset: EventDataset):
         """Test if the ball owning team is correctly set"""

@@ -119,7 +119,9 @@ class TestWyscoutV2:
 
     def test_correct_normalized_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, data_version="V2")
-        assert dataset.records[2].coordinates == Point(0.29, 0.06)
+        assert dataset.records[2].coordinates == Point(
+            0.2981354967264447, 0.06427244582043344
+        )
 
 
 class TestWyscoutV3:
@@ -144,7 +146,9 @@ class TestWyscoutV3:
 
     def test_normalized_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
-        assert dataset.records[2].coordinates == Point(0.36, 0.78)
+        assert dataset.records[2].coordinates == Point(
+            0.36417591801878735, 0.7695098039215686
+        )
 
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1331979498)

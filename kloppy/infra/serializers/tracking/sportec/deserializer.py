@@ -122,7 +122,8 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             teams = home_team, away_team = sportec_metadata.teams
             periods = sportec_metadata.periods
             transformer = self.get_transformer(
-                length=sportec_metadata.x_max, width=sportec_metadata.y_max
+                pitch_length=sportec_metadata.x_max,
+                pitch_width=sportec_metadata.y_max,
             )
 
         with performance_logging("parse raw data", logger=logger):

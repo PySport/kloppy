@@ -158,7 +158,7 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():

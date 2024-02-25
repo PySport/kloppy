@@ -300,7 +300,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             pitch_size_length = metadata["pitch_length"]
 
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
             home_team_id = metadata["home_team"]["id"]

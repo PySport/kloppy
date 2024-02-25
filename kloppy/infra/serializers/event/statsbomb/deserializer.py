@@ -38,7 +38,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
     def deserialize(self, inputs: StatsBombInputs) -> EventDataset:
         # Intialize coordinate system transformer
-        self.transformer = self.get_transformer(length=120, width=80)
+        self.transformer = self.get_transformer()
 
         # Load data from JSON files
         # and determine fidelity versions for x/y coordinates

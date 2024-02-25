@@ -28,14 +28,14 @@ def transform(
         if isinstance(to_coordinate_system, str):
             to_coordinate_system = build_coordinate_system(
                 provider=Provider[to_coordinate_system.upper()],
-                length=dataset.metadata.coordinate_system.length,
-                width=dataset.metadata.coordinate_system.width,
+                pitch_length=dataset.metadata.coordinate_system.pitch_length,
+                pitch_width=dataset.metadata.coordinate_system.pitch_width,
             )
         elif isinstance(to_coordinate_system, Provider):
             to_coordinate_system = build_coordinate_system(
                 provider=to_coordinate_system,
-                length=dataset.metadata.coordinate_system.length,
-                width=dataset.metadata.coordinate_system.width,
+                pitch_length=dataset.metadata.coordinate_system.pitch_length,
+                pitch_width=dataset.metadata.coordinate_system.pitch_width,
             )
 
     return DatasetTransformer.transform_dataset(

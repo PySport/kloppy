@@ -63,4 +63,5 @@ class TestDatafactory:
     def test_correct_normalized_deserialization(self, event_data: str):
         dataset = datafactory.load(event_data=event_data)
 
-        assert dataset.events[0].coordinates == Point(0.505, 0.505)
+        assert dataset.events[0].coordinates.x == pytest.approx(0.505, 0.001)
+        assert dataset.events[0].coordinates.y == pytest.approx(0.505, 0.001)

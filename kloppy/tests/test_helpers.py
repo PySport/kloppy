@@ -276,9 +276,8 @@ class TestHelpers:
             to_coordinate_system=Provider.METRICA
         )
         transformerd_coordinate_system = MetricaCoordinateSystem(
-            normalized=True,
-            length=dataset.metadata.coordinate_system.length,
-            width=dataset.metadata.coordinate_system.width,
+            pitch_length=dataset.metadata.coordinate_system.pitch_length,
+            pitch_width=dataset.metadata.coordinate_system.pitch_width,
         )
 
         assert transformed_dataset.records[0].players_data[
@@ -419,8 +418,12 @@ class TestHelpers:
         incomplete_passes = df[
             (df.event_type == "PASS") & (df.result == "INCOMPLETE")
         ].reset_index()
-        assert incomplete_passes.loc[0, "end_coordinates_y"] == 0.90625
-        assert incomplete_passes.loc[0, "end_coordinates_x"] == 0.7125
+        assert incomplete_passes.loc[0, "end_coordinates_y"] == pytest.approx(
+            0.91519, 1e-4
+        )
+        assert incomplete_passes.loc[0, "end_coordinates_x"] == pytest.approx(
+            0.70945, 1e-4
+        )
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()

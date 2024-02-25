@@ -172,7 +172,7 @@ class TestStatsBombMetadata:
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
         assert dataset.metadata.coordinate_system == build_coordinate_system(
-            Provider.STATSBOMB, width=80, length=120
+            Provider.STATSBOMB
         )
 
     @pytest.mark.xfail
@@ -497,10 +497,10 @@ class TestStatsBombEvent:
         player_3089 = dataset.metadata.teams[0].get_player_by_id("3089")
         assert freeze_frame.players_coordinates[
             player_3089
-        ].x == pytest.approx(0.762, abs=1e-2)
+        ].x == pytest.approx(0.756, abs=1e-2)
         assert freeze_frame.players_coordinates[
             player_3089
-        ].y == pytest.approx(0.352, abs=1e-2)
+        ].y == pytest.approx(0.340, abs=1e-2)
 
         # The 360 freeze-frame should have standardized coordinates
         pass_event = dataset.get_event_by_id(
@@ -515,28 +515,28 @@ class TestStatsBombEvent:
         print(coordinates_per_team)
         assert coordinates_per_team == {
             "Belgium": [
-                Point(x=0.29992169834015553, y=0.5208156671179599),
-                Point(x=0.30643713954672475, y=0.7026264079766127),
-                Point(x=0.3214467545271119, y=0.3826089652330575),
-                Point(x=0.405612967947393, y=0.9422736509345233),
-                Point(x=0.4062973621807315, y=0.0482915505598324),
-                Point(x=0.42465606231382946, y=0.5964959025774841),
-                Point(x=0.4508398556294095, y=0.5289610882963541),
-                Point(x=0.4890186975946768, y=0.2568344237508965),
-                Point(x=0.4950593030298559, y=0.7029586200529815),
-                Point(x=0.4995833333333334, y=0.499375),
+                Point(x=0.30230680550305883, y=0.5224074534269804),
+                Point(x=0.3084765294211162, y=0.7184206360532097),
+                Point(x=0.3226897158515237, y=0.37349986446702277),
+                Point(x=0.4023899669270551, y=0.9477821783616865),
+                Point(x=0.40303804636433893, y=0.04368333723843663),
+                Point(x=0.4212117680196045, y=0.6039661694463063),
+                Point(x=0.4485925347438968, y=0.5311757597543106),
+                Point(x=0.48851669519900487, y=0.23786065306469226),
+                Point(x=0.494833442596935, y=0.7187789039787056),
+                Point(x=0.49956428571428574, y=0.49932720588235296),
             ],
             "Portugal": [
-                Point(x=0.5007398055585528, y=0.64528577145353),
-                Point(x=0.503027413811032, y=0.8161700273569469),
-                Point(x=0.5276528464860737, y=0.2579702535077385),
-                Point(x=0.5278342018640673, y=0.3780770836091537),
-                Point(x=0.5771632092108575, y=0.5977748576718983),
-                Point(x=0.6031968709341459, y=0.5636937522375899),
-                Point(x=0.661570167297097, y=0.3648423832684863),
-                Point(x=0.6653717429879116, y=0.7616501561039648),
-                Point(x=0.665577307051358, y=0.5960104748540174),
-                Point(x=0.6887022647928279, y=0.4433104586034662),
+                Point(x=0.5007736252412294, y=0.6565826947047873),
+                Point(x=0.5031658098709648, y=0.8337119724588331),
+                Point(x=0.5289169766111513, y=0.23908556750834548),
+                Point(x=0.5291066225207104, y=0.36861254114712655),
+                Point(x=0.5806906702033539, y=0.605345434744204),
+                Point(x=0.6059524111158714, y=0.568591301432695),
+                Point(x=0.6612283488962987, y=0.3543398250934656),
+                Point(x=0.6648282083259679, y=0.7820736977591778),
+                Point(x=0.6650228649084968, y=0.6034426689602147),
+                Point(x=0.6869207840759295, y=0.43896225927824783),
             ],
         }
 

@@ -16,7 +16,7 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
-    PlayerData,
+    Detection,
     Point,
     Point3D,
     Provider,
@@ -84,11 +84,13 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         ball_owning_team = None
 
         if len(components) > 2:
-            ball_data = components[2].split(";")[0].split(",")
-            ball_x, ball_y, ball_z = map(float, ball_data)
-            ball_coordinates = Point3D(ball_x, ball_y, ball_z)
+            raw_ball_data = components[2].split(";")[0].split(",")
+            ball_x, ball_y, ball_z = map(float, raw_ball_data)
+            ball_data = Detection(
+                coordinates=Point3D(ball_x, ball_y, ball_z),
+            )
         else:
-            ball_coordinates = None
+            ball_data = None
 
         players_data = {}
         player_info = components[1].split(";")[:-1]
@@ -115,12 +117,12 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                 )
                 team.players.append(player)
 
-            players_data[player] = PlayerData(coordinates=Point(x, y))
+            players_data[player] = Detection(coordinates=Point(x, y))
 
         return Frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
-            ball_coordinates=ball_coordinates,
+            ball_data=ball_data,
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_data=players_data,

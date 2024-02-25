@@ -9,7 +9,7 @@ from kloppy.domain import (
     Frame,
     Period,
     Player,
-    PlayerData,
+    Detection,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -111,14 +111,14 @@ def parse_freeze_frame(
             freeze_frame_player, freeze_frame_team, i
         )
 
-        players_data[player] = PlayerData(
+        players_data[player] = Detection(
             coordinates=parse_coordinates(
                 freeze_frame_player["location"], fidelity_version
             )
         )
 
     if event.player not in players_data:
-        players_data[event.player] = PlayerData(coordinates=event.coordinates)
+        players_data[event.player] = Detection(coordinates=event.coordinates)
 
     FREEZE_FRAME_FPS = 25
     frame_id = int(
@@ -128,8 +128,10 @@ def parse_freeze_frame(
 
     return Frame(
         frame_id=frame_id,
-        ball_coordinates=Point3D(
-            x=event.coordinates.x, y=event.coordinates.y, z=0
+        ball_data=Detection(
+            coordinates=Point3D(
+                x=event.coordinates.x, y=event.coordinates.y, z=0
+            ),
         ),
         players_data=players_data,
         period=event.period,

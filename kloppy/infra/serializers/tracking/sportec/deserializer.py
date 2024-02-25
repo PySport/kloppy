@@ -19,7 +19,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
     Metadata,
     Provider,
-    PlayerData,
+    Detection,
 )
 
 from kloppy.utils import performance_logging
@@ -176,7 +176,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                 else BallState.DEAD,
                                 period=period,
                                 players_data={
-                                    player_map[player_id]: PlayerData(
+                                    player_map[player_id]: Detection(
                                         coordinates=Point(
                                             x=float(raw_player_data["X"]),
                                             y=float(raw_player_data["Y"]),
@@ -187,12 +187,14 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     if player_id != "ball"
                                 },
                                 other_data={},
-                                ball_coordinates=Point3D(
-                                    x=float(ball_data["X"]),
-                                    y=float(ball_data["Y"]),
-                                    z=float(ball_data["Z"]),
+                                ball_data=Detection(
+                                    coordinates=Point3D(
+                                        x=float(ball_data["X"]),
+                                        y=float(ball_data["Y"]),
+                                        z=float(ball_data["Z"]),
+                                    ),
+                                    speed=float(ball_data["S"]),
                                 ),
-                                ball_speed=float(ball_data["S"]),
                             )
 
             frames = []

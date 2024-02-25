@@ -305,8 +305,8 @@ def load_metadata(
     if provider and pitch_dimensions:
         from_coordinate_system = build_coordinate_system(
             provider,
-            length=pitch_dimensions.pitch_length,
-            width=pitch_dimensions.pitch_width,
+            pitch_length=pitch_dimensions.pitch_length,
+            pitch_width=pitch_dimensions.pitch_width,
         )
     else:
         from_coordinate_system = None

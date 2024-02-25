@@ -17,7 +17,7 @@ from kloppy.domain import (
     Team,
     Ground,
     Player,
-    PlayerData,
+    Detection,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -103,7 +103,7 @@ class MetricaCSVTrackingDataDeserializer(
                         period=period,
                         frame_id=frame_id,
                         players_data={
-                            player: PlayerData(
+                            player: Detection(
                                 coordinates=Point(
                                     x=float(columns[3 + i * 2]),
                                     y=1 - float(columns[3 + i * 2 + 1]),
@@ -178,6 +178,10 @@ class MetricaCSVTrackingDataDeserializer(
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
 
+                ball_data = Detection(
+                    coordinates=home_partial_frame.ball_coordinates
+                )
+
                 players_data = {
                     **home_partial_frame.players_data,
                     **away_partial_frame.players_data,
@@ -186,7 +190,7 @@ class MetricaCSVTrackingDataDeserializer(
                 frame = Frame(
                     frame_id=frame_id,
                     timestamp=frame_id / frame_rate - period.start_timestamp,
-                    ball_coordinates=home_partial_frame.ball_coordinates,
+                    ball_data=ball_data,
                     players_data=players_data,
                     period=period,
                     ball_state=None,

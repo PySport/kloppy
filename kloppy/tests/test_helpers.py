@@ -25,7 +25,7 @@ from kloppy.domain import (
     Team,
     Ground,
     Player,
-    PlayerData,
+    Detection,
     Point3D,
 )
 
@@ -79,7 +79,9 @@ class TestHelpers:
                     period=periods[0],
                     players_data={},
                     other_data=None,
-                    ball_coordinates=Point3D(x=100, y=-50, z=0),
+                    ball_data=Detection(
+                        coordinates=Point3D(x=100, y=-50, z=0),
+                    ),
                 ),
                 Frame(
                     frame_id=2,
@@ -90,7 +92,7 @@ class TestHelpers:
                     players_data={
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
-                        ): PlayerData(
+                        ): Detection(
                             coordinates=Point(x=15, y=35),
                             distance=0.03,
                             speed=10.5,
@@ -98,7 +100,9 @@ class TestHelpers:
                         )
                     },
                     other_data={"extra_data": 1},
-                    ball_coordinates=Point3D(x=0, y=50, z=1),
+                    ball_data=Detection(
+                        coordinates=Point3D(x=0, y=50, z=1),
+                    ),
                 ),
             ],
         )

@@ -1,6 +1,6 @@
 from dataclasses import fields, replace
 
-from kloppy.domain.models.tracking import PlayerData
+from kloppy.domain.models.tracking import Detection
 from typing import Union, Optional
 
 from kloppy.domain import (
@@ -102,16 +102,10 @@ class DatasetTransformer:
         if point is None:
             return None
 
-        x_base = self._from_pitch_dimensions.x_dim.to_base(point.x)
-        y_base = self._from_pitch_dimensions.y_dim.to_base(point.y)
+        point_base = self._from_pitch_dimensions.to_base(point)
+        point_to = self._to_pitch_dimensions.from_base(point_base)
 
-        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
-        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
-
-        if isinstance(point, Point3D):
-            return Point3D(x=x, y=y, z=point.z)
-        else:
-            return Point(x=x, y=y)
+        return point_to
 
     def flip_point(
         self, point: Union[Point, Point3D, None]
@@ -195,17 +189,22 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.__change_point_coordinate_system(
-                frame.ball_coordinates
-            ),
-            ball_speed=frame.ball_speed,
+            ball_data=replace(
+                frame.ball_data,
+                coordinates=self.__change_point_coordinate_system(
+                    frame.ball_data.coordinates
+                ),
+            )
+            if frame.ball_data
+            else None,
             players_data={
-                key: PlayerData(
+                key: Detection(
                     coordinates=self.__change_point_coordinate_system(
                         player_data.coordinates
                     ),
                     distance=player_data.distance,
                     speed=player_data.speed,
+                    acceleration=player_data.acceleration,
                     other_data=player_data.other_data,
                 )
                 for key, player_data in frame.players_data.items()
@@ -222,11 +221,16 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.change_point_dimensions(
-                frame.ball_coordinates
-            ),
+            ball_data=replace(
+                frame.ball_data,
+                coordinates=self.change_point_dimensions(
+                    frame.ball_data.coordinates
+                ),
+            )
+            if frame.ball_data
+            else None,
             players_data={
-                key: PlayerData(
+                key: Detection(
                     coordinates=self.change_point_dimensions(
                         player_data.coordinates
                     ),
@@ -245,28 +249,25 @@ class DatasetTransformer:
         if not point:
             return None
 
-        x = self._from_pitch_dimensions.x_dim.to_base(point.x)
-        y = self._from_pitch_dimensions.y_dim.to_base(point.y)
+        point_base = self._from_pitch_dimensions.to_base(point)
 
         if (
             self._from_coordinate_system.vertical_orientation
             != self._to_coordinate_system.vertical_orientation
         ):
-            y = 1 - y
+            point_base = replace(
+                point_base,
+                y=68 - point_base.y,
+            )
 
-        if not self._to_coordinate_system.normalized:
-            x = self._to_pitch_dimensions.x_dim.from_base(x)
-            y = self._to_pitch_dimensions.y_dim.from_base(y)
+        point_to = self._to_pitch_dimensions.from_base(point_base)
 
-        if isinstance(point, Point3D):
-            return Point3D(x=x, y=y, z=point.z)
-        else:
-            return Point(x=x, y=y)
+        return point_to
 
     def __flip_frame(self, frame: Frame):
         players_data = {}
         for player, data in frame.players_data.items():
-            players_data[player] = PlayerData(
+            players_data[player] = Detection(
                 coordinates=self.flip_point(data.coordinates),
                 distance=data.distance,
                 speed=data.speed,
@@ -281,7 +282,12 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.flip_point(frame.ball_coordinates),
+            ball_data=replace(
+                frame.ball_data,
+                coordinates=self.flip_point(frame.ball_data.coordinates),
+            )
+            if frame.ball_data
+            else None,
             players_data=players_data,
             other_data=frame.other_data,
         )
@@ -476,24 +482,24 @@ class DatasetTransformerBuilder:
 
     def build(
         self,
-        length: float,
-        width: float,
         provider: Provider,
         dataset_type: DatasetType,
+        pitch_length: Optional[float] = None,
+        pitch_width: Optional[float] = None,
     ):
         from_coordinate_system = build_coordinate_system(
             # This comment forces black to keep the arguments as multi-line
             provider,
-            length=length,
-            width=width,
             dataset_type=dataset_type,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
         to_coordinate_system = build_coordinate_system(
             self.to_coordinate_system,
-            length=length,
-            width=width,
             dataset_type=self.to_dataset_type or dataset_type,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
         return DatasetTransformer(

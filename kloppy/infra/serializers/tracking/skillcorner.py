@@ -24,7 +24,7 @@ from kloppy.domain import (
     Score,
     Team,
     TrackingDataset,
-    PlayerData,
+    Detection,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -73,7 +73,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         frame_id = frame["frame"]
         frame_time = cls._timestamp_from_timestring(frame["time"])
 
-        ball_coordinates = None
+        ball_data = None
         players_data = {}
 
         # ball_carrier = frame["possession"].get("trackable_object")
@@ -101,7 +101,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 z = frame_record.get("z")
                 if z is not None:
                     z = float(z)
-                ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
+                ball_data = Detection(
+                    coordinates=Point3D(x=float(x), y=float(y), z=z)
+                )
                 continue
 
             elif trackable_object in referee_dict.keys():
@@ -134,12 +136,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     else:
                         player = anon_players["AWAY"][f"anon_away_{player_id}"]
 
-            players_data[player] = PlayerData(coordinates=Point(x, y))
+            players_data[player] = Detection(coordinates=Point(x, y))
 
         return Frame(
             frame_id=frame_id,
             timestamp=frame_time - periods[frame_period].start_timestamp,
-            ball_coordinates=ball_coordinates,
+            ball_data=ball_data,
             players_data=players_data,
             period=periods[frame_period],
             ball_state=None,
@@ -300,7 +302,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             pitch_size_length = metadata["pitch_length"]
 
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
             home_team_id = metadata["home_team"]["id"]

@@ -30,13 +30,16 @@ class TrackingDataDeserializer(ABC, Generic[T]):
         self.transformer_builder = DatasetTransformerBuilder(coordinate_system)
 
     def get_transformer(
-        self, length: float, width: float, provider: Optional[Provider] = None
+        self,
+        pitch_length: Optional[float] = None,
+        pitch_width: Optional[float] = None,
+        provider: Optional[Provider] = None,
     ) -> DatasetTransformer:
         return self.transformer_builder.build(
-            length=length,
-            width=width,
             provider=provider or self.provider,
             dataset_type=DatasetType.TRACKING,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
     @property

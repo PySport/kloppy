@@ -20,7 +20,7 @@ from kloppy.domain import (
     Ground,
     Player,
     Provider,
-    PlayerData,
+    Detection,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -80,7 +80,7 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
                 team.players.append(player)
 
-            players_data[player] = PlayerData(
+            players_data[player] = Detection(
                 coordinates=Point(float(x), float(y)), speed=float(speed)
             )
 
@@ -92,6 +92,11 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
             ball_owning_team,
             ball_state,
         ) = ball.rstrip(";").split(",")[:6]
+
+        ball_data = Detection(
+            coordinates=Point3D(float(ball_x), float(ball_y), float(ball_z)),
+            speed=float(ball_speed),
+        )
 
         frame_id = int(frame_id)
 
@@ -114,9 +119,7 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
         return Frame(
             frame_id=frame_id,
             timestamp=frame_id / frame_rate - period.start_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
+            ball_data=ball_data,
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_data=players_data,
@@ -158,7 +161,7 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():

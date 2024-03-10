@@ -1226,8 +1226,11 @@ def _get_pass_qualifiers(pass_dict: Dict) -> List[PassQualifier]:
             add_qualifier(PassType.HEAD_PASS)
         elif body_part_id == BODYPART.KEEPER_ARM:
             add_qualifier(PassType.HAND_PASS)
+    if "shot_assist" in pass_dict:
+        add_qualifier(PassType.SHOT_ASSIST)
     if "goal_assist" in pass_dict:
         add_qualifier(PassType.ASSIST)
+        add_qualifier(PassType.SHOT_ASSIST)
     return qualifiers
 
 

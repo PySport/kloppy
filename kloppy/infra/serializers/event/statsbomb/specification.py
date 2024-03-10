@@ -697,6 +697,26 @@ class DRIBBLE(EVENT):
         return [take_on_event]
 
 
+class DRIBBLED_PAST(EVENT):
+    """StatsBomb 39/Dribbled Past event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        duel_result = DuelResult.LOST
+        duel_qualifiers = [
+            DuelQualifier(value=DuelType.GROUND),
+            DuelQualifier(value=DuelType.DRIBBLED_PAST),
+        ]
+        dribbled_past_event = event_factory.build_duel(
+            result=duel_result,
+            qualifiers=duel_qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [dribbled_past_event]
+
+
 class CARRY(EVENT):
     """StatsBomb 43/Carry event."""
 
@@ -748,7 +768,10 @@ class DUEL(EVENT):
                 DuelQualifier(value=DuelType.AERIAL),
             ]
         elif type_id == DUEL.TYPE.TACKLE:
-            duel_qualifiers = [DuelQualifier(value=DuelType.GROUND)]
+            duel_qualifiers = [
+                DuelQualifier(value=DuelType.GROUND),
+                DuelQualifier(value=DuelType.TACKLE),
+            ]
 
         # Get duel result
         duel_won_outcomes = [
@@ -1272,6 +1295,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.CARRY: CARRY,
         EVENT_TYPE.DUEL: DUEL,
         EVENT_TYPE.FIFTY_FIFTY: FIFTY_FIFTY,
+        EVENT_TYPE.DRIBBLED_PAST: DRIBBLED_PAST,
         EVENT_TYPE.GOALKEEPER: GOALKEEPER,
         EVENT_TYPE.SUBSTITUTION: SUBSTITUTION,
         EVENT_TYPE.BAD_BEHAVIOUR: BAD_BEHAVIOUR,

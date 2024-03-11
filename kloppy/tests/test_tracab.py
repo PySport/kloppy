@@ -2,6 +2,11 @@ from pathlib import Path
 
 import pytest
 
+from kloppy._providers.tracab import (
+    identify_deserializer,
+    TRACABJSONDeserializer,
+    TRACABDatDeserializer,
+)
 from kloppy.domain import (
     Period,
     AttackingDirection,
@@ -18,19 +23,120 @@ from kloppy.domain import (
 from kloppy import tracab
 
 
-class TestTracabTracking:
-    @pytest.fixture
-    def meta_data(self, base_dir) -> str:
-        return base_dir / "files/tracab_meta.xml"
+@pytest.fixture(scope="session")
+def json_meta_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_meta.json"
 
-    @pytest.fixture
-    def raw_data(self, base_dir) -> str:
-        return base_dir / "files/tracab_raw.dat"
 
-    def test_correct_deserialization(self, meta_data: Path, raw_data: Path):
+@pytest.fixture(scope="session")
+def json_raw_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_raw.json"
+
+
+@pytest.fixture(scope="session")
+def xml_meta_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_meta.xml"
+
+
+@pytest.fixture(scope="session")
+def dat_raw_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_raw.dat"
+
+
+def test_correct_auto_recognize_deserialization(
+    json_meta_data: Path,
+    json_raw_data: Path,
+    xml_meta_data: Path,
+    dat_raw_data: Path,
+):
+    tracab_json_deserializer = identify_deserializer(
+        meta_data=json_meta_data, raw_data=json_raw_data
+    )
+    assert tracab_json_deserializer == TRACABJSONDeserializer
+    tracab_dat_deserializer = identify_deserializer(
+        meta_data=xml_meta_data, raw_data=dat_raw_data
+    )
+    assert tracab_dat_deserializer == TRACABDatDeserializer
+
+
+class TestTracabJSONTracking:
+    def test_correct_deserialization(
+        self, json_meta_data: Path, json_raw_data: Path
+    ):
         dataset = tracab.load(
-            meta_data=meta_data,
-            raw_data=raw_data,
+            meta_data=json_meta_data,
+            raw_data=json_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+            file_format="json",
+        )
+        assert dataset.metadata.provider == Provider.TRACAB
+        assert dataset.dataset_type == DatasetType.TRACKING
+        assert len(dataset.records) == 7
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.periods[0] == Period(
+            id=1,
+            start_timestamp=73940.32,
+            end_timestamp=76656.32,
+        )
+        assert dataset.metadata.periods[1] == Period(
+            id=2,
+            start_timestamp=77684.56,
+            end_timestamp=80717.32,
+        )
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
+
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
+        )
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
+
+        player_away_12 = dataset.metadata.teams[1].get_player_by_jersey_number(
+            12
+        )
+        assert dataset.records[0].players_data[
+            player_away_12
+        ].coordinates == Point(x=-4722.0, y=28.0)
+        assert dataset.records[0].ball_state == BallState.DEAD
+        assert dataset.records[1].ball_state == BallState.ALIVE
+        # Shouldn't this be closer to (0,0,0)?
+        assert dataset.records[1].ball_coordinates == Point3D(
+            x=2710.0, y=3722.0, z=11.0
+        )
+
+        # make sure player data is only in the frame when the player is at the pitch
+        assert "12170" in [
+            player.player_id
+            for player in dataset.records[0].players_data.keys()
+        ]
+        assert "12170" not in [
+            player.player_id
+            for player in dataset.records[6].players_data.keys()
+        ]
+
+    def test_correct_normalized_deserialization(
+        self, json_meta_data: Path, json_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=json_meta_data, raw_data=json_raw_data, only_alive=False
+        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
+        )
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
+
+
+class TestTracabDATTracking:
+    def test_correct_deserialization(
+        self, xml_meta_data: Path, dat_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=xml_meta_data,
+            raw_data=dat_raw_data,
             coordinates="tracab",
             only_alive=False,
         )
@@ -88,10 +194,10 @@ class TestTracabTracking:
         ]
 
     def test_correct_normalized_deserialization(
-        self, meta_data: Path, raw_data: Path
+        self, xml_meta_data: Path, dat_raw_data: Path
     ):
         dataset = tracab.load(
-            meta_data=meta_data, raw_data=raw_data, only_alive=False
+            meta_data=xml_meta_data, raw_data=dat_raw_data, only_alive=False
         )
 
         player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(

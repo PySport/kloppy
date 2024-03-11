@@ -30,7 +30,7 @@ class TestDatafactory:
         assert len(dataset.metadata.periods) == 2
         assert dataset.events[10].ball_owning_team == dataset.metadata.teams[1]
         assert dataset.events[23].ball_owning_team == dataset.metadata.teams[0]
-        assert dataset.metadata.orientation == Orientation.HOME_TEAM
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.teams[0].name == "Team A"
         assert dataset.metadata.teams[0].ground == Ground.HOME
         assert dataset.metadata.teams[1].name == "Team B"
@@ -47,13 +47,11 @@ class TestDatafactory:
             id=1,
             start_timestamp=0,
             end_timestamp=2912,
-            attacking_direction=AttackingDirection.HOME_AWAY,
         )
         assert dataset.metadata.periods[1] == Period(
             id=2,
             start_timestamp=2700,
             end_timestamp=5710,
-            attacking_direction=AttackingDirection.AWAY_HOME,
         )
 
         assert dataset.events[0].coordinates == Point(0.01, 0.01)

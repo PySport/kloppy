@@ -155,10 +155,6 @@ class TestStatsBombMetadata:
         assert dataset.metadata.periods[0].end_timestamp == parse_str_ts(
             "00:47:38.122"
         )
-        assert (
-            dataset.metadata.periods[0].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == parse_str_ts(
             "00:47:38.122"
@@ -166,10 +162,6 @@ class TestStatsBombMetadata:
         assert dataset.metadata.periods[1].end_timestamp == parse_str_ts(
             "00:47:38.122"
         ) + parse_str_ts("00:50:29.638")
-        assert (
-            dataset.metadata.periods[1].attacking_direction
-            == AttackingDirection.NOT_SET
-        )
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""

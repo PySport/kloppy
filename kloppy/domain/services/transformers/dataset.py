@@ -7,10 +7,12 @@ from kloppy.domain import (
     AttackingDirection,
     Dataset,
     DatasetFlag,
+    DataRecord,
     EventDataset,
     Frame,
     Orientation,
     PitchDimensions,
+    Period,
     Point,
     Point3D,
     Team,
@@ -90,6 +92,10 @@ class DatasetTransformer:
     def _needs_pitch_dimensions_change(self):
         return self._from_pitch_dimensions != self._to_pitch_dimensions
 
+    @property
+    def _needs_orientation_change(self):
+        return self._from_orientation != self._to_orientation
+
     def change_point_dimensions(
         self, point: Union[Point, Point3D, None]
     ) -> Union[Point, Point3D, None]:
@@ -130,7 +136,7 @@ class DatasetTransformer:
     def __needs_flip(
         self,
         ball_owning_team: Team,
-        attacking_direction: AttackingDirection,
+        period: Period,
         action_executing_team: Optional[Team] = None,
     ) -> bool:
         if (
@@ -143,37 +149,40 @@ class DatasetTransformer:
             if action_executing_team is None:
                 action_executing_team = ball_owning_team
 
-            orientation_factor_from = (
-                self._from_orientation.get_orientation_factor(
-                    ball_owning_team=ball_owning_team,
-                    attacking_direction=attacking_direction,
-                    action_executing_team=action_executing_team,
-                )
+            attacking_direction_from = AttackingDirection.from_orientation(
+                self._from_orientation,
+                period=period,
+                ball_owning_team=ball_owning_team,
+                action_executing_team=action_executing_team,
             )
-            orientation_factor_to = (
-                self._to_orientation.get_orientation_factor(
-                    ball_owning_team=ball_owning_team,
-                    attacking_direction=attacking_direction,
-                    action_executing_team=action_executing_team,
-                )
+            attacking_direction_to = AttackingDirection.from_orientation(
+                self._to_orientation,
+                period=period,
+                ball_owning_team=ball_owning_team,
+                action_executing_team=action_executing_team,
             )
-            flip = orientation_factor_from != orientation_factor_to
+            flip = (
+                attacking_direction_from != attacking_direction_to
+                and attacking_direction_to != AttackingDirection.NOT_SET
+            )
         return flip
 
     def transform_frame(self, frame: Frame) -> Frame:
         # Change coordinate system
         if self._needs_coordinate_system_change:
             frame = self.__change_frame_coordinate_system(frame)
+
         # Change dimensions
         elif self._needs_pitch_dimensions_change:
             frame = self.__change_frame_dimensions(frame)
 
         # Flip frame based on orientation
-        if self.__needs_flip(
-            ball_owning_team=frame.ball_owning_team,
-            attacking_direction=frame.period.attacking_direction,
-        ):
-            frame = self.__flip_frame(frame)
+        if self._needs_orientation_change:
+            if self.__needs_flip(
+                ball_owning_team=frame.ball_owning_team,
+                period=frame.period,
+            ):
+                frame = self.__flip_frame(frame)
 
         return frame
 
@@ -281,20 +290,22 @@ class DatasetTransformer:
         # Change coordinate system
         if self._needs_coordinate_system_change:
             event = self.__change_event_coordinate_system(event)
+
         # Change dimensions
         elif self._needs_pitch_dimensions_change:
             event = self.__change_event_dimensions(event)
 
         # Flip event based on orientation
-        if self.__needs_flip(
-            ball_owning_team=event.ball_owning_team,
-            attacking_direction=event.period.attacking_direction,
-            action_executing_team=event.team,
-        ):
-            event = self.__flip_event(event)
+        if self._needs_orientation_change:
+            if self.__needs_flip(
+                ball_owning_team=event.ball_owning_team,
+                period=event.period,
+                action_executing_team=event.team,
+            ):
+                event = self.__flip_event(event)
 
-        if event.freeze_frame:
-            event.freeze_frame = self.transform_frame(event.freeze_frame)
+            if event.freeze_frame:
+                event.freeze_frame = self.transform_frame(event.freeze_frame)
 
         return event
 

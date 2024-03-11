@@ -115,7 +115,7 @@ class TestMetricaEPTSTracking:
 
         assert len(dataset.records) == 100
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation is Orientation.HOME_TEAM
+        assert dataset.metadata.orientation is Orientation.HOME_AWAY
 
         assert dataset.records[0].players_data[
             first_player

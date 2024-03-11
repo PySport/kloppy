@@ -25,7 +25,7 @@ def main():
     with performance_logging("transform", logger=logger):
         # convert to TRACAB coordinates
         dataset = dataset.transform(
-            to_orientation="FIXED_HOME_AWAY",
+            to_orientation="STATIC_HOME_AWAY",
             to_pitch_dimensions=[(-5500, 5500), (-3300, 3300)],
         )
 

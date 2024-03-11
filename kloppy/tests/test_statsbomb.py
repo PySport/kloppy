@@ -868,6 +868,18 @@ class TestStatsBombDuelEvent:
         duel = dataset.get_event_by_id("9e5281ac-1fee-4a51-b6a5-78e99c22397e")
         assert duel.get_qualifier_value(CounterAttackQualifier) is True
 
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kick_off.get_qualifier_value(CounterAttackQualifier) is None
+
+        counter_attack_events = [
+            event
+            for event in dataset.events
+            if event.get_qualifier_value(CounterAttackQualifier) is True
+        ]
+        assert len(counter_attack_events) == 26
+
 
 class TestStatsBombGoalkeeperEvent:
     """Tests related to deserializing 30/Goalkeeper events"""

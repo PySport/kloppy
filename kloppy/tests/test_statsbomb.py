@@ -921,6 +921,18 @@ class TestStatsBombGoalkeeperEvent:
         )
         assert under_pressure.get_qualifier_value(UnderPressureQualifier)
 
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kick_off.get_qualifier_value(UnderPressureQualifier) is None
+
+        under_pressure_events = [
+            event
+            for event in dataset.events
+            if event.get_qualifier_value(UnderPressureQualifier) is True
+        ]
+        assert len(under_pressure_events) == 571
+
 
 class TestStatsBombSubstitutionEvent:
     """Tests related to deserializing 18/Substitution events"""

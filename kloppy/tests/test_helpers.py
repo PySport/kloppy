@@ -242,12 +242,12 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=-1234.0, y=-294.0)
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
 
         transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA
@@ -259,8 +259,8 @@ class TestHelpers:
         )
 
         assert transformed_dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
         assert (
             transformed_dataset.metadata.orientation
             == dataset.metadata.orientation

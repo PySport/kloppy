@@ -188,7 +188,7 @@ class BODYPART(Enum, metaclass=TypesEnumMeta):
 class PLAY_PATTERN(Enum, metaclass=TypesEnumMeta):
     """The list of play patterns used in StatsBomb data."""
 
-    REGULAR_PLAYER = 1
+    REGULAR_PLAY = 1
     FROM_CORNER = 2
     FROM_FREE_KICK = 3
     FROM_THROW_IN = 4
@@ -335,10 +335,8 @@ class EVENT:
         return [generic_event]
 
     def _add_play_pattern_qualifiers(self, event: Event) -> Event:
-        if (
-            self.raw_event["play_pattern"]["id"]
-            == PLAY_PATTERN.FROM_COUNTER.value
-        ):
+        pattern_id = PLAY_PATTERN(self.raw_event["play_pattern"]["id"])
+        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
             if event.qualifiers:
                 event.qualifiers.append(CounterAttackQualifier(True))
             else:

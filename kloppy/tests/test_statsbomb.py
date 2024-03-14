@@ -993,7 +993,7 @@ class TestStatsBombPressureEvent:
     """Tests related to deserializing 17/Pressure events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
-        """It should deserialize all ball recovery events"""
+        """It should deserialize all pressure events"""
         events = dataset.find_all("pressure")
         assert len(events) == 203
 

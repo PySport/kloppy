@@ -235,17 +235,20 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        events = (
-            self._create_aerial_won_event(
-                event_factory, **generic_event_kwargs
-            )
-            + self._create_events(event_factory, **generic_event_kwargs)
-            + self._create_ball_out_event(
-                event_factory, **generic_event_kwargs
-            )
+        aerial_won_events = self._create_aerial_won_event(
+            event_factory, **generic_event_kwargs
         )
-        for event in events:
+        base_events = self._create_events(
+            event_factory, **generic_event_kwargs
+        )
+        ball_out_events = self._create_ball_out_event(
+            event_factory, **generic_event_kwargs
+        )
+        under_pressure_events = aerial_won_events + base_events
+        for event in under_pressure_events:
             self._add_under_pressure_qualifier(event)
+        events = under_pressure_events + ball_out_events
+
         return events
 
     def _parse_generic_kwargs(self) -> Dict:

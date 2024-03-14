@@ -931,7 +931,7 @@ class TestStatsBombGoalkeeperEvent:
             for event in dataset.events
             if event.get_qualifier_value(UnderPressureQualifier) is True
         ]
-        assert len(under_pressure_events) == 571
+        assert len(under_pressure_events) == 559
 
 
 class TestStatsBombSubstitutionEvent:

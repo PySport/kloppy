@@ -1136,6 +1136,24 @@ class BALL_RECOVERY(EVENT):
         return [recovery_event]
 
 
+class PRESSURE(EVENT):
+    """StatsBomb 17/Pressure event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        end_timestamp = generic_event_kwargs["timestamp"] + self.raw_event.get(
+            "duration", 0.0
+        )
+        pressure_event = event_factory.build_pressure_event(
+            result=None,
+            qualifiers=None,
+            end_timestamp=end_timestamp,
+            **generic_event_kwargs,
+        )
+        return [pressure_event]
+
+
 class TACTICAL_SHIFT(EVENT):
     """StatsBomb 36/Tactical shift event."""
 
@@ -1282,6 +1300,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.PLAYER_ON: PLAYER_ON,
         EVENT_TYPE.PLAYER_OFF: PLAYER_OFF,
         EVENT_TYPE.BALL_RECOVERY: BALL_RECOVERY,
+        EVENT_TYPE.PRESSURE: PRESSURE,
         EVENT_TYPE.TACTICAL_SHIFT: TACTICAL_SHIFT,
     }
     event_type = EVENT_TYPE(raw_event["type"])

@@ -990,6 +990,15 @@ class TestStatsBombFoulCommittedEvent:
         assert foul_without_card.get_qualifier_value(CardQualifier) is None
 
 
+class TestStatsBombPressureEvent:
+    """Tests related to deserializing 17/Pressure events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all pressure events"""
+        events = dataset.find_all("pressure")
+        assert len(events) == 203
+
+
 class TestStatsBombPlayerOffEvent:
     """Tests related to deserializing 19/Player Off events"""
 

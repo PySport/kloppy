@@ -243,7 +243,7 @@ class TestOptaPassEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all clearance events"""
         events = dataset.find_all("pass")
-        assert len(events) == 14
+        assert len(events) == 15
 
     def test_receiver_coordinates(self, dataset: EventDataset):
         """Test if the receiver coordinates are correctly deserialized"""
@@ -265,6 +265,11 @@ class TestOptaPassEvent:
         )
         chipped_pass = dataset.get_event_by_id("1444075194")
         assert PassType.CHIPPED_PASS in chipped_pass.get_qualifier_values(
+            PassQualifier
+        )
+        assist = dataset.get_event_by_id("1666666666")
+        assert PassType.ASSIST in assist.get_qualifier_values(PassQualifier)
+        assert PassType.SHOT_ASSIST in assist.get_qualifier_values(
             PassQualifier
         )
 

@@ -107,7 +107,8 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=timedelta(seconds=frame_id / frame_rate) - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
             ball_coordinates=Point3D(ball_x, ball_y, ball_z),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
@@ -182,8 +183,12 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=period_start_frame / frame_rate),
-                            end_timestamp=timedelta(seconds=period_end_frame / frame_rate),
+                            start_timestamp=timedelta(
+                                seconds=period_start_frame / frame_rate
+                            ),
+                            end_timestamp=timedelta(
+                                seconds=period_end_frame / frame_rate
+                            ),
                         )
                     )
 

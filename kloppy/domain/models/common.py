@@ -261,7 +261,7 @@ class Period:
         ):
             return self.start_timestamp <= timestamp <= self.end_timestamp
         raise KloppyError(
-            "This method can only be used when start_timestamp and end_timmestamp are a datetime"
+            "This method can only be used when start_timestamp and end_timestamp are a datetime"
         )
 
     @property

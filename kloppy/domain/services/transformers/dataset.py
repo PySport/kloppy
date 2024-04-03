@@ -21,6 +21,8 @@ from kloppy.domain import (
     Provider,
     build_coordinate_system,
     DatasetType,
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
 )
 from kloppy.domain.models.event import Event
 from kloppy.exceptions import KloppyError
@@ -102,8 +104,21 @@ class DatasetTransformer:
         if point is None:
             return None
 
-        point_base = self._from_pitch_dimensions.to_base(point)
-        point_to = self._to_pitch_dimensions.from_base(point_base)
+        base_pitch_length = (
+            self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        base_pitch_width = (
+            self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        )
+
+        point_base = self._from_pitch_dimensions.to_metric_base(
+            point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
+        )
+        point_to = self._to_pitch_dimensions.from_metric_base(
+            point_base,
+            pitch_length=base_pitch_length,
+            pitch_width=base_pitch_width,
+        )
 
         return point_to
 
@@ -239,7 +254,16 @@ class DatasetTransformer:
         if not point:
             return None
 
-        point_base = self._from_pitch_dimensions.to_base(point)
+        base_pitch_length = (
+            self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        base_pitch_width = (
+            self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        )
+
+        point_base = self._from_pitch_dimensions.to_metric_base(
+            point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
+        )
 
         if (
             self._from_coordinate_system.vertical_orientation
@@ -247,10 +271,14 @@ class DatasetTransformer:
         ):
             point_base = replace(
                 point_base,
-                y=68 - point_base.y,
+                y=base_pitch_width - point_base.y,
             )
 
-        point_to = self._to_pitch_dimensions.from_base(point_base)
+        point_to = self._to_pitch_dimensions.from_metric_base(
+            point_base,
+            pitch_length=base_pitch_length,
+            pitch_width=base_pitch_width,
+        )
 
         return point_to
 

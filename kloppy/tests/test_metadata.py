@@ -25,62 +25,62 @@ class TestPitchdimensions:
         assert pitch_with_scale.pitch_length == 120
         assert pitch_with_scale.pitch_width == 80
 
-    def test_to_base_dimensions(self):
+    def test_to_metric_base_dimensions(self):
         pitch = OptaPitchDimensions()
 
-        ifab_point = pitch.to_base(Point(11.5, 50))
+        ifab_point = pitch.to_metric_base(Point(11.5, 50))
         assert ifab_point == Point(11, 34)
 
-        ifab_point = pitch.to_base(Point3D(0, 50, 38))
+        ifab_point = pitch.to_metric_base(Point3D(0, 50, 38))
         assert ifab_point == Point3D(0, 34, 2.44)
 
-        ifab_point = pitch.to_base(
+        ifab_point = pitch.to_metric_base(
             Point(60, 61), pitch_length=105, pitch_width=68
         )
         assert round(ifab_point.x, 2) == 62.78
         assert round(ifab_point.y, 2) == 41.72
 
-    def test_to_base_dimensions_out_of_bounds(self):
+    def test_to_metric_base_dimensions_out_of_bounds(self):
         pitch = NormalizedPitchDimensions(
             x_dim=Dimension(-100, 100),
             y_dim=Dimension(-50, 50),
             pitch_length=120,
             pitch_width=80,
         )
-        ifab_point = pitch.to_base(Point(-100, 0))
+        ifab_point = pitch.to_metric_base(Point(-100, 0))
         assert ifab_point == Point(0, 34)
-        ifab_point = pitch.to_base(Point(-105, 0))
+        ifab_point = pitch.to_metric_base(Point(-105, 0))
         assert ifab_point == Point(-2.625, 34)
-        ifab_point = pitch.to_base(Point(105, 0))
+        ifab_point = pitch.to_metric_base(Point(105, 0))
         assert ifab_point == Point(107.625, 34)
 
-    def test_from_base_dimensions(self):
+    def test_from_metric_base_dimensions(self):
         pitch = OptaPitchDimensions()
 
-        opta_point = pitch.from_base(Point(11, 34))
+        opta_point = pitch.from_metric_base(Point(11, 34))
         assert opta_point == Point(11.5, 50)
 
-        opta_point = pitch.from_base(Point3D(0, 34, 2.44))
+        opta_point = pitch.from_metric_base(Point3D(0, 34, 2.44))
         assert opta_point == Point3D(0, 50, 38)
 
-        ifab_point = pitch.from_base(
+        ifab_point = pitch.from_metric_base(
             Point(62.78, 41.72), pitch_length=105, pitch_width=68
         )
         assert round(ifab_point.x, 2) == 60
         assert round(ifab_point.y, 2) == 61
 
-    def test_from_base_dimensions_out_of_bounds(self):
+    def test_from_metric_base_dimensions_out_of_bounds(self):
         pitch = NormalizedPitchDimensions(
             x_dim=Dimension(-100, 100),
             y_dim=Dimension(-50, 50),
             pitch_length=120,
             pitch_width=80,
         )
-        point = pitch.from_base(Point(0, 34))
+        point = pitch.from_metric_base(Point(0, 34))
         assert point == Point(-100, 0)
-        point = pitch.from_base(Point(-2.625, 34))
+        point = pitch.from_metric_base(Point(-2.625, 34))
         assert point == Point(-105, 0)
-        point = pitch.from_base(Point(107.625, 34))
+        point = pitch.from_metric_base(Point(107.625, 34))
         assert point == Point(105, 0)
 
     def test_distance_between(self):

@@ -100,4 +100,4 @@ class TestTracabTracking:
 
         assert dataset.records[0].players_data[
             player_home_19
-        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+        ].coordinates == Point(x=0.37660000000000005, y=0.5489999999999999)

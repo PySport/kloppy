@@ -6,6 +6,9 @@ from typing import Optional
 
 from kloppy.exceptions import KloppyError
 
+DEFAULT_PITCH_LENGTH = 105.0
+DEFAULT_PITCH_WIDTH = 68.0
+
 
 class Unit(Enum):
     """Unit to measure distances on a pitch."""
@@ -268,14 +271,14 @@ class PitchDimensions:
             ),
         ]
 
-    def to_base(
+    def to_metric_base(
         self,
         point: Point,
-        pitch_length: float = 105.0,
-        pitch_width: float = 68.0,
+        pitch_length: float = DEFAULT_PITCH_LENGTH,
+        pitch_width: float = DEFAULT_PITCH_WIDTH,
     ) -> Point:
         """
-        Convert a point from the pitch dimensions to the IFAB pitch dimensions.
+        Convert a point from this pitch dimensions to the IFAB pitch dimensions.
 
         Arguments:
             point: The point to convert
@@ -382,14 +385,14 @@ class PitchDimensions:
                 ),
             )
 
-    def from_base(
+    def from_metric_base(
         self,
         point: Point,
-        pitch_length: float = 105.0,
-        pitch_width: float = 68.0,
+        pitch_length: float = DEFAULT_PITCH_LENGTH,
+        pitch_width: float = DEFAULT_PITCH_WIDTH,
     ) -> Point:
         """
-        Convert a point from the IFAB pitch dimensions to the regular pitch dimensions.
+        Convert a point from the IFAB pitch dimensions to this pitch dimensions.
 
         Arguments:
             point: The point to convert
@@ -517,13 +520,13 @@ class PitchDimensions:
                 "This may lead to incorrect results.",
                 stacklevel=2,
             )
-            pitch_length = 105
-            pitch_width = 68
+            pitch_length = DEFAULT_PITCH_LENGTH
+            pitch_width = DEFAULT_PITCH_WIDTH
         else:
             pitch_length = self.pitch_length
             pitch_width = self.pitch_width
-        point1_ifab = self.to_base(point1, pitch_length, pitch_width)
-        point2_ifab = self.to_base(point2, pitch_length, pitch_width)
+        point1_ifab = self.to_metric_base(point1, pitch_length, pitch_width)
+        point2_ifab = self.to_metric_base(point2, pitch_length, pitch_width)
         dist = point1_ifab.distance_to(point2_ifab)
         return Unit.METERS.convert(unit, dist)
 

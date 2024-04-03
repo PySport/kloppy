@@ -701,7 +701,7 @@ class Event(DataRecord, ABC):
             return True
 
     def __str__(self):
-        m, s = divmod(self.timestamp, 60)
+        m, s = divmod(self.timestamp.total_seconds(), 60)
 
         event_type = (
             self.__class__.__name__

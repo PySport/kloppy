@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 import pytest
 
 from kloppy import metrica
@@ -45,16 +46,35 @@ class TestMetricaEvents:
         assert str(player) == "Track_11"
         assert player.position.name == "Goalkeeper"
 
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=14.44,
-            end_timestamp=2783.76,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=18
         )
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=2803.6,
-            end_timestamp=5742.12,
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=19.96
         )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=26
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=27.96
+        )
+
+    def test_timestamps(self, dataset: EventDataset):
+        """It should parse the timestamps correctly."""
+        # note: these timestamps are odd because the metadata and event data
+        # are from different matches
+        assert dataset.events[0].timestamp == timedelta(
+            seconds=14.44
+        ) - timedelta(
+            seconds=450 / 25
+        )  # kickoff first half
+        assert dataset.events[1749].timestamp == timedelta(
+            seconds=2803.6
+        ) - timedelta(
+            seconds=650 / 25
+        )  # kickoff second half
 
     def test_coordinates(self, dataset: EventDataset):
         """It should parse the coordinates of events correctly."""

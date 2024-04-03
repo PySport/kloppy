@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -48,16 +49,31 @@ class TestSecondSpectrumTracking:
 
         # Check the Periods
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == 0
-        assert dataset.metadata.periods[0].end_timestamp == 2982240
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=0
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=2982240 / 25
+        )
 
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == 3907360
-        assert dataset.metadata.periods[1].end_timestamp == 6927840
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=3907360 / 25
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=6927840 / 25
+        )
 
         # Check some timestamps
-        assert dataset.records[0].timestamp == 0  # First frame
-        assert dataset.records[20].timestamp == 320.0  # Later frame
+        assert dataset.records[0].timestamp == timedelta(
+            seconds=0
+        )  # First frame
+        assert dataset.records[20].timestamp == timedelta(
+            seconds=320.0
+        )  # Later frame
+        assert dataset.records[187].timestamp == timedelta(
+            seconds=9.72
+        )  # Second period
 
         # Check some players
         home_player = dataset.metadata.teams[0].players[2]

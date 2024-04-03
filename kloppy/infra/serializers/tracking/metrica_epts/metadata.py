@@ -1,4 +1,5 @@
 from typing import IO
+from datetime import timedelta
 
 from lxml import objectify
 import warnings
@@ -89,9 +90,12 @@ def _load_periods(
             periods.append(
                 Period(
                     id=idx + 1,
-                    start_timestamp=float(provider_params[start_key])
-                    / frame_rate,
-                    end_timestamp=float(provider_params[end_key]) / frame_rate,
+                    start_timestamp=timedelta(
+                        seconds=float(provider_params[start_key]) / frame_rate
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=float(provider_params[end_key]) / frame_rate
+                    ),
                 )
             )
         else:

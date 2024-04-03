@@ -10,7 +10,7 @@ from kloppy.utils import (
 )
 
 
-@dataclass
+@dataclass(kw_only=True)
 @docstring_inherit_attributes(DataRecord)
 class Code(DataRecord):
     """

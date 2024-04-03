@@ -24,6 +24,8 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     FormationType,
+    ExpectedGoals,
+    PostShotExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
@@ -487,6 +489,15 @@ class SHOT(EVENT):
         qualifiers = _get_set_piece_qualifiers(
             EVENT_TYPE.SHOT, shot_dict
         ) + _get_body_part_qualifiers(shot_dict)
+        shot_statistics = []
+
+        for statistic_cls, prop_name in {
+            ExpectedGoals: "statsbomb_xg",
+            PostShotExpectedGoals: "shot_execution_xg",
+        }.items():
+            value = shot_dict.get(prop_name, None)
+            if value:
+                shot_statistics.append(statistic_cls(value=value))
 
         shot_event = event_factory.build_shot(
             result=result,
@@ -495,6 +506,7 @@ class SHOT(EVENT):
                 shot_dict["end_location"],
                 self.fidelity_version,
             ),
+            statistics=shot_statistics,
             **generic_event_kwargs,
         )
 

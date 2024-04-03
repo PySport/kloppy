@@ -168,6 +168,14 @@
       <Q id="1982245989" qualifier_id="56" value="Back" />
       <Q id="1223973456" qualifier_id="167" />
     </Event>
+    <Event id="1666666666" event_id="332" type_id="1" period_id="2" min="46" sec="4" player_id="248479" team_id="2592" outcome="1" x="35.6" y="80.5" timestamp="2018-09-23T16:05:32.873" last_modified="2018-09-23T17:14:58" version="1537719297885">
+      <Q id="1111111111" qualifier_id="210" value="16" />
+      <Q id="1111111112" qualifier_id="212" value="15.6" />
+      <Q id="1111111113" qualifier_id="213" value="1.9" />
+      <Q id="1111111114" qualifier_id="140" value="30.3" />
+      <Q id="1111111115" qualifier_id="141" value="100.0" />
+      <Q id="1111111116" qualifier_id="56" value="Back" />
+    </Event>
     <Event id="2318695229" event_id="292" type_id="16" period_id="2" min="47" sec="19" player_id="460842" team_id="2592" outcome="1" x="90.2" y="62.0" timestamp="2018-09-23T16:07:48.325" last_modified="2018-09-23T16:05:50" version="1629011564949">
       <Q id="3037279881" qualifier_id="395" value="93.8" />
       <Q id="3035784297" qualifier_id="103" value="2.5" />

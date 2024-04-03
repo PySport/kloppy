@@ -604,6 +604,7 @@ class TestStatsBombPassEvent:
             PassType.CROSS,
             PassType.HIGH_PASS,
             PassType.LONG_BALL,
+            PassType.SHOT_ASSIST,
         ]
 
     def test_set_piece(self, dataset: EventDataset):
@@ -1002,6 +1003,15 @@ class TestStatsBombFoulCommittedEvent:
             "309c22be-d1fc-43a4-a9ee-4643c04afb14"
         )
         assert foul_without_card.get_qualifier_value(CardQualifier) is None
+
+
+class TestStatsBombPressureEvent:
+    """Tests related to deserializing 17/Pressure events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all pressure events"""
+        events = dataset.find_all("pressure")
+        assert len(events) == 203
 
 
 class TestStatsBombPlayerOffEvent:

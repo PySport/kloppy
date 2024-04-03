@@ -2,6 +2,7 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import NamedTuple, Optional, Union, IO
+from datetime import timedelta
 
 from lxml import objectify
 
@@ -158,11 +159,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         if i % sample == 0:
                             yield Frame(
                                 frame_id=frame_id,
-                                timestamp=(
-                                    (
+                                timestamp=timedelta(
+                                    seconds=(
                                         frame_id
                                         # Do subtraction with integers to prevent floating errors
-                                        - period.start_timestamp
+                                        - period.start_timestamp.seconds
                                         * sportec_metadata.fps
                                     )
                                     / sportec_metadata.fps

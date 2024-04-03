@@ -217,6 +217,7 @@ class EventType(Enum):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
         GOALKEEPER (EventType):
+        PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
     """
 
@@ -238,6 +239,7 @@ class EventType(Enum):
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
     GOALKEEPER = "GOALKEEPER"
+    PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
@@ -354,6 +356,7 @@ class PassType(Enum):
     THROUGH_BALL = "THROUGH_BALL"
     CHIPPED_PASS = "CHIPPED_PASS"
     FLICK_ON = "FLICK_ON"
+    SHOT_ASSIST = "SHOT_ASSIST"
     ASSIST = "ASSIST"
     ASSIST_2ND = "ASSIST_2ND"
     SWITCH_OF_PLAY = "SWITCH_OF_PLAY"
@@ -698,7 +701,7 @@ class Event(DataRecord, ABC):
             return True
 
     def __str__(self):
-        m, s = divmod(self.timestamp, 60)
+        m, s = divmod(self.timestamp.total_seconds(), 60)
 
         event_type = (
             self.__class__.__name__
@@ -1021,6 +1024,24 @@ class GoalkeeperEvent(Event):
 
     event_type: EventType = EventType.GOALKEEPER
     event_name: str = "goalkeeper"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class PressureEvent(Event):
+    """
+    PressureEvent
+
+    Attributes:
+        event_type (EventType): `EventType.Pressure` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"pressure"`,
+        end_timestamp (float):
+    """
+
+    end_timestamp: float
+
+    event_type: EventType = EventType.PRESSURE
+    event_name: str = "pressure"
 
 
 @dataclass(repr=False)

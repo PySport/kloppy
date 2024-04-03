@@ -1,0 +1,4406 @@
+{
+  "FrameData": [
+    {
+      "FrameCount": 1848508,
+      "GameRunning": 1,
+      "Phase": 2,
+      "PlayerPositions": [
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": 6,
+          "Y": -913,
+          "Speed": 1.02
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -1947,
+          "Y": 2020,
+          "Speed": 0.46
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": 256,
+          "Y": -958,
+          "Speed": 0.09
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": 1738,
+          "Y": -2548,
+          "Speed": 0.51
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": 2221,
+          "Y": -603,
+          "Speed": 0.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -4722,
+          "Y": 28,
+          "Speed": 0.38
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": 1580,
+          "Y": 2284,
+          "Speed": 0.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -777,
+          "Y": 759,
+          "Speed": 0.56
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -2123,
+          "Y": 639,
+          "Speed": 0.1
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 5270,
+          "Y": 27,
+          "Speed": 0.15
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": 18,
+          "Y": 3182,
+          "Speed": 0.45
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": 2242,
+          "Y": 815,
+          "Speed": 0.33
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": 866,
+          "Y": -108,
+          "Speed": 0.24
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -926,
+          "Y": -31,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -46,
+          "Y": 7,
+          "Speed": 0.27
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -2008,
+          "Y": -633,
+          "Speed": 0.35
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -1924,
+          "Y": -2321,
+          "Speed": 0.32
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": 43,
+          "Y": 1066,
+          "Speed": 0.32
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": 53,
+          "Y": -3165,
+          "Speed": 0.32
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -667,
+          "Y": -726,
+          "Speed": 0.92
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -404,
+          "Y": -2581,
+          "Speed": 0.2
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -364,
+          "Y": 1432,
+          "Speed": 0.48
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 11,
+          "X": 2710,
+          "Y": 3722,
+          "Z": 11
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1848509,
+      "GameRunning": 1,
+      "Phase": 2,
+      "PlayerPositions": [
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": 14,
+          "Y": -905,
+          "Speed": 1.33
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -1946,
+          "Y": 2023,
+          "Speed": 0.47
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": 256,
+          "Y": -957,
+          "Speed": 0.13
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": 1736,
+          "Y": -2552,
+          "Speed": 0.5
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": 2221,
+          "Y": -602,
+          "Speed": 0.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -4722,
+          "Y": 28,
+          "Speed": 0.35
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": 1581,
+          "Y": 2284,
+          "Speed": 0.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -775,
+          "Y": 761,
+          "Speed": 0.62
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -2123,
+          "Y": 641,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 5270,
+          "Y": 28,
+          "Speed": 0.15
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": 14,
+          "Y": 3186,
+          "Speed": 0.49
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": 2244,
+          "Y": 813,
+          "Speed": 0.33
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": 865,
+          "Y": -107,
+          "Speed": 0.24
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -926,
+          "Y": -30,
+          "Speed": 0.15
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -41,
+          "Y": 9,
+          "Speed": 0.27
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -2005,
+          "Y": -633,
+          "Speed": 0.35
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -1923,
+          "Y": -2323,
+          "Speed": 0.35
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": 41,
+          "Y": 1066,
+          "Speed": 0.37
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": 50,
+          "Y": -3164,
+          "Speed": 0.38
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -663,
+          "Y": -727,
+          "Speed": 0.96
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -404,
+          "Y": -2579,
+          "Speed": 0.26
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -366,
+          "Y": 1434,
+          "Speed": 0.51
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 2710,
+          "Y": 3722,
+          "Z": 11
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1848510,
+      "GameRunning": 1,
+      "Phase": 2,
+      "PlayerPositions": [
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": 24,
+          "Y": -897,
+          "Speed": 1.58
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -1946,
+          "Y": 2026,
+          "Speed": 0.48
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": 258,
+          "Y": -957,
+          "Speed": 0.13
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": 1735,
+          "Y": -2555,
+          "Speed": 0.54
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": 2221,
+          "Y": -601,
+          "Speed": 0.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -4722,
+          "Y": 29,
+          "Speed": 0.32
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": 1583,
+          "Y": 2284,
+          "Speed": 0.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -771,
+          "Y": 763,
+          "Speed": 0.64
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -2123,
+          "Y": 642,
+          "Speed": 0.08
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 5270,
+          "Y": 30,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": 9,
+          "Y": 3190,
+          "Speed": 0.62
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": 2247,
+          "Y": 811,
+          "Speed": 0.36
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": 864,
+          "Y": -106,
+          "Speed": 0.24
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -926,
+          "Y": -28,
+          "Speed": 0.15
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -39,
+          "Y": 11,
+          "Speed": 0.3
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -2002,
+          "Y": -631,
+          "Speed": 0.35
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -1921,
+          "Y": -2325,
+          "Speed": 0.34
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": 39,
+          "Y": 1065,
+          "Speed": 0.4
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": 47,
+          "Y": -3160,
+          "Speed": 0.44
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -658,
+          "Y": -727,
+          "Speed": 0.99
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -404,
+          "Y": -2578,
+          "Speed": 0.29
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -367,
+          "Y": 1437,
+          "Speed": 0.57
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 2710,
+          "Y": 3722,
+          "Z": 11
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetHome",
+          "BallOwningTeam": "H",
+          "BallStatus": "Alive",
+          "Speed": 11,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916408,
+      "GameRunning": 1,
+      "Phase": 2,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -702,
+          "Y": 726,
+          "Speed": 1.8
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4476,
+          "Y": 411,
+          "Speed": 1.58
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -497,
+          "Y": 222,
+          "Speed": 1.06
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1477,
+          "Y": 796,
+          "Speed": 1.29
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2980,
+          "Y": 1199,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3596,
+          "Y": 430,
+          "Speed": 0.13
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3807,
+          "Y": 488,
+          "Speed": 1.18
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3245,
+          "Y": 1361,
+          "Speed": 1.45
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3102,
+          "Y": -716,
+          "Speed": 1.19
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3766,
+          "Y": 799,
+          "Speed": 1.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3721,
+          "Y": 1330,
+          "Speed": 1.63
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3968,
+          "Y": -182,
+          "Speed": 1.72
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4059,
+          "Y": -3008,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3327,
+          "Y": 1367,
+          "Speed": 1.67
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2218,
+          "Y": 876,
+          "Speed": 1.93
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5144,
+          "Y": 419,
+          "Speed": 0.83
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2510,
+          "Y": -3219,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4027,
+          "Y": 44,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3655,
+          "Y": -689,
+          "Speed": 1.59
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3176,
+          "Y": -642,
+          "Speed": 1.24
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2167,
+          "Y": -1363,
+          "Speed": 1.48
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2822,
+          "Y": -268,
+          "Speed": 1.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3187,
+          "Y": 630,
+          "Speed": 1.34
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3343,
+          "Y": -326,
+          "Speed": 1.9
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 106.9,
+          "X": -4490,
+          "Y": 436,
+          "Z": 5
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 106.9,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 106.9,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 106.9,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 106.9,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916409,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -699,
+          "Y": 721,
+          "Speed": 1.77
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4473,
+          "Y": 407,
+          "Speed": 1.58
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -501,
+          "Y": 225,
+          "Speed": 1.08
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1477,
+          "Y": 790,
+          "Speed": 1.31
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2977,
+          "Y": 1193,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3596,
+          "Y": 430,
+          "Speed": 0.13
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3804,
+          "Y": 484,
+          "Speed": 1.18
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3243,
+          "Y": 1356,
+          "Speed": 1.47
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3097,
+          "Y": -717,
+          "Speed": 1.23
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3762,
+          "Y": 796,
+          "Speed": 1.4
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3720,
+          "Y": 1324,
+          "Speed": 1.62
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3974,
+          "Y": -184,
+          "Speed": 1.71
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4061,
+          "Y": -3001,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3323,
+          "Y": 1360,
+          "Speed": 1.7
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2216,
+          "Y": 869,
+          "Speed": 1.95
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5140,
+          "Y": 417,
+          "Speed": 0.83
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2516,
+          "Y": -3213,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4024,
+          "Y": 40,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3650,
+          "Y": -693,
+          "Speed": 1.61
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3171,
+          "Y": -642,
+          "Speed": 1.23
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2161,
+          "Y": -1368,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2819,
+          "Y": -273,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3183,
+          "Y": 627,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3338,
+          "Y": -331,
+          "Speed": 1.86
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 85.18,
+          "X": -4494,
+          "Y": 435,
+          "Z": 2
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 85.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 85.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 85.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 85.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916410,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -696,
+          "Y": 714,
+          "Speed": 1.77
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4470,
+          "Y": 404,
+          "Speed": 1.58
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -503,
+          "Y": 228,
+          "Speed": 1.03
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1479,
+          "Y": 785,
+          "Speed": 1.3
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2975,
+          "Y": 1189,
+          "Speed": 1.41
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3596,
+          "Y": 430,
+          "Speed": 0.13
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3801,
+          "Y": 480,
+          "Speed": 1.18
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3242,
+          "Y": 1353,
+          "Speed": 1.47
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3092,
+          "Y": -715,
+          "Speed": 1.2
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3757,
+          "Y": 793,
+          "Speed": 1.4
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3717,
+          "Y": 1317,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3980,
+          "Y": -186,
+          "Speed": 1.72
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4064,
+          "Y": -2993,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3320,
+          "Y": 1353,
+          "Speed": 1.7
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2212,
+          "Y": 862,
+          "Speed": 1.95
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5138,
+          "Y": 416,
+          "Speed": 0.83
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2522,
+          "Y": -3208,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4019,
+          "Y": 36,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3644,
+          "Y": -696,
+          "Speed": 1.63
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3167,
+          "Y": -642,
+          "Speed": 1.22
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2158,
+          "Y": -1371,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2816,
+          "Y": -277,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3179,
+          "Y": 622,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3332,
+          "Y": -334,
+          "Speed": 1.83
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 78.03,
+          "X": -4498,
+          "Y": 440,
+          "Z": 1
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 78.03,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 78.03,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 78.03,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 78.03,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916411,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -693,
+          "Y": 708,
+          "Speed": 1.75
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4467,
+          "Y": 400,
+          "Speed": 1.56
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -506,
+          "Y": 231,
+          "Speed": 1.04
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1479,
+          "Y": 779,
+          "Speed": 1.31
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2971,
+          "Y": 1184,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3595,
+          "Y": 431,
+          "Speed": 0.1
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3797,
+          "Y": 477,
+          "Speed": 1.18
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3241,
+          "Y": 1350,
+          "Speed": 1.47
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3088,
+          "Y": -715,
+          "Speed": 1.2
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3753,
+          "Y": 791,
+          "Speed": 1.38
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3715,
+          "Y": 1310,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3986,
+          "Y": -187,
+          "Speed": 1.71
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4065,
+          "Y": -2986,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3318,
+          "Y": 1346,
+          "Speed": 1.72
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2210,
+          "Y": 854,
+          "Speed": 1.93
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5135,
+          "Y": 415,
+          "Speed": 0.83
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2529,
+          "Y": -3201,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4016,
+          "Y": 33,
+          "Speed": 1.21
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3639,
+          "Y": -700,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3160,
+          "Y": -642,
+          "Speed": 1.22
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2153,
+          "Y": -1375,
+          "Speed": 1.52
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2813,
+          "Y": -282,
+          "Speed": 1.29
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3175,
+          "Y": 618,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3326,
+          "Y": -339,
+          "Speed": 1.83
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 41.64,
+          "X": -4494,
+          "Y": 436,
+          "Z": 2
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 41.64,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 41.64,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 41.64,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 41.64,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916412,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -690,
+          "Y": 701,
+          "Speed": 1.72
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4463,
+          "Y": 395,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -509,
+          "Y": 234,
+          "Speed": 1.04
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1479,
+          "Y": 772,
+          "Speed": 1.31
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2968,
+          "Y": 1179,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3594,
+          "Y": 430,
+          "Speed": 0.13
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3794,
+          "Y": 473,
+          "Speed": 1.21
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3240,
+          "Y": 1348,
+          "Speed": 1.43
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3084,
+          "Y": -715,
+          "Speed": 1.2
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3748,
+          "Y": 788,
+          "Speed": 1.36
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3712,
+          "Y": 1302,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3994,
+          "Y": -189,
+          "Speed": 1.71
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4067,
+          "Y": -2979,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3314,
+          "Y": 1340,
+          "Speed": 1.72
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2207,
+          "Y": 847,
+          "Speed": 1.93
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5133,
+          "Y": 413,
+          "Speed": 0.83
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2534,
+          "Y": -3197,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4012,
+          "Y": 27,
+          "Speed": 1.21
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3634,
+          "Y": -704,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3155,
+          "Y": -642,
+          "Speed": 1.22
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2149,
+          "Y": -1379,
+          "Speed": 1.49
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2809,
+          "Y": -288,
+          "Speed": 1.31
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3171,
+          "Y": 612,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3320,
+          "Y": -342,
+          "Speed": 1.78
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 29.98,
+          "X": -4492,
+          "Y": 433,
+          "Z": 3
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 29.98,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 29.98,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 29.98,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 29.98,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916413,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -687,
+          "Y": 695,
+          "Speed": 1.71
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4460,
+          "Y": 391,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -513,
+          "Y": 236,
+          "Speed": 1.02
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1480,
+          "Y": 766,
+          "Speed": 1.31
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2965,
+          "Y": 1174,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3594,
+          "Y": 430,
+          "Speed": 0.13
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3791,
+          "Y": 469,
+          "Speed": 1.18
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3239,
+          "Y": 1346,
+          "Speed": 1.41
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3079,
+          "Y": -715,
+          "Speed": 1.19
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3744,
+          "Y": 785,
+          "Speed": 1.38
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3709,
+          "Y": 1295,
+          "Speed": 1.65
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 3999,
+          "Y": -191,
+          "Speed": 1.68
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4068,
+          "Y": -2972,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3312,
+          "Y": 1332,
+          "Speed": 1.73
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2204,
+          "Y": 841,
+          "Speed": 1.91
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5129,
+          "Y": 411,
+          "Speed": 0.8
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2540,
+          "Y": -3192,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4007,
+          "Y": 22,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3629,
+          "Y": -708,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3147,
+          "Y": -646,
+          "Speed": 1.26
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2143,
+          "Y": -1382,
+          "Speed": 1.52
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2806,
+          "Y": -293,
+          "Speed": 1.31
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3167,
+          "Y": 608,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3313,
+          "Y": -346,
+          "Speed": 1.78
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 114.88,
+          "X": -4489,
+          "Y": 429,
+          "Z": 4
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 114.88,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 114.88,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 114.88,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 114.88,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916414,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -685,
+          "Y": 688,
+          "Speed": 1.71
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4456,
+          "Y": 385,
+          "Speed": 1.56
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -516,
+          "Y": 239,
+          "Speed": 1.02
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1481,
+          "Y": 760,
+          "Speed": 1.3
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2961,
+          "Y": 1169,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3593,
+          "Y": 430,
+          "Speed": 0.1
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3787,
+          "Y": 464,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3237,
+          "Y": 1344,
+          "Speed": 1.4
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3075,
+          "Y": -715,
+          "Speed": 1.19
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3740,
+          "Y": 781,
+          "Speed": 1.38
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3706,
+          "Y": 1288,
+          "Speed": 1.65
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4005,
+          "Y": -194,
+          "Speed": 1.68
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4069,
+          "Y": -2965,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3310,
+          "Y": 1325,
+          "Speed": 1.75
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2202,
+          "Y": 834,
+          "Speed": 1.9
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5125,
+          "Y": 407,
+          "Speed": 0.82
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2545,
+          "Y": -3186,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4004,
+          "Y": 18,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3623,
+          "Y": -712,
+          "Speed": 1.66
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3140,
+          "Y": -647,
+          "Speed": 1.29
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2140,
+          "Y": -1385,
+          "Speed": 1.49
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2804,
+          "Y": -298,
+          "Speed": 1.34
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3163,
+          "Y": 604,
+          "Speed": 1.31
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3308,
+          "Y": -349,
+          "Speed": 1.74
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 121.28,
+          "X": -4486,
+          "Y": 425,
+          "Z": 4
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 121.28,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 121.28,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 121.28,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 121.28,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916415,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -683,
+          "Y": 682,
+          "Speed": 1.68
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4451,
+          "Y": 381,
+          "Speed": 1.55
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -519,
+          "Y": 242,
+          "Speed": 1.04
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1481,
+          "Y": 754,
+          "Speed": 1.3
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2958,
+          "Y": 1164,
+          "Speed": 1.46
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3593,
+          "Y": 431,
+          "Speed": 0.06
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3784,
+          "Y": 459,
+          "Speed": 1.23
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3236,
+          "Y": 1341,
+          "Speed": 1.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3069,
+          "Y": -714,
+          "Speed": 1.23
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3734,
+          "Y": 778,
+          "Speed": 1.4
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3704,
+          "Y": 1282,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4012,
+          "Y": -195,
+          "Speed": 1.68
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4070,
+          "Y": -2957,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3308,
+          "Y": 1317,
+          "Speed": 1.78
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2200,
+          "Y": 828,
+          "Speed": 1.88
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5122,
+          "Y": 406,
+          "Speed": 0.82
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2550,
+          "Y": -3181,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -4000,
+          "Y": 13,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3616,
+          "Y": -716,
+          "Speed": 1.66
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3134,
+          "Y": -649,
+          "Speed": 1.33
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2136,
+          "Y": -1389,
+          "Speed": 1.46
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2801,
+          "Y": -304,
+          "Speed": 1.36
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3159,
+          "Y": 599,
+          "Speed": 1.33
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3302,
+          "Y": -352,
+          "Speed": 1.71
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 360.73,
+          "X": -4460,
+          "Y": 403,
+          "Z": 2
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 360.73,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 360.73,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 360.73,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 360.73,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916416,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -679,
+          "Y": 676,
+          "Speed": 1.7
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4448,
+          "Y": 377,
+          "Speed": 1.55
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -522,
+          "Y": 244,
+          "Speed": 0.99
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1482,
+          "Y": 748,
+          "Speed": 1.33
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2955,
+          "Y": 1159,
+          "Speed": 1.49
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3592,
+          "Y": 430,
+          "Speed": 0.07
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3781,
+          "Y": 456,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3233,
+          "Y": 1337,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3065,
+          "Y": -714,
+          "Speed": 1.19
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3730,
+          "Y": 774,
+          "Speed": 1.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3701,
+          "Y": 1275,
+          "Speed": 1.67
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4018,
+          "Y": -198,
+          "Speed": 1.69
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4070,
+          "Y": -2949,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3307,
+          "Y": 1310,
+          "Speed": 1.77
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2198,
+          "Y": 821,
+          "Speed": 1.87
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5118,
+          "Y": 404,
+          "Speed": 0.84
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2555,
+          "Y": -3175,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -3997,
+          "Y": 9,
+          "Speed": 1.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3610,
+          "Y": -719,
+          "Speed": 1.68
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3127,
+          "Y": -652,
+          "Speed": 1.38
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2131,
+          "Y": -1392,
+          "Speed": 1.46
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2798,
+          "Y": -309,
+          "Speed": 1.39
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3156,
+          "Y": 595,
+          "Speed": 1.33
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3296,
+          "Y": -356,
+          "Speed": 1.71
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 437.01,
+          "X": -4452,
+          "Y": 392,
+          "Z": 4
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 437.01,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 437.01,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 437.01,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 437.01,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916417,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -677,
+          "Y": 670,
+          "Speed": 1.68
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4443,
+          "Y": 372,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -524,
+          "Y": 246,
+          "Speed": 0.97
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1482,
+          "Y": 742,
+          "Speed": 1.36
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2951,
+          "Y": 1154,
+          "Speed": 1.49
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3591,
+          "Y": 430,
+          "Speed": 0.09
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3777,
+          "Y": 451,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3233,
+          "Y": 1334,
+          "Speed": 1.14
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3059,
+          "Y": -715,
+          "Speed": 1.23
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3725,
+          "Y": 770,
+          "Speed": 1.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3699,
+          "Y": 1269,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4025,
+          "Y": -201,
+          "Speed": 1.69
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4071,
+          "Y": -2942,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3304,
+          "Y": 1302,
+          "Speed": 1.78
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2196,
+          "Y": 815,
+          "Speed": 1.87
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5116,
+          "Y": 401,
+          "Speed": 0.84
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2561,
+          "Y": -3171,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -3994,
+          "Y": 4,
+          "Speed": 1.31
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3604,
+          "Y": -722,
+          "Speed": 1.66
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3119,
+          "Y": -656,
+          "Speed": 1.45
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2127,
+          "Y": -1396,
+          "Speed": 1.44
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2795,
+          "Y": -313,
+          "Speed": 1.39
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3151,
+          "Y": 591,
+          "Speed": 1.36
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3289,
+          "Y": -361,
+          "Speed": 1.73
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 378.66,
+          "X": -4452,
+          "Y": 394,
+          "Z": 2
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 378.66,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 378.66,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 378.66,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 378.66,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916418,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -675,
+          "Y": 664,
+          "Speed": 1.68
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4439,
+          "Y": 367,
+          "Speed": 1.55
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -526,
+          "Y": 248,
+          "Speed": 0.94
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1482,
+          "Y": 737,
+          "Speed": 1.39
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2948,
+          "Y": 1148,
+          "Speed": 1.51
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3591,
+          "Y": 429,
+          "Speed": 0.09
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3775,
+          "Y": 448,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3231,
+          "Y": 1330,
+          "Speed": 1.1
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3054,
+          "Y": -715,
+          "Speed": 1.23
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3720,
+          "Y": 766,
+          "Speed": 1.43
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3695,
+          "Y": 1263,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4032,
+          "Y": -202,
+          "Speed": 1.72
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4071,
+          "Y": -2935,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3302,
+          "Y": 1295,
+          "Speed": 1.8
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2193,
+          "Y": 807,
+          "Speed": 1.88
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5113,
+          "Y": 400,
+          "Speed": 0.87
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2566,
+          "Y": -3165,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -3990,
+          "Y": 0,
+          "Speed": 1.33
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3599,
+          "Y": -723,
+          "Speed": 1.66
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3112,
+          "Y": -659,
+          "Speed": 1.51
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2122,
+          "Y": -1398,
+          "Speed": 1.44
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2792,
+          "Y": -319,
+          "Speed": 1.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3147,
+          "Y": 587,
+          "Speed": 1.4
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3283,
+          "Y": -366,
+          "Speed": 1.76
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 151.74,
+          "X": -4456,
+          "Y": 385,
+          "Z": 8
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 151.74,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 151.74,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 151.74,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 151.74,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916419,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -672,
+          "Y": 657,
+          "Speed": 1.7
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4434,
+          "Y": 363,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -528,
+          "Y": 251,
+          "Speed": 0.94
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1482,
+          "Y": 730,
+          "Speed": 1.42
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2945,
+          "Y": 1144,
+          "Speed": 1.49
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3590,
+          "Y": 429,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3773,
+          "Y": 444,
+          "Speed": 1.26
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3231,
+          "Y": 1328,
+          "Speed": 0.99
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3048,
+          "Y": -715,
+          "Speed": 1.27
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3714,
+          "Y": 761,
+          "Speed": 1.45
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3693,
+          "Y": 1258,
+          "Speed": 1.64
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4037,
+          "Y": -206,
+          "Speed": 1.7
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4071,
+          "Y": -2928,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3300,
+          "Y": 1288,
+          "Speed": 1.82
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2190,
+          "Y": 800,
+          "Speed": 1.88
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5110,
+          "Y": 399,
+          "Speed": 0.86
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2573,
+          "Y": -3160,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -3986,
+          "Y": -4,
+          "Speed": 1.33
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3592,
+          "Y": -725,
+          "Speed": 1.66
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3107,
+          "Y": -660,
+          "Speed": 1.54
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2118,
+          "Y": -1402,
+          "Speed": 1.44
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2788,
+          "Y": -324,
+          "Speed": 1.45
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3144,
+          "Y": 583,
+          "Speed": 1.43
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3277,
+          "Y": -370,
+          "Speed": 1.79
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 66.2,
+          "X": -4453,
+          "Y": 385,
+          "Z": 6
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 66.2,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 66.2,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 66.2,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 66.2,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1916420,
+      "GameRunning": 0,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -669,
+          "Y": 650,
+          "Speed": 1.7
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": -4430,
+          "Y": 358,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -531,
+          "Y": 253,
+          "Speed": 0.92
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -1482,
+          "Y": 723,
+          "Speed": 1.45
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -2940,
+          "Y": 1140,
+          "Speed": 1.51
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": -3590,
+          "Y": 429,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": -3770,
+          "Y": 440,
+          "Speed": 1.28
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 33,
+          "X": -3230,
+          "Y": 1324,
+          "Speed": 0.97
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3043,
+          "Y": -714,
+          "Speed": 1.31
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -3710,
+          "Y": 759,
+          "Speed": 1.43
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 22,
+          "X": -3689,
+          "Y": 1252,
+          "Speed": 1.67
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": 4044,
+          "Y": -209,
+          "Speed": 1.7
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -4071,
+          "Y": -2920,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -3298,
+          "Y": 1282,
+          "Speed": 1.82
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -2188,
+          "Y": 792,
+          "Speed": 1.9
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": -5107,
+          "Y": 397,
+          "Speed": 0.89
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": 2577,
+          "Y": -3156,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": -3983,
+          "Y": -8,
+          "Speed": 1.33
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": -3588,
+          "Y": -726,
+          "Speed": 1.63
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -3101,
+          "Y": -661,
+          "Speed": 1.53
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -2113,
+          "Y": -1404,
+          "Speed": 1.44
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -2785,
+          "Y": -329,
+          "Speed": 1.47
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": -3140,
+          "Y": 579,
+          "Speed": 1.43
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -3270,
+          "Y": -375,
+          "Speed": 1.84
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 176.34,
+          "X": -4447,
+          "Y": 374,
+          "Z": 6
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 176.34,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 176.34,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 176.34,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 176.34,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1942114,
+      "GameRunning": 1,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": -5281,
+          "Y": 16,
+          "Speed": 0.29
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": 2371,
+          "Y": 48,
+          "Speed": 0.12
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": 23,
+          "Y": -1557,
+          "Speed": 1.16
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -3,
+          "Y": 2589,
+          "Speed": 0.52
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -292,
+          "Y": 1960,
+          "Speed": 0.15
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -1706,
+          "Y": 1835,
+          "Speed": 0.86
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": 1988,
+          "Y": -1654,
+          "Speed": 0.06
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -59,
+          "Y": -1822,
+          "Speed": 0.04
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -18,
+          "Y": -952,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -1931,
+          "Y": -597,
+          "Speed": 0.6
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": 1235,
+          "Y": -677,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -916,
+          "Y": -245,
+          "Speed": 0.57
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -1911,
+          "Y": 447,
+          "Speed": 0.58
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -38,
+          "Y": -47,
+          "Speed": 0.32
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": 4790,
+          "Y": 5,
+          "Speed": 0.03
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": 871,
+          "Y": 3027,
+          "Speed": 0.3
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 28,
+          "X": 1837,
+          "Y": 1159,
+          "Speed": 0.42
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 2,
+          "X": 604,
+          "Y": -36,
+          "Speed": 0.1
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -1638,
+          "Y": -1782,
+          "Speed": 0.09
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": -2,
+          "Y": 895,
+          "Speed": 0.41
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": 514,
+          "Y": -3189,
+          "Speed": 0.19
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -734,
+          "Y": 542,
+          "Speed": 0.16
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 807.18,
+          "X": 240,
+          "Y": -6,
+          "Z": 15
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 807.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 807.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 807.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 807.18,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 1942115,
+      "GameRunning": 1,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": -5280,
+          "Y": 18,
+          "Speed": 0.37
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": 2369,
+          "Y": 48,
+          "Speed": 0.12
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 26,
+          "X": 23,
+          "Y": -1551,
+          "Speed": 1.19
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": -6,
+          "Y": 2592,
+          "Speed": 0.57
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": -290,
+          "Y": 1960,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 55,
+          "X": -1706,
+          "Y": 1834,
+          "Speed": 0.82
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": 1988,
+          "Y": -1654,
+          "Speed": 0.06
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 7,
+          "X": -59,
+          "Y": -1820,
+          "Speed": 0.08
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 90,
+          "X": -14,
+          "Y": -948,
+          "Speed": 0.2
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": -1929,
+          "Y": -595,
+          "Speed": 0.62
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 17,
+          "X": 1237,
+          "Y": -676,
+          "Speed": 0.03
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": -915,
+          "Y": -246,
+          "Speed": 0.57
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -1909,
+          "Y": 447,
+          "Speed": 0.58
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": -41,
+          "Y": -47,
+          "Speed": 0.36
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": 4790,
+          "Y": 5,
+          "Speed": 0.03
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": 869,
+          "Y": 3029,
+          "Speed": 0.35
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 28,
+          "X": 1839,
+          "Y": 1159,
+          "Speed": 0.44
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 2,
+          "X": 603,
+          "Y": -37,
+          "Speed": 0.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -1639,
+          "Y": -1783,
+          "Speed": 0.13
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": 1,
+          "Y": 889,
+          "Speed": 0.48
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": 512,
+          "Y": -3190,
+          "Speed": 0.26
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 20,
+          "X": -734,
+          "Y": 541,
+          "Speed": 0.18
+        },
+        {
+          "Team": 4,
+          "JerseyNumber": 0,
+          "X": 5550,
+          "Y": 4400,
+          "Speed": 0
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 747.39,
+          "X": 269,
+          "Y": -7,
+          "Z": 18
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 747.39,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 747.39,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 747.39,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "SetAway",
+          "BallOwningTeam": "A",
+          "BallStatus": "Dead",
+          "Speed": 747.39,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    },
+    {
+      "FrameCount": 2017933,
+      "GameRunning": 1,
+      "Phase": 3,
+      "PlayerPositions": [
+        {
+          "Team": 1,
+          "JerseyNumber": 1,
+          "X": -3081,
+          "Y": -272,
+          "Speed": 1.45
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 23,
+          "X": 1461,
+          "Y": 268,
+          "Speed": 0.59
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 21,
+          "X": 2711,
+          "Y": 2210,
+          "Speed": 1.08
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 24,
+          "X": 1321,
+          "Y": 1321,
+          "Speed": 1.89
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 6,
+          "X": 1090,
+          "Y": -955,
+          "Speed": 0.98
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 27,
+          "X": 2060,
+          "Y": -2279,
+          "Speed": 1.29
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 5,
+          "X": 1956,
+          "Y": -420,
+          "Speed": 1.82
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 28,
+          "X": 1294,
+          "Y": 1030,
+          "Speed": 0.82
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -1954,
+          "Y": -3164,
+          "Speed": 0
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 13,
+          "X": -124,
+          "Y": -1318,
+          "Speed": 1.02
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 8,
+          "X": 881,
+          "Y": 734,
+          "Speed": 1.32
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 21,
+          "X": 2314,
+          "Y": -1471,
+          "Speed": 1.07
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 9,
+          "X": 390,
+          "Y": -194,
+          "Speed": 0.82
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 4,
+          "X": 2369,
+          "Y": 737,
+          "Speed": 1.5
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 77,
+          "X": 2681,
+          "Y": -1870,
+          "Speed": 0.16
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 18,
+          "X": 2680,
+          "Y": -260,
+          "Speed": 1.13
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 2,
+          "X": 2560,
+          "Y": 1766,
+          "Speed": 1.3
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 12,
+          "X": 4688,
+          "Y": 313,
+          "Speed": 1.59
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 16,
+          "X": 925,
+          "Y": -1402,
+          "Speed": 0.9
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -1493,
+          "Y": -2956,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 2,
+          "X": 2002,
+          "Y": -230,
+          "Speed": 1.55
+        },
+        {
+          "Team": 1,
+          "JerseyNumber": 5,
+          "X": -18,
+          "Y": 579,
+          "Speed": 1.18
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -2793,
+          "Y": -3303,
+          "Speed": 0
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 19,
+          "X": 2458,
+          "Y": -1083,
+          "Speed": 1.49
+        },
+        {
+          "Team": 0,
+          "JerseyNumber": 27,
+          "X": 2624,
+          "Y": 1571,
+          "Speed": 1.36
+        },
+        {
+          "Team": -1,
+          "JerseyNumber": 0,
+          "X": -2402,
+          "Y": -3174,
+          "Speed": 0
+        }
+      ],
+      "BallPosition": [
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 275.15,
+          "X": 2600,
+          "Y": 1577,
+          "Z": 10
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 275.15,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 275.15,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 275.15,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        },
+        {
+          "BallContactInfo": "",
+          "BallOwningTeam": "H",
+          "BallStatus": "Dead",
+          "Speed": 275.15,
+          "X": 5550,
+          "Y": 4400,
+          "Z": 0
+        }
+      ]
+    }
+  ],
+  "PackageID": "d27d5170-bab1-11ee-b39d-d10edbcdad1e",
+  "Filename": "TF10-55-2023-13495-1848508-2017931.json",
+  "GameID": "13495",
+  "CompetitionID": "55",
+  "SeasonID": "2023",
+  "PackageTime": "1706098339",
+  "NumberOfFrames": 169423,
+  "PitchShortSide": 680,
+  "PitchLongSide": 1050
+}

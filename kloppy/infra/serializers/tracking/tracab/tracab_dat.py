@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 import warnings
 from typing import Tuple, Dict, NamedTuple, IO, Optional, Union
 
@@ -26,17 +27,13 @@ from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from .deserializer import TrackingDataDeserializer
+from .common import TRACABInputs
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
 
-class TRACABInputs(NamedTuple):
-    meta_data: IO[bytes]
-    raw_data: IO[bytes]
-
-
-class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
+class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -113,7 +110,8 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_id / frame_rate - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
             ball_coordinates=Point3D(
                 float(ball_x), float(ball_y), float(ball_z)
             ),
@@ -151,8 +149,12 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     periods.append(
                         Period(
                             id=int(period.attrib["iId"]),
-                            start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate,
+                            start_timestamp=timedelta(
+                                seconds=start_frame_id / frame_rate
+                            ),
+                            end_timestamp=timedelta(
+                                seconds=end_frame_id / frame_rate
+                            ),
                         )
                     )
 
@@ -175,7 +177,11 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         continue
 
                     for period_ in periods:
-                        if period_.contains(frame_id / frame_rate):
+                        if (
+                            period_.start_timestamp
+                            <= timedelta(seconds=frame_id / frame_rate)
+                            <= period_.end_timestamp
+                        ):
                             if n % sample == 0:
                                 yield period_, line_
                             n += 1

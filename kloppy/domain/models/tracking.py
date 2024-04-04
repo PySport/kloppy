@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
-from scipy.signal import savgol_filter
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.exceptions import KloppyError
@@ -11,6 +10,11 @@ from kloppy.utils import deprecated
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point
+
+try:
+    from scipy.signal import savgol_filter
+except ImportError:
+    savgol_filter = None
 
 
 @dataclass
@@ -333,6 +337,12 @@ def smoothing_savgol_3rd(raw_maps):
     Returns:
         tracked_maps: smoothed player positions
     """
+    if savgol_filter is None:
+        raise ImportError(
+            "Seems like you don't have scipy installed. Please"
+            " install it using: pip install scipy"
+        )
+
     window_length = min(raw_maps.shape[0], 31)
     if window_length % 2 == 0:
         window_length = window_length - 1

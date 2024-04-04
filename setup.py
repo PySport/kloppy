@@ -53,6 +53,7 @@ def setup_package():
                 'pandas>=1.0,<2;python_version<"3.8"',
                 "black==22.3.0",
                 "polars>=0.16.6",
+                "scipy>=1.5.0",
                 # We could install pyarrow as it's compatible with
                 # python 3.7. But the python 3.7 compatible version
                 # of Pandas (1.3) does not support pyarrow

@@ -1,0 +1,29 @@
+from pathlib import Path
+
+import pytest
+
+from kloppy import tracab
+
+
+@pytest.fixture(scope="session")
+def xml_meta_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_meta.xml"
+
+
+@pytest.fixture(scope="session")
+def dat_raw_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_raw.dat"
+
+
+class TestIssue305:
+    def test_str_path(
+        self, xml_meta_data: Path, dat_raw_data: Path
+    ):
+        # Make sure it works for string paths.
+        dataset = tracab.load(
+            meta_data=str(xml_meta_data),
+            raw_data=str(dat_raw_data),
+            coordinates="tracab",
+            only_alive=False,
+        )
+        assert dataset

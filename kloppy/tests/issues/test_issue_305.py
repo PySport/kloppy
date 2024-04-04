@@ -16,9 +16,7 @@ def dat_raw_data(base_dir: Path) -> Path:
 
 
 class TestIssue305:
-    def test_str_path(
-        self, xml_meta_data: Path, dat_raw_data: Path
-    ):
+    def test_str_path(self, xml_meta_data: Path, dat_raw_data: Path):
         # Make sure it works for string paths.
         dataset = tracab.load(
             meta_data=str(xml_meta_data),

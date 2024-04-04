@@ -34,6 +34,17 @@ class Source:
 FileLike = Union[str, PurePath, bytes, IO[bytes], Source]
 
 
+def get_file_extension(f: FileLike) -> str:
+    if isinstance(f, str):
+        return os.path.splitext(f)[1]
+    elif isinstance(f, PurePath):
+        return os.path.splitext(f.name)[1]
+    elif isinstance(f, Source):
+        return get_file_extension(f.data)
+    else:
+        raise Exception("Could not determine filename")
+
+
 def get_local_cache_stream(url: str, cache_dir: str) -> Tuple[BinaryIO, bool]:
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)

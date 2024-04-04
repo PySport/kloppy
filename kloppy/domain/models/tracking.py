@@ -1,10 +1,18 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import numpy as np
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from kloppy.domain.models.common import DatasetType
+from kloppy.domain.models.pitch import (
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
+)
 from kloppy.exceptions import KloppyError
 from kloppy.utils import deprecated
 
@@ -12,9 +20,11 @@ from .common import DataRecord, Dataset, Player
 from .pitch import Point
 
 try:
+    import numpy as np
     from scipy.signal import savgol_filter
 except ImportError:
     savgol_filter = None
+    np = None
 
 
 @dataclass
@@ -123,9 +133,17 @@ class TrackingDataset(Dataset[Frame]):
                         end_frame=record.frame_id,
                         detections=[record.ball_data],
                     )
-                else:
+                elif record.frame_id - current_trajectory.end_frame == 1:
                     current_trajectory.end_frame = record.frame_id
                     current_trajectory.detections.append(record.ball_data)
+                else:
+                    trajectories["ball"].append(current_trajectory)
+                    current_trajectory = Trajectory(
+                        trackable_object="ball",
+                        start_frame=record.frame_id,
+                        end_frame=record.frame_id,
+                        detections=[record.ball_data],
+                    )
             else:
                 if current_trajectory:
                     trajectories["ball"].append(current_trajectory)
@@ -151,10 +169,20 @@ class TrackingDataset(Dataset[Frame]):
                                 end_frame=record.frame_id,
                                 detections=[record.players_data[player]],
                             )
-                        else:
+                        elif (
+                            record.frame_id - current_trajectory.end_frame == 1
+                        ):
                             current_trajectory.end_frame = record.frame_id
                             current_trajectory.detections.append(
                                 record.players_data[player]
+                            )
+                        else:
+                            trajectories[player].append(current_trajectory)
+                            current_trajectory = Trajectory(
+                                trackable_object=player,
+                                start_frame=record.frame_id,
+                                end_frame=record.frame_id,
+                                detections=[record.players_data[player]],
                             )
                     else:
                         if current_trajectory:
@@ -169,23 +197,53 @@ class TrackingDataset(Dataset[Frame]):
         self,
         n_smooth_speed: int = 6,
         n_smooth_acc: int = 10,
+        filter_type: Optional[
+            Literal["savitzky_golay", "moving_average"]
+        ] = "savitzky_golay",
+        polyorder: int = 3,
+        window_length: int = 31,
         max_speed_player: float = 12.0,
         max_speed_ball: float = 50.0,
+        copy: bool = True,
     ):
         """Compute speed and acceleration for each object in the dataset.
 
         Args:
             n_smooth_speed: The number of frames to smooth over when computing speed.
             n_smooth_acc: The number of frames to smooth over when computing acceleration.
+            filter_type: The type of filter to use when smoothing. Either "savitzky_golay", "moving_average" or None.
+            polyorder: Polyorder to use when the savitzky_golay filter is selected. Defaults to 3.
+            window_length: Window length of the filter. Defaults to 31 frames.
             max_speed_player: The maximum speed allowed for a player (in m/s).
             max_speed_ball: The maximum speed allowed for the ball (in m/s).
+            copy: If True, a new dataset is returned with the computed kinematics. If False, the dataset is modified in place.
 
         """
+        if np is None:
+            raise ImportError(
+                "Numpy is required to compute kinematics. Please install it using: pip install numpy"
+            )
+
         if self.metadata.frame_rate is None:
             raise KloppyError(
                 "Frame rate is not set in metadata. Please set the frame rate before computing kinematics."
             )
-        for trackable_object, trajectories in self.trajectories.items():
+
+        if n_smooth_speed < 2:
+            n_smooth_speed = 2
+        if n_smooth_speed % 2 != 0:
+            n_smooth_speed += 1
+
+        if n_smooth_acc < 2:
+            n_smooth_acc = 2
+        if n_smooth_acc % 2 != 0:
+            n_smooth_acc += 1
+
+        new_dataset = (
+            replace(self, records=deepcopy(self.records)) if copy else self
+        )
+
+        for trackable_object, trajectories in new_dataset.trajectories.items():
             max_speed = (
                 max_speed_player
                 if isinstance(trackable_object, Player)
@@ -194,19 +252,38 @@ class TrackingDataset(Dataset[Frame]):
 
             for trajectory in trajectories:
                 if len(trajectory) < n_smooth_speed + 1:
+                    for i, detection in enumerate(trajectory):
+                        detection.distance = np.nan
+                        detection.speed = np.nan
+                        detection.acceleration = np.nan
                     continue
 
                 # get x-y coordinates in metric space
                 tracked_maps = np.empty((len(trajectory), 2))
                 for i, detection in enumerate(trajectory):
                     point = detection.coordinates
-                    metric_point = self.metadata.pitch_dimensions.to_base(
-                        point
+                    metric_point = new_dataset.metadata.pitch_dimensions.to_metric_base(
+                        point,
+                        pitch_length=new_dataset.metadata.pitch_dimensions.pitch_length
+                        or DEFAULT_PITCH_LENGTH,
+                        pitch_width=new_dataset.metadata.pitch_dimensions.pitch_width
+                        or DEFAULT_PITCH_WIDTH,
                     )
                     tracked_maps[i] = [metric_point.x, metric_point.y]
 
-                # apply a Savitzky-Golay filter for smoothing
-                tracked_maps = smoothing_savgol_3rd(tracked_maps)
+                # apply a filter for smoothing
+                if filter_type == "savitzky_golay":
+                    tracked_maps = _apply_savgol_filter(
+                        tracked_maps, polyorder, window_length
+                    )
+                elif filter_type == "moving_average":
+                    tracked_maps = _apply_savgol_filter(
+                        tracked_maps, 0, window_length
+                    )
+                elif filter_type is not None:
+                    raise ValueError(
+                        f"Unknown filter type: {filter_type}. Supported types are 'savitzky_golay' and 'moving_average'."
+                    )
 
                 # get speed vect and speed norm
                 dist = (
@@ -215,11 +292,13 @@ class TrackingDataset(Dataset[Frame]):
                 )
                 dist_norm = np.linalg.norm(dist, axis=1) / n_smooth_speed
 
-                speed_vect = dist / (n_smooth_speed / self.metadata.frame_rate)
+                speed_vect = dist / (
+                    n_smooth_speed / new_dataset.metadata.frame_rate
+                )
                 speed_norm = np.linalg.norm(speed_vect, axis=1)
 
                 # acc process for short tracks
-                if speed_vect.shape[0] < self.metadata.frame_rate:
+                if speed_vect.shape[0] < new_dataset.metadata.frame_rate:
                     acc_vect = np.nan * np.ones_like(speed_vect)
                     acc_norm = np.nan * np.ones_like(speed_norm)
                 else:
@@ -228,7 +307,7 @@ class TrackingDataset(Dataset[Frame]):
                         speed_vect[n_smooth_acc:] - speed_vect[:-n_smooth_acc]
                     )
                     acc_vect = diff_acc / (
-                        n_smooth_acc / self.metadata.frame_rate
+                        n_smooth_acc / new_dataset.metadata.frame_rate
                     )
 
                     # padding to respect the shape after the smoothing
@@ -236,14 +315,16 @@ class TrackingDataset(Dataset[Frame]):
                     acc_vect = np.concatenate((add, acc_vect, add))
 
                     # apply a physical check based on speed and acc
-                    acc_vect = apply_criterion(speed_vect, acc_vect, max_speed)
+                    acc_vect = _apply_criterion(
+                        speed_vect, acc_vect, max_speed
+                    )
 
                     # acc norm process for other tracks
                     diff_acc = (
                         speed_norm[n_smooth_acc:] - speed_norm[:-n_smooth_acc]
                     )
                     acc_norm = diff_acc / (
-                        n_smooth_acc / self.metadata.frame_rate
+                        n_smooth_acc / new_dataset.metadata.frame_rate
                     )
 
                     # padding to respect the shape after the smoothing
@@ -264,6 +345,8 @@ class TrackingDataset(Dataset[Frame]):
                     detection.distance = dist_norm[i]
                     detection.speed = speed_norm[i]
                     detection.acceleration = acc_norm[i]
+
+        return new_dataset
 
     @deprecated(
         "to_pandas will be removed in the future. Please use to_df instead."
@@ -307,7 +390,7 @@ class TrackingDataset(Dataset[Frame]):
         )
 
 
-def apply_criterion(speeds, acc, max_speed):
+def _apply_criterion(speeds, acc, max_speed):
     """
     Criterion used to spot tracking inaccuracies.
 
@@ -319,6 +402,7 @@ def apply_criterion(speeds, acc, max_speed):
     Returns:
         acc: same as acc with value set to np.NaN if criterion <= 0
     """
+    assert np is not None
     criterion = -(9.1 / max_speed) * speeds + 9.1 - acc
     mask = np.isnan(criterion)
     criterion[mask] = -np.inf
@@ -327,7 +411,7 @@ def apply_criterion(speeds, acc, max_speed):
     return acc
 
 
-def smoothing_savgol_3rd(raw_maps):
+def _apply_savgol_filter(raw_maps, polyorder, window_length):
     """
     Smooth player/ball positions using a Savitzky-Golay filter.
 
@@ -339,14 +423,14 @@ def smoothing_savgol_3rd(raw_maps):
     """
     if savgol_filter is None:
         raise ImportError(
-            "Seems like you don't have scipy installed. Please"
-            " install it using: pip install scipy"
+            "Scipy is required to apply a Savitzky-Golay smoothing filter. "
+            "Please install it using: pip install scipy"
         )
 
-    window_length = min(raw_maps.shape[0], 31)
+    window_length = min(raw_maps.shape[0], window_length)
     if window_length % 2 == 0:
         window_length = window_length - 1
-    polyorder = min(window_length - 1, 3)
+    polyorder = min(window_length - 1, 1)
     tracked_maps = savgol_filter(raw_maps, window_length, polyorder, axis=0)
     return tracked_maps
 

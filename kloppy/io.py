@@ -42,7 +42,7 @@ def get_file_extension(f: FileLike) -> str:
     elif isinstance(f, Source):
         return get_file_extension(f.data)
     else:
-        raise Exception("Could not determine filename")
+        raise Exception("Could not determine extension")
 
 
 def get_local_cache_stream(url: str, cache_dir: str) -> Tuple[BinaryIO, bool]:

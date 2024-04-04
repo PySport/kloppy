@@ -79,7 +79,7 @@ class TestSecondSpectrumTracking:
         home_player = dataset.metadata.teams[0].players[2]
         assert home_player.player_id == "8xwx2"
         assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=-8.943903672572427, y=-28.171654132650364
+            x=-8.943903672572427, y=-28.171654132650365
         )
 
         away_player = dataset.metadata.teams[1].players[3]
@@ -112,7 +112,7 @@ class TestSecondSpectrumTracking:
 
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=0.4146981051733674, y=0.9144718866065965
+            x=0.4146981051733674, y=0.9144718866065964
         )
         assert (
             dataset.records[0].players_data[home_player].speed

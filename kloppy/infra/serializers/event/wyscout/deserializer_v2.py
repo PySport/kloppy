@@ -476,7 +476,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
         return Provider.WYSCOUT
 
     def deserialize(self, inputs: WyscoutInputs) -> EventDataset:
-        transformer = self.get_transformer(length=100, width=100)
+        transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)

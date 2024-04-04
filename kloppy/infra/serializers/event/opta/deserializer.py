@@ -694,7 +694,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
         return Provider.OPTA
 
     def deserialize(self, inputs: OptaInputs) -> EventDataset:
-        transformer = self.get_transformer(length=100, width=100)
+        transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
             f7_root = objectify.fromstring(inputs.f7_data.read())

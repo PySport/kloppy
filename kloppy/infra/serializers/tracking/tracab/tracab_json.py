@@ -197,7 +197,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             teams = [home_team, away_team]
 
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
         with performance_logging("Loading data", logger=logger):

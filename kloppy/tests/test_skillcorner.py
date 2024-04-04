@@ -123,7 +123,7 @@ class TestSkillCornerTracking:
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_data[
             home_player
-        ].coordinates == Point(x=0.8225688718076191, y=0.6405503322430882)
+        ].coordinates == Point(x=0.8225688718076191, y=0.6405503322430883)
 
     def test_skip_empty_frames(self, meta_data: str, raw_data: str):
         dataset = skillcorner.load(

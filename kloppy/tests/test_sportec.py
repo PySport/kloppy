@@ -93,7 +93,7 @@ class TestSportecEventData:
             event_data=event_data, meta_data=meta_data
         )
 
-        assert dataset.events[0].coordinates == Point(0.5640999999999999, 1)
+        assert dataset.events[0].coordinates == Point(0.5641, 1)
 
     def test_pass_receiver_coordinates(
         self, event_data: Path, meta_data: Path

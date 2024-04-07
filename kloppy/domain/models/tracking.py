@@ -1,3 +1,4 @@
+from math import ceil
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -228,15 +229,8 @@ class TrackingDataset(Dataset[Frame]):
                 "Frame rate is not set in metadata. Please set the frame rate before computing kinematics."
             )
 
-        if n_smooth_speed < 2:
-            n_smooth_speed = 2
-        if n_smooth_speed % 2 != 0:
-            n_smooth_speed += 1
-
-        if n_smooth_acc < 2:
-            n_smooth_acc = 2
-        if n_smooth_acc % 2 != 0:
-            n_smooth_acc += 1
+        n_smooth_speed = 1 if n_smooth_speed < 1 else n_smooth_speed
+        n_smooth_acc = 1 if n_smooth_acc < 1 else n_smooth_acc
 
         new_dataset = (
             replace(
@@ -327,8 +321,13 @@ class TrackingDataset(Dataset[Frame]):
                     )
 
                     # padding to respect the shape after the smoothing
-                    add = np.zeros((n_smooth_acc // 2, 2)) + np.nan
-                    acc_vect = np.concatenate((add, acc_vect, add))
+                    add_acc_before = (
+                        np.zeros((ceil(n_smooth_acc / 2), 2)) + np.nan
+                    )
+                    add_acc_after = np.zeros((n_smooth_acc // 2, 2)) + np.nan
+                    acc_vect = np.concatenate(
+                        (add_acc_before, acc_vect, add_acc_after)
+                    )
 
                     # apply a physical check based on speed and acc
                     acc_vect = _apply_criterion(
@@ -344,17 +343,36 @@ class TrackingDataset(Dataset[Frame]):
                     )
 
                     # padding to respect the shape after the smoothing
-                    add = np.zeros((n_smooth_acc // 2)) + np.nan
-                    acc_norm = np.concatenate((add, acc_norm, add))
+                    add_acc_norm_before = (
+                        np.zeros((ceil(n_smooth_acc / 2))) + np.nan
+                    )
+                    add_acc_norm_after = np.zeros((n_smooth_acc // 2)) + np.nan
+                    acc_norm = np.concatenate(
+                        (add_acc_norm_before, acc_norm, add_acc_norm_after)
+                    )
 
                 # apply last padding
-                add = np.zeros((n_smooth_speed // 2, 2)) + np.nan
-                speed_vect = np.concatenate((add, speed_vect, add))
+                add_speed_before = (
+                    np.zeros((ceil(n_smooth_speed / 2), 2)) + np.nan
+                )
+                add_speed_after = np.zeros((n_smooth_speed // 2, 2)) + np.nan
+                speed_vect = np.concatenate(
+                    (add_speed_before, speed_vect, add_speed_after)
+                )
 
-                add = np.zeros((n_smooth_speed // 2)) + np.nan
-                dist_norm = np.concatenate((add, dist_norm, add))
-                speed_norm = np.concatenate((add, speed_norm, add))
-                acc_norm = np.concatenate((add, acc_norm, add))
+                add_speed_norm_before = (
+                    np.zeros((ceil(n_smooth_speed / 2))) + np.nan
+                )
+                add_speed_norm_after = np.zeros((n_smooth_speed // 2)) + np.nan
+                dist_norm = np.concatenate(
+                    (add_speed_norm_before, dist_norm, add_speed_norm_after)
+                )
+                speed_norm = np.concatenate(
+                    (add_speed_norm_before, speed_norm, add_speed_norm_after)
+                )
+                acc_norm = np.concatenate(
+                    (add_speed_norm_before, acc_norm, add_speed_norm_after)
+                )
 
                 # fill detection dict with physical info
                 for i, detection in enumerate(trajectory):

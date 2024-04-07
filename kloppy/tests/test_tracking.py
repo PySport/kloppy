@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, isnan
 import numpy as np
 
 import pytest
@@ -106,31 +106,46 @@ class TestHelpers:
         return tracking_data
 
     def test_compute_kinematics(self):
-        dataset = self._get_tracking_dataset()
-        new_dataset = dataset.compute_kinematics(
-            n_smooth_speed=2, n_smooth_acc=2, filter_type=None
+        dataset = self._get_tracking_dataset().compute_kinematics(
+            # disable all filters
+            n_smooth_speed=1,
+            n_smooth_acc=1,
+            filter_type=None,
         )
 
-        ball_speeds = [frame.ball_data.speed for frame in new_dataset.records]
-        assert ball_speeds[26:-1] == pytest.approx(
-            [sqrt(105**2 + 68**2) / 4] * 98
+        ball_speeds = [frame.ball_data.speed for frame in dataset.records]
+        # The ball speed is not defined for the first frame
+        assert isnan(ball_speeds[0])
+        # The ball ball does not move for the first 25 frames
+        assert ball_speeds[1:25] == pytest.approx([0] * 24)
+        # The ball moves with a constant speed in the next 100 frames
+        assert ball_speeds[26:] == pytest.approx(
+            [sqrt(105**2 + 68**2) / 4] * 99
         )
 
         ball_accelerations = [
-            frame.ball_data.acceleration for frame in new_dataset.records
+            frame.ball_data.acceleration for frame in dataset.records
         ]
-        assert ball_accelerations[23] == pytest.approx(0)
-        assert np.nanargmax(ball_accelerations) == 25
+        # The ball acceleration is not defined for the first frame
+        assert isnan(ball_accelerations[0])
+        # The ball only accelerates at the 26th frame
+        assert ball_accelerations[25] == pytest.approx(0)
+        assert np.nanargmax(ball_accelerations) == 26
         assert ball_accelerations[27] == pytest.approx(0)
 
-        for player in new_dataset.metadata.teams[0].players:
+        # It should also compute the speed and acceleration for the players
+        for player in dataset.metadata.teams[0].players:
             player_speeds = [
-                frame.players_data[player].speed
-                for frame in new_dataset.records
+                frame.players_data[player].speed for frame in dataset.records
             ]
-            assert player_speeds[26:-1] == pytest.approx(
-                [sqrt(105**2 + 68**2) / 4] * 98
+            assert player_speeds[26:] == pytest.approx(
+                [sqrt(105**2 + 68**2) / 4] * 99
             )
+            player_accelerations = [
+                frame.players_data[player].acceleration
+                for frame in dataset.records
+            ]
+            assert np.nanargmax(player_accelerations) == 26
 
     def test_compute_kinematics_with_filter(self):
         dataset = self._get_tracking_dataset()

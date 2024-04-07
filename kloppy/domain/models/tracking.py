@@ -1,5 +1,4 @@
 from collections import defaultdict
-from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -240,7 +239,24 @@ class TrackingDataset(Dataset[Frame]):
             n_smooth_acc += 1
 
         new_dataset = (
-            replace(self, records=deepcopy(self.records)) if copy else self
+            replace(
+                self,
+                records=[
+                    replace(
+                        record,
+                        ball_data=replace(record.ball_data)
+                        if record.ball_data
+                        else None,
+                        players_data={
+                            player: replace(detection)
+                            for player, detection in record.players_data.items()
+                        },
+                    )
+                    for record in self.records
+                ],
+            )
+            if copy
+            else self
         )
 
         for trackable_object, trajectories in new_dataset.trajectories.items():

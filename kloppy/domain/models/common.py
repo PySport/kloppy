@@ -126,6 +126,13 @@ class Position:
 
 
 @dataclass(frozen=True)
+class PositionChange:
+    timestamp: timedelta
+    period_id: int
+    position: Position
+
+
+@dataclass(frozen=True)
 class Player:
     """
     Attributes:
@@ -135,8 +142,7 @@ class Player:
         name: Full name of the player
         first_name: First name
         last_name: Last name
-        starting: `True` when player is part of the starting 11
-        position: See [`Position][kloppy.domain.models.common.Position]
+        position_changes: See [`PositionChange][kloppy.domain.models.common.PositionChange]
         attributes: attributes given by the provider
     """
 
@@ -148,8 +154,7 @@ class Player:
     last_name: str = None
 
     # match specific
-    starting: bool = None
-    position: Position = None
+    position_changes: List[PositionChange] = field(default_factory=list)
 
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
@@ -160,6 +165,32 @@ class Player:
         if self.first_name or self.last_name:
             return f"{self.first_name} {self.last_name}"
         return f"{self.team.ground}_{self.jersey_no}"
+
+    @property
+    def starting(self):
+        if self.position_changes:
+            return self.position_changes[0].position.position_id != "0"
+
+    @property
+    def starting_position(self):
+        if self.position_changes:
+            return self.position_changes[0].position
+
+    def position(self, period_id: int, timestamp: timedelta):
+        if self.position_changes:
+            position = self.position_changes[0].position
+            for position_change in self.position_changes:
+                # Check if the current change is before or exactly at the given period and timestamp
+                if period_id > position_change.period_id or (
+                    period_id == position_change.period_id
+                    and timestamp >= position_change.timestamp
+                ):
+                    position = position_change.position
+                else:
+                    # Since the list is assumed to be in chronological order, break on finding the first future change
+                    break
+
+            return position
 
     def __str__(self):
         return self.full_name
@@ -210,10 +241,15 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position_id: Union[int, str]):
+    def get_player_by_position(
+        self,
+        position_id: Union[int, str],
+        period_id: int,
+        timestamp: Union[float, timedelta],
+    ):
         position_id = str(position_id)
         for player in self.players:
-            if player.position and player.position.position_id == position_id:
+            if player.position(period_id, timestamp) == position_id:
                 return player
 
         return None

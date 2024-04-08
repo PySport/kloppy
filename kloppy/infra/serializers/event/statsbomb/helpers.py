@@ -14,10 +14,17 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 
 
-def parse_str_ts(timestamp: str) -> float:
+def parse_str_ts(timestamp: str) -> timedelta:
     """Parse a HH:mm:ss string timestamp into number of seconds."""
-    h, m, s = timestamp.split(":")
-    return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
+    split_timestamp = timestamp.split(":")
+    if len(split_timestamp) == 2:
+        m, s = split_timestamp[0], split_timestamp[1]
+        return timedelta(seconds=int(m) * 60 + float(s))
+    elif len(split_timestamp) == 3:
+        h, m, s = split_timestamp[0], split_timestamp[1], split_timestamp[2]
+        return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
+    else:
+        raise DeserializationError(f"Unknown timestamp format: {timestamp}")
 
 
 def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
@@ -93,7 +100,11 @@ def parse_freeze_frame(
         elif player_data.get("actor"):
             return event.player
         elif player_data.get("keeper"):
-            return team.get_player_by_position(position_id=1)
+            return team.get_player_by_position(
+                position_id=1,
+                period_id=event.period.id,
+                timestamp=event.timestamp,
+            )
         else:
             return Player(
                 player_id=f"T{team.team_id}-E{event.event_id}-{i}",

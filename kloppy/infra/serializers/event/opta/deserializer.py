@@ -126,7 +126,7 @@ EVENT_QUALIFIER_CHIPPED_BALL = 155
 EVENT_QUALIFIER_LAUNCH = 157
 EVENT_QUALIFIER_FLICK_ON = 168
 EVENT_QUALIFIER_SWITCH_OF_PLAY = 196
-EVENT_QUALIFIER_ASSIST = 210
+EVENT_QUALIFIER_SHOT_ASSIST = 210
 EVENT_QUALIFIER_ASSIST_2ND = 218
 
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
@@ -245,16 +245,14 @@ formations = {
 }
 
 
-def _parse_f24_datetime(dt_str: str) -> float:
+def _parse_f24_datetime(dt_str: str) -> datetime:
     def zero_pad_milliseconds(timestamp):
         parts = timestamp.split(".")
         return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
 
     dt_str = zero_pad_milliseconds(dt_str)
-    return (
-        datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
-        .replace(tzinfo=pytz.utc)
-        .timestamp()
+    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").replace(
+        tzinfo=pytz.utc
     )
 
 
@@ -578,7 +576,6 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
         EVENT_QUALIFIER_THROUGH_BALL: PassType.THROUGH_BALL,
         EVENT_QUALIFIER_LAUNCH: PassType.LAUNCH,
         EVENT_QUALIFIER_FLICK_ON: PassType.FLICK_ON,
-        EVENT_QUALIFIER_ASSIST: PassType.ASSIST,
         EVENT_QUALIFIER_ASSIST_2ND: PassType.ASSIST_2ND,
     }
     for (
@@ -587,6 +584,14 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     ) in pass_qualifier_mapping.items():
         if sp_pass_qualifier in raw_qualifiers:
             qualifiers.append(PassQualifier(value=pass_qualifier_value))
+
+    if EVENT_QUALIFIER_SHOT_ASSIST in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.SHOT_ASSIST))
+        shot_result_qualifier = int(
+            raw_qualifiers[EVENT_QUALIFIER_SHOT_ASSIST]
+        )
+        if shot_result_qualifier == EVENT_TYPE_SHOT_GOAL:
+            qualifiers.append(PassQualifier(value=PassType.ASSIST))
 
     return qualifiers
 
@@ -689,7 +694,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
         return Provider.OPTA
 
     def deserialize(self, inputs: OptaInputs) -> EventDataset:
-        transformer = self.get_transformer(length=100, width=100)
+        transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
             f7_root = objectify.fromstring(inputs.f7_data.read())

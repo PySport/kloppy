@@ -2,6 +2,7 @@ import logging
 import warnings
 import json
 import html
+from datetime import timedelta
 from typing import Dict, Optional, Union
 
 from kloppy.domain import (
@@ -106,7 +107,8 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_id / frame_rate - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
             ball_coordinates=Point3D(ball_x, ball_y, ball_z),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
@@ -181,8 +183,12 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=period_start_frame / frame_rate,
-                            end_timestamp=period_end_frame / frame_rate,
+                            start_timestamp=timedelta(
+                                seconds=period_start_frame / frame_rate
+                            ),
+                            end_timestamp=timedelta(
+                                seconds=period_end_frame / frame_rate
+                            ),
                         )
                     )
 
@@ -191,7 +197,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             teams = [home_team, away_team]
 
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
         with performance_logging("Loading data", logger=logger):
@@ -210,7 +216,11 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
                     frame_id = frame["FrameCount"]
                     for _period in periods:
-                        if _period.contains(frame_id / frame_rate):
+                        if (
+                            _period.start_timestamp
+                            <= timedelta(seconds=frame_id / frame_rate)
+                            <= _period.end_timestamp
+                        ):
                             if n % sample == 0:
                                 yield _period, frame
                             n += 1

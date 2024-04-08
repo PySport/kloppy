@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -57,6 +58,28 @@ class TestWyscoutV2:
             dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
         return dataset
+
+    def test_metadata(self, dataset: EventDataset):
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=0
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=2863.708369
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=2863.708369
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=2863.708369
+        ) + timedelta(seconds=2999.70982)
+
+    def test_timestamps(self, dataset: EventDataset):
+        kickoff_p1 = dataset.get_event_by_id("190078343")
+        assert kickoff_p1.timestamp == timedelta(seconds=2.643377)
+        kickoff_p2 = dataset.get_event_by_id("190079822")
+        assert kickoff_p2.timestamp == timedelta(seconds=0)
 
     def test_shot_event(self, dataset: EventDataset):
         shot_event = dataset.get_event_by_id("190079151")
@@ -119,7 +142,9 @@ class TestWyscoutV2:
 
     def test_correct_normalized_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, data_version="V2")
-        assert dataset.records[2].coordinates == Point(0.29, 0.06)
+        assert dataset.records[2].coordinates == Point(
+            0.2981354967264447, 0.06427244582043344
+        )
 
 
 class TestWyscoutV3:
@@ -139,12 +164,39 @@ class TestWyscoutV3:
         )
         return dataset
 
+    def test_metadata(self, dataset: EventDataset):
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=0
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            minutes=20, seconds=47
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            minutes=20, seconds=47
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            minutes=20, seconds=47
+        ) + timedelta(minutes=50, seconds=30)
+
+    def test_timestamps(self, dataset: EventDataset):
+        kickoff_p1 = dataset.get_event_by_id(663292348)
+        assert kickoff_p1.timestamp == timedelta(minutes=0, seconds=1)
+        # Note: the test file is incorrect. The second period start at 45:00
+        kickoff_p2 = dataset.get_event_by_id(1331979498)
+        assert kickoff_p2.timestamp == timedelta(
+            minutes=1, seconds=0
+        ) - timedelta(minutes=45)
+
     def test_coordinates(self, dataset: EventDataset):
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
 
     def test_normalized_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
-        assert dataset.records[2].coordinates == Point(0.36, 0.78)
+        assert dataset.records[2].coordinates == Point(
+            0.36417591801878735, 0.7695098039215686
+        )
 
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1331979498)

@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 import warnings
 from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
 from enum import Enum, Flag
@@ -32,6 +33,9 @@ from kloppy.infra.serializers.tracking.deserializer import (
 from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
+
+
+frame_rate = 10
 
 
 class SkillCornerInputs(NamedTuple):
@@ -72,6 +76,20 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         frame_id = frame["frame"]
         frame_time = cls._timestamp_from_timestring(frame["time"])
+
+        if frame_period == 1:
+            frame_time -= timedelta(seconds=0)
+        elif frame_period == 2:
+            frame_time -= timedelta(seconds=45 * 60)
+        # TODO: check if the below is correct; just guessing here
+        elif frame_period == 3:
+            frame_time -= timedelta(seconds=90 * 60)
+        elif frame_period == 4:
+            frame_time -= timedelta(seconds=105 * 60)
+        elif frame_period == 5:
+            frame_time -= timedelta(seconds=120 * 60)
+        else:
+            raise ValueError(f"Unknown period id {frame_period}")
 
         ball_coordinates = None
         players_data = {}
@@ -138,7 +156,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_time - periods[frame_period].start_timestamp,
+            timestamp=frame_time,
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame_period],
@@ -153,10 +171,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         if len(parts) == 2:
             m, s = parts
-            return 60 * float(m) + float(s)
+            return timedelta(seconds=60 * float(m) + float(s))
         elif len(parts) == 3:
             h, m, s = parts
-            return 3600 * float(h) + 60 * float(m) + float(s)
+            return timedelta(
+                seconds=3600 * float(h) + 60 * float(m) + float(s)
+            )
         else:
             raise ValueError("Invalid timestring format")
 
@@ -222,11 +242,11 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
             periods[period] = Period(
                 id=period,
-                start_timestamp=cls._timestamp_from_timestring(
-                    _frames[0]["time"]
+                start_timestamp=timedelta(
+                    seconds=_frames[0]["frame"] / frame_rate
                 ),
-                end_timestamp=cls._timestamp_from_timestring(
-                    _frames[-1]["time"]
+                end_timestamp=timedelta(
+                    seconds=_frames[-1]["frame"] / frame_rate
                 ),
             )
         return periods
@@ -300,7 +320,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             pitch_size_length = metadata["pitch_length"]
 
             transformer = self.get_transformer(
-                length=pitch_size_length, width=pitch_size_width
+                pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
             home_team_id = metadata["home_team"]["id"]

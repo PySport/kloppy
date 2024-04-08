@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 import warnings
 from typing import Dict, Optional, Union
 import html
@@ -110,7 +111,8 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_id / frame_rate - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
             ball_coordinates=Point3D(
                 float(ball_x), float(ball_y), float(ball_z)
             ),
@@ -171,8 +173,12 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     periods.append(
                         Period(
                             id=int(period.attrib["iId"]),
-                            start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate,
+                            start_timestamp=timedelta(
+                                seconds=start_frame_id / frame_rate
+                            ),
+                            end_timestamp=timedelta(
+                                seconds=end_frame_id / frame_rate
+                            ),
                         )
                     )
 
@@ -186,7 +192,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():
@@ -203,7 +209,11 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         continue
 
                     for period_ in periods:
-                        if period_.contains(frame_id / frame_rate):
+                        if (
+                            period_.start_timestamp
+                            <= timedelta(seconds=frame_id / frame_rate)
+                            <= period_.end_timestamp
+                        ):
                             if n % sample == 0:
                                 yield period_, line_
                             n += 1

@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 import pytest
 from kloppy import statsbomb
@@ -57,7 +58,7 @@ class TestToRecords:
             "timestamp", "coordinates_x", "coordinates"
         )
         assert records[0] == {
-            "timestamp": 0.098,
+            "timestamp": timedelta(seconds=0.098),
             "coordinates_x": 60.5,
             "coordinates": Point(x=60.5, y=40.5),
         }
@@ -75,7 +76,7 @@ class TestToRecords:
             DistanceToOwnGoalTransformer(),
         )
         assert records[0] == {
-            "timestamp": 0.098,
+            "timestamp": timedelta(seconds=0.098),
             "player_id": "6581",
             "coordinates_x": 60.5,
             "coordinates_y": 40.5,

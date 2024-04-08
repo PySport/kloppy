@@ -1,5 +1,5 @@
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import pytest
 
@@ -25,7 +25,7 @@ from kloppy.domain import (
     Orientation,
     PassQualifier,
     PassType,
-    PitchDimensions,
+    OptaPitchDimensions,
     Point,
     Point,
     Point3D,
@@ -59,18 +59,12 @@ def dataset(base_dir) -> EventDataset:
 def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
-    assert (
-        _parse_f24_datetime("2018-09-23T15:02:13.608")
-        == datetime(
-            2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
-        ).timestamp()
+    assert _parse_f24_datetime("2018-09-23T15:02:13.608") == datetime(
+        2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
-    assert (
-        _parse_f24_datetime("2018-09-23T15:02:14.39")
-        == datetime(
-            2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
-        ).timestamp()
+    assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
+        2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
     )
 
 
@@ -149,14 +143,12 @@ class TestOptaMetadata:
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""
-        assert dataset.metadata.pitch_dimensions == PitchDimensions(
-            x_dim=Dimension(0, 100), y_dim=Dimension(0, 100)
-        )
+        assert dataset.metadata.pitch_dimensions == OptaPitchDimensions()
 
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
         assert dataset.metadata.coordinate_system == build_coordinate_system(
-            Provider.OPTA, width=100, length=100
+            Provider.OPTA
         )
 
     def test_score(self, dataset):
@@ -191,6 +183,13 @@ class TestOptaEvent:
         )
         assert event.ball_state == BallState.ALIVE
 
+    def test_timestamp(self, dataset):
+        """It should set the correct timestamp, reset to zero after each period"""
+        kickoff_p1 = dataset.get_event_by_id("1510681159")
+        assert kickoff_p1.timestamp == timedelta(seconds=0.431)
+        kickoff_p2 = dataset.get_event_by_id("1209571018")
+        assert kickoff_p2.timestamp == timedelta(seconds=1.557)
+
     def test_correct_normalized_deserialization(self, base_dir):
         """Test if the normalized deserialization is correct"""
         dataset = opta.load(
@@ -198,7 +197,8 @@ class TestOptaEvent:
             f24_data=base_dir / "files" / "opta_f24.xml",
         )
         event = dataset.get_event_by_id("1510681159")
-        assert event.coordinates == Point(0.501, 0.506)
+        assert event.coordinates.x == pytest.approx(0.501, 0.001)
+        assert event.coordinates.y == pytest.approx(0.50672, 0.001)
 
     def test_ball_owning_team(self, dataset: EventDataset):
         """Test if the ball owning team is correctly set"""
@@ -243,7 +243,7 @@ class TestOptaPassEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all clearance events"""
         events = dataset.find_all("pass")
-        assert len(events) == 14
+        assert len(events) == 15
 
     def test_receiver_coordinates(self, dataset: EventDataset):
         """Test if the receiver coordinates are correctly deserialized"""
@@ -265,6 +265,11 @@ class TestOptaPassEvent:
         )
         chipped_pass = dataset.get_event_by_id("1444075194")
         assert PassType.CHIPPED_PASS in chipped_pass.get_qualifier_values(
+            PassQualifier
+        )
+        assist = dataset.get_event_by_id("1666666666")
+        assert PassType.ASSIST in assist.get_qualifier_values(PassQualifier)
+        assert PassType.SHOT_ASSIST in assist.get_qualifier_values(
             PassQualifier
         )
 

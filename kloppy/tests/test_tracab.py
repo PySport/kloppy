@@ -154,24 +154,26 @@ class TestTracabDATTracking:
         assert dataset.metadata.orientation == Orientation.AWAY_HOME
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == timedelta(
-            seconds=100 / 25
+            seconds=73940, microseconds=320000
         )
         assert dataset.metadata.periods[0].end_timestamp == timedelta(
-            seconds=102 / 25
+            seconds=76656, microseconds=320000
         )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
-            seconds=200 / 25
+            seconds=77684, microseconds=560000
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
-            seconds=202 / 25
+            seconds=80717, microseconds=320000
         )
 
         # Check frame ids and timestamps
-        assert dataset.records[0].frame_id == 100
-        assert dataset.records[0].timestamp == timedelta(seconds=0)
-        assert dataset.records[3].frame_id == 200
-        assert dataset.records[3].timestamp == timedelta(seconds=0)
+        assert dataset.records[0].frame_id == 1848508
+        assert dataset.records[0].timestamp == timedelta(0)
+        assert dataset.records[1].frame_id == 1848509
+        assert dataset.records[1].timestamp == timedelta(microseconds=40000)
+        assert dataset.records[3].frame_id == 1916408
+        assert dataset.records[3].timestamp == timedelta(seconds=2716)
 
         # Check frame data
         player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(

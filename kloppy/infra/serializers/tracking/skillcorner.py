@@ -159,8 +159,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         return Frame(
             frame_id=frame_id,
             timestamp=frame_time,
-            ball_data=ball_data,
-            players_data=players_data,
+            objects={"ball": ball_data, **players_data},
             period=periods[frame_period],
             ball_state=None,
             ball_owning_team=ball_owning_team,

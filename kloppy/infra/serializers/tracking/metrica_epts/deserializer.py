@@ -79,13 +79,15 @@ class MetricaEPTSTrackingDataDeserializer(
             ball_owning_team=None,
             ball_state=None,
             period=period,
-            players_data=players_data,
             other_data={},
-            ball_data=Detection(
-                coordinates=Point3D(
-                    x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
+            objects={
+                "ball": Detection(
+                    coordinates=Point3D(
+                        x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
+                    ),
                 ),
-            ),
+                **players_data,
+            },
         )
 
         if transformer:

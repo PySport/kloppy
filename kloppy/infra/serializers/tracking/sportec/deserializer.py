@@ -175,26 +175,28 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                 if ball_data["BallStatus"] == "1"
                                 else BallState.DEAD,
                                 period=period,
-                                players_data={
-                                    player_map[player_id]: Detection(
-                                        coordinates=Point(
-                                            x=float(raw_player_data["X"]),
-                                            y=float(raw_player_data["Y"]),
+                                objects={
+                                    "ball": Detection(
+                                        coordinates=Point3D(
+                                            x=float(ball_data["X"]),
+                                            y=float(ball_data["Y"]),
+                                            z=float(ball_data["Z"]),
                                         ),
-                                        speed=float(raw_player_data["S"]),
-                                    )
-                                    for player_id, raw_player_data in frame_data.items()
-                                    if player_id != "ball"
+                                        speed=float(ball_data["S"]),
+                                    ),
+                                    **{
+                                        player_map[player_id]: Detection(
+                                            coordinates=Point(
+                                                x=float(raw_player_data["X"]),
+                                                y=float(raw_player_data["Y"]),
+                                            ),
+                                            speed=float(raw_player_data["S"]),
+                                        )
+                                        for player_id, raw_player_data in frame_data.items()
+                                        if player_id != "ball"
+                                    },
                                 },
                                 other_data={},
-                                ball_data=Detection(
-                                    coordinates=Point3D(
-                                        x=float(ball_data["X"]),
-                                        y=float(ball_data["Y"]),
-                                        z=float(ball_data["Z"]),
-                                    ),
-                                    speed=float(ball_data["S"]),
-                                ),
                             )
 
             frames = []

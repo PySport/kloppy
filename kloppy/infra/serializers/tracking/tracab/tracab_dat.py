@@ -117,10 +117,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
-            ball_data=ball_data,
+            objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            players_data=players_data,
             period=period,
             other_data={},
         )

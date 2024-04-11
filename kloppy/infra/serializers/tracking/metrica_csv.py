@@ -196,8 +196,7 @@ class MetricaCSVTrackingDataDeserializer(
                     frame_id=frame_id,
                     timestamp=timedelta(seconds=frame_id / frame_rate)
                     - period.start_timestamp,
-                    ball_data=ball_data,
-                    players_data=players_data,
+                    objects={"ball": ball_data, **players_data},
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,

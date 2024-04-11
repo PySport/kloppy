@@ -7,15 +7,12 @@ from kloppy.domain import (
     Period,
     DatasetFlag,
     Point,
-    AttackingDirection,
     TrackingDataset,
     NormalizedPitchDimensions,
     Dimension,
     Orientation,
-    Provider,
     Frame,
     Metadata,
-    MetricaCoordinateSystem,
     Team,
     Ground,
     Player,
@@ -24,7 +21,7 @@ from kloppy.domain import (
 )
 
 
-class TestHelpers:
+class TestTrackingDataset:
     def _get_tracking_dataset(self):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         home_team.players = [
@@ -69,15 +66,15 @@ class TestHelpers:
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    players_data={
-                        Player(
-                            team=home_team, player_id="home_1", jersey_no=1
-                        ): Detection(
+                    objects={
+                        "ball": Detection(
+                            coordinates=Point3D(x=0, y=0, z=0),
+                        ),
+                        home_team.players[0]: Detection(
                             coordinates=Point(x=0, y=0),
-                        )
+                        ),
                     },
                     other_data={"extra_data": 1},
-                    ball_data=Detection(coordinates=Point3D(x=0, y=0, z=0)),
                 )
                 for i in range(25)  # not moving for one second
             ]
@@ -88,17 +85,15 @@ class TestHelpers:
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    players_data={
-                        Player(
-                            team=home_team, player_id="home_1", jersey_no=1
-                        ): Detection(
+                    objects={
+                        "ball": Detection(
+                            coordinates=Point3D(x=0 + i, y=0 + i, z=0)
+                        ),
+                        home_team.players[0]: Detection(
                             coordinates=Point(x=0 + i, y=0 + i),
-                        )
+                        ),
                     },
                     other_data={"extra_data": 1},
-                    ball_data=Detection(
-                        coordinates=Point3D(x=0 + i, y=0 + i, z=0)
-                    ),
                 )
                 for i in range(100)  # 125.096m in 4 seconds
             ],
@@ -106,11 +101,22 @@ class TestHelpers:
         return tracking_data
 
     def test_compute_kinematics(self):
-        dataset = self._get_tracking_dataset().compute_kinematics(
-            # disable all filters
-            n_smooth_speed=1,
-            n_smooth_acc=1,
-            filter_type=None,
+        dataset = (
+            self._get_tracking_dataset()
+            .compute_ball_kinematics(
+                # disable all filters
+                n_smooth_speed=1,
+                n_smooth_acc=1,
+                filter_type=None,
+                copy=True,
+            )
+            .compute_player_kinematics(
+                # disable all filters
+                n_smooth_speed=1,
+                n_smooth_acc=1,
+                filter_type=None,
+                copy=False,
+            )
         )
 
         ball_speeds = [frame.ball_data.speed for frame in dataset.records]
@@ -149,9 +155,9 @@ class TestHelpers:
 
     def test_compute_kinematics_with_filter(self):
         dataset = self._get_tracking_dataset()
-        dataset.compute_kinematics(
+        dataset.compute_ball_kinematics(
             n_smooth_speed=2, n_smooth_acc=2, filter_type="savitzky_golay"
         )
-        dataset.compute_kinematics(
+        dataset.compute_ball_kinematics(
             n_smooth_speed=2, n_smooth_acc=2, filter_type="moving_average"
         )

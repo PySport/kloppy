@@ -1,6 +1,6 @@
 from typing import Optional
 
-from kloppy.domain import TrackingDataset
+from kloppy.domain import TrackingDataset, Provider
 from kloppy.infra.serializers.tracking.statsperform import (
     StatsPerformDeserializer,
     StatsPerformInputs,
@@ -11,12 +11,23 @@ from kloppy.io import FileLike, open_as_file
 def load(
     meta_data: FileLike,  # Stats Perform MA1 file - xml or json - single game, live data & lineups
     raw_data: FileLike,  # Stats Perform MA25 file - txt - tracking data
+    provider_name: str = "sportvu",
+    pitch_length: Optional[float] = None,
+    pitch_width: Optional[float] = None,
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
+    if pitch_length is None or pitch_width is None:
+        if coordinates is None or coordinates != provider_name:
+            raise ValueError(
+                "Please provide the pitch dimensions "
+                "('pitch_length', 'pitch_width') "
+                f"or set 'coordinates' to '{provider_name}'"
+            )
     deserializer = StatsPerformDeserializer(
+        provider=Provider[provider_name.upper()],
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
@@ -27,6 +38,9 @@ def load(
     ) as raw_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformInputs(
-                meta_data=meta_data_fp, raw_data=raw_data_fp
+                meta_data=meta_data_fp,
+                raw_data=raw_data_fp,
+                pitch_length=pitch_length,
+                pitch_width=pitch_width,
             )
         )

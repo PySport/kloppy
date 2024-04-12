@@ -96,6 +96,7 @@ class Provider(Enum):
         KLOPPY:
         DATAFACTORY:
         STATSPERFORM:
+        SPORTVU:
     """
 
     METRICA = "metrica"
@@ -109,6 +110,7 @@ class Provider(Enum):
     KLOPPY = "kloppy"
     DATAFACTORY = "datafactory"
     STATSPERFORM = "statsperform"
+    SPORTVU = "sportvu"
     OTHER = "other"
 
     def __str__(self):
@@ -764,10 +766,10 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
 
 
 @dataclass
-class StatsPerformCoordinateSystem(CoordinateSystem):
+class SportVUCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
-        return Provider.STATSPERFORM
+        return Provider.SportVU
 
     @property
     def origin(self) -> Origin:
@@ -779,13 +781,12 @@ class StatsPerformCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        # FIXME: This does not seem correct
-        return NormalizedPitchDimensions(
-            x_dim=Dimension(0, 100),
-            y_dim=Dimension(0, 100),
-            pitch_length=105,
-            pitch_width=68,
-            standardized=True,
+        return MetricPitchDimensions(
+            x_dim=Dimension(0, self.pitch_length),
+            y_dim=Dimension(0, self.pitch_width),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
         )
 
 
@@ -838,7 +839,7 @@ def build_coordinate_system(
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
-        Provider.STATSPERFORM: StatsPerformCoordinateSystem,
+        Provider.SPORTVU: SportVUCoordinateSystem,
     }
 
     if provider in coordinate_systems:

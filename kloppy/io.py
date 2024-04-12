@@ -3,19 +3,31 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass, replace
-from pathlib import PurePath
-from typing import Union, IO, BinaryIO, Tuple
-
 from io import BytesIO
+from pathlib import PurePath
+from typing import IO, BinaryIO, Tuple, Union
 
 from kloppy.config import get_config
 from kloppy.exceptions import InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
 
-
 logger = logging.getLogger(__name__)
 
-_open = open
+
+def _open(file: str, mode: str):
+    if file.endswith(".gz"):
+        import gzip
+
+        return gzip.open(file, mode)
+    elif file.endswith(".xz"):
+        import lzma
+
+        return lzma.open(file, mode)
+    elif file.endswith(".bz2"):
+        import bz2
+
+        return bz2.open(file, mode)
+    return open(file, mode)
 
 
 @dataclass(frozen=True)
@@ -35,10 +47,12 @@ FileLike = Union[str, PurePath, bytes, IO[bytes], Source]
 
 
 def get_file_extension(f: FileLike) -> str:
-    if isinstance(f, str):
+    if isinstance(f, PurePath) or isinstance(f, str):
+        f = str(f)
+        for ext in [".gz", ".xz", ".bz2"]:
+            if f.endswith(ext):
+                f = f[: -len(ext)]
         return os.path.splitext(f)[1]
-    elif isinstance(f, PurePath):
-        return os.path.splitext(f.name)[1]
     elif isinstance(f, Source):
         return get_file_extension(f.data)
     else:

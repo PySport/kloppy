@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -12,22 +12,23 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     SportVUCoordinateSystem,
+    DatasetType,
 )
 
 
 @pytest.fixture(scope="module")
 def meta_data_xml(base_dir: Path) -> Path:
-    return base_dir / "files" / "statsperform_ma1_metadata.xml"
+    return base_dir / "files" / "statsperform_tracking_ma1.xml"
 
 
 @pytest.fixture(scope="module")
 def meta_data_json(base_dir: Path) -> Path:
-    return base_dir / "files" / "statsperform_ma1_metadata.json"
+    return base_dir / "files" / "statsperform_tracking_ma1.json"
 
 
 @pytest.fixture(scope="module")
 def raw_data(base_dir: Path) -> Path:
-    return base_dir / "files" / "statsperform_ma25_tracking.txt"
+    return base_dir / "files" / "statsperform_tracking_ma25.txt"
 
 
 @pytest.fixture(scope="module", params=["xml", "json"])
@@ -44,6 +45,26 @@ def dataset(
         provider_name="sportvu",
         coordinates="sportvu",
     )
+
+
+class TestStatsPerformEvent:
+    def test_deserialize_json(self, base_dir: Path):
+        dataset = statsperform.load_event(
+            ma1_data=base_dir / "files/statsperform_event_ma1.json",
+            ma3_data=base_dir / "files/statsperform_event_ma3.json",
+        )
+        assert dataset.metadata.provider == Provider.STATSPERFORM
+        assert dataset.dataset_type == DatasetType.EVENT
+        assert len(dataset.records) == 1652
+
+    def test_deserialize_xml(self, base_dir: Path):
+        dataset = statsperform.load_event(
+            ma1_data=base_dir / "files/statsperform_event_ma1.xml",
+            ma3_data=base_dir / "files/statsperform_event_ma3.xml",
+        )
+        assert dataset.metadata.provider == Provider.STATSPERFORM
+        assert dataset.dataset_type == DatasetType.EVENT
+        assert len(dataset.records) == 1652
 
 
 class TestStatsPerformTracking:
@@ -91,18 +112,18 @@ class TestStatsPerformTracking:
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == datetime(
-            2020, 8, 23, 11, 0, 10
+            2020, 8, 23, 11, 0, 10, tzinfo=timezone.utc
         )
         assert dataset.metadata.periods[0].end_timestamp == datetime(
-            2020, 8, 23, 11, 48, 15
+            2020, 8, 23, 11, 48, 15, tzinfo=timezone.utc
         )
 
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == datetime(
-            2020, 8, 23, 12, 6, 22
+            2020, 8, 23, 12, 6, 22, tzinfo=timezone.utc
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime(
-            2020, 8, 23, 12, 56, 30
+            2020, 8, 23, 12, 56, 30, tzinfo=timezone.utc
         )
 
     def test_flags(self, dataset):

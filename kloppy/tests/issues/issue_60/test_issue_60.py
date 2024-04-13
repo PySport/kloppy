@@ -16,7 +16,7 @@ class TestIssue60:
         assert deleted_event_id not in df["event_id"].to_list()
 
         # OPTA F24 file: Pass -> Deleted Event -> Tackle
-        assert event_dataset.events[14].event_name == "pass"
+        assert event_dataset.events[16].event_name == "pass"
         assert (
-            event_dataset.events[15].event_name == "duel"
+            event_dataset.events[17].event_name == "duel"
         )  # Deleted Event is filter out

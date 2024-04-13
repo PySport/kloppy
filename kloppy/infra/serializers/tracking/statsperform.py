@@ -1,30 +1,26 @@
-import json
 import logging
+from datetime import timedelta
 import warnings
-from datetime import datetime, timedelta
-from typing import IO, Any, Dict, List, NamedTuple, Optional, Union
+from typing import IO, NamedTuple, Optional, Union
 
-from lxml import objectify
 
 from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
     Frame,
-    Ground,
     Metadata,
     Orientation,
-    Period,
     Player,
     PlayerData,
     Point,
     Point3D,
     Provider,
-    Team,
     TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.utils import performance_logging
+from kloppy.infra.serializers.event.statsperform.parsers import get_parser
 
 from .deserializer import TrackingDataDeserializer
 
@@ -131,187 +127,18 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             other_data={},
         )
 
-    @staticmethod
-    def __parse_periods_from_xml(match: Any) -> List[Dict[str, Any]]:
-        parsed_periods = []
-        live_data = match.liveData
-        match_details = live_data.matchDetails
-        periods = match_details.periods
-        for period in periods.iterchildren(tag="period"):
-            parsed_periods.append(
-                {
-                    "id": int(period.get("id")),
-                    "start_timestamp": datetime.strptime(
-                        period.get("start"), "%Y-%m-%dT%H:%M:%SZ"
-                    ),
-                    "end_timestamp": datetime.strptime(
-                        period.get("end"), "%Y-%m-%dT%H:%M:%SZ"
-                    ),
-                }
-            )
-        return parsed_periods
-
-    @staticmethod
-    def __parse_teams_from_xml(match: Any) -> List[Dict[str, Any]]:
-        parsed_teams = []
-        match_info = match.matchInfo
-        teams = match_info.contestants.iterchildren(tag="contestant")
-        for team in teams:
-            team_attributes = team.attrib
-            team_id = team_attributes["id"]
-            parsed_teams.append(
-                {
-                    "team_id": team_id,
-                    "name": team_attributes["name"],
-                    "ground": team_attributes["position"],
-                }
-            )
-        return parsed_teams
-
-    @staticmethod
-    def __parse_players_from_xml(match: Any) -> List[Dict[str, Any]]:
-        parsed_players = []
-        live_data = match.liveData
-        line_ups = live_data.iterchildren(tag="lineUp")
-        for line_up in line_ups:
-            team_id = line_up.get("contestantId")
-            players = line_up.iterchildren(tag="player")
-            for player in players:
-                player_attributes = player.attrib
-                player_id = player_attributes["playerId"]
-                parsed_players.append(
-                    {
-                        "player_id": player_id,
-                        "team_id": team_id,
-                        "jersey_no": int(player_attributes["shirtNumber"]),
-                        "name": player_attributes["matchName"],
-                        "first_name": player_attributes["shortFirstName"],
-                        "last_name": player_attributes["shortLastName"],
-                        "starting": player_attributes["position"]
-                        != "Substitute",
-                        "position": player_attributes["position"],
-                    }
-                )
-        return parsed_players
-
-    @staticmethod
-    def __parse_periods_from_json(
-        match: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        parsed_periods = []
-        live_data = match["liveData"]
-        match_details = live_data["matchDetails"]
-        periods = match_details["period"]
-        for period in periods:
-            parsed_periods.append(
-                {
-                    "id": period["id"],
-                    "start_timestamp": datetime.strptime(
-                        period["start"], "%Y-%m-%dT%H:%M:%SZ"
-                    ),
-                    "end_timestamp": datetime.strptime(
-                        period["end"], "%Y-%m-%dT%H:%M:%SZ"
-                    ),
-                }
-            )
-        return parsed_periods
-
-    @staticmethod
-    def __parse_teams_from_json(match: Dict[str, Any]) -> List[Dict[str, Any]]:
-        parsed_teams = []
-        match_info = match["matchInfo"]
-        teams = match_info["contestant"]
-        for team in teams:
-            team_id = team["id"]
-            parsed_teams.append(
-                {
-                    "team_id": team_id,
-                    "name": team["name"],
-                    "ground": team["position"],
-                }
-            )
-        return parsed_teams
-
-    @staticmethod
-    def __parse_players_from_json(
-        match: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        parsed_players = []
-        live_data = match["liveData"]
-        line_ups = live_data["lineUp"]
-        for line_up in line_ups:
-            team_id = line_up["contestantId"]
-            players = line_up["player"]
-            for player in players:
-                player_id = player["playerId"]
-                parsed_players.append(
-                    {
-                        "player_id": player_id,
-                        "team_id": team_id,
-                        "jersey_no": player["shirtNumber"],
-                        "name": player["matchName"],
-                        "first_name": player["shortFirstName"],
-                        "last_name": player["shortLastName"],
-                        "starting": player["position"] != "Substitute",
-                        "position": player["position"],
-                    }
-                )
-        return parsed_players
-
     def deserialize(self, inputs: StatsPerformInputs) -> TrackingDataset:
-        tracking_data = inputs.raw_data.read().decode("ascii").splitlines()
-        meta_data = inputs.meta_data.read()
-
         with performance_logging("Loading meta data", logger=logger):
-            if meta_data.decode("utf-8")[0] == "<":
-                match = objectify.fromstring(meta_data)
-                parsed_periods = self.__parse_periods_from_xml(match)
-                parsed_teams = self.__parse_teams_from_xml(match)
-                parsed_players = self.__parse_players_from_xml(match)
-            else:
-                match = json.loads(meta_data)
-                parsed_periods = self.__parse_periods_from_json(match)
-                parsed_teams = self.__parse_teams_from_json(match)
-                parsed_players = self.__parse_players_from_json(match)
+            meta_data_parser = get_parser(inputs.meta_data, "MA1")
 
-            periods = {}
-            for parsed_period in parsed_periods:
-                period_id = parsed_period["id"]
-                periods[period_id] = Period(
-                    id=period_id,
-                    start_timestamp=parsed_period["start_timestamp"],
-                    end_timestamp=parsed_period["end_timestamp"],
-                )
-
-            teams = {}
-            for parsed_team in parsed_teams:
-                team_id = parsed_team["team_id"]
-                teams[team_id] = Team(
-                    team_id=team_id,
-                    name=parsed_team["name"],
-                    ground=Ground.HOME
-                    if parsed_team["ground"] == "home"
-                    else Ground.AWAY,
-                )
-
-            for parsed_player in parsed_players:
-                player_id = parsed_player["player_id"]
-                team_id = parsed_player["team_id"]
-                team = teams[team_id]
-                player = Player(
-                    player_id=player_id,
-                    team=team,
-                    jersey_no=parsed_player["jersey_no"],
-                    name=parsed_player["name"],
-                    first_name=parsed_player["first_name"],
-                    last_name=parsed_player["last_name"],
-                    starting=parsed_player["starting"],
-                    position=parsed_player["position"],
-                )
-                team.players.append(player)
-            teams_list = list(teams.values())
+            periods = {
+                period.id: period
+                for period in meta_data_parser.extract_periods()
+            }
+            teams_list = list(meta_data_parser.extract_lineups())
 
         with performance_logging("Loading tracking data", logger=logger):
+            tracking_data = inputs.raw_data.read().decode("ascii").splitlines()
             frame_rate = self.__get_frame_rate(tracking_data)
 
             transformer = self.get_transformer(

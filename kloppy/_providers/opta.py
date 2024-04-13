@@ -29,10 +29,9 @@ def load(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with (
-        open_as_file(f7_data) as f7_data_fp,
-        open_as_file(f24_data) as f24_data_fp,
-    ):
+    with open_as_file(f7_data) as f7_data_fp, open_as_file(
+        f24_data
+    ) as f24_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformInputs(
                 meta_data=f7_data_fp,

@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import fields, replace
 
 from kloppy.domain.models.tracking import PlayerData
@@ -7,7 +8,6 @@ from kloppy.domain import (
     AttackingDirection,
     Dataset,
     DatasetFlag,
-    DataRecord,
     EventDataset,
     Frame,
     Orientation,
@@ -514,6 +514,33 @@ class DatasetTransformerBuilder:
             pitch_length=pitch_length,
             pitch_width=pitch_width,
         )
+
+        needs_pitch_dimensions_change = (
+            from_coordinate_system.pitch_dimensions
+            != to_coordinate_system.pitch_dimensions
+        )
+        not_standardized = (
+            not from_coordinate_system.pitch_dimensions.standardized
+            or not to_coordinate_system.pitch_dimensions.standardized
+        )
+        missing_dimensions = pitch_length is None or pitch_width is None
+        if (
+            needs_pitch_dimensions_change
+            and not_standardized
+            and missing_dimensions
+        ):
+            warnings.warn(
+                "The pitch dimensions are required to transform coordinates "
+                f"from {from_coordinate_system.provider} to {to_coordinate_system.provider}. "
+                f"Using default pitch dimensions ({DEFAULT_PITCH_LENGTH} x {DEFAULT_PITCH_WIDTH}). "
+                "This might result in inaccurate coordinates."
+            )
+            return self.build(
+                provider,
+                dataset_type,
+                pitch_length=DEFAULT_PITCH_LENGTH,
+                pitch_width=DEFAULT_PITCH_WIDTH,
+            )
 
         return DatasetTransformer(
             from_coordinate_system=from_coordinate_system,

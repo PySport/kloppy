@@ -584,6 +584,8 @@ class StatsPerformInputs(NamedTuple):
     event_feed: str
     meta_datatype: Optional[str] = None
     event_datatype: Optional[str] = None
+    pitch_length: Optional[float] = None
+    pitch_width: Optional[float] = None
 
 
 class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
@@ -592,7 +594,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
         return Provider.OPTA
 
     def deserialize(self, inputs: StatsPerformInputs) -> EventDataset:
-        transformer = self.get_transformer()
+        transformer = self.get_transformer(
+            pitch_length=inputs.pitch_length, pitch_width=inputs.pitch_width
+        )
 
         with performance_logging("load data", logger=logger):
             metadata_parser = get_parser(

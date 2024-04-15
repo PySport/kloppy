@@ -216,17 +216,39 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         return [home_team, away_team]
 
     def create_periods(self, raw_events):
-        half_start_and_end_events = [
-            event.raw_event
-            for event in raw_events.values()
-            if SB.EVENT_TYPE(event.raw_event["type"])
-            in [
+        # Initialize a dictionary to dynamically track the inclusion of start and end events for each period
+        event_included = {}
+
+        # List to hold the relevant events
+        half_start_and_end_events = []
+
+        # Iterate through the raw events
+        for event in raw_events.values():
+            # Extract the event type and period from the raw event data
+            event_type = SB.EVENT_TYPE(event.raw_event["type"])
+            period = event.raw_event["period"]
+
+            # Initialize tracking for new periods as they are encountered
+            if period not in event_included:
+                event_included[period] = {"start": False, "end": False}
+
+            # Check conditions for including HALF_START and HALF_END events
+            if event_type in (
                 SB.EVENT_TYPE.HALF_START,
                 SB.EVENT_TYPE.HALF_END,
-            ]
-        ][
-            ::2
-        ]  # recorded for each team, take every other
+            ):
+                # Determine the key based on event type ('start' or 'end')
+                type_key = (
+                    "start"
+                    if event_type == SB.EVENT_TYPE.HALF_START
+                    else "end"
+                )
+
+                # Include the event if it hasn't been included yet for this period and type
+                if not event_included[period][type_key]:
+                    half_start_and_end_events.append(event.raw_event)
+                    event_included[period][type_key] = True
+
         periods = []
         for start_event, end_event in zip_longest(
             half_start_and_end_events[::2], half_start_and_end_events[1::2]

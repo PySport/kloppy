@@ -276,7 +276,18 @@ def _create_periods(match_result_type: str) -> List[Period]:
     return periods
 
 
-def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
+def _parse_pass(
+    event_elm: ObjectifiedElement,
+    next_event: ObjectifiedElement,
+    next_next_event: ObjectifiedElement,
+) -> Dict:
+    outcome = int(event_elm.attrib["outcome"])
+    raw_qualifiers = {
+        int(qualifier_elm.attrib["qualifier_id"]): qualifier_elm.attrib.get(
+            "value"
+        )
+        for qualifier_elm in event_elm.iterchildren("Q")
+    }
     if outcome:
         result = PassResult.COMPLETE
     else:
@@ -286,6 +297,22 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
 
     qualifiers = pass_qualifiers + overall_qualifiers
+
+    if next_event is not None and next_next_event is not None:
+        event_team_id = event_elm.attrib["team_id"]
+        next_event_type_id = int(next_event.attrib["type_id"])
+        next_event_outcome = int(next_event.attrib["outcome"])
+        next_next_event_team_id = next_next_event.attrib["team_id"]
+        if (
+            next_event_type_id == EVENT_TYPE_BALL_TOUCH
+            and next_event_outcome == 1
+            and next_next_event_team_id == event_team_id
+        ):
+            result = PassResult.COMPLETE
+            receiver_coordinates = Point(
+                x=float(next_next_event.attrib["x"]),
+                y=float(next_next_event.attrib["y"]),
+            )
 
     return dict(
         result=result,
@@ -749,6 +776,11 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     if (idx + 1) < len(events_list)
                     else None
                 )
+                next_next_event_elm = (
+                    events_list[idx + 2]
+                    if (idx + 2) < len(events_list)
+                    else None
+                )
                 event_id = event_elm.attrib["id"]
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
@@ -820,7 +852,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
 
                     if type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(
-                            raw_qualifiers, outcome
+                            event_elm, next_event_elm, next_next_event_elm
                         )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,

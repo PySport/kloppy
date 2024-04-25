@@ -58,6 +58,10 @@ def setup_package():
                 # of Pandas (1.3) does not support pyarrow
                 'pyarrow==11.0.0;python_version>"3.7"',
                 "pytest-lazy-fixture",
+                "s3fs<0.5",
+                "moto[s3]==1.3.7;python_version<'3.10'",
+                "moto[s3]==4.1.0;python_version>='3.10'",
+                "pytest-httpserver",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

@@ -837,8 +837,8 @@ class TestStatsBombDuelEvent:
         """It should deserialize all duel and 50/50 events"""
         events = dataset.find_all("duel")
         assert (
-            len(events) == 59 + 4 + 26
-        )  # duels + 50/50 + aerial won attribute
+            len(events) == 59 + 4 + 26 + 22
+        )  # duels + 50/50 + aerial won attribute + dribbled past
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of duels"""
@@ -846,7 +846,10 @@ class TestStatsBombDuelEvent:
         # A duel should have a result
         assert duel.result == DuelResult.WON
         # A duel should have a duel type
-        assert duel.get_qualifier_values(DuelQualifier) == [DuelType.GROUND]
+        assert duel.get_qualifier_values(DuelQualifier) == [
+            DuelType.GROUND,
+            DuelType.TACKLE,
+        ]
         # A duel does not have a body part
         assert duel.get_qualifier_value(BodyPartQualifier) is None
 
@@ -861,7 +864,10 @@ class TestStatsBombDuelEvent:
     def test_tackle_qualfiers(self, dataset: EventDataset):
         """It should add ground duel qualifiers"""
         duel = dataset.get_event_by_id("15c4bfaa-36fd-4b3e-bec1-bc8bcc1febb9")
-        assert duel.get_qualifier_values(DuelQualifier) == [DuelType.GROUND]
+        assert duel.get_qualifier_values(DuelQualifier) == [
+            DuelType.GROUND,
+            DuelType.TACKLE,
+        ]
 
     def test_loose_ground_duel_qualfiers(self, dataset: EventDataset):
         """It should add ground duel + loose ball qualifiers"""
@@ -869,6 +875,14 @@ class TestStatsBombDuelEvent:
         assert duel.get_qualifier_values(DuelQualifier) == [
             DuelType.LOOSE_BALL,
             DuelType.GROUND,
+        ]
+
+    def test_dribbled_past_qualifiers(self, dataset: EventDataset):
+        """It should add ground  + dribbled past qualifiers"""
+        duel = dataset.get_event_by_id("ebf42396-6fc0-4700-9618-32b24df33bf3")
+        assert duel.get_qualifier_values(DuelQualifier) == [
+            DuelType.GROUND,
+            DuelType.DRIBBLED_PAST,
         ]
 
 

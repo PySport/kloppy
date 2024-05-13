@@ -298,6 +298,9 @@ def _parse_pass(
 
     qualifiers = pass_qualifiers + overall_qualifiers
 
+    # Set the end location of a deflected pass to the start location
+    # of the next action and the outcome to "success" if the deflected
+    # pass reached a teammate
     if next_event is not None and next_next_event is not None:
         event_team_id = event_elm.attrib["team_id"]
         next_event_type_id = int(next_event.attrib["type_id"])

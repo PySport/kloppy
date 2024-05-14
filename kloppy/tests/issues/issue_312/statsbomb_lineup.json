@@ -1,0 +1,1428 @@
+[ {
+  "team_id" : 10000,
+  "team_name" : "Team A",
+  "lineup" : [ {
+    "player_id" : 10317,
+    "player_name" : "João Ricardo Silva Afonso",
+    "player_nickname" : "João Afonso",
+    "birth_date" : "1990-05-28",
+    "player_gender" : "male",
+    "player_height" : 188.0,
+    "player_weight" : 84.0,
+    "jersey_number" : 5,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 4,
+      "position" : "Center Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 10841,
+    "player_name" : "João Carlos Reis Graça",
+    "player_nickname" : "Joãozinho",
+    "birth_date" : "1989-07-02",
+    "player_gender" : "male",
+    "player_height" : 185.0,
+    "player_weight" : 77.0,
+    "jersey_number" : 31,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 5,
+      "position" : "Left Center Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 12043,
+    "player_name" : "Anthony D'Alberto",
+    "player_nickname" : "Anthony D'Alberto",
+    "birth_date" : "1994-10-13",
+    "player_gender" : "male",
+    "player_height" : 178.0,
+    "player_weight" : 74.0,
+    "jersey_number" : 27,
+    "country" : {
+      "id" : 22,
+      "name" : "Belgium"
+    },
+    "positions" : [ {
+      "position_id" : 7,
+      "position" : "Right Wing Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 12057,
+    "player_name" : "Welthon Fiel Sampaio",
+    "player_nickname" : "Welthon",
+    "birth_date" : "1992-06-21",
+    "player_gender" : "male",
+    "player_height" : 180.0,
+    "player_weight" : 80.0,
+    "jersey_number" : 10,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ {
+      "position_id" : 24,
+      "position" : "Left Center Forward",
+      "from" : "00:00:00.000",
+      "to" : "01:17:19.242",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 45429,
+      "counterpart_name" : "Antoine Carnejy"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 100,
+    "player_name" : "Vagner da Silva",
+    "player_nickname" : "Vagner",
+    "birth_date" : "1986-06-06",
+    "player_gender" : "male",
+    "player_height" : 185.0,
+    "player_weight" : 77.0,
+    "jersey_number" : 1,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ {
+      "position_id" : 1,
+      "position" : "Goalkeeper",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 21449,
+    "player_name" : "Cristian Marcelo González Tassano",
+    "player_nickname" : "Cristian González",
+    "birth_date" : "1996-07-23",
+    "player_gender" : "male",
+    "player_height" : 185.0,
+    "player_weight" : 80.0,
+    "jersey_number" : 17,
+    "country" : {
+      "id" : 242,
+      "name" : "Uruguay"
+    },
+    "positions" : [ {
+      "position_id" : 3,
+      "position" : "Right Center Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 1,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 22255,
+    "player_name" : "Fábio Patrick dos Reis dos Santos Fernandes",
+    "player_nickname" : null,
+    "birth_date" : "1993-12-13",
+    "player_gender" : "male",
+    "player_height" : 190.0,
+    "player_weight" : 73.0,
+    "jersey_number" : 29,
+    "country" : {
+      "id" : 41,
+      "name" : "Cape Verde"
+    },
+    "positions" : [ {
+      "position_id" : 22,
+      "position" : "Right Center Forward",
+      "from" : "00:00:00.000",
+      "to" : "00:43:19.570",
+      "from_period" : 1,
+      "to_period" : 1,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Player Off"
+    }, {
+      "position_id" : 22,
+      "position" : "Right Center Forward",
+      "from" : "00:44:15.864",
+      "to" : "01:17:23.426",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Player On (Off Camera)",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "01:17:23.426",
+      "to" : "01:25:36.152",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 293626,
+      "counterpart_name" : "Jonathan Arriba Monroy"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 27672,
+    "player_name" : "Sebastián Felipe Guzmán Mendoza",
+    "player_nickname" : "Sebastián Guzmán",
+    "birth_date" : "1997-05-26",
+    "player_gender" : "male",
+    "player_height" : 187.0,
+    "player_weight" : 57.0,
+    "jersey_number" : 32,
+    "country" : {
+      "id" : 49,
+      "name" : "Colombia"
+    },
+    "positions" : [ {
+      "position_id" : 10,
+      "position" : "Center Defensive Midfield",
+      "from" : "01:17:09.618",
+      "to" : "01:17:23.426",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 346672,
+      "counterpart_name" : "Juan Andrés Balanta Palacios"
+    }, {
+      "position_id" : 11,
+      "position" : "Left Defensive Midfield",
+      "from" : "01:17:23.426",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 28294,
+    "player_name" : "Carlos Enrique Rentería Olaya",
+    "player_nickname" : "Carlos Rentería",
+    "birth_date" : "1995-07-05",
+    "player_gender" : "male",
+    "player_height" : 188.0,
+    "player_weight" : 81.0,
+    "jersey_number" : 77,
+    "country" : {
+      "id" : 49,
+      "name" : "Colombia"
+    },
+    "positions" : [ {
+      "position_id" : 9,
+      "position" : "Right Defensive Midfield",
+      "from" : "00:00:00.000",
+      "to" : "00:45:00.000",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 13,
+      "position" : "Right Center Midfield",
+      "from" : "00:45:00.000",
+      "to" : "01:17:23.426",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 9,
+      "position" : "Right Defensive Midfield",
+      "from" : "01:17:23.426",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 2,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 31929,
+    "player_name" : "Bernardo Oliveira Dias",
+    "player_nickname" : "Benny",
+    "birth_date" : "1997-01-04",
+    "player_gender" : "male",
+    "player_height" : 177.0,
+    "player_weight" : 70.0,
+    "jersey_number" : 8,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 15,
+      "position" : "Left Center Midfield",
+      "from" : "00:45:00.000",
+      "to" : "01:17:23.426",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 198734,
+      "counterpart_name" : "Luis Felipe Gómez Miranda"
+    }, {
+      "position_id" : 21,
+      "position" : "Left Wing",
+      "from" : "01:17:23.426",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 1,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 45429,
+    "player_name" : "Antoine Carnejy",
+    "player_nickname" : null,
+    "birth_date" : "1991-07-27",
+    "player_gender" : "male",
+    "player_height" : 191.0,
+    "player_weight" : 86.0,
+    "jersey_number" : 11,
+    "country" : {
+      "id" : 98,
+      "name" : "Haiti"
+    },
+    "positions" : [ {
+      "position_id" : 24,
+      "position" : "Left Center Forward",
+      "from" : "01:17:19.242",
+      "to" : "01:17:23.426",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 12057,
+      "counterpart_name" : "Welthon Fiel Sampaio"
+    }, {
+      "position_id" : 17,
+      "position" : "Right Wing",
+      "from" : "01:17:23.426",
+      "to" : "01:26:05.055",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "01:26:05.055",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 98260,
+    "player_name" : "Marvin Elimbi Gilbert",
+    "player_nickname" : null,
+    "birth_date" : "2003-02-20",
+    "player_gender" : "male",
+    "player_height" : 186.0,
+    "player_weight" : null,
+    "jersey_number" : 14,
+    "country" : {
+      "id" : 78,
+      "name" : "France"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 120873,
+    "player_name" : "Rodrigo Da Rocha Borges",
+    "player_nickname" : "Rodrigo Borges",
+    "birth_date" : "1998-08-05",
+    "player_gender" : "male",
+    "player_height" : 188.0,
+    "player_weight" : 72.0,
+    "jersey_number" : 24,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 132472,
+    "player_name" : "Ricardo José da Silva Fernandes",
+    "player_nickname" : null,
+    "birth_date" : "1994-10-28",
+    "player_gender" : "male",
+    "player_height" : 193.0,
+    "player_weight" : 79.0,
+    "jersey_number" : 12,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 132877,
+    "player_name" : "Simão Pedro Soares Azevedo",
+    "player_nickname" : "Simaozinho",
+    "birth_date" : "1995-05-31",
+    "player_gender" : "male",
+    "player_height" : 180.0,
+    "player_weight" : 73.0,
+    "jersey_number" : 13,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 8,
+      "position" : "Left Wing Back",
+      "from" : "00:00:00.000",
+      "to" : "00:45:00.000",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 133062,
+      "counterpart_name" : "André Filipe Lopes Teixeira Rodrigues"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 133062,
+    "player_name" : "André Filipe Lopes Teixeira Rodrigues",
+    "player_nickname" : "André Rodrigues",
+    "birth_date" : "1997-12-28",
+    "player_gender" : "male",
+    "player_height" : 173.0,
+    "player_weight" : 60.0,
+    "jersey_number" : 21,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 8,
+      "position" : "Left Wing Back",
+      "from" : "00:45:00.000",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Final Whistle",
+      "counterpart_id" : 132877,
+      "counterpart_name" : "Simão Pedro Soares Azevedo"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 133081,
+    "player_name" : "Keffel Resende Alvim",
+    "player_nickname" : null,
+    "birth_date" : "1999-09-27",
+    "player_gender" : "male",
+    "player_height" : 179.0,
+    "player_weight" : 72.0,
+    "jersey_number" : 80,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 198734,
+    "player_name" : "Luis Felipe Gómez Miranda",
+    "player_nickname" : null,
+    "birth_date" : "1999-10-11",
+    "player_gender" : "male",
+    "player_height" : 174.0,
+    "player_weight" : null,
+    "jersey_number" : 40,
+    "country" : {
+      "id" : 49,
+      "name" : "Colombia"
+    },
+    "positions" : [ {
+      "position_id" : 19,
+      "position" : "Center Attacking Midfield",
+      "from" : "00:00:00.000",
+      "to" : "00:45:00.000",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 31929,
+      "counterpart_name" : "Bernardo Oliveira Dias"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 293626,
+    "player_name" : "Jonathan Arriba Monroy",
+    "player_nickname" : null,
+    "birth_date" : "2001-11-01",
+    "player_gender" : "male",
+    "player_height" : 176.0,
+    "player_weight" : 66.0,
+    "jersey_number" : 19,
+    "country" : {
+      "id" : 214,
+      "name" : "Spain"
+    },
+    "positions" : [ {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "01:25:36.152",
+      "to" : "01:26:05.055",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 22255,
+      "counterpart_name" : "Fábio Patrick dos Reis dos Santos Fernandes"
+    }, {
+      "position_id" : 17,
+      "position" : "Right Wing",
+      "from" : "01:26:05.055",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 346672,
+    "player_name" : "Juan Andrés Balanta Palacios",
+    "player_nickname" : null,
+    "birth_date" : "1997-03-03",
+    "player_gender" : "male",
+    "player_height" : 172.0,
+    "player_weight" : 63.0,
+    "jersey_number" : 30,
+    "country" : {
+      "id" : 49,
+      "name" : "Colombia"
+    },
+    "positions" : [ {
+      "position_id" : 11,
+      "position" : "Left Defensive Midfield",
+      "from" : "00:00:00.000",
+      "to" : "00:45:00.000",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 10,
+      "position" : "Center Defensive Midfield",
+      "from" : "00:45:00.000",
+      "to" : "01:17:09.618",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 27672,
+      "counterpart_name" : "Sebastián Felipe Guzmán Mendoza"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  } ],
+  "formations" : [ {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "reason" : "Starting XI",
+    "formation" : 3412
+  }, {
+    "period" : 2,
+    "timestamp" : "00:45:00.000",
+    "reason" : "Tactical Shift",
+    "formation" : 352
+  }, {
+    "period" : 2,
+    "timestamp" : "01:17:23.426",
+    "reason" : "Tactical Shift",
+    "formation" : 343
+  } ],
+  "events" : [ {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "type" : "Half Start"
+  }, {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "type" : "Half Start"
+  }, {
+    "player_id" : 21449,
+    "player_name" : "Cristian Marcelo González Tassano",
+    "period" : 1,
+    "timestamp" : "00:04:40.277",
+    "type" : "Shot",
+    "outcome" : "Goal"
+  }, {
+    "player_id" : 346672,
+    "player_name" : "Juan Andrés Balanta Palacios",
+    "period" : 1,
+    "timestamp" : "00:41:12.286",
+    "type" : "Foul Committed",
+    "outcome" : "Yellow Card"
+  }, {
+    "period" : 1,
+    "timestamp" : "00:50:06.876",
+    "type" : "Half End"
+  }, {
+    "period" : 2,
+    "timestamp" : "00:45:00.000",
+    "type" : "Half Start"
+  }, {
+    "player_id" : 31929,
+    "player_name" : "Bernardo Oliveira Dias",
+    "period" : 2,
+    "timestamp" : "01:04:19.880",
+    "type" : "Ground Pass",
+    "outcome" : "Assist"
+  }, {
+    "player_id" : 28294,
+    "player_name" : "Carlos Enrique Rentería Olaya",
+    "period" : 2,
+    "timestamp" : "01:04:20.700",
+    "type" : "Shot",
+    "outcome" : "Goal"
+  }, {
+    "player_id" : 28294,
+    "player_name" : "Carlos Enrique Rentería Olaya",
+    "period" : 2,
+    "timestamp" : "01:18:46.253",
+    "type" : "Shot",
+    "outcome" : "Goal"
+  }, {
+    "player_id" : 28294,
+    "player_name" : "Carlos Enrique Rentería Olaya",
+    "period" : 2,
+    "timestamp" : "01:29:07.092",
+    "type" : "Bad Behaviour",
+    "outcome" : "Yellow Card"
+  }, {
+    "period" : 2,
+    "timestamp" : "01:35:02.460",
+    "type" : "Half End"
+  } ]
+}, {
+  "team_id" : 17000,
+  "team_name" : "Team B",
+  "lineup" : [ {
+    "player_id" : 49373,
+    "player_name" : "Boubacar Rafael Neto Hanne",
+    "player_nickname" : "Boubacar Hanne",
+    "birth_date" : "1999-02-26",
+    "player_gender" : "male",
+    "player_height" : 175.0,
+    "player_weight" : 70.0,
+    "jersey_number" : 70,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 17,
+      "position" : "Right Wing",
+      "from" : "00:00:00.000",
+      "to" : "01:20:54.227",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 398266,
+      "counterpart_name" : "N'Anso Fati"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 51738,
+    "player_name" : "Rogério Paulo Veiga Santos",
+    "player_nickname" : "Rogério Santos",
+    "birth_date" : "1999-03-29",
+    "player_gender" : "male",
+    "player_height" : 185.0,
+    "player_weight" : 75.0,
+    "jersey_number" : 93,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 1,
+      "position" : "Goalkeeper",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 106084,
+    "player_name" : "Ericson Jorge Silva Rodrigues Duarte",
+    "player_nickname" : null,
+    "birth_date" : "1987-11-25",
+    "player_gender" : "male",
+    "player_height" : 188.0,
+    "player_weight" : 79.0,
+    "jersey_number" : 23,
+    "country" : {
+      "id" : 41,
+      "name" : "Cape Verde"
+    },
+    "positions" : [ {
+      "position_id" : 11,
+      "position" : "Left Defensive Midfield",
+      "from" : "00:00:00.000",
+      "to" : "00:52:13.221",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 398259,
+      "counterpart_name" : "Laércio Cordeiro de Morais"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 132374,
+    "player_name" : "Ivo Filipe Claudino da Palma Gonçalves",
+    "player_nickname" : "Ivo Gonçalves",
+    "birth_date" : "1984-05-06",
+    "player_gender" : "male",
+    "player_height" : 186.0,
+    "player_weight" : 79.0,
+    "jersey_number" : 1,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 132566,
+    "player_name" : "João Caiado Vaz Dias",
+    "player_nickname" : "João Caiado",
+    "birth_date" : "1999-04-20",
+    "player_gender" : "male",
+    "player_height" : 178.0,
+    "player_weight" : 74.0,
+    "jersey_number" : 8,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 21,
+      "position" : "Left Wing",
+      "from" : "00:00:00.000",
+      "to" : "01:21:41.105",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 19,
+      "position" : "Center Attacking Midfield",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 132986,
+    "player_name" : "Gustavo Moreno de França",
+    "player_nickname" : null,
+    "birth_date" : "1996-07-20",
+    "player_gender" : "male",
+    "player_height" : 188.0,
+    "player_weight" : 84.0,
+    "jersey_number" : 33,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ {
+      "position_id" : 5,
+      "position" : "Left Center Back",
+      "from" : "00:00:00.000",
+      "to" : "01:21:41.105",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 3,
+      "position" : "Right Center Back",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 163715,
+    "player_name" : "Emmanuel Maviram",
+    "player_nickname" : null,
+    "birth_date" : "2001-04-04",
+    "player_gender" : "male",
+    "player_height" : 170.0,
+    "player_weight" : null,
+    "jersey_number" : 12,
+    "country" : {
+      "id" : 166,
+      "name" : "Nigeria"
+    },
+    "positions" : [ {
+      "position_id" : 6,
+      "position" : "Left Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398253,
+    "player_name" : "João Carlos Pereira Batista",
+    "player_nickname" : "João Batista",
+    "birth_date" : "1998-04-27",
+    "player_gender" : "male",
+    "player_height" : 182.0,
+    "player_weight" : 77.0,
+    "jersey_number" : 26,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 3,
+      "position" : "Right Center Back",
+      "from" : "00:00:00.000",
+      "to" : "01:21:01.521",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 398263,
+      "counterpart_name" : "André Tiago Carneiro Soares"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 1,
+      "assists" : 0,
+      "penalties_scored" : 1,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398254,
+    "player_name" : "Carlos Manuel Ribeiro Freitas",
+    "player_nickname" : "Carlos Freitas",
+    "birth_date" : "1994-01-20",
+    "player_gender" : "male",
+    "player_height" : 177.0,
+    "player_weight" : 69.0,
+    "jersey_number" : 27,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 398255,
+    "player_name" : "Jair Semedo Monteiro",
+    "player_nickname" : "Jair Monteiro",
+    "birth_date" : "1995-12-29",
+    "player_gender" : "male",
+    "player_height" : 173.0,
+    "player_weight" : 65.0,
+    "jersey_number" : 20,
+    "country" : {
+      "id" : 41,
+      "name" : "Cape Verde"
+    },
+    "positions" : [ {
+      "position_id" : 19,
+      "position" : "Center Attacking Midfield",
+      "from" : "00:00:00.000",
+      "to" : "01:21:41.105",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Tactical Shift"
+    }, {
+      "position_id" : 11,
+      "position" : "Left Defensive Midfield",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398256,
+    "player_name" : "Gonçalo Filipe Carmo Teixeira",
+    "player_nickname" : "Gonçalo Teixeira",
+    "birth_date" : "1999-11-24",
+    "player_gender" : "male",
+    "player_height" : 179.0,
+    "player_weight" : 65.0,
+    "jersey_number" : 7,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "00:00:00.000",
+      "to" : "01:11:48.389",
+      "from_period" : 1,
+      "to_period" : 2,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Substitution - Off (Tactical)",
+      "counterpart_id" : 398268,
+      "counterpart_name" : "Bruno Miguel Perestrelo Alves Silva"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398258,
+    "player_name" : "Armando Roberto Torres Lopes",
+    "player_nickname" : "Armando Lopes",
+    "birth_date" : "1999-03-15",
+    "player_gender" : "male",
+    "player_height" : 167.0,
+    "player_weight" : 70.0,
+    "jersey_number" : 19,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 398259,
+    "player_name" : "Laércio Cordeiro de Morais",
+    "player_nickname" : "Laércio Morais",
+    "birth_date" : "1993-02-03",
+    "player_gender" : "male",
+    "player_height" : 184.0,
+    "player_weight" : 74.0,
+    "jersey_number" : 3,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ {
+      "position_id" : 11,
+      "position" : "Left Defensive Midfield",
+      "from" : "00:52:13.221",
+      "to" : "01:21:41.105",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 106084,
+      "counterpart_name" : "Ericson Jorge Silva Rodrigues Duarte"
+    }, {
+      "position_id" : 5,
+      "position" : "Left Center Back",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398263,
+    "player_name" : "André Tiago Carneiro Soares",
+    "player_nickname" : "André Soares",
+    "birth_date" : "1990-03-05",
+    "player_gender" : "male",
+    "player_height" : 172.0,
+    "player_weight" : 70.0,
+    "jersey_number" : 10,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 3,
+      "position" : "Right Center Back",
+      "from" : "01:21:01.521",
+      "to" : "01:21:41.105",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 398253,
+      "counterpart_name" : "João Carlos Pereira Batista"
+    }, {
+      "position_id" : 17,
+      "position" : "Right Wing",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398266,
+    "player_name" : "N'Anso Fati",
+    "player_nickname" : null,
+    "birth_date" : "2003-03-28",
+    "player_gender" : "male",
+    "player_height" : 182.0,
+    "player_weight" : null,
+    "jersey_number" : 17,
+    "country" : {
+      "id" : 96,
+      "name" : "Guinea-Bissau"
+    },
+    "positions" : [ {
+      "position_id" : 17,
+      "position" : "Right Wing",
+      "from" : "01:20:54.227",
+      "to" : "01:21:41.105",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 49373,
+      "counterpart_name" : "Boubacar Rafael Neto Hanne"
+    }, {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 398268,
+    "player_name" : "Bruno Miguel Perestrelo Alves Silva",
+    "player_nickname" : "Bruno Perestrelo",
+    "birth_date" : "1998-02-05",
+    "player_gender" : "male",
+    "player_height" : 172.0,
+    "player_weight" : 64.0,
+    "jersey_number" : 11,
+    "country" : {
+      "id" : 183,
+      "name" : "Portugal"
+    },
+    "positions" : [ {
+      "position_id" : 23,
+      "position" : "Center Forward",
+      "from" : "01:11:48.389",
+      "to" : "01:21:41.105",
+      "from_period" : 2,
+      "to_period" : 2,
+      "start_reason" : "Substitution - On (Tactical)",
+      "end_reason" : "Tactical Shift",
+      "counterpart_id" : 398256,
+      "counterpart_name" : "Gonçalo Filipe Carmo Teixeira"
+    }, {
+      "position_id" : 21,
+      "position" : "Left Wing",
+      "from" : "01:21:41.105",
+      "to" : null,
+      "from_period" : 2,
+      "to_period" : null,
+      "start_reason" : "Tactical Shift",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 405717,
+    "player_name" : "Rafael Ferreira Viegas",
+    "player_nickname" : "Rafael Viegas",
+    "birth_date" : "1994-01-23",
+    "player_gender" : "male",
+    "player_height" : 175.0,
+    "player_weight" : 78.0,
+    "jersey_number" : 94,
+    "country" : {
+      "id" : 31,
+      "name" : "Brazil"
+    },
+    "positions" : [ {
+      "position_id" : 2,
+      "position" : "Right Back",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  }, {
+    "player_id" : 405719,
+    "player_name" : "Rohun Nitin Kawale",
+    "player_nickname" : "Rohun Kawale",
+    "birth_date" : "2000-06-02",
+    "player_gender" : "male",
+    "player_height" : null,
+    "player_weight" : null,
+    "jersey_number" : 4,
+    "country" : {
+      "id" : 40,
+      "name" : "Canada"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 405720,
+    "player_name" : "Bakary Konaté",
+    "player_nickname" : null,
+    "birth_date" : "2003-04-17",
+    "player_gender" : "male",
+    "player_height" : null,
+    "player_weight" : null,
+    "jersey_number" : 6,
+    "country" : {
+      "id" : 140,
+      "name" : "Mali"
+    },
+    "positions" : [ ],
+    "stats" : [ ]
+  }, {
+    "player_id" : 408935,
+    "player_name" : "Mohamed Lamine Seyba Sako",
+    "player_nickname" : null,
+    "birth_date" : "2001-12-08",
+    "player_gender" : "male",
+    "player_height" : null,
+    "player_weight" : null,
+    "jersey_number" : 5,
+    "country" : {
+      "id" : 140,
+      "name" : "Mali"
+    },
+    "positions" : [ {
+      "position_id" : 9,
+      "position" : "Right Defensive Midfield",
+      "from" : "00:00:00.000",
+      "to" : null,
+      "from_period" : 1,
+      "to_period" : null,
+      "start_reason" : "Starting XI",
+      "end_reason" : "Final Whistle"
+    } ],
+    "stats" : {
+      "own_goals" : 0,
+      "goals" : 0,
+      "assists" : 0,
+      "penalties_scored" : 0,
+      "penalties_missed" : 0,
+      "penalties_saved" : 0
+    }
+  } ],
+  "formations" : [ {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "reason" : "Starting XI",
+    "formation" : 4231
+  } ],
+  "events" : [ {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "type" : "Half Start"
+  }, {
+    "period" : 1,
+    "timestamp" : "00:00:00.000",
+    "type" : "Half Start"
+  }, {
+    "player_id" : 398253,
+    "player_name" : "João Carlos Pereira Batista",
+    "period" : 1,
+    "timestamp" : "00:03:36.178",
+    "type" : "Foul Committed",
+    "outcome" : "Yellow Card"
+  }, {
+    "player_id" : 398253,
+    "player_name" : "João Carlos Pereira Batista",
+    "period" : 1,
+    "timestamp" : "00:39:27.471",
+    "type" : "Penalty",
+    "outcome" : "Goal"
+  }, {
+    "period" : 1,
+    "timestamp" : "00:50:06.876",
+    "type" : "Half End"
+  }, {
+    "period" : 2,
+    "timestamp" : "00:45:00.000",
+    "type" : "Half Start"
+  }, {
+    "player_id" : 408935,
+    "player_name" : "Mohamed Lamine Seyba Sako",
+    "period" : 2,
+    "timestamp" : "01:27:03.975",
+    "type" : "Foul Committed",
+    "outcome" : "Yellow Card"
+  }, {
+    "player_id" : 132566,
+    "player_name" : "João Caiado Vaz Dias",
+    "period" : 2,
+    "timestamp" : "01:28:44.145",
+    "type" : "Foul Committed",
+    "outcome" : "Yellow Card"
+  }, {
+    "period" : 2,
+    "timestamp" : "01:35:02.460",
+    "type" : "Half End"
+  } ]
+} ]

@@ -216,49 +216,22 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         return [home_team, away_team]
 
     def create_periods(self, raw_events):
-        # Initialize a dictionary to dynamically track the inclusion of start and end events for each period
-        event_included = {}
-
-        # List to hold the relevant events
-        half_start_and_end_events = []
-
-        # Iterate through the raw events
+        half_start_events = {}
+        half_end_events = {}
         for event in raw_events.values():
-            # Extract the event type and period from the raw event data
             event_type = SB.EVENT_TYPE(event.raw_event["type"])
             period = event.raw_event["period"]
 
-            # Initialize tracking for new periods as they are encountered
-            if period not in event_included:
-                event_included[period] = {"start": False, "end": False}
-
-            # Check conditions for including HALF_START and HALF_END events
-            if event_type in (
-                SB.EVENT_TYPE.HALF_START,
-                SB.EVENT_TYPE.HALF_END,
-            ):
-                # Determine the key based on event type ('start' or 'end')
-                type_key = (
-                    "start"
-                    if event_type == SB.EVENT_TYPE.HALF_START
-                    else "end"
-                )
-
-                # Include the event if it hasn't been included yet for this period and type
-                if not event_included[period][type_key]:
-                    half_start_and_end_events.append(event.raw_event)
-                    event_included[period][type_key] = True
+            if event_type == SB.EVENT_TYPE.HALF_START:
+                half_start_events[period] = event.raw_event
+            elif event_type == SB.EVENT_TYPE.HALF_END:
+                half_end_events[period] = event.raw_event
 
         periods = []
         for start_event, end_event in zip_longest(
-            half_start_and_end_events[::2], half_start_and_end_events[1::2]
+            half_start_events.values(), half_end_events.values()
         ):
-            if (
-                start_event is None
-                or SB.EVENT_TYPE(start_event["type"])
-                != SB.EVENT_TYPE.HALF_START
-                or SB.EVENT_TYPE(end_event["type"]) != SB.EVENT_TYPE.HALF_END
-            ):
+            if start_event is None or end_event is None:
                 raise DeserializationError(
                     "Failed to determine start and end time of periods."
                 )

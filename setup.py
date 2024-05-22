@@ -52,7 +52,7 @@ def setup_package():
                 'pandas>=1.0,<2;python_version<"3.8"',
                 "black==22.3.0",
                 "polars>=0.16.6",
-                'pyarrow',
+                "pyarrow",
                 "pytest-lazy-fixture",
             ],
             "development": ["pre-commit==2.6.0"],

@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Tuple, Dict, List, NamedTuple, IO
+from typing import Dict, List, NamedTuple, IO
+from datetime import timedelta, datetime, timezone
 import logging
 from dateutil.parser import parse
 from lxml import objectify
@@ -12,9 +13,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Orientation,
-    PassEvent,
-    ShotEvent,
-    GenericEvent,
     PassResult,
     ShotResult,
     EventType,
@@ -29,12 +27,7 @@ from kloppy.domain import (
     BodyPartQualifier,
     BodyPart,
     Qualifier,
-    BallOutEvent,
-    RecoveryEvent,
-    SubstitutionEvent,
-    CardEvent,
     CardType,
-    FoulCommittedEvent,
     AttackingDirection,
 )
 from kloppy.exceptions import DeserializationError
@@ -74,6 +67,136 @@ def _team_from_xml_elm(team_elm) -> Team:
     return team
 
 
+SPORTEC_FPS = 25
+
+"""Sportec uses fixed starting frame ids for each half"""
+SPORTEC_FIRST_HALF_STARTING_FRAME_ID = 10_000
+SPORTEC_SECOND_HALF_STARTING_FRAME_ID = 100_000
+SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID = 200_000
+SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID = 250_000
+
+
+class SportecMetadata(NamedTuple):
+    score: Score
+    teams: List[Team]
+    periods: List[Period]
+    x_max: float
+    y_max: float
+    fps: int
+
+
+def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
+    """
+    Load metadata from Sportec XML element. This part is shared between event- and tracking data.
+    In the future this might move to a common.sportec package that provides functionality for both
+    deserializers.
+    """
+    x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
+    y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
+
+    team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
+    team_elms = list(team_path.find(match_root).iterchildren("Team"))
+
+    home_team = away_team = None
+    for team_elm in team_elms:
+        if team_elm.attrib["Role"] == "home":
+            home_team = _team_from_xml_elm(team_elm)
+        elif team_elm.attrib["Role"] == "guest":
+            away_team = _team_from_xml_elm(team_elm)
+        else:
+            raise DeserializationError(
+                f"Unknown side: {team_elm.attrib['Role']}"
+            )
+
+    if not home_team:
+        raise DeserializationError("Home team is missing from metadata")
+    if not away_team:
+        raise DeserializationError("Away team is missing from metadata")
+
+    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+        "Result"
+    ].split(":")
+    score = Score(home=int(home_score), away=int(away_score))
+    teams = [home_team, away_team]
+
+    if len(home_team.players) == 0 or len(away_team.players) == 0:
+        raise DeserializationError("LineUp incomplete")
+
+    # The periods can be rebuild from event data. Therefore, the periods attribute
+    # from the metadata can be ignored. It is required for tracking data.
+    other_game_information = (
+        match_root.MatchInformation.OtherGameInformation.attrib
+    )
+    periods = [
+        Period(
+            id=1,
+            start_timestamp=timedelta(
+                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            ),
+            end_timestamp=timedelta(
+                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+                + float(other_game_information["TotalTimeFirstHalf"]) / 1000
+            ),
+        ),
+        Period(
+            id=2,
+            start_timestamp=timedelta(
+                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            ),
+            end_timestamp=timedelta(
+                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+                + float(other_game_information["TotalTimeSecondHalf"]) / 1000
+            ),
+        ),
+    ]
+
+    if "TotalTimeFirstHalfExtra" in other_game_information:
+        # Add two periods for extra time.
+        periods.extend(
+            [
+                Period(
+                    id=3,
+                    start_timestamp=timedelta(
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                        + float(
+                            other_game_information["TotalTimeFirstHalfExtra"]
+                        )
+                        / 1000
+                    ),
+                ),
+                Period(
+                    id=4,
+                    start_timestamp=timedelta(
+                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                        + float(
+                            other_game_information["TotalTimeSecondHalfExtra"]
+                        )
+                        / 1000
+                    ),
+                ),
+            ]
+        )
+
+    return SportecMetadata(
+        score=score,
+        teams=teams,
+        periods=periods,
+        x_max=x_max,
+        y_max=y_max,
+        fps=SPORTEC_FPS,
+    )
+
+
 def _event_chain_from_xml_elm(event_elm):
     chain = OrderedDict()
     current_elm = event_elm
@@ -94,6 +217,7 @@ SPORTEC_EVENT_NAME_SHOT_BLOCKED = "BlockedShot"
 SPORTEC_EVENT_NAME_SHOT_WOODWORK = "ShotWoodWork"
 SPORTEC_EVENT_NAME_SHOT_OTHER = "OtherShot"
 SPORTEC_EVENT_NAME_SHOT_GOAL = "SuccessfulShot"
+SPORTEC_EVENT_NAME_OWN_GOAL = "OwnGoal"
 SPORTEC_SHOT_EVENT_NAMES = (
     SPORTEC_EVENT_NAME_SHOT_WIDE,
     SPORTEC_EVENT_NAME_SHOT_SAVED,
@@ -101,6 +225,7 @@ SPORTEC_SHOT_EVENT_NAMES = (
     SPORTEC_EVENT_NAME_SHOT_WOODWORK,
     SPORTEC_EVENT_NAME_SHOT_OTHER,
     SPORTEC_EVENT_NAME_SHOT_GOAL,
+    SPORTEC_EVENT_NAME_OWN_GOAL,
 )
 
 SPORTEC_EVENT_NAME_PASS = "Pass"
@@ -123,8 +248,8 @@ SPORTEC_EVENT_BODY_PART_LEFT_FOOT = "leftLeg"
 SPORTEC_EVENT_BODY_PART_RIGHT_FOOT = "rightLeg"
 
 
-def _parse_datetime(dt_str: str) -> float:
-    return parse(dt_str).timestamp()
+def _parse_datetime(dt_str: str) -> datetime:
+    return parse(dt_str).astimezone(timezone.utc)
 
 
 def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
@@ -185,6 +310,8 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
         result = ShotResult.POST
     elif event_name == SPORTEC_EVENT_NAME_SHOT_GOAL:
         result = ShotResult.GOAL
+    elif event_name == SPORTEC_EVENT_NAME_OWN_GOAL:
+        result = ShotResult.OWN_GOAL
     elif event_name == SPORTEC_EVENT_NAME_SHOT_OTHER:
         result = None
     else:
@@ -259,55 +386,30 @@ def _parse_coordinates(event_attributes: Dict) -> Point:
     )
 
 
-class SportecInputs(NamedTuple):
+class SportecEventDataInputs(NamedTuple):
     meta_data: IO[bytes]
     event_data: IO[bytes]
 
 
-class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
+class SportecEventDataDeserializer(
+    EventDataDeserializer[SportecEventDataInputs]
+):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
 
-    def deserialize(self, inputs: SportecInputs) -> EventDataset:
+    def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
-            x_max = float(
-                match_root.MatchInformation.Environment.attrib["PitchX"]
+            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
+            teams = home_team, away_team = sportec_metadata.teams
+            transformer = self.get_transformer(
+                pitch_length=sportec_metadata.x_max,
+                pitch_width=sportec_metadata.y_max,
             )
-            y_max = float(
-                match_root.MatchInformation.Environment.attrib["PitchY"]
-            )
-
-            transformer = self.get_transformer(length=x_max, width=y_max)
-
-            team_path = objectify.ObjectPath(
-                "PutDataRequest.MatchInformation.Teams"
-            )
-            team_elms = list(team_path.find(match_root).iterchildren("Team"))
-
-            for team_elm in team_elms:
-                if team_elm.attrib["Role"] == "home":
-                    home_team = _team_from_xml_elm(team_elm)
-                elif team_elm.attrib["Role"] == "guest":
-                    away_team = _team_from_xml_elm(team_elm)
-                else:
-                    raise DeserializationError(
-                        f"Unknown side: {team_elm.attrib['Role']}"
-                    )
-
-            (
-                home_score,
-                away_score,
-            ) = match_root.MatchInformation.General.attrib["Result"].split(":")
-            score = Score(home=int(home_score), away=int(away_score))
-            teams = [home_team, away_team]
-
-            if len(home_team.players) == 0 or len(away_team.players) == 0:
-                raise DeserializationError("LineUp incomplete")
 
             periods = []
             period_id = 0
@@ -316,6 +418,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
             for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
+
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
                     and "GameSection"
@@ -331,25 +434,10 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                         team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
                             "TeamLeft"
                         ]
-                        if team_left == home_team.team_id:
-                            # goal of home team is on the left side.
-                            # this means they attack from left to right
-                            orientation = Orientation.FIXED_HOME_AWAY
-                            period.set_attacking_direction(
-                                AttackingDirection.HOME_AWAY
-                            )
-                        else:
-                            orientation = Orientation.FIXED_AWAY_HOME
-                            period.set_attacking_direction(
-                                AttackingDirection.AWAY_HOME
-                            )
-                    else:
-                        last_period = periods[-1]
-                        period.set_attacking_direction(
-                            AttackingDirection.AWAY_HOME
-                            if last_period.attacking_direction
-                            == AttackingDirection.HOME_AWAY
-                            else AttackingDirection.HOME_AWAY
+                        orientation = (
+                            Orientation.HOME_AWAY
+                            if team_left == home_team.team_id
+                            else Orientation.AWAY_HOME
                         )
 
                     periods.append(period)
@@ -454,22 +542,6 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
                         **generic_event_kwargs,
                     )
 
-                if events:
-                    previous_event = events[-1]
-                    if (
-                        previous_event.event_type == EventType.PASS
-                        and previous_event.result == PassResult.COMPLETE
-                    ):
-                        if "X-Source-Position" in event_chain["Event"]:
-                            previous_event.receiver_coordinates = Point(
-                                x=float(
-                                    event_chain["Event"]["X-Source-Position"]
-                                ),
-                                y=float(
-                                    event_chain["Event"]["Y-Source-Position"]
-                                ),
-                            )
-
                 if (
                     event.event_type == EventType.PASS
                     and event.get_qualifier_value(SetPieceQualifier)
@@ -507,6 +579,42 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
 
                 events.append(transformer.transform_event(event))
 
+        for i, event in enumerate(events[:-1]):
+            if (
+                event.event_type == EventType.PASS
+                and event.result == PassResult.COMPLETE
+            ):
+                # Sportec uses X/Y-Source-Position to define the start coordinates of
+                # an event and X/Y-Position to define the end of an event. There can/will
+                # be quite a distance between the start and the end of an event.
+                # When we want to set the receiver_coordinates we need to use
+                # the start of the event.
+                # How to solve this:
+                # 1. Create a copy of an event
+                # 2. Set the coordinates based on X/Y-Source-Position
+                # 3. Pass through the transformer
+                # 4. Update the receiver coordinates
+                if "X-Source-Position" in events[i + 1].raw_event:
+                    updated_event = transformer.transform_event(
+                        events[i + 1].replace(
+                            coordinates=Point(
+                                x=float(
+                                    events[i + 1].raw_event[
+                                        "X-Source-Position"
+                                    ]
+                                ),
+                                y=float(
+                                    events[i + 1].raw_event[
+                                        "Y-Source-Position"
+                                    ]
+                                ),
+                            )
+                        )
+                    )
+                    event.receiver_coordinates = updated_event.coordinates
+                else:
+                    event.receiver_coordinates = events[i + 1].coordinates
+
         events = list(
             filter(
                 self.should_include_event,
@@ -518,7 +626,7 @@ class SportecEventDeserializer(EventDataDeserializer[SportecInputs]):
             teams=teams,
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            score=score,
+            score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

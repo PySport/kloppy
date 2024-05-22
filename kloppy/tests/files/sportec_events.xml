@@ -119,6 +119,9 @@
             </Play>
         </KickOff>
     </Event>
+    <Event Y-Source-Position="37.11" Y-Position="34.05" EventId="182094" EventTime="2020-06-05T21:47:11.393+02:00" MatchId="DFL-MAT-003BN1" X-Position="91.90" X-Source-Position="102.20">
+        <OwnGoal Player="DFL-OBJ-0028QK" BallPossessionPhase="700" TeamOwnGoalCountsFor="DFL-CLU-00000A" Team="DFL-CLU-000004" ShotOrigin="3" GoalZone="13" OwnGoalFromCounterAttack="false" TypeOfShot="leftLeg" CurrentResult="3:3" SetupOrigin="left" ScorerBallTouch="direct" ScorerSetup="oppositionGoalkeeperAction" BuildUp="crossOpenPlay"/>
+    </Event>
     <Event MatchId="DFL-MAT-003BN1" EventId="17364900001576" EventTime="2020-06-05T22:23:18.000+02:00">
         <FinalWhistle BreakingOff="false" GameSection="secondHalf" FinalResult="1:0"/>
     </Event>

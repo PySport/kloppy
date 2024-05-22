@@ -4,8 +4,9 @@ from typing import Generic, TypeVar, Optional, Union
 from kloppy.domain import (
     Provider,
     TrackingDataset,
-    build_coordinate_system,
     DatasetTransformer,
+    DatasetTransformerBuilder,
+    DatasetType,
 )
 
 T = TypeVar("T")
@@ -26,32 +27,19 @@ class TrackingDataDeserializer(ABC, Generic[T]):
             sample_rate = 1.0
         self.sample_rate = sample_rate
 
-        if not coordinate_system:
-            coordinate_system = Provider.KLOPPY
-
-        if isinstance(coordinate_system, str):
-            coordinate_system = Provider[coordinate_system.upper()]
-
-        self.coordinate_system = coordinate_system
+        self.transformer_builder = DatasetTransformerBuilder(coordinate_system)
 
     def get_transformer(
-        self, length: float, width: float, provider: Optional[Provider] = None
+        self,
+        pitch_length: Optional[float] = None,
+        pitch_width: Optional[float] = None,
+        provider: Optional[Provider] = None,
     ) -> DatasetTransformer:
-        from_coordinate_system = build_coordinate_system(
-            provider or self.provider,
-            length=length,
-            width=width,
-        )
-
-        to_coordinate_system = build_coordinate_system(
-            self.coordinate_system,
-            length=length,
-            width=width,
-        )
-
-        return DatasetTransformer(
-            from_coordinate_system=from_coordinate_system,
-            to_coordinate_system=to_coordinate_system,
+        return self.transformer_builder.build(
+            provider=provider or self.provider,
+            dataset_type=DatasetType.TRACKING,
+            pitch_length=pitch_length,
+            pitch_width=pitch_width,
         )
 
     @property

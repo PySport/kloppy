@@ -1,5 +1,7 @@
 import json
 import logging
+from datetime import timedelta
+import warnings
 from typing import Tuple, Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
@@ -55,9 +57,8 @@ class SecondSpectrumDeserializer(
 
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
-
         frame_id = frame_data["frameIdx"]
-        frame_timestamp = frame_data["gameClock"]
+        frame_timestamp = timedelta(seconds=frame_data["gameClock"])
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
@@ -77,7 +78,6 @@ class SecondSpectrumDeserializer(
         players_data = {}
         for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
             for player_data in frame_data[team_str]:
-
                 jersey_no = player_data["number"]
                 x, y, _ = player_data["xyz"]
                 speed = player_data["speed"]
@@ -115,7 +115,6 @@ class SecondSpectrumDeserializer(
             raise ValueError("Please specify a value for 'raw_data'")
 
     def deserialize(self, inputs: SecondSpectrumInputs) -> TrackingDataset:
-
         metadata = None
 
         # Handles the XML metadata that contains the pitch dimensions and frame info
@@ -140,8 +139,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period["number"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
             else:
@@ -161,8 +164,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period.attrib["iId"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
 
@@ -205,7 +212,6 @@ class SecondSpectrumDeserializer(
                         teams, ["homePlayers", "awayPlayers"]
                     ):
                         for player_data in metadata[team_str]:
-
                             # We use the attributes field of Player to store the extra IDs provided by the
                             # metadata. We designate the player_id to be the 'optaId' field as this is what's
                             # used as 'player_id' in the raw frame data file
@@ -234,7 +240,7 @@ class SecondSpectrumDeserializer(
         # Handles the tracking frame data
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():
@@ -265,21 +271,24 @@ class SecondSpectrumDeserializer(
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(
-                            frame
-                        )
-                    )
-
                 if self.limit and n + 1 >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

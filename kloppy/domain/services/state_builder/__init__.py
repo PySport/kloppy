@@ -36,7 +36,6 @@ def add_state(dataset: EventDataset, *builder_keys: List[str]) -> EventDataset:
 
     events = []
     for event in dataset.events:
-
         state = {
             builder_key: builder.reduce_before(state[builder_key], event)
             for builder_key, builder in builders.items()

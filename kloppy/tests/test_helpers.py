@@ -15,7 +15,7 @@ from kloppy.domain import (
     Point,
     AttackingDirection,
     TrackingDataset,
-    PitchDimensions,
+    NormalizedPitchDimensions,
     Dimension,
     Orientation,
     Provider,
@@ -44,21 +44,22 @@ class TestHelpers:
                 id=1,
                 start_timestamp=0.0,
                 end_timestamp=10.0,
-                attacking_direction=AttackingDirection.HOME_AWAY,
             ),
             Period(
                 id=2,
                 start_timestamp=15.0,
                 end_timestamp=25.0,
-                attacking_direction=AttackingDirection.AWAY_HOME,
             ),
         ]
         metadata = Metadata(
-            flags=~(DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE),
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 100), y_dim=Dimension(-50, 50)
+            flags=(DatasetFlag.BALL_OWNING_TEAM),
+            pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(0, 100),
+                y_dim=Dimension(-50, 50),
+                pitch_length=105,
+                pitch_width=68,
             ),
-            orientation=Orientation.HOME_TEAM,
+            orientation=Orientation.HOME_AWAY,
             frame_rate=25,
             periods=periods,
             teams=teams,
@@ -73,7 +74,7 @@ class TestHelpers:
                 Frame(
                     frame_id=1,
                     timestamp=0.1,
-                    ball_owning_team=None,
+                    ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
                     players_data={},
@@ -83,9 +84,9 @@ class TestHelpers:
                 Frame(
                     frame_id=2,
                     timestamp=0.2,
-                    ball_owning_team=None,
+                    ball_owning_team=teams[1],
                     ball_state=None,
-                    period=periods[0],
+                    period=periods[1],
                     players_data={
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
@@ -108,8 +109,13 @@ class TestHelpers:
 
         # orientation change AND dimension scale
         transformed_dataset = tracking_data.transform(
-            to_orientation="AWAY_TEAM",
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_orientation="AWAY_HOME",
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            ),
         )
 
         assert transformed_dataset.frames[0].ball_coordinates == Point3D(
@@ -119,35 +125,28 @@ class TestHelpers:
             x=1, y=0, z=1
         )
         assert (
-            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
+            transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
         )
         assert transformed_dataset.metadata.coordinate_system is None
         assert (
             transformed_dataset.metadata.pitch_dimensions
-            == PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             )
-        )
-
-    def test_transform_to_orientation(self):
-        tracking_data = self._get_tracking_dataset()
-
-        transformed_dataset = tracking_data.transform(
-            to_orientation=Orientation.AWAY_TEAM,
-        )
-        assert transformed_dataset.frames[0].ball_coordinates == Point3D(
-            x=0, y=50, z=0
-        )
-        assert (
-            transformed_dataset.metadata.orientation == Orientation.AWAY_TEAM
         )
 
     def test_transform_to_pitch_dimensions(self):
         tracking_data = self._get_tracking_dataset()
 
         transformed_dataset = tracking_data.transform(
-            to_pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             ),
         )
 
@@ -159,10 +158,104 @@ class TestHelpers:
         )
         assert (
             transformed_dataset.metadata.pitch_dimensions
-            == PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             )
         )
+
+    def test_transform_to_orientation(self):
+        to_pitch_dimensions = NormalizedPitchDimensions(
+            x_dim=Dimension(min=0, max=1),
+            y_dim=Dimension(min=0, max=1),
+            pitch_length=105,
+            pitch_width=68,
+        )
+        # Create a dataset with the KLOPPY pitch dimensions
+        # and HOME_AWAY orientation
+        original = self._get_tracking_dataset().transform(
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        assert original.metadata.orientation == Orientation.HOME_AWAY
+        assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
+        assert original.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        # the frames should have the correct attacking direction
+        assert original.frames[0].attacking_direction == AttackingDirection.LTR
+        assert original.frames[1].attacking_direction == AttackingDirection.RTL
+
+        # Transform to AWAY_HOME orientation
+        transform1 = original.transform(
+            to_orientation=Orientation.AWAY_HOME,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        assert transform1.metadata.orientation == Orientation.AWAY_HOME
+        # all coordinates should be flipped
+        assert transform1.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
+        assert transform1.frames[1].ball_coordinates == Point3D(x=1, y=0, z=1)
+        # the frames should have the correct attacking direction
+        assert (
+            transform1.frames[0].attacking_direction == AttackingDirection.RTL
+        )
+        assert (
+            transform1.frames[1].attacking_direction == AttackingDirection.LTR
+        )
+
+        # Transform to STATIC_AWAY_HOME orientation
+        transform2 = transform1.transform(
+            to_orientation=Orientation.STATIC_AWAY_HOME,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        assert transform2.metadata.orientation == Orientation.STATIC_AWAY_HOME
+        # all coordintes in the second half should be flipped
+        assert transform2.frames[0].ball_coordinates == Point3D(x=0, y=1, z=0)
+        assert transform2.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        # the frames should have the correct attacking direction
+        for frame in transform2.frames:
+            assert frame.attacking_direction == AttackingDirection.RTL
+
+        # Transform to BALL_OWNING_TEAM orientation
+        transform3 = transform2.transform(
+            to_orientation=Orientation.BALL_OWNING_TEAM,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        assert transform3.metadata.orientation == Orientation.BALL_OWNING_TEAM
+        # the coordinates of frame 1 should be flipped
+        assert transform3.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
+        assert transform3.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        # the frames should have the correct attacking direction
+        assert (
+            transform3.frames[0].attacking_direction == AttackingDirection.LTR
+        )
+        assert (
+            transform3.frames[1].attacking_direction == AttackingDirection.RTL
+        )
+
+        # Transform to ACTION_EXECUTING_TEAM orientation
+        # this should be identical to BALL_OWNING_TEAM for tracking data
+        transform4 = transform3.transform(
+            to_orientation=Orientation.ACTION_EXECUTING_TEAM,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        assert (
+            transform4.metadata.orientation
+            == Orientation.ACTION_EXECUTING_TEAM
+        )
+        assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
+        for frame_t3, frame_t4 in zip(transform3.frames, transform4.frames):
+            assert frame_t3.ball_coordinates == frame_t4.ball_coordinates
+            assert frame_t3.attacking_direction == frame_t4.attacking_direction
+
+        # Transform back to the original HOME_AWAY orientation
+        transform5 = transform4.transform(
+            to_orientation=Orientation.HOME_AWAY,
+            to_pitch_dimensions=to_pitch_dimensions,
+        )
+        # we should be back at the original
+        for frame1, frame2 in zip(original.frames, transform5.frames):
+            assert frame1.ball_coordinates == frame2.ball_coordinates
+            assert frame1.attacking_direction == frame2.attacking_direction
 
     def test_transform_to_coordinate_system(self, base_dir):
         dataset = tracab.load(
@@ -172,25 +265,24 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=-1234.0, y=-294.0)
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
 
         transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA
         )
         transformerd_coordinate_system = MetricaCoordinateSystem(
-            normalized=True,
-            length=dataset.metadata.coordinate_system.length,
-            width=dataset.metadata.coordinate_system.width,
+            pitch_length=dataset.metadata.coordinate_system.pitch_length,
+            pitch_width=dataset.metadata.coordinate_system.pitch_width,
         )
 
         assert transformed_dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
         assert (
             transformed_dataset.metadata.orientation
             == dataset.metadata.orientation
@@ -226,7 +318,7 @@ class TestHelpers:
         assert receipt_event.ball_owning_team == home_team
 
         transformed_dataset = dataset.transform(
-            to_orientation="fixed_home_away"
+            to_orientation="static_home_away"
         )
         transformed_pressure_event = transformed_dataset.get_event_by_id(
             pressure_event.event_id
@@ -266,7 +358,7 @@ class TestHelpers:
             "65f16e50-7c5d-4293-b2fc-d20887a772f9"
         )
         transformed_dataset = dataset.transform(
-            to_orientation="fixed_away_home"
+            to_orientation="static_away_home"
         )
         shot_event_transformed = transformed_dataset.get_event_by_id(
             shot_event.event_id
@@ -289,13 +381,14 @@ class TestHelpers:
         expected_data_frame = DataFrame.from_dict(
             {
                 "frame_id": {0: 1, 1: 2},
-                "period_id": {0: 1, 1: 1},
+                "period_id": {0: 1, 1: 2},
                 "timestamp": {0: 0.1, 1: 0.2},
                 "ball_state": {0: None, 1: None},
-                "ball_owning_team_id": {0: None, 1: None},
+                "ball_owning_team_id": {0: "home", 1: "away"},
                 "ball_x": {0: 100, 1: 0},
                 "ball_y": {0: -50, 1: 50},
                 "ball_z": {0: 0, 1: 1},
+                "ball_speed": {0: None, 1: None},
                 "home_1_x": {0: None, 1: 15.0},
                 "home_1_y": {0: None, 1: 35.0},
                 "home_1_d": {0: None, 1: 0.03},
@@ -325,8 +418,12 @@ class TestHelpers:
         incomplete_passes = df[
             (df.event_type == "PASS") & (df.result == "INCOMPLETE")
         ].reset_index()
-        assert incomplete_passes.loc[0, "end_coordinates_y"] == 0.90625
-        assert incomplete_passes.loc[0, "end_coordinates_x"] == 0.7125
+        assert incomplete_passes.loc[0, "end_coordinates_y"] == pytest.approx(
+            0.91519, 1e-4
+        )
+        assert incomplete_passes.loc[0, "end_coordinates_x"] == pytest.approx(
+            0.70945, 1e-4
+        )
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
@@ -341,13 +438,14 @@ class TestHelpers:
         expected_data_frame = DataFrame.from_dict(
             {
                 "frame_id": [1, 2],
-                "period_id": [1, 1],
+                "period_id": [1, 2],
                 "timestamp": [0.1, 0.2],
                 "ball_state": [None, None],
-                "ball_owning_team_id": [None, None],
+                "ball_owning_team_id": ["home", "away"],
                 "ball_x": [100, 0],
                 "ball_y": [-50, 50],
                 "ball_z": [0, 1],
+                "ball_speed": [None, None],
                 "match": ["test", "test"],
                 "bonus_column": [11, 12],
                 "home_1_x": [None, 15],
@@ -374,7 +472,7 @@ class TestHelpers:
         import polars as pl
 
         c = df.select(pl.col("event_id").count())[0, 0]
-        assert c == 4023
+        assert c == 4061
 
     def test_tracking_dataset_to_polars(self):
         """

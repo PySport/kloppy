@@ -96,7 +96,6 @@ def deprecated(reason):
     """
 
     if isinstance(reason, string_types):
-
         # The @deprecated is used with a 'reason'.
         #
         # .. code-block:: python
@@ -106,7 +105,6 @@ def deprecated(reason):
         #      pass
 
         def decorator(func1):
-
             if inspect.isclass(func1):
                 fmt1 = "Call to deprecated class {name} ({reason})."
             else:
@@ -128,7 +126,6 @@ def deprecated(reason):
         return decorator
 
     elif inspect.isclass(reason) or inspect.isfunction(reason):
-
         # The @deprecated is used without any 'reason'.
         #
         # .. code-block:: python
@@ -159,3 +156,16 @@ def deprecated(reason):
 
     else:
         raise TypeError(repr(type(reason)))
+
+
+class DeprecatedEnumValue:
+    def __init__(self, value):
+        self.value = value
+
+    def __get__(self, instance, owner):
+        warnings.warn(
+            f"{owner.__name__} is deprecated. Use GoalkeeperActionType instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.value

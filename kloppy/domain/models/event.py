@@ -12,12 +12,17 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from kloppy.domain.models.common import DatasetType
+from kloppy.domain.models.common import (
+    DatasetType,
+    AttackingDirection,
+    OrientationError,
+)
 from kloppy.utils import (
     camelcase_to_snakecase,
     removes_suffix,
     docstring_inherit_attributes,
     deprecated,
+    DeprecatedEnumValue,
 )
 
 from .common import DataRecord, Dataset, Player, Team
@@ -133,6 +138,50 @@ class CarryResult(ResultType):
         return self == self.COMPLETE
 
 
+class DuelResult(ResultType):
+    """
+    DuelResult
+
+    Attributes:
+        WON (DuelResult): When winning the duel (player touching the ball first)
+        LOST (DuelResult): When losing the duel (opponent touches the ball first)
+        NEUTRAL (DuelResult): When neither player wins duel [Mainly for WyScout v2]
+    """
+
+    WON = "WON"
+    LOST = "LOST"
+    NEUTRAL = "NEUTRAL"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the duel was won
+        """
+        return self == self.WON
+
+
+class InterceptionResult(ResultType):
+    """
+    InterceptionResult
+
+    Attributes:
+        SUCCESS (InterceptionResult): An interception that gains possession of the ball (without going out of bounds)
+        LOST (InterceptionResult): An interception by the defending team that knocked the ball to an attacker
+        OUT (InterceptionResult): An interception that knocked the ball out of bounds
+    """
+
+    SUCCESS = "SUCCESS"
+    LOST = "LOST"
+    OUT = "OUT"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the interception was successful
+        """
+        return self == self.SUCCESS
+
+
 class CardType(Enum):
     """
     CardType
@@ -157,13 +206,18 @@ class EventType(Enum):
         TAKE_ON (EventType):
         CARRY (EventType):
         CLEARANCE (EventType):
+        INTERCEPTION (EventType):
+        DUEL (EventType):
         SUBSTITUTION (EventType):
         CARD (EventType):
         PLAYER_ON (EventType):
         PLAYER_OFF (EventType):
         RECOVERY (EventType):
+        MISCONTROL (EventType):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
+        GOALKEEPER (EventType):
+        PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
     """
 
@@ -174,13 +228,18 @@ class EventType(Enum):
     TAKE_ON = "TAKE_ON"
     CARRY = "CARRY"
     CLEARANCE = "CLEARANCE"
+    INTERCEPTION = "INTERCEPTION"
+    DUEL = "DUEL"
     SUBSTITUTION = "SUBSTITUTION"
     CARD = "CARD"
     PLAYER_ON = "PLAYER_ON"
     PLAYER_OFF = "PLAYER_OFF"
     RECOVERY = "RECOVERY"
+    MISCONTROL = "MISCONTROL"
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
+    GOALKEEPER = "GOALKEEPER"
+    PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
@@ -297,6 +356,7 @@ class PassType(Enum):
     THROUGH_BALL = "THROUGH_BALL"
     CHIPPED_PASS = "CHIPPED_PASS"
     FLICK_ON = "FLICK_ON"
+    SHOT_ASSIST = "SHOT_ASSIST"
     ASSIST = "ASSIST"
     ASSIST_2ND = "ASSIST_2ND"
     SWITCH_OF_PLAY = "SWITCH_OF_PLAY"
@@ -313,15 +373,17 @@ class BodyPart(Enum):
 
     Attributes:
         RIGHT_FOOT (BodyPart): Pass or Shot with right foot, save with right foot (for goalkeepers).
-        LEFT_FOOT (BodyPart): Pass or Shot with leftt foot, save with left foot (for goalkeepers).
+        LEFT_FOOT (BodyPart): Pass or Shot with left foot, save with left foot (for goalkeepers).
         HEAD (BodyPart): Pass or Shot with head, save with head (for goalkeepers).
+        OTHER (BodyPart): Other body part (chest, back, etc.), for Pass and Shot.
+        HEAD_OTHER (BodyPart): Pass or Shot with head or other body part. Only used when the
+                               data provider does not distinguish between HEAD and OTHER.
         BOTH_HANDS (BodyPart): Goalkeeper only. Save with both hands.
         CHEST (BodyPart): Goalkeeper only. Save with chest.
         LEFT_HAND (BodyPart): Goalkeeper only. Save with left hand.
         RIGHT_HAND (BodyPart): Goalkeeper only. Save with right hand.
         DROP_KICK (BodyPart): Pass is a keeper drop kick.
         KEEPER_ARM (BodyPart): Pass thrown from keepers hands.
-        OTHER (BodyPart): Other body part (chest, back, etc.), for Pass and Shot.
         NO_TOUCH (BodyPart): Pass only. A player deliberately let the pass go past him
                              instead of receiving it to deliver to a teammate behind him.
                              (Also known as a "dummy").
@@ -330,6 +392,8 @@ class BodyPart(Enum):
     RIGHT_FOOT = "RIGHT_FOOT"
     LEFT_FOOT = "LEFT_FOOT"
     HEAD = "HEAD"
+    OTHER = "OTHER"
+    HEAD_OTHER = "HEAD_OTHER"
 
     BOTH_HANDS = "BOTH_HANDS"
     CHEST = "CHEST"
@@ -337,7 +401,7 @@ class BodyPart(Enum):
     RIGHT_HAND = "RIGHT_HAND"
     DROP_KICK = "DROP_KICK"
     KEEPER_ARM = "KEEPER_ARM"
-    OTHER = "OTHER"
+
     NO_TOUCH = "NO_TOUCH"
 
 
@@ -347,13 +411,80 @@ class BodyPartQualifier(EnumQualifier):
 
 
 class GoalkeeperAction(Enum):
+    """
+    Deprecated: GoalkeeperAction has been renamed to GoalkeeperActionType.
+
+    Attributes:
+        SAVE (GoalkeeperAction): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperAction): Goalkeeper catches cross.
+        PUNCH (GoalkeeperAction): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperAction): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperAction): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperAction): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperAction): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = DeprecatedEnumValue("SAVE")
+    CLAIM = DeprecatedEnumValue("CLAIM")
+    PUNCH = DeprecatedEnumValue("PUNCH")
+    PICK_UP = DeprecatedEnumValue("PICK_UP")
+    SMOTHER = DeprecatedEnumValue("SMOTHER")
+    REFLEX = DeprecatedEnumValue("REFLEX")
+    SAVE_ATTEMPT = DeprecatedEnumValue("SAVE_ATTEMPT")
+
+
+class GoalkeeperActionType(Enum):
+    """
+    GoalkeeperActionType
+
+    Attributes:
+        SAVE (GoalkeeperActionType): Goalkeeper faces shot and saves.
+        CLAIM (GoalkeeperActionType): Goalkeeper catches cross.
+        PUNCH (GoalkeeperActionType): Goalkeeper punches ball clear.
+        PICK_UP (GoalkeeperActionType): Goalkeeper picks up ball.
+        SMOTHER (GoalkeeperActionType): Goalkeeper coming out to dispossess a player,
+                                  equivalent to a tackle for an outfield player.
+        REFLEX (GoalkeeperActionType): Goalkeeper performs a reflex to save a ball.
+        SAVE_ATTEMPT (GoalkeeperActionType): Goalkeeper attempting to save a shot.
+    """
+
+    SAVE = "SAVE"
+    CLAIM = "CLAIM"
+    PUNCH = "PUNCH"
+    PICK_UP = "PICK_UP"
+    SMOTHER = "SMOTHER"
+
     REFLEX = "REFLEX"
     SAVE_ATTEMPT = "SAVE_ATTEMPT"
 
 
 @dataclass
-class GoalkeeperActionQualifier(EnumQualifier):
-    value: GoalkeeperAction
+class GoalkeeperQualifier(EnumQualifier):
+    value: GoalkeeperActionType
+
+
+class DuelType(Enum):
+    """
+    DuelType
+
+    Attributes:
+        AERIAL (DuelType): A duel when the ball is in the air and loose.
+        GROUND (DuelType): A duel when the ball is on the ground.
+        LOOSE_BALL (DuelType): When the ball is not under the control of any particular player or team.
+        SLIDING_TACKLE (DuelType): A duel where the player slides on the ground to kick the ball away from an opponent.
+    """
+
+    AERIAL = "AERIAL"
+    GROUND = "GROUND"
+    LOOSE_BALL = "LOOSE_BALL"
+    SLIDING_TACKLE = "SLIDING_TACKLE"
+    TACKLE = "TACKLE"
+
+
+@dataclass
+class DuelQualifier(EnumQualifier):
+    value: DuelType
 
 
 @dataclass
@@ -406,6 +537,24 @@ class Event(DataRecord, ABC):
     def event_name(self) -> str:
         raise NotImplementedError
 
+    @property
+    def attacking_direction(self):
+        if (
+            self.dataset
+            and self.dataset.metadata
+            and self.dataset.metadata.orientation is not None
+        ):
+            try:
+                return AttackingDirection.from_orientation(
+                    self.dataset.metadata.orientation,
+                    period=self.period,
+                    ball_owning_team=self.ball_owning_team,
+                    action_executing_team=self.team,
+                )
+            except OrientationError:
+                return AttackingDirection.NOT_SET
+        return AttackingDirection.NOT_SET
+
     def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
         """
         Returns the Qualifier of a certain type, or None if qualifier is not present.
@@ -424,6 +573,27 @@ class Event(DataRecord, ABC):
                 if isinstance(qualifier, qualifier_type):
                     return qualifier.value
         return None
+
+    def get_qualifier_values(self, qualifier_type: Type[Qualifier]):
+        """
+        Returns all Qualifiers of a certain type, or None if qualifier is not present.
+
+        Arguments:
+            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
+                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
+
+        Examples:
+            >>> from kloppy.domain import SetPieceQualifier
+            >>> pass_event.get_qualifier_values(SetPieceQualifier)
+            [<SetPieceType.GOAL_KICK: 'GOAL_KICK'>]
+        """
+        qualifiers = []
+        if self.qualifiers:
+            for qualifier in self.qualifiers:
+                if isinstance(qualifier, qualifier_type):
+                    qualifiers.append(qualifier.value)
+
+        return qualifiers
 
     def get_related_events(self) -> List["Event"]:
         if not self.dataset:
@@ -531,7 +701,7 @@ class Event(DataRecord, ABC):
             return True
 
     def __str__(self):
-        m, s = divmod(self.timestamp, 60)
+        m, s = divmod(self.timestamp.total_seconds(), 60)
 
         event_type = (
             self.__class__.__name__
@@ -654,6 +824,21 @@ class CarryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class InterceptionEvent(Event):
+    """
+    InterceptionEvent
+
+    Attributes:
+        event_type (EventType): `EventType.INTERCEPTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"interception"`
+    """
+
+    event_type: EventType = EventType.INTERCEPTION
+    event_name: str = "interception"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class ClearanceEvent(Event):
     """
     ClearanceEvent
@@ -665,6 +850,22 @@ class ClearanceEvent(Event):
 
     event_type: EventType = EventType.CLEARANCE
     event_name: str = "clearance"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class DuelEvent(Event):
+    """
+    DuelEvent
+
+    Attributes:
+        event_type (EventType): `EventType.DUEL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"duel"`
+
+    """
+
+    event_type: EventType = EventType.DUEL
+    event_name: str = "duel"
 
 
 @dataclass(repr=False)
@@ -783,6 +984,20 @@ class BallOutEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class MiscontrolEvent(Event):
+    """
+    MiscontrolEvent
+    Attributes:
+        event_type (EventType): `EventType.MISCONTROL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "miscontrol"
+    """
+
+    event_type: EventType = EventType.MISCONTROL
+    event_name: str = "miscontrol"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
     FoulCommittedEvent
@@ -794,6 +1009,39 @@ class FoulCommittedEvent(Event):
 
     event_type: EventType = EventType.FOUL_COMMITTED
     event_name: str = "foul_committed"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class GoalkeeperEvent(Event):
+    """
+    GoalkeeperEvent
+
+    Attributes:
+        event_type (EventType): `EventType.GOALKEEPER` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): "goalkeeper"
+    """
+
+    event_type: EventType = EventType.GOALKEEPER
+    event_name: str = "goalkeeper"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class PressureEvent(Event):
+    """
+    PressureEvent
+
+    Attributes:
+        event_type (EventType): `EventType.Pressure` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"pressure"`,
+        end_timestamp (float):
+    """
+
+    end_timestamp: float
+
+    event_type: EventType = EventType.PRESSURE
+    event_name: str = "pressure"
 
 
 @dataclass(repr=False)
@@ -883,6 +1131,8 @@ __all__ = [
     "TakeOnEvent",
     "CarryEvent",
     "ClearanceEvent",
+    "InterceptionEvent",
+    "InterceptionResult",
     "SubstitutionEvent",
     "PlayerOnEvent",
     "PlayerOffEvent",
@@ -893,6 +1143,7 @@ __all__ = [
     "FormationChangeEvent",
     "EventDataset",
     "RecoveryEvent",
+    "MiscontrolEvent",
     "FoulCommittedEvent",
     "BallOutEvent",
     "SetPieceType",
@@ -902,7 +1153,13 @@ __all__ = [
     "PassType",
     "BodyPart",
     "BodyPartQualifier",
+    "GoalkeeperEvent",
+    "GoalkeeperQualifier",
     "GoalkeeperAction",
-    "GoalkeeperActionQualifier",
+    "GoalkeeperActionType",
     "CounterAttackQualifier",
+    "DuelEvent",
+    "DuelType",
+    "DuelQualifier",
+    "DuelResult",
 ]

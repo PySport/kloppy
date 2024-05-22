@@ -1,0 +1,464 @@
+{
+  "GameID": 1,
+  "CompetitionID": 1,
+  "SeasonID": 2023,
+  "FrameRate": 25,
+  "PitchShortSide": 6800,
+  "PitchLongSide": 10500,
+  "Phase1StartFrame": 1848508,
+  "Phase1EndFrame": 1916408,
+  "Phase2StartFrame": 1942114,
+  "Phase2EndFrame": 2017933,
+  "Phase3StartFrame": 0,
+  "Phase3EndFrame": 0,
+  "Phase4StartFrame": 0,
+  "Phase4EndFrame": 0,
+  "Phase5StartFrame": 0,
+  "Phase5EndFrame": 0,
+  "Phase1HomeGKLeft": false,
+  "Phase2HomeGKLeft": true,
+  "Phase3HomeGKLeft": null,
+  "Phase4HomeGKLeft": null,
+  "Phase5HomeGKLeft": null,
+  "HomeTeam": {
+    "LongName": "Long Name Home",
+    "ShortName": "Short Name Home",
+    "TeamID": 1,
+    "Players": [
+      {
+        "PlayerID": 8216,
+        "FirstName": "Player",
+        "LastName": "One",
+        "JerseyNo": 1,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "G",
+        "CurrentPosition": "G"
+      },
+      {
+        "PlayerID": 8302,
+        "FirstName": "Player",
+        "LastName": "Two",
+        "JerseyNo": 2,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 12544,
+        "FirstName": "Player",
+        "LastName": "Three",
+        "JerseyNo": 5,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 12142,
+        "FirstName": "Player",
+        "LastName": "Four",
+        "JerseyNo": 7,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1976302,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 8172,
+        "FirstName": "Player",
+        "LastName": "Five",
+        "JerseyNo": 8,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "M",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 12736,
+        "FirstName": "Player",
+        "LastName": "Six",
+        "JerseyNo": 13,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 13282,
+        "FirstName": "Player",
+        "LastName": "Seven",
+        "JerseyNo": 16,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "M",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 12170,
+        "FirstName": "Player",
+        "LastName": "Eight",
+        "JerseyNo": 20,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2001211,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 12524,
+        "FirstName": "Player",
+        "LastName": "Nine",
+        "JerseyNo": 55,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1976390,
+        "StartingPosition": "D",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 9340,
+        "FirstName": "Player",
+        "LastName": "Ten",
+        "JerseyNo": 77,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "M",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 11909,
+        "FirstName": "Player",
+        "LastName": "Eleven",
+        "JerseyNo": 90,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1976494,
+        "StartingPosition": "A",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 12814,
+        "FirstName": "Player",
+        "LastName": "Twelve",
+        "JerseyNo": 22,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 11650,
+        "FirstName": "Player",
+        "LastName": "Thirteen",
+        "JerseyNo": 6,
+        "StartFrameCount": 2001211,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 8183,
+        "FirstName": "Player",
+        "LastName": "Fourteen",
+        "JerseyNo": 11,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 13245,
+        "FirstName": "Player",
+        "LastName": "Fifteen",
+        "JerseyNo": 17,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 13246,
+        "FirstName": "Player",
+        "LastName": "Sixteen",
+        "JerseyNo": 18,
+        "StartFrameCount": 1976494,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "A"
+      },
+      {
+        "PlayerID": 12809,
+        "FirstName": "Player",
+        "LastName": "Seventeen",
+        "JerseyNo": 21,
+        "StartFrameCount": 1976302,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 8106,
+        "FirstName": "Player",
+        "LastName": "Eighteen",
+        "JerseyNo": 25,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 12816,
+        "FirstName": "Player",
+        "LastName": "Nineteen",
+        "JerseyNo": 27,
+        "StartFrameCount": 1976390,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 12102,
+        "FirstName": "Player",
+        "LastName": "Twenty",
+        "JerseyNo": 39,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      }
+    ]
+  },
+  "AwayTeam": {
+    "LongName": "Long Name Away",
+    "ShortName": "Short Name Away",
+    "TeamID": 2,
+    "Players": [
+      {
+        "PlayerID": 10524,
+        "FirstName": "Away Player",
+        "LastName": "One",
+        "JerseyNo": 12,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "G",
+        "CurrentPosition": "G"
+      },
+      {
+        "PlayerID": 12660,
+        "FirstName": "Away Player",
+        "LastName": "Two",
+        "JerseyNo": 4,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 13275,
+        "FirstName": "Away Player",
+        "LastName": "Three",
+        "JerseyNo": 5,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 12314,
+        "FirstName": "Away Player",
+        "LastName": "Four",
+        "JerseyNo": 9,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "A",
+        "CurrentPosition": "A"
+      },
+      {
+        "PlayerID": 12352,
+        "FirstName": "Away Player",
+        "LastName": "Five",
+        "JerseyNo": 17,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2011156,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 12535,
+        "FirstName": "Away Player",
+        "LastName": "Six",
+        "JerseyNo": 19,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 11979,
+        "FirstName": "Away Player",
+        "LastName": "Seven",
+        "JerseyNo": 22,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1941284,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 12128,
+        "FirstName": "Away Player",
+        "LastName": "Eight",
+        "JerseyNo": 24,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "M",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 13281,
+        "FirstName": "Away Player",
+        "LastName": "Nine",
+        "JerseyNo": 26,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1984022,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 9080,
+        "FirstName": "Away Player",
+        "LastName": "Ten",
+        "JerseyNo": 27,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "D",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 12604,
+        "FirstName": "Away Player",
+        "LastName": "Eleven",
+        "JerseyNo": 33,
+        "StartFrameCount": 1848508,
+        "EndFrameCount": 1940954,
+        "StartingPosition": "M",
+        "CurrentPosition": "O"
+      },
+      {
+        "PlayerID": 12360,
+        "FirstName": "Away Player",
+        "LastName": "Twelve",
+        "JerseyNo": 35,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 12282,
+        "FirstName": "Away Player",
+        "LastName": "Thirteen",
+        "JerseyNo": 2,
+        "StartFrameCount": 1940954,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "D"
+      },
+      {
+        "PlayerID": 13283,
+        "FirstName": "Away Player",
+        "LastName": "Fourteen",
+        "JerseyNo": 3,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 13276,
+        "FirstName": "Away Player",
+        "LastName": "Fifteen",
+        "JerseyNo": 7,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 13142,
+        "FirstName": "Away Player",
+        "LastName": "Sixteen",
+        "JerseyNo": 21,
+        "StartFrameCount": 2011156,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 13307,
+        "FirstName": "Away Player",
+        "LastName": "Seventeen",
+        "JerseyNo": 23,
+        "StartFrameCount": 1984022,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 12595,
+        "FirstName": "Away Player",
+        "LastName": "Eighteen",
+        "JerseyNo": 25,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      },
+      {
+        "PlayerID": 9654,
+        "FirstName": "Away Player",
+        "LastName": "Nineteen",
+        "JerseyNo": 28,
+        "StartFrameCount": 1941284,
+        "EndFrameCount": 2017933,
+        "StartingPosition": "S",
+        "CurrentPosition": "M"
+      },
+      {
+        "PlayerID": 12636,
+        "FirstName": "Away Player",
+        "LastName": "Twenty",
+        "JerseyNo": 31,
+        "StartFrameCount": 0,
+        "EndFrameCount": 0,
+        "StartingPosition": "S",
+        "CurrentPosition": "S"
+      }
+    ]
+  },
+  "Referees": [
+    {
+      "PlayerID": 0,
+      "FirstName": "Referee",
+      "LastName": "Main",
+      "JerseyNo": 1,
+      "StartFrameCount": 1848508,
+      "EndFrameCount": 2017933
+    },
+    {
+      "PlayerID": 9999991,
+      "FirstName": "Referee",
+      "LastName": "Head",
+      "JerseyNo": 0,
+      "StartFrameCount": 1848508,
+      "EndFrameCount": 2017933
+    },
+    {
+      "PlayerID": 9999993,
+      "FirstName": "Referee",
+      "LastName": "2nd Assistant",
+      "JerseyNo": 2,
+      "StartFrameCount": 1848508,
+      "EndFrameCount": 2017933
+    }
+  ],
+  "Kickoff": "2023-12-15 20:32:20"
+}

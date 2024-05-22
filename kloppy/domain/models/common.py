@@ -2,6 +2,7 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
     Dict,
@@ -17,18 +18,34 @@ from typing import (
     Iterable,
 )
 
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
-from .pitch import PitchDimensions, Point, Dimension
+from .pitch import (
+    PitchDimensions,
+    Unit,
+    Point,
+    Dimension,
+    NormalizedPitchDimensions,
+    MetricPitchDimensions,
+    ImperialPitchDimensions,
+    OptaPitchDimensions,
+    WyscoutPitchDimensions,
+)
 from .formation import FormationType
 from ...exceptions import (
     OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    KloppyError,
 )
 
 
@@ -227,25 +244,70 @@ class BallState(Enum):
         return self.value
 
 
-class AttackingDirection(Enum):
+@dataclass
+class Period:
     """
-    AttackingDirection
+    Period
 
     Attributes:
-        HOME_AWAY (AttackingDirection): Home team is playing from left to right
-        AWAY_HOME (AttackingDirection): Home team is playing from right to left
-        NOT_SET (AttackingDirection): not set yet
+        id: `1` for first half, `2` for second half, `3` for first half of
+            overtime, `4` for second half of overtime, `5` for penalty shootout
+        start_timestamp: The UTC datetime of the kick-off or, if the
+            absolute datetime is not available, the offset between the start
+            of the data feed and the period's kick-off
+        end_timestamp: The UTC datetime of the final whistle or, if the
+            absolute datetime is not available, the offset between the start
+            of the data feed and the period's final whistle
+        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
     """
 
-    HOME_AWAY = "home-away"
-    AWAY_HOME = "away-home"
-    NOT_SET = "not-set"
+    id: int
+    start_timestamp: Union[datetime, timedelta]
+    end_timestamp: Union[datetime, timedelta]
 
-    def __repr__(self):
-        return self.value
+    def contains(self, timestamp: datetime):
+        if isinstance(self.start_timestamp, datetime) and isinstance(
+            self.end_timestamp, datetime
+        ):
+            return self.start_timestamp <= timestamp <= self.end_timestamp
+        raise KloppyError(
+            "This method can only be used when start_timestamp and end_timestamp are a datetime"
+        )
+
+    @property
+    def duration(self) -> timedelta:
+        return self.end_timestamp - self.start_timestamp
+
+    def __eq__(self, other):
+        return isinstance(other, Period) and other.id == self.id
 
 
 class Orientation(Enum):
+    """
+    The attacking direction of each team in a dataset.
+
+    Attributes:
+        BALL_OWNING_TEAM: The team that is currently in possession of the ball
+            plays from left to right.
+        ACTION_EXECUTING_TEAM: The team that executes the action
+            plays from left to right. Used in event stream data only. Equivalent
+            to "BALL_OWNING_TEAM" for tracking data.
+        HOME_AWAY: The home team plays from left to right in the first period.
+            The away team plays from left to right in the second period.
+        AWAY_HOME: The away team plays from left to right in the first period.
+            The home team plays from left to right in the second period.
+        STATIC_HOME_AWAY: The home team plays from left to right in both periods.
+        STATIC_AWAY_HOME: The away team plays from left to right in both periods.
+        NOT_SET: The attacking direction is not defined.
+
+    Notes:
+        The attacking direction is not defined for penalty shootouts in the
+        `HOME_AWAY`, `AWAY_HOME`, `STATIC_HOME_AWAY`, and `STATIC_AWAY_HOME`
+        orientations. This period is ignored in orientation transforms
+        involving one of these orientations and keeps its original
+        attacking direction.
+    """
+
     # change when possession changes
     BALL_OWNING_TEAM = "ball-owning-team"
 
@@ -253,60 +315,119 @@ class Orientation(Enum):
     ACTION_EXECUTING_TEAM = "action-executing-team"
 
     # changes during half-time
-    HOME_TEAM = "home-team"
-    AWAY_TEAM = "away-team"
+    HOME_AWAY = "home-away"
+    AWAY_HOME = "away-home"
 
     # won't change during match
-    FIXED_HOME_AWAY = "fixed-home-away"
-    FIXED_AWAY_HOME = "fixed-away-home"
+    STATIC_HOME_AWAY = "fixed-home-away"
+    STATIC_AWAY_HOME = "fixed-away-home"
 
     # Not set in dataset
     NOT_SET = "not-set"
 
-    def get_orientation_factor(
-        self,
-        attacking_direction: AttackingDirection,
-        ball_owning_team: Team,
-        action_executing_team: Team,
-    ) -> int:
-        if self == Orientation.FIXED_HOME_AWAY:
-            return -1
-        elif self == Orientation.FIXED_AWAY_HOME:
-            return 1
-        elif self == Orientation.HOME_TEAM:
-            if attacking_direction == AttackingDirection.HOME_AWAY:
-                return -1
-            elif attacking_direction == AttackingDirection.AWAY_HOME:
-                return 1
-            else:
-                raise OrientationError("AttackingDirection not set")
-        elif self == Orientation.AWAY_TEAM:
-            if attacking_direction == AttackingDirection.AWAY_HOME:
-                return -1
-            elif attacking_direction == AttackingDirection.HOME_AWAY:
-                return 1
-            else:
-                raise OrientationError("AttackingDirection not set")
-        elif self == Orientation.BALL_OWNING_TEAM:
-            if ball_owning_team.ground == Ground.HOME:
-                return -1
-            elif ball_owning_team.ground == Ground.AWAY:
-                return 1
-            else:
+    def __repr__(self):
+        return self.value
+
+
+class AttackingDirection(Enum):
+    """
+    AttackingDirection
+
+    Attributes:
+        LTR (AttackingDirection): Home team is playing from left to right
+        RTL (AttackingDirection): Home team is playing from right to left
+        NOT_SET (AttackingDirection): not set yet
+    """
+
+    LTR = "left-to-right"
+    RTL = "right-to-left"
+    NOT_SET = "not-set"
+
+    @staticmethod
+    def from_orientation(
+        orientation: Orientation,
+        period: Optional[Period] = None,
+        ball_owning_team: Optional[Team] = None,
+        action_executing_team: Optional[Team] = None,
+    ) -> "AttackingDirection":
+        """Determines the attacking direction for a specific data record.
+
+        Args:
+            orientation: The orientation of the dataset.
+            period: The period of the data record.
+            ball_owning_team: The team that is in possession of the ball.
+            action_executing_team: The team that executes the action.
+
+        Raises:
+            OrientationError: If the attacking direction cannot be determined
+                from the given data.
+
+        Returns:
+            The attacking direction for the given data record.
+        """
+        if orientation == Orientation.STATIC_HOME_AWAY:
+            return AttackingDirection.LTR
+        if orientation == Orientation.STATIC_AWAY_HOME:
+            return AttackingDirection.RTL
+        if orientation == Orientation.HOME_AWAY:
+            if period is None:
                 raise OrientationError(
-                    f"Invalid ball_owning_team: {ball_owning_team}"
+                    "You must provide a period to determine the attacking direction"
                 )
-        elif self == Orientation.ACTION_EXECUTING_TEAM:
+            dirmap = {
+                1: AttackingDirection.LTR,
+                2: AttackingDirection.RTL,
+                3: AttackingDirection.LTR,
+                4: AttackingDirection.RTL,
+            }
+            if period.id in dirmap:
+                return dirmap[period.id]
+            raise OrientationError(
+                "This orientation is not defined for period %s" % period.id
+            )
+        if orientation == Orientation.AWAY_HOME:
+            if period is None:
+                raise OrientationError(
+                    "You must provide a period to determine the attacking direction"
+                )
+            dirmap = {
+                1: AttackingDirection.RTL,
+                2: AttackingDirection.LTR,
+                3: AttackingDirection.RTL,
+                4: AttackingDirection.LTR,
+            }
+            if period.id in dirmap:
+                return dirmap[period.id]
+            raise OrientationError(
+                "This orientation is not defined for period %s" % period.id
+            )
+        if orientation == Orientation.BALL_OWNING_TEAM:
+            if ball_owning_team is None:
+                raise OrientationError(
+                    "You must provide the ball owning team to determine the attacking direction"
+                )
+            if ball_owning_team is not None:
+                if ball_owning_team.ground == Ground.HOME:
+                    return AttackingDirection.LTR
+                if ball_owning_team.ground == Ground.AWAY:
+                    return AttackingDirection.RTL
+                raise OrientationError(
+                    "Invalid ball_owning_team: %s", ball_owning_team
+                )
+            return AttackingDirection.NOT_SET
+        if orientation == Orientation.ACTION_EXECUTING_TEAM:
+            if action_executing_team is None:
+                raise ValueError(
+                    "You must provide the action executing team to determine the attacking direction"
+                )
             if action_executing_team.ground == Ground.HOME:
-                return -1
-            elif action_executing_team.ground == Ground.AWAY:
-                return 1
-            else:
-                raise OrientationError(
-                    f"Invalid action_executing_team: {action_executing_team}"
-                )
-        else:
-            raise OrientationError(f"Unknown orientation: {self}")
+                return AttackingDirection.LTR
+            if action_executing_team.ground == Ground.AWAY:
+                return AttackingDirection.RTL
+            raise OrientationError(
+                "Invalid action_executing_team: %s", action_executing_team
+            )
+        raise OrientationError("Unknown orientation: %s", orientation)
 
     def __repr__(self):
         return self.value
@@ -318,43 +439,6 @@ class VerticalOrientation(Enum):
 
     # the y axis decreases as you go from top to bottom of the pitch
     BOTTOM_TO_TOP = "bottom-to-top"
-
-
-@dataclass
-class Period:
-    """
-    Period
-
-    Attributes:
-        id: `1` for first half, `2` for second half
-        start_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        end_timestamp: timestamp given by provider (can be unix timestamp or relative)
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
-    """
-
-    id: int
-    start_timestamp: float
-    end_timestamp: float
-    attacking_direction: Optional[
-        AttackingDirection
-    ] = AttackingDirection.NOT_SET
-
-    def contains(self, timestamp: float):
-        return self.start_timestamp <= timestamp <= self.end_timestamp
-
-    @property
-    def attacking_direction_set(self):
-        return self.attacking_direction != AttackingDirection.NOT_SET
-
-    def set_attacking_direction(self, attacking_direction: AttackingDirection):
-        self.attacking_direction = attacking_direction
-
-    @property
-    def duration(self):
-        return self.end_timestamp - self.start_timestamp
-
-    def __eq__(self, other):
-        return isinstance(other, Period) and other.id == self.id
 
 
 class Origin(Enum):
@@ -375,9 +459,8 @@ class Origin(Enum):
 
 @dataclass
 class CoordinateSystem(ABC):
-    normalized: bool
-    length: float = None
-    width: float = None
+    pitch_length: Optional[float] = None
+    pitch_width: Optional[float] = None
 
     def __eq__(self, other):
         if isinstance(other, CoordinateSystem):
@@ -409,6 +492,10 @@ class CoordinateSystem(ABC):
     def pitch_dimensions(self) -> PitchDimensions:
         raise NotImplementedError
 
+    @property
+    def normalized(self) -> bool:
+        return isinstance(self.pitch_dimensions, NormalizedPitchDimensions)
+
 
 @dataclass
 class KloppyCoordinateSystem(CoordinateSystem):
@@ -426,18 +513,21 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-
-        if self.length is not None and self.width is not None:
-            return PitchDimensions(
+        if self.pitch_length is not None and self.pitch_width is not None:
+            return NormalizedPitchDimensions(
                 x_dim=Dimension(0, 1),
                 y_dim=Dimension(0, 1),
-                length=self.length,
-                width=self.width,
+                pitch_length=self.pitch_length,
+                pitch_width=self.pitch_width,
+                standardized=False,
             )
         else:
-            return PitchDimensions(
+            return NormalizedPitchDimensions(
                 x_dim=Dimension(0, 1),
                 y_dim=Dimension(0, 1),
+                pitch_length=105,
+                pitch_width=68,
+                standardized=True,
             )
 
 
@@ -464,12 +554,13 @@ class TracabCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(-1 * self.length * 100 / 2, self.length * 100 / 2),
-            y_dim=Dimension(-1 * self.width * 100 / 2, self.width * 100 / 2),
-            length=self.length,
-            width=self.width,
-        )
+        return MetricPitchDimensions(
+            x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+            y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
+        ).convert(to_unit=Unit.CENTIMETERS)
 
 
 @dataclass
@@ -488,11 +579,12 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
-            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
-            length=self.length,
-            width=self.width,
+        return MetricPitchDimensions(
+            x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+            y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
         )
 
 
@@ -512,14 +604,13 @@ class OptaCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(0, 100),
-            y_dim=Dimension(0, 100),
+        return OptaPitchDimensions(
+            pitch_length=self.pitch_length, pitch_width=self.pitch_width
         )
 
 
 @dataclass
-class SportecCoordinateSystem(CoordinateSystem):
+class SportecEventDataCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -534,11 +625,37 @@ class SportecCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(0, self.length),
-            y_dim=Dimension(0, self.width),
-            length=self.length,
-            width=self.width,
+        return MetricPitchDimensions(
+            x_dim=Dimension(0, self.pitch_length),
+            y_dim=Dimension(0, self.pitch_width),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
+        )
+
+
+@dataclass
+class SportecTrackingDataCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SPORTEC
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(-self.pitch_length / 2, self.pitch_length / 2),
+            y_dim=Dimension(-self.pitch_width / 2, self.pitch_width / 2),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
         )
 
 
@@ -558,9 +675,12 @@ class StatsBombCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
+        return ImperialPitchDimensions(
             x_dim=Dimension(0, 120),
             y_dim=Dimension(0, 80),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=True,
         )
 
 
@@ -579,9 +699,8 @@ class WyscoutCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(0, 100),
-            y_dim=Dimension(0, 100),
+        return WyscoutPitchDimensions(
+            pitch_length=self.pitch_length, pitch_width=self.pitch_width
         )
 
 
@@ -601,11 +720,12 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(-1 * self.length / 2, self.length / 2),
-            y_dim=Dimension(-1 * self.width / 2, self.width / 2),
-            length=self.length,
-            width=self.width,
+        return MetricPitchDimensions(
+            x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+            y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
+            standardized=False,
         )
 
 
@@ -625,10 +745,22 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
-            x_dim=Dimension(-1, 1),
-            y_dim=Dimension(-1, 1),
-        )
+        if self.pitch_length is not None and self.pitch_width is not None:
+            return NormalizedPitchDimensions(
+                x_dim=Dimension(-1, 1),
+                y_dim=Dimension(-1, 1),
+                pitch_length=self.pitch_length,
+                pitch_width=self.pitch_width,
+                standardized=False,
+            )
+        else:
+            return NormalizedPitchDimensions(
+                x_dim=Dimension(-1, 1),
+                y_dim=Dimension(-1, 1),
+                pitch_length=105,
+                pitch_width=68,
+                standardized=True,
+            )
 
 
 @dataclass
@@ -647,48 +779,80 @@ class StatsPerformCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return PitchDimensions(
+        # FIXME: This does not seem correct
+        return NormalizedPitchDimensions(
             x_dim=Dimension(0, 100),
             y_dim=Dimension(0, 100),
-            length=self.length,
-            width=self.width,
+            pitch_length=105,
+            pitch_width=68,
+            standardized=True,
         )
 
 
-def build_coordinate_system(provider: Provider, **kwargs):
+class DatasetType(Enum):
+    """
+    DatasetType
 
-    if provider == Provider.TRACAB:
-        return TracabCoordinateSystem(normalized=False, **kwargs)
+    Attributes:
+        TRACKING (DatasetType):
+        EVENT (DatasetType):
+        CODE (DatasetType):
+    """
 
-    if provider == Provider.KLOPPY:
-        return KloppyCoordinateSystem(normalized=True, **kwargs)
+    TRACKING = "TRACKING"
+    EVENT = "EVENT"
+    CODE = "CODE"
 
-    if provider == Provider.METRICA:
-        return MetricaCoordinateSystem(normalized=True, **kwargs)
+    def __repr__(self):
+        return self.value
 
-    if provider == Provider.OPTA:
-        return OptaCoordinateSystem(normalized=False, **kwargs)
 
-    if provider == Provider.SPORTEC:
-        return SportecCoordinateSystem(normalized=False, **kwargs)
+def build_coordinate_system(
+    provider: Provider,
+    dataset_type: DatasetType = DatasetType.EVENT,
+    pitch_length: Optional[float] = None,
+    pitch_width: Optional[float] = None,
+) -> CoordinateSystem:
+    """Build a coordinate system for a given provider and dataset type.
 
-    if provider == Provider.STATSBOMB:
-        return StatsBombCoordinateSystem(normalized=False, **kwargs)
+    Args:
+        provider: The provider of the dataset.
+        dataset_type: The type of the dataset.
+        pitch_length: The real length of the pitch.
+        pitch_width: The real width of the pitch.
 
-    if provider == Provider.WYSCOUT:
-        return WyscoutCoordinateSystem(normalized=False, **kwargs)
+    Returns:
+        The coordinate system for the given provider and dataset type.
+    """
+    coordinate_systems = {
+        Provider.TRACAB: TracabCoordinateSystem,
+        Provider.KLOPPY: KloppyCoordinateSystem,
+        Provider.METRICA: MetricaCoordinateSystem,
+        Provider.OPTA: OptaCoordinateSystem,
+        Provider.SPORTEC: {
+            DatasetType.EVENT: SportecEventDataCoordinateSystem,
+            DatasetType.TRACKING: SportecTrackingDataCoordinateSystem,
+        },
+        Provider.STATSBOMB: StatsBombCoordinateSystem,
+        Provider.WYSCOUT: WyscoutCoordinateSystem,
+        Provider.SKILLCORNER: SkillCornerCoordinateSystem,
+        Provider.DATAFACTORY: DatafactoryCoordinateSystem,
+        Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
+        Provider.STATSPERFORM: StatsPerformCoordinateSystem,
+    }
 
-    if provider == Provider.SKILLCORNER:
-        return SkillCornerCoordinateSystem(normalized=False, **kwargs)
-
-    if provider == Provider.DATAFACTORY:
-        return DatafactoryCoordinateSystem(normalized=False, **kwargs)
-
-    if provider == Provider.SECONDSPECTRUM:
-        return SecondSpectrumCoordinateSystem(normalized=False, **kwargs)
-
-    if provider == Provider.STATSPERFORM:
-        return StatsPerformCoordinateSystem(normalized=False, **kwargs)
+    if provider in coordinate_systems:
+        if isinstance(coordinate_systems[provider], dict):
+            assert dataset_type in coordinate_systems[provider]
+            return coordinate_systems[provider][dataset_type](
+                pitch_length=pitch_length, pitch_width=pitch_width
+            )
+        else:
+            return coordinate_systems[provider](
+                pitch_length=pitch_length, pitch_width=pitch_width
+            )
+    else:
+        raise ValueError(f"Invalid provider: {provider}")
 
 
 class DatasetFlag(Flag):
@@ -703,7 +867,7 @@ class DataRecord(ABC):
 
     Attributes:
         period: See [`Period`][kloppy.domain.models.common.Period]
-        timestamp: Timestamp of occurrence
+        timestamp: Timestamp of occurrence, relative to the period kick-off
         ball_owning_team: See [`Team`][kloppy.domain.models.common.Team]
         ball_state: See [`Team`][kloppy.domain.models.common.BallState]
     """
@@ -712,7 +876,7 @@ class DataRecord(ABC):
     prev_record: Optional["DataRecord"] = field(init=False)
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
-    timestamp: float
+    timestamp: timedelta
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 
@@ -736,6 +900,23 @@ class DataRecord(ABC):
         self.prev_record = prev
         self.next_record = next_
 
+    @property
+    def attacking_direction(self):
+        if (
+            self.dataset
+            and self.dataset.metadata
+            and self.dataset.metadata.orientation is not None
+        ):
+            try:
+                return AttackingDirection.from_orientation(
+                    self.dataset.metadata.orientation,
+                    period=self.period,
+                    ball_owning_team=self.ball_owning_team,
+                )
+            except OrientationError:
+                return AttackingDirection.NOT_SET
+        return AttackingDirection.NOT_SET
+
     def matches(self, filter_) -> bool:
         if filter_ is None:
             return True
@@ -744,7 +925,7 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(self, filter_=None) -> Optional["DataRecord"]:
+    def prev(self, filter_=None) -> Optional[Self]:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -752,7 +933,7 @@ class DataRecord(ABC):
                     return prev_record
                 prev_record = prev_record.prev_record
 
-    def next(self, filter_=None) -> Optional["DataRecord"]:
+    def next(self, filter_=None) -> Optional[Self]:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -788,31 +969,18 @@ class Metadata:
     teams: List[Team]
     periods: List[Period]
     pitch_dimensions: PitchDimensions
-    score: Score
-    frame_rate: float
     orientation: Orientation
     flags: DatasetFlag
     provider: Provider
     coordinate_system: CoordinateSystem
+    score: Optional[Score] = None
+    frame_rate: Optional[float] = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
-
-class DatasetType(Enum):
-    """
-    DatasetType
-
-    Attributes:
-        TRACKING (DatasetType):
-        EVENT (DatasetType):
-        CODE (DatasetType):
-    """
-
-    TRACKING = "TRACKING"
-    EVENT = "EVENT"
-    CODE = "CODE"
-
-    def __repr__(self):
-        return self.value
+    def __post_init__(self):
+        if self.coordinate_system is not None:
+            # set the pitch dimensions from the coordinate system
+            self.pitch_dimensions = self.coordinate_system.pitch_dimensions
 
 
 T = TypeVar("T", bound="DataRecord")
@@ -839,6 +1007,9 @@ class Dataset(ABC, Generic[T]):
 
     def __getitem__(self, item):
         return self.records[item]
+
+    def __len__(self):
+        return len(self.records)
 
     def __post_init__(self):
         for i, record in enumerate(self.records):
@@ -966,7 +1137,6 @@ class Dataset(ABC, Generic[T]):
         as_list: bool = True,
         **named_columns: "Column",
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
-
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -984,7 +1154,6 @@ class Dataset(ABC, Generic[T]):
         orient: Literal["list"] = "list",
         **named_columns: "Column",
     ) -> Dict[str, List[Any]]:
-
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 

@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timedelta
 
 import pytest
 from pandas import DataFrame
@@ -115,15 +116,37 @@ class TestMetricaEPTSTracking:
 
         assert len(dataset.records) == 100
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation is Orientation.HOME_TEAM
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=18
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=19.96
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=26
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=27.96
+        )
+        assert dataset.metadata.orientation is Orientation.HOME_AWAY
+
+        assert dataset.records[0].frame_id == 450
+        assert dataset.records[0].timestamp == timedelta(
+            seconds=0
+        )  # kickoff first half
+        assert dataset.records[50].frame_id == 650
+        assert dataset.records[50].timestamp == timedelta(
+            seconds=0
+        )  # kickoff second half
 
         assert dataset.records[0].players_data[
             first_player
         ].coordinates == Point(x=0.30602, y=0.97029)
 
-        assert dataset.records[0].ball_coordinates == Point3D(
-            x=0.52867, y=0.7069, z=None
-        )
+        assert dataset.records[0].ball_coordinates.x == pytest.approx(0.52867)
+        assert dataset.records[0].ball_coordinates.y == pytest.approx(0.7069)
 
     def test_other_data_deserialization(self, meta_data: str, raw_data: str):
         dataset = metrica.load_tracking_epts(
@@ -182,3 +205,9 @@ class TestMetricaEPTSTracking:
         # x,y coordinates of the first player are empty. Check if they are nan's
         assert first_player_x != first_player_x
         assert first_player_y != first_player_y
+
+    def test_read_metadata_withou_score_field(self, base_dir):
+        with open(
+            base_dir / "files/epts_metrica_metadata_without_score.xml", "rb"
+        ) as metadata_fp:
+            metadata = load_metadata(metadata_fp)

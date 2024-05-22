@@ -51,7 +51,6 @@ class MetricaEPTSTrackingDataDeserializer(
         players_data = {}
         for team in metadata.teams:
             for player in team.players:
-
                 other_data = {}
                 for sensor in other_sensors:
                     player_sensor_field_str = f"player_{player.player_id}_{sensor.channels[0].channel_id}"
@@ -100,9 +99,8 @@ class MetricaEPTSTrackingDataDeserializer(
 
             if metadata.provider and metadata.pitch_dimensions:
                 transformer = self.get_transformer(
-                    length=metadata.pitch_dimensions.length,
-                    width=metadata.pitch_dimensions.width,
-                    provider=metadata.coordinate_system.provider,
+                    pitch_length=metadata.pitch_dimensions.pitch_length,
+                    pitch_width=metadata.pitch_dimensions.pitch_width,
                 )
             else:
                 transformer = None

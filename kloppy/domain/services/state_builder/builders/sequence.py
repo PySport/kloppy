@@ -43,7 +43,6 @@ class SequenceStateBuilder(StateBuilder):
         return state
 
     def reduce_after(self, state: Sequence, event: Event) -> Sequence:
-
         if isinstance(event, CLOSE_SEQUENCE):
             state = replace(
                 state, sequence_id=state.sequence_id + 1, team=None

@@ -274,9 +274,9 @@ class DefaultFrameTransformer:
             ball_z=getattr(frame.ball_coordinates, "z", None)
             if frame.ball_coordinates
             else None,
+            ball_speed=frame.ball_speed,
         )
         for player, player_data in frame.players_data.items():
-
             row.update(
                 {
                     f"{player.player_id}_x": player_data.coordinates.x

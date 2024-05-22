@@ -48,7 +48,6 @@ def load(
     ) as lineup_data_fp, open_as_file(
         Source.create(three_sixty_data, optional=True)
     ) as three_sixty_data_fp:
-
         return deserializer.deserialize(
             inputs=StatsBombInputs(
                 event_data=event_data_fp,

@@ -1,5 +1,8 @@
 import logging
-from typing import Tuple, Dict, NamedTuple, IO, Optional, Union
+from datetime import timedelta
+import warnings
+from typing import Dict, Optional, Union
+import html
 
 from lxml import objectify
 
@@ -25,17 +28,13 @@ from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from .deserializer import TrackingDataDeserializer
+from .common import TRACABInputs
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
 
-class TRACABInputs(NamedTuple):
-    meta_data: IO[bytes]
-    raw_data: IO[bytes]
-
-
-class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
+class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -65,23 +64,23 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 team = teams[0]
             elif team_id == 0:
                 team = teams[1]
-            else:
-                # it's probably -1, but make sure it doesn't crash
+            elif team_id in (-1, 3, 4):
                 continue
+            else:
+                raise DeserializationError(
+                    f"Unknown Player Team ID: {team_id}"
+                )
 
             player = team.get_player_by_jersey_number(jersey_no)
-
-            if not player:
-                player = Player(
-                    player_id=f"{team.ground}_{jersey_no}",
-                    team=team,
-                    jersey_no=int(jersey_no),
+            if player:
+                players_data[player] = PlayerData(
+                    coordinates=Point(float(x), float(y)), speed=float(speed)
                 )
-                team.players.append(player)
-
-            players_data[player] = PlayerData(
-                coordinates=Point(float(x), float(y)), speed=float(speed)
-            )
+            else:
+                # continue
+                raise DeserializationError(
+                    f"Player not found for player jersey no {jersey_no} of team: {team.name}"
+                )
 
         (
             ball_x,
@@ -112,7 +111,8 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_id / frame_rate - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
             ball_coordinates=Point3D(
                 float(ball_x), float(ball_y), float(ball_z)
             ),
@@ -130,14 +130,37 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
-        # TODO: also used in Metrica, extract to a method
-        home_team = Team(team_id="home", name="home", ground=Ground.HOME)
-        away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
-        teams = [home_team, away_team]
+    @staticmethod
+    def create_team(team_data, ground, start_frame_id):
+        team = Team(
+            team_id=str(team_data["TeamId"]),
+            name=html.unescape(team_data["ShortName"]),
+            ground=ground,
+        )
 
+        team.players = [
+            Player(
+                player_id=str(player["PlayerId"]),
+                team=team,
+                first_name=html.unescape(player["FirstName"]),
+                last_name=html.unescape(player["LastName"]),
+                name=html.unescape(
+                    player["FirstName"] + " " + player["LastName"]
+                ),
+                jersey_no=int(player["JerseyNo"]),
+                starting=True
+                if player["StartFrameCount"] == start_frame_id
+                else False,
+            )
+            for player in team_data["Players"]["Player"]
+        ]
+
+        return team
+
+    def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
         with performance_logging("Loading metadata", logger=logger):
-            match = objectify.fromstring(inputs.meta_data.read()).match
+            meta_data = objectify.fromstring(inputs.meta_data.read())
+            match = meta_data.match
             frame_rate = int(match.attrib["iFrameRateFps"])
             pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
             pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
@@ -150,15 +173,26 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     periods.append(
                         Period(
                             id=int(period.attrib["iId"]),
-                            start_timestamp=start_frame_id / frame_rate,
-                            end_timestamp=end_frame_id / frame_rate,
+                            start_timestamp=timedelta(
+                                seconds=start_frame_id / frame_rate
+                            ),
+                            end_timestamp=timedelta(
+                                seconds=end_frame_id / frame_rate
+                            ),
                         )
                     )
 
-        with performance_logging("Loading data", logger=logger):
+            home_team = self.create_team(
+                meta_data["HomeTeam"], Ground.HOME, start_frame_id
+            )
+            away_team = self.create_team(
+                meta_data["AwayTeam"], Ground.AWAY, start_frame_id
+            )
+            teams = [home_team, away_team]
 
+        with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():
@@ -175,7 +209,11 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         continue
 
                     for period_ in periods:
-                        if period_.contains(frame_id / frame_rate):
+                        if (
+                            period_.start_timestamp
+                            <= timedelta(seconds=frame_id / frame_rate)
+                            <= period_.end_timestamp
+                        ):
                             if n % sample == 0:
                                 yield period_, line_
                             n += 1
@@ -185,24 +223,26 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 frame = self._frame_from_line(teams, period, line, frame_rate)
 
                 frame = transformer.transform_frame(frame)
-
                 frames.append(frame)
-
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(
-                            frame
-                        )
-                    )
 
                 if self.limit and n >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

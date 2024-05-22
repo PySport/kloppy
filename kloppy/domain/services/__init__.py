@@ -2,7 +2,7 @@ from typing import List
 
 from kloppy.domain import AttackingDirection, Frame, Ground
 
-from .transformers import DatasetTransformer
+from .transformers import DatasetTransformer, DatasetTransformerBuilder
 from .event_factory import EventFactory, create_event
 
 # NOT YET: from .enrichers import TrackingPossessionEnricher
@@ -15,7 +15,7 @@ def avg(items: List[float]) -> float:
 
 
 def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
-    """This method should only be called for the first frame of a"""
+    """This method should only be called for the first frame of a period."""
     avg_x_home = avg(
         [
             player_data.coordinates.x
@@ -32,6 +32,6 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
     )
 
     if avg_x_home < avg_x_away:
-        return AttackingDirection.HOME_AWAY
+        return AttackingDirection.LTR
     else:
-        return AttackingDirection.AWAY_HOME
+        return AttackingDirection.RTL

@@ -1,26 +1,33 @@
-from typing import Tuple, Dict, List, NamedTuple, IO
+import math
+from typing import Tuple, Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime
 import pytz
 from lxml import objectify
+from lxml.objectify import ObjectifiedElement
 
 from kloppy.domain import (
     EventDataset,
     Team,
     Period,
     Point,
+    Point3D,
     BallState,
     DatasetFlag,
     Orientation,
     PassResult,
     ShotResult,
     TakeOnResult,
+    DuelResult,
+    DuelType,
+    DuelQualifier,
     Ground,
     Score,
     Provider,
     Metadata,
     Player,
     Position,
+    InterceptionResult,
     FormationType,
     CardType,
     CardQualifier,
@@ -31,6 +38,9 @@ from kloppy.domain import (
     BodyPart,
     PassType,
     PassQualifier,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
+    CounterAttackQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -45,6 +55,10 @@ EVENT_TYPE_DELETED_EVENT = 43
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
 EVENT_TYPE_TAKE_ON = 3
+EVENT_TYPE_TACKLE = 7
+EVENT_TYPE_AERIAL = 44
+EVENT_TYPE_50_50 = 67
+EVENT_TYPE_INTERCEPTION = 8
 EVENT_TYPE_CLEARANCE = 12
 EVENT_TYPE_SHOT_MISS = 13
 EVENT_TYPE_SHOT_POST = 14
@@ -56,8 +70,28 @@ EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
 EVENT_TYPE_FORMATION_CHANGE = 40
+EVENT_TYPE_BALL_TOUCH = 61
+EVENT_TYPE_BLOCKED_PASS = 74
+
+EVENT_TYPE_SAVE = 10
+EVENT_TYPE_CLAIM = 11
+EVENT_TYPE_PUNCH = 41
+EVENT_TYPE_KEEPER_PICK_UP = 52
+EVENT_TYPE_SMOTHER = 54
+KEEPER_EVENTS = [
+    EVENT_TYPE_SAVE,
+    EVENT_TYPE_CLAIM,
+    EVENT_TYPE_PUNCH,
+    EVENT_TYPE_KEEPER_PICK_UP,
+    EVENT_TYPE_SMOTHER,
+]
 
 BALL_OUT_EVENTS = [EVENT_TYPE_BALL_OUT, EVENT_TYPE_CORNER_AWARDED]
+DUEL_EVENTS = [
+    EVENT_TYPE_TACKLE,
+    EVENT_TYPE_AERIAL,
+    EVENT_TYPE_50_50,
+]
 
 BALL_OWNING_EVENTS = (
     EVENT_TYPE_PASS,
@@ -68,6 +102,7 @@ BALL_OWNING_EVENTS = (
     EVENT_TYPE_SHOT_SAVED,
     EVENT_TYPE_SHOT_GOAL,
     EVENT_TYPE_RECOVERY,
+    EVENT_TYPE_BALL_TOUCH,
 )
 
 EVENT_QUALIFIER_GOAL_KICK = 124
@@ -91,12 +126,14 @@ EVENT_QUALIFIER_CHIPPED_BALL = 155
 EVENT_QUALIFIER_LAUNCH = 157
 EVENT_QUALIFIER_FLICK_ON = 168
 EVENT_QUALIFIER_SWITCH_OF_PLAY = 196
-EVENT_QUALIFIER_ASSIST = 210
+EVENT_QUALIFIER_SHOT_ASSIST = 210
 EVENT_QUALIFIER_ASSIST_2ND = 218
 
 EVENT_QUALIFIER_FIRST_YELLOW_CARD = 31
 EVENT_QUALIFIER_SECOND_YELLOW_CARD = 32
 EVENT_QUALIFIER_RED_CARD = 33
+
+EVENT_QUALIFIER_COUNTER_ATTACK = 23
 
 EVENT_QUALIFIER_TEAM_FORMATION = 130
 
@@ -208,28 +245,47 @@ formations = {
 }
 
 
-def _parse_f24_datetime(dt_str: str) -> float:
-    return (
-        datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
-        .replace(tzinfo=pytz.utc)
-        .timestamp()
+def _parse_f24_datetime(dt_str: str) -> datetime:
+    def zero_pad_milliseconds(timestamp):
+        parts = timestamp.split(".")
+        return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
+
+    dt_str = zero_pad_milliseconds(dt_str)
+    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").replace(
+        tzinfo=pytz.utc
     )
+
+
+def _create_periods(match_result_type: str) -> List[Period]:
+    if match_result_type == "AfterExtraTime":
+        num_periods = 4
+    elif match_result_type == "PenaltyShootout":
+        num_periods = 5
+    else:
+        num_periods = 2
+
+    periods = [
+        Period(
+            id=period_id,
+            start_timestamp=None,
+            end_timestamp=None,
+        )
+        for period_id in range(1, num_periods + 1)
+    ]
+
+    return periods
 
 
 def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     if outcome:
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-        # receiver_coordinates = None
-        receiver_coordinates = Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        )
+    receiver_coordinates = _get_end_coordinates(raw_qualifiers)
+    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
 
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    qualifiers = pass_qualifiers + overall_qualifiers
 
     return dict(
         result=result,
@@ -240,13 +296,15 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     )
 
 
-def _parse_offside_pass(raw_qualifiers: List) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+def _parse_offside_pass(raw_qualifiers: Dict[int, str]) -> Dict:
+    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
+
+    qualifiers = pass_qualifiers + overall_qualifiers
+
     return dict(
         result=PassResult.OFFSIDE,
-        receiver_coordinates=Point(
-            x=float(raw_qualifiers[140]), y=float(raw_qualifiers[141])
-        ),
+        receiver_coordinates=_get_end_coordinates(raw_qualifiers),
         receiver_player=None,
         receive_timestamp=None,
         qualifiers=qualifiers,
@@ -261,11 +319,11 @@ def _parse_take_on(outcome: int) -> Dict:
     return dict(result=result)
 
 
-def _parse_clearance(raw_qualifiers: List) -> Dict:
+def _parse_clearance(raw_qualifiers: Dict[int, str]) -> Dict:
     return dict(qualifiers=_get_event_qualifiers(raw_qualifiers))
 
 
-def _parse_card(raw_qualifiers: List) -> Dict:
+def _parse_card(raw_qualifiers: Dict[int, str]) -> Dict:
     qualifiers = _get_event_qualifiers(raw_qualifiers)
 
     if EVENT_QUALIFIER_RED_CARD in qualifiers:
@@ -280,7 +338,7 @@ def _parse_card(raw_qualifiers: List) -> Dict:
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
 
 
-def _parse_formation_change(raw_qualifiers: List) -> Dict:
+def _parse_formation_change(raw_qualifiers: Dict[int, str]) -> Dict:
     formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
     formation = formations[formation_id]
 
@@ -298,12 +356,100 @@ def _parse_shot(
             # timestamp =
         else:
             result = ShotResult.GOAL
+    elif 82 in raw_qualifiers:
+        result = ShotResult.BLOCKED
+    elif type_id == EVENT_TYPE_SHOT_MISS:
+        result = ShotResult.OFF_TARGET
+    elif type_id == EVENT_TYPE_SHOT_POST:
+        result = ShotResult.OFF_TARGET
+    elif type_id == EVENT_TYPE_SHOT_SAVED:
+        result = ShotResult.SAVED
     else:
         result = None
 
     qualifiers = _get_event_qualifiers(raw_qualifiers)
+    result_coordinates = _get_end_coordinates(
+        raw_qualifiers, start_coordinates=coordinates
+    )
+    if result == ShotResult.OWN_GOAL:
+        if isinstance(result_coordinates, Point3D):
+            result_coordinates = Point3D(
+                x=100 - result_coordinates.x,
+                y=100 - result_coordinates.y,
+                z=result_coordinates.z,
+            )
+        elif isinstance(result_coordinates, Point):
+            result_coordinates = Point(
+                x=100 - result_coordinates.x,
+                y=100 - result_coordinates.y,
+            )
 
-    return dict(coordinates=coordinates, result=result, qualifiers=qualifiers)
+    return dict(
+        coordinates=coordinates,
+        result=result,
+        result_coordinates=result_coordinates,
+        qualifiers=qualifiers,
+    )
+
+
+def _parse_goalkeeper_events(
+    raw_qualifiers: Dict[int, str], type_id: int
+) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(type_id)
+    qualifiers.extend(goalkeeper_qualifiers)
+
+    return dict(result=None, qualifiers=qualifiers)
+
+
+def _parse_duel(
+    raw_qualifiers: Dict[int, str], type_id: int, outcome: int
+) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    if type_id == EVENT_TYPE_TACKLE:
+        qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
+    elif type_id == EVENT_TYPE_AERIAL:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    elif type_id == EVENT_TYPE_50_50:
+        qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.GROUND),
+            ]
+        )
+
+    result = DuelResult.WON if outcome else DuelResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=qualifiers,
+    )
+
+
+def _parse_interception(
+    raw_qualifiers: Dict[int, str], team: Team, next_event: ObjectifiedElement
+) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    result = InterceptionResult.SUCCESS
+
+    if next_event is not None:
+        next_event_type_id = int(next_event.attrib["type_id"])
+        if next_event_type_id in BALL_OUT_EVENTS:
+            result = InterceptionResult.OUT
+        elif (next_event_type_id in BALL_OWNING_EVENTS) and (
+            next_event.attrib["team_id"] != team.team_id
+        ):
+            result = InterceptionResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=qualifiers,
+    )
 
 
 def _parse_team_players(
@@ -371,37 +517,88 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     return team
 
 
-def _get_event_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_end_coordinates(
+    raw_qualifiers: Dict[int, str], start_coordinates: Optional[Point] = None
+) -> Optional[Point]:
+    x, y, z = None, None, None
+
+    # pass
+    if 140 in raw_qualifiers and 141 in raw_qualifiers:
+        x = float(raw_qualifiers[140])
+        y = float(raw_qualifiers[141])
+
+    # blocked shot
+    elif 146 in raw_qualifiers and 147 in raw_qualifiers:
+        x = float(raw_qualifiers[146])
+        y = float(raw_qualifiers[147])
+        if 102 in raw_qualifiers and 103 in raw_qualifiers:
+            # the goal mouth z-coordinate is projected back to the location
+            # where the shot was blocked
+            assert start_coordinates is not None
+            x0, y0 = start_coordinates.x, start_coordinates.y
+            x_proj = float(100)
+            y_proj = float(raw_qualifiers[102])
+            z_proj = float(raw_qualifiers[103])
+            adj_proj = math.sqrt((x_proj - x0) ** 2 + (y_proj - y0) ** 2)
+            adj_block = math.sqrt((x - x0) ** 2 + (y - y0) ** 2)
+            z = z_proj / adj_proj * adj_block
+
+    # passed the goal line
+    elif 102 in raw_qualifiers:
+        x = float(100)
+        y = float(raw_qualifiers[102])
+        if 103 in raw_qualifiers:
+            z = float(raw_qualifiers[103])
+
+    if x is not None and y is not None and z is not None:
+        return Point3D(x=x, y=y, z=z)
+    if x is not None and y is not None:
+        return Point(x=x, y=y)
+
+    return None
+
+
+def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     qualifiers = []
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
-    qualifiers.extend(_get_event_pass_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_card_qualifiers(raw_qualifiers))
+    qualifiers.extend(_get_event_counter_attack_qualifiers(raw_qualifiers))
     return qualifiers
 
 
-def _get_event_pass_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     qualifiers = []
-    if EVENT_QUALIFIER_CROSS in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.CROSS))
-    elif EVENT_QUALIFIER_LONG_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.LONG_BALL))
-    elif EVENT_QUALIFIER_CHIPPED_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.CHIPPED_PASS))
-    elif EVENT_QUALIFIER_THROUGH_BALL in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.THROUGH_BALL))
-    elif EVENT_QUALIFIER_LAUNCH in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.LAUNCH))
-    elif EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.FLICK_ON))
-    elif EVENT_QUALIFIER_ASSIST in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST))
-    elif EVENT_QUALIFIER_ASSIST_2ND in raw_qualifiers:
-        qualifiers.append(PassQualifier(value=PassType.ASSIST_2ND))
+    pass_qualifier_mapping = {
+        EVENT_QUALIFIER_CROSS: PassType.CROSS,
+        EVENT_QUALIFIER_LONG_BALL: PassType.LONG_BALL,
+        EVENT_QUALIFIER_CHIPPED_BALL: PassType.CHIPPED_PASS,
+        EVENT_QUALIFIER_THROUGH_BALL: PassType.THROUGH_BALL,
+        EVENT_QUALIFIER_LAUNCH: PassType.LAUNCH,
+        EVENT_QUALIFIER_FLICK_ON: PassType.FLICK_ON,
+        EVENT_QUALIFIER_ASSIST_2ND: PassType.ASSIST_2ND,
+    }
+    for (
+        sp_pass_qualifier,
+        pass_qualifier_value,
+    ) in pass_qualifier_mapping.items():
+        if sp_pass_qualifier in raw_qualifiers:
+            qualifiers.append(PassQualifier(value=pass_qualifier_value))
+
+    if EVENT_QUALIFIER_SHOT_ASSIST in raw_qualifiers:
+        qualifiers.append(PassQualifier(value=PassType.SHOT_ASSIST))
+        shot_result_qualifier = int(
+            raw_qualifiers[EVENT_QUALIFIER_SHOT_ASSIST]
+        )
+        if shot_result_qualifier == EVENT_TYPE_SHOT_GOAL:
+            qualifiers.append(PassQualifier(value=PassType.ASSIST))
+
     return qualifiers
 
 
-def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_event_setpiece_qualifiers(
+    raw_qualifiers: Dict[int, str]
+) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
@@ -421,7 +618,9 @@ def _get_event_setpiece_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_event_bodypart_qualifiers(
+    raw_qualifiers: Dict[int, str]
+) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -436,7 +635,9 @@ def _get_event_bodypart_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
+def _get_event_card_qualifiers(
+    raw_qualifiers: Dict[int, str]
+) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.RED))
@@ -444,6 +645,36 @@ def _get_event_card_qualifiers(raw_qualifiers: List) -> List[Qualifier]:
         qualifiers.append(CardQualifier(value=CardType.FIRST_YELLOW))
     elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.SECOND_YELLOW))
+
+    return qualifiers
+
+
+def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
+    qualifiers = []
+    goalkeeper_qualifier = None
+    if type_id == EVENT_TYPE_SAVE:
+        goalkeeper_qualifier = GoalkeeperActionType.SAVE
+    elif type_id == EVENT_TYPE_CLAIM:
+        goalkeeper_qualifier = GoalkeeperActionType.CLAIM
+    elif type_id == EVENT_TYPE_PUNCH:
+        goalkeeper_qualifier = GoalkeeperActionType.PUNCH
+    elif type_id == EVENT_TYPE_KEEPER_PICK_UP:
+        goalkeeper_qualifier = GoalkeeperActionType.PICK_UP
+    elif type_id == EVENT_TYPE_SMOTHER:
+        goalkeeper_qualifier = GoalkeeperActionType.SMOTHER
+
+    if goalkeeper_qualifier:
+        qualifiers.append(GoalkeeperQualifier(value=goalkeeper_qualifier))
+
+    return qualifiers
+
+
+def _get_event_counter_attack_qualifiers(
+    raw_qualifiers: Dict[int, str],
+) -> List[Qualifier]:
+    qualifiers = []
+    if EVENT_QUALIFIER_COUNTER_ATTACK in raw_qualifiers:
+        qualifiers.append(CounterAttackQualifier(True))
 
     return qualifiers
 
@@ -463,7 +694,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
         return Provider.OPTA
 
     def deserialize(self, inputs: OptaInputs) -> EventDataset:
-        transformer = self.get_transformer(length=100, width=100)
+        transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
             f7_root = objectify.fromstring(inputs.f7_data.read())
@@ -473,6 +704,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             matchdata_path = objectify.ObjectPath(
                 "SoccerFeed.SoccerDocument.MatchData"
             )
+            match_result_path = objectify.ObjectPath(
+                "SoccerFeed.SoccerDocument.MatchData.MatchInfo.Result"
+            )
             team_elms = list(
                 matchdata_path.find(f7_root).iterchildren("TeamData")
             )
@@ -481,10 +715,10 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             away_score = None
             for team_elm in team_elms:
                 if team_elm.attrib["Side"] == "Home":
-                    home_score = team_elm.attrib["Score"]
+                    home_score = int(team_elm.attrib["Score"])
                     home_team = _team_from_xml_elm(team_elm, f7_root)
                 elif team_elm.attrib["Side"] == "Away":
-                    away_score = team_elm.attrib["Score"]
+                    away_score = int(team_elm.attrib["Score"])
                     away_team = _team_from_xml_elm(team_elm, f7_root)
                 else:
                     raise DeserializationError(
@@ -492,26 +726,29 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
+            match_result_type = list(match_result_path.find(f7_root))[
+                0
+            ].attrib["Type"]
+            periods = _create_periods(match_result_type)
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:
                 raise DeserializationError("LineUp incomplete")
 
             game_elm = f24_root.find("Game")
-            periods = [
-                Period(
-                    id=1,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-                Period(
-                    id=2,
-                    start_timestamp=None,
-                    end_timestamp=None,
-                ),
-            ]
+
             possession_team = None
             events = []
-            for event_elm in game_elm.iterchildren("Event"):
+            events_list = [
+                event
+                for event in list(game_elm.iterchildren("Event"))
+                if int(event.attrib["type_id"]) != EVENT_TYPE_DELETED_EVENT
+            ]
+            for idx, event_elm in enumerate(events_list):
+                next_event_elm = (
+                    events_list[idx + 1]
+                    if (idx + 1) < len(events_list)
+                    else None
+                )
                 event_id = event_elm.attrib["id"]
                 type_id = int(event_elm.attrib["type_id"])
                 timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
@@ -535,11 +772,6 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                         f"Set end of period {period.id} to {timestamp}"
                     )
                     period.end_timestamp = timestamp
-                elif type_id == EVENT_TYPE_DELETED_EVENT:
-                    logger.debug(
-                        f"Skipping event {event_id} because it is a deleted event (type id - {type_id})"
-                    )
-                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet
@@ -603,9 +835,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     elif type_id == EVENT_TYPE_TAKE_ON:
                         take_on_event_kwargs = _parse_take_on(outcome)
                         event = self.event_factory.build_take_on(
-                            qualifiers=None,
                             **take_on_event_kwargs,
                             **generic_event_kwargs,
+                            qualifiers=None,
                         )
                     elif type_id in (
                         EVENT_TYPE_SHOT_MISS,
@@ -647,7 +879,41 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **clearance_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_FOUL_COMMITTED:
+                    elif type_id in DUEL_EVENTS:
+                        duel_event_kwargs = _parse_duel(
+                            raw_qualifiers, type_id, outcome
+                        )
+                        event = self.event_factory.build_duel(
+                            **duel_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+                    elif type_id in (
+                        EVENT_TYPE_INTERCEPTION,
+                        EVENT_TYPE_BLOCKED_PASS,
+                    ):
+                        interception_event_kwargs = _parse_interception(
+                            raw_qualifiers, team, next_event_elm
+                        )
+                        event = self.event_factory.build_interception(
+                            **interception_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+                    elif type_id in KEEPER_EVENTS:
+                        goalkeeper_event_kwargs = _parse_goalkeeper_events(
+                            raw_qualifiers, type_id
+                        )
+                        event = self.event_factory.build_goalkeeper_event(
+                            **goalkeeper_event_kwargs, **generic_event_kwargs
+                        )
+                    elif (type_id == EVENT_TYPE_BALL_TOUCH) & (outcome == 0):
+                        event = self.event_factory.build_miscontrol(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
+                        outcome == 0
+                    ):
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,
@@ -696,7 +962,7 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
-            flags=DatasetFlag.BALL_OWNING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             provider=Provider.OPTA,
             coordinate_system=transformer.get_to_coordinate_system(),
         )

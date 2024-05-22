@@ -1,4 +1,5 @@
 from typing import IO
+from datetime import timedelta
 
 from lxml import objectify
 import warnings
@@ -6,6 +7,7 @@ import warnings
 from kloppy.domain import (
     Period,
     PitchDimensions,
+    NormalizedPitchDimensions,
     Dimension,
     Score,
     Ground,
@@ -62,33 +64,26 @@ def _load_periods(
     ]
 
     periods = []
+    start_attacking_direction = AttackingDirection.NOT_SET
 
     for idx, period_name in enumerate(period_names):
         # the attacking direction is only defined for the first period
         # and alternates between periods
-        invert = idx % 2
-        if (
-            provider_teams_params[Ground.HOME].get(
-                "attack_direction_first_half"
-            )
-            == "left_to_right"
-        ):
-            attacking_direction = [
-                AttackingDirection.HOME_AWAY,
-                AttackingDirection.AWAY_HOME,
-            ][invert]
-        elif (
-            provider_teams_params[Ground.HOME].get(
-                "attack_direction_first_half"
-            )
-            == "right_to_left"
-        ):
-            attacking_direction = [
-                AttackingDirection.AWAY_HOME,
-                AttackingDirection.HOME_AWAY,
-            ][invert]
-        else:
-            attacking_direction = AttackingDirection.NOT_SET
+        if idx == 0:
+            if (
+                provider_teams_params[Ground.HOME].get(
+                    "attack_direction_first_half"
+                )
+                == "left_to_right"
+            ):
+                start_attacking_direction = AttackingDirection.LTR
+            elif (
+                provider_teams_params[Ground.HOME].get(
+                    "attack_direction_first_half"
+                )
+                == "right_to_left"
+            ):
+                start_attacking_direction = AttackingDirection.RTL
 
         start_key = f"{period_name}_start"
         end_key = f"{period_name}_end"
@@ -96,17 +91,19 @@ def _load_periods(
             periods.append(
                 Period(
                     id=idx + 1,
-                    start_timestamp=float(provider_params[start_key])
-                    / frame_rate,
-                    end_timestamp=float(provider_params[end_key]) / frame_rate,
-                    attacking_direction=attacking_direction,
+                    start_timestamp=timedelta(
+                        seconds=float(provider_params[start_key]) / frame_rate
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=float(provider_params[end_key]) / frame_rate
+                    ),
                 )
             )
         else:
             # done
             break
 
-    return periods
+    return periods, start_attacking_direction
 
 
 def _load_players(players_elm, team: Team) -> List[Player]:
@@ -178,11 +175,11 @@ def _load_pitch_dimensions(
     field_size_elm = field_size_path.find(metadata_elm).find("FieldSize")
 
     if field_size_elm is not None and normalized:
-        return PitchDimensions(
+        return NormalizedPitchDimensions(
             x_dim=Dimension(0, 1),
             y_dim=Dimension(0, 1),
-            length=int(field_size_elm.find("Width")),
-            width=int(field_size_elm.find("Height")),
+            pitch_length=int(field_size_elm.find("Width")),
+            pitch_width=int(field_size_elm.find("Height")),
         )
     else:
         return None
@@ -227,20 +224,29 @@ def load_metadata(
     score_path = objectify.ObjectPath(
         "Metadata.Sessions.Session[0].MatchParameters.Score"
     )
-    score_elm = score_path.find(metadata)
-    score = Score(
-        home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
-    )
-
-    _team_map = {
-        score_elm.attrib["idLocalTeam"]: Ground.HOME,
-        score_elm.attrib["idVisitingTeam"]: Ground.AWAY,
-    }
 
     _team_name_map = {
         team_elm.attrib["id"]: str(team_elm.find("Name"))
         for team_elm in metadata.find("Teams").iterchildren(tag="Team")
     }
+
+    if score_path.hasattr(metadata):
+        score_elm = score_path.find(metadata)
+        score = Score(
+            home=score_elm.LocalTeamScore, away=score_elm.VisitingTeamScore
+        )
+
+        _team_map = {
+            score_elm.attrib["idLocalTeam"]: Ground.HOME,
+            score_elm.attrib["idVisitingTeam"]: Ground.AWAY,
+        }
+    else:
+        score = Score(home=0, away=0)
+        home_team_id, away_team_id = list(_team_name_map.keys())
+        _team_map = {
+            home_team_id: Ground.HOME,
+            away_team_id: Ground.AWAY,
+        }
 
     teams_metadata = {}
     for team_id, ground in _team_map.items():
@@ -284,30 +290,27 @@ def load_metadata(
 
     frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
     pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
-    periods = _load_periods(metadata, _team_map, frame_rate)
-
-    if periods:
-        start_attacking_direction = periods[0].attacking_direction
-    else:
-        start_attacking_direction = None
-
-    orientation = (
-        (
-            Orientation.HOME_TEAM
-            if start_attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.AWAY_TEAM
-        )
-        if start_attacking_direction != AttackingDirection.NOT_SET
-        else Orientation.NOT_SET
+    periods, start_attacking_direction = _load_periods(
+        metadata, _team_map, frame_rate
     )
 
-    metadata.orientation = orientation
+    if start_attacking_direction != AttackingDirection.NOT_SET:
+        orientation = (
+            Orientation.HOME_AWAY
+            if start_attacking_direction == AttackingDirection.LTR
+            else Orientation.AWAY_HOME
+        )
+    else:
+        warnings.warn(
+            "Could not determine orientation of dataset, defaulting to NOT_SET"
+        )
+        orientation = Orientation.NOT_SET
 
     if provider and pitch_dimensions:
         from_coordinate_system = build_coordinate_system(
             provider,
-            length=pitch_dimensions.length,
-            width=pitch_dimensions.width,
+            pitch_length=pitch_dimensions.pitch_length,
+            pitch_width=pitch_dimensions.pitch_width,
         )
     else:
         from_coordinate_system = None

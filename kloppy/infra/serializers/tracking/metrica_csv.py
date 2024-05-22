@@ -1,5 +1,7 @@
 import logging
+import warnings
 from collections import namedtuple
+from datetime import timedelta
 from typing import Tuple, Dict, Iterator, IO, NamedTuple
 
 from kloppy.domain import (
@@ -89,12 +91,16 @@ class MetricaCSVTrackingDataDeserializer(
                 if period is None or period.id != period_id:
                     period = Period(
                         id=period_id,
-                        start_timestamp=frame_id / frame_rate,
-                        end_timestamp=frame_id / frame_rate,
+                        start_timestamp=timedelta(
+                            seconds=(frame_id - 1) / frame_rate
+                        ),
+                        end_timestamp=timedelta(seconds=frame_id / frame_rate),
                     )
                 else:
                     # consider not update this every frame for performance reasons
-                    period.end_timestamp = frame_id / frame_rate
+                    period.end_timestamp = timedelta(
+                        seconds=frame_id / frame_rate
+                    )
 
                 if frame_idx % frame_sample == 0:
                     yield self.__PartialFrame(
@@ -123,7 +129,6 @@ class MetricaCSVTrackingDataDeserializer(
     def __validate_partials(
         home_partial_frame: __PartialFrame, away_partial_frame: __PartialFrame
     ):
-
         if home_partial_frame.frame_id != away_partial_frame.frame_id:
             raise ValueError(
                 f"frame_id mismatch: home {home_partial_frame.frame_id}, "
@@ -146,14 +151,10 @@ class MetricaCSVTrackingDataDeserializer(
     def deserialize(
         self, inputs: MetricaCSVTrackingDataInputs
     ) -> TrackingDataset:
-        # TODO: consider passing this in __init__
-        length = 105
-        width = 68
-
         # consider reading this from data
         frame_rate = 25
 
-        transformer = self.get_transformer(length=length, width=width)
+        transformer = self.get_transformer()
 
         with performance_logging("prepare", logger=logger):
             home_iterator = self.__create_iterator(
@@ -189,7 +190,8 @@ class MetricaCSVTrackingDataDeserializer(
 
                 frame = Frame(
                     frame_id=frame_id,
-                    timestamp=frame_id / frame_rate - period.start_timestamp,
+                    timestamp=timedelta(seconds=frame_id / frame_rate)
+                    - period.start_timestamp,
                     ball_coordinates=home_partial_frame.ball_coordinates,
                     players_data=players_data,
                     period=period,
@@ -205,13 +207,6 @@ class MetricaCSVTrackingDataDeserializer(
                 if not periods or period.id != periods[-1].id:
                     periods.append(period)
 
-                if not period.attacking_direction_set:
-                    period.set_attacking_direction(
-                        attacking_direction=attacking_direction_from_frame(
-                            frame
-                        )
-                    )
-
                 if n == 0:
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
@@ -219,11 +214,21 @@ class MetricaCSVTrackingDataDeserializer(
                 if self.limit and n >= self.limit:
                     break
 
-        orientation = (
-            Orientation.FIXED_HOME_AWAY
-            if periods[0].attacking_direction == AttackingDirection.HOME_AWAY
-            else Orientation.FIXED_AWAY_HOME
-        )
+        try:
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
 
         metadata = Metadata(
             teams=teams,

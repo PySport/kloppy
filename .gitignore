@@ -1,3 +1,5 @@
+kloppy/tests/outputs
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -148,3 +150,5 @@ examples/pattern_matching/repository/*.json
 *.code-workspace
 
 .*
+
+scratchpad

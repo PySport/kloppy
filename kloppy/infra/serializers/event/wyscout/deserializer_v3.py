@@ -1,33 +1,52 @@
 import json
 import logging
+from dataclasses import replace
+from datetime import timedelta
 from typing import Dict, List, Tuple, NamedTuple, IO
 
 from kloppy.domain import (
+    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
+    CardEvent,
     CardType,
     CounterAttackQualifier,
+    Dimension,
+    DuelType,
+    DuelQualifier,
+    DuelResult,
     EventDataset,
+    FoulCommittedEvent,
+    GenericEvent,
+    GoalkeeperQualifier,
+    GoalkeeperActionType,
     Ground,
+    InterceptionResult,
     Metadata,
     Orientation,
+    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
+    PitchDimensions,
     Player,
     Point,
     Provider,
     Qualifier,
+    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
+    ShotEvent,
     ShotResult,
+    TakeOnEvent,
     TakeOnResult,
     Team,
+    FormationType,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
-from . import wyscout_tags
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
 
@@ -36,6 +55,29 @@ logger = logging.getLogger(__name__)
 
 
 INVALID_PLAYER = "0"
+
+formations = {
+    "4-4-2": FormationType.FOUR_FOUR_TWO,
+    "4-4-1-1": FormationType.FOUR_FOUR_ONE_ONE,
+    "4-3-2-1": FormationType.FOUR_THREE_TWO_ONE,
+    "4-2-3-1": FormationType.FOUR_TWO_THREE_ONE,
+    "4-1-4-1": FormationType.FOUR_ONE_FOUR_ONE,
+    "4-1-3-2": FormationType.FOUR_ONE_THREE_TWO,
+    "4-3-1-2": FormationType.FOUR_THREE_ONE_TWO,
+    "4-3-3": FormationType.FOUR_THREE_THREE,
+    "4-5-1": FormationType.FOUR_FIVE_ONE,
+    "4-2-2-2": FormationType.FOUR_TWO_TWO_TWO,
+    "4-2-1-3": FormationType.FOUR_TWO_ONE_THREE,
+    "3-4-3": FormationType.THREE_FOUR_THREE,
+    "3-4-1-2": FormationType.THREE_FOUR_ONE_TWO,
+    "3-4-2-1": FormationType.THREE_FOUR_TWO_ONE,
+    "3-5-2": FormationType.THREE_FIVE_TWO,
+    "3-5-1-1": FormationType.THREE_FIVE_ONE_ONE,
+    "5-3-2": FormationType.FIVE_THREE_TWO,
+    "5-4-1": FormationType.FIVE_FOUR_ONE,
+    "3-3-3-1": FormationType.THREE_THREE_THREE_ONE,
+    "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
+}
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -55,13 +97,6 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         for player in raw_events["players"][wyId]
     ]
     return team
-
-
-def _has_tag(raw_event, tag_id) -> bool:
-    for tag in raw_event["tags"]:
-        if tag["id"] == tag_id:
-            return True
-    return False
 
 
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
@@ -144,7 +179,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
         if next_event["type"]["primary"] == "offside":
             pass_result = PassResult.OFFSIDE
         if next_event["type"]["primary"] == "game_interruption":
-            if next_event["type"]["secondary"] == "ball_out":
+            if "ball_out" in next_event["type"]["secondary"]:
                 pass_result = PassResult.OUT
 
     return {
@@ -172,12 +207,10 @@ def _parse_foul(raw_event: Dict) -> Dict:
 def _parse_card(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     card_type = None
-    if _has_tag(raw_event, wyscout_tags.RED_CARD):
-        card_type = CardType.RED
-    elif _has_tag(raw_event, wyscout_tags.YELLOW_CARD):
+    if _check_secondary_event_types(raw_event, ["yellow_card"]):
         card_type = CardType.FIRST_YELLOW
-    elif _has_tag(raw_event, wyscout_tags.SECOND_YELLOW_CARD):
-        card_type = CardType.SECOND_YELLOW
+    elif _check_secondary_event_types(raw_event, ["red_card"]):
+        card_type = CardType.RED
 
     return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
@@ -196,6 +229,55 @@ def _parse_clearance(raw_event: Dict) -> Dict:
         "result": None,
         "qualifiers": qualifiers,
     }
+
+
+def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    result = InterceptionResult.SUCCESS
+
+    if next_event is not None:
+        is_game_interruption = (
+            next_event["type"]["primary"] == "game_interruption"
+        )
+        is_ball_out = "ball_out" in next_event["type"]["secondary"]
+        is_loss = "loss" in raw_event["type"]["secondary"]
+        is_pass_loss = (
+            "pass" in raw_event["type"]["secondary"]
+            and raw_event["pass"]["accurate"] is False
+        )
+        is_possession_loss = (
+            next_event["possession"] is not None
+            and raw_event["team"]["id"]
+            != next_event["possession"]["team"]["id"]
+        )
+
+        if is_game_interruption and is_ball_out:
+            result = InterceptionResult.OUT
+        elif is_loss or is_pass_loss or is_possession_loss:
+            result = InterceptionResult.LOST
+
+    return {
+        "result": result,
+        "qualifiers": qualifiers,
+    }
+
+
+def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+
+    goalkeeper_qualifiers = []
+    if "save" in raw_event["type"]["secondary"]:
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+        )
+
+    if "save_with_reflex" == "save_with_reflex":
+        goalkeeper_qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
+        )
+    qualifiers.extend(goalkeeper_qualifiers)
+
+    return {"result": None, "qualifiers": qualifiers}
 
 
 def _parse_ball_out(raw_event: Dict) -> Dict:
@@ -244,7 +326,7 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_takeon(raw_event: Dict) -> Dict:
+def _parse_take_on(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = None
     if "offensive_duel" in raw_event["type"]["secondary"]:
@@ -266,6 +348,114 @@ def _parse_takeon(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
+def _parse_duel(raw_event: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    duel_qualifiers = []
+    secondary_types = raw_event["type"]["secondary"]
+
+    if "ground_duel" in secondary_types:
+        duel_qualifiers.append(DuelQualifier(value=DuelType.GROUND))
+    elif "aerial_duel" in secondary_types:
+        duel_qualifiers.extend(
+            [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+        )
+    else:
+        if (
+            "loose_ball_duel" in secondary_types
+            and "sliding_tackle" in secondary_types
+        ):
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
+        elif "loose_ball_duel" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                ]
+            )
+        elif "sliding_tackle" in secondary_types:
+            duel_qualifiers.extend(
+                [
+                    DuelQualifier(value=DuelType.GROUND),
+                    DuelQualifier(value=DuelType.SLIDING_TACKLE),
+                ]
+            )
+
+    qualifiers.extend(duel_qualifiers)
+
+    if (
+        "offensive_duel" in secondary_types
+        and raw_event["groundDuel"]["keptPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "defensive_duel" in secondary_types
+        and raw_event["groundDuel"]["recoveredPossession"]
+    ):
+        result = DuelResult.WON
+    elif (
+        "aerial_duel" in secondary_types
+        and raw_event["aerialDuel"]["firstTouch"]
+    ):
+        result = DuelResult.WON
+    else:
+        result = DuelResult.LOST
+
+    return {"result": result, "qualifiers": qualifiers}
+
+
+def get_home_away_team_formation(event, team):
+    if team.ground == Ground.HOME:
+        current_home_team_formation = formations[event["team"]["formation"]]
+        current_away_team_formation = formations[
+            event["opponentTeam"]["formation"]
+        ]
+    elif team.ground == Ground.AWAY:
+        current_away_team_formation = formations[event["team"]["formation"]]
+        current_home_team_formation = formations[
+            event["opponentTeam"]["formation"]
+        ]
+    else:
+        raise DeserializationError(f"Unknown team_id {team.team_id}")
+
+    return current_home_team_formation, current_away_team_formation
+
+
+def identify_synthetic_formation_change_event(
+    raw_event, raw_next_event, teams, home_team, away_team
+):
+    current_event_team = teams[str(raw_event["team"]["id"])]
+    next_event_team = teams[str(raw_next_event["team"]["id"])]
+    event_formation_change_info = {}
+    (
+        current_home_team_formation,
+        current_away_team_formation,
+    ) = get_home_away_team_formation(raw_event, current_event_team)
+    (
+        next_home_team_formation,
+        next_away_team_formation,
+    ) = get_home_away_team_formation(raw_next_event, next_event_team)
+    if next_home_team_formation != current_home_team_formation:
+        event_formation_change_info[home_team] = {
+            "formation_type": next_home_team_formation
+        }
+
+    if next_away_team_formation != current_away_team_formation:
+        event_formation_change_info[away_team] = {
+            "formation_type": next_away_team_formation
+        }
+
+    return event_formation_change_info
+
+
 def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
@@ -276,7 +466,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
         return Provider.WYSCOUT
 
     def deserialize(self, inputs: WyscoutInputs) -> EventDataset:
-        transformer = self.get_transformer(length=100, width=100)
+        transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
@@ -285,6 +475,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     event["id"] = event["type"]["primary"]
 
         periods = []
+        # start timestamps are fixed
+        start_ts = {
+            1: timedelta(minutes=0),
+            2: timedelta(minutes=45),
+            3: timedelta(minutes=90),
+            4: timedelta(minutes=105),
+            5: timedelta(minutes=120),
+        }
 
         with performance_logging("parse data", logger=logger):
             home_team_id, away_team_id = raw_events["teams"].keys()
@@ -302,8 +500,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
+                next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
+                    next_period_id = int(
+                        next_event["matchPeriod"].replace("H", "")
+                    )
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
@@ -314,9 +516,22 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=0,
-                            end_timestamp=0,
+                            start_timestamp=timedelta(seconds=0)
+                            if len(periods) == 0
+                            else periods[-1].end_timestamp,
+                            end_timestamp=None,
                         )
+                    )
+
+                if next_period_id != period_id:
+                    periods[-1] = replace(
+                        periods[-1],
+                        end_timestamp=periods[-1].start_timestamp
+                        + timedelta(
+                            seconds=float(
+                                raw_event["second"] + raw_event["minute"] * 60
+                            )
+                        ),
                     )
 
                 ball_owning_team = None
@@ -341,9 +556,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],
-                    "timestamp": float(
-                        raw_event["second"] + raw_event["minute"] * 60
-                    ),
+                    "timestamp": timedelta(
+                        seconds=float(
+                            raw_event["second"] + raw_event["minute"] * 60
+                        )
+                    )
+                    - start_ts[period_id],
                 }
 
                 primary_event_type = raw_event["type"]["primary"]
@@ -359,14 +577,34 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **pass_event_args, **generic_event_args
                     )
                 elif primary_event_type == "duel":
-                    takeon_event_args = _parse_takeon(raw_event)
-                    event = self.event_factory.build_take_on(
-                        **takeon_event_args, **generic_event_args
-                    )
+                    if "dribble" in secondary_event_types:
+                        takeon_event_args = _parse_take_on(raw_event)
+                        event = self.event_factory.build_take_on(
+                            **takeon_event_args, **generic_event_args
+                        )
+                    else:
+                        duel_event_args = _parse_duel(raw_event)
+                        event = self.event_factory.build_duel(
+                            **duel_event_args, **generic_event_args
+                        )
                 elif primary_event_type == "clearance":
                     clearance_event_args = _parse_clearance(raw_event)
                     event = self.event_factory.build_clearance(
                         **clearance_event_args, **generic_event_args
+                    )
+                elif primary_event_type == "interception":
+                    interception_event_args = _parse_interception(
+                        raw_event, next_event
+                    )
+                    event = self.event_factory.build_interception(
+                        **interception_event_args, **generic_event_args
+                    )
+                elif (primary_event_type == "shot_against") & (
+                    "save" in raw_event["type"]["secondary"]
+                ):
+                    goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
+                    event = self.event_factory.build_goalkeeper_event(
+                        **goalkeeper_save_args, **generic_event_args
                     )
                 elif (
                     (primary_event_type in ["throw_in", "goal_kick"])
@@ -402,17 +640,67 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     event = self.event_factory.build_shot(
                         **set_piece_event_args, **generic_event_args
                     )
+                elif primary_event_type == "infraction":
+                    if "foul" in secondary_event_types:
+                        foul_event_args = _parse_foul(raw_event)
+                        event = self.event_factory.build_foul_committed(
+                            **foul_event_args, **generic_event_args
+                        )
+                        # We already append event to events
+                        # as we potentially have a card and foul event for one raw event
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
+                        continue
+                    if (
+                        "yellow_card" in secondary_event_types
+                        or "red_card" in secondary_event_types
+                    ):
+                        card_event_args = _parse_card(raw_event)
+                        event = self.event_factory.build_card(
+                            **card_event_args, **generic_event_args
+                        )
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
+                        continue
 
                 else:
                     event = self.event_factory.build_generic(
                         result=None,
                         qualifiers=_generic_qualifiers(raw_event),
                         event_name=raw_event["type"]["primary"],
-                        **generic_event_args
+                        **generic_event_args,
                     )
 
                 if event and self.should_include_event(event):
                     events.append(transformer.transform_event(event))
+
+                if next_event:
+                    event_formation_change_info = (
+                        identify_synthetic_formation_change_event(
+                            raw_event, next_event, teams, home_team, away_team
+                        )
+                    )
+                    for (
+                        formation_change_team,
+                        formation_change_event_kwargs,
+                    ) in event_formation_change_info.items():
+                        generic_event_args.update(
+                            {
+                                "event_id": f"synthetic-{raw_event['id']}",
+                                "raw_event": None,
+                                "coordinates": None,
+                                "player": None,
+                                "team": formation_change_team,
+                            }
+                        )
+                        event = self.event_factory.build_formation_change(
+                            result=None,
+                            qualifiers=None,
+                            **formation_change_event_kwargs,
+                            **generic_event_args,
+                        )
+                        if event and self.should_include_event(event):
+                            events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=[home_team, away_team],
@@ -420,7 +708,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=None,
             frame_rate=None,
-            orientation=Orientation.BALL_OWNING_TEAM,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),

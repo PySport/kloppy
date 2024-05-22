@@ -15,7 +15,7 @@ from typing import (
     Generic,
     NewType,
     overload,
-    Iterable,
+    Iterable, NamedTuple,
 )
 
 
@@ -41,6 +41,7 @@ from .pitch import (
     WyscoutPitchDimensions,
 )
 from .formation import FormationType
+from .time import AbsTime, Period
 from ...exceptions import (
     OrientationError,
     InvalidFilterError,
@@ -242,44 +243,6 @@ class BallState(Enum):
 
     def __repr__(self):
         return self.value
-
-
-@dataclass
-class Period:
-    """
-    Period
-
-    Attributes:
-        id: `1` for first half, `2` for second half, `3` for first half of
-            overtime, `4` for second half of overtime, `5` for penalty shootout
-        start_timestamp: The UTC datetime of the kick-off or, if the
-            absolute datetime is not available, the offset between the start
-            of the data feed and the period's kick-off
-        end_timestamp: The UTC datetime of the final whistle or, if the
-            absolute datetime is not available, the offset between the start
-            of the data feed and the period's final whistle
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
-    """
-
-    id: int
-    start_timestamp: Union[datetime, timedelta]
-    end_timestamp: Union[datetime, timedelta]
-
-    def contains(self, timestamp: datetime):
-        if isinstance(self.start_timestamp, datetime) and isinstance(
-            self.end_timestamp, datetime
-        ):
-            return self.start_timestamp <= timestamp <= self.end_timestamp
-        raise KloppyError(
-            "This method can only be used when start_timestamp and end_timestamp are a datetime"
-        )
-
-    @property
-    def duration(self) -> timedelta:
-        return self.end_timestamp - self.start_timestamp
-
-    def __eq__(self, other):
-        return isinstance(other, Period) and other.id == self.id
 
 
 class Orientation(Enum):
@@ -860,6 +823,9 @@ class DatasetFlag(Flag):
     BALL_STATE = 2
 
 
+
+
+
 @dataclass
 class DataRecord(ABC):
     """
@@ -884,6 +850,13 @@ class DataRecord(ABC):
     @abstractmethod
     def record_id(self) -> Union[int, str]:
         pass
+
+    @property
+    def abs_time(self) -> AbsTime:
+        return AbsTime(
+            period=self.period,
+            timestamp=self.timestamp
+        )
 
     def set_refs(
         self,
@@ -981,6 +954,14 @@ class Metadata:
         if self.coordinate_system is not None:
             # set the pitch dimensions from the coordinate system
             self.pitch_dimensions = self.coordinate_system.pitch_dimensions
+
+        for i, period in enumerate(self.periods):
+            period.set_refs(
+                prev=self.periods[i - 1] if i > 0 else None,
+                next_=self.periods[i + 1]
+                if i + 1 < len(self.periods)
+                else None,
+            )
 
 
 T = TypeVar("T", bound="DataRecord")

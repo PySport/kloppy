@@ -487,9 +487,9 @@ def _team_from_xml_elm(team_elm, f7_root) -> Team:
     team = Team(
         team_id=str(team_id),
         name=team_name,
-        ground=Ground.HOME
-        if team_elm.attrib["Side"] == "Home"
-        else Ground.AWAY,
+        ground=(
+            Ground.HOME if team_elm.attrib["Side"] == "Home" else Ground.AWAY
+        ),
         starting_formation=FormationType(formation),
     )
     team.players = [
@@ -726,9 +726,14 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
-            match_result_type = list(match_result_path.find(f7_root))[
-                0
-            ].attrib["Type"]
+
+            try:
+                match_result_type = list(match_result_path.find(f7_root))[
+                    0
+                ].attrib["Type"]
+            except AttributeError:
+                match_result_type = None
+
             periods = _create_periods(match_result_type)
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:

@@ -41,15 +41,13 @@ def setup_package():
             "lxml>=4.4.0,<5",
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
-            'mypy_extensions;python_version<"3.8"',
             'typing_extensions;python_version<"3.11"',
             "python-dateutil>=2.8.1,<3",
         ],
         extras_require={
             "test": [
                 "pytest>=6.2.5,<7",
-                'pandas>=2;python_version>"3.7"',
-                'pandas>=1.0,<2;python_version<"3.8"',
+                "pandas>=2",
                 "black==22.3.0",
                 "polars>=0.16.6",
                 "pyarrow",

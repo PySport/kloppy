@@ -726,9 +726,13 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
-            match_result_type = list(match_result_path.find(f7_root))[
-                0
-            ].attrib["Type"]
+            try:
+              match_result_type = list(match_result_path.find(f7_root))[
+                    0
+                ].attrib["Type"]
+            except AttributeError:
+                match_result_type = None
+                
             periods = _create_periods(match_result_type)
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:

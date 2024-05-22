@@ -6,6 +6,7 @@ import gzip
 import logging
 import lzma
 import os
+import gzip
 import urllib.parse
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper

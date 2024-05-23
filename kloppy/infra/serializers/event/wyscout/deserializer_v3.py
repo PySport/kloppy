@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO
+from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BallOutEvent,
@@ -48,7 +48,8 @@ from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
-from .deserializer_v2 import WyscoutInputs, _create_shot_result_coordinates
+from .deserializer_v2 import WyscoutInputs
+from . import wyscout_tags
 
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,82 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         for player in raw_events["players"][wyId]
     ]
     return team
+
+
+def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags.
+
+    Wyscout does not provide end-coordinates of shots. Instead shots on goal
+    are tagged with a zone. This function maps each of these zones to
+    a coordinate. The zones and corresponding y-coordinate are depicted below.
+
+
+        olt      | ot |      ort
+     --------------------------------
+          ||=================||
+     -------------------------------
+          || g;l | gt | grt ||
+     --------------------------------
+      ol || gcl | gc  | gcr || or
+     --------------------------------
+      olb || glb  | gb | gln || grb
+
+      40     45    50    55     60    (y-coordinate of zone)
+        44.62               55.38     (y-coordiante of post)
+    """
+    if (
+        raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalBottomCenter
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalCenter
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalTopCenter
+    ):
+        return Point(100.0, 50.0)
+    if (
+        raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalBottomRight
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalCenterRight
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalTopRight
+    ):
+        return Point(100.0, 55.0)
+    if (
+        raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalBottomLeft
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalCenterLeft
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.GoalTopLeft
+    ):
+        return Point(100.0, 45.0)
+    if raw_event["shot"]["goalZone"] == wyscout_tags.ShotZoneResults.OutTop:
+        return Point(100.0, 50.0)
+    if (
+        raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutRightTop
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutRight
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutBottomRight
+    ):
+        return Point(100.0, 60.0)
+    if (
+        raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutLeftTop
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutLeft
+        or raw_event["shot"]["goalZone"]
+        == wyscout_tags.ShotZoneResults.OutBottomLeft
+    ):
+        return Point(100.0, 40.0)
+    if raw_event["shot"]["goalZone"] == wyscout_tags.ShotZoneResults.Blocked:
+        return Point(
+            x=float(raw_event["location"]["x"]),
+            y=float(raw_event["positions"]["y"]),
+        )
+    return None
 
 
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
@@ -540,6 +617,8 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     ball_owning_team = teams[
                         str(raw_event["possession"]["team"]["id"])
                     ]
+                else:
+                    ball_owning_team = team  # TODO: this solve the issue of ball owning team when transforming to spald, but it's not correct
 
                 generic_event_args = {
                     "event_id": raw_event["id"],

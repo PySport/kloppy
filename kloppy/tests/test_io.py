@@ -3,39 +3,12 @@ import json
 from io import BytesIO
 from pathlib import Path
 
-import aiobotocore.endpoint
-import botocore.awsrequest
 import pytest
 import s3fs
 from moto import mock_aws
 
 from kloppy.exceptions import InputNotFoundError
 from kloppy.io import get_file_extension, open_as_file
-
-
-# Patch `aiobotocore.endpoint.convert_to_response_dict` to work with moto.
-class PatchedAWSResponse:
-    def __init__(self, response: botocore.awsrequest.AWSResponse):
-        self._response = response
-        self.status_code = response.status_code
-        self.raw = response.raw
-        self.raw.raw_headers = {}
-
-    @property
-    async def content(self):
-        return self._response.content
-
-
-def factory(original):
-    def patched_convert_to_response_dict(http_response, operation_model):
-        return original(PatchedAWSResponse(http_response), operation_model)
-
-    return patched_convert_to_response_dict
-
-
-aiobotocore.endpoint.convert_to_response_dict = factory(
-    aiobotocore.endpoint.convert_to_response_dict
-)
 
 
 @pytest.fixture()
@@ -172,12 +145,18 @@ class TestOpenAsFile:
             assert fp is not None
             assert fp.read() == b"Hello, world!"
 
+    @pytest.mark.skip(
+        reason="see https://github.com/aio-libs/aiobotocore/issues/755"
+    )
     def test_s3(self, s3_content):
         """It should be able to open a file from an S3 bucket."""
         with open_as_file("s3://test-bucket/testfile.txt") as fp:
             assert fp is not None
             assert fp.read() == b"Hello, world!"
 
+    @pytest.mark.skip(
+        reason="see https://github.com/aio-libs/aiobotocore/issues/755"
+    )
     def test_s3_compressed(self, s3_content):
         """It should be able to open a file from an S3 bucket."""
         with open_as_file("s3://test-bucket/testfile.txt.gz") as fp:

@@ -1,15 +1,14 @@
-import os
-from pathlib import Path
-from io import BytesIO
-import json
 import gzip
+import json
+from io import BytesIO
+from pathlib import Path
+
+import pytest
 import s3fs
 from moto import mock_s3
 
-import pytest
-
-from kloppy.io import open_as_file, get_file_extension
 from kloppy.exceptions import InputNotFoundError
+from kloppy.io import get_file_extension, open_as_file
 
 
 @pytest.fixture()
@@ -46,9 +45,7 @@ def filesystem_content(tmp_path: Path):
 @pytest.fixture
 def httpserver_content(httpserver):
     """Set up the content to be read from a HTTP server."""
-    httpserver.expect_request("/testfile.txt").respond_with_data(
-        "Hello, world!"
-    )
+    httpserver.expect_request("/testfile.txt").respond_with_data("Hello, world!")
     httpserver.expect_request("/compressed_testfile.txt").respond_with_data(
         gzip.compress(b"Hello, world!"),
         headers={"Content-Encoding": "gzip", "Content-Type": "text/plain"},
@@ -63,10 +60,10 @@ def httpserver_content(httpserver):
 def s3_content():
     with mock_s3():
         s3_fs = s3fs.S3FileSystem(anon=True)
-        s3_fs.mkdir("test-bucket")
-        with s3_fs.open(f"test-bucket/testfile.txt", "wb") as f:
+        s3_fs.mkdir("test-bucket", region_name="eu-central-1")
+        with s3_fs.open("test-bucket/testfile.txt", "wb") as f:
             f.write(b"Hello, world!")
-        with s3_fs.open(f"test-bucket/testfile.txt.gz", "wb") as f:
+        with s3_fs.open("test-bucket/testfile.txt.gz", "wb") as f:
             f.write(gzip.compress(b"Hello, world!"))
         yield s3_fs
         s3_fs.rm("test-bucket", recursive=True)

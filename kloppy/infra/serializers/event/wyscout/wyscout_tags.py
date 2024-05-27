@@ -1,5 +1,3 @@
-from enum import Enum
-
 GOAL = 101
 OWN_GOAL = 102
 
@@ -89,23 +87,3 @@ COUNTER_ATTACK = 1901
 DANGEROUS_BALL_LOST = 2001
 
 BLOCKED = 2101
-
-
-class ShotZoneResults(Enum):
-    GoalBottomLeft = "glb"
-    GoalBottomRight = "gbr"
-    GoalBottomCenter = "gbc"
-    GoalCenterLeft = "gcl"
-    GoalCenter = "gc"
-    GoalCenterRight = "gcr"
-    GoalTopLeft = "gtl"
-    GoalTopRight = "gtr"
-    GoalTopCenter = "gtc"
-    OutBottomRight = "obr"
-    OutBottomLeft = "obl"
-    OutRight = "or"
-    OutLeft = "ol"
-    OutLeftTop = "olt"
-    OutTop = "ot"
-    OutRightTop = "ort"
-    Blocked = "bc"

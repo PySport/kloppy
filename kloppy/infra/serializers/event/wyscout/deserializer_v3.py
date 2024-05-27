@@ -2,6 +2,7 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta
+from enum import Enum
 from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
@@ -79,6 +80,26 @@ formations = {
     "3-3-3-1": FormationType.THREE_THREE_THREE_ONE,
     "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
 }
+
+
+class ShotZoneResults(Enum):
+    GoalBottomLeft = "glb"
+    GoalBottomRight = "gbr"
+    GoalBottomCenter = "gbc"
+    GoalCenterLeft = "gcl"
+    GoalCenter = "gc"
+    GoalCenterRight = "gcr"
+    GoalTopLeft = "gtl"
+    GoalTopRight = "gtr"
+    GoalTopCenter = "gtc"
+    OutBottomRight = "obr"
+    OutBottomLeft = "obl"
+    OutRight = "or"
+    OutLeft = "ol"
+    OutLeftTop = "olt"
+    OutTop = "ot"
+    OutRightTop = "ort"
+    Blocked = "bc"
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:

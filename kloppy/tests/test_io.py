@@ -3,12 +3,39 @@ import json
 from io import BytesIO
 from pathlib import Path
 
+import aiobotocore.endpoint
+import botocore.awsrequest
 import pytest
 import s3fs
-from moto import mock_s3
+from moto import mock_aws
 
 from kloppy.exceptions import InputNotFoundError
 from kloppy.io import get_file_extension, open_as_file
+
+
+# Patch `aiobotocore.endpoint.convert_to_response_dict` to work with moto.
+class PatchedAWSResponse:
+    def __init__(self, response: botocore.awsrequest.AWSResponse):
+        self._response = response
+        self.status_code = response.status_code
+        self.raw = response.raw
+        self.raw.raw_headers = {}
+
+    @property
+    async def content(self):
+        return self._response.content
+
+
+def factory(original):
+    def patched_convert_to_response_dict(http_response, operation_model):
+        return original(PatchedAWSResponse(http_response), operation_model)
+
+    return patched_convert_to_response_dict
+
+
+aiobotocore.endpoint.convert_to_response_dict = factory(
+    aiobotocore.endpoint.convert_to_response_dict
+)
 
 
 @pytest.fixture()
@@ -60,7 +87,7 @@ def httpserver_content(httpserver):
 
 @pytest.fixture
 def s3_content():
-    with mock_s3():
+    with mock_aws():
         s3_fs = s3fs.S3FileSystem(anon=True)
         s3_fs.mkdir("test-bucket", region_name="eu-central-1")
         with s3_fs.open("test-bucket/testfile.txt", "wb") as f:

@@ -45,7 +45,9 @@ def filesystem_content(tmp_path: Path):
 @pytest.fixture
 def httpserver_content(httpserver):
     """Set up the content to be read from a HTTP server."""
-    httpserver.expect_request("/testfile.txt").respond_with_data("Hello, world!")
+    httpserver.expect_request("/testfile.txt").respond_with_data(
+        "Hello, world!"
+    )
     httpserver.expect_request("/compressed_testfile.txt").respond_with_data(
         gzip.compress(b"Hello, world!"),
         headers={"Content-Encoding": "gzip", "Content-Type": "text/plain"},

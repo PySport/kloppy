@@ -83,23 +83,23 @@ formations = {
 
 
 class ShotZoneResults(Enum):
-    GoalBottomLeft = "glb"
-    GoalBottomRight = "gbr"
-    GoalBottomCenter = "gbc"
-    GoalCenterLeft = "gcl"
-    GoalCenter = "gc"
-    GoalCenterRight = "gcr"
-    GoalTopLeft = "gtl"
-    GoalTopRight = "gtr"
-    GoalTopCenter = "gtc"
-    OutBottomRight = "obr"
-    OutBottomLeft = "obl"
-    OutRight = "or"
-    OutLeft = "ol"
-    OutLeftTop = "olt"
-    OutTop = "ot"
-    OutRightTop = "ort"
-    Blocked = "bc"
+    GOAL_BOTTOM_LEFT = "glb"
+    GOAL_BOTTOM_RIGHT = "gbr"
+    GOAL_BOTTOM_CENTER = "gbc"
+    GOAL_CENTER_LEFT = "gcl"
+    GOAL_CENTER = "gc"
+    GOAL_CENTER_RIGHT = "gcr"
+    GOAL_TOP_LEFT = "gtl"
+    GOAL_TOP_RIGHT = "gtr"
+    GOAL_TOP_CENTER = "gtc"
+    OUT_BOTTOM_RIGHT = "obr"
+    OUT_BOTTOM_LEFT = "obl"
+    OUT_RIGHT = "or"
+    OUT_LEFT = "ol"
+    OUT_LEFT_TOP = "olt"
+    OUT_TOP = "ot"
+    OUT_RIGHT_TOP = "ort"
+    BLOCKED = "bc"
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -143,57 +143,49 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
         44.62               55.38     (y-coordiante of post)
     """
     if (
-        raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalBottomCenter
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalCenter
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalTopCenter
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_CENTER
     ):
         return Point(100.0, 50.0)
+
     if (
-        raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalBottomRight
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalCenterRight
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalTopRight
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_RIGHT
     ):
         return Point(100.0, 55.0)
+
     if (
-        raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalBottomLeft
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalCenterLeft
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.GoalTopLeft
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_LEFT
     ):
         return Point(100.0, 45.0)
-    if raw_event["shot"]["goalZone"] == wyscout_tags.ShotZoneResults.OutTop:
+
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_TOP:
         return Point(100.0, 50.0)
+
     if (
-        raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutRightTop
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutRight
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutBottomRight
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_RIGHT
     ):
         return Point(100.0, 60.0)
+
     if (
-        raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutLeftTop
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutLeft
-        or raw_event["shot"]["goalZone"]
-        == wyscout_tags.ShotZoneResults.OutBottomLeft
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_LEFT
     ):
         return Point(100.0, 40.0)
-    if raw_event["shot"]["goalZone"] == wyscout_tags.ShotZoneResults.Blocked:
+
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
         return Point(
             x=float(raw_event["location"]["x"]),
             y=float(raw_event["positions"]["y"]),
         )
+
     return None
 
 

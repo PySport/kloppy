@@ -630,8 +630,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     ball_owning_team = teams[
                         str(raw_event["possession"]["team"]["id"])
                     ]
-                else:
-                    ball_owning_team = team  # TODO: this solve the issue of ball owning team when transforming to spald, but it's not correct
 
                 generic_event_args = {
                     "event_id": raw_event["id"],

@@ -1,26 +1,25 @@
 """XML parser for Opta F7 feeds."""
+
 from datetime import datetime
-from typing import Any, Dict, Tuple, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from lxml import objectify
 
-from .base import OptaXMLParser
 from kloppy.domain import (
-    Team,
-    Ground,
     FormationType,
+    Ground,
+    Period,
     Player,
     Position,
     Score,
-    Period,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 
+from .base import OptaXMLParser
+
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
-match_result_path = objectify.ObjectPath(
-    "SoccerFeed.SoccerDocument.MatchData.MatchInfo.Result"
-)
 
 
 def _parse_f7_datetime(dt_str: str) -> datetime:
@@ -65,9 +64,13 @@ class F7XMLParser(OptaXMLParser):
             if period.start_timestamp is not None
         ]
 
-        match_result_type = list(match_result_path.find(self.root))[0].attrib[
-            "Type"
-        ]
+        result_elements = self.root.xpath(
+            "/SoccerFeed/SoccerDocument/MatchData/MatchInfo/Result"
+        )
+        if result_elements and "Type" in result_elements[0].attrib:
+            match_result_type = result_elements[0].attrib["Type"]
+        else:
+            match_result_type = None
         if match_result_type == "PenaltyShootout":
             periods.append(
                 Period(id=5, start_timestamp=None, end_timestamp=None)
@@ -129,9 +132,11 @@ class F7XMLParser(OptaXMLParser):
         team = Team(
             team_id=str(team_elm.attrib["TeamRef"].lstrip("t")),
             name=team_name,
-            ground=Ground.HOME
-            if team_elm.attrib["Side"] == "Home"
-            else Ground.AWAY,
+            ground=(
+                Ground.HOME
+                if team_elm.attrib["Side"] == "Home"
+                else Ground.AWAY
+            ),
             starting_formation=FormationType(
                 "-".join(list(team_elm.attrib["Formation"]))
             ),
@@ -147,9 +152,9 @@ class F7XMLParser(OptaXMLParser):
                 last_name=team_players[player_elm.attrib["PlayerRef"]][
                     "last_name"
                 ],
-                starting=True
-                if player_elm.attrib["Status"] == "Start"
-                else False,
+                starting=(
+                    True if player_elm.attrib["Status"] == "Start" else False
+                ),
                 position=Position(
                     position_id=player_elm.attrib["Formation_Place"],
                     name=player_elm.attrib["Position"],

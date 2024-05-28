@@ -266,21 +266,10 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
 def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
     carry_info = raw_event["carry"]
-    if carry_info:
-        end_coordinates = Point(
-            x=float(carry_info["endLocation"]["x"]),
-            y=float(carry_info["endLocation"]["y"]),
-        )
-    elif next_event is not None:
-        end_coordinates = Point(
-            x=float(next_event["location"]["x"]),
-            y=float(next_event["location"]["y"]),
-        )
-    else:
-        end_coordinates = Point(
-            x=float(raw_event["location"]["x"]),
-            y=float(raw_event["location"]["y"]),
-        )
+    end_coordinates = Point(
+        x=float(carry_info["endLocation"]["x"]),
+        y=float(carry_info["endLocation"]["y"]),
+    )
 
     if next_event is not None:
         period_id = int(next_event["matchPeriod"].replace("H", ""))

@@ -43,6 +43,7 @@ from kloppy.domain import (
     TakeOnResult,
     Team,
     FormationType,
+    CarryResult,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
@@ -262,6 +263,44 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
+def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
+    qualifiers = _generic_qualifiers(raw_event)
+    carry_info = raw_event["carry"]
+    if carry_info:
+        end_coordinates = Point(
+            x=float(carry_info["endLocation"]["x"]),
+            y=float(carry_info["endLocation"]["y"]),
+        )
+    elif next_event is not None:
+        end_coordinates = Point(
+            x=float(next_event["location"]["x"]),
+            y=float(next_event["location"]["y"]),
+        )
+    else:
+        end_coordinates = Point(
+            x=float(raw_event["location"]["x"]),
+            y=float(raw_event["location"]["y"]),
+        )
+
+    if next_event is not None:
+        period_id = int(next_event["matchPeriod"].replace("H", ""))
+        end_timestamp = _create_timestamp_timedelta(
+            next_event, start_ts, period_id
+        )
+    else:
+        period_id = int(raw_event["matchPeriod"].replace("H", ""))
+        end_timestamp = _create_timestamp_timedelta(
+            raw_event, start_ts, period_id
+        )
+
+    return {
+        "result": CarryResult.COMPLETE,
+        "qualifiers": qualifiers,
+        "end_coordinates": end_coordinates,
+        "end_timestamp": end_timestamp,
+    }
+
+
 def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
 
@@ -412,6 +451,19 @@ def _parse_duel(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
+def _create_timestamp_timedelta(
+    raw_event: Dict, start_ts: Dict, period_id: int
+) -> timedelta:
+    time_delta = (
+        timedelta(
+            seconds=float(raw_event["second"] + raw_event["minute"] * 60)
+        )
+        - start_ts[period_id]
+    )
+
+    return time_delta
+
+
 def get_home_away_team_formation(event, team):
     if team.ground == Ground.HOME:
         current_home_team_formation = formations[event["team"]["formation"]]
@@ -556,12 +608,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],
-                    "timestamp": timedelta(
-                        seconds=float(
-                            raw_event["second"] + raw_event["minute"] * 60
-                        )
-                    )
-                    - start_ts[period_id],
+                    "timestamp": _create_timestamp_timedelta(
+                        raw_event, start_ts, period_id
+                    ),
                 }
 
                 primary_event_type = raw_event["type"]["primary"]
@@ -662,6 +711,13 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         if event and self.should_include_event(event):
                             events.append(transformer.transform_event(event))
                         continue
+                elif "carry" in secondary_event_types:
+                    carry_event_args = _parse_carry(
+                        raw_event, next_event, start_ts
+                    )
+                    event = self.event_factory.build_carry(
+                        **carry_event_args, **generic_event_args
+                    )
 
                 else:
                     event = self.event_factory.build_generic(

@@ -249,3 +249,8 @@ class TestWyscoutV3:
     def test_take_on_event(self, dataset: EventDataset):
         take_on_event = dataset.get_event_by_id(139800000)
         assert take_on_event.event_type == EventType.TAKE_ON
+
+    def test_carry_event(self, dataset: EventDataset):
+        carry_event = dataset.get_event_by_id(139800001)
+        assert carry_event.event_type == EventType.CARRY
+        assert carry_event.end_coordinates == Point(58.0, 74.0)

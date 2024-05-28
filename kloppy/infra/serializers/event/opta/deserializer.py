@@ -734,9 +734,11 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
             matchdata_path = objectify.ObjectPath(
                 "SoccerFeed.SoccerDocument.MatchData"
             )
-            match_result_path = objectify.ObjectPath(
-                "SoccerFeed.SoccerDocument.MatchData.MatchInfo.Result"
+
+            result_elements = f7_root.xpath(
+                "/SoccerFeed/SoccerDocument/MatchData/MatchInfo/Result"
             )
+
             team_elms = list(
                 matchdata_path.find(f7_root).iterchildren("TeamData")
             )
@@ -756,9 +758,12 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                     )
             score = Score(home=home_score, away=away_score)
             teams = [home_team, away_team]
-            match_result_type = list(match_result_path.find(f7_root))[
-                0
-            ].attrib["Type"]
+
+            if result_elements and "Type" in result_elements[0].attrib:
+                match_result_type = result_elements[0].attrib["Type"]
+            else:
+                match_result_type = None
+
             periods = _create_periods(match_result_type)
 
             if len(home_team.players) == 0 or len(away_team.players) == 0:

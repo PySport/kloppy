@@ -1,20 +1,20 @@
 """Functions to load Stats Perform data."""
+
 from typing import List, Optional
 
 from kloppy.config import get_config
-from kloppy.domain import (
-    EventDataset,
-    EventFactory,
-    Provider,
-    TrackingDataset,
+from kloppy.domain import EventDataset, EventFactory, Provider, TrackingDataset
+from kloppy.infra.serializers.event.statsperform import (
+    StatsPerformDeserializer as StatsPerformEventDeserializer,
 )
 from kloppy.infra.serializers.event.statsperform import (
     StatsPerformInputs as StatsPerformEventInputs,
-    StatsPerformDeserializer as StatsPerformEventDeserializer,
+)
+from kloppy.infra.serializers.tracking.statsperform import (
+    StatsPerformDeserializer as StatsPerformTrackingDeserializer,
 )
 from kloppy.infra.serializers.tracking.statsperform import (
     StatsPerformInputs as StatsPerformTrackingInputs,
-    StatsPerformDeserializer as StatsPerformTrackingDeserializer,
 )
 from kloppy.io import FileLike, open_as_file
 from kloppy.utils import deprecated
@@ -39,9 +39,7 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=meta_data_fp,
@@ -80,9 +78,7 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),  # type: ignore
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma3_data
-    ) as ma3_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma3_data) as ma3_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformEventInputs(
                 meta_data=ma1_data_fp,
@@ -111,7 +107,7 @@ def load_tracking(
 
     Args:
         ma1_data: json or xml feed containing the lineup information
-        ma25_data: txt file containing the tracking data
+        ma25_data: txt file linked in the MA25 Match Tracking Feed; also known as an OPT file
         tracking_system: system that generated the tracking data
         pitch_length: length of the pitch (in meters)
         pitch_width: width of the pitch (in meters)
@@ -130,9 +126,7 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma25_data
-    ) as ma25_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma25_data) as ma25_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=ma1_data_fp,

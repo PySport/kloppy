@@ -50,7 +50,6 @@ from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
-from . import wyscout_tags
 
 
 logger = logging.getLogger(__name__)

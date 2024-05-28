@@ -1,6 +1,6 @@
 from typing import IO, Optional
 
-from .base import OptaParser, OptaEvent
+from .base import OptaEvent, OptaParser
 from .f7_xml import F7XMLParser
 from .f24_xml import F24XMLParser
 from .ma1_json import MA1JSONParser
@@ -17,10 +17,11 @@ def get_parser(
 ) -> OptaParser:
     # infer the data format if not provided
     if feed_format is None:
-        if feed.peek().decode("utf-8")[0] == "<":
+        if feed.read(1).decode("utf-8")[0] == "<":
             feed_format = "XML"
         else:
             feed_format = "JSON"
+        feed.seek(0)
 
     # select the appropriate parser
     feed_code = feed_code.upper()

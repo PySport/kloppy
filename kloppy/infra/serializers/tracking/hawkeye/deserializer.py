@@ -83,8 +83,8 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             period_id = period["segment"]
             parsed_periods[period_id] = Period(
                 id=period_id,
-                start_timestamp=datetime.fromisoformat(period["startTimeUTC"].replace("Z", "+00:00")),
-                end_timestamp=datetime.fromisoformat(period["endTimeUTC"].replace("Z", "+00:00"))
+                start_timestamp=datetime.strptime(period["startTimeUTC"], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                end_timestamp=datetime.strptime(period["endTimeUTC"], '%Y-%m-%dT%H:%M:%S.%fZ'),
             )
         return parsed_periods
 

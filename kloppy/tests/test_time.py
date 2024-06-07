@@ -4,7 +4,7 @@ from typing import Tuple
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import AbsTime, Period, AbsTimeContainer
+from kloppy.domain import Time, Period, TimeContainer
 
 
 @pytest.fixture
@@ -35,9 +35,9 @@ class TestAbsTime:
         """Test subtract with non-period overlapping timedelta."""
         period1, *_ = periods
 
-        abs_time = AbsTime(period=period1, timestamp=timedelta(seconds=1800))
+        time = Time(period=period1, timestamp=timedelta(seconds=1800))
 
-        assert abs_time - timedelta(seconds=1000) == AbsTime(
+        assert time - timedelta(seconds=1000) == Time(
             period=period1, timestamp=timedelta(seconds=800)
         )
 
@@ -56,9 +56,9 @@ class TestAbsTime:
         """
         period1, period2, period3 = periods
 
-        abs_time = AbsTime(period=period3, timestamp=timedelta(seconds=800))
+        time = Time(period=period3, timestamp=timedelta(seconds=800))
 
-        assert abs_time - timedelta(seconds=4000) == AbsTime(
+        assert time - timedelta(seconds=4000) == Time(
             period=period1, timestamp=timedelta(seconds=2500)
         )
 
@@ -66,34 +66,34 @@ class TestAbsTime:
         """Test subtract that goes over start of first period. This should return start of match."""
         period1, *_ = periods
 
-        abs_time = AbsTime(period=period1, timestamp=timedelta(seconds=1800))
+        time = Time(period=period1, timestamp=timedelta(seconds=1800))
 
-        assert abs_time - timedelta(seconds=2000) == AbsTime(
+        assert time - timedelta(seconds=2000) == Time(
             period=period1, timestamp=timedelta(0)
         )
 
     def test_subtract_two_abstime(self, periods):
         """Subtract two AbsTime in same period"""
         period1, *_ = periods
-        abs_time1 = AbsTime(period=period1, timestamp=timedelta(seconds=1000))
-        abs_time2 = AbsTime(period=period1, timestamp=timedelta(seconds=800))
+        time1 = Time(period=period1, timestamp=timedelta(seconds=1000))
+        time2 = Time(period=period1, timestamp=timedelta(seconds=800))
 
-        assert abs_time1 - abs_time2 == timedelta(seconds=200)
+        assert time1 - time2 == timedelta(seconds=200)
 
     def test_subtract_two_abstime_spans_periods(self, periods):
         """Subtract AbsTime over multiple periods."""
         period1, period2, period3 = periods
-        abs_time1 = AbsTime(period=period1, timestamp=timedelta(seconds=800))
-        abs_time2 = AbsTime(period=period2, timestamp=timedelta(seconds=800))
+        time1 = Time(period=period1, timestamp=timedelta(seconds=800))
+        time2 = Time(period=period2, timestamp=timedelta(seconds=800))
 
-        assert abs_time2 - abs_time1 == timedelta(seconds=2700)
+        assert time2 - time1 == timedelta(seconds=2700)
 
     def test_add_timedelta_same_period(self, periods):
         """Test add timedelta in same period"""
         period1, *_ = periods
 
-        abs_time = AbsTime(period=period1, timestamp=timedelta(seconds=800))
-        assert abs_time + timedelta(seconds=100) == AbsTime(
+        time = Time(period=period1, timestamp=timedelta(seconds=800))
+        assert time + timedelta(seconds=100) == Time(
             period=period1, timestamp=timedelta(seconds=900)
         )
 
@@ -110,12 +110,12 @@ class TestAbsTime:
         """
         period1, period2, period3 = periods
 
-        abs_time = AbsTime(period=period1, timestamp=timedelta(seconds=800))
-        assert abs_time + timedelta(seconds=5000) == AbsTime(
+        time = Time(period=period1, timestamp=timedelta(seconds=800))
+        assert time + timedelta(seconds=5000) == Time(
             period=period3, timestamp=timedelta(seconds=100)
         )
 
-        assert abs_time + timedelta(seconds=2600) == AbsTime(
+        assert time + timedelta(seconds=2600) == Time(
             period=period2, timestamp=timedelta(seconds=700)
         )
 
@@ -128,15 +128,13 @@ class TestAbsTime:
 
         # Determine time until first formation change
         diff = (
-            formation_changes[0].abs_time
-            - dataset.metadata.periods[0].start_abs_time
+            formation_changes[0].time - dataset.metadata.periods[0].start_time
         )
         assert diff == timedelta(seconds=2705.267)
 
         # Time until last formation change
         diff = (
-            formation_changes[-1].abs_time
-            - dataset.metadata.periods[0].start_abs_time
+            formation_changes[-1].time - dataset.metadata.periods[0].start_time
         )
         assert diff == timedelta(seconds=5067.367)
 
@@ -145,36 +143,34 @@ class TestAbsTimeContainer:
     def test_value_at(self, periods):
         period1, *_ = periods
 
-        abs_time1 = AbsTime(period=period1, timestamp=timedelta(seconds=800))
-        container = AbsTimeContainer()
-        container.add(abs_time1, 10)
+        time1 = Time(period=period1, timestamp=timedelta(seconds=800))
+        container = TimeContainer()
+        container.add(time1, 10)
 
-        value = container.value_at(abs_time1 + timedelta(seconds=1))
+        value = container.value_at(time1 + timedelta(seconds=1))
         assert value == 10
 
-        value = container.value_at(abs_time1 + timedelta(seconds=10000))
+        value = container.value_at(time1 + timedelta(seconds=10000))
         assert value == 10
 
         with pytest.raises(ValueError):
-            container.value_at(abs_time1 - timedelta(seconds=1))
+            container.value_at(time1 - timedelta(seconds=1))
 
     def test_ranges(self, periods):
         period1, period2, _ = periods
 
-        abs_time1 = AbsTime(
-            period=period1, timestamp=timedelta(seconds=15 * 60)
-        )
-        container = AbsTimeContainer()
+        time1 = Time(period=period1, timestamp=timedelta(seconds=15 * 60))
+        container = TimeContainer()
 
         # Player gets on the pitch
-        container.add(abs_time1, "LB")
+        container.add(time1, "LB")
 
         # Switches from LB to RB
-        container.add(abs_time1 + timedelta(seconds=40 * 60), "RB")
+        container.add(time1 + timedelta(seconds=40 * 60), "RB")
 
         # Player gets of the pitch
         container.add(
-            AbsTime(period=period2, timestamp=timedelta(seconds=20 * 60)), None
+            Time(period=period2, timestamp=timedelta(seconds=20 * 60)), None
         )
 
         print("")

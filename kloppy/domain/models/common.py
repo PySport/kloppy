@@ -42,7 +42,7 @@ from .pitch import (
     WyscoutPitchDimensions,
 )
 from .formation import FormationType
-from .time import AbsTime, Period, AbsTimeContainer
+from .time import Time, Period, TimeContainer
 from ...exceptions import (
     OrientationError,
     InvalidFilterError,
@@ -903,8 +903,8 @@ class DataRecord(ABC):
         pass
 
     @property
-    def abs_time(self) -> AbsTime:
-        return AbsTime(period=self.period, timestamp=self.timestamp)
+    def time(self) -> Time:
+        return Time(period=self.period, timestamp=self.timestamp)
 
     def set_refs(
         self,

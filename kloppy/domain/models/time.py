@@ -50,12 +50,12 @@ class Period:
         )
 
     @property
-    def start_abs_time(self) -> "AbsTime":
-        return AbsTime(period=self, timestamp=self.start_timestamp)
+    def start_time(self) -> "Time":
+        return Time(period=self, timestamp=self.start_timestamp)
 
     @property
-    def end_abs_time(self) -> "AbsTime":
-        return AbsTime(period=self, timestamp=self.end_timestamp)
+    def end_time(self) -> "Time":
+        return Time(period=self, timestamp=self.end_timestamp)
 
     @property
     def duration(self) -> timedelta:
@@ -90,21 +90,21 @@ class Period:
 
 
 @dataclass
-class AbsTime:
+class Time:
     period: "Period"
     timestamp: timedelta
 
     @overload
-    def __sub__(self, other: timedelta) -> "AbsTime":
+    def __sub__(self, other: timedelta) -> "Time":
         ...
 
     @overload
-    def __sub__(self, other: "AbsTime") -> timedelta:
+    def __sub__(self, other: "Time") -> timedelta:
         ...
 
     def __sub__(
-        self, other: Union["AbsTime", timedelta]
-    ) -> Union["AbsTime", timedelta]:
+        self, other: Union["Time", timedelta]
+    ) -> Union["Time", timedelta]:
         """
         Subtract a timedelta or AbsTime from the current AbsTime.
 
@@ -120,18 +120,16 @@ class AbsTime:
                 other -= current_timestamp
                 if not current_period.prev_period:
                     # We reached start of the match, lets just return start itself
-                    return AbsTime(
-                        period=current_period, timestamp=timedelta(0)
-                    )
+                    return Time(period=current_period, timestamp=timedelta(0))
 
                 current_period = current_period.prev_period
                 current_timestamp = current_period.duration
 
-            return AbsTime(
+            return Time(
                 period=current_period, timestamp=current_timestamp - other
             )
 
-        elif isinstance(other, AbsTime):
+        elif isinstance(other, Time):
             if self.period >= other.period:
                 diff = self.timestamp
                 current_period = self.period
@@ -145,7 +143,7 @@ class AbsTime:
         else:
             raise ValueError(f"Cannot subtract {other}")
 
-    def __add__(self, other: timedelta) -> "AbsTime":
+    def __add__(self, other: timedelta) -> "Time":
         assert isinstance(other, timedelta)
         current_timestamp = self.timestamp
         current_period = self.period
@@ -155,18 +153,16 @@ class AbsTime:
             other -= current_period.duration - current_timestamp
             if not current_period.next_period:
                 # We reached start of the match, lets just return start itself
-                return AbsTime(
+                return Time(
                     period=current_period, timestamp=current_period.duration
                 )
 
             current_period = current_period.next_period
             current_timestamp = timedelta(0)
 
-        return AbsTime(
-            period=current_period, timestamp=current_timestamp + other
-        )
+        return Time(period=current_period, timestamp=current_timestamp + other)
 
-    def __radd__(self, other: timedelta) -> "AbsTime":
+    def __radd__(self, other: timedelta) -> "Time":
         assert isinstance(other, timedelta)
         return self.__add__(other)
 
@@ -187,24 +183,24 @@ T = TypeVar("T")
 
 
 class Pair(NamedTuple):
-    key: AbsTime
+    key: Time
     item: T
 
 
-class AbsTimeContainer(Generic[T]):
+class TimeContainer(Generic[T]):
     def __init__(self):
         self.items: SortedList = SortedList(key=lambda pair: pair.key)
 
-    def add(self, abs_time: AbsTime, item: T):
-        self.items.add(Pair(key=abs_time, item=item))
+    def add(self, time: Time, item: T):
+        self.items.add(Pair(key=time, item=item))
 
-    def value_at(self, abs_time: AbsTime) -> T:
-        idx = self.items.bisect_left(Pair(key=abs_time, item=None)) - 1
+    def value_at(self, time: Time) -> T:
+        idx = self.items.bisect_left(Pair(key=time, item=None)) - 1
         if idx < 0:
             raise ValueError("Not found")
         return self.items[idx].item
 
-    def ranges(self, add_end: bool = True) -> List[Tuple[AbsTime, AbsTime, T]]:
+    def ranges(self, add_end: bool = True) -> List[Tuple[Time, Time, T]]:
         items = list(self.items)
         if not items:
             return []

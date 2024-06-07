@@ -710,7 +710,7 @@ class Event(DataRecord, ABC):
         return (
             f"<{event_type} "
             f"event_id='{self.event_id}' "
-            f"time='{self.abs_time}' "
+            f"time='{self.time}' "
             f"player='{self.player}' "
             f"result='{self.result}'>"
         )

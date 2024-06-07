@@ -57,4 +57,4 @@ class TestAdapter:
             # Asserts borrowed from `test_opta.py`
             assert dataset.metadata.provider == Provider.OPTA
             assert dataset.dataset_type == DatasetType.EVENT
-            assert len(dataset.events) == 34
+            assert len(dataset.events) == 36

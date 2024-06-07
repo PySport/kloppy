@@ -14,6 +14,10 @@ class OrientationError(KloppyError):
     pass
 
 
+class MissingDimensionError(KloppyError):
+    pass
+
+
 class OrphanedRecordError(KloppyError):
     pass
 

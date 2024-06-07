@@ -193,9 +193,7 @@ class Pair(NamedTuple):
 
 class AbsTimeContainer(Generic[T]):
     def __init__(self):
-        self.items: SortedList[Pair] = SortedList[Pair](
-            key=lambda pair: pair.key
-        )
+        self.items: SortedList = SortedList(key=lambda pair: pair.key)
 
     def add(self, abs_time: AbsTime, item: T):
         self.items.add(Pair(key=abs_time, item=item))

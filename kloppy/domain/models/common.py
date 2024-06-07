@@ -914,6 +914,32 @@ class DatasetFlag(Flag):
 
 
 @dataclass
+class Statistic(ABC):
+    name: str
+
+
+@dataclass
+class ScalarStatistic(Statistic):
+    value: float
+
+
+@dataclass
+class ExpectedGoals(ScalarStatistic):
+    """Expected goals"""
+
+    def __init__(self, value: float):
+        super().__init__(name="xG", value=value)
+
+
+@dataclass
+class PostShotExpectedGoals(ScalarStatistic):
+    """Post-shot expected goals"""
+
+    def __init__(self, value: float):
+        super().__init__(name="PsXG", value=value)
+
+
+@dataclass
 class DataRecord(ABC):
     """
     DataRecord
@@ -932,6 +958,7 @@ class DataRecord(ABC):
     timestamp: timedelta
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
+    statistics: Optional[List[Statistic]] = field(default_factory=list)
 
     @property
     @abstractmethod

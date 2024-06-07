@@ -492,7 +492,7 @@ class CounterAttackQualifier(BoolQualifier):
     pass
 
 
-@dataclass
+@dataclass(kw_only=True)
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
     """
@@ -736,7 +736,7 @@ class GenericEvent(Event):
     event_name: str = "generic"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
     """
@@ -756,7 +756,7 @@ class ShotEvent(Event):
     event_name: str = "shot"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
     """
@@ -781,7 +781,7 @@ class PassEvent(Event):
     event_name: str = "pass"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
     """
@@ -799,7 +799,7 @@ class TakeOnEvent(Event):
     event_name: str = "take_on"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class CarryEvent(Event):
     """
@@ -868,7 +868,7 @@ class DuelEvent(Event):
     event_name: str = "duel"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
     """
@@ -916,7 +916,7 @@ class PlayerOnEvent(Event):
     event_name: str = "player_on"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
@@ -934,7 +934,7 @@ class CardEvent(Event):
     event_name: str = "card"
 
 
-@dataclass(repr=False)
+@dataclass(repr=False, kw_only=True)
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """

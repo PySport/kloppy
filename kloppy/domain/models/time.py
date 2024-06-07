@@ -48,6 +48,9 @@ class Period:
     def __lt__(self, other: 'Period'):
         return self.id < other.id
 
+    def __ge__(self, other):
+        return self == other or other < self
+
     def __hash__(self):
         return id(self.id)
 
@@ -90,15 +93,61 @@ class AbsTime:
         The period duration must be taking into account.
         """
         if isinstance(other, timedelta):
-            pass
+            current_timestamp = self.timestamp
+            current_period = self.period
+            while other > current_timestamp:
+                other -= current_timestamp
+                if not current_period.prev_period:
+                    # We reached start of the match, lets just return start itself
+                    return AbsTime(
+                        period=current_period,
+                        timestamp=timedelta(0)
+                    )
+
+                current_period = current_period.prev_period
+                current_timestamp = current_period.duration
+
+            return AbsTime(
+                period=current_period,
+                timestamp=current_timestamp - other
+            )
+
         elif isinstance(other, AbsTime):
-            pass
+            if self.period >= other.period:
+                diff = self.timestamp
+                current_period = self.period
+                while current_period > other.period:
+                    current_period = current_period.prev_period
+                    diff += current_period.duration
+
+                return diff - other.timestamp
+            else:
+                return -other.__sub__(self)
         else:
             raise ValueError(f'Cannot subtract {other}')
 
     def __add__(self, other: timedelta) -> 'AbsTime':
         assert isinstance(other, timedelta)
-        return self.__sub__(-other)
+        current_timestamp = self.timestamp
+        current_period = self.period
+        while other > current_period.duration:
+            # Subtract time left in this period
+
+            other -= (current_period.duration - current_timestamp)
+            if not current_period.next_period:
+                # We reached start of the match, lets just return start itself
+                return AbsTime(
+                    period=current_period,
+                    timestamp=current_period.duration
+                )
+
+            current_period = current_period.next_period
+            current_timestamp = timedelta(0)
+
+        return AbsTime(
+            period=current_period,
+            timestamp=current_timestamp + other
+        )
 
     def __radd__(self, other: timedelta) -> 'AbsTime':
         assert isinstance(other, timedelta)

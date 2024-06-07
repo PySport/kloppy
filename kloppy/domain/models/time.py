@@ -39,13 +39,21 @@ class Period:
         )
 
     @property
+    def start_abs_time(self) -> "AbsTime":
+        return AbsTime(period=self, timestamp=self.start_timestamp)
+
+    @property
+    def end_abs_time(self) -> "AbsTime":
+        return AbsTime(period=self, timestamp=self.end_timestamp)
+
+    @property
     def duration(self) -> timedelta:
         return self.end_timestamp - self.start_timestamp
 
     def __eq__(self, other):
         return isinstance(other, Period) and other.id == self.id
 
-    def __lt__(self, other: 'Period'):
+    def __lt__(self, other: "Period"):
         return self.id < other.id
 
     def __ge__(self, other):
@@ -72,18 +80,20 @@ class Period:
 
 @dataclass
 class AbsTime:
-    period: 'Period'
+    period: "Period"
     timestamp: timedelta
 
     @overload
-    def __sub__(self, other: timedelta) -> 'AbsTime':
+    def __sub__(self, other: timedelta) -> "AbsTime":
         ...
 
     @overload
-    def __sub__(self, other: 'AbsTime') -> timedelta:
+    def __sub__(self, other: "AbsTime") -> timedelta:
         ...
 
-    def __sub__(self, other: Union['AbsTime', timedelta]) -> Union['AbsTime', timedelta]:
+    def __sub__(
+        self, other: Union["AbsTime", timedelta]
+    ) -> Union["AbsTime", timedelta]:
         """
         Subtract a timedelta or AbsTime from the current AbsTime.
 
@@ -100,16 +110,14 @@ class AbsTime:
                 if not current_period.prev_period:
                     # We reached start of the match, lets just return start itself
                     return AbsTime(
-                        period=current_period,
-                        timestamp=timedelta(0)
+                        period=current_period, timestamp=timedelta(0)
                     )
 
                 current_period = current_period.prev_period
                 current_timestamp = current_period.duration
 
             return AbsTime(
-                period=current_period,
-                timestamp=current_timestamp - other
+                period=current_period, timestamp=current_timestamp - other
             )
 
         elif isinstance(other, AbsTime):
@@ -124,32 +132,30 @@ class AbsTime:
             else:
                 return -other.__sub__(self)
         else:
-            raise ValueError(f'Cannot subtract {other}')
+            raise ValueError(f"Cannot subtract {other}")
 
-    def __add__(self, other: timedelta) -> 'AbsTime':
+    def __add__(self, other: timedelta) -> "AbsTime":
         assert isinstance(other, timedelta)
         current_timestamp = self.timestamp
         current_period = self.period
         while other > current_period.duration:
             # Subtract time left in this period
 
-            other -= (current_period.duration - current_timestamp)
+            other -= current_period.duration - current_timestamp
             if not current_period.next_period:
                 # We reached start of the match, lets just return start itself
                 return AbsTime(
-                    period=current_period,
-                    timestamp=current_period.duration
+                    period=current_period, timestamp=current_period.duration
                 )
 
             current_period = current_period.next_period
             current_timestamp = timedelta(0)
 
         return AbsTime(
-            period=current_period,
-            timestamp=current_timestamp + other
+            period=current_period, timestamp=current_timestamp + other
         )
 
-    def __radd__(self, other: timedelta) -> 'AbsTime':
+    def __radd__(self, other: timedelta) -> "AbsTime":
         assert isinstance(other, timedelta)
         return self.__add__(other)
 

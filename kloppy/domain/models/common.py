@@ -15,7 +15,8 @@ from typing import (
     Generic,
     NewType,
     overload,
-    Iterable, NamedTuple,
+    Iterable,
+    NamedTuple,
 )
 
 
@@ -876,9 +877,6 @@ class DatasetFlag(Flag):
     BALL_STATE = 2
 
 
-
-
-
 @dataclass
 class DataRecord(ABC):
     """
@@ -906,10 +904,7 @@ class DataRecord(ABC):
 
     @property
     def abs_time(self) -> AbsTime:
-        return AbsTime(
-            period=self.period,
-            timestamp=self.timestamp
-        )
+        return AbsTime(period=self.period, timestamp=self.timestamp)
 
     def set_refs(
         self,

@@ -1,6 +1,17 @@
 from dataclasses import dataclass, field
 from datetime import timedelta, datetime
-from typing import overload, Union, Optional
+from typing import (
+    overload,
+    Union,
+    Optional,
+    TypeVar,
+    Generic,
+    List,
+    Tuple,
+    NamedTuple,
+)
+
+from sortedcontainers import SortedList
 
 from kloppy.exceptions import KloppyError
 
@@ -138,7 +149,7 @@ class AbsTime:
         assert isinstance(other, timedelta)
         current_timestamp = self.timestamp
         current_period = self.period
-        while other > current_period.duration:
+        while (current_timestamp + other) > current_period.duration:
             # Subtract time left in this period
 
             other -= current_period.duration - current_timestamp
@@ -161,3 +172,58 @@ class AbsTime:
 
     def __rsub__(self, other):
         raise RuntimeError("Doesn't make sense.")
+
+    def __lt__(self, other):
+        return self.period < other.period or (
+            self.period == other.period and self.timestamp < other.timestamp
+        )
+
+    def __str__(self):
+        m, s = divmod(self.timestamp.total_seconds(), 60)
+        return f"P{self.period.id}T{m:02.0f}:{s:02.0f}"
+
+
+T = TypeVar("T")
+
+
+class Pair(NamedTuple):
+    key: AbsTime
+    item: T
+
+
+class AbsTimeContainer(Generic[T]):
+    def __init__(self):
+        self.items: SortedList[Pair] = SortedList[Pair](
+            key=lambda pair: pair.key
+        )
+
+    def add(self, abs_time: AbsTime, item: T):
+        self.items.add(Pair(key=abs_time, item=item))
+
+    def value_at(self, abs_time: AbsTime) -> T:
+        idx = self.items.bisect_left(Pair(key=abs_time, item=None)) - 1
+        if idx < 0:
+            raise ValueError("Not found")
+        return self.items[idx].item
+
+    def ranges(self, add_end: bool = True) -> List[Tuple[AbsTime, AbsTime, T]]:
+        items = list(self.items)
+        if not items:
+            return []
+
+        if add_end:
+            items.append(
+                Pair(
+                    # Ugly way to get us to the end of the last period
+                    key=items[0].key + timedelta(seconds=10_000_000),
+                    item=None,
+                )
+            )
+
+        if len(items) < 2:
+            raise ValueError("Cannot create ranges when length < 2")
+
+        ranges_ = []
+        for start_pair, end_pair in zip(items[:-1], items[1:]):
+            ranges_.append((start_pair.key, end_pair.key, start_pair.item))
+        return ranges_

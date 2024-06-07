@@ -4,7 +4,7 @@ from typing import Tuple
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import AbsTime, Period
+from kloppy.domain import AbsTime, Period, AbsTimeContainer
 
 
 @pytest.fixture
@@ -115,6 +115,10 @@ class TestAbsTime:
             period=period3, timestamp=timedelta(seconds=100)
         )
 
+        assert abs_time + timedelta(seconds=2600) == AbsTime(
+            period=period2, timestamp=timedelta(seconds=700)
+        )
+
     def test_statsbomb(self, base_dir):
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",
@@ -135,3 +139,44 @@ class TestAbsTime:
             - dataset.metadata.periods[0].start_abs_time
         )
         assert diff == timedelta(seconds=5067.367)
+
+
+class TestAbsTimeContainer:
+    def test_value_at(self, periods):
+        period1, *_ = periods
+
+        abs_time1 = AbsTime(period=period1, timestamp=timedelta(seconds=800))
+        container = AbsTimeContainer()
+        container.add(abs_time1, 10)
+
+        value = container.value_at(abs_time1 + timedelta(seconds=1))
+        assert value == 10
+
+        value = container.value_at(abs_time1 + timedelta(seconds=10000))
+        assert value == 10
+
+        with pytest.raises(ValueError):
+            container.value_at(abs_time1 - timedelta(seconds=1))
+
+    def test_ranges(self, periods):
+        period1, period2, _ = periods
+
+        abs_time1 = AbsTime(
+            period=period1, timestamp=timedelta(seconds=60 * 15)
+        )
+        container = AbsTimeContainer()
+
+        # Player gets on the pitch
+        container.add(abs_time1, "LB")
+
+        # Switches to RB
+        container.add(abs_time1 + timedelta(seconds=2400), "RB")
+
+        # Player gets of the pitch
+        container.add(
+            AbsTime(period=period2, timestamp=timedelta(seconds=60 * 20)), None
+        )
+
+        print("")
+        for start, end, item in container.ranges(add_end=False):
+            print(f"{start} - {end} = {end - start} -> {item}")

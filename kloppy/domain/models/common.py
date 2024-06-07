@@ -42,7 +42,7 @@ from .pitch import (
     WyscoutPitchDimensions,
 )
 from .formation import FormationType
-from .time import AbsTime, Period
+from .time import AbsTime, Period, AbsTimeContainer
 from ...exceptions import (
     OrientationError,
     InvalidFilterError,

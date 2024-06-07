@@ -701,8 +701,6 @@ class Event(DataRecord, ABC):
             return True
 
     def __str__(self):
-        m, s = divmod(self.timestamp.total_seconds(), 60)
-
         event_type = (
             self.__class__.__name__
             if not isinstance(self, GenericEvent)
@@ -712,7 +710,7 @@ class Event(DataRecord, ABC):
         return (
             f"<{event_type} "
             f"event_id='{self.event_id}' "
-            f"time='P{self.period.id}T{m:02.0f}:{s:02.0f}' "
+            f"time='{self.abs_time}' "
             f"player='{self.player}' "
             f"result='{self.result}'>"
         )

@@ -56,6 +56,13 @@ class Period:
         prev: Optional["Period"],
         next_: Optional["Period"],
     ):
+        """
+        Set references to other periods
+
+        Parameters:
+            prev: Period before this period
+            next_: Period after this period
+        """
         self.prev_period = prev
         self.next_period = next_
 
@@ -74,6 +81,14 @@ class AbsTime:
         ...
 
     def __sub__(self, other: Union['AbsTime', timedelta]) -> Union['AbsTime', timedelta]:
+        """
+        Subtract a timedelta or AbsTime from the current AbsTime.
+
+        AbsTime - AbsTime = timedelta
+        AbsTime - timedelta = AbsTime
+
+        The period duration must be taking into account.
+        """
         if isinstance(other, timedelta):
             pass
         elif isinstance(other, AbsTime):
@@ -82,9 +97,11 @@ class AbsTime:
             raise ValueError(f'Cannot subtract {other}')
 
     def __add__(self, other: timedelta) -> 'AbsTime':
+        assert isinstance(other, timedelta)
         return self.__sub__(-other)
 
     def __radd__(self, other: timedelta) -> 'AbsTime':
+        assert isinstance(other, timedelta)
         return self.__add__(other)
 
     def __rsub__(self, other):

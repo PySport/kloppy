@@ -1,0 +1,1089 @@
+[
+  {
+    "id": "f9f6f6be-d1ac-4e00-be97-27d87f14f924",
+    "index": 1,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 35,
+      "name": "Starting XI"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "tactics": {
+      "formation": 3412,
+      "lineup": [
+        {
+          "player": {
+            "id": 100,
+            "name": "Vagner da Silva"
+          },
+          "position": {
+            "id": 1,
+            "name": "Goalkeeper"
+          },
+          "jersey_number": 1
+        },
+        {
+          "player": {
+            "id": 21449,
+            "name": "Cristian Marcelo González Tassano"
+          },
+          "position": {
+            "id": 3,
+            "name": "Right Center Back"
+          },
+          "jersey_number": 17
+        },
+        {
+          "player": {
+            "id": 10317,
+            "name": "João Ricardo Silva Afonso"
+          },
+          "position": {
+            "id": 4,
+            "name": "Center Back"
+          },
+          "jersey_number": 5
+        },
+        {
+          "player": {
+            "id": 10841,
+            "name": "João Carlos Reis Graça"
+          },
+          "position": {
+            "id": 5,
+            "name": "Left Center Back"
+          },
+          "jersey_number": 31
+        },
+        {
+          "player": {
+            "id": 12043,
+            "name": "Anthony D'Alberto"
+          },
+          "position": {
+            "id": 7,
+            "name": "Right Wing Back"
+          },
+          "jersey_number": 27
+        },
+        {
+          "player": {
+            "id": 132877,
+            "name": "Simão Pedro Soares Azevedo"
+          },
+          "position": {
+            "id": 8,
+            "name": "Left Wing Back"
+          },
+          "jersey_number": 13
+        },
+        {
+          "player": {
+            "id": 28294,
+            "name": "Carlos Enrique Rentería Olaya"
+          },
+          "position": {
+            "id": 9,
+            "name": "Right Defensive Midfield"
+          },
+          "jersey_number": 77
+        },
+        {
+          "player": {
+            "id": 346672,
+            "name": "Juan Andrés Balanta Palacios"
+          },
+          "position": {
+            "id": 11,
+            "name": "Left Defensive Midfield"
+          },
+          "jersey_number": 30
+        },
+        {
+          "player": {
+            "id": 198734,
+            "name": "Luis Felipe Gómez Miranda"
+          },
+          "position": {
+            "id": 19,
+            "name": "Center Attacking Midfield"
+          },
+          "jersey_number": 40
+        },
+        {
+          "player": {
+            "id": 22255,
+            "name": "Fábio Patrick dos Reis dos Santos Fernandes"
+          },
+          "position": {
+            "id": 22,
+            "name": "Right Center Forward"
+          },
+          "jersey_number": 29
+        },
+        {
+          "player": {
+            "id": 12057,
+            "name": "Welthon Fiel Sampaio"
+          },
+          "position": {
+            "id": 24,
+            "name": "Left Center Forward"
+          },
+          "jersey_number": 10
+        }
+      ]
+    }
+  },
+  {
+    "id": "5d23a18b-4918-4888-a589-0289d4b44039",
+    "index": 2,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 35,
+      "name": "Starting XI"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "tactics": {
+      "formation": 4231,
+      "lineup": [
+        {
+          "player": {
+            "id": 51738,
+            "name": "Rogério Paulo Veiga Santos"
+          },
+          "position": {
+            "id": 1,
+            "name": "Goalkeeper"
+          },
+          "jersey_number": 93
+        },
+        {
+          "player": {
+            "id": 405717,
+            "name": "Rafael Ferreira Viegas"
+          },
+          "position": {
+            "id": 2,
+            "name": "Right Back"
+          },
+          "jersey_number": 94
+        },
+        {
+          "player": {
+            "id": 398253,
+            "name": "João Carlos Pereira Batista"
+          },
+          "position": {
+            "id": 3,
+            "name": "Right Center Back"
+          },
+          "jersey_number": 26
+        },
+        {
+          "player": {
+            "id": 132986,
+            "name": "Gustavo Moreno de França"
+          },
+          "position": {
+            "id": 5,
+            "name": "Left Center Back"
+          },
+          "jersey_number": 33
+        },
+        {
+          "player": {
+            "id": 163715,
+            "name": "Emmanuel Maviram"
+          },
+          "position": {
+            "id": 6,
+            "name": "Left Back"
+          },
+          "jersey_number": 12
+        },
+        {
+          "player": {
+            "id": 408935,
+            "name": "Mohamed Lamine Seyba Sako"
+          },
+          "position": {
+            "id": 9,
+            "name": "Right Defensive Midfield"
+          },
+          "jersey_number": 5
+        },
+        {
+          "player": {
+            "id": 106084,
+            "name": "Ericson Jorge Silva Rodrigues Duarte"
+          },
+          "position": {
+            "id": 11,
+            "name": "Left Defensive Midfield"
+          },
+          "jersey_number": 23
+        },
+        {
+          "player": {
+            "id": 49373,
+            "name": "Boubacar Rafael Neto Hanne"
+          },
+          "position": {
+            "id": 17,
+            "name": "Right Wing"
+          },
+          "jersey_number": 70
+        },
+        {
+          "player": {
+            "id": 398255,
+            "name": "Jair Semedo Monteiro"
+          },
+          "position": {
+            "id": 19,
+            "name": "Center Attacking Midfield"
+          },
+          "jersey_number": 20
+        },
+        {
+          "player": {
+            "id": 132566,
+            "name": "João Caiado Vaz Dias"
+          },
+          "position": {
+            "id": 21,
+            "name": "Left Wing"
+          },
+          "jersey_number": 8
+        },
+        {
+          "player": {
+            "id": 398256,
+            "name": "Gonçalo Filipe Carmo Teixeira"
+          },
+          "position": {
+            "id": 23,
+            "name": "Center Forward"
+          },
+          "jersey_number": 7
+        }
+      ]
+    }
+  },
+  {
+    "id": "83097dfa-eff0-4523-8744-ebfdf174b091",
+    "index": 3,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "262b88a9-e39f-4e21-bc06-02ce3b316ec9"
+    ]
+  },
+  {
+    "id": "787f08bd-7973-48d5-a972-d3d62841490d",
+    "index": 4,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "be0c4d1a-457e-4a10-84b9-cff8be9fd73d"
+    ]
+  },
+  {
+    "id": "262b88a9-e39f-4e21-bc06-02ce3b316ec9",
+    "index": 5,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "83097dfa-eff0-4523-8744-ebfdf174b091"
+    ]
+  },
+  {
+    "id": "be0c4d1a-457e-4a10-84b9-cff8be9fd73d",
+    "index": 6,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 1,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "787f08bd-7973-48d5-a972-d3d62841490d"
+    ]
+  },
+  {
+    "id": "628bf3b3-d340-4e6b-afd9-68ec3bf5a28c",
+    "index": 7,
+    "period": 1,
+    "timestamp": "00:00:00.554",
+    "minute": 0,
+    "second": 0,
+    "type": {
+      "id": 30,
+      "name": "Pass"
+    },
+    "possession": 2,
+    "possession_team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "play_pattern": {
+      "id": 9,
+      "name": "From Kick Off"
+    },
+    "obv_for_after": 0.016713165,
+    "obv_for_before": 0.0068286974,
+    "obv_for_net": 0.009884467,
+    "obv_against_after": 0.00986372,
+    "obv_against_before": 0.009690916,
+    "obv_against_net": 1.728041E-4,
+    "obv_total_net": 0.009711663,
+    "off_camera": true,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "player": {
+      "id": 132566,
+      "name": "João Caiado Vaz Dias"
+    },
+    "position": {
+      "id": 21,
+      "name": "Left Wing"
+    },
+    "location": [
+      61.0,
+      40.1
+    ],
+    "duration": 0.9,
+    "related_events": [
+      "ead32169-7bdd-4ffd-9d74-f5478528f8f7"
+    ],
+    "pass": {
+      "recipient": {
+        "id": 398255,
+        "name": "Jair Semedo Monteiro"
+      },
+      "length": 10.261579,
+      "angle": -2.8753407,
+      "height": {
+        "id": 1,
+        "name": "Ground Pass"
+      },
+      "end_location": [
+        51.1,
+        37.4
+      ],
+      "pass_success_probability": 0.9986205101,
+      "body_part": {
+        "id": 40,
+        "name": "Right Foot"
+      },
+      "type": {
+        "id": 65,
+        "name": "Kick Off"
+      }
+    }
+  },
+  {
+    "id": "e314cc8a-0a83-45c3-bd9c-b62a9c2a9313",
+    "index": 1817,
+    "period": 1,
+    "timestamp": "00:50:06.876",
+    "minute": 50,
+    "second": 6,
+    "type": {
+      "id": 34,
+      "name": "Half End"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "5cb24b77-3995-46a3-aea7-ef95795243dd"
+    ]
+  },
+  {
+    "id": "5cb24b77-3995-46a3-aea7-ef95795243dd",
+    "index": 1818,
+    "period": 1,
+    "timestamp": "00:50:06.876",
+    "minute": 50,
+    "second": 6,
+    "type": {
+      "id": 34,
+      "name": "Half End"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "e314cc8a-0a83-45c3-bd9c-b62a9c2a9313"
+    ]
+  },
+  {
+    "id": "fefe31d4-9942-4e8a-8103-b6e74d568ce9",
+    "index": 1819,
+    "period": 2,
+    "timestamp": "00:00:00.000",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "89a8555e-b911-4a7c-a800-0cd10c1d2b3f"
+    ]
+  },
+  {
+    "id": "89a8555e-b911-4a7c-a800-0cd10c1d2b3f",
+    "index": 1820,
+    "period": 2,
+    "timestamp": "00:00:00.000",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 18,
+      "name": "Half Start"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "fefe31d4-9942-4e8a-8103-b6e74d568ce9"
+    ]
+  },
+  {
+    "id": "846d68ef-4afa-4505-b322-e9ed4a71d7ec",
+    "index": 1821,
+    "period": 2,
+    "timestamp": "00:00:00.000",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 19,
+      "name": "Substitution"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "player": {
+      "id": 198734,
+      "name": "Luis Felipe Gómez Miranda"
+    },
+    "position": {
+      "id": 19,
+      "name": "Center Attacking Midfield"
+    },
+    "duration": 0.0,
+    "substitution": {
+      "outcome": {
+        "id": 103,
+        "name": "Tactical"
+      },
+      "replacement": {
+        "id": 31929,
+        "name": "Bernardo Oliveira Dias"
+      }
+    }
+  },
+  {
+    "id": "f7b3c69b-f5ae-4919-98d8-5d049225a7c8",
+    "index": 1822,
+    "period": 2,
+    "timestamp": "00:00:00.000",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 19,
+      "name": "Substitution"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "player": {
+      "id": 132877,
+      "name": "Simão Pedro Soares Azevedo"
+    },
+    "position": {
+      "id": 8,
+      "name": "Left Wing Back"
+    },
+    "duration": 0.0,
+    "substitution": {
+      "outcome": {
+        "id": 103,
+        "name": "Tactical"
+      },
+      "replacement": {
+        "id": 133062,
+        "name": "André Filipe Lopes Teixeira Rodrigues"
+      }
+    }
+  },
+  {
+    "id": "684b818c-b530-4ff7-873a-42f96d7cd1e5",
+    "index": 1823,
+    "period": 2,
+    "timestamp": "00:00:00.000",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 36,
+      "name": "Tactical Shift"
+    },
+    "possession": 93,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "tactics": {
+      "formation": 352,
+      "lineup": [
+        {
+          "player": {
+            "id": 100,
+            "name": "Vagner da Silva"
+          },
+          "position": {
+            "id": 1,
+            "name": "Goalkeeper"
+          },
+          "jersey_number": 1
+        },
+        {
+          "player": {
+            "id": 21449,
+            "name": "Cristian Marcelo González Tassano"
+          },
+          "position": {
+            "id": 3,
+            "name": "Right Center Back"
+          },
+          "jersey_number": 17
+        },
+        {
+          "player": {
+            "id": 10317,
+            "name": "João Ricardo Silva Afonso"
+          },
+          "position": {
+            "id": 4,
+            "name": "Center Back"
+          },
+          "jersey_number": 5
+        },
+        {
+          "player": {
+            "id": 10841,
+            "name": "João Carlos Reis Graça"
+          },
+          "position": {
+            "id": 5,
+            "name": "Left Center Back"
+          },
+          "jersey_number": 31
+        },
+        {
+          "player": {
+            "id": 12043,
+            "name": "Anthony D'Alberto"
+          },
+          "position": {
+            "id": 7,
+            "name": "Right Wing Back"
+          },
+          "jersey_number": 27
+        },
+        {
+          "player": {
+            "id": 133062,
+            "name": "André Filipe Lopes Teixeira Rodrigues"
+          },
+          "position": {
+            "id": 8,
+            "name": "Left Wing Back"
+          },
+          "jersey_number": 21
+        },
+        {
+          "player": {
+            "id": 346672,
+            "name": "Juan Andrés Balanta Palacios"
+          },
+          "position": {
+            "id": 10,
+            "name": "Center Defensive Midfield"
+          },
+          "jersey_number": 30
+        },
+        {
+          "player": {
+            "id": 28294,
+            "name": "Carlos Enrique Rentería Olaya"
+          },
+          "position": {
+            "id": 13,
+            "name": "Right Center Midfield"
+          },
+          "jersey_number": 77
+        },
+        {
+          "player": {
+            "id": 31929,
+            "name": "Bernardo Oliveira Dias"
+          },
+          "position": {
+            "id": 15,
+            "name": "Left Center Midfield"
+          },
+          "jersey_number": 8
+        },
+        {
+          "player": {
+            "id": 22255,
+            "name": "Fábio Patrick dos Reis dos Santos Fernandes"
+          },
+          "position": {
+            "id": 22,
+            "name": "Right Center Forward"
+          },
+          "jersey_number": 29
+        },
+        {
+          "player": {
+            "id": 12057,
+            "name": "Welthon Fiel Sampaio"
+          },
+          "position": {
+            "id": 24,
+            "name": "Left Center Forward"
+          },
+          "jersey_number": 10
+        }
+      ]
+    }
+  },
+  {
+    "id": "00a77d90-e1a7-4cc1-aa79-f30490fb9b81",
+    "index": 1824,
+    "period": 2,
+    "timestamp": "00:00:00.227",
+    "minute": 45,
+    "second": 0,
+    "type": {
+      "id": 30,
+      "name": "Pass"
+    },
+    "possession": 94,
+    "possession_team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "play_pattern": {
+      "id": 9,
+      "name": "From Kick Off"
+    },
+    "obv_for_after": 0.016234264,
+    "obv_for_before": 0.0068286974,
+    "obv_for_net": 0.009405566,
+    "obv_against_after": 0.010076826,
+    "obv_against_before": 0.009690916,
+    "obv_against_net": 3.859103E-4,
+    "obv_total_net": 0.009019656,
+    "off_camera": true,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "player": {
+      "id": 12057,
+      "name": "Welthon Fiel Sampaio"
+    },
+    "position": {
+      "id": 24,
+      "name": "Left Center Forward"
+    },
+    "location": [
+      61.0,
+      40.1
+    ],
+    "duration": 1.0515,
+    "related_events": [
+      "76026eae-c2d6-43f4-92f9-f6ad9acd7ca5"
+    ],
+    "pass": {
+      "recipient": {
+        "id": 346672,
+        "name": "Juan Andrés Balanta Palacios"
+      },
+      "length": 8.864536,
+      "angle": 2.9486217,
+      "height": {
+        "id": 1,
+        "name": "Ground Pass"
+      },
+      "end_location": [
+        52.3,
+        41.8
+      ],
+      "pass_success_probability": 0.9984976053,
+      "body_part": {
+        "id": 40,
+        "name": "Right Foot"
+      },
+      "type": {
+        "id": 65,
+        "name": "Kick Off"
+      }
+    }
+  },
+  {
+    "id": "16ea5483-dee9-48ba-8a51-2992383c3047",
+    "index": 3449,
+    "period": 2,
+    "timestamp": "00:50:02.460",
+    "minute": 95,
+    "second": 2,
+    "type": {
+      "id": 34,
+      "name": "Half End"
+    },
+    "possession": 181,
+    "possession_team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "eba8aad9-314e-4ebf-b0ef-3abc161748b8"
+    ]
+  },
+  {
+    "id": "eba8aad9-314e-4ebf-b0ef-3abc161748b8",
+    "index": 3450,
+    "period": 2,
+    "timestamp": "00:50:02.460",
+    "minute": 95,
+    "second": 2,
+    "type": {
+      "id": 34,
+      "name": "Half End"
+    },
+    "possession": 181,
+    "possession_team": {
+      "id": 17000,
+      "name": "Team B"
+    },
+    "play_pattern": {
+      "id": 1,
+      "name": "Regular Play"
+    },
+    "obv_for_after": null,
+    "obv_for_before": null,
+    "obv_for_net": null,
+    "obv_against_after": null,
+    "obv_against_before": null,
+    "obv_against_net": null,
+    "obv_total_net": null,
+    "team": {
+      "id": 10000,
+      "name": "Team A"
+    },
+    "duration": 0.0,
+    "related_events": [
+      "16ea5483-dee9-48ba-8a51-2992383c3047"
+    ]
+  }
+]

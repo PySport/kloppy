@@ -162,19 +162,19 @@ class TestAbsTimeContainer:
         period1, period2, _ = periods
 
         abs_time1 = AbsTime(
-            period=period1, timestamp=timedelta(seconds=60 * 15)
+            period=period1, timestamp=timedelta(seconds=15 * 60)
         )
         container = AbsTimeContainer()
 
         # Player gets on the pitch
         container.add(abs_time1, "LB")
 
-        # Switches to RB
-        container.add(abs_time1 + timedelta(seconds=2400), "RB")
+        # Switches from LB to RB
+        container.add(abs_time1 + timedelta(seconds=40 * 60), "RB")
 
         # Player gets of the pitch
         container.add(
-            AbsTime(period=period2, timestamp=timedelta(seconds=60 * 20)), None
+            AbsTime(period=period2, timestamp=timedelta(seconds=20 * 60)), None
         )
 
         print("")

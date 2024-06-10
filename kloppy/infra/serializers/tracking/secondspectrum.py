@@ -221,14 +221,16 @@ class SecondSpectrumDeserializer(
                                 if k in ["ssiId", "optaUuid"]
                             }
 
-                            player = Player(
+                            player = Player.build(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
-                                starting=player_data["position"] != "SUB",
-                                position=player_data["position"],
                                 team=team,
                                 jersey_no=int(player_data["number"]),
                                 attributes=player_attributes,
+                                starting_position=player_data["position"]
+                                if player_data["position"] != "SUB"
+                                else None,
+                                periods=periods,
                             )
                             team.players.append(player)
 

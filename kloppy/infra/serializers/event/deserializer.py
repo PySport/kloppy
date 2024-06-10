@@ -14,6 +14,7 @@ from kloppy.domain import (
     SubstitutionEvent,
     Position,
     Period,
+    FormationChangeEvent,
 )
 
 T = TypeVar("T")
@@ -60,18 +61,22 @@ class EventDataDeserializer(ABC, Generic[T]):
             pitch_width=pitch_width,
         )
 
+    @staticmethod
     def _update_player_positions(
-        self, teams: List[Team], events: List[Event], periods: List[Period]
+        teams: List[Team], events: List[Event], periods: List[Period]
     ):
         for event in events:
             if isinstance(event, SubstitutionEvent):
-                event: SubstitutionEvent
-
+                event.replacement_player.set_position(
+                    event.time, event.player.position
+                )
                 event.player.set_position(event.time, None)
 
-                event.replacement_player.set_position(
-                    event.time, Position.unknown()
-                )
+            elif isinstance(event, FormationChangeEvent):
+                for player, position in event.player_positions.items():
+                    if player.positions.last() != position:
+                        # Only update when the position changed
+                        player.positions.set(event.time, position)
 
         # Set all player positions to None at end of match
         end_of_match = periods[-1].end_time
@@ -81,7 +86,7 @@ class EventDataDeserializer(ABC, Generic[T]):
                     if player.positions.value_at(end_of_match) is not None:
                         player.positions.set(end_of_match, None)
                 except KeyError:
-                    # Was not in the pitch
+                    # Was not on the pitch
                     pass
 
     @property

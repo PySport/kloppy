@@ -125,7 +125,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def create_team(self, team_data, ground):
+    def create_team(self, team_data, ground, periods):
         team = Team(
             team_id=str(team_data["TeamID"]),
             name=html.unescape(team_data["ShortName"]),
@@ -147,7 +147,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 return None
 
         team.players = [
-            Player(
+            Player.build(
                 player_id=str(player["PlayerID"]),
                 team=team,
                 first_name=html.unescape(player["FirstName"]),
@@ -156,10 +156,12 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     player["FirstName"] + " " + player["LastName"]
                 ),
                 jersey_no=int(player["JerseyNo"]),
-                starting=True if player["StartingPosition"] != "S" else False,
-                position=parse_player_position(
+                starting_position=parse_player_position(
                     player["StartingPosition"], player["CurrentPosition"]
-                ),
+                )
+                if player["StartingPosition"] != "S"
+                else None,
+                periods=periods,
             )
             for player in team_data["Players"]
         ]
@@ -192,8 +194,12 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         )
                     )
 
-            home_team = self.create_team(meta_data["HomeTeam"], Ground.HOME)
-            away_team = self.create_team(meta_data["AwayTeam"], Ground.AWAY)
+            home_team = self.create_team(
+                meta_data["HomeTeam"], Ground.HOME, periods
+            )
+            away_team = self.create_team(
+                meta_data["AwayTeam"], Ground.AWAY, periods
+            )
             teams = [home_team, away_team]
 
             transformer = self.get_transformer(

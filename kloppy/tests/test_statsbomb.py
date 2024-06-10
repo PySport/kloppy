@@ -138,7 +138,6 @@ class TestStatsBombMetadata:
         """It should set the correct player position from the events"""
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
-        player.positions.at_start()
 
         assert player.starting_position == Position(
             position_id="18", name="Right Attacking Midfield", coordinates=None
@@ -1057,3 +1056,35 @@ class TestStatsBombTacticalShiftEvent:
             "983cdd00-6f7f-4d62-bfc2-74e4e5b0137f"
         )
         assert formation_change.formation_type == FormationType("4-3-3")
+
+    def test_player_position(self, base_dir):
+        dataset = statsbomb.load(
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
+        )
+
+        home_team, away_team = dataset.metadata.teams
+        period1, period2 = dataset.metadata.periods
+
+        player = home_team.get_player_by_id(6379)
+        for item in dataset.aggregate(
+            "minutes_played", aggregate_position=False
+        ):
+            print(
+                f"{item.player} - {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
+            )
+
+        assert player.positions.ranges() == [
+            (
+                period1.start_time,
+                period2.start_time,
+                Position(
+                    position_id="12", name="Right Midfield", coordinates=None
+                ),
+            ),
+            (
+                period2.start_time,
+                period2.end_time,
+                Position(position_id="2", name="Right Back", coordinates=None),
+            ),
+        ]

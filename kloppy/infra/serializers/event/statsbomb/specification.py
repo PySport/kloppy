@@ -1167,11 +1167,21 @@ class TACTICAL_SHIFT(EVENT):
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
         formation = FORMATIONS[self.raw_event["tactics"]["formation"]]
+        player_positions = {}
+        team = generic_event_kwargs["team"]
+        for player in self.raw_event["tactics"]["lineup"]:
+            player_positions[
+                team.get_player_by_id(player["player"]["id"])
+            ] = Position(
+                position_id=str(player["position"]["id"]),
+                name=player["position"]["name"],
+            )
 
         formation_change_event = event_factory.build_formation_change(
             result=None,
             qualifiers=None,
             formation_type=formation,
+            player_positions=player_positions,
             **generic_event_kwargs,
         )
         return [formation_change_event]

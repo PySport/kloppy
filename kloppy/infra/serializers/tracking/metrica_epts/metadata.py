@@ -106,16 +106,17 @@ def _load_periods(
     return periods, start_attacking_direction
 
 
-def _load_players(players_elm, team: Team) -> List[Player]:
+def _load_players(players_elm, team: Team, periods) -> List[Player]:
     return [
-        Player(
+        Player.build(
             team=team,
             jersey_no=int(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
-            position=_load_position_data(
+            starting_position=_load_position_data(
                 player_elm.find("ProviderPlayerParameters")
             ),
+            periods=periods,
             attributes=_load_provider_parameters(
                 player_elm.find("ProviderPlayerParameters")
             ),
@@ -248,12 +249,17 @@ def load_metadata(
             away_team_id: Ground.AWAY,
         }
 
+    frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
+    periods, start_attacking_direction = _load_periods(
+        metadata, _team_map, frame_rate
+    )
+
     teams_metadata = {}
     for team_id, ground in _team_map.items():
         team = Team(
             team_id=team_id, name=_team_name_map[team_id], ground=ground
         )
-        team.players = _load_players(metadata.find("Players"), team)
+        team.players = _load_players(metadata.find("Players"), team, periods)
         teams_metadata.update({ground: team})
 
     data_format_specifications = _load_data_format_specifications(
@@ -288,11 +294,7 @@ def load_metadata(
         )
     ]
 
-    frame_rate = int(metadata.find("GlobalConfig").find("FrameRate"))
     pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
-    periods, start_attacking_direction = _load_periods(
-        metadata, _team_map, frame_rate
-    )
 
     if start_attacking_direction != AttackingDirection.NOT_SET:
         orientation = (

@@ -948,6 +948,7 @@ class FormationChangeEvent(Event):
     """
 
     formation_type: FormationType
+    player_positions: Optional[Dict[Player, Position]] = None
 
     event_type: EventType = EventType.FORMATION_CHANGE
     event_name: str = "formation_change"
@@ -1116,13 +1117,13 @@ class EventDataset(Dataset[Event]):
             map(generic_record_converter, self.records)
         )
 
-    def aggregate(self, type_: str) -> List[Any]:
+    def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":
             from kloppy.domain.services.aggregators.minutes_played import (
                 MinutesPlayedAggregator,
             )
 
-            aggregator = MinutesPlayedAggregator()
+            aggregator = MinutesPlayedAggregator(**aggregator_kwargs)
         else:
             raise KloppyError(f"No aggregator {type_} not found")
 

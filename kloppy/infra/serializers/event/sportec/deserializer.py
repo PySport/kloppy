@@ -37,7 +37,7 @@ from kloppy.utils import performance_logging
 logger = logging.getLogger(__name__)
 
 
-def _team_from_xml_elm(team_elm) -> Team:
+def _team_from_xml_elm(team_elm, periods) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
@@ -46,21 +46,25 @@ def _team_from_xml_elm(team_elm) -> Team:
         else Ground.AWAY,
     )
     team.players = [
-        Player(
+        Player.build(
             player_id=player_elm.attrib["PersonId"],
             team=team,
             jersey_no=int(player_elm.attrib["ShirtNumber"]),
             name=player_elm.attrib["Shortname"],
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
-            position=Position(
-                position_id=None,
-                name=player_elm.attrib["PlayingPosition"],
-                coordinates=None,
+            starting_position=(
+                Position(
+                    position_id=None,
+                    name=player_elm.attrib["PlayingPosition"],
+                    coordinates=None,
+                )
+                if "PlayingPosition" in player_elm.attrib
+                else None
             )
-            if "PlayingPosition" in player_elm.attrib
+            if player_elm.attrib["Starting"] == "true"
             else None,
-            starting=player_elm.attrib["Starting"] == "true",
+            periods=periods,
         )
         for player_elm in team_elm.Players.iterchildren("Player")
     ]
@@ -93,34 +97,6 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     """
     x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
     y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
-
-    team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
-    team_elms = list(team_path.find(match_root).iterchildren("Team"))
-
-    home_team = away_team = None
-    for team_elm in team_elms:
-        if team_elm.attrib["Role"] == "home":
-            home_team = _team_from_xml_elm(team_elm)
-        elif team_elm.attrib["Role"] == "guest":
-            away_team = _team_from_xml_elm(team_elm)
-        else:
-            raise DeserializationError(
-                f"Unknown side: {team_elm.attrib['Role']}"
-            )
-
-    if not home_team:
-        raise DeserializationError("Home team is missing from metadata")
-    if not away_team:
-        raise DeserializationError("Away team is missing from metadata")
-
-    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
-        "Result"
-    ].split(":")
-    score = Score(home=int(home_score), away=int(away_score))
-    teams = [home_team, away_team]
-
-    if len(home_team.players) == 0 or len(away_team.players) == 0:
-        raise DeserializationError("LineUp incomplete")
 
     # The periods can be rebuild from event data. Therefore, the periods attribute
     # from the metadata can be ignored. It is required for tracking data.
@@ -186,6 +162,34 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
                 ),
             ]
         )
+
+    team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
+    team_elms = list(team_path.find(match_root).iterchildren("Team"))
+
+    home_team = away_team = None
+    for team_elm in team_elms:
+        if team_elm.attrib["Role"] == "home":
+            home_team = _team_from_xml_elm(team_elm, periods)
+        elif team_elm.attrib["Role"] == "guest":
+            away_team = _team_from_xml_elm(team_elm, periods)
+        else:
+            raise DeserializationError(
+                f"Unknown side: {team_elm.attrib['Role']}"
+            )
+
+    if not home_team:
+        raise DeserializationError("Home team is missing from metadata")
+    if not away_team:
+        raise DeserializationError("Away team is missing from metadata")
+
+    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+        "Result"
+    ].split(":")
+    score = Score(home=int(home_score), away=int(away_score))
+    teams = [home_team, away_team]
+
+    if len(home_team.players) == 0 or len(away_team.players) == 0:
+        raise DeserializationError("LineUp incomplete")
 
     return SportecMetadata(
         score=score,

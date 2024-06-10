@@ -275,15 +275,13 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 f"anonymous player with track_id `{track_id}` does not have a specified group_name."
             )
 
-        return Player(
+        return Player.build(
             player_id=f"{team.ground}_anon_{track_id}",
             team=team,
             jersey_no=None,
             name=f"Anon_{track_id}",
             first_name="Anon",
             last_name=track_id,
-            starting=None,
-            position=None,
             attributes={},
         )
 
@@ -340,6 +338,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
             teams = [home_team, away_team]
 
+            periods_list = sorted(periods.values(), key=lambda p: p.id)
+
             for player_track_obj_id, player in player_dict.items():
                 team_id = player["team_id"]
 
@@ -350,19 +350,21 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     team_string = "AWAY"
                     team = away_team
 
-                players[team_string][player_track_obj_id] = Player(
+                players[team_string][player_track_obj_id] = Player.build(
                     player_id=f"{player['id']}",
                     team=team,
                     jersey_no=player["number"],
                     name=f"{player['first_name']} {player['last_name']}",
                     first_name=player["first_name"],
                     last_name=player["last_name"],
-                    starting=player["start_time"] == "00:00:00",
-                    position=Position(
+                    starting_position=Position(
                         position_id=player["player_role"].get("id"),
                         name=player["player_role"].get("name"),
                         coordinates=None,
-                    ),
+                    )
+                    if player["start_time"] == "00:00:00"
+                    else None,
+                    periods=periods_list,
                     attributes={},
                 )
 
@@ -428,7 +430,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         metadata = Metadata(
             teams=teams,
-            periods=sorted(periods.values(), key=lambda p: p.id),
+            periods=periods_list,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=Score(
                 home=metadata["home_team_score"],

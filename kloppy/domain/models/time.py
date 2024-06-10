@@ -9,9 +9,10 @@ from typing import (
     List,
     Tuple,
     NamedTuple,
+    Literal,
 )
 
-from sortedcontainers import SortedList
+from sortedcontainers import SortedDict
 
 from kloppy.exceptions import KloppyError
 
@@ -51,11 +52,13 @@ class Period:
 
     @property
     def start_time(self) -> "Time":
-        return Time(period=self, timestamp=self.start_timestamp)
+        return Time(period=self, timestamp=timedelta(0))
 
     @property
     def end_time(self) -> "Time":
-        return Time(period=self, timestamp=self.end_timestamp)
+        return Time(
+            period=self, timestamp=self.end_timestamp - self.start_timestamp
+        )
 
     @property
     def duration(self) -> timedelta:
@@ -93,6 +96,17 @@ class Period:
 class Time:
     period: "Period"
     timestamp: timedelta
+
+    @classmethod
+    def from_period(
+        cls,
+        period: Period,
+        type_: Union[Literal["start"], Literal["end"]] = "start",
+    ):
+        return cls(
+            period=period,
+            timestamp=timedelta(0) if type_ == "start" else period.duration,
+        )
 
     @overload
     def __sub__(self, other: timedelta) -> "Time":
@@ -178,46 +192,60 @@ class Time:
         m, s = divmod(self.timestamp.total_seconds(), 60)
         return f"P{self.period.id}T{m:02.0f}:{s:02.0f}"
 
+    def __hash__(self):
+        return hash((self.period.id, self.timestamp.total_seconds()))
+
 
 T = TypeVar("T")
 
 
-class Pair(NamedTuple):
-    key: Time
-    item: T
-
-
 class TimeContainer(Generic[T]):
     def __init__(self):
-        self.items: SortedList = SortedList(key=lambda pair: pair.key)
+        self.items: SortedDict = SortedDict()
 
-    def add(self, time: Time, item: T):
-        self.items.add(Pair(key=time, item=item))
+    def set(self, time: Time, item: Optional[T]):
+        self.items[time] = item  # Pair(key=time, item=item)
 
-    def value_at(self, time: Time) -> T:
-        idx = self.items.bisect_left(Pair(key=time, item=None)) - 1
+    def value_at(self, time: Time) -> Optional[T]:
+        idx = self.items.bisect_right(time) - 1
         if idx < 0:
-            raise ValueError("Not found")
-        return self.items[idx].item
+            raise KeyError("Not found")
+        return self.items.values()[idx]
 
-    def ranges(self, add_end: bool = True) -> List[Tuple[Time, Time, T]]:
+    def __getitem__(self, item: Time):
+        return self.value_at(item)
+
+    def __setitem__(self, key: Time, value: Optional[T]):
+        self.set(key, value)
+
+    def ranges(self) -> List[Tuple[Time, Time, T]]:
         items = list(self.items)
         if not items:
             return []
-
-        if add_end:
-            items.append(
-                Pair(
-                    # Ugly way to get us to the end of the last period
-                    key=items[0].key + timedelta(seconds=10_000_000),
-                    item=None,
-                )
-            )
 
         if len(items) < 2:
             raise ValueError("Cannot create ranges when length < 2")
 
         ranges_ = []
-        for start_pair, end_pair in zip(items[:-1], items[1:]):
-            ranges_.append((start_pair.key, end_pair.key, start_pair.item))
+        for start_time, end_time in zip(items[:-1], items[1:]):
+            ranges_.append((start_time, end_time, self.items[start_time]))
         return ranges_
+
+    def last(self):
+        if not len(self.items):
+            raise KeyError
+
+        return self.items[self.items.keys()[-1]]
+
+    def at_start(self):
+        """Return the value at the beginning of the match"""
+        if not self.items:
+            raise KeyError
+
+        first_item: Time = self.items.keys()[0]
+
+        tmp_period = first_item.period
+        while tmp_period.prev_period:
+            tmp_period = tmp_period.prev_period
+
+        return self.value_at(Time.from_period(tmp_period, "start"))

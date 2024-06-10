@@ -119,7 +119,7 @@ class TestAbsTime:
             period=period2, timestamp=timedelta(seconds=700)
         )
 
-    def test_statsbomb(self, base_dir):
+    def test_statsbomb_formation_changes(self, base_dir):
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
@@ -138,6 +138,55 @@ class TestAbsTime:
         )
         assert diff == timedelta(seconds=5067.367)
 
+    def test_statsbomb_minuted_played(self, base_dir):
+        dataset = statsbomb.load(
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
+        )
+
+        minutes_played = dataset.aggregate("minutes_played")
+
+        for item in minutes_played:
+            print(f"{item.player} - {item.duration}")
+
+        home_team, away_team = dataset.metadata.teams
+
+        minutes_played_map = {
+            item.player: item.duration for item in minutes_played
+        }
+
+        """
+        3109 - 0:00:00.000000 - Malcom
+        3501 - 0:47:32.053000 - Coutinho
+        5203 - 1:24:12.343000 - Busquets
+        5211 - 1:32:37.320000 - Ramos
+        """
+
+        # Didn't play
+        player_malcon = home_team.get_player_by_id(3109)
+        assert player_malcon not in minutes_played_map
+
+        # Started second half
+        player_coutinho = home_team.get_player_by_id(3501)
+        assert minutes_played_map[player_coutinho] == timedelta(
+            seconds=2852.053
+        )
+
+        # Replaced in second half
+        player_busquets = home_team.get_player_by_id(5203)
+        assert minutes_played_map[player_busquets] == timedelta(
+            seconds=5052.343
+        )
+
+        # Played entire match
+        player_ramos = home_team.get_player_by_id(5211)
+        assert minutes_played_map[player_ramos] == (
+            dataset.metadata.periods[0].duration
+            + dataset.metadata.periods[1].duration
+        )
+
+        # assert
+
 
 class TestAbsTimeContainer:
     def test_value_at(self, periods):
@@ -145,7 +194,7 @@ class TestAbsTimeContainer:
 
         time1 = Time(period=period1, timestamp=timedelta(seconds=800))
         container = TimeContainer()
-        container.add(time1, 10)
+        container[time1] = 10
 
         value = container.value_at(time1 + timedelta(seconds=1))
         assert value == 10
@@ -153,26 +202,29 @@ class TestAbsTimeContainer:
         value = container.value_at(time1 + timedelta(seconds=10000))
         assert value == 10
 
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             container.value_at(time1 - timedelta(seconds=1))
 
     def test_ranges(self, periods):
         period1, period2, _ = periods
 
-        time1 = Time(period=period1, timestamp=timedelta(seconds=15 * 60))
         container = TimeContainer()
 
         # Player gets on the pitch
-        container.add(time1, "LB")
+        substitution_time = Time(
+            period=period1, timestamp=timedelta(seconds=15 * 60)
+        )
+        container.set(substitution_time, "LB")
 
         # Switches from LB to RB
-        container.add(time1 + timedelta(seconds=40 * 60), "RB")
+        container.set(substitution_time + timedelta(seconds=40 * 60), "RB")
 
         # Player gets of the pitch
-        container.add(
+        container.set(
             Time(period=period2, timestamp=timedelta(seconds=20 * 60)), None
         )
 
-        print("")
-        for start, end, item in container.ranges(add_end=False):
-            print(f"{start} - {end} = {end - start} -> {item}")
+        for start, end, position in container.ranges():
+            print(f"{start} - {end} = {end - start} -> {position}")
+
+        assert container.last() is None

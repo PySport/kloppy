@@ -10,12 +10,14 @@ from typing import (
     Callable,
     Optional,
     TYPE_CHECKING,
+    NamedTuple,
 )
 
 from kloppy.domain.models.common import (
     DatasetType,
     AttackingDirection,
     OrientationError,
+    Position,
 )
 from kloppy.utils import (
     camelcase_to_snakecase,
@@ -29,7 +31,7 @@ from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
 
-from ...exceptions import OrphanedRecordError, InvalidFilterError
+from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
 
 if TYPE_CHECKING:
     from .tracking import Frame
@@ -879,6 +881,7 @@ class SubstitutionEvent(Event):
     """
 
     replacement_player: Player
+    position: Optional[Position] = None
 
     event_type: EventType = EventType.SUBSTITUTION
     event_name: str = "substitution"
@@ -1112,6 +1115,18 @@ class EventDataset(Dataset[Event]):
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
         )
+
+    def aggregate(self, type_: str) -> List[Any]:
+        if type_ == "minutes_played":
+            from kloppy.domain.services.aggregators.minutes_played import (
+                MinutesPlayedAggregator,
+            )
+
+            aggregator = MinutesPlayedAggregator()
+        else:
+            raise KloppyError(f"No aggregator {type_} not found")
+
+        return aggregator.aggregate(self)
 
 
 __all__ = [

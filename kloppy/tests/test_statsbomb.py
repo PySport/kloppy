@@ -138,7 +138,9 @@ class TestStatsBombMetadata:
         """It should set the correct player position from the events"""
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert player.position == Position(
+        player.positions.at_start()
+
+        assert player.starting_position == Position(
             position_id="18", name="Right Attacking Midfield", coordinates=None
         )
         assert player.starting

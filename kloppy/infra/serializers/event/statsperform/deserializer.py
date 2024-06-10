@@ -609,7 +609,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
         with performance_logging("parse data", logger=logger):
             periods = metadata_parser.extract_periods()
             score = metadata_parser.extract_score()
-            teams = metadata_parser.extract_lineups()
+            teams = metadata_parser.extract_lineups(periods)
             raw_events = [
                 event
                 for event in events_parser.extract_events()

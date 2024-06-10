@@ -20,6 +20,7 @@ from kloppy.domain import (
     PassQualifier,
     PassResult,
     PassType,
+    Position,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,

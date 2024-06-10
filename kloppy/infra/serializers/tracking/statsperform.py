@@ -135,7 +135,13 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                 period.id: period
                 for period in meta_data_parser.extract_periods()
             }
-            teams_list = list(meta_data_parser.extract_lineups())
+            teams_list = list(
+                meta_data_parser.extract_lineups(
+                    list(
+                        sorted(periods.values(), key=lambda period: period.id)
+                    )
+                )
+            )
 
         with performance_logging("Loading tracking data", logger=logger):
             tracking_data = inputs.raw_data.read().decode("ascii").splitlines()

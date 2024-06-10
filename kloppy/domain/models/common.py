@@ -17,8 +17,8 @@ from typing import (
     overload,
     Iterable,
     NamedTuple,
+    Tuple,
 )
-
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -128,6 +128,10 @@ class Position:
     def __str__(self):
         return self.name
 
+    @classmethod
+    def unknown(cls) -> "Position":
+        return cls(position_id="", name="Unknown")
+
 
 @dataclass(frozen=True)
 class Player:
@@ -152,8 +156,9 @@ class Player:
     last_name: str = None
 
     # match specific
-    starting: bool = None
-    position: Position = None
+    positions: TimeContainer[Position] = field(
+        default_factory=TimeContainer, compare=False
+    )
 
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
@@ -165,6 +170,25 @@ class Player:
             return f"{self.first_name} {self.last_name}"
         return f"{self.team.ground}_{self.jersey_no}"
 
+    @property
+    def position(self) -> Optional[Position]:
+        try:
+            return self.positions.last()
+        except KeyError:
+            return None
+
+    @property
+    def starting(self) -> bool:
+        """Return if the player has a position at the beginning of the match."""
+        return self.starting_position is not None
+
+    @property
+    def starting_position(self):
+        try:
+            return self.positions.at_start()
+        except KeyError:
+            return None
+
     def __str__(self):
         return self.full_name
 
@@ -175,6 +199,46 @@ class Player:
         if not isinstance(other, Player):
             return False
         return self.player_id == other.player_id
+
+    @classmethod
+    def build(
+        cls,
+        player_id: str,
+        team: "Team",
+        jersey_no: Optional[int],
+        name: str = None,
+        first_name: str = None,
+        last_name: str = None,
+        starting_position: Optional[Position] = None,
+        periods: Optional[List[Period]] = None,
+        attributes: Optional[dict] = None,
+    ):
+
+        if attributes is None:
+            attributes = {}
+
+        positions = TimeContainer()
+        if starting_position:
+            if not periods:
+                raise KloppyError(
+                    "You must pass periods when using starting_position"
+                )
+
+            positions.set(periods[0].start_time, starting_position)
+
+        return cls(
+            player_id=player_id,
+            team=team,
+            jersey_no=jersey_no,
+            name=name,
+            first_name=first_name,
+            last_name=last_name,
+            positions=positions,
+            attributes=attributes,
+        )
+
+    def set_position(self, time: Time, position: Optional[Position]):
+        self.positions.set(time, position)
 
 
 @dataclass

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Dict, List, NamedTuple, Union, Optional
+from typing import List, NamedTuple, Union
 
 from kloppy.domain import EventDataset, Player, Position, Time
 from kloppy.domain.services.aggregators.aggregator import (

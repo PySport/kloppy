@@ -11,7 +11,6 @@ from typing import (
     Callable,
     Optional,
     TYPE_CHECKING,
-    NamedTuple,
 )
 
 from kloppy.domain.models.common import (

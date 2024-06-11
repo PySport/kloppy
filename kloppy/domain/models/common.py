@@ -15,9 +15,7 @@ from typing import (
     Generic,
     NewType,
     overload,
-    Iterable,
-    NamedTuple,
-    Tuple,
+    Iterable
 )
 
 if sys.version_info >= (3, 8):
@@ -155,10 +153,9 @@ class Player:
     first_name: str = None
     last_name: str = None
 
-    initial_position: Optional[Position] = None
-    starting: bool = False
-
     # match specific
+    starting: bool = False
+    initial_position: Optional[Position] = None
     positions: TimeContainer[Position] = field(
         default_factory=TimeContainer, compare=False
     )
@@ -202,43 +199,6 @@ class Player:
         if not isinstance(other, Player):
             return False
         return self.player_id == other.player_id
-
-    @classmethod
-    def build(
-        cls,
-        player_id: str,
-        team: "Team",
-        jersey_no: Optional[int],
-        name: str = None,
-        first_name: str = None,
-        last_name: str = None,
-        starting_position: Optional[Position] = None,
-        periods: Optional[List[Period]] = None,
-        attributes: Optional[dict] = None,
-    ):
-
-        if attributes is None:
-            attributes = {}
-
-        positions = TimeContainer()
-        if starting_position:
-            if not periods:
-                raise KloppyError(
-                    "You must pass periods when using starting_position"
-                )
-
-            positions.set(periods[0].start_time, starting_position)
-
-        return cls(
-            player_id=player_id,
-            team=team,
-            jersey_no=jersey_no,
-            name=name,
-            first_name=first_name,
-            last_name=last_name,
-            positions=positions,
-            attributes=attributes,
-        )
 
     def set_position(self, time: Time, position: Optional[Position]):
         self.positions.set(time, position)

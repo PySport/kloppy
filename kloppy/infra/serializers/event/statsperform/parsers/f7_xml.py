@@ -95,7 +95,7 @@ class F7XMLParser(OptaXMLParser):
             return None
         return Score(home=home_score, away=away_score)
 
-    def extract_lineups(self, periods) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> Tuple[Team, Team]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -109,9 +109,9 @@ class F7XMLParser(OptaXMLParser):
         away_team = None
         for team_elm in team_elms:
             if team_elm.attrib["Side"] == "Home":
-                home_team = self._team_from_xml_elm(team_elm, periods)
+                home_team = self._team_from_xml_elm(team_elm)
             elif team_elm.attrib["Side"] == "Away":
-                away_team = self._team_from_xml_elm(team_elm, periods)
+                away_team = self._team_from_xml_elm(team_elm)
             else:
                 raise DeserializationError(
                     f"Unknown side: {team_elm.attrib['Side']}"
@@ -124,7 +124,7 @@ class F7XMLParser(OptaXMLParser):
             raise DeserializationError("Lineup incomplete")
         return home_team, away_team
 
-    def _team_from_xml_elm(self, team_elm: Any, periods) -> Team:
+    def _team_from_xml_elm(self, team_elm: Any) -> Team:
         # This should not happen here
         team_name, team_players = self._parse_team_players(
             team_elm.attrib["TeamRef"]
@@ -142,7 +142,7 @@ class F7XMLParser(OptaXMLParser):
             ),
         )
         team.players = [
-            Player.build(
+            Player(
                 player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
                 team=team,
                 jersey_no=int(player_elm.attrib["ShirtNumber"]),
@@ -152,14 +152,14 @@ class F7XMLParser(OptaXMLParser):
                 last_name=team_players[player_elm.attrib["PlayerRef"]][
                     "last_name"
                 ],
-                starting_position=Position(
+                starting=(
+                    True if player_elm.attrib["Status"] == "Start" else False
+                ),
+                initial_position=Position(
                     position_id=player_elm.attrib["Formation_Place"],
                     name=player_elm.attrib["Position"],
                     coordinates=None,
-                )
-                if player_elm.attrib["Status"] == "Start"
-                else None,
-                periods=periods,
+                ),
             )
             for player_elm in team_elm.find("PlayerLineUp").iterchildren(
                 "MatchPlayer"

@@ -53,7 +53,7 @@ class OptaParser:
         """Return the score of the game."""
         return None
 
-    def extract_lineups(self, periods: List[Period]) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> Tuple[Team, Team]:
         """Return the home and away team."""
         raise NotImplementedError
 

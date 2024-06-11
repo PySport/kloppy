@@ -1087,10 +1087,20 @@ class EventDataset(Dataset[Event]):
         """Update player positions based on the events."""
         max_leeway = timedelta(seconds=60)
 
+        start_of_match = self.metadata.periods[0].start_time
+
+        for team in self.metadata.teams:
+            for player in team.players:
+                if player.starting:
+                    player.set_position(
+                        start_of_match,
+                        player.initial_position or Position.unknown()
+                    )
+
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 event.replacement_player.set_position(
-                    event.time, event.player.position
+                    event.time, event.replacement_player.initial_position or event.player.position
                 )
                 event.player.set_position(event.time, None)
 

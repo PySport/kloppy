@@ -155,6 +155,9 @@ class Player:
     first_name: str = None
     last_name: str = None
 
+    initial_position: Optional[Position] = None
+    starting: bool = False
+
     # match specific
     positions: TimeContainer[Position] = field(
         default_factory=TimeContainer, compare=False
@@ -177,10 +180,10 @@ class Player:
         except KeyError:
             return None
 
-    @property
-    def starting(self) -> bool:
-        """Return if the player has a position at the beginning of the match."""
-        return self.starting_position is not None
+    # @property
+    # def starting(self) -> bool:
+    #     """Return if the player has a position at the beginning of the match."""
+    #     return self.starting_position is not None
 
     @property
     def starting_position(self):

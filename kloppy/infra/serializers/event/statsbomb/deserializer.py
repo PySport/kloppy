@@ -55,13 +55,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             data_version.xy_fidelity_version,
         )
 
+        # Create teams and players
+        with performance_logging("parse teams ans players", logger=logger):
+            teams = self.create_teams_and_players(raw_events, lineups)
+
         # Create periods
         with performance_logging("parse periods", logger=logger):
             periods = self.create_periods(raw_events)
-
-        # Create teams and players
-        with performance_logging("parse teams ans players", logger=logger):
-            teams = self.create_teams_and_players(raw_events, lineups, periods)
 
         # Create events
         with performance_logging("parse events", logger=logger):
@@ -160,7 +160,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
         return raw_events, lineups, three_sixty_data, version
 
-    def create_teams_and_players(self, raw_events, lineups, periods):
+    def create_teams_and_players(self, raw_events, lineups):
         it_events = iter(raw_events.values())
         starting_xi_events = [
             next(it_events).raw_event,
@@ -199,16 +199,13 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                 starting_formation=starting_formations[lineup["team_id"]],
             )
             team.players = [
-                Player.build(
+                Player(
                     player_id=str(player["player_id"]),
                     team=team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
-                    # Consider a way to pass this without the periods
-                    starting_position=player_positions.get(
-                        str(player["player_id"])
-                    ),
-                    periods=periods,
+                    starting=str(player["player_id"]) in player_positions,
+                    initial_position=player_positions.get(str(player["player_id"])),
                 )
                 for player in lineup["lineup"]
             ]

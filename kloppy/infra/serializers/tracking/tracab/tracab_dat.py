@@ -23,7 +23,6 @@ from kloppy.domain import (
     Player,
     Provider,
     PlayerData,
-    Position,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -132,7 +131,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             raise ValueError("Please specify a value for 'raw_data'")
 
     @staticmethod
-    def create_team(team_data, ground, start_frame_id, periods):
+    def create_team(team_data, ground, start_frame_id):
         team = Team(
             team_id=str(team_data["TeamId"]),
             name=html.unescape(team_data["ShortName"]),
@@ -140,7 +139,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         )
 
         team.players = [
-            Player.build(
+            Player(
                 player_id=str(player["PlayerId"]),
                 team=team,
                 first_name=html.unescape(player["FirstName"]),
@@ -149,10 +148,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     player["FirstName"] + " " + player["LastName"]
                 ),
                 jersey_no=int(player["JerseyNo"]),
-                starting_position=Position.unknown()
-                if player["StartFrameCount"] == start_frame_id
-                else None,
-                periods=periods,
+                starting=player["StartFrameCount"] == start_frame_id,
             )
             for player in team_data["Players"]["Player"]
         ]
@@ -185,10 +181,10 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     )
 
             home_team = self.create_team(
-                meta_data["HomeTeam"], Ground.HOME, start_frame_id, periods
+                meta_data["HomeTeam"], Ground.HOME, start_frame_id
             )
             away_team = self.create_team(
-                meta_data["AwayTeam"], Ground.AWAY, start_frame_id, periods
+                meta_data["AwayTeam"], Ground.AWAY, start_frame_id
             )
             teams = [home_team, away_team]
 

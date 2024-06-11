@@ -10,11 +10,6 @@ from kloppy.domain import (
     EventFactory,
     DatasetType,
     DatasetTransformerBuilder,
-    Team,
-    SubstitutionEvent,
-    Position,
-    Period,
-    FormationChangeEvent,
 )
 
 T = TypeVar("T")

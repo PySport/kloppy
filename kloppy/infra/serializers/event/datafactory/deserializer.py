@@ -35,7 +35,6 @@ from kloppy.domain import (
     ShotResult,
     SubstitutionEvent,
     Team,
-    Position,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -369,6 +368,36 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             teams_data = data["teams"]
 
         with performance_logging("parse data", logger=logger):
+            teams = []
+            scores = []
+            team_ids = (
+                (Ground.HOME, str(match["homeTeamId"])),
+                (Ground.AWAY, str(match["awayTeamId"])),
+            )
+            for ground, team_id in team_ids:
+                team = Team(
+                    team_id=team_id,
+                    name=teams_data[team_id]["name"],
+                    ground=ground,
+                )
+                team.players = [
+                    Player(
+                        player_id=player_id,
+                        team=team,
+                        first_name=player["name"]["first"],
+                        last_name=player["name"]["last"],
+                        name=player["name"]["shortName"]
+                        or player["name"]["nick"],
+                        jersey_no=player["squadNo"],
+                        starting=not player["substitute"],
+                    )
+                    for player_id, player in players_data.items()
+                    if str(player["teamId"]) == team_id
+                ]
+                teams.append(team)
+                scores.append(score_data.get(team_id, {}).get("score"))
+            score = Score(home=scores[0], away=scores[1])
+
             # setup periods
             status = incidences.pop(DF_EVENT_CLASS_STATUS)
             # start timestamps are fixed
@@ -423,40 +452,6 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     periods[half] = replace(
                         periods[half], end_timestamp=timestamp
                     )
-
-            periods_list = list(sorted(periods.values(), key=lambda p: p.id))
-            teams = []
-            scores = []
-            team_ids = (
-                (Ground.HOME, str(match["homeTeamId"])),
-                (Ground.AWAY, str(match["awayTeamId"])),
-            )
-            for ground, team_id in team_ids:
-                team = Team(
-                    team_id=team_id,
-                    name=teams_data[team_id]["name"],
-                    ground=ground,
-                )
-                team.players = [
-                    Player.build(
-                        player_id=player_id,
-                        team=team,
-                        first_name=player["name"]["first"],
-                        last_name=player["name"]["last"],
-                        name=player["name"]["shortName"]
-                        or player["name"]["nick"],
-                        jersey_no=player["squadNo"],
-                        starting_position=Position.unknown()
-                        if not player["substitute"]
-                        else None,
-                        periods=periods_list,
-                    )
-                    for player_id, player in players_data.items()
-                    if str(player["teamId"]) == team_id
-                ]
-                teams.append(team)
-                scores.append(score_data.get(team_id, {}).get("score"))
-            score = Score(home=scores[0], away=scores[1])
 
             # exclude goals, already listed as shots too
             incidences.pop(DF_EVENT_CLASS_GOALS)
@@ -610,7 +605,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
 
         metadata = Metadata(
             teams=teams,
-            periods=periods_list,
+            periods=sorted(periods.values(), key=lambda p: p.id),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
             orientation=Orientation.HOME_AWAY,

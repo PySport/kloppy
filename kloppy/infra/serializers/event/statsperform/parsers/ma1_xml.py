@@ -33,7 +33,7 @@ class MA1XMLParser(OptaXMLParser):
     def extract_score(self) -> Optional[Score]:
         return None
 
-    def extract_lineups(self, periods: List[Period]) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> Tuple[Team, Team]:
         teams = {}
         for parsed_team in self._parse_teams():
             team_id = parsed_team["team_id"]
@@ -49,17 +49,15 @@ class MA1XMLParser(OptaXMLParser):
             player_id = parsed_player["player_id"]
             team_id = parsed_player["team_id"]
             team = teams[team_id]
-            player = Player.build(
+            player = Player(
                 player_id=player_id,
                 team=team,
                 jersey_no=parsed_player["jersey_no"],
                 name=parsed_player["name"],
                 first_name=parsed_player["first_name"],
                 last_name=parsed_player["last_name"],
-                starting_position=parsed_player["position"]
-                if parsed_player["starting"]
-                else None,
-                periods=periods,
+                starting=parsed_player["starting"],
+                initial_position=parsed_player["position"],
             )
             team.players.append(player)
 

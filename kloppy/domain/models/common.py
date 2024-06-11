@@ -1117,6 +1117,23 @@ class Dataset(ABC, Generic[T]):
                 else None,
             )
 
+        self._init_player_positions()
+        self._update_player_positions()
+
+    def _init_player_positions(self):
+        start_of_match = self.metadata.periods[0].start_time
+        for team in self.metadata.teams:
+            for player in team.players:
+                if player.starting:
+                    player.set_position(
+                        start_of_match,
+                        player.initial_position or Position.unknown(),
+                    )
+
+    def _update_player_positions(self):
+        """Update player positions based on the events for example."""
+        pass
+
     @property
     @abstractmethod
     def dataset_type(self) -> DatasetType:

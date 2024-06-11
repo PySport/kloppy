@@ -119,7 +119,7 @@ def _load_players(players_elm, team: Team) -> List[Player]:
             attributes=_load_provider_parameters(
                 player_elm.find("ProviderPlayerParameters")
             ),
-            starting=True  # Not sure if this is correct
+            starting=True,  # Not sure if this is correct
         )
         for player_elm in players_elm.iterchildren(tag="Player")
         if player_elm.attrib["teamId"] == team.team_id

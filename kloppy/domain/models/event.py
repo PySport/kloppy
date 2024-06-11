@@ -1063,44 +1063,16 @@ class EventDataset(Dataset[Event]):
 
     dataset_type: DatasetType = DatasetType.EVENT
 
-    @property
-    def events(self):
-        return self.records
-
-    def get_event_by_id(self, event_id: str) -> Event:
-        return self.get_record_by_id(event_id)
-
-    def add_state(self, *builder_keys):
-        """
-        See [add_state][kloppy.domain.services.state_builder.add_state]
-        """
-        from kloppy.domain.services.state_builder import add_state
-
-        return add_state(self, *builder_keys)
-
-    def __post_init__(self):
-        super().__post_init__()
-
-        self._update_player_positions()
-
     def _update_player_positions(self):
-        """Update player positions based on the events."""
+        """Update player positions based on"""
         max_leeway = timedelta(seconds=60)
-
-        start_of_match = self.metadata.periods[0].start_time
-
-        for team in self.metadata.teams:
-            for player in team.players:
-                if player.starting:
-                    player.set_position(
-                        start_of_match,
-                        player.initial_position or Position.unknown()
-                    )
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 event.replacement_player.set_position(
-                    event.time, event.replacement_player.initial_position or event.player.position
+                    event.time,
+                    event.replacement_player.initial_position
+                    or event.player.position,
                 )
                 event.player.set_position(event.time, None)
 
@@ -1118,6 +1090,21 @@ class EventDataset(Dataset[Event]):
                                 player.positions.set(last_time, position)
                             else:
                                 player.positions.set(event.time, position)
+
+    @property
+    def events(self):
+        return self.records
+
+    def get_event_by_id(self, event_id: str) -> Event:
+        return self.get_record_by_id(event_id)
+
+    def add_state(self, *builder_keys):
+        """
+        See [add_state][kloppy.domain.services.state_builder.add_state]
+        """
+        from kloppy.domain.services.state_builder import add_state
+
+        return add_state(self, *builder_keys)
 
     @deprecated(
         "to_pandas will be removed in the future. Please use to_df instead."

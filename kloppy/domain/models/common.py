@@ -15,7 +15,7 @@ from typing import (
     Generic,
     NewType,
     overload,
-    Iterable
+    Iterable,
 )
 
 if sys.version_info >= (3, 8):

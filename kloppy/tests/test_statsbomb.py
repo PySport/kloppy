@@ -144,9 +144,9 @@ class TestStatsBombMetadata:
         )
         assert player.starting
 
-        # Substituted players don't have a position
+        # Substituted players have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("5630")
-        assert sub_player.position is None
+        assert sub_player.position is not None
         assert not sub_player.starting
 
     def test_periods(self, dataset):
@@ -1063,17 +1063,17 @@ class TestStatsBombTacticalShiftEvent:
             event_data=base_dir / "files/statsbomb_event.json",
         )
 
+        # for item in dataset.aggregate(
+        #     "minutes_played", include_position=True
+        # ):
+        #     print(
+        #         f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
+        #     )
+        #
         home_team, away_team = dataset.metadata.teams
         period1, period2 = dataset.metadata.periods
 
         player = home_team.get_player_by_id(6379)
-        for item in dataset.aggregate(
-            "minutes_played", aggregate_position=False
-        ):
-            print(
-                f"{item.player} - {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
-            )
-
         assert player.positions.ranges() == [
             (
                 period1.start_time,
@@ -1087,4 +1087,16 @@ class TestStatsBombTacticalShiftEvent:
                 period2.end_time,
                 Position(position_id="2", name="Right Back", coordinates=None),
             ),
+        ]
+
+        # This player gets a new position 30 sec after he gets on the pitch, these two positions must be merged
+        player = away_team.get_player_by_id(6935)
+        assert player.positions.ranges() == [
+            (
+                period2.start_time + timedelta(seconds=1362.254),
+                period2.end_time,
+                Position(
+                    position_id="16", name="Left Midfield", coordinates=None
+                ),
+            )
         ]

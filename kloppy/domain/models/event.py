@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import Enum
 from typing import (
     Dict,
@@ -1076,6 +1077,37 @@ class EventDataset(Dataset[Event]):
         from kloppy.domain.services.state_builder import add_state
 
         return add_state(self, *builder_keys)
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self._update_player_positions()
+
+    def _update_player_positions(self):
+        """Update player positions based on the events."""
+        max_leeway = timedelta(seconds=60)
+
+        for event in self.events:
+            if isinstance(event, SubstitutionEvent):
+                event.replacement_player.set_position(
+                    event.time, event.player.position
+                )
+                event.player.set_position(event.time, None)
+
+            elif isinstance(event, FormationChangeEvent):
+                if event.player_positions:
+                    for player, position in event.player_positions.items():
+                        last_time, last_position = player.positions.last(
+                            include_time=True
+                        )
+                        if last_position != position:
+                            # Only update when the position changed
+                            if event.time - last_time < max_leeway:
+                                # Often the formation change is detected a couple of seconds after a Substitution.
+                                # In this case we need to use the time of the Substitution
+                                player.positions.set(last_time, position)
+                            else:
+                                player.positions.set(event.time, position)
 
     @deprecated(
         "to_pandas will be removed in the future. Please use to_df instead."

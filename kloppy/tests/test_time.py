@@ -146,9 +146,6 @@ class TestAbsTime:
 
         minutes_played = dataset.aggregate("minutes_played")
 
-        for item in minutes_played:
-            print(f"{item.player} - {item.duration}")
-
         home_team, away_team = dataset.metadata.teams
 
         minutes_played_map = {

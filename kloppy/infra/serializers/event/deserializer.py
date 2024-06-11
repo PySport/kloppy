@@ -61,34 +61,6 @@ class EventDataDeserializer(ABC, Generic[T]):
             pitch_width=pitch_width,
         )
 
-    @staticmethod
-    def _update_player_positions(
-        teams: List[Team], events: List[Event], periods: List[Period]
-    ):
-        for event in events:
-            if isinstance(event, SubstitutionEvent):
-                event.replacement_player.set_position(
-                    event.time, event.player.position
-                )
-                event.player.set_position(event.time, None)
-
-            elif isinstance(event, FormationChangeEvent):
-                for player, position in event.player_positions.items():
-                    if player.positions.last() != position:
-                        # Only update when the position changed
-                        player.positions.set(event.time, position)
-
-        # Set all player positions to None at end of match
-        end_of_match = periods[-1].end_time
-        for team in teams:
-            for player in team.players:
-                try:
-                    if player.positions.value_at(end_of_match) is not None:
-                        player.positions.set(end_of_match, None)
-                except KeyError:
-                    # Was not on the pitch
-                    pass
-
     @property
     @abstractmethod
     def provider(self) -> Provider:

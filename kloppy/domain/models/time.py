@@ -223,6 +223,13 @@ class TimeContainer(Generic[T]):
         if not items:
             return []
 
+        # When last item isn't None (meaning 'end'), make sure to add it
+        if self.items[items[-1]] is not None:
+            current_period = items[0].period
+            while current_period.next_period:
+                current_period = current_period.next_period
+            items.append(current_period.end_time)
+
         if len(items) < 2:
             raise ValueError("Cannot create ranges when length < 2")
 
@@ -231,11 +238,15 @@ class TimeContainer(Generic[T]):
             ranges_.append((start_time, end_time, self.items[start_time]))
         return ranges_
 
-    def last(self):
+    def last(self, include_time: bool = False):
         if not len(self.items):
             raise KeyError
 
-        return self.items[self.items.keys()[-1]]
+        time = self.items.keys()[-1]
+        if include_time:
+            return time, self.items[time]
+        else:
+            return self.items[time]
 
     def at_start(self):
         """Return the value at the beginning of the match"""

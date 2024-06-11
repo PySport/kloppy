@@ -23,8 +23,8 @@ class MinutesPlayedPerPosition(NamedTuple):
 
 
 class MinutesPlayedAggregator(EventDatasetAggregator):
-    def __init__(self, aggregate_position: bool = True):
-        self.aggregate_position = aggregate_position
+    def __init__(self, include_position: bool = False):
+        self.include_position = include_position
 
     def aggregate(
         self, dataset: EventDataset
@@ -33,7 +33,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
 
         for team in dataset.metadata.teams:
             for player in team.players:
-                if self.aggregate_position:
+                if not self.include_position:
                     _start_time = None
                     end_time = None
                     for (

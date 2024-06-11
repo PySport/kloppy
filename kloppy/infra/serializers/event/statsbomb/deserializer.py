@@ -108,8 +108,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                             )
                         events.append(event)
 
-        self._update_player_positions(teams, events, periods)
-
         metadata = Metadata(
             teams=teams,
             periods=periods,

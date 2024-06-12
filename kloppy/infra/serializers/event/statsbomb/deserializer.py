@@ -2,6 +2,7 @@ from typing import NamedTuple, IO, Optional
 import logging
 import json
 from itertools import zip_longest
+from datetime import timedelta
 
 from kloppy.domain import (
     DatasetFlag,
@@ -13,6 +14,7 @@ from kloppy.domain import (
     Period,
     Player,
     Position,
+    PositionChange,
     Provider,
     Team,
 )
@@ -20,7 +22,10 @@ from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 from . import specification as SB
-from .helpers import parse_freeze_frame, parse_str_ts
+from .helpers import (
+    parse_freeze_frame,
+    parse_str_ts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -175,14 +180,61 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         )
 
         # Create players and teams
-        player_positions = {
-            str(player["player"]["id"]): Position(
-                position_id=str(player["position"]["id"]),
-                name=player["position"]["name"],
-            )
-            for raw_event in starting_xi_events
-            for player in raw_event["tactics"]["lineup"]
-        }
+        team_position_changes = {}
+        for lineup in lineups:
+            for player in lineup["lineup"]:
+                if player["positions"]:
+                    position_changes = []
+                    for position in player["positions"]:
+                        start_timestamp = parse_str_ts(position["from"])
+                        # For subs on, add a substitute position change from start of the match
+                        if "Substitution - On" in position["start_reason"]:
+                            position_changes.append(
+                                PositionChange(
+                                    timestamp=timedelta(0),
+                                    period_id=1,
+                                    position=Position(
+                                        position_id="0",
+                                        name="Bench",
+                                    ),
+                                )
+                            )
+                        position_changes.append(
+                            PositionChange(
+                                timestamp=start_timestamp,
+                                period_id=position["from_period"],
+                                position=Position(
+                                    position_id=str(position["position_id"]),
+                                    name=position["position"],
+                                ),
+                            )
+                        )
+                        if (
+                            "Substitution - Off" in position["end_reason"]
+                            or "Card" in position["end_reason"]
+                        ):
+                            end_timestamp = parse_str_ts(position["to"])
+                            position_changes.append(
+                                PositionChange(
+                                    timestamp=end_timestamp,
+                                    period_id=position["to_period"],
+                                    position=Position(
+                                        position_id="0",
+                                        name="Bench",
+                                    ),
+                                )
+                            )
+                else:
+                    position_changes = [
+                        PositionChange(
+                            timestamp=timedelta(0),
+                            period_id=1,
+                            position=Position(position_id="0", name="Bench"),
+                        )
+                    ]
+                team_position_changes[
+                    str(player["player_id"])
+                ] = position_changes
 
         starting_formations = {
             raw_event["team"]["id"]: FormationType(
@@ -204,8 +256,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     team=team,
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
-                    starting=str(player["player_id"]) in player_positions,
-                    position=player_positions.get(str(player["player_id"])),
+                    position_changes=team_position_changes.get(
+                        str(player["player_id"])
+                    ),
                 )
                 for player in lineup["lineup"]
             ]

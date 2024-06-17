@@ -18,6 +18,8 @@ from typing import (
     Iterable,
 )
 
+from ...utils import deprecated
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
@@ -155,7 +157,7 @@ class Player:
 
     # match specific
     starting: bool = False
-    initial_position: Optional[Position] = None
+    starting_position: Optional[Position] = None
     positions: TimeContainer[Position] = field(
         default_factory=TimeContainer, compare=False
     )
@@ -171,21 +173,10 @@ class Player:
         return f"{self.team.ground}_{self.jersey_no}"
 
     @property
+    @deprecated("starting_position or positions should be used")
     def position(self) -> Optional[Position]:
         try:
             return self.positions.last()
-        except KeyError:
-            return None
-
-    # @property
-    # def starting(self) -> bool:
-    #     """Return if the player has a position at the beginning of the match."""
-    #     return self.starting_position is not None
-
-    @property
-    def starting_position(self):
-        try:
-            return self.positions.at_start()
         except KeyError:
             return None
 
@@ -1087,7 +1078,7 @@ class Dataset(ABC, Generic[T]):
                 if player.starting:
                     player.set_position(
                         start_of_match,
-                        player.initial_position or Position.unknown(),
+                        player.starting_position or Position.unknown(),
                     )
 
     def _update_player_positions(self):

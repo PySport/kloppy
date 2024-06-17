@@ -157,7 +157,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 ),
                 jersey_no=int(player["JerseyNo"]),
                 starting=True if player["StartingPosition"] != "S" else False,
-                initial_position=parse_player_position(
+                starting_position=parse_player_position(
                     player["StartingPosition"], player["CurrentPosition"]
                 ),
             )

@@ -202,6 +202,8 @@ class TestAbsTimeContainer:
         with pytest.raises(KeyError):
             container.value_at(time1 - timedelta(seconds=1))
 
+        assert repr(container) == "TimeContainer[int]({'P1T13:20': 10})"
+
     def test_ranges(self, periods):
         period1, period2, _ = periods
 

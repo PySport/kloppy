@@ -260,3 +260,11 @@ class TimeContainer(Generic[T]):
             tmp_period = tmp_period.prev_period
 
         return self.value_at(Time.from_period(tmp_period, "start"))
+
+    def __repr__(self):
+        if not self.items:
+            return "<TimeContainer>"
+
+        item_type = type(self.items.values()[0]).__name__
+        str_items = {str(key): value for key, value in self.items.items()}
+        return f"TimeContainer[{item_type}]({str_items})"

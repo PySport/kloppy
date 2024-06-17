@@ -56,7 +56,7 @@ class MA1JSONParser(OptaJSONParser):
                 first_name=parsed_player["first_name"],
                 last_name=parsed_player["last_name"],
                 starting=parsed_player["starting"],
-                initial_position=parsed_player["position"],
+                starting_position=parsed_player["position"],
             )
             team.players.append(player)
 

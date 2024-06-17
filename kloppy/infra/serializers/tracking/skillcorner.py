@@ -283,7 +283,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             first_name="Anon",
             last_name=track_id,
             starting=None,
-            initial_position=None,
+            starting_position=None,
             attributes={},
         )
 
@@ -358,7 +358,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     first_name=player["first_name"],
                     last_name=player["last_name"],
                     starting=player["start_time"] == "00:00:00",
-                    initial_position=Position(
+                    starting_position=Position(
                         position_id=player["player_role"].get("id"),
                         name=player["player_role"].get("name"),
                         coordinates=None,

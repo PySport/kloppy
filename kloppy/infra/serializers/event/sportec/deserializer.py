@@ -53,7 +53,7 @@ def _team_from_xml_elm(team_elm) -> Team:
             name=player_elm.attrib["Shortname"],
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
-            initial_position=Position(
+            starting_position=Position(
                 position_id=None,
                 name=player_elm.attrib["PlayingPosition"],
                 coordinates=None,

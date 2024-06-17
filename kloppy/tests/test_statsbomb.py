@@ -1063,13 +1063,11 @@ class TestStatsBombTacticalShiftEvent:
             event_data=base_dir / "files/statsbomb_event.json",
         )
 
-        # for item in dataset.aggregate(
-        #     "minutes_played", include_position=True
-        # ):
-        #     print(
-        #         f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
-        #     )
-        #
+        for item in dataset.aggregate("minutes_played", include_position=True):
+            print(
+                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
+            )
+
         home_team, away_team = dataset.metadata.teams
         period1, period2 = dataset.metadata.periods
 

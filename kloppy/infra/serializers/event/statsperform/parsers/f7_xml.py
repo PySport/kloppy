@@ -152,10 +152,8 @@ class F7XMLParser(OptaXMLParser):
                 last_name=team_players[player_elm.attrib["PlayerRef"]][
                     "last_name"
                 ],
-                starting=(
-                    True if player_elm.attrib["Status"] == "Start" else False
-                ),
-                initial_position=Position(
+                starting=(player_elm.attrib["Status"] == "Start"),
+                starting_position=Position(
                     position_id=player_elm.attrib["Formation_Place"],
                     name=player_elm.attrib["Position"],
                     coordinates=None,

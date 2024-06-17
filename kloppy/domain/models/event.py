@@ -1063,14 +1063,14 @@ class EventDataset(Dataset[Event]):
     dataset_type: DatasetType = DatasetType.EVENT
 
     def _update_player_positions(self):
-        """Update player positions based on"""
+        """Update player positions based on Substitution and TacticalShift events."""
         max_leeway = timedelta(seconds=60)
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 event.replacement_player.set_position(
                     event.time,
-                    event.replacement_player.initial_position
+                    event.replacement_player.starting_position
                     or event.player.position,
                 )
                 event.player.set_position(event.time, None)

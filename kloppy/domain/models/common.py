@@ -18,6 +18,7 @@ from typing import (
     Iterable,
 )
 
+from ...utils import deprecated
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -41,6 +42,7 @@ from .pitch import (
     WyscoutPitchDimensions,
 )
 from .formation import FormationType
+from .time import Time, Period, TimeContainer
 from ...exceptions import (
     OrientationError,
     InvalidFilterError,
@@ -126,6 +128,10 @@ class Position:
     def __str__(self):
         return self.name
 
+    @classmethod
+    def unknown(cls) -> "Position":
+        return cls(position_id="", name="Unknown")
+
 
 @dataclass(frozen=True)
 class Player:
@@ -150,8 +156,11 @@ class Player:
     last_name: str = None
 
     # match specific
-    starting: bool = None
-    position: Position = None
+    starting: bool = False
+    starting_position: Optional[Position] = None
+    positions: TimeContainer[Position] = field(
+        default_factory=TimeContainer, compare=False
+    )
 
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
@@ -163,6 +172,14 @@ class Player:
             return f"{self.first_name} {self.last_name}"
         return f"{self.team.ground}_{self.jersey_no}"
 
+    @property
+    @deprecated("starting_position or positions should be used")
+    def position(self) -> Optional[Position]:
+        try:
+            return self.positions.last()
+        except KeyError:
+            return None
+
     def __str__(self):
         return self.full_name
 
@@ -173,6 +190,9 @@ class Player:
         if not isinstance(other, Player):
             return False
         return self.player_id == other.player_id
+
+    def set_position(self, time: Time, position: Optional[Position]):
+        self.positions.set(time, position)
 
 
 @dataclass
@@ -244,44 +264,6 @@ class BallState(Enum):
 
     def __repr__(self):
         return self.value
-
-
-@dataclass
-class Period:
-    """
-    Period
-
-    Attributes:
-        id: `1` for first half, `2` for second half, `3` for first half of
-            overtime, `4` for second half of overtime, `5` for penalty shootout
-        start_timestamp: The UTC datetime of the kick-off or, if the
-            absolute datetime is not available, the offset between the start
-            of the data feed and the period's kick-off
-        end_timestamp: The UTC datetime of the final whistle or, if the
-            absolute datetime is not available, the offset between the start
-            of the data feed and the period's final whistle
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
-    """
-
-    id: int
-    start_timestamp: Union[datetime, timedelta]
-    end_timestamp: Union[datetime, timedelta]
-
-    def contains(self, timestamp: datetime):
-        if isinstance(self.start_timestamp, datetime) and isinstance(
-            self.end_timestamp, datetime
-        ):
-            return self.start_timestamp <= timestamp <= self.end_timestamp
-        raise KloppyError(
-            "This method can only be used when start_timestamp and end_timestamp are a datetime"
-        )
-
-    @property
-    def duration(self) -> timedelta:
-        return self.end_timestamp - self.start_timestamp
-
-    def __eq__(self, other):
-        return isinstance(other, Period) and other.id == self.id
 
 
 class Orientation(Enum):
@@ -938,6 +920,10 @@ class DataRecord(ABC):
     def record_id(self) -> Union[int, str]:
         pass
 
+    @property
+    def time(self) -> Time:
+        return Time(period=self.period, timestamp=self.timestamp)
+
     def set_refs(
         self,
         dataset: "Dataset",
@@ -1035,6 +1021,14 @@ class Metadata:
             # set the pitch dimensions from the coordinate system
             self.pitch_dimensions = self.coordinate_system.pitch_dimensions
 
+        for i, period in enumerate(self.periods):
+            period.set_refs(
+                prev=self.periods[i - 1] if i > 0 else None,
+                next_=self.periods[i + 1]
+                if i + 1 < len(self.periods)
+                else None,
+            )
+
 
 T = TypeVar("T", bound="DataRecord")
 
@@ -1073,6 +1067,23 @@ class Dataset(ABC, Generic[T]):
                 if i + 1 < len(self.records)
                 else None,
             )
+
+        self._init_player_positions()
+        self._update_player_positions()
+
+    def _init_player_positions(self):
+        start_of_match = self.metadata.periods[0].start_time
+        for team in self.metadata.teams:
+            for player in team.players:
+                if player.starting:
+                    player.set_position(
+                        start_of_match,
+                        player.starting_position or Position.unknown(),
+                    )
+
+    def _update_player_positions(self):
+        """Update player positions based on the events for example."""
+        pass
 
     @property
     @abstractmethod

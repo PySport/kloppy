@@ -205,7 +205,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
                     starting=str(player["player_id"]) in player_positions,
-                    position=player_positions.get(str(player["player_id"])),
+                    starting_position=player_positions.get(
+                        str(player["player_id"])
+                    ),
                 )
                 for player in lineup["lineup"]
             ]

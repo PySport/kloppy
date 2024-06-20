@@ -148,9 +148,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     player["FirstName"] + " " + player["LastName"]
                 ),
                 jersey_no=int(player["JerseyNo"]),
-                starting=True
-                if player["StartFrameCount"] == start_frame_id
-                else False,
+                starting=player["StartFrameCount"] == start_frame_id,
             )
             for player in team_data["Players"]["Player"]
         ]

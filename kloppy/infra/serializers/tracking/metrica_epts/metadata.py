@@ -113,12 +113,13 @@ def _load_players(players_elm, team: Team) -> List[Player]:
             jersey_no=int(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
-            position=_load_position_data(
+            starting_position=_load_position_data(
                 player_elm.find("ProviderPlayerParameters")
             ),
             attributes=_load_provider_parameters(
                 player_elm.find("ProviderPlayerParameters")
             ),
+            starting=True,  # Not sure if this is correct
         )
         for player_elm in players_elm.iterchildren(tag="Player")
         if player_elm.attrib["teamId"] == team.team_id

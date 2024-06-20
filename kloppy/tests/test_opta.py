@@ -106,14 +106,16 @@ class TestOptaMetadata:
         """It should set the correct player position from the events"""
         # Starting players have a position
         player = dataset.metadata.teams[0].get_player_by_id("111319")
-        assert player.position == Position(
+        assert player.starting_position == Position(
             position_id="1", name="Goalkeeper", coordinates=None
         )
         assert player.starting
 
         # Substituted players don't have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("88022")
-        assert sub_player.position is None
+        assert sub_player.starting_position == Position(
+            position_id="0", name="Substitute", coordinates=None
+        )
         assert not sub_player.starting
 
     def test_periods(self, dataset):

@@ -22,7 +22,7 @@ from kloppy.domain import (
     Ground,
     Player,
     Provider,
-    PlayerData,
+    Detection,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -73,7 +73,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
             player = team.get_player_by_jersey_number(jersey_no)
             if player:
-                players_data[player] = PlayerData(
+                players_data[player] = Detection(
                     coordinates=Point(float(x), float(y)), speed=float(speed)
                 )
             else:
@@ -90,6 +90,11 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             ball_owning_team,
             ball_state,
         ) = ball.rstrip(";").split(",")[:6]
+
+        ball_data = Detection(
+            coordinates=Point3D(float(ball_x), float(ball_y), float(ball_z)),
+            speed=float(ball_speed),
+        )
 
         frame_id = int(frame_id)
 
@@ -113,12 +118,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
+            objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            players_data=players_data,
             period=period,
             other_data={},
         )

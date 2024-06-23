@@ -1,7 +1,7 @@
 import warnings
 from dataclasses import fields, replace
 
-from kloppy.domain.models.tracking import PlayerData
+from kloppy.domain.models.tracking import Detection
 from typing import Union, Optional
 
 from kloppy.domain import (
@@ -204,20 +204,16 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.__change_point_coordinate_system(
-                frame.ball_coordinates
-            ),
-            ball_speed=frame.ball_speed,
-            players_data={
-                key: PlayerData(
+            objects={
+                trackable_object: replace(
+                    detection,
                     coordinates=self.__change_point_coordinate_system(
-                        player_data.coordinates
+                        detection.coordinates
                     ),
-                    distance=player_data.distance,
-                    speed=player_data.speed,
-                    other_data=player_data.other_data,
                 )
-                for key, player_data in frame.players_data.items()
+                if detection is not None
+                else None
+                for trackable_object, detection in frame.objects.items()
             },
             other_data=frame.other_data,
         )
@@ -231,19 +227,16 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.change_point_dimensions(
-                frame.ball_coordinates
-            ),
-            players_data={
-                key: PlayerData(
+            objects={
+                trackable_object: replace(
+                    detection,
                     coordinates=self.change_point_dimensions(
-                        player_data.coordinates
+                        detection.coordinates
                     ),
-                    distance=player_data.distance,
-                    speed=player_data.speed,
-                    other_data=player_data.other_data,
                 )
-                for key, player_data in frame.players_data.items()
+                if detection is not None
+                else None
+                for trackable_object, detection in frame.objects.items()
             },
             other_data=frame.other_data,
         )
@@ -283,15 +276,6 @@ class DatasetTransformer:
         return point_to
 
     def __flip_frame(self, frame: Frame):
-        players_data = {}
-        for player, data in frame.players_data.items():
-            players_data[player] = PlayerData(
-                coordinates=self.flip_point(data.coordinates),
-                distance=data.distance,
-                speed=data.speed,
-                other_data=data.other_data,
-            )
-
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -300,8 +284,15 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.flip_point(frame.ball_coordinates),
-            players_data=players_data,
+            objects={
+                trackable_object: replace(
+                    detection,
+                    coordinates=self.flip_point(detection.coordinates),
+                )
+                if detection is not None
+                else None
+                for trackable_object, detection in frame.objects.items()
+            },
             other_data=frame.other_data,
         )
 

@@ -4,7 +4,6 @@ from datetime import datetime, timezone, timedelta
 import pytest
 
 from kloppy.domain import (
-    AttackingDirection,
     BallState,
     BodyPart,
     BodyPartQualifier,
@@ -14,7 +13,6 @@ from kloppy.domain import (
     CounterAttackQualifier,
     DatasetFlag,
     DatasetType,
-    Dimension,
     DuelQualifier,
     DuelType,
     EventDataset,
@@ -38,8 +36,10 @@ from kloppy.domain import (
     build_coordinate_system,
 )
 from kloppy import opta
-from kloppy.infra.serializers.event.opta.deserializer import (
+from kloppy.infra.serializers.event.statsperform.deserializer import (
     _get_end_coordinates,
+)
+from kloppy.infra.serializers.event.statsperform.parsers.f24_xml import (
     _parse_f24_datetime,
 )
 
@@ -111,11 +111,9 @@ class TestOptaMetadata:
         )
         assert player.starting
 
-        # Substituted players have a "Substitute" position
+        # Substituted players don't have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("88022")
-        assert sub_player.position == Position(
-            position_id="0", name="Substitute", coordinates=None
-        )
+        assert sub_player.position is None
         assert not sub_player.starting
 
     def test_periods(self, dataset):
@@ -174,7 +172,7 @@ class TestOptaEvent:
         assert event.ball_owning_team.name == "FC København"
         assert event.player.full_name == "Dame N'Doye"
         assert event.coordinates == Point(50.1, 49.4)
-        assert event.raw_event.attrib["id"] == "1510681159"
+        assert event.raw_event.id == "1510681159"
         assert event.related_event_ids == []
         assert event.period.id == 1
         assert event.timestamp == (
@@ -241,7 +239,7 @@ class TestOptaPassEvent:
     """Tests related to deserialzing pass events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
-        """It should deserialize all clearance events"""
+        """It should deserialize all pass events"""
         events = dataset.find_all("pass")
         assert len(events) == 15
 

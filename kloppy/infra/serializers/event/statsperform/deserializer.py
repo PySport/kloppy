@@ -1,15 +1,12 @@
+import pytz
 import math
-from typing import Tuple, Dict, List, NamedTuple, IO, Optional
+from typing import Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime
-import pytz
-from lxml import objectify
-from lxml.objectify import ObjectifiedElement
 
 from kloppy.domain import (
     EventDataset,
     Team,
-    Period,
     Point,
     Point3D,
     BallState,
@@ -21,12 +18,8 @@ from kloppy.domain import (
     DuelResult,
     DuelType,
     DuelQualifier,
-    Ground,
-    Score,
     Provider,
     Metadata,
-    Player,
-    Position,
     InterceptionResult,
     FormationType,
     CardType,
@@ -45,6 +38,8 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
+
+from .parsers import get_parser, OptaEvent
 
 logger = logging.getLogger(__name__)
 
@@ -245,45 +240,14 @@ formations = {
 }
 
 
-def _parse_f24_datetime(dt_str: str) -> datetime:
-    def zero_pad_milliseconds(timestamp):
-        parts = timestamp.split(".")
-        return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
-
-    dt_str = zero_pad_milliseconds(dt_str)
-    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").replace(
-        tzinfo=pytz.utc
-    )
-
-
-def _create_periods(match_result_type: str) -> List[Period]:
-    if match_result_type == "AfterExtraTime":
-        num_periods = 4
-    elif match_result_type == "PenaltyShootout":
-        num_periods = 5
-    else:
-        num_periods = 2
-
-    periods = [
-        Period(
-            id=period_id,
-            start_timestamp=None,
-            end_timestamp=None,
-        )
-        for period_id in range(1, num_periods + 1)
-    ]
-
-    return periods
-
-
-def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
-    if outcome:
+def _parse_pass(raw_event: OptaEvent) -> Dict:
+    if raw_event.outcome:
         result = PassResult.COMPLETE
     else:
         result = PassResult.INCOMPLETE
-    receiver_coordinates = _get_end_coordinates(raw_qualifiers)
-    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
-    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
+    receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
+    pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     qualifiers = pass_qualifiers + overall_qualifiers
 
@@ -296,35 +260,35 @@ def _parse_pass(raw_qualifiers: Dict[int, str], outcome: int) -> Dict:
     )
 
 
-def _parse_offside_pass(raw_qualifiers: Dict[int, str]) -> Dict:
-    pass_qualifiers = _get_pass_qualifiers(raw_qualifiers)
-    overall_qualifiers = _get_event_qualifiers(raw_qualifiers)
+def _parse_offside_pass(raw_event: OptaEvent) -> Dict:
+    pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
+    overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     qualifiers = pass_qualifiers + overall_qualifiers
 
     return dict(
         result=PassResult.OFFSIDE,
-        receiver_coordinates=_get_end_coordinates(raw_qualifiers),
+        receiver_coordinates=_get_end_coordinates(raw_event.qualifiers),
         receiver_player=None,
         receive_timestamp=None,
         qualifiers=qualifiers,
     )
 
 
-def _parse_take_on(outcome: int) -> Dict:
-    if outcome:
+def _parse_take_on(raw_event: OptaEvent) -> Dict:
+    if raw_event.outcome == 1:
         result = TakeOnResult.COMPLETE
     else:
         result = TakeOnResult.INCOMPLETE
     return dict(result=result)
 
 
-def _parse_clearance(raw_qualifiers: Dict[int, str]) -> Dict:
-    return dict(qualifiers=_get_event_qualifiers(raw_qualifiers))
+def _parse_clearance(raw_event: OptaEvent) -> Dict:
+    return dict(qualifiers=_get_event_qualifiers(raw_event.qualifiers))
 
 
-def _parse_card(raw_qualifiers: Dict[int, str]) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+def _parse_card(raw_event: OptaEvent) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     if EVENT_QUALIFIER_RED_CARD in qualifiers:
         card_type = CardType.RED
@@ -338,38 +302,37 @@ def _parse_card(raw_qualifiers: Dict[int, str]) -> Dict:
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
 
 
-def _parse_formation_change(raw_qualifiers: Dict[int, str]) -> Dict:
-    formation_id = int(raw_qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
+def _parse_formation_change(raw_event: OptaEvent) -> Dict:
+    formation_id = int(raw_event.qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
     formation = formations[formation_id]
 
     return dict(formation_type=formation)
 
 
-def _parse_shot(
-    raw_qualifiers: Dict[int, str], type_id: int, coordinates: Point
-) -> Dict:
-    if type_id == EVENT_TYPE_SHOT_GOAL:
-        if 28 in raw_qualifiers:
-            coordinates = Point(x=100 - coordinates.x, y=100 - coordinates.y)
+def _parse_shot(raw_event: OptaEvent) -> Dict:
+    coordinates = Point(x=raw_event.x, y=raw_event.y)
+    if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
+        if 28 in raw_event.qualifiers:
+            coordinates = Point(x=100 - raw_event.x, y=100 - raw_event.y)
             result = ShotResult.OWN_GOAL
             # ball_owning_team =
             # timestamp =
         else:
             result = ShotResult.GOAL
-    elif 82 in raw_qualifiers:
+    elif 82 in raw_event.qualifiers:
         result = ShotResult.BLOCKED
-    elif type_id == EVENT_TYPE_SHOT_MISS:
+    elif raw_event.type_id == EVENT_TYPE_SHOT_MISS:
         result = ShotResult.OFF_TARGET
-    elif type_id == EVENT_TYPE_SHOT_POST:
+    elif raw_event.type_id == EVENT_TYPE_SHOT_POST:
         result = ShotResult.OFF_TARGET
-    elif type_id == EVENT_TYPE_SHOT_SAVED:
+    elif raw_event.type_id == EVENT_TYPE_SHOT_SAVED:
         result = ShotResult.SAVED
     else:
         result = None
 
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     result_coordinates = _get_end_coordinates(
-        raw_qualifiers, start_coordinates=coordinates
+        raw_event.qualifiers, start_coordinates=coordinates
     )
     if result == ShotResult.OWN_GOAL:
         if isinstance(result_coordinates, Point3D):
@@ -392,30 +355,26 @@ def _parse_shot(
     )
 
 
-def _parse_goalkeeper_events(
-    raw_qualifiers: Dict[int, str], type_id: int
-) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
-    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(type_id)
+def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
+    goalkeeper_qualifiers = _get_goalkeeper_qualifiers(raw_event.type_id)
     qualifiers.extend(goalkeeper_qualifiers)
 
     return dict(result=None, qualifiers=qualifiers)
 
 
-def _parse_duel(
-    raw_qualifiers: Dict[int, str], type_id: int, outcome: int
-) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
-    if type_id == EVENT_TYPE_TACKLE:
+def _parse_duel(raw_event: OptaEvent) -> Dict:
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
+    if raw_event.type_id == EVENT_TYPE_TACKLE:
         qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
-    elif type_id == EVENT_TYPE_AERIAL:
+    elif raw_event.type_id == EVENT_TYPE_AERIAL:
         qualifiers.extend(
             [
                 DuelQualifier(value=DuelType.LOOSE_BALL),
                 DuelQualifier(value=DuelType.AERIAL),
             ]
         )
-    elif type_id == EVENT_TYPE_50_50:
+    elif raw_event.type_id == EVENT_TYPE_50_50:
         qualifiers.extend(
             [
                 DuelQualifier(value=DuelType.LOOSE_BALL),
@@ -423,7 +382,7 @@ def _parse_duel(
             ]
         )
 
-    result = DuelResult.WON if outcome else DuelResult.LOST
+    result = DuelResult.WON if raw_event.outcome == 1 else DuelResult.LOST
 
     return dict(
         result=result,
@@ -432,17 +391,17 @@ def _parse_duel(
 
 
 def _parse_interception(
-    raw_qualifiers: Dict[int, str], team: Team, next_event: ObjectifiedElement
+    raw_event: OptaEvent, team: Team, next_event: OptaEvent
 ) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_qualifiers)
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     result = InterceptionResult.SUCCESS
 
     if next_event is not None:
-        next_event_type_id = int(next_event.attrib["type_id"])
+        next_event_type_id = int(next_event.type_id)
         if next_event_type_id in BALL_OUT_EVENTS:
             result = InterceptionResult.OUT
         elif (next_event_type_id in BALL_OWNING_EVENTS) and (
-            next_event.attrib["team_id"] != team.team_id
+            next_event.contestant_id != team.team_id
         ):
             result = InterceptionResult.LOST
 
@@ -450,71 +409,6 @@ def _parse_interception(
         result=result,
         qualifiers=qualifiers,
     )
-
-
-def _parse_team_players(
-    f7_root, team_ref: str
-) -> Tuple[str, Dict[str, Dict[str, str]]]:
-    matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
-    team_elms = list(matchdata_path.find(f7_root).iterchildren("Team"))
-    for team_elm in team_elms:
-        if team_elm.attrib["uID"] == team_ref:
-            team_name = str(team_elm.find("Name"))
-            players = {
-                player_elm.attrib["uID"]: dict(
-                    first_name=str(
-                        player_elm.find("PersonName").find("First")
-                    ),
-                    last_name=str(player_elm.find("PersonName").find("Last")),
-                )
-                for player_elm in team_elm.iterchildren("Player")
-            }
-            break
-    else:
-        raise DeserializationError(f"Could not parse players for {team_ref}")
-
-    return team_name, players
-
-
-def _team_from_xml_elm(team_elm, f7_root) -> Team:
-    # This should not happen here
-    team_name, team_players = _parse_team_players(
-        f7_root, team_elm.attrib["TeamRef"]
-    )
-
-    team_id = team_elm.attrib["TeamRef"].lstrip("t")
-    formation = "-".join(list(team_elm.attrib["Formation"]))
-    team = Team(
-        team_id=str(team_id),
-        name=team_name,
-        ground=Ground.HOME
-        if team_elm.attrib["Side"] == "Home"
-        else Ground.AWAY,
-        starting_formation=FormationType(formation),
-    )
-    team.players = [
-        Player(
-            player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
-            team=team,
-            jersey_no=int(player_elm.attrib["ShirtNumber"]),
-            first_name=team_players[player_elm.attrib["PlayerRef"]][
-                "first_name"
-            ],
-            last_name=team_players[player_elm.attrib["PlayerRef"]][
-                "last_name"
-            ],
-            starting=True if player_elm.attrib["Status"] == "Start" else False,
-            position=Position(
-                position_id=player_elm.attrib["Formation_Place"],
-                name=player_elm.attrib["Position"],
-                coordinates=None,
-            ),
-        )
-        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
-            "MatchPlayer"
-        )
-    ]
-    return team
 
 
 def _get_end_coordinates(
@@ -683,252 +577,214 @@ def _get_event_type_name(type_id: int) -> str:
     return event_type_names.get(type_id, "unknown")
 
 
-class OptaInputs(NamedTuple):
-    f7_data: IO[bytes]
-    f24_data: IO[bytes]
+class StatsPerformInputs(NamedTuple):
+    meta_data: IO[bytes]
+    meta_feed: str
+    event_data: IO[bytes]
+    event_feed: str
+    meta_datatype: Optional[str] = None
+    event_datatype: Optional[str] = None
+    pitch_length: Optional[float] = None
+    pitch_width: Optional[float] = None
 
 
-class OptaDeserializer(EventDataDeserializer[OptaInputs]):
+class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
     @property
     def provider(self) -> Provider:
         return Provider.OPTA
 
-    def deserialize(self, inputs: OptaInputs) -> EventDataset:
-        transformer = self.get_transformer()
+    def deserialize(self, inputs: StatsPerformInputs) -> EventDataset:
+        transformer = self.get_transformer(
+            pitch_length=inputs.pitch_length, pitch_width=inputs.pitch_width
+        )
 
         with performance_logging("load data", logger=logger):
-            f7_root = objectify.fromstring(inputs.f7_data.read())
-            f24_root = objectify.fromstring(inputs.f24_data.read())
+            metadata_parser = get_parser(
+                inputs.meta_data, inputs.meta_feed, inputs.event_datatype
+            )
+            events_parser = get_parser(
+                inputs.event_data, inputs.event_feed, inputs.event_datatype
+            )
 
         with performance_logging("parse data", logger=logger):
-            matchdata_path = objectify.ObjectPath(
-                "SoccerFeed.SoccerDocument.MatchData"
-            )
-            match_result_path = objectify.ObjectPath(
-                "SoccerFeed.SoccerDocument.MatchData.MatchInfo.Result"
-            )
-            team_elms = list(
-                matchdata_path.find(f7_root).iterchildren("TeamData")
-            )
-
-            home_score = None
-            away_score = None
-            for team_elm in team_elms:
-                if team_elm.attrib["Side"] == "Home":
-                    home_score = int(team_elm.attrib["Score"])
-                    home_team = _team_from_xml_elm(team_elm, f7_root)
-                elif team_elm.attrib["Side"] == "Away":
-                    away_score = int(team_elm.attrib["Score"])
-                    away_team = _team_from_xml_elm(team_elm, f7_root)
-                else:
-                    raise DeserializationError(
-                        f"Unknown side: {team_elm.attrib['Side']}"
-                    )
-            score = Score(home=home_score, away=away_score)
-            teams = [home_team, away_team]
-            match_result_type = list(match_result_path.find(f7_root))[
-                0
-            ].attrib["Type"]
-            periods = _create_periods(match_result_type)
-
-            if len(home_team.players) == 0 or len(away_team.players) == 0:
-                raise DeserializationError("LineUp incomplete")
-
-            game_elm = f24_root.find("Game")
+            periods = metadata_parser.extract_periods()
+            score = metadata_parser.extract_score()
+            teams = metadata_parser.extract_lineups()
+            raw_events = [
+                event
+                for event in events_parser.extract_events()
+                if event.type_id != EVENT_TYPE_DELETED_EVENT
+            ]
 
             possession_team = None
             events = []
-            events_list = [
-                event
-                for event in list(game_elm.iterchildren("Event"))
-                if int(event.attrib["type_id"]) != EVENT_TYPE_DELETED_EVENT
-            ]
-            for idx, event_elm in enumerate(events_list):
+            for idx, raw_event in enumerate(raw_events):
                 next_event_elm = (
-                    events_list[idx + 1]
-                    if (idx + 1) < len(events_list)
+                    raw_events[idx + 1]
+                    if (idx + 1) < len(raw_events)
                     else None
                 )
-                event_id = event_elm.attrib["id"]
-                type_id = int(event_elm.attrib["type_id"])
-                timestamp = _parse_f24_datetime(event_elm.attrib["timestamp"])
-                period_id = int(event_elm.attrib["period_id"])
-                for period in periods:
-                    if period.id == period_id:
-                        break
-                else:
+                period = next(
+                    (
+                        period
+                        for period in periods
+                        if period.id == raw_event.period_id
+                    ),
+                    None,
+                )
+                if period is None:
                     logger.debug(
-                        f"Skipping event {event_id} because period doesn't match {period_id}"
+                        f"Skipping event {raw_event.id} because period doesn't match {raw_event.period_id}"
                     )
                     continue
 
-                if type_id == EVENT_TYPE_START_PERIOD:
+                if raw_event.type_id == EVENT_TYPE_START_PERIOD:
                     logger.debug(
-                        f"Set start of period {period.id} to {timestamp}"
+                        f"Set start of period {period.id} to {raw_event.timestamp}"
                     )
-                    period.start_timestamp = timestamp
-                elif type_id == EVENT_TYPE_END_PERIOD:
+                    period.start_timestamp = raw_event.timestamp
+                elif raw_event.type_id == EVENT_TYPE_END_PERIOD:
                     logger.debug(
-                        f"Set end of period {period.id} to {timestamp}"
+                        f"Set end of period {period.id} to {raw_event.timestamp}"
                     )
-                    period.end_timestamp = timestamp
+                    period.end_timestamp = raw_event.timestamp
                 else:
                     if not period.start_timestamp:
                         # not started yet
                         continue
 
-                    if event_elm.attrib["team_id"] == home_team.team_id:
+                    if raw_event.contestant_id == teams[0].team_id:
                         team = teams[0]
-                    elif event_elm.attrib["team_id"] == away_team.team_id:
+                    elif raw_event.contestant_id == teams[1].team_id:
                         team = teams[1]
                     else:
                         raise DeserializationError(
-                            f"Unknown team_id {event_elm.attrib['team_id']}"
+                            f"Unknown team_id {raw_event.contestant_id}"
                         )
 
-                    x = float(event_elm.attrib["x"])
-                    y = float(event_elm.attrib["y"])
-                    outcome = int(event_elm.attrib["outcome"])
-                    raw_qualifiers = {
-                        int(
-                            qualifier_elm.attrib["qualifier_id"]
-                        ): qualifier_elm.attrib.get("value")
-                        for qualifier_elm in event_elm.iterchildren("Q")
-                    }
                     player = None
-                    if "player_id" in event_elm.attrib:
-                        player = team.get_player_by_id(
-                            event_elm.attrib["player_id"]
-                        )
+                    if raw_event.player_id is not None:
+                        player = team.get_player_by_id(raw_event.player_id)
 
-                    if type_id in BALL_OWNING_EVENTS:
+                    if raw_event.type_id in BALL_OWNING_EVENTS:
                         possession_team = team
 
                     generic_event_kwargs = dict(
                         # from DataRecord
                         period=period,
-                        timestamp=timestamp - period.start_timestamp,
+                        timestamp=raw_event.timestamp - period.start_timestamp,
                         ball_owning_team=possession_team,
                         ball_state=BallState.ALIVE,
                         # from Event
-                        event_id=event_id,
+                        event_id=raw_event.id,
                         team=team,
                         player=player,
-                        coordinates=Point(x=x, y=y),
-                        raw_event=event_elm,
+                        coordinates=Point(x=raw_event.x, y=raw_event.y),
+                        raw_event=raw_event,
                     )
 
-                    if type_id == EVENT_TYPE_PASS:
-                        pass_event_kwargs = _parse_pass(
-                            raw_qualifiers, outcome
-                        )
+                    if raw_event.type_id == EVENT_TYPE_PASS:
+                        pass_event_kwargs = _parse_pass(raw_event)
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_OFFSIDE_PASS:
-                        pass_event_kwargs = _parse_offside_pass(raw_qualifiers)
+                    elif raw_event.type_id == EVENT_TYPE_OFFSIDE_PASS:
+                        pass_event_kwargs = _parse_offside_pass(raw_event)
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_TAKE_ON:
-                        take_on_event_kwargs = _parse_take_on(outcome)
+                    elif raw_event.type_id == EVENT_TYPE_TAKE_ON:
+                        take_on_event_kwargs = _parse_take_on(raw_event)
                         event = self.event_factory.build_take_on(
                             **take_on_event_kwargs,
                             **generic_event_kwargs,
                             qualifiers=None,
                         )
-                    elif type_id in (
+                    elif raw_event.type_id in (
                         EVENT_TYPE_SHOT_MISS,
                         EVENT_TYPE_SHOT_POST,
                         EVENT_TYPE_SHOT_SAVED,
                         EVENT_TYPE_SHOT_GOAL,
                     ):
-                        if type_id == EVENT_TYPE_SHOT_GOAL:
-                            if 374 in raw_qualifiers.keys():
+                        if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
+                            if 374 in raw_event.qualifiers:
                                 generic_event_kwargs["timestamp"] = (
-                                    _parse_f24_datetime(
-                                        raw_qualifiers.get(374).replace(
-                                            " ", "T"
-                                        )
-                                    )
+                                    datetime.strptime(
+                                        raw_event.qualifiers[374],
+                                        "%Y-%m-%d %H:%M:%S.%f",
+                                    ).replace(tzinfo=pytz.utc)
                                     - period.start_timestamp
                                 )
-                        shot_event_kwargs = _parse_shot(
-                            raw_qualifiers,
-                            type_id,
-                            coordinates=generic_event_kwargs["coordinates"],
-                        )
+                        shot_event_kwargs = _parse_shot(raw_event)
                         kwargs = {}
                         kwargs.update(generic_event_kwargs)
                         kwargs.update(shot_event_kwargs)
                         event = self.event_factory.build_shot(**kwargs)
-                    elif type_id == EVENT_TYPE_RECOVERY:
+                    elif raw_event.type_id == EVENT_TYPE_RECOVERY:
                         event = self.event_factory.build_recovery(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_CLEARANCE:
-                        clearance_event_kwargs = _parse_clearance(
-                            raw_qualifiers
-                        )
+                    elif raw_event.type_id == EVENT_TYPE_CLEARANCE:
+                        clearance_event_kwargs = _parse_clearance(raw_event)
                         event = self.event_factory.build_clearance(
                             result=None,
                             **clearance_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id in DUEL_EVENTS:
-                        duel_event_kwargs = _parse_duel(
-                            raw_qualifiers, type_id, outcome
-                        )
+                    elif raw_event.type_id in DUEL_EVENTS:
+                        duel_event_kwargs = _parse_duel(raw_event)
                         event = self.event_factory.build_duel(
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id in (
+                    elif raw_event.type_id in (
                         EVENT_TYPE_INTERCEPTION,
                         EVENT_TYPE_BLOCKED_PASS,
                     ):
                         interception_event_kwargs = _parse_interception(
-                            raw_qualifiers, team, next_event_elm
+                            raw_event, team, next_event_elm
                         )
                         event = self.event_factory.build_interception(
                             **interception_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id in KEEPER_EVENTS:
+                    elif raw_event.type_id in KEEPER_EVENTS:
                         goalkeeper_event_kwargs = _parse_goalkeeper_events(
-                            raw_qualifiers, type_id
+                            raw_event
                         )
                         event = self.event_factory.build_goalkeeper_event(
                             **goalkeeper_event_kwargs, **generic_event_kwargs
                         )
-                    elif (type_id == EVENT_TYPE_BALL_TOUCH) & (outcome == 0):
+                    elif (raw_event.type_id == EVENT_TYPE_BALL_TOUCH) & (
+                        raw_event.outcome == 0
+                    ):
                         event = self.event_factory.build_miscontrol(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-                    elif (type_id == EVENT_TYPE_FOUL_COMMITTED) and (
-                        outcome == 0
+                    elif (raw_event.type_id == EVENT_TYPE_FOUL_COMMITTED) and (
+                        raw_event.outcome == 0
                     ):
                         event = self.event_factory.build_foul_committed(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-                    elif type_id in BALL_OUT_EVENTS:
+                    elif raw_event.type_id in BALL_OUT_EVENTS:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         event = self.event_factory.build_ball_out(
                             result=None,
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_FORMATION_CHANGE:
+                    elif raw_event.type_id == EVENT_TYPE_FORMATION_CHANGE:
                         formation_change_event_kwargs = (
-                            _parse_formation_change(raw_qualifiers)
+                            _parse_formation_change(raw_event)
                         )
                         event = self.event_factory.build_formation_change(
                             result=None,
@@ -936,9 +792,9 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **formation_change_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif type_id == EVENT_TYPE_CARD:
+                    elif raw_event.type_id == EVENT_TYPE_CARD:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
-                        card_event_kwargs = _parse_card(raw_qualifiers)
+                        card_event_kwargs = _parse_card(raw_event)
 
                         event = self.event_factory.build_card(
                             **card_event_kwargs,
@@ -949,21 +805,23 @@ class OptaDeserializer(EventDataDeserializer[OptaInputs]):
                             **generic_event_kwargs,
                             result=None,
                             qualifiers=None,
-                            event_name=_get_event_type_name(type_id),
+                            event_name=_get_event_type_name(raw_event.type_id),
                         )
 
                     if self.should_include_event(event):
                         events.append(transformer.transform_event(event))
 
         metadata = Metadata(
-            teams=teams,
+            teams=list(teams),
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             score=score,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-            provider=Provider.OPTA,
+            provider=Provider.OPTA
+            if inputs.event_feed.upper() == "F24"
+            else Provider.STATSPERFORM,
             coordinate_system=transformer.get_to_coordinate_system(),
         )
 

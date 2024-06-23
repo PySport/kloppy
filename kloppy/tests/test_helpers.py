@@ -1,36 +1,30 @@
-import os
 import sys
-from pathlib import Path
 
 import pytest
-
-from kloppy.config import config_context
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-
+from kloppy import opta, statsbomb, tracab
+from kloppy.config import config_context
 from kloppy.domain import (
-    Period,
-    DatasetFlag,
-    Point,
     AttackingDirection,
-    TrackingDataset,
-    NormalizedPitchDimensions,
+    DatasetFlag,
     Dimension,
-    Orientation,
-    Provider,
     Frame,
+    Ground,
     Metadata,
     MetricaCoordinateSystem,
-    Team,
-    Ground,
+    NormalizedPitchDimensions,
+    Orientation,
+    Period,
     Player,
     Detection,
+    Point,
     Point3D,
+    Provider,
+    Team,
+    TrackingDataset,
 )
-
-from kloppy import opta, tracab, statsbomb
-from kloppy.io import open_as_file
 
 
 class TestHelpers:
@@ -270,12 +264,12 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=-1234.0, y=-294.0)
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
 
         transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA
@@ -286,8 +280,8 @@ class TestHelpers:
         )
 
         assert transformed_dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=0.37660000000000005, y=0.5489999999999999)
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
         assert (
             transformed_dataset.metadata.orientation
             == dataset.metadata.orientation
@@ -522,12 +516,3 @@ class TestHelpers:
         df = dataset.to_df(engine="pandas[pyarrow]")
         assert isinstance(df, pd.DataFrame)
         assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
-
-
-class TestOpenAsFile:
-    def test_path(self):
-        path = Path(__file__).parent / "files/tracab_meta.xml"
-        with open_as_file(path) as fp:
-            data = fp.read()
-
-        assert len(data) == os.path.getsize(path)

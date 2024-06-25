@@ -461,6 +461,14 @@ def _validate_formation(formation: str) -> bool:
     return total_players == 10
 
 
+def _get_team_formation(team_formation, last_formations, team_id):
+    return (
+        formations[team_formation]
+        if _validate_formation(team_formation)
+        else formations[last_formations[team_id]]
+    )
+
+
 def get_home_away_team_formation(event, team, last_formations):
     team_formation = event["team"]["formation"]
     team_id = str(event["team"]["id"])
@@ -468,23 +476,19 @@ def get_home_away_team_formation(event, team, last_formations):
     opponent_team_id = str(event["opponentTeam"]["id"])
 
     if team.ground == Ground.HOME:
-        if _validate_formation(team_formation):
-            home_team_formation = formations[team_formation]
-        else:
-            home_team_formation = formations[last_formations[team_id]]
-        if _validate_formation(opponent_formation):
-            away_team_formation = formations[opponent_formation]
-        else:
-            away_team_formation = formations[last_formations[opponent_team_id]]
+        home_team_formation = _get_team_formation(
+            team_formation, last_formations, team_id
+        )
+        away_team_formation = _get_team_formation(
+            opponent_formation, last_formations, opponent_team_id
+        )
     elif team.ground == Ground.AWAY:
-        if _validate_formation(team_formation):
-            away_team_formation = formations[team_formation]
-        else:
-            away_team_formation = formations[last_formations[team_id]]
-        if _validate_formation(opponent_formation):
-            home_team_formation = formations[opponent_formation]
-        else:
-            home_team_formation = formations[last_formations[opponent_team_id]]
+        away_team_formation = _get_team_formation(
+            team_formation, last_formations, team_id
+        )
+        home_team_formation = _get_team_formation(
+            opponent_formation, last_formations, opponent_team_id
+        )
     else:
         raise DeserializationError(f"Unknown team_id {team.team_id}")
 

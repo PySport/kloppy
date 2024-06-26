@@ -196,6 +196,8 @@ class Time:
         return hash((self.period.id, self.timestamp.total_seconds()))
 
 
+SENTINEL = object()
+
 T = TypeVar("T")
 
 
@@ -238,9 +240,12 @@ class TimeContainer(Generic[T]):
             ranges_.append((start_time, end_time, self.items[start_time]))
         return ranges_
 
-    def last(self, include_time: bool = False):
+    def last(self, include_time: bool = False, default=SENTINEL):
         if not len(self.items):
-            raise KeyError
+            if default == SENTINEL:
+                raise KeyError
+            else:
+                return default
 
         time = self.items.keys()[-1]
         if include_time:

@@ -522,6 +522,8 @@ def _get_event_bodypart_qualifiers(
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif EVENT_QUALIFIER_HEAD in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+    elif EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif EVENT_QUALIFIER_LEFT_FOOT in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
     elif EVENT_QUALIFIER_RIGHT_FOOT in raw_qualifiers:

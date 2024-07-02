@@ -2,7 +2,8 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO
+from enum import Enum
+from typing import Dict, List, Tuple, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BallOutEvent,
@@ -81,6 +82,26 @@ formations = {
 }
 
 
+class ShotZoneResults(Enum):
+    GOAL_BOTTOM_LEFT = "glb"
+    GOAL_BOTTOM_RIGHT = "gbr"
+    GOAL_BOTTOM_CENTER = "gbc"
+    GOAL_CENTER_LEFT = "gcl"
+    GOAL_CENTER = "gc"
+    GOAL_CENTER_RIGHT = "gcr"
+    GOAL_TOP_LEFT = "gtl"
+    GOAL_TOP_RIGHT = "gtr"
+    GOAL_TOP_CENTER = "gtc"
+    OUT_BOTTOM_RIGHT = "obr"
+    OUT_BOTTOM_LEFT = "obl"
+    OUT_RIGHT = "or"
+    OUT_LEFT = "ol"
+    OUT_LEFT_TOP = "olt"
+    OUT_TOP = "ot"
+    OUT_RIGHT_TOP = "ort"
+    BLOCKED = "bc"
+
+
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     team = Team(
         team_id=wyId,
@@ -98,6 +119,74 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         for player in raw_events["players"][wyId]
     ]
     return team
+
+
+def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags.
+
+    Wyscout does not provide end-coordinates of shots. Instead shots on goal
+    are tagged with a zone. This function maps each of these zones to
+    a coordinate. The zones and corresponding y-coordinate are depicted below.
+
+
+        olt      | ot |      ort
+     --------------------------------
+          ||=================||
+     -------------------------------
+          || g;l | gt | grt ||
+     --------------------------------
+      ol || gcl | gc  | gcr || or
+     --------------------------------
+      olb || glb  | gb | gln || grb
+
+      40     45    50    55     60    (y-coordinate of zone)
+        44.62               55.38     (y-coordiante of post)
+    """
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_CENTER
+    ):
+        return Point(100.0, 50.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_RIGHT
+    ):
+        return Point(100.0, 55.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_LEFT
+    ):
+        return Point(100.0, 45.0)
+
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_TOP:
+        return Point(100.0, 50.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_RIGHT
+    ):
+        return Point(100.0, 60.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_LEFT
+    ):
+        return Point(100.0, 40.0)
+
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
+        return Point(
+            x=float(raw_event["location"]["x"]),
+            y=float(raw_event["positions"]["y"]),
+        )
+
+    return None
 
 
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
@@ -132,10 +221,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
 
     return {
         "result": result,
-        "result_coordinates": Point(
-            x=float(0),
-            y=float(0),
-        ),
+        "result_coordinates": _create_shot_result_coordinates(raw_event),
         "qualifiers": qualifiers,
     }
 
@@ -188,12 +274,14 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": receiver_player,
-        "receiver_coordinates": Point(
-            x=float(raw_event["pass"]["endLocation"]["x"]),
-            y=float(raw_event["pass"]["endLocation"]["y"]),
-        )
-        if len(raw_event["pass"]["endLocation"]) > 1
-        else None,
+        "receiver_coordinates": (
+            Point(
+                x=float(raw_event["pass"]["endLocation"]["x"]),
+                y=float(raw_event["pass"]["endLocation"]["y"]),
+            )
+            if len(raw_event["pass"]["endLocation"]) > 1
+            else None
+        ),
     }
 
 
@@ -557,9 +645,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=0)
-                            if len(periods) == 0
-                            else periods[-1].end_timestamp,
+                            start_timestamp=(
+                                timedelta(seconds=0)
+                                if len(periods) == 0
+                                else periods[-1].end_timestamp
+                            ),
                             end_timestamp=None,
                         )
                     )
@@ -584,16 +674,20 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
-                    "coordinates": Point(
-                        x=float(raw_event["location"]["x"]),
-                        y=float(raw_event["location"]["y"]),
-                    )
-                    if raw_event["location"]
-                    else None,
+                    "coordinates": (
+                        Point(
+                            x=float(raw_event["location"]["x"]),
+                            y=float(raw_event["location"]["y"]),
+                        )
+                        if raw_event["location"]
+                        else None
+                    ),
                     "team": team,
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    else None,
+                    "player": (
+                        players[team_id][player_id]
+                        if player_id != INVALID_PLAYER
+                        else None
+                    ),
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],

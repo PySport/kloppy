@@ -200,9 +200,7 @@ class TestWyscoutV3:
         assert kickoff_p1.timestamp == timedelta(minutes=0, seconds=1)
         # Note: the test file is incorrect. The second period start at 45:00
         kickoff_p2 = dataset.get_event_by_id(1331979498)
-        assert kickoff_p2.timestamp == timedelta(
-            minutes=1, seconds=0
-        ) - timedelta(minutes=45)
+        assert kickoff_p2.timestamp == timedelta(seconds=900)
 
     def test_coordinates(self, dataset: EventDataset):
         assert dataset.records[2].coordinates == Point(36.0, 78.0)

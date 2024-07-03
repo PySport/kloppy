@@ -18,6 +18,8 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    FormationType,
+    Time,
 )
 
 from kloppy import wyscout
@@ -178,7 +180,20 @@ class TestWyscoutV3:
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             minutes=20, seconds=47
-        ) + timedelta(minutes=50, seconds=35)
+        ) + timedelta(minutes=69, seconds=35)
+
+        assert (
+            dataset.metadata.teams[0].starting_formation
+            == FormationType.FOUR_TWO_THREE_ONE
+        )
+
+        formation_time_change = Time(
+            dataset.metadata.periods[1], timedelta(minutes=24, seconds=20)
+        )
+        assert (
+            dataset.metadata.teams[0].formations.items[formation_time_change]
+            == FormationType.FOUR_THREE_THREE
+        )
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(663292348)

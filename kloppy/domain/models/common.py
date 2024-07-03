@@ -211,6 +211,9 @@ class Team:
     name: str
     ground: Ground
     starting_formation: Optional[FormationType] = None
+    formations: TimeContainer[FormationType] = field(
+        default_factory=TimeContainer, compare=False
+    )
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
@@ -248,6 +251,9 @@ class Team:
                 return player
 
         return None
+
+    def set_formation(self, time: Time, formation: Optional[FormationType]):
+        self.formations.set(time, formation)
 
 
 class BallState(Enum):
@@ -1069,7 +1075,7 @@ class Dataset(ABC, Generic[T]):
             )
 
         self._init_player_positions()
-        self._update_player_positions()
+        self._update_formations_and_positions()
 
     def _init_player_positions(self):
         start_of_match = self.metadata.periods[0].start_time
@@ -1081,7 +1087,7 @@ class Dataset(ABC, Generic[T]):
                         player.starting_position or Position.unknown(),
                     )
 
-    def _update_player_positions(self):
+    def _update_formations_and_positions(self):
         """Update player positions based on the events for example."""
         pass
 

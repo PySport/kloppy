@@ -225,7 +225,7 @@ class SecondSpectrumDeserializer(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
                                 starting=player_data["position"] != "SUB",
-                                position=player_data["position"],
+                                starting_position=player_data["position"],
                                 team=team,
                                 jersey_no=int(player_data["number"]),
                                 attributes=player_attributes,

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<match>
+  <matchInfo id="71pif9hi2vwzp6q0xzilyxst0" coverageLevel="15" date="2021-09-11Z" time="18:30:00Z" localDate="2021-09-11" localTime="20:30:00" week="6" attendanceInfoId="2" attendanceInfo="Limited Audience" numberOfPeriods="2" periodLength="45" lastUpdated="2024-03-14T21:27:20Z">
+    <description>Hamburger SV vs Sandhausen</description>
+    <sport id="289u5typ3vp4ifwh5thalohmq">Soccer</sport>
+    <ruleset id="79plas4983031idr6vw83nuel">Men</ruleset>
+    <competition id="722fdbecxzcq9788l6jqclzlw" name="2. Bundesliga" knownName="German Bundesliga Zwei" competitionCode="2.B" competitionFormat="Domestic league">
+      <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+    </competition>
+    <tournamentCalendar id="93wcwtf25153hracvqva88aac" startDate="2021-07-23Z" endDate="2022-05-15Z">2021/2022</tournamentCalendar>
+    <stage id="9443wbz12vfz0f7ewmg8xhes4" formatId="e2q01r9o9jwiq1fls93d1sslx" startDate="2021-07-23Z" endDate="2022-05-15Z">Regular Season</stage>
+    <contestants>
+      <contestant id="75xi6hloabmnjn2kzgj1g8h1s" name="Hamburger SV" shortName="Hamburg" officialName="Hamburger SV" code="HSV" position="home">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+      <contestant id="884uzyf1wosc7ykji6e18gifp" name="Sandhausen" shortName="Sandhausen" officialName="SV Sandhausen" code="SVS" position="away">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+    </contestants>
+    <venue id="8gaqzo8y471bfkkc3tq7ra7o" neutral="no" longName="Volksparkstadion">Volksparkstadion</venue>
+  </matchInfo>
+  <liveData>
+    <matchDetails periodId="14" matchStatus="Played" winner="home" matchLengthMin="97" matchLengthSec="41">
+      <periods>
+        <period id="1" start="2021-09-11T18:30:06Z" end="2021-09-11T19:15:08Z" lengthMin="45" lengthSec="2"/>
+        <period id="2" start="2021-09-11T19:34:13Z" end="2021-09-11T20:26:52Z" lengthMin="52" lengthSec="39"/>
+      </periods>
+      <scores>
+        <ht home="0" away="0"/>
+        <ft home="2" away="1"/>
+        <total home="2" away="1"/>
+      </scores>
+    </matchDetails>
+    <goal type="PG" scorerId="8metzwuemi3edqhsv2pnqqbx1" scorerName="D. Kinsombi" optaEventId="2328646979" homeScore="1" awayScore="0" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="74" timeMinSec="73:39" lastUpdated="2023-07-27T00:03:12Z" timestamp="2021-09-11T20:02:52Z"/>
+    <goal type="G" scorerId="2np4n7d10f0jsgor0zbs5acwl" scorerName="J. Bachmann" assistPlayerId="6hh1y9t572yqk7d1zegi0hm5m" assistPlayerName="C. Conteh" optaEventId="2328657401" homeScore="1" awayScore="1" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="87" timeMinSec="86:57" lastUpdated="2021-09-11T20:17:02Z" timestamp="2021-09-11T20:16:10Z"/>
+    <goal type="G" scorerId="2nrmndj0uq3f46c2cb1fbf85" scorerName="M. Heyer" assistPlayerId="7b9gqjq7z692znpoklj7c057u" assistPlayerName="L. Reis" optaEventId="2328663263" homeScore="2" awayScore="1" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="96" timeMinSec="95:22" lastUpdated="2023-12-15T09:41:10Z" timestamp="2021-09-11T20:24:35Z"/>
+    <card type="YC" playerId="4wk62n7739xlysrxoky33mf2t" playerName="M. Ritzmaier" optaEventId="2328599567" cardReason="Foul" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="1" timeMin="11" timeMinSec="10:13" lastUpdated="2021-09-11T18:40:27Z" timestamp="2021-09-11T18:40:19Z"/>
+    <card type="YC" playerId="dkf9v2y9a7ogw6k53crs6dc5x" playerName="A. Esswein" optaEventId="2328644287" cardReason="Foul" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="69" timeMinSec="68:18" lastUpdated="2021-09-11T19:57:37Z" timestamp="2021-09-11T19:57:31Z"/>
+    <card type="YC" playerId="68u3vd1upyaz92c06d1ekpbyt" playerName="E. Zenga" optaEventId="2328645375" cardReason="Foul" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="71" timeMinSec="70:27" lastUpdated="2021-09-11T19:59:55Z" timestamp="2021-09-11T19:59:41Z"/>
+    <card type="Y2C" playerId="4wk62n7739xlysrxoky33mf2t" playerName="M. Ritzmaier" optaEventId="2328646633" cardReason="Time wasting" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="72" timeMinSec="71:48" lastUpdated="2021-09-11T20:02:28Z" timestamp="2021-09-11T20:01:01Z"/>
+    <card type="YC" teamOfficialId="e2uqfil4tuurmjujxxjph9hat" officialName="S. Kulovits" optaEventId="2329648937" cardReason="Dissent" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="94" timeMinSec="93:53" lastUpdated="2021-11-17T10:49:15Z" timestamp="2021-09-11T20:23:06Z"/>
+    <substitute playerOnId="3mp7p8tytgkbwi8itxl5mfkrt" playerOnName="B. Jatta" playerOffId="aksjicf4keobpav3tuujngell" playerOffName="M. Wintzheimer" subReason="Tactical" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="61" timeMinSec="60:46" lastUpdated="2021-09-11T19:50:12Z" timestamp="2021-09-11T19:49:59Z"/>
+    <substitute playerOnId="8asvg8sto06l27xjgbzyzqx1x" playerOnName="C. Soukou" playerOffId="8tqphrtr7fraqeunw67iwwq8l" playerOffName="C. Okoroji" subReason="Tactical" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="62" timeMinSec="61:01" lastUpdated="2023-11-16T06:09:27Z" timestamp="2021-09-11T19:50:15Z"/>
+    <substitute playerOnId="7b9gqjq7z692znpoklj7c057u" playerOnName="L. Reis" playerOffId="ci4pwzieoc94uj3i1371bsatx" playerOffName="J. Gyamerah" subReason="Tactical" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="67" timeMinSec="66:20" lastUpdated="2021-09-11T19:55:45Z" timestamp="2021-09-11T19:55:33Z"/>
+    <substitute playerOnId="5revw8iy1mhgi4jbb5nae2ind" playerOnName="C. Kinsombi" playerOffId="dkf9v2y9a7ogw6k53crs6dc5x" playerOffName="A. Esswein" subReason="Tactical" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="75" timeMinSec="74:15" lastUpdated="2023-07-27T16:58:09Z" timestamp="2021-09-11T20:03:29Z"/>
+    <substitute playerOnId="c7nq7mou1gyrzl60ho7pmaok5" playerOnName="D. Diekmeier" playerOffId="ehvnch6p70deczk99k156jglx" playerOffName="B. Ajdini" subReason="Tactical" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="75" timeMinSec="74:18" lastUpdated="2021-09-11T20:05:07Z" timestamp="2021-09-11T20:03:31Z"/>
+    <substitute playerOnId="cipmd3k2nfv0ddic0l8go14gl" playerOnName="C. Benschop" playerOffId="dvljd3jdouhags70b4rv7jl5h" playerOffName="D. Keita-Ruel" subReason="Tactical" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="75" timeMinSec="74:19" lastUpdated="2022-02-01T14:38:28Z" timestamp="2021-09-11T20:03:32Z"/>
+    <substitute playerOnId="6hh1y9t572yqk7d1zegi0hm5m" playerOnName="C. Conteh" playerOffId="68u3vd1upyaz92c06d1ekpbyt" playerOffName="E. Zenga" subReason="Tactical" contestantId="884uzyf1wosc7ykji6e18gifp" periodId="2" timeMin="82" timeMinSec="81:33" lastUpdated="2022-11-01T07:24:43Z" timestamp="2021-09-11T20:10:46Z"/>
+    <substitute playerOnId="etfmz143p0d2yowiiijd8g6sq" playerOnName="M. Kaufmann" playerOffId="enpnulwzdxetukh80iwyazkk5" playerOffName="S. Kittel" subReason="Tactical" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="88" timeMinSec="87:54" lastUpdated="2021-09-17T08:26:07Z" timestamp="2021-09-11T20:17:07Z"/>
+    <substitute playerOnId="1px9whllb1pnprmgq4fjw3qhh" playerOnName="M. Muheim" playerOffId="e7if3ma2jblaurrokcxadk0k5" playerOffName="R. Glatzel" subReason="Tactical" contestantId="75xi6hloabmnjn2kzgj1g8h1s" periodId="2" timeMin="88" timeMinSec="87:59" lastUpdated="2021-09-17T08:26:07Z" timestamp="2021-09-11T20:17:12Z"/>
+    <lineUp contestantId="75xi6hloabmnjn2kzgj1g8h1s" formationUsed="433">
+      <player playerId="8b60vtt1stnmt2uoj0f4lh49h" firstName="Daniel" lastName="Heuer Fernandes" shortFirstName="Daniel" shortLastName="Heuer Fernandes" knownName="Daniel Heuer Fernandes" matchName="Daniel Heuer Fernandes" shirtNumber="1" position="Goalkeeper" positionSide="Centre" formationPlace="1"/>
+      <player playerId="46vr35g415omy60ahbiv40wk5" firstName="Tim" lastName="Leibold" shortFirstName="Tim" shortLastName="Leibold" matchName="T. Leibold" shirtNumber="21" position="Defender" positionSide="Left" formationPlace="3"/>
+      <player playerId="do9g7p0jtcfngmvq1uzy2tqdx" firstName="Sebastian" lastName="Schonlau" shortFirstName="Sebastian" shortLastName="Schonlau" matchName="S. Schonlau" shirtNumber="4" position="Defender" positionSide="Left/Centre" formationPlace="6" captain="yes"/>
+      <player playerId="n82tdzb1liltoe33f5p6xbhm" firstName="Jonas Benjamin" lastName="Chimezie David" shortFirstName="Jonas" shortLastName="David" matchName="J. David" shirtNumber="34" position="Defender" positionSide="Centre/Right" formationPlace="5"/>
+      <player playerId="ci4pwzieoc94uj3i1371bsatx" firstName="Jan Kwasi" lastName="Gyamerah" shortFirstName="Jan" shortLastName="Gyamerah" matchName="J. Gyamerah" shirtNumber="2" position="Defender" positionSide="Right" formationPlace="2"/>
+      <player playerId="2nrmndj0uq3f46c2cb1fbf85" firstName="Moritz" lastName="Heyer" shortFirstName="Moritz" shortLastName="Heyer" matchName="M. Heyer" shirtNumber="3" position="Midfielder" positionSide="Left/Centre" formationPlace="8"/>
+      <player playerId="apdrig6xt1hxub1986s3uh1x" firstName="Jonas" lastName="Meffert" shortFirstName="Jonas" shortLastName="Meffert" matchName="J. Meffert" shirtNumber="23" position="Midfielder" positionSide="Centre" formationPlace="4"/>
+      <player playerId="8metzwuemi3edqhsv2pnqqbx1" firstName="David" lastName="Kinsombi" shortFirstName="David" shortLastName="Kinsombi" matchName="D. Kinsombi" shirtNumber="6" position="Midfielder" positionSide="Centre/Right" formationPlace="7"/>
+      <player playerId="enpnulwzdxetukh80iwyazkk5" firstName="Sonny" lastName="Kittel" shortFirstName="Sonny" shortLastName="Kittel" matchName="S. Kittel" shirtNumber="10" position="Striker" positionSide="Left/Centre" formationPlace="11"/>
+      <player playerId="e7if3ma2jblaurrokcxadk0k5" firstName="Robert-Nesta" lastName="Glatzel" shortFirstName="Robert" shortLastName="Glatzel" matchName="R. Glatzel" shirtNumber="9" position="Striker" positionSide="Centre" formationPlace="9"/>
+      <player playerId="aksjicf4keobpav3tuujngell" firstName="Manuel Paul" lastName="Wintzheimer" shortFirstName="Manuel" shortLastName="Wintzheimer" matchName="M. Wintzheimer" shirtNumber="19" position="Striker" positionSide="Centre/Right" formationPlace="10"/>
+      <player playerId="9ed74dfr9aeuedaf63l0i7aei" firstName="Faride" lastName="Alidou" shortFirstName="Faride" shortLastName="Alidou" matchName="F. Alidou" shirtNumber="48" position="Substitute" subPosition="Attacker"/>
+      <player playerId="3xq9irm7o2mp3zdlw4qt5plka" firstName="Thomas Glyn" lastName="Doyle" shortFirstName="Tommy" shortLastName="Doyle" matchName="T. Doyle" shirtNumber="8" position="Substitute" subPosition="Midfielder"/>
+      <player playerId="3mp7p8tytgkbwi8itxl5mfkrt" firstName="Bakery" lastName="Jatta" shortFirstName="Bakery" shortLastName="Jatta" matchName="B. Jatta" shirtNumber="18" position="Substitute" subPosition="Midfielder"/>
+      <player playerId="4tufo2e9tsw24l2cx7m5b6xh" firstName="Marko" lastName="Johansson" shortFirstName="Marko" shortLastName="Johansson" matchName="M. Johansson" shirtNumber="16" position="Substitute" subPosition="Goalkeeper"/>
+      <player playerId="etfmz143p0d2yowiiijd8g6sq" firstName="Mikkel" lastName="Kaufmann Sørensen" shortFirstName="Mikkel" shortLastName="Kaufmann" matchName="M. Kaufmann" shirtNumber="11" position="Substitute" subPosition="Attacker"/>
+      <player playerId="1px9whllb1pnprmgq4fjw3qhh" firstName="Miro Max Maria" lastName="Muheim" shortFirstName="Miro" shortLastName="Muheim" matchName="M. Muheim" shirtNumber="28" position="Substitute" subPosition="Defender"/>
+      <player playerId="7b9gqjq7z692znpoklj7c057u" firstName="Ludovit" lastName="Reis" shortFirstName="Ludovit" shortLastName="Reis" matchName="L. Reis" shirtNumber="14" position="Substitute" subPosition="Midfielder"/>
+      <player playerId="bhshqnrzmdjbqhtr8rcy7tca2" firstName="Maximilian" lastName="Rohr" shortFirstName="Maximilian" shortLastName="Rohr" matchName="M. Rohr" shirtNumber="41" position="Substitute" subPosition="Defender"/>
+      <player playerId="4o4sv7lm8h0qvwiv81enhjv1l" firstName="Mario" lastName="Vušković" shortFirstName="Mario" shortLastName="Vuskovic" matchName="M. Vušković" shirtNumber="44" position="Substitute" subPosition="Defender"/>
+      <teamOfficial id="epklyppmaov5dmgvhzm3feml1" firstName="Tim Laszlo" lastName="Walter" shortFirstName="Tim" shortLastName="Walter" type="manager"/>
+    </lineUp>
+    <lineUp contestantId="884uzyf1wosc7ykji6e18gifp" formationUsed="451">
+      <player playerId="5ysw8ditixnietm3lejwmw4id" firstName="Patrick" lastName="Drewes" shortFirstName="Patrick" shortLastName="Drewes" matchName="P. Drewes" shirtNumber="1" position="Goalkeeper" positionSide="Centre" formationPlace="1"/>
+      <player playerId="8tqphrtr7fraqeunw67iwwq8l" firstName="Chima Sean" lastName="Okoroji" shortFirstName="Chima" shortLastName="Okoroji" matchName="C. Okoroji" shirtNumber="36" position="Defender" positionSide="Left" formationPlace="3"/>
+      <player playerId="47ye0gt6bw2ilvl9s0e0ogr11" firstName="Aleksandr" lastName="Zhirov" shortFirstName="Aleksandr" shortLastName="Zhirov" matchName="A. Zhirov" shirtNumber="2" position="Defender" positionSide="Left/Centre" formationPlace="6" captain="yes"/>
+      <player playerId="4oaj1qrhwobtrso61687x9ck5" firstName="Immanuel" lastName="Höhn" shortFirstName="Immanuel" shortLastName="Höhn" matchName="I. Höhn" shirtNumber="15" position="Defender" positionSide="Centre/Right" formationPlace="5"/>
+      <player playerId="ehvnch6p70deczk99k156jglx" firstName="Bashkim" lastName="Ajdini" shortFirstName="Bashkim" shortLastName="Ajdini" matchName="B. Ajdini" shirtNumber="19" position="Defender" positionSide="Right" formationPlace="2"/>
+      <player playerId="8jildds7zfj7uk3iohmmkj3kl" firstName="Arne" lastName="Sicker" shortFirstName="Arne" shortLastName="Sicker" matchName="A. Sicker" shirtNumber="27" position="Midfielder" positionSide="Left" formationPlace="11"/>
+      <player playerId="4wk62n7739xlysrxoky33mf2t" firstName="Marcel" lastName="Ritzmaier" shortFirstName="Marcel" shortLastName="Ritzmaier" matchName="M. Ritzmaier" shirtNumber="22" position="Midfielder" positionSide="Left/Centre" formationPlace="8"/>
+      <player playerId="2np4n7d10f0jsgor0zbs5acwl" firstName="Janik Jay" lastName="Bachmann" shortFirstName="Janik" shortLastName="Bachmann" matchName="J. Bachmann" shirtNumber="26" position="Midfielder" positionSide="Centre" formationPlace="10"/>
+      <player playerId="68u3vd1upyaz92c06d1ekpbyt" firstName="Erik" lastName="Zenga" shortFirstName="Erik" shortLastName="Zenga" matchName="E. Zenga" shirtNumber="17" position="Midfielder" positionSide="Centre/Right" formationPlace="4"/>
+      <player playerId="dkf9v2y9a7ogw6k53crs6dc5x" firstName="Alexander" lastName="Esswein" shortFirstName="Alexander" shortLastName="Esswein" matchName="A. Esswein" shirtNumber="30" position="Midfielder" positionSide="Right" formationPlace="7"/>
+      <player playerId="dvljd3jdouhags70b4rv7jl5h" firstName="Daniel" lastName="Keita-Ruel" shortFirstName="Daniel" shortLastName="Keita-Ruel" matchName="D. Keita-Ruel" shirtNumber="9" position="Striker" positionSide="Centre" formationPlace="9"/>
+      <player playerId="cipmd3k2nfv0ddic0l8go14gl" firstName="Charlison Girigorio" lastName="Benschop" shortFirstName="Charlison" shortLastName="Benschop" matchName="C. Benschop" shirtNumber="35" position="Substitute" subPosition="Attacker"/>
+      <player playerId="6hh1y9t572yqk7d1zegi0hm5m" firstName="Christian Joe" lastName="Conteh" shortFirstName="Christian" shortLastName="Conteh" matchName="C. Conteh" shirtNumber="23" position="Substitute" subPosition="Attacker"/>
+      <player playerId="hpzxgnwobdttfgd04dykf26t" firstName="Oumar" lastName="Diakhité" shortFirstName="Oumar" shortLastName="Diakhite" matchName="O. Diakhité" shirtNumber="25" position="Substitute" subPosition="Defender"/>
+      <player playerId="c7nq7mou1gyrzl60ho7pmaok5" firstName="Dennis" lastName="Diekmeier" shortFirstName="Dennis" shortLastName="Diekmeier" matchName="D. Diekmeier" shirtNumber="18" position="Substitute" subPosition="Defender"/>
+      <player playerId="5revw8iy1mhgi4jbb5nae2ind" firstName="Christian" lastName="Kinsombi" shortFirstName="Christian" shortLastName="Kinsombi" matchName="C. Kinsombi" shirtNumber="8" position="Substitute" subPosition="Attacker"/>
+      <player playerId="8l443indci9k4q1i3akstjmc5" firstName="Tim" lastName="Kister" shortFirstName="Tim" shortLastName="Kister" matchName="T. Kister" shirtNumber="14" position="Substitute" subPosition="Defender"/>
+      <player playerId="8sh1fdq95u43vc8cku5ckf6xh" firstName="Carlo" lastName="Sickinger" shortFirstName="Carlo" shortLastName="Sickinger" matchName="C. Sickinger" shirtNumber="5" position="Substitute" subPosition="Midfielder"/>
+      <player playerId="8asvg8sto06l27xjgbzyzqx1x" firstName="Cèbio" lastName="Soukou" shortFirstName="Cèbio" shortLastName="Soukou" matchName="C. Soukou" shirtNumber="7" position="Substitute" subPosition="Midfielder"/>
+      <player playerId="7adaw298hyb8lf2lqsc428vrp" firstName="Rick" lastName="Wulle" shortFirstName="Rick" shortLastName="Wulle" matchName="R. Wulle" shirtNumber="13" position="Substitute" subPosition="Goalkeeper"/>
+      <teamOfficial id="2is866d30xtcrd9avumo5jwx6" firstName="Gerhard" lastName="Kleppinger" shortFirstName="Gerhard" shortLastName="Kleppinger" type="manager"/>
+    </lineUp>
+    <matchDetailsExtra>
+      <attendance>19950</attendance>
+      <matchOfficials>
+        <matchOfficial id="62gpt150mgqkhvo8aj0t42vo5" type="Main" firstName="Bastian" lastName="Dankert" shortFirstName="Bastian" shortLastName="Dankert"/>
+        <matchOfficial id="53w7cuji22bam36zypd1gfmqd" type="Assistant referee 1" firstName="René" lastName="Rohde" shortFirstName="René" shortLastName="Rohde"/>
+        <matchOfficial id="1jm6zex40ghdwccknyyn1gq1h" type="Assistant referee 2" firstName="Fabian" lastName="Maibaum" shortFirstName="Fabian" shortLastName="Maibaum"/>
+        <matchOfficial id="7cjam1vkn1shuhskoc1cu4lp1" type="Fourth official" firstName="Lukas" lastName="Benen" shortFirstName="Lukas" shortLastName="Benen"/>
+      </matchOfficials>
+    </matchDetailsExtra>
+  </liveData>
+</match>

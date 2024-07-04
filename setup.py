@@ -43,6 +43,7 @@ def setup_package():
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "python-dateutil>=2.8.1,<3",
+            "sortedcontainers>=2",
         ],
         extras_require={
             "test": [
@@ -52,6 +53,9 @@ def setup_package():
                 "polars>=0.16.6",
                 "pyarrow",
                 "pytest-lazy-fixture",
+                "s3fs",
+                "moto[s3]",
+                "pytest-httpserver",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

@@ -4,7 +4,7 @@ from enum import Enum
 from math import sqrt
 from typing import Optional
 
-from kloppy.exceptions import KloppyError
+from kloppy.exceptions import MissingDimensionError
 
 DEFAULT_PITCH_LENGTH = 105.0
 DEFAULT_PITCH_WIDTH = 68.0
@@ -100,17 +100,13 @@ class Dimension:
     def to_base(self, value: float) -> float:
         """Map a value from this dimension to [0, 1]."""
         if self.min is None or self.max is None:
-            raise KloppyError(
-                "The pitch boundaries need to be fully specified to convert coordinates."
-            )
+            raise MissingDimensionError()
         return (value - self.min) / (self.max - self.min)
 
     def from_base(self, value: float) -> float:
         """Map a value from [0, 1] to this dimension."""
         if self.min is None or self.max is None:
-            raise KloppyError(
-                "The pitch boundaries need to be fully specified to convert coordinates."
-            )
+            raise MissingDimensionError()
         return value * (self.max - self.min) + self.min
 
 
@@ -292,7 +288,7 @@ class PitchDimensions:
             or self.y_dim.min is None
             or self.y_dim.max is None
         ):
-            raise KloppyError(
+            raise MissingDimensionError(
                 "The pitch boundaries need to be fully specified to convert coordinates."
             )
 
@@ -406,7 +402,7 @@ class PitchDimensions:
             or self.y_dim.min is None
             or self.y_dim.max is None
         ):
-            raise KloppyError(
+            raise MissingDimensionError(
                 "The pitch boundaries need to be fully specified to convert coordinates."
             )
 

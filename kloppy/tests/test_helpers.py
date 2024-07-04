@@ -1,36 +1,30 @@
-import os
 import sys
-from pathlib import Path
 
 import pytest
-
-from kloppy.config import config_context
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-
+from kloppy import opta, statsbomb, tracab
+from kloppy.config import config_context
 from kloppy.domain import (
-    Period,
-    DatasetFlag,
-    Point,
     AttackingDirection,
-    TrackingDataset,
-    NormalizedPitchDimensions,
+    DatasetFlag,
     Dimension,
-    Orientation,
-    Provider,
     Frame,
+    Ground,
     Metadata,
     MetricaCoordinateSystem,
-    Team,
-    Ground,
+    NormalizedPitchDimensions,
+    Orientation,
+    Period,
     Player,
     PlayerData,
+    Point,
     Point3D,
+    Provider,
+    Team,
+    TrackingDataset,
 )
-
-from kloppy import opta, tracab, statsbomb
-from kloppy.io import open_as_file
 
 
 class TestHelpers:
@@ -517,12 +511,3 @@ class TestHelpers:
         df = dataset.to_df(engine="pandas[pyarrow]")
         assert isinstance(df, pd.DataFrame)
         assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
-
-
-class TestOpenAsFile:
-    def test_path(self):
-        path = Path(__file__).parent / "files/tracab_meta.xml"
-        with open_as_file(path) as fp:
-            data = fp.read()
-
-        assert len(data) == os.path.getsize(path)

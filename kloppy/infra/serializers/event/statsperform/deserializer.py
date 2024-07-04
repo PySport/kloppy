@@ -34,12 +34,14 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     GoalkeeperActionType,
     CounterAttackQualifier,
+    Position,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
 from .parsers import get_parser, OptaEvent
+from .formation_mapping import formation_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,7 @@ EVENT_TYPE_CORNER_AWARDED = 6
 EVENT_TYPE_FOUL_COMMITTED = 4
 EVENT_TYPE_CARD = 17
 EVENT_TYPE_RECOVERY = 49
+EVENT_TYPE_TEAM_SET_UP = 34
 EVENT_TYPE_FORMATION_CHANGE = 40
 EVENT_TYPE_BALL_TOUCH = 61
 EVENT_TYPE_BLOCKED_PASS = 74
@@ -131,6 +134,8 @@ EVENT_QUALIFIER_RED_CARD = 33
 EVENT_QUALIFIER_COUNTER_ATTACK = 23
 
 EVENT_QUALIFIER_TEAM_FORMATION = 130
+EVENT_QUALIFIER_FORMATION_PLAYER_IDS = 30
+EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS = 131
 
 event_type_names = {
     1: "pass",
@@ -302,11 +307,56 @@ def _parse_card(raw_event: OptaEvent) -> Dict:
     return dict(result=None, qualifiers=qualifiers, card_type=card_type)
 
 
-def _parse_formation_change(raw_event: OptaEvent) -> Dict:
+def _parse_lineup_qualifiers(raw_event: OptaEvent):
     formation_id = int(raw_event.qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
     formation = formations[formation_id]
 
-    return dict(formation_type=formation)
+    player_ids = raw_event.qualifiers[
+        EVENT_QUALIFIER_FORMATION_PLAYER_IDS
+    ].split(", ")
+    position_ids = raw_event.qualifiers[
+        EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS
+    ].split(", ")
+
+    positions_mapping = formation_mapping[formation_id]
+
+    return formation, player_ids, position_ids, positions_mapping
+
+
+def _update_team_setup(raw_event: OptaEvent, team: Team):
+    (
+        formation,
+        player_ids,
+        position_ids,
+        positions_mapping,
+    ) = _parse_lineup_qualifiers(raw_event)
+
+    team.starting_formation = formation
+    for player_id, position_id in zip(player_ids, position_ids):
+        player = team.get_player_by_id(player_id)
+        position = Position(
+            position_id=position_id, name=positions_mapping[int(position_id)]
+        )
+        player.starting_position = position
+
+
+def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
+    (
+        formation,
+        player_ids,
+        position_ids,
+        positions_mapping,
+    ) = _parse_lineup_qualifiers(raw_event)
+
+    player_positions = {}
+    for player_id, position_id in zip(player_ids, position_ids):
+        player = team.get_player_by_id(player_id)
+        position = Position(
+            position_id=position_id, name=positions_mapping[int(position_id)]
+        )
+        player_positions[player] = position
+
+    return dict(formation_type=formation, player_positions=player_positions)
 
 
 def _parse_shot(raw_event: OptaEvent) -> Dict:
@@ -619,6 +669,18 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             possession_team = None
             events = []
             for idx, raw_event in enumerate(raw_events):
+                if raw_event.contestant_id == teams[0].team_id:
+                    team = teams[0]
+                elif raw_event.contestant_id == teams[1].team_id:
+                    team = teams[1]
+                else:
+                    raise DeserializationError(
+                        f"Unknown team_id {raw_event.contestant_id}"
+                    )
+
+                if raw_event.type_id == EVENT_TYPE_TEAM_SET_UP:
+                    _update_team_setup(raw_event, team)
+
                 next_event_elm = (
                     raw_events[idx + 1]
                     if (idx + 1) < len(raw_events)
@@ -652,15 +714,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     if not period.start_timestamp:
                         # not started yet
                         continue
-
-                    if raw_event.contestant_id == teams[0].team_id:
-                        team = teams[0]
-                    elif raw_event.contestant_id == teams[1].team_id:
-                        team = teams[1]
-                    else:
-                        raise DeserializationError(
-                            f"Unknown team_id {raw_event.contestant_id}"
-                        )
 
                     player = None
                     if raw_event.player_id is not None:
@@ -782,9 +835,11 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
+                    elif raw_event.type_id == EVENT_TYPE_TEAM_SET_UP:
+                        _update_team_setup(raw_event, team)
                     elif raw_event.type_id == EVENT_TYPE_FORMATION_CHANGE:
                         formation_change_event_kwargs = (
-                            _parse_formation_change(raw_event)
+                            _parse_formation_change(raw_event, team)
                         )
                         event = self.event_factory.build_formation_change(
                             result=None,

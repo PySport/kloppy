@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 import pytest
 
@@ -74,15 +75,19 @@ class TestTracabJSONTracking:
         assert dataset.dataset_type == DatasetType.TRACKING
         assert len(dataset.records) == 7
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=73940.32,
-            end_timestamp=76656.32,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=73940.32
         )
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=77684.56,
-            end_timestamp=80717.32,
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=76656.32
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=77684.56
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=80717.32
         )
         assert dataset.metadata.orientation == Orientation.AWAY_HOME
 
@@ -141,56 +146,67 @@ class TestTracabDATTracking:
             only_alive=False,
         )
 
+        # Check metadata
         assert dataset.metadata.provider == Provider.TRACAB
         assert dataset.dataset_type == DatasetType.TRACKING
-        assert len(dataset.records) == 6
+        assert len(dataset.records) == 7
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.orientation == Orientation.HOME_AWAY
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=4.0,
-            end_timestamp=4.08,
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=73940, microseconds=320000
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=76656, microseconds=320000
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=77684, microseconds=560000
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=80717, microseconds=320000
         )
 
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=8.0,
-            end_timestamp=8.08,
-        )
+        # Check frame ids and timestamps
+        assert dataset.records[0].frame_id == 1848508
+        assert dataset.records[0].timestamp == timedelta(0)
+        assert dataset.records[1].frame_id == 1848509
+        assert dataset.records[1].timestamp == timedelta(microseconds=40000)
+        assert dataset.records[3].frame_id == 1916408
+        assert dataset.records[3].timestamp == timedelta(seconds=2716)
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        # Check frame data
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=-1234.0, y=-294.0)
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
 
-        player_away_19 = dataset.metadata.teams[1].get_player_by_jersey_number(
-            19
+        player_away_12 = dataset.metadata.teams[1].get_player_by_jersey_number(
+            12
         )
         assert dataset.records[0].players_data[
-            player_away_19
-        ].coordinates == Point(x=8889, y=-666)
-        assert dataset.records[0].ball_coordinates == Point3D(x=-27, y=25, z=0)
-        assert dataset.records[0].ball_state == BallState.ALIVE
-        assert dataset.records[0].ball_owning_team == Team(
-            team_id="home", name="home", ground=Ground.HOME
+            player_away_12
+        ].coordinates == Point(x=-4722.0, y=28.0)
+        assert dataset.records[0].ball_coordinates == Point3D(
+            x=2710.0, y=3722.0, z=11.0
         )
+        assert dataset.records[0].ball_state == BallState.DEAD
+        assert dataset.records[0].ball_owning_team == dataset.metadata.teams[0]
 
-        assert dataset.records[1].ball_owning_team == Team(
-            team_id="away", name="away", ground=Ground.AWAY
-        )
+        assert dataset.records[4].ball_owning_team == dataset.metadata.teams[1]
 
-        assert dataset.records[2].ball_state == BallState.DEAD
+        assert dataset.records[1].ball_state == BallState.ALIVE
 
         # make sure player data is only in the frame when the player is at the pitch
-        assert "away_1337" not in [
+        assert "12170" in [
             player.player_id
             for player in dataset.records[0].players_data.keys()
         ]
-        assert "away_1337" in [
+        assert "12170" not in [
             player.player_id
-            for player in dataset.records[3].players_data.keys()
+            for player in dataset.records[6].players_data.keys()
         ]
 
     def test_correct_normalized_deserialization(
@@ -200,10 +216,10 @@ class TestTracabDATTracking:
             meta_data=xml_meta_data, raw_data=dat_raw_data, only_alive=False
         )
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
 
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)

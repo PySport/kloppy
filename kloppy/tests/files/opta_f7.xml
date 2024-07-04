@@ -13,6 +13,12 @@
       <Stat Type="second_half_start">20180923T160528+0100</Stat>
       <Stat Type="second_half_time">51</Stat>
       <Stat Type="second_half_stop">20180923T165537+0100</Stat>
+      <Stat Type="first_half_extra_start">20180923T165537+0100</Stat>
+      <Stat Type="first_half_extra_time">17</Stat>
+      <Stat Type="first_half_extra_stop">20180923T165537+0100</Stat>
+      <Stat Type="second_half_extra_start">20180923T165537+0100</Stat>
+      <Stat Type="second_half_extra_time">18</Stat>
+      <Stat Type="second_half_extra_stop">20180923T165537+0100</Stat>
       <TeamData Formation="442" Score="2" Side="Home" TeamRef="t569">
         <PlayerLineUp>
           <MatchPlayer Formation_Place="1" PlayerRef="p111319" Position="Goalkeeper" ShirtNumber="21" Status="Start" />

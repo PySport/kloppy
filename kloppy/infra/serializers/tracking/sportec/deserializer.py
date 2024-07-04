@@ -2,6 +2,7 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import NamedTuple, Optional, Union, IO
+from datetime import timedelta
 
 from lxml import objectify
 
@@ -122,7 +123,8 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             teams = home_team, away_team = sportec_metadata.teams
             periods = sportec_metadata.periods
             transformer = self.get_transformer(
-                length=sportec_metadata.x_max, width=sportec_metadata.y_max
+                pitch_length=sportec_metadata.x_max,
+                pitch_width=sportec_metadata.y_max,
             )
 
         with performance_logging("parse raw data", logger=logger):
@@ -157,11 +159,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         if i % sample == 0:
                             yield Frame(
                                 frame_id=frame_id,
-                                timestamp=(
-                                    (
+                                timestamp=timedelta(
+                                    seconds=(
                                         frame_id
                                         # Do subtraction with integers to prevent floating errors
-                                        - period.start_timestamp
+                                        - period.start_timestamp.seconds
                                         * sportec_metadata.fps
                                     )
                                     / sportec_metadata.fps

@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from typing import Dict, List, NamedTuple, IO
+from datetime import timedelta, datetime, timezone
 import logging
 from dateutil.parser import parse
 from lxml import objectify
@@ -52,7 +53,7 @@ def _team_from_xml_elm(team_elm) -> Team:
             name=player_elm.attrib["Shortname"],
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
-            position=Position(
+            starting_position=Position(
                 position_id=None,
                 name=player_elm.attrib["PlayingPosition"],
                 coordinates=None,
@@ -129,16 +130,23 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     periods = [
         Period(
             id=1,
-            start_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS,
-            end_timestamp=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-            + float(other_game_information["TotalTimeFirstHalf"]) / 1000,
+            start_timestamp=timedelta(
+                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            ),
+            end_timestamp=timedelta(
+                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+                + float(other_game_information["TotalTimeFirstHalf"]) / 1000
+            ),
         ),
         Period(
             id=2,
-            start_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID
-            / SPORTEC_FPS,
-            end_timestamp=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-            + float(other_game_information["TotalTimeSecondHalf"]) / 1000,
+            start_timestamp=timedelta(
+                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+            ),
+            end_timestamp=timedelta(
+                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+                + float(other_game_information["TotalTimeSecondHalf"]) / 1000
+            ),
         ),
     ]
 
@@ -148,21 +156,33 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             [
                 Period(
                     id=3,
-                    start_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
-                    / SPORTEC_FPS,
-                    end_timestamp=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
-                    / SPORTEC_FPS
-                    + float(other_game_information["TotalTimeFirstHalfExtra"])
-                    / 1000,
+                    start_timestamp=timedelta(
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                        + float(
+                            other_game_information["TotalTimeFirstHalfExtra"]
+                        )
+                        / 1000
+                    ),
                 ),
                 Period(
                     id=4,
-                    start_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
-                    / SPORTEC_FPS,
-                    end_timestamp=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
-                    / SPORTEC_FPS
-                    + float(other_game_information["TotalTimeSecondHalfExtra"])
-                    / 1000,
+                    start_timestamp=timedelta(
+                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                        + float(
+                            other_game_information["TotalTimeSecondHalfExtra"]
+                        )
+                        / 1000
+                    ),
                 ),
             ]
         )
@@ -228,8 +248,8 @@ SPORTEC_EVENT_BODY_PART_LEFT_FOOT = "leftLeg"
 SPORTEC_EVENT_BODY_PART_RIGHT_FOOT = "rightLeg"
 
 
-def _parse_datetime(dt_str: str) -> float:
-    return parse(dt_str).timestamp()
+def _parse_datetime(dt_str: str) -> datetime:
+    return parse(dt_str).astimezone(timezone.utc)
 
 
 def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
@@ -387,7 +407,8 @@ class SportecEventDataDeserializer(
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             transformer = self.get_transformer(
-                length=sportec_metadata.x_max, width=sportec_metadata.y_max
+                pitch_length=sportec_metadata.x_max,
+                pitch_width=sportec_metadata.y_max,
             )
 
             periods = []
@@ -397,6 +418,7 @@ class SportecEventDataDeserializer(
             for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
+
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
                     and "GameSection"

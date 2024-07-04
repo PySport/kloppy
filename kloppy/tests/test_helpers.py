@@ -1,36 +1,30 @@
-import os
 import sys
-from pathlib import Path
 
 import pytest
-
-from kloppy.config import config_context
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-
+from kloppy import opta, statsbomb, tracab
+from kloppy.config import config_context
 from kloppy.domain import (
-    Period,
-    DatasetFlag,
-    Point,
     AttackingDirection,
-    TrackingDataset,
-    PitchDimensions,
+    DatasetFlag,
     Dimension,
-    Orientation,
-    Provider,
     Frame,
+    Ground,
     Metadata,
     MetricaCoordinateSystem,
-    Team,
-    Ground,
+    NormalizedPitchDimensions,
+    Orientation,
+    Period,
     Player,
     PlayerData,
+    Point,
     Point3D,
+    Provider,
+    Team,
+    TrackingDataset,
 )
-
-from kloppy import opta, tracab, statsbomb
-from kloppy.io import open_as_file
 
 
 class TestHelpers:
@@ -53,8 +47,11 @@ class TestHelpers:
         ]
         metadata = Metadata(
             flags=(DatasetFlag.BALL_OWNING_TEAM),
-            pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(0, 100), y_dim=Dimension(-50, 50)
+            pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(0, 100),
+                y_dim=Dimension(-50, 50),
+                pitch_length=105,
+                pitch_width=68,
             ),
             orientation=Orientation.HOME_AWAY,
             frame_rate=25,
@@ -107,7 +104,12 @@ class TestHelpers:
         # orientation change AND dimension scale
         transformed_dataset = tracking_data.transform(
             to_orientation="AWAY_HOME",
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            ),
         )
 
         assert transformed_dataset.frames[0].ball_coordinates == Point3D(
@@ -122,8 +124,11 @@ class TestHelpers:
         assert transformed_dataset.metadata.coordinate_system is None
         assert (
             transformed_dataset.metadata.pitch_dimensions
-            == PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             )
         )
 
@@ -131,8 +136,11 @@ class TestHelpers:
         tracking_data = self._get_tracking_dataset()
 
         transformed_dataset = tracking_data.transform(
-            to_pitch_dimensions=PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             ),
         )
 
@@ -144,16 +152,25 @@ class TestHelpers:
         )
         assert (
             transformed_dataset.metadata.pitch_dimensions
-            == PitchDimensions(
-                x_dim=Dimension(min=0, max=1), y_dim=Dimension(min=0, max=1)
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
             )
         )
 
     def test_transform_to_orientation(self):
+        to_pitch_dimensions = NormalizedPitchDimensions(
+            x_dim=Dimension(min=0, max=1),
+            y_dim=Dimension(min=0, max=1),
+            pitch_length=105,
+            pitch_width=68,
+        )
         # Create a dataset with the KLOPPY pitch dimensions
         # and HOME_AWAY orientation
         original = self._get_tracking_dataset().transform(
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         assert original.metadata.orientation == Orientation.HOME_AWAY
         assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)
@@ -165,7 +182,7 @@ class TestHelpers:
         # Transform to AWAY_HOME orientation
         transform1 = original.transform(
             to_orientation=Orientation.AWAY_HOME,
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         assert transform1.metadata.orientation == Orientation.AWAY_HOME
         # all coordinates should be flipped
@@ -182,7 +199,7 @@ class TestHelpers:
         # Transform to STATIC_AWAY_HOME orientation
         transform2 = transform1.transform(
             to_orientation=Orientation.STATIC_AWAY_HOME,
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         assert transform2.metadata.orientation == Orientation.STATIC_AWAY_HOME
         # all coordintes in the second half should be flipped
@@ -195,7 +212,7 @@ class TestHelpers:
         # Transform to BALL_OWNING_TEAM orientation
         transform3 = transform2.transform(
             to_orientation=Orientation.BALL_OWNING_TEAM,
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         assert transform3.metadata.orientation == Orientation.BALL_OWNING_TEAM
         # the coordinates of frame 1 should be flipped
@@ -213,7 +230,7 @@ class TestHelpers:
         # this should be identical to BALL_OWNING_TEAM for tracking data
         transform4 = transform3.transform(
             to_orientation=Orientation.ACTION_EXECUTING_TEAM,
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         assert (
             transform4.metadata.orientation
@@ -227,7 +244,7 @@ class TestHelpers:
         # Transform back to the original HOME_AWAY orientation
         transform5 = transform4.transform(
             to_orientation=Orientation.HOME_AWAY,
-            to_pitch_dimensions=[[0, 1], [0, 1]],
+            to_pitch_dimensions=to_pitch_dimensions,
         )
         # we should be back at the original
         for frame1, frame2 in zip(original.frames, transform5.frames):
@@ -242,25 +259,24 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_19 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            19
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
         )
         assert dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=-1234.0, y=-294.0)
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
 
         transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA
         )
         transformerd_coordinate_system = MetricaCoordinateSystem(
-            normalized=True,
-            length=dataset.metadata.coordinate_system.length,
-            width=dataset.metadata.coordinate_system.width,
+            pitch_length=dataset.metadata.coordinate_system.pitch_length,
+            pitch_width=dataset.metadata.coordinate_system.pitch_width,
         )
 
         assert transformed_dataset.records[0].players_data[
-            player_home_19
-        ].coordinates == Point(x=0.3766, y=0.5489999999999999)
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
         assert (
             transformed_dataset.metadata.orientation
             == dataset.metadata.orientation
@@ -396,8 +412,12 @@ class TestHelpers:
         incomplete_passes = df[
             (df.event_type == "PASS") & (df.result == "INCOMPLETE")
         ].reset_index()
-        assert incomplete_passes.loc[0, "end_coordinates_y"] == 0.90625
-        assert incomplete_passes.loc[0, "end_coordinates_x"] == 0.7125
+        assert incomplete_passes.loc[0, "end_coordinates_y"] == pytest.approx(
+            0.91519, 1e-4
+        )
+        assert incomplete_passes.loc[0, "end_coordinates_x"] == pytest.approx(
+            0.70945, 1e-4
+        )
 
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
@@ -491,12 +511,3 @@ class TestHelpers:
         df = dataset.to_df(engine="pandas[pyarrow]")
         assert isinstance(df, pd.DataFrame)
         assert isinstance(df.dtypes["ball_x"], pd.ArrowDtype)
-
-
-class TestOpenAsFile:
-    def test_path(self):
-        path = Path(__file__).parent / "files/tracab_meta.xml"
-        with open_as_file(path) as fp:
-            data = fp.read()
-
-        assert len(data) == os.path.getsize(path)

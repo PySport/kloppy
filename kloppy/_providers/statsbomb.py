@@ -1,4 +1,3 @@
-import contextlib
 import warnings
 from typing import Union
 
@@ -10,11 +9,6 @@ from kloppy.infra.serializers.event.statsbomb import (
 )
 from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike, Source
-
-
-@contextlib.contextmanager
-def dummy_context_mgr():
-    yield None
 
 
 def load(

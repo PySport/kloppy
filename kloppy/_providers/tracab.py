@@ -4,13 +4,12 @@ from typing import Optional, Union, Type
 from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.tracab.tracab_dat import (
     TRACABDatDeserializer,
-    TRACABInputs,
 )
 from kloppy.infra.serializers.tracking.tracab.tracab_json import (
     TRACABJSONDeserializer,
     TRACABInputs,
 )
-from kloppy.io import FileLike, open_as_file
+from kloppy.io import FileLike, open_as_file, get_file_extension
 
 
 def load(
@@ -47,13 +46,14 @@ def identify_deserializer(
     meta_data: FileLike,
     raw_data: FileLike,
 ) -> Union[Type[TRACABDatDeserializer], Type[TRACABJSONDeserializer]]:
-    deserializer = None
-    if "xml" in meta_data.name and "dat" in raw_data.name:
-        deserializer = TRACABDatDeserializer
-    if "json" in meta_data.name and "json" in raw_data.name:
-        deserializer = TRACABJSONDeserializer
+    meta_data_extension = get_file_extension(meta_data)
+    raw_data_extension = get_file_extension(raw_data)
 
-    if deserializer is None:
+    if meta_data_extension == ".xml" and raw_data_extension == ".dat":
+        deserializer = TRACABDatDeserializer
+    elif meta_data_extension == ".json" and raw_data_extension == ".json":
+        deserializer = TRACABJSONDeserializer
+    else:
         raise ValueError(
             "Tracab file format could not be recognized, please specify"
         )

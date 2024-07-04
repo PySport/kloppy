@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import timedelta
 import warnings
 from typing import Tuple, Dict, Optional, Union, NamedTuple, IO
 
@@ -57,7 +58,7 @@ class SecondSpectrumDeserializer(
     @classmethod
     def _frame_from_framedata(cls, teams, period, frame_data):
         frame_id = frame_data["frameIdx"]
-        frame_timestamp = frame_data["gameClock"]
+        frame_timestamp = timedelta(seconds=frame_data["gameClock"])
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
@@ -138,8 +139,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period["number"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
             else:
@@ -159,8 +164,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period.attrib["iId"]),
-                                start_timestamp=start_frame_id,
-                                end_timestamp=end_frame_id,
+                                start_timestamp=timedelta(
+                                    seconds=start_frame_id / frame_rate
+                                ),
+                                end_timestamp=timedelta(
+                                    seconds=end_frame_id / frame_rate
+                                ),
                             )
                         )
 
@@ -216,7 +225,7 @@ class SecondSpectrumDeserializer(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
                                 starting=player_data["position"] != "SUB",
-                                position=player_data["position"],
+                                starting_position=player_data["position"],
                                 team=team,
                                 jersey_no=int(player_data["number"]),
                                 attributes=player_attributes,
@@ -231,7 +240,7 @@ class SecondSpectrumDeserializer(
         # Handles the tracking frame data
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                length=pitch_size_width, width=pitch_size_height
+                pitch_length=pitch_size_width, pitch_width=pitch_size_height
             )
 
             def _iter():

@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict
+from datetime import timedelta
 from pathlib import Path
 from typing import cast
 
@@ -11,7 +12,7 @@ from kloppy.domain import (
     TakeOnResult,
     Dimension,
     BallState,
-    PitchDimensions,
+    ImperialPitchDimensions,
     CardQualifier,
     DatasetFlag,
     CarryResult,
@@ -138,21 +139,24 @@ class TestStatsBombMetadata:
         """It should set the correct player position from the events"""
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert player.position == Position(
+
+        assert player.starting_position == Position(
             position_id="18", name="Right Attacking Midfield", coordinates=None
         )
         assert player.starting
 
-        # Substituted players don't have a position
+        # Substituted players have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("5630")
-        assert sub_player.position is None
+        assert sub_player.position is not None
         assert not sub_player.starting
 
     def test_periods(self, dataset):
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == 0.0
+        assert dataset.metadata.periods[0].start_timestamp == parse_str_ts(
+            "00:00:00.000"
+        )
         assert dataset.metadata.periods[0].end_timestamp == parse_str_ts(
             "00:47:38.122"
         )
@@ -166,14 +170,14 @@ class TestStatsBombMetadata:
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""
-        assert dataset.metadata.pitch_dimensions == PitchDimensions(
-            x_dim=Dimension(0, 120), y_dim=Dimension(0, 80)
+        assert dataset.metadata.pitch_dimensions == ImperialPitchDimensions(
+            x_dim=Dimension(0, 120), y_dim=Dimension(0, 80), standardized=True
         )
 
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
         assert dataset.metadata.coordinate_system == build_coordinate_system(
-            Provider.STATSBOMB, width=80, length=120
+            Provider.STATSBOMB
         )
 
     @pytest.mark.xfail
@@ -209,6 +213,17 @@ class TestStatsBombEvent:
         assert event.period.id == 1
         assert event.timestamp == parse_str_ts("00:41:31.122")
         assert event.ball_state == BallState.ALIVE
+
+    def test_timestamp(self, dataset):
+        """It should set the correct timestamp, reset to zero after each period"""
+        kickoff_p1 = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kickoff_p1.timestamp == parse_str_ts("00:00:00.840")
+        kickoff_p2 = dataset.get_event_by_id(
+            "b3199171-507c-42a3-b4c4-9e609d7a98f6"
+        )
+        assert kickoff_p2.timestamp == parse_str_ts("00:00:00.848")
 
     def test_related_events(self, dataset: EventDataset):
         """Test whether related events are properly linked"""
@@ -498,10 +513,10 @@ class TestStatsBombEvent:
         player_3089 = dataset.metadata.teams[0].get_player_by_id("3089")
         assert freeze_frame.players_coordinates[
             player_3089
-        ].x == pytest.approx(0.762, abs=1e-2)
+        ].x == pytest.approx(0.756, abs=1e-2)
         assert freeze_frame.players_coordinates[
             player_3089
-        ].y == pytest.approx(0.352, abs=1e-2)
+        ].y == pytest.approx(0.340, abs=1e-2)
 
         # The 360 freeze-frame should have standardized coordinates
         pass_event = dataset.get_event_by_id(
@@ -516,28 +531,28 @@ class TestStatsBombEvent:
         print(coordinates_per_team)
         assert coordinates_per_team == {
             "Belgium": [
-                Point(x=0.29992169834015553, y=0.5208156671179599),
-                Point(x=0.30643713954672475, y=0.7026264079766127),
-                Point(x=0.3214467545271119, y=0.3826089652330575),
-                Point(x=0.405612967947393, y=0.9422736509345233),
-                Point(x=0.4062973621807315, y=0.0482915505598324),
-                Point(x=0.42465606231382946, y=0.5964959025774841),
-                Point(x=0.4508398556294095, y=0.5289610882963541),
-                Point(x=0.4890186975946768, y=0.2568344237508965),
-                Point(x=0.4950593030298559, y=0.7029586200529815),
-                Point(x=0.4995833333333334, y=0.499375),
+                Point(x=0.30230680550305883, y=0.5224074534269804),
+                Point(x=0.3084765294211162, y=0.7184206360532097),
+                Point(x=0.3226897158515237, y=0.37349986446702277),
+                Point(x=0.4023899669270551, y=0.9477821783616865),
+                Point(x=0.40303804636433893, y=0.04368333723843663),
+                Point(x=0.4212117680196045, y=0.6039661694463063),
+                Point(x=0.4485925347438968, y=0.5311757597543106),
+                Point(x=0.48851669519900487, y=0.23786065306469226),
+                Point(x=0.494833442596935, y=0.7187789039787056),
+                Point(x=0.49956428571428574, y=0.49932720588235296),
             ],
             "Portugal": [
-                Point(x=0.5007398055585528, y=0.64528577145353),
-                Point(x=0.503027413811032, y=0.8161700273569469),
-                Point(x=0.5276528464860737, y=0.2579702535077385),
-                Point(x=0.5278342018640673, y=0.3780770836091537),
-                Point(x=0.5771632092108575, y=0.5977748576718983),
-                Point(x=0.6031968709341459, y=0.5636937522375899),
-                Point(x=0.661570167297097, y=0.3648423832684863),
-                Point(x=0.6653717429879116, y=0.7616501561039648),
-                Point(x=0.665577307051358, y=0.5960104748540174),
-                Point(x=0.6887022647928279, y=0.4433104586034662),
+                Point(x=0.5007736252412294, y=0.6565826947047873),
+                Point(x=0.5031658098709648, y=0.8337119724588331),
+                Point(x=0.5289169766111513, y=0.23908556750834548),
+                Point(x=0.5291066225207104, y=0.36861254114712655),
+                Point(x=0.5806906702033539, y=0.605345434744204),
+                Point(x=0.6059524111158714, y=0.568591301432695),
+                Point(x=0.6612283488962987, y=0.3543398250934656),
+                Point(x=0.6648282083259679, y=0.7820736977591778),
+                Point(x=0.6650228649084968, y=0.6034426689602147),
+                Point(x=0.6869207840759295, y=0.43896225927824783),
             ],
         }
 
@@ -564,10 +579,9 @@ class TestStatsBombPassEvent:
         # A pass should have end coordinates
         assert pass_event.receiver_coordinates == Point(86.15, 53.35)
         # A pass should have an end timestamp
-        assert (
-            pass_event.receive_timestamp
-            == parse_str_ts("00:35:21.533") + 0.634066
-        )
+        assert pass_event.receive_timestamp == parse_str_ts(
+            "00:35:21.533"
+        ) + timedelta(seconds=0.634066)
         # A pass should have a receiver
         assert (
             pass_event.receiver_player.name
@@ -592,6 +606,7 @@ class TestStatsBombPassEvent:
             PassType.CROSS,
             PassType.HIGH_PASS,
             PassType.LONG_BALL,
+            PassType.SHOT_ASSIST,
         ]
 
     def test_set_piece(self, dataset: EventDataset):
@@ -808,7 +823,9 @@ class TestStatsBombCarryEvent:
         # A carry should have an end location
         assert carry.end_coordinates == Point(21.65, 54.85)
         # A carry should have an end timestamp
-        assert carry.end_timestamp == parse_str_ts("00:20:11.457") + 1.365676
+        assert carry.end_timestamp == parse_str_ts("00:20:11.457") + timedelta(
+            seconds=1.365676
+        )
 
 
 class TestStatsBombDuelEvent:
@@ -1005,6 +1022,15 @@ class TestStatsBombFoulCommittedEvent:
         assert foul_without_card.get_qualifier_value(CardQualifier) is None
 
 
+class TestStatsBombPressureEvent:
+    """Tests related to deserializing 17/Pressure events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all pressure events"""
+        events = dataset.find_all("pressure")
+        assert len(events) == 203
+
+
 class TestStatsBombPlayerOffEvent:
     """Tests related to deserializing 19/Player Off events"""
 
@@ -1046,3 +1072,45 @@ class TestStatsBombTacticalShiftEvent:
             "983cdd00-6f7f-4d62-bfc2-74e4e5b0137f"
         )
         assert formation_change.formation_type == FormationType("4-3-3")
+
+    def test_player_position(self, base_dir):
+        dataset = statsbomb.load(
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
+        )
+
+        for item in dataset.aggregate("minutes_played", include_position=True):
+            print(
+                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
+            )
+
+        home_team, away_team = dataset.metadata.teams
+        period1, period2 = dataset.metadata.periods
+
+        player = home_team.get_player_by_id(6379)
+        assert player.positions.ranges() == [
+            (
+                period1.start_time,
+                period2.start_time,
+                Position(
+                    position_id="12", name="Right Midfield", coordinates=None
+                ),
+            ),
+            (
+                period2.start_time,
+                period2.end_time,
+                Position(position_id="2", name="Right Back", coordinates=None),
+            ),
+        ]
+
+        # This player gets a new position 30 sec after he gets on the pitch, these two positions must be merged
+        player = away_team.get_player_by_id(6935)
+        assert player.positions.ranges() == [
+            (
+                period2.start_time + timedelta(seconds=1362.254),
+                period2.end_time,
+                Position(
+                    position_id="16", name="Left Midfield", coordinates=None
+                ),
+            )
+        ]

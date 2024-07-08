@@ -2,7 +2,7 @@ import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import Enum, Flag
 from typing import (
     Dict,
@@ -17,6 +17,8 @@ from typing import (
     overload,
     Iterable,
 )
+
+from .position import PositionType
 
 from ...utils import deprecated
 
@@ -33,7 +35,6 @@ else:
 from .pitch import (
     PitchDimensions,
     Unit,
-    Point,
     Dimension,
     NormalizedPitchDimensions,
     MetricPitchDimensions,
@@ -47,7 +48,6 @@ from ...exceptions import (
     OrientationError,
     InvalidFilterError,
     KloppyParameterError,
-    KloppyError,
 )
 
 
@@ -120,20 +120,6 @@ class Provider(Enum):
 
 
 @dataclass(frozen=True)
-class Position:
-    position_id: str
-    name: str
-    coordinates: Optional[Point] = None
-
-    def __str__(self):
-        return self.name
-
-    @classmethod
-    def unknown(cls) -> "Position":
-        return cls(position_id="", name="Unknown")
-
-
-@dataclass(frozen=True)
 class Player:
     """
     Attributes:
@@ -157,8 +143,8 @@ class Player:
 
     # match specific
     starting: bool = False
-    starting_position: Optional[Position] = None
-    positions: TimeContainer[Position] = field(
+    starting_position: Optional[PositionType] = None
+    positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
 
@@ -174,7 +160,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> Optional[Position]:
+    def position(self) -> Optional[PositionType]:
         try:
             return self.positions.last()
         except KeyError:
@@ -191,7 +177,7 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: Optional[Position]):
+    def set_position(self, time: Time, position: Optional[PositionType]):
         self.positions.set(time, position)
 
 
@@ -1078,7 +1064,7 @@ class Dataset(ABC, Generic[T]):
                 if player.starting:
                     player.set_position(
                         start_of_match,
-                        player.starting_position or Position.unknown(),
+                        player.starting_position or PositionType.unknown(),
                     )
 
     def _update_player_positions(self):

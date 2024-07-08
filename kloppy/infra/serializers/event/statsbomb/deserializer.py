@@ -12,7 +12,6 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
-    Position,
     Provider,
     Team,
 )
@@ -21,6 +20,7 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 from . import specification as SB
 from .helpers import parse_freeze_frame, parse_str_ts
+from .specification import position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -176,10 +176,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
         # Create players and teams
         player_positions = {
-            str(player["player"]["id"]): Position(
-                position_id=str(player["position"]["id"]),
-                name=player["position"]["name"],
-            )
+            str(player["player"]["id"]): position_types_mapping[
+                player["position"]["id"]
+            ]
             for raw_event in starting_xi_events
             for player in raw_event["tactics"]["lineup"]
         }

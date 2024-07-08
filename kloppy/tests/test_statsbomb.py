@@ -32,10 +32,10 @@ from kloppy.domain import (
     FormationType,
     SetPieceQualifier,
     SetPieceType,
-    Position,
     ShotResult,
     EventDataset,
 )
+from kloppy.domain.models import PositionType
 
 from kloppy.exceptions import DeserializationError
 from kloppy import statsbomb
@@ -139,9 +139,7 @@ class TestStatsBombMetadata:
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
 
-        assert player.starting_position == Position(
-            position_id="18", name="Right Attacking Midfield", coordinates=None
-        )
+        assert player.starting_position == PositionType.RightAttackingMidfield
         assert player.starting
 
         # Substituted players have a position
@@ -1076,14 +1074,12 @@ class TestStatsBombTacticalShiftEvent:
             (
                 period1.start_time,
                 period2.start_time,
-                Position(
-                    position_id="12", name="Right Midfield", coordinates=None
-                ),
+                PositionType.RightMidfield,
             ),
             (
                 period2.start_time,
                 period2.end_time,
-                Position(position_id="2", name="Right Back", coordinates=None),
+                PositionType.RightBack,
             ),
         ]
 
@@ -1093,8 +1089,6 @@ class TestStatsBombTacticalShiftEvent:
             (
                 period2.start_time + timedelta(seconds=1362.254),
                 period2.end_time,
-                Position(
-                    position_id="16", name="Left Midfield", coordinates=None
-                ),
+                PositionType.LeftMidfield,
             )
         ]

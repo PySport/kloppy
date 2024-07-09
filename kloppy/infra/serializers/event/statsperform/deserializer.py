@@ -753,12 +753,22 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id in KEEPER_EVENTS:
-                        goalkeeper_event_kwargs = _parse_goalkeeper_events(
-                            raw_event
-                        )
-                        event = self.event_factory.build_goalkeeper_event(
-                            **goalkeeper_event_kwargs, **generic_event_kwargs
-                        )
+                        # Qualifier 94 means the "save" event is a shot block by a defender
+                        if 94 in raw_event.qualifiers:
+                            event = self.event_factory.build_generic(
+                                **generic_event_kwargs,
+                                result=None,
+                                qualifiers=None,
+                                event_name="block",
+                            )
+                        else:
+                            goalkeeper_event_kwargs = _parse_goalkeeper_events(
+                                raw_event
+                            )
+                            event = self.event_factory.build_goalkeeper_event(
+                                **goalkeeper_event_kwargs,
+                                **generic_event_kwargs,
+                            )
                     elif (raw_event.type_id == EVENT_TYPE_BALL_TOUCH) & (
                         raw_event.outcome == 0
                     ):

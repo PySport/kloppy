@@ -469,3 +469,13 @@ class TestOptaMiscontrolEvent:
         """Test if the miscontrol event is correctly deserialized"""
         event = dataset.get_event_by_id("2509132175")
         assert event.event_type == EventType.MISCONTROL
+
+
+class TestOptaBlockEvent:
+    """Tests related to deserialzing miscontrol events"""
+
+    def test_correct_deserialization(self, dataset: EventDataset):
+        """Test if the miscontrol event is correctly deserialized"""
+        event = dataset.get_event_by_id("1515097981")
+        assert event.event_type == EventType.GENERIC
+        assert event.event_name == "block"

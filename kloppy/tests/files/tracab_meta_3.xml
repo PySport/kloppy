@@ -1,0 +1,12 @@
+<OptaMetaData sVersion="1.2">
+    <match 
+        iId="1"
+        dtDate="2023-12-15 20:32:20"
+        iFrameRateFps="25"
+        fPitchXSizeMeters="105,00"
+        fPitchYSizeMeters="68,00"
+    >
+    <period iId="1" iStartFrame="1848508" iEndFrame="1916408"/>
+    <period iId="2" iStartFrame="1942114" iEndFrame="2017933"/>
+</match>
+</OptaMetaData>

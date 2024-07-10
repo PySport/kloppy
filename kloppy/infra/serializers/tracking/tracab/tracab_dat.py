@@ -72,6 +72,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
 
             player = team.get_player_by_jersey_number(jersey_no)
+
             if not player:
                 player = Player(
                     player_id=f"{team.ground}_{jersey_no}",
@@ -162,8 +163,12 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             meta_data = objectify.fromstring(inputs.meta_data.read())
             match = meta_data.match
             frame_rate = int(match.attrib["iFrameRateFps"])
-            pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
-            pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
+            pitch_size_width = float(
+                match.attrib["fPitchXSizeMeters"].replace(",", ".")
+            )
+            pitch_size_height = float(
+                match.attrib["fPitchYSizeMeters"].replace(",", ".")
+            )
 
             periods = []
             for period in match.iterchildren(tag="period"):
@@ -182,7 +187,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         )
                     )
 
-            if meta_data.get("HomeTeam") and meta_data.get("AwayTeam"):
+            if hasattr(meta_data, "HomeTeam") and hasattr(
+                meta_data, "AwayTeam"
+            ):
                 home_team = self.create_team(
                     meta_data["HomeTeam"], Ground.HOME, start_frame_id
                 )

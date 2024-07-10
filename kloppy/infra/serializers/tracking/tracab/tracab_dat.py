@@ -72,17 +72,17 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
 
             player = team.get_player_by_jersey_number(jersey_no)
-            if player:
-                players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y)), speed=float(speed)
-                )
-            else:
+            if not player:
                 player = Player(
                     player_id=f"{team.ground}_{jersey_no}",
                     team=team,
                     jersey_no=int(jersey_no),
                 )
                 team.players.append(player)
+
+            players_data[player] = PlayerData(
+                coordinates=Point(float(x), float(y)), speed=float(speed)
+            )
 
         (
             ball_x,
@@ -182,7 +182,6 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         )
                     )
 
-            
             if meta_data.get("HomeTeam") and meta_data.get("AwayTeam"):
                 home_team = self.create_team(
                     meta_data["HomeTeam"], Ground.HOME, start_frame_id
@@ -191,8 +190,12 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                     meta_data["AwayTeam"], Ground.AWAY, start_frame_id
                 )
             else:
-                home_team = Team(team_id="home", name="home", ground=Ground.HOME)
-                away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
+                home_team = Team(
+                    team_id="home", name="home", ground=Ground.HOME
+                )
+                away_team = Team(
+                    team_id="away", name="away", ground=Ground.AWAY
+                )
             teams = [home_team, away_team]
 
         with performance_logging("Loading data", logger=logger):

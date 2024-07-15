@@ -220,13 +220,13 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 data.append(obj)
             return data
         else:
-            data = json.load(file)
+            data = self.__load_json(file)
             for line in data:
                 if "timestamp" in line:
                     line["time"] = line.pop("timestamp")
             return data
-        
-    def __load_json_meta(self, file):
+
+    def __load_json(self, file):
         return json.load(file)
 
     @classmethod
@@ -295,7 +295,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         )
 
     def deserialize(self, inputs: SkillCornerInputs) -> TrackingDataset:
-        metadata = self.__load_json_meta(inputs.meta_data)
+        metadata = self.__load_json(inputs.meta_data)
         raw_data = self.__load_json_raw(inputs.raw_data)
 
         with performance_logging("Loading metadata", logger=logger):

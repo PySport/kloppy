@@ -1,8 +1,9 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
 import warnings
 from typing import Dict, Optional, Union
 import html
+from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -169,6 +170,10 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             pitch_size_height = float(
                 match.attrib["fPitchYSizeMeters"].replace(",", ".")
             )
+            date = parse(meta_data.match.attrib["dtDate"]).astimezone(
+                timezone.utc
+            )
+            game_id = meta_data.match.attrib["iId"]
 
             periods = []
             for period in match.iterchildren(tag="period"):
@@ -269,6 +274,8 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
         )
 
         return TrackingDataset(

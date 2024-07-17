@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -233,6 +233,22 @@ class TestTracabDATTracking:
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
+
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2023, 12, 15, 20, 32, 20, tzinfo=timezone.utc
+            )
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "1"
 
 
 class TestTracabMeta2:

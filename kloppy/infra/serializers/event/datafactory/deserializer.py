@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import timedelta, datetime, timezone
+from dateutil.parser import parse, _parser
 from dataclasses import replace
 from typing import Dict, List, Tuple, Union, IO, NamedTuple
 
@@ -453,6 +454,19 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         periods[half], end_timestamp=timestamp
                     )
 
+            try:
+                date = match["date"]
+                if date:
+                    date = parse(date).astimezone(timezone.utc)
+            except _parser.ParserError:
+                date = None
+            game_week = match.get("week", None)
+            if game_week:
+                game_week = str(game_week)
+            game_id = match.get("matchId", None)
+            if game_id:
+                game_id = str(game_id)
+
             # exclude goals, already listed as shots too
             incidences.pop(DF_EVENT_CLASS_GOALS)
             raw_events = [
@@ -613,6 +627,9 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             score=score,
             provider=Provider.DATAFACTORY,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return EventDataset(

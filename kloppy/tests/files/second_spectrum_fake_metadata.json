@@ -343,7 +343,9 @@
       "optaUuid": "plq0s041krxbe84x8t7ic4pwp"
     }
   ],
-  "ssiId": null,
+  "homeScore": 2,
+  "awayScore": 1,
+  "ssiId": "1234456",
   "optaId": 1234456,
   "optaUuid": "evpjwmqgrefu1yb27oh74i8yw",
   "homeSsiId": "zvmye4srxdo1zvczazdppju0a03sado8a74z",

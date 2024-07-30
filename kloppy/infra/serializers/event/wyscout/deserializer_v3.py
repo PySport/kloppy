@@ -81,6 +81,10 @@ formations = {
 }
 
 
+def _flip_point(point: Point) -> Point:
+    return Point(x=1 - point.x, y=1 - point.y)
+
+
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     team = Team(
         team_id=wyId,
@@ -167,6 +171,13 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
 def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     pass_result = None
     receiver_player = None
+    if len(raw_event["pass"]["endLocation"]) > 1:
+        receiver_coordinates = Point(
+            x=float(raw_event["pass"]["endLocation"]["x"]),
+            y=float(raw_event["pass"]["endLocation"]["y"]),
+        )
+    else:
+        receiver_coordinates = None
 
     if raw_event["pass"]["accurate"] is True:
         pass_result = PassResult.COMPLETE
@@ -176,24 +187,32 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
+    if raw_event["pass"]["height"] == "blocked":
+        receiver_coordinates = None
+
     if next_event:
         if next_event["type"]["primary"] == "offside":
             pass_result = PassResult.OFFSIDE
         if next_event["type"]["primary"] == "game_interruption":
             if "ball_out" in next_event["type"]["secondary"]:
                 pass_result = PassResult.OUT
+        # Set end coordinates of blocked pass to start coordinates of next event if it is not a game interruption
+        else:
+            next_event_location = Point(
+                x=float(next_event["location"]["x"]),
+                y=float(next_event["location"]["y"]),
+            )
+            if team.team_id == next_event["team"]["id"]:
+                receiver_coordinates = next_event_location
+            else:
+                receiver_coordinates = _flip_point(next_event_location)
 
     return {
         "result": pass_result,
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": receiver_player,
-        "receiver_coordinates": Point(
-            x=float(raw_event["pass"]["endLocation"]["x"]),
-            y=float(raw_event["pass"]["endLocation"]["y"]),
-        )
-        if len(raw_event["pass"]["endLocation"]) > 1
-        else None,
+        "receiver_coordinates": receiver_coordinates,
     }
 
 

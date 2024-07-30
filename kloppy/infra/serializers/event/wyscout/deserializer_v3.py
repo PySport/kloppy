@@ -187,7 +187,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
-    if raw_event["pass"]["height"] == "blocked":
+    if raw_event["pass"].get("height") == "blocked":
         receiver_coordinates = None
 
     if next_event:

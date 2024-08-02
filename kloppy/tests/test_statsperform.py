@@ -270,7 +270,7 @@ class TestStatsPerformTracking:
         )
 
         assert tracking_dataset.records[1].ball_coordinates == Point3D(
-            x=50.615 / 105, y=1 - 35.325 / 68, z=0.0
+            x=50.615 / 105, y=35.325 / 68, z=0.0
         )
 
         # Check normalised pitch dimensions

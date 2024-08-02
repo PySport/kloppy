@@ -66,11 +66,12 @@ class Score:
 
 
 class Ground(Enum):
-    """
+    """Whether a team is playing at home or away.
+
     Attributes:
-        HOME: home playing team
-        AWAY: away playing team
-        REFEREE: Referee (could be used in tracking data)
+        HOME (Ground): The team is playing at home.
+        AWAY (Ground): The team is playing away.
+        REFEREE (Ground): Referee (could be used in tracking data)
     """
 
     HOME = "home"
@@ -85,20 +86,22 @@ class Ground(Enum):
 
 
 class Provider(Enum):
-    """
+    """Data providers.
+
     Attributes:
-        METRICA:
-        TRACAB:
-        SECONDSPECTRUM:
-        OPTA:
-        SKILLCORNER:
-        STATSBOMB:
-        SPORTEC:
-        WYSCOUT:
-        KLOPPY:
-        DATAFACTORY:
-        STATSPERFORM:
-        SPORTVU:
+        METRICA (Provider):
+        TRACAB (Provider):
+        SECONDSPECTRUM (Provider):
+        OPTA (Provider):
+        SKILLCORNER (Provider):
+        STATSBOMB (Provider):
+        SPORTEC (Provider):
+        WYSCOUT (Provider):
+        KLOPPY (Provider):
+        DATAFACTORY (Provider):
+        STATSPERFORM (Provider):
+        SPORTVU (Provider):
+        OTHER (Provider):
     """
 
     METRICA = "metrica"
@@ -121,6 +124,14 @@ class Provider(Enum):
 
 @dataclass(frozen=True)
 class Position:
+    """A player's position on the field.
+
+    Attributes:
+        position_id (str): A unique identifier for the position.
+        name (str): The name of the position.
+        coordinates (Point, optional): The coordinates of the position on the field.
+    """
+
     position_id: str
     name: str
     coordinates: Optional[Point] = None
@@ -135,25 +146,31 @@ class Position:
 
 @dataclass(frozen=True)
 class Player:
-    """
+    """A player in a team.
+
     Attributes:
-        player_id: identifier given by the provider
-        team: See [`Team`][kloppy.domain.models.common.Team]
-        jersey_no: Jersey number
-        name: Full name of the player
-        first_name: First name
-        last_name: Last name
-        starting: `True` when player is part of the starting 11
-        position: See [`Position][kloppy.domain.models.common.Position]
-        attributes: attributes given by the provider
+        player_id (str): Identifier given by the provider.
+        team (team): The player's team.
+        jersey_no (int): The player's jersey number.
+        first_name (str, optional): The player's first name.
+        last_name (str, optional): The player's last name.
+        name (str, optional): Full name of the player.
+        full_name (str): If `name` is not set, this will be the concatenation
+            of `first_name` and `last_name` or if these are also not set,
+            the concatenation of the team's ground and the jersey number.
+        starting (bool): `True` when player is part of the starting XI.
+        starting_position (Position, optional): The player's starting position
+            or `None` if the player is not starting.
+        poisitions (TimeContainer[Position]): The player's positions over time.
+        attributes (dict): Additional attributes given by the provider.
     """
 
     player_id: str
     team: "Team"
     jersey_no: int
-    name: str = None
-    first_name: str = None
-    last_name: str = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    name: Optional[str] = None
 
     # match specific
     starting: bool = False
@@ -162,7 +179,7 @@ class Player:
         default_factory=TimeContainer, compare=False
     )
 
-    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+    attributes: Dict = field(default_factory=dict, compare=False)
 
     @property
     def full_name(self):
@@ -197,14 +214,14 @@ class Player:
 
 @dataclass
 class Team:
-    """
+    """A team in a match.
 
     Attributes:
-        team_id: id of the team, given by the provider
-        name: readable name of the team
-        ground: See [`Ground`][kloppy.domain.models.common.Ground]
-        players: See [`Player`][kloppy.domain.models.common.Player]
-        starting_formation: See ['FormationType']
+        team_id (str): Identifier given by the provider.
+        name (str): Readable name of the team.
+        ground (Ground): The team's ground (home or away).
+        players (List[Player]): The team's players.
+        starting_formation (FormationType, optional): The team's starting formation.
     """
 
     team_id: str
@@ -225,6 +242,15 @@ class Team:
         return self.team_id == other.team_id
 
     def get_player_by_jersey_number(self, jersey_no: int):
+        """Get a player by their jersey number.
+
+        Args:
+            jersey_no (int): The jersey number of the player.
+
+        Returns:
+            Player: The player with the given jersey number or `None` if no
+                    player with that jersey number is found.
+        """
         jersey_no = int(jersey_no)
         for player in self.players:
             if player.jersey_no == jersey_no:
@@ -233,6 +259,15 @@ class Team:
         return None
 
     def get_player_by_position(self, position_id: Union[int, str]):
+        """Get a player by their position.
+
+        Args:
+            position_id (int or str): The identifier of the position.
+
+        Returns:
+            Player: The player with the given position or `None` if no player
+                    with that position is found.
+        """
         position_id = str(position_id)
         for player in self.players:
             if player.position and player.position.position_id == position_id:
@@ -241,6 +276,15 @@ class Team:
         return None
 
     def get_player_by_id(self, player_id: Union[int, str]):
+        """Get a player by their identifier.
+
+        Args:
+            player_id (int or str): The identifier of the player.
+
+        Returns:
+            Player: The player with the given identifier or `None` if no player
+                    with that identifier is found.
+        """
         player_id = str(player_id)
 
         for player in self.players:
@@ -395,9 +439,7 @@ class AttackingDirection(Enum):
                     return AttackingDirection.LTR
                 if ball_owning_team.ground == Ground.AWAY:
                     return AttackingDirection.RTL
-                raise OrientationError(
-                    "Invalid ball_owning_team: %s", ball_owning_team
-                )
+                raise OrientationError("Invalid ball_owning_team: %s", ball_owning_team)
             return AttackingDirection.NOT_SET
         if orientation == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team is None:
@@ -540,12 +582,8 @@ class TracabCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -578,12 +616,8 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -662,12 +696,8 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -745,12 +775,8 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -1024,9 +1050,7 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=self.periods[i + 1]
-                if i + 1 < len(self.periods)
-                else None,
+                next_=self.periods[i + 1] if i + 1 < len(self.periods) else None,
             )
 
 
@@ -1063,9 +1087,7 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=self.records[i + 1]
-                if i + 1 < len(self.records)
-                else None,
+                next_=self.records[i + 1] if i + 1 < len(self.records) else None,
             )
 
         self._init_player_positions()
@@ -1124,9 +1146,7 @@ class Dataset(ABC, Generic[T]):
         )
 
     def map(self, mapper):
-        return replace(
-            self, records=[mapper(record) for record in self.records]
-        )
+        return replace(self, records=[mapper(record) for record in self.records])
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
@@ -1183,8 +1203,7 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[True] = True,
         **named_columns: "Column",
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1192,8 +1211,7 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[False] = False,
         **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1203,9 +1221,7 @@ class Dataset(ABC, Generic[T]):
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(
-            *columns, **named_columns
-        )
+        transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
         iterator = map(transformer, self.records)
         if as_list:
             return list(iterator)
@@ -1279,9 +1295,7 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install pyarrow"
                 )
 
-            table = pa.Table.from_pydict(
-                self.to_dict(*columns, **named_columns)
-            )
+            table = pa.Table.from_pydict(self.to_dict(*columns, **named_columns))
             return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":

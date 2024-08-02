@@ -52,9 +52,7 @@ class DatasetTransformer:
         if from_pitch_dimensions:
             self._from_pitch_dimensions = from_pitch_dimensions
         elif from_coordinate_system:
-            self._from_pitch_dimensions = (
-                from_coordinate_system.pitch_dimensions
-            )
+            self._from_pitch_dimensions = from_coordinate_system.pitch_dimensions
         else:
             raise ValueError(
                 "You must either specify the source PitchDimension or CoordinateSystem"
@@ -82,9 +80,7 @@ class DatasetTransformer:
             or not from_orientation
             and to_orientation
         ):
-            raise ValueError(
-                "You must specify both the source and target Orientation"
-            )
+            raise ValueError("You must specify both the source and target Orientation")
 
     @property
     def _needs_coordinate_system_change(self):
@@ -114,8 +110,10 @@ class DatasetTransformer:
         point_base = self._from_pitch_dimensions.to_metric_base(
             point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
         )
+        print(point_base)
+        print(self._to_pitch_dimensions.from_metric_base)
         point_to = self._to_pitch_dimensions.from_metric_base(
-            point_base,
+            point=point_base,
             pitch_length=base_pitch_length,
             pitch_width=base_pitch_width,
         )
@@ -231,14 +229,10 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.change_point_dimensions(
-                frame.ball_coordinates
-            ),
+            ball_coordinates=self.change_point_dimensions(frame.ball_coordinates),
             players_data={
                 key: PlayerData(
-                    coordinates=self.change_point_dimensions(
-                        player_data.coordinates
-                    ),
+                    coordinates=self.change_point_dimensions(player_data.coordinates),
                     distance=player_data.distance,
                     speed=player_data.speed,
                     other_data=player_data.other_data,
@@ -334,20 +328,16 @@ class DatasetTransformer:
                 getattr(event, field.name)
             )
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)
 
     def __change_event_dimensions(self, event: Event):
         position_changes = {
-            field.name: self.change_point_dimensions(
-                getattr(event, field.name)
-            )
+            field.name: self.change_point_dimensions(getattr(event, field.name))
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)
@@ -356,8 +346,7 @@ class DatasetTransformer:
         position_changes = {
             field.name: self.flip_point(getattr(event, field.name))
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)
@@ -445,19 +434,14 @@ class DatasetTransformer:
             )
 
         if isinstance(dataset, TrackingDataset):
-            frames = [
-                transformer.transform_frame(record)
-                for record in dataset.records
-            ]
+            frames = [transformer.transform_frame(record) for record in dataset.records]
 
             return TrackingDataset(
                 metadata=metadata,
                 records=frames,
             )
         elif isinstance(dataset, EventDataset):
-            events = [
-                transformer.transform_event(event) for event in dataset.records
-            ]
+            events = [transformer.transform_event(event) for event in dataset.records]
 
             return EventDataset(
                 metadata=metadata,
@@ -468,9 +452,7 @@ class DatasetTransformer:
 
 
 class DatasetTransformerBuilder:
-    def __init__(
-        self, to_coordinate_system: Optional[Union[str, Provider]] = None
-    ):
+    def __init__(self, to_coordinate_system: Optional[Union[str, Provider]] = None):
         from kloppy.config import get_config
 
         if not to_coordinate_system:
@@ -482,9 +464,7 @@ class DatasetTransformerBuilder:
         to_dataset_type = None
         if isinstance(to_coordinate_system, str):
             if ":" in to_coordinate_system:
-                provider_name, dataset_type_name = to_coordinate_system.split(
-                    ":"
-                )
+                provider_name, dataset_type_name = to_coordinate_system.split(":")
                 to_coordinate_system = Provider[provider_name.upper()]
                 to_dataset_type = DatasetType[dataset_type_name.upper()]
             else:
@@ -524,11 +504,7 @@ class DatasetTransformerBuilder:
             or not to_coordinate_system.pitch_dimensions.standardized
         )
         missing_dimensions = pitch_length is None or pitch_width is None
-        if (
-            needs_pitch_dimensions_change
-            and not_standardized
-            and missing_dimensions
-        ):
+        if needs_pitch_dimensions_change and not_standardized and missing_dimensions:
             warnings.warn(
                 "The pitch dimensions are required to transform coordinates "
                 f"from {from_coordinate_system.provider} to {to_coordinate_system.provider}. "

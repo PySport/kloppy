@@ -1,4 +1,5 @@
 """XML parser for Stats Perform MA1 feeds."""
+
 import pytz
 from datetime import datetime
 from typing import Any, Optional, List, Dict, Tuple
@@ -40,9 +41,11 @@ class MA1XMLParser(OptaXMLParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=Ground.HOME
-                if parsed_team["ground"] == "home"
-                else Ground.AWAY,
+                ground=(
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
+                ),
             )
 
         for parsed_player in self._parse_players():

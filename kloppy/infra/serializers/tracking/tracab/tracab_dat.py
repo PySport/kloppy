@@ -72,15 +72,18 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
 
             player = team.get_player_by_jersey_number(jersey_no)
-            if player:
-                players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y)), speed=float(speed)
+
+            if not player:
+                player = Player(
+                    player_id=f"{team.ground}_{jersey_no}",
+                    team=team,
+                    jersey_no=int(jersey_no),
                 )
-            else:
-                # continue
-                raise DeserializationError(
-                    f"Player not found for player jersey no {jersey_no} of team: {team.name}"
-                )
+                team.players.append(player)
+
+            players_data[player] = PlayerData(
+                coordinates=Point(float(x), float(y)), speed=float(speed)
+            )
 
         (
             ball_x,
@@ -160,8 +163,12 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             meta_data = objectify.fromstring(inputs.meta_data.read())
             match = meta_data.match
             frame_rate = int(match.attrib["iFrameRateFps"])
-            pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
-            pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
+            pitch_size_width = float(
+                match.attrib["fPitchXSizeMeters"].replace(",", ".")
+            )
+            pitch_size_height = float(
+                match.attrib["fPitchYSizeMeters"].replace(",", ".")
+            )
 
             periods = []
             for period in match.iterchildren(tag="period"):
@@ -180,12 +187,22 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                         )
                     )
 
-            home_team = self.create_team(
-                meta_data["HomeTeam"], Ground.HOME, start_frame_id
-            )
-            away_team = self.create_team(
-                meta_data["AwayTeam"], Ground.AWAY, start_frame_id
-            )
+            if hasattr(meta_data, "HomeTeam") and hasattr(
+                meta_data, "AwayTeam"
+            ):
+                home_team = self.create_team(
+                    meta_data["HomeTeam"], Ground.HOME, start_frame_id
+                )
+                away_team = self.create_team(
+                    meta_data["AwayTeam"], Ground.AWAY, start_frame_id
+                )
+            else:
+                home_team = Team(
+                    team_id="home", name="home", ground=Ground.HOME
+                )
+                away_team = Team(
+                    team_id="away", name="away", ground=Ground.AWAY
+                )
             teams = [home_team, away_team]
 
         with performance_logging("Loading data", logger=logger):

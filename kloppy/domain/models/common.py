@@ -439,7 +439,9 @@ class AttackingDirection(Enum):
                     return AttackingDirection.LTR
                 if ball_owning_team.ground == Ground.AWAY:
                     return AttackingDirection.RTL
-                raise OrientationError("Invalid ball_owning_team: %s", ball_owning_team)
+                raise OrientationError(
+                    "Invalid ball_owning_team: %s", ball_owning_team
+                )
             return AttackingDirection.NOT_SET
         if orientation == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team is None:
@@ -582,8 +584,12 @@ class TracabCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
-                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -616,8 +622,12 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
-                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -696,8 +706,12 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
-                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -775,8 +789,12 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
-                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -1050,7 +1068,9 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=self.periods[i + 1] if i + 1 < len(self.periods) else None,
+                next_=(
+                    self.periods[i + 1] if i + 1 < len(self.periods) else None
+                ),
             )
 
 
@@ -1087,7 +1107,9 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=self.records[i + 1] if i + 1 < len(self.records) else None,
+                next_=(
+                    self.records[i + 1] if i + 1 < len(self.records) else None
+                ),
             )
 
         self._init_player_positions()
@@ -1146,7 +1168,9 @@ class Dataset(ABC, Generic[T]):
         )
 
     def map(self, mapper):
-        return replace(self, records=[mapper(record) for record in self.records])
+        return replace(
+            self, records=[mapper(record) for record in self.records]
+        )
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
@@ -1203,7 +1227,8 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[True] = True,
         **named_columns: "Column",
-    ) -> List[Dict[str, Any]]: ...
+    ) -> List[Dict[str, Any]]:
+        ...
 
     @overload
     def to_records(
@@ -1211,7 +1236,8 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[False] = False,
         **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]: ...
+    ) -> Iterable[Dict[str, Any]]:
+        ...
 
     def to_records(
         self,
@@ -1221,7 +1247,9 @@ class Dataset(ABC, Generic[T]):
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
+        transformer = get_transformer_cls(self.dataset_type)(
+            *columns, **named_columns
+        )
         iterator = map(transformer, self.records)
         if as_list:
             return list(iterator)
@@ -1295,7 +1323,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install pyarrow"
                 )
 
-            table = pa.Table.from_pydict(self.to_dict(*columns, **named_columns))
+            table = pa.Table.from_pydict(
+                self.to_dict(*columns, **named_columns)
+            )
             return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":

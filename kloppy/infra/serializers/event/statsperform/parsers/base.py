@@ -3,6 +3,7 @@
 A parser reads a single data file and should extend the 'OptaParser' class to
 extract data about players, teams and events that is encoded in the file.
 """
+
 import json
 from typing import Tuple, List, Optional, IO, Dict
 

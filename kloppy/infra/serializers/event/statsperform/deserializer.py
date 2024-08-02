@@ -823,9 +823,11 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-            provider=Provider.OPTA
-            if inputs.event_feed.upper() == "F24"
-            else Provider.STATSPERFORM,
+            provider=(
+                Provider.OPTA
+                if inputs.event_feed.upper() == "F24"
+                else Provider.STATSPERFORM
+            ),
             coordinate_system=transformer.get_to_coordinate_system(),
         )
 

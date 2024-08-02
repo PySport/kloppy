@@ -1,4 +1,5 @@
 """JSON parser for Stats Perform MA3 feeds."""
+
 import pytz
 from datetime import datetime
 from typing import List

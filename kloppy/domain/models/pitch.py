@@ -168,27 +168,37 @@ class PitchDimensions:
         """
         return PitchDimensions(
             x_dim=Dimension(
-                min=self.unit.convert(to_unit, self.x_dim.min)
-                if self.x_dim.min is not None
-                else None,
-                max=self.unit.convert(to_unit, self.x_dim.max)
-                if self.x_dim.max is not None
-                else None,
+                min=(
+                    self.unit.convert(to_unit, self.x_dim.min)
+                    if self.x_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.x_dim.max)
+                    if self.x_dim.max is not None
+                    else None
+                ),
             ),
             y_dim=Dimension(
-                min=self.unit.convert(to_unit, self.y_dim.min)
-                if self.y_dim.min is not None
-                else None,
-                max=self.unit.convert(to_unit, self.y_dim.max)
-                if self.y_dim.max is not None
-                else None,
+                min=(
+                    self.unit.convert(to_unit, self.y_dim.min)
+                    if self.y_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.y_dim.max)
+                    if self.y_dim.max is not None
+                    else None
+                ),
             ),
             standardized=self.standardized,
             unit=to_unit,
             goal_width=self.unit.convert(to_unit, self.goal_width),
-            goal_height=self.unit.convert(to_unit, self.goal_height)
-            if self.goal_height is not None
-            else None,
+            goal_height=(
+                self.unit.convert(to_unit, self.goal_height)
+                if self.goal_height is not None
+                else None
+            ),
             six_yard_width=self.unit.convert(to_unit, self.six_yard_width),
             six_yard_length=self.unit.convert(to_unit, self.six_yard_length),
             penalty_area_width=self.unit.convert(
@@ -356,12 +366,14 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    point.z * 2.44 / self.goal_height
-                    if self.goal_height is not None
-                    else point.z
-                )
-                if point.z is not None
-                else None,
+                    (
+                        point.z * 2.44 / self.goal_height
+                        if self.goal_height is not None
+                        else point.z
+                    )
+                    if point.z is not None
+                    else None
+                ),
             )
         else:
             return Point(
@@ -470,12 +482,14 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    point.z * self.goal_height / 2.44
-                    if self.goal_height is not None
-                    else point.z
-                )
-                if point.z is not None
-                else None,
+                    (
+                        point.z * self.goal_height / 2.44
+                        if self.goal_height is not None
+                        else point.z
+                    )
+                    if point.z is not None
+                    else None
+                ),
             )
         else:
             return Point(

@@ -161,7 +161,7 @@ class F7XMLParser(OptaXMLParser):
                     position_id=player_elm.attrib["Formation_Place"],
                     name=formation_position_mapping[
                         formation_name_mapping[team_elm.attrib["Formation"]]
-                    ][player_elm.attrib["Formation_Place"]],
+                    ][int(player_elm.attrib["Formation_Place"])],
                     coordinates=None,
                 ),
             )

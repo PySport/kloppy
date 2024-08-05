@@ -1,5 +1,59 @@
-formation_mapping = {
-    2: {
+from kloppy.domain import FormationType
+
+formation_id_mapping = {
+    2: FormationType.FOUR_FOUR_TWO,
+    3: FormationType.FOUR_ONE_TWO_ONE_TWO,
+    4: FormationType.FOUR_THREE_THREE,
+    5: FormationType.FOUR_FIVE_ONE,
+    6: FormationType.FOUR_FOUR_ONE_ONE,
+    7: FormationType.FOUR_ONE_FOUR_ONE,
+    8: FormationType.FOUR_TWO_THREE_ONE,
+    9: FormationType.FOUR_THREE_TWO_ONE,
+    10: FormationType.FIVE_THREE_TWO,
+    11: FormationType.FIVE_FOUR_ONE,
+    12: FormationType.THREE_FIVE_TWO,
+    13: FormationType.THREE_FOUR_THREE,
+    14: FormationType.THREE_ONE_THREE_ONE_TWO,
+    15: FormationType.FOUR_TWO_TWO_TWO,
+    16: FormationType.THREE_FIVE_ONE_ONE,
+    17: FormationType.THREE_FOUR_TWO_ONE,
+    18: FormationType.THREE_FOUR_ONE_TWO,
+    19: FormationType.THREE_ONE_FOUR_TWO,
+    20: FormationType.THREE_ONE_TWO_ONE_THREE,
+    21: FormationType.FOUR_ONE_THREE_TWO,
+    22: FormationType.FOUR_TWO_FOUR_ZERO,
+    23: FormationType.FOUR_THREE_ONE_TWO,
+    24: FormationType.THREE_TWO_FOUR_ONE,
+    25: FormationType.THREE_THREE_THREE_ONE,
+}
+
+formation_name_mapping = {
+    "442": FormationType.FOUR_FOUR_TWO,
+    "41212": FormationType.FOUR_ONE_TWO_ONE_TWO,
+    "433": FormationType.FOUR_THREE_THREE,
+    "451": FormationType.FOUR_FIVE_ONE,
+    "4411": FormationType.FOUR_FOUR_ONE_ONE,
+    "4141": FormationType.FOUR_ONE_FOUR_ONE,
+    "4231": FormationType.FOUR_TWO_THREE_ONE,
+    "4321": FormationType.FOUR_THREE_TWO_ONE,
+    "532": FormationType.FIVE_THREE_TWO,
+    "541": FormationType.FIVE_FOUR_ONE,
+    "352": FormationType.THREE_FIVE_TWO,
+    "343": FormationType.THREE_FOUR_THREE,
+    "4222": FormationType.FOUR_TWO_TWO_TWO,
+    "3511": FormationType.THREE_FIVE_ONE_ONE,
+    "3421": FormationType.THREE_FOUR_TWO_ONE,
+    "3412": FormationType.THREE_FOUR_ONE_TWO,
+    "3142": FormationType.THREE_ONE_FOUR_TWO,
+    "343d": FormationType.THREE_ONE_TWO_ONE_THREE,
+    "4132": FormationType.FOUR_ONE_THREE_TWO,
+    "4312": FormationType.FOUR_THREE_ONE_TWO,
+    "3241": FormationType.THREE_TWO_FOUR_ONE,
+    "3331": FormationType.THREE_THREE_THREE_ONE,
+}
+
+formation_position_mapping = {
+    FormationType.FOUR_FOUR_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -13,7 +67,7 @@ formation_mapping = {
         10: "RF",
         11: "LM",
     },
-    3: {
+    FormationType.FOUR_ONE_TWO_ONE_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -27,7 +81,7 @@ formation_mapping = {
         10: "RF",
         11: "LM",
     },
-    4: {
+    FormationType.FOUR_THREE_THREE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -41,7 +95,7 @@ formation_mapping = {
         10: "RW",
         11: "LW",
     },
-    5: {
+    FormationType.FOUR_FIVE_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -55,7 +109,7 @@ formation_mapping = {
         10: "CM",
         11: "LM",
     },
-    6: {
+    FormationType.FOUR_FOUR_ONE_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -69,7 +123,7 @@ formation_mapping = {
         10: "CAM",
         11: "LM",
     },
-    7: {
+    FormationType.FOUR_ONE_FOUR_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -83,7 +137,7 @@ formation_mapping = {
         10: "LCM",
         11: "LM",
     },
-    8: {
+    FormationType.FOUR_TWO_THREE_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -97,7 +151,7 @@ formation_mapping = {
         10: "CAM",
         11: "LAM",
     },
-    9: {
+    FormationType.FOUR_THREE_TWO_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -111,7 +165,7 @@ formation_mapping = {
         10: "RAM",
         11: "LAM",
     },
-    10: {
+    FormationType.FIVE_THREE_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -125,7 +179,7 @@ formation_mapping = {
         10: "RF",
         11: "LCM",
     },
-    11: {
+    FormationType.FIVE_FOUR_ONE: {
         0: None,
         1: "GK",
         2: "RB",
@@ -139,7 +193,7 @@ formation_mapping = {
         10: "LCM",
         11: "LM",
     },
-    12: {
+    FormationType.THREE_FIVE_TWO: {
         0: None,
         1: "GK",
         2: "RM",
@@ -153,7 +207,7 @@ formation_mapping = {
         10: "RF",
         11: "CM",
     },
-    13: {
+    FormationType.THREE_FOUR_THREE: {
         0: None,
         1: "GK",
         2: "RM",
@@ -167,7 +221,7 @@ formation_mapping = {
         10: "RW",
         11: "LW",
     },
-    14: {
+    FormationType.THREE_ONE_THREE_ONE_TWO: {
         0: None,
         1: "GK",
         2: "Unknown",
@@ -181,7 +235,7 @@ formation_mapping = {
         10: "Unknown",
         11: "Unknown",
     },
-    15: {
+    FormationType.FOUR_TWO_TWO_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -195,7 +249,7 @@ formation_mapping = {
         10: "RF",
         11: "LCM",
     },
-    16: {
+    FormationType.THREE_FIVE_ONE_ONE: {
         0: None,
         1: "GK",
         2: "RM",
@@ -209,7 +263,7 @@ formation_mapping = {
         10: "CAM",
         11: "CDM",
     },
-    17: {
+    FormationType.THREE_FOUR_TWO_ONE: {
         0: None,
         1: "GK",
         2: "RM",
@@ -223,7 +277,7 @@ formation_mapping = {
         10: "RF",
         11: "LF",
     },
-    18: {
+    FormationType.THREE_FOUR_ONE_TWO: {
         0: None,
         1: "GK",
         2: "RM",
@@ -237,7 +291,7 @@ formation_mapping = {
         10: "RF",
         11: "LF",
     },
-    19: {
+    FormationType.THREE_ONE_FOUR_TWO: {
         0: None,
         1: "GK",
         2: "RM",
@@ -251,7 +305,7 @@ formation_mapping = {
         10: "LW",
         11: "LCM",
     },
-    20: {
+    FormationType.THREE_ONE_TWO_ONE_THREE: {
         0: None,
         1: "GK",
         2: "RM",
@@ -265,7 +319,7 @@ formation_mapping = {
         10: "RW",
         11: "LW",
     },
-    21: {
+    FormationType.FOUR_ONE_THREE_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -279,7 +333,7 @@ formation_mapping = {
         10: "LF",
         11: "LW",
     },
-    22: {
+    FormationType.FOUR_TWO_FOUR_ZERO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -293,7 +347,7 @@ formation_mapping = {
         10: "LF",
         11: "LW",
     },
-    23: {
+    FormationType.FOUR_THREE_ONE_TWO: {
         0: None,
         1: "GK",
         2: "RB",
@@ -307,7 +361,7 @@ formation_mapping = {
         10: "LF",
         11: "LM",
     },
-    24: {
+    FormationType.THREE_TWO_FOUR_ONE: {
         0: None,
         1: "GK",
         2: "RDM",
@@ -321,7 +375,7 @@ formation_mapping = {
         10: "RW",
         11: "LW",
     },
-    25: {
+    FormationType.THREE_THREE_THREE_ONE: {
         0: None,
         1: "GK",
         2: "RDM",

@@ -21,7 +21,6 @@ from kloppy.domain import (
     Provider,
     Metadata,
     InterceptionResult,
-    FormationType,
     CardType,
     CardQualifier,
     Qualifier,
@@ -41,7 +40,7 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
 from .parsers import get_parser, OptaEvent
-from .formation_mapping import formation_mapping
+from .formation_mapping import formation_position_mapping, formation_id_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -217,33 +216,6 @@ event_type_names = {
     77: "player off pitch",
 }
 
-formations = {
-    2: FormationType.FOUR_FOUR_TWO,
-    3: FormationType.FOUR_ONE_TWO_ONE_TWO,
-    4: FormationType.FOUR_THREE_THREE,
-    5: FormationType.FOUR_FIVE_ONE,
-    6: FormationType.FOUR_FOUR_ONE_ONE,
-    7: FormationType.FOUR_ONE_FOUR_ONE,
-    8: FormationType.FOUR_TWO_THREE_ONE,
-    9: FormationType.FOUR_THREE_TWO_ONE,
-    10: FormationType.FIVE_THREE_TWO,
-    11: FormationType.FIVE_FOUR_ONE,
-    12: FormationType.THREE_FIVE_TWO,
-    13: FormationType.THREE_FOUR_THREE,
-    14: FormationType.THREE_ONE_THREE_ONE_TWO,
-    15: FormationType.FOUR_TWO_TWO_TWO,
-    16: FormationType.THREE_FIVE_ONE_ONE,
-    17: FormationType.THREE_FOUR_TWO_ONE,
-    18: FormationType.THREE_FOUR_ONE_TWO,
-    19: FormationType.THREE_ONE_FOUR_TWO,
-    20: FormationType.THREE_ONE_TWO_ONE_THREE,
-    21: FormationType.FOUR_ONE_THREE_TWO,
-    22: FormationType.FOUR_TWO_FOUR_ZERO,
-    23: FormationType.FOUR_THREE_ONE_TWO,
-    24: FormationType.THREE_TWO_FOUR_ONE,
-    25: FormationType.THREE_THREE_THREE_ONE,
-}
-
 
 def _parse_pass(raw_event: OptaEvent) -> Dict:
     if raw_event.outcome:
@@ -309,7 +281,7 @@ def _parse_card(raw_event: OptaEvent) -> Dict:
 
 def _parse_lineup_qualifiers(raw_event: OptaEvent):
     formation_id = int(raw_event.qualifiers[EVENT_QUALIFIER_TEAM_FORMATION])
-    formation = formations[formation_id]
+    formation = formation_id_mapping[formation_id]
 
     player_ids = raw_event.qualifiers[
         EVENT_QUALIFIER_FORMATION_PLAYER_IDS
@@ -318,26 +290,9 @@ def _parse_lineup_qualifiers(raw_event: OptaEvent):
         EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS
     ].split(", ")
 
-    positions_mapping = formation_mapping[formation_id]
+    positions_mapping = formation_position_mapping[formation]
 
     return formation, player_ids, position_ids, positions_mapping
-
-
-def _update_team_setup(raw_event: OptaEvent, team: Team):
-    (
-        formation,
-        player_ids,
-        position_ids,
-        positions_mapping,
-    ) = _parse_lineup_qualifiers(raw_event)
-
-    team.starting_formation = formation
-    for player_id, position_id in zip(player_ids, position_ids):
-        player = team.get_player_by_id(player_id)
-        position = Position(
-            position_id=position_id, name=positions_mapping[int(position_id)]
-        )
-        player.starting_position = position
 
 
 def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
@@ -678,9 +633,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         f"Unknown team_id {raw_event.contestant_id}"
                     )
 
-                if raw_event.type_id == EVENT_TYPE_TEAM_SET_UP:
-                    _update_team_setup(raw_event, team)
-
                 next_event_elm = (
                     raw_events[idx + 1]
                     if (idx + 1) < len(raw_events)
@@ -835,8 +787,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-                    elif raw_event.type_id == EVENT_TYPE_TEAM_SET_UP:
-                        _update_team_setup(raw_event, team)
                     elif raw_event.type_id == EVENT_TYPE_FORMATION_CHANGE:
                         formation_change_event_kwargs = (
                             _parse_formation_change(raw_event, team)

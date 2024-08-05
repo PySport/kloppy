@@ -17,6 +17,10 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 
 from .base import OptaXMLParser
+from ..formation_mapping import (
+    formation_position_mapping,
+    formation_name_mapping,
+)
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
@@ -155,7 +159,9 @@ class F7XMLParser(OptaXMLParser):
                 starting=(player_elm.attrib["Status"] == "Start"),
                 starting_position=Position(
                     position_id=player_elm.attrib["Formation_Place"],
-                    name=player_elm.attrib["Position"],
+                    name=formation_position_mapping[
+                        formation_name_mapping[team_elm.attrib["Formation"]]
+                    ][player_elm.attrib["Formation_Place"]],
                     coordinates=None,
                 ),
             )

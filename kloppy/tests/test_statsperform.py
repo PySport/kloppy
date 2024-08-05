@@ -119,7 +119,6 @@ class TestStatsPerformMetadata:
 
         away_substitute = away_team.players[15]
         assert away_substitute.jersey_no == 18
-        assert away_substitute.position is None
         assert not away_substitute.starting
         assert away_substitute.team == away_team
 

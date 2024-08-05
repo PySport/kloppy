@@ -84,13 +84,13 @@ nav:
               - Overview: reference/code-data/index.md
           - Metadata:
               - Overview: reference/metadata/index.md
-  - Other:
+  - Development:
       - Issues: 'issues.md'
       - Contributing: 'contributing.md'
       - Sponsors: 'sponsors.md'
       - About: 'about.md'
-      - Changelog: 'changelog.md'
       - License: 'license.md'
+  - Releases: 'changelog.md'
 plugins:
   - mkdocs-jupyter:
       include: ["*.ipynb"]

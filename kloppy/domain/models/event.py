@@ -17,8 +17,8 @@ from kloppy.domain.models.common import (
     DatasetType,
     AttackingDirection,
     OrientationError,
+    PositionType,
 )
-from . import PositionType
 from kloppy.utils import (
     camelcase_to_snakecase,
     removes_suffix,

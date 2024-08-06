@@ -27,7 +27,6 @@ from kloppy.domain import (
     Point,
     Point,
     Point3D,
-    Position,
     Provider,
     Score,
     SetPieceQualifier,
@@ -35,6 +34,7 @@ from kloppy.domain import (
     ShotResult,
     build_coordinate_system,
 )
+from kloppy.domain.models import PositionType
 from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
     _get_end_coordinates,
@@ -106,9 +106,7 @@ class TestOptaMetadata:
         """It should set the correct player position from the events"""
         # Starting players have a position
         player = dataset.metadata.teams[0].get_player_by_id("111319")
-        assert player.position == Position(
-            position_id="1", name="Goalkeeper", coordinates=None
-        )
+        assert player.position == PositionType.Goalkeeper
         assert player.starting
 
         # Substituted players don't have a position

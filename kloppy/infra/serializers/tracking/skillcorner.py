@@ -20,7 +20,7 @@ from kloppy.domain import (
     Player,
     Point,
     Point3D,
-    Position,
+    PositionType,
     Provider,
     Score,
     Team,
@@ -34,8 +34,27 @@ from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
-
 frame_rate = 10
+
+position_types_mapping: Dict[int, PositionType] = {
+    1: PositionType.Unknown,
+    2: PositionType.CenterBack,  # Provider: CB
+    3: PositionType.LeftCenterBack,  # Provider: LCB
+    4: PositionType.RightCenterBack,  # Provider: RCB
+    5: PositionType.LeftBack,  # Provider: LWB (mapped to Left Back)
+    6: PositionType.RightBack,  # Provider: RWB (mapped to Right Back)
+    7: PositionType.DefensiveMidfield,  # Provider: DM
+    8: PositionType.CenterMidfield,  # Provider: CM
+    9: PositionType.LeftMidfield,  # Provider: LM
+    10: PositionType.RightMidfield,  # Provider: RM
+    11: PositionType.AttackingMidfield,  # Provider: AM
+    12: PositionType.LeftWing,  # Provider: LW
+    13: PositionType.RightWing,  # Provider: RW
+    14: PositionType.LeftForward,  # Provider: LF
+    15: PositionType.Striker,  # Provider: CF (mapped to Striker)
+    16: PositionType.RightForward,  # Provider: RF
+    17: PositionType.Unknown,  # Provider: SUB (mapped to Unknown)
+}
 
 
 class SkillCornerInputs(NamedTuple):
@@ -358,10 +377,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     first_name=player["first_name"],
                     last_name=player["last_name"],
                     starting=player["start_time"] == "00:00:00",
-                    starting_position=Position(
-                        position_id=player["player_role"].get("id"),
-                        name=player["player_role"].get("name"),
-                        coordinates=None,
+                    starting_position=position_types_mapping.get(
+                        player["player_role"]["id"], PositionType.Unknown
                     ),
                     attributes={},
                 )

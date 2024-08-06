@@ -89,4 +89,4 @@ class PositionType(Enum):
 
     @classmethod
     def unknown(cls) -> "PositionType":
-        return cls("Unknown", "UNK", None)
+        return cls.Unknown

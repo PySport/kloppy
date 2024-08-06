@@ -11,8 +11,8 @@ from kloppy.domain import (
     Provider,
     SetPieceType,
     DatasetType,
+    PositionType,
 )
-from kloppy.domain.models import PositionType
 
 from kloppy import datafactory
 
@@ -43,7 +43,7 @@ class TestDatafactory:
         assert player.player_id == "38804"
         assert player.jersey_no == 1
         assert str(player) == "Daniel Bold"
-        assert player.position == PositionType.Unknown
+        assert player.starting_position == PositionType.Unknown
         assert player.starting
 
         assert dataset.metadata.periods[0].id == 1

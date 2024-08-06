@@ -144,7 +144,8 @@ class TestStatsBombMetadata:
 
         # Substituted players have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("5630")
-        assert sub_player.position is not None
+        assert sub_player.starting_position is None
+        assert sub_player.positions.last() is not None
         assert not sub_player.starting
 
     def test_periods(self, dataset):
@@ -287,7 +288,7 @@ class TestStatsBombEvent:
             def get_color(player):
                 if player.team == shot_event.player.team:
                     return "#b94b75"
-                elif player.position.position_id == "1":
+                elif player.starting_position.position_id == "1":
                     return "#c15ca5"
                 else:
                     return "#7f63b8"

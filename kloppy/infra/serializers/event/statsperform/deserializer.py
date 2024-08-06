@@ -480,12 +480,14 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
             qualifiers.append(PassQualifier(value=pass_qualifier_value))
 
     if EVENT_QUALIFIER_SHOT_ASSIST in raw_qualifiers:
+        # Qualifier '210' defines that the pass was an assist for a shot
         qualifiers.append(PassQualifier(value=PassType.SHOT_ASSIST))
-        shot_result_qualifier = int(
-            raw_qualifiers[EVENT_QUALIFIER_SHOT_ASSIST]
-        )
-        if shot_result_qualifier == EVENT_TYPE_SHOT_GOAL:
-            qualifiers.append(PassQualifier(value=PassType.ASSIST))
+        # The qualifier value then dictates whether it was a goal assist
+        # or just key pass (note: values only available since May 2021).
+        shot_result_qualifier = raw_qualifiers[EVENT_QUALIFIER_SHOT_ASSIST]
+        if shot_result_qualifier is not None:
+            if int(shot_result_qualifier) == EVENT_TYPE_SHOT_GOAL:
+                qualifiers.append(PassQualifier(value=PassType.ASSIST))
 
     return qualifiers
 
@@ -519,6 +521,8 @@ def _get_event_bodypart_qualifiers(
     if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif EVENT_QUALIFIER_HEAD in raw_qualifiers:
+        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+    elif EVENT_QUALIFIER_FLICK_ON in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
     elif EVENT_QUALIFIER_LEFT_FOOT in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))

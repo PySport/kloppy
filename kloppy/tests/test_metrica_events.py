@@ -44,7 +44,7 @@ class TestMetricaEvents:
         assert player.player_id == "Track_11"
         assert player.jersey_no == 11
         assert str(player) == "Track_11"
-        assert player.position.name == "Goalkeeper"
+        assert player.starting_position.name == "Goalkeeper"
 
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == timedelta(

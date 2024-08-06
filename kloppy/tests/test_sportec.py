@@ -76,7 +76,7 @@ class TestSportecEventData:
         assert player.player_id == "DFL-OBJ-00001D"
         assert player.jersey_no == 1
         assert str(player) == "A. Schwolow"
-        assert player.position == PositionType.Goalkeeper
+        assert player.starting_position == PositionType.Goalkeeper
 
         # Check the qualifiers
         assert dataset.events[25].qualifiers[0].value == SetPieceType.KICK_OFF

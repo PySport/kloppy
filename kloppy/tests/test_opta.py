@@ -111,7 +111,7 @@ class TestOptaMetadata:
 
         # Substituted players don't have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("88022")
-        assert sub_player.starting_position is None
+        assert sub_player.starting_position is PositionType.Unknown
         assert not sub_player.starting
 
     def test_periods(self, dataset):

@@ -75,10 +75,8 @@ def _team_from_xml_elm(team_elm) -> Team:
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
             starting_position=position_types_mapping.get(
-                player_elm.attrib["PlayingPosition"], PositionType.Unknown
-            )
-            if "PlayingPosition" in player_elm.attrib
-            else PositionType.Unknown,
+                player_elm.attrib.get("PlayingPosition"), PositionType.Unknown
+            ),
             starting=player_elm.attrib["Starting"] == "true",
         )
         for player_elm in team_elm.Players.iterchildren("Player")

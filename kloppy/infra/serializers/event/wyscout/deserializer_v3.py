@@ -155,7 +155,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     qualifier_mapping = {
         ("cross", "cross_blocked"): PassType.CROSS,
         ("hand_pass",): PassType.HAND_PASS,
-        ("head_pass",): PassType,
+        ("head_pass",): PassType.HEAD_PASS,
         ("smart_pass",): PassType.SMART_PASS,
         ("shot_assist",): PassType.SHOT_ASSIST,
         ("assist",): PassType.ASSIST,

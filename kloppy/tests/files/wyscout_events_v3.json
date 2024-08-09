@@ -301,11 +301,12 @@
         "name": "Torino"
       },
       "pass": {
-        "accurate": true,
+        "accurate": false,
+        "height": "blocked",
         "angle": -105,
         "endLocation": {
-          "x": 18,
-          "y": 23
+          "x": 0,
+          "y": 0
         },
         "length": 20.41,
         "recipient": {

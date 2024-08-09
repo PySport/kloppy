@@ -82,7 +82,7 @@ formations = {
 
 
 def _flip_point(point: Point) -> Point:
-    return Point(x=1 - point.x, y=1 - point.y)
+    return Point(x=100 - point.x, y=100 - point.y)
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -197,12 +197,12 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
             if "ball_out" in next_event["type"]["secondary"]:
                 pass_result = PassResult.OUT
         # Set end coordinates of blocked pass to start coordinates of next event if it is not a game interruption
-        else:
+        if raw_event["pass"].get("height") == "blocked":
             next_event_location = Point(
                 x=float(next_event["location"]["x"]),
                 y=float(next_event["location"]["y"]),
             )
-            if team.team_id == next_event["team"]["id"]:
+            if team.team_id == str(next_event["team"]["id"]):
                 receiver_coordinates = next_event_location
             else:
                 receiver_coordinates = _flip_point(next_event_location)

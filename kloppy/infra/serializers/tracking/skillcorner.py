@@ -191,9 +191,11 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         frame_period_ids = np.array([_frame.period.id for _frame in frames])
         frame_attacking_directions = np.array(
             [
-                attacking_direction_from_frame(frame)
-                if len(frame.players_data) > 0
-                else AttackingDirection.NOT_SET
+                (
+                    attacking_direction_from_frame(frame)
+                    if len(frame.players_data) > 0
+                    else AttackingDirection.NOT_SET
+                )
                 for frame in frames
             ]
         )

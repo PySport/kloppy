@@ -1,4 +1,5 @@
 """XML parser for Opta F24 feeds."""
+
 import pytz
 from datetime import datetime
 from typing import List
@@ -41,9 +42,11 @@ class F24XMLParser(OptaXMLParser):
                 ),
                 contestant_id=event.attrib.get("team_id"),
                 player_id=event.attrib.get("player_id"),
-                outcome=int(event.attrib["outcome"])
-                if "outcome" in event.attrib
-                else None,
+                outcome=(
+                    int(event.attrib["outcome"])
+                    if "outcome" in event.attrib
+                    else None
+                ),
                 qualifiers={
                     int(
                         qualifier.attrib["qualifier_id"]

@@ -1,4 +1,5 @@
 """XML parser for Stats Perform MA3 feeds."""
+
 import pytz
 from datetime import datetime
 from typing import List
@@ -38,9 +39,11 @@ class MA3XMLParser(OptaXMLParser):
                 ),
                 contestant_id=event.attrib.get("contestantId"),
                 player_id=event.attrib.get("playerId"),
-                outcome=int(event.attrib["outcome"])
-                if "outcome" in event.attrib
-                else None,
+                outcome=(
+                    int(event.attrib["outcome"])
+                    if "outcome" in event.attrib
+                    else None
+                ),
                 qualifiers={
                     int(qualifier.attrib["qualifierId"]): qualifier.attrib.get(
                         "value"

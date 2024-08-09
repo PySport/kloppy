@@ -188,12 +188,14 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": receiver_player,
-        "receiver_coordinates": Point(
-            x=float(raw_event["pass"]["endLocation"]["x"]),
-            y=float(raw_event["pass"]["endLocation"]["y"]),
-        )
-        if len(raw_event["pass"]["endLocation"]) > 1
-        else None,
+        "receiver_coordinates": (
+            Point(
+                x=float(raw_event["pass"]["endLocation"]["x"]),
+                y=float(raw_event["pass"]["endLocation"]["y"]),
+            )
+            if len(raw_event["pass"]["endLocation"]) > 1
+            else None
+        ),
     }
 
 
@@ -557,9 +559,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=0)
-                            if len(periods) == 0
-                            else periods[-1].end_timestamp,
+                            start_timestamp=(
+                                timedelta(seconds=0)
+                                if len(periods) == 0
+                                else periods[-1].end_timestamp
+                            ),
                             end_timestamp=None,
                         )
                     )
@@ -584,16 +588,20 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
-                    "coordinates": Point(
-                        x=float(raw_event["location"]["x"]),
-                        y=float(raw_event["location"]["y"]),
-                    )
-                    if raw_event["location"]
-                    else None,
+                    "coordinates": (
+                        Point(
+                            x=float(raw_event["location"]["x"]),
+                            y=float(raw_event["location"]["y"]),
+                        )
+                        if raw_event["location"]
+                        else None
+                    ),
                     "team": team,
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    else None,
+                    "player": (
+                        players[team_id][player_id]
+                        if player_id != INVALID_PLAYER
+                        else None
+                    ),
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],

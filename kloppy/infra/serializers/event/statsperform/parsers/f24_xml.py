@@ -1,9 +1,9 @@
 """XML parser for Opta F24 feeds."""
 import pytz
-from datetime import datetime
-from typing import List
+from datetime import datetime, timezone
+from typing import List, Optional
+from dateutil.parser import parse
 
-from kloppy.domain import Period
 from .base import OptaXMLParser, OptaEvent
 
 
@@ -53,3 +53,27 @@ class F24XMLParser(OptaXMLParser):
             )
             for event in game_elm.iterchildren("Event")
         ]
+
+    def extract_date(self) -> Optional[str]:
+        """Return the date of the game."""
+        game_elm = self.root.find("Game")
+        if game_elm and "game_date" in game_elm.attrib:
+            return parse(game_elm.attrib["game_date"]).astimezone(timezone.utc)
+        else:
+            return None
+
+    def extract_game_week(self) -> Optional[str]:
+        """Return the game_week of the game."""
+        game_elm = self.root.find("Game")
+        if game_elm and "matchday" in game_elm.attrib:
+            return game_elm.attrib["matchday"]
+        else:
+            return None
+
+    def extract_game_id(self) -> Optional[str]:
+        """Return the game_id of the game."""
+        game_elm = self.root.find("Game")
+        if game_elm and "id" in game_elm.attrib:
+            return game_elm.attrib["id"]
+        else:
+            return None

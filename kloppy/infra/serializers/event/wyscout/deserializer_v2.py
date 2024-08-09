@@ -499,6 +499,9 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     for wyId, team in teams.items()
                 ]
             )
+            game_id = raw_events["events"][0].get("matchId", None)
+            if game_id:
+                game_id = str(game_id)
 
             events = []
 
@@ -730,6 +733,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),
+            game_id=game_id,
         )
 
         return EventDataset(metadata=metadata, records=events)

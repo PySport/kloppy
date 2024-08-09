@@ -1,12 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from kloppy.domain import (
-    Period,
     Provider,
-    AttackingDirection,
     Orientation,
     Point,
     Point3D,
@@ -114,6 +112,19 @@ class TestSkillCornerTracking:
         assert pitch_dimensions.x_dim.max == 52.5
         assert pitch_dimensions.y_dim.min == -34
         assert pitch_dimensions.y_dim.max == 34
+
+        # Check enriched metadata
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc
+            )
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2417"
 
     def test_correct_normalized_deserialization(
         self, meta_data: str, raw_data: str

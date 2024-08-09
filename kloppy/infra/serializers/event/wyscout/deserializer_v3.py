@@ -1,8 +1,9 @@
 import json
 import logging
 from dataclasses import replace
-from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO
+from datetime import timedelta, timezone
+from dateutil.parser import parse
+from typing import Dict, List
 
 from kloppy.domain import (
     BallOutEvent,
@@ -536,6 +537,15 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     for wyId, team in teams.items()
                 ]
             )
+            date = raw_events["match"].get("dateutc", None)
+            if date:
+                date = parse(date).astimezone(timezone.utc)
+            game_week = raw_events["match"].get("gameweek", None)
+            if game_week:
+                game_week = str(game_week)
+            game_id = raw_events["events"][0].get("matchId", None)
+            if game_id:
+                game_id = str(game_id)
 
             events = []
 
@@ -757,6 +767,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return EventDataset(metadata=metadata, records=events)

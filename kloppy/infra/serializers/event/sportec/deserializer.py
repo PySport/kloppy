@@ -404,6 +404,12 @@ class SportecEventDataDeserializer(
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
+            date = parse(
+                match_root.MatchInformation.General.attrib["KickoffTime"]
+            ).astimezone(timezone.utc)
+            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
+            game_id = match_root.MatchInformation.General.attrib["MatchId"]
+
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             transformer = self.get_transformer(
@@ -632,6 +638,9 @@ class SportecEventDataDeserializer(
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return EventDataset(

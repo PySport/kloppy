@@ -18,6 +18,8 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    PassType,
+    PassQualifier,
 )
 
 from kloppy import wyscout
@@ -204,6 +206,13 @@ class TestWyscoutV3:
         assert (
             goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
+        )
+
+    def test_shot_assist_event(self, dataset: EventDataset):
+        shot_assist_event = dataset.get_event_by_id(663291837)
+        assert shot_assist_event.event_type == EventType.PASS
+        assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(
+            PassQualifier
         )
 
     def test_shot_event(self, dataset: EventDataset):

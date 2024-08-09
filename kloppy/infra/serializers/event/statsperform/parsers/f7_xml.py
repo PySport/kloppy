@@ -10,13 +10,13 @@ from kloppy.domain import (
     Ground,
     Period,
     Player,
-    Position,
     Score,
     Team,
 )
+from kloppy.domain.models import PositionType
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser
+from .base import OptaXMLParser, position_types_mapping
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
@@ -153,10 +153,8 @@ class F7XMLParser(OptaXMLParser):
                     "last_name"
                 ],
                 starting=(player_elm.attrib["Status"] == "Start"),
-                starting_position=Position(
-                    position_id=player_elm.attrib["Formation_Place"],
-                    name=player_elm.attrib["Position"],
-                    coordinates=None,
+                starting_position=position_types_mapping.get(
+                    player_elm.attrib["Position"], PositionType.Unknown
                 ),
             )
             for player_elm in team_elm.find("PlayerLineUp").iterchildren(

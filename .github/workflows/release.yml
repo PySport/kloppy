@@ -97,9 +97,8 @@ jobs:
           path: dist
           merge-multiple: true
 
-#     Skip for test
-#      - name: Publish to PyPI
-#        if: inputs.dry-run == false
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          verbose: true
+      - name: Publish to PyPI
+        if: inputs.dry-run == false
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true

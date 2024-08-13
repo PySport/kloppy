@@ -64,6 +64,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install wheel
+        run: pip install wheel
+
       - name: Build wheel
         run: python setup.py bdist_wheel
 

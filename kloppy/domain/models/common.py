@@ -807,11 +807,11 @@ class SportVUCoordinateSystem(CoordinateSystem):
 
     @property
     def origin(self) -> Origin:
-        return Origin.BOTTOM_LEFT
+        return Origin.TOP_LEFT
 
     @property
     def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.BOTTOM_TO_TOP
+        return VerticalOrientation.TOP_TO_BOTTOM
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:

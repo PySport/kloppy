@@ -220,7 +220,7 @@ class TestStatsPerformTracking:
         assert pitch_dimensions.y_dim.max == 68
 
     def test_deserialize_all(self, tracking_dataset: TrackingDataset):
-        assert len(tracking_dataset.records) == 92
+        assert len(tracking_dataset.records) == 93
 
     def test_deserialize_only_alive(
         self, tracking_data: Path, tracking_metadata_xml: Path
@@ -232,7 +232,7 @@ class TestStatsPerformTracking:
             only_alive=True,
             coordinates="sportvu",
         )
-        assert len(tracking_dataset.records) == 91
+        assert len(tracking_dataset.records) == 92
 
     def test_timestamps(self, tracking_dataset: TrackingDataset):
         assert tracking_dataset.records[0].timestamp == timedelta(
@@ -255,6 +255,11 @@ class TestStatsPerformTracking:
         assert tracking_dataset.records[0].players_coordinates[
             home_player
         ] == Point(x=68.689, y=39.750)
+
+    def test_frame_without_player_coordinates(
+        self, tracking_dataset: TrackingDataset
+    ):
+        assert tracking_dataset.records[-1].players_coordinates == {}
 
     def test_correct_normalized_deserialization(
         self, tracking_data: Path, tracking_metadata_xml: Path

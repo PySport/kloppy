@@ -501,6 +501,17 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
+def _parse_period_id(raw_period: str) -> int:
+    if "H" in raw_period:
+        period_id = int(raw_period.replace("H", ""))
+    elif raw_period == "P":
+        period_id = 5
+    else:
+        raise DeserializationError(f"Unknown period {raw_period}")
+
+    return period_id
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -544,14 +555,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = int(
-                        next_event["matchPeriod"].replace("H", "")
+                    next_period_id = _parse_period_id(
+                        next_event["matchPeriod"]
                     )
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
-                period_id = int(raw_event["matchPeriod"].replace("H", ""))
+                period_id = _parse_period_id(raw_event["matchPeriod"])
 
                 if len(periods) == 0 or periods[-1].id != period_id:
                     periods.append(

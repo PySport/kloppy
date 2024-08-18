@@ -23,12 +23,13 @@ from kloppy.domain import (
     Player,
     Provider,
     PlayerData,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from .common import TRACABInputs
+from .common import TRACABInputs, position_types_mapping
 from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
@@ -152,6 +153,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 ),
                 jersey_no=int(player["JerseyNo"]),
                 starting=player["StartFrameCount"] == start_frame_id,
+                starting_position=position_types_mapping.get(
+                    player.get("StartingPosition"), PositionType.Unknown
+                ),
             )
             for player in team_data["Players"]["Player"]
         ]

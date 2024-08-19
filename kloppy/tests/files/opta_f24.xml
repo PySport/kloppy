@@ -64,6 +64,10 @@
       <Q id="1149162593" qualifier_id="213" value="4.9" />
       <Q id="1140451930" qualifier_id="141" value="7.4" />
     </Event>
+    <Event id="1515097981" event_id="70" type_id="10" period_id="1" min="0" sec="10" player_id="164266" team_id="569" outcome="1" x="8.9" y="48.0" timestamp="2018-09-23T15:02:22.579" last_modified="2018-09-23T15:02:30" version="1537711350409">
+      <Q id="5001563785" qualifier_id="94" />
+      <Q id="5001563787" qualifier_id="56" value="Back" />
+    </Event>
     <Event id="1444075194" event_id="8" type_id="1" period_id="1" min="0" sec="16" player_id="82830" team_id="569" outcome="0" x="47.3" y="10.7" timestamp="2018-09-23T15:02:30.404" last_modified="2018-09-23T15:02:32" version="1537711352109">
       <Q id="2068850442" qualifier_id="56" value="Right" />
       <Q id="2106816650" qualifier_id="213" value="0.2" />

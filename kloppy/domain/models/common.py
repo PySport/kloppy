@@ -237,7 +237,10 @@ class Team:
         for player in self.players:
             if player.positions.items:
                 player_position = player.positions.value_at(time)
-                if player_position.position_id == position_id:
+                if (
+                    player_position
+                    and player_position.position_id == position_id
+                ):
                     return player
 
         return None

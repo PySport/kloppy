@@ -176,9 +176,9 @@ class TestWyscoutV3:
         assert dataset.metadata.periods[1].start_timestamp == timedelta(
             minutes=45, seconds=5
         )
-        # assert dataset.metadata.periods[1].end_timestamp == timedelta(
-        #     minutes=45, seconds=5
-        # ) + timedelta(minutes=50, seconds=35)
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            minutes=45, seconds=5
+        ) + timedelta(minutes=46, seconds=53)
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(1927028854)

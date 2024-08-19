@@ -567,8 +567,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if next_period_id != period_id:
                     periods[-1] = replace(
                         periods[-1],
-                        end_timestamp=periods[-1].start_timestamp
-                        + timedelta(
+                        end_timestamp=timedelta(
                             seconds=float(
                                 raw_event["second"] + raw_event["minute"] * 60
                             )

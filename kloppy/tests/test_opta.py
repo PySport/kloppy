@@ -236,7 +236,7 @@ class TestOptaEvent:
 
 
 class TestOptaPassEvent:
-    """Tests related to deserialzing pass events"""
+    """Tests related to deserializing pass events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all pass events"""
@@ -273,7 +273,7 @@ class TestOptaPassEvent:
 
 
 class TestOptaClearanceEvent:
-    """Tests related to deserialzing clearance events"""
+    """Tests related to deserializing clearance events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all clearance events"""
@@ -287,7 +287,7 @@ class TestOptaClearanceEvent:
 
 
 class TestOptaShotEvent:
-    """Tests related to deserialzing shot events"""
+    """Tests related to deserializing shot events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all shot events"""
@@ -397,7 +397,7 @@ class TestOptaShotEvent:
 
 
 class TestOptaDuelEvent:
-    """Tests related to deserialzing duel events"""
+    """Tests related to deserializing duel events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all duel events"""
@@ -417,7 +417,7 @@ class TestOptaDuelEvent:
 
 
 class TestOptaGoalkeeperEvent:
-    """Tests related to deserialzing goalkeeper events"""
+    """Tests related to deserializing goalkeeper events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all goalkeeper events"""
@@ -454,7 +454,7 @@ class TestOptaGoalkeeperEvent:
 
 
 class TestOptaInterceptionEvent:
-    """Tests related to deserialzing interception events"""
+    """Tests related to deserializing interception events"""
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the interception event is correctly deserialized"""
@@ -463,7 +463,7 @@ class TestOptaInterceptionEvent:
 
 
 class TestOptaMiscontrolEvent:
-    """Tests related to deserialzing miscontrol events"""
+    """Tests related to deserializing miscontrol events"""
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the miscontrol event is correctly deserialized"""
@@ -472,10 +472,10 @@ class TestOptaMiscontrolEvent:
 
 
 class TestOptaBlockEvent:
-    """Tests related to deserialzing miscontrol events"""
+    """Tests related to deserializing block events"""
 
     def test_correct_deserialization(self, dataset: EventDataset):
-        """Test if the miscontrol event is correctly deserialized"""
+        """Test if the block event is correctly deserialized"""
         event = dataset.get_event_by_id("1515097981")
         assert event.event_type == EventType.GENERIC
         assert event.event_name == "block"

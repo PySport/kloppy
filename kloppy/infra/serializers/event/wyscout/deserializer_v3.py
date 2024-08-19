@@ -272,12 +272,12 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     )
 
     if next_event is not None:
-        period_id = int(next_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(next_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             next_event, start_ts, period_id
         )
     else:
-        period_id = int(raw_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(raw_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             raw_event, start_ts, period_id
         )
@@ -504,6 +504,8 @@ def _players_to_dict(players: List[Player]):
 def _parse_period_id(raw_period: str) -> int:
     if "H" in raw_period:
         period_id = int(raw_period.replace("H", ""))
+    elif "E" in raw_period:
+        period_id = 2 + int(raw_period.replace("E", ""))
     elif raw_period == "P":
         period_id = 5
     else:

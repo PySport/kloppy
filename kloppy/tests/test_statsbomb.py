@@ -35,6 +35,7 @@ from kloppy.domain import (
     Position,
     ShotResult,
     EventDataset,
+    Time,
 )
 
 from kloppy.exceptions import DeserializationError
@@ -149,6 +150,27 @@ class TestStatsBombMetadata:
         assert sub_player.starting_position is None
         assert sub_player.positions.last() is not None
         assert not sub_player.starting
+
+        # Get player by position and time
+        periods = dataset.metadata.periods
+        period_1 = periods[0]
+        period_2 = periods[1]
+
+        home_starting_gk = dataset.metadata.teams[0].get_player_by_position(
+            "1", time=Time(period=period_1, timestamp=timedelta(seconds=0))
+        )
+        assert home_starting_gk.player_id == "3509"  # Thibaut Courtois
+
+        home_starting_lam = dataset.metadata.teams[0].get_player_by_position(
+            "20", time=Time(period=period_1, timestamp=timedelta(seconds=0))
+        )
+        assert home_starting_lam.player_id == "3621"  # Eden Hazard
+
+        home_ending_lam = dataset.metadata.teams[0].get_player_by_position(
+            "20",
+            time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
+        )
+        assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
     def test_periods(self, dataset):
         """It should create the periods"""

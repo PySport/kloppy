@@ -18,6 +18,7 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    FormationType,
 )
 
 from kloppy import wyscout
@@ -254,3 +255,16 @@ class TestWyscoutV3:
         carry_event = dataset.get_event_by_id(139800001)
         assert carry_event.event_type == EventType.CARRY
         assert carry_event.end_coordinates == Point(58.0, 74.0)
+
+    def test_formation_change_event(self, dataset: EventDataset):
+        assert (
+            len(dataset.find_all("formation_change")) == 2
+        )  # We shouldn't recognize the change to 4-4-1 as a formation change
+        formation_change_event = dataset.get_event_by_id(
+            "synthetic-3166-1397082780"
+        )
+        assert formation_change_event.event_type == EventType.FORMATION_CHANGE
+        assert (
+            formation_change_event.formation_type
+            == FormationType.FOUR_THREE_THREE
+        )

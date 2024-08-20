@@ -209,18 +209,24 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         return attacking_directions
 
-    def __load_json(self, file):
+    @staticmethod
+    def __replace_timestamp(obj):
+        if "timestamp" in obj:
+            obj["time"] = obj.pop("timestamp")
+        return obj
+
+    def __load_json_raw(self, file):
         if Path(file.name).suffix == ".jsonl":
             data = []
             for line in file:
                 obj = json.loads(line)
-                # for each line rename timestamp to time to make it compatible with existing loader
-                if "timestamp" in obj:
-                    obj["time"] = obj.pop("timestamp")
-                data.append(obj)
+                data.append(self.__replace_timestamp(obj))
             return data
         else:
-            return json.load(file)
+            data = json.load(file)
+            for line in data:
+                line = self.__replace_timestamp(line)
+            return data
 
     @classmethod
     def __get_periods(cls, tracking):
@@ -288,8 +294,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         )
 
     def deserialize(self, inputs: SkillCornerInputs) -> TrackingDataset:
-        metadata = self.__load_json(inputs.meta_data)
-        raw_data = self.__load_json(inputs.raw_data)
+        metadata = json.load(inputs.meta_data)
+        raw_data = self.__load_json_raw(inputs.raw_data)
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)

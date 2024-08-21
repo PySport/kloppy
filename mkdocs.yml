@@ -23,67 +23,80 @@ nav:
       - index.md
       - Getting started: user-guide/getting-started.md
       - Installation: user-guide/installation.md
-      - Datasets:
-          - user-guide/datasets/index.md
-          - Event data: user-guide/datasets/event-data.md
-          - Tracking data: user-guide/datasets/tracking-data.md
-          - Code data: user-guide/datasets/code-data.md
-          - Metadata: user-guide/datasets/metadata.md
-      - Coordinate system: user-guide/coordinate-system.md
-      - Transformations:
+      - Concepts:
+          - user-guide/concepts/index.md
+          - Event data: user-guide/concepts/event-data.md
+          - Tracking data: user-guide/concepts/tracking-data.md
+          - Code data: user-guide/concepts/code-data.md
+          - Metadata: user-guide/concepts/metadata.md
+          - Coordinates: user-guide/concepts/coordinates.md
+          - Time: user-guide/concepts/time.md
+          - Positions: user-guide/concepts/positions.md
+          - Formations: user-guide/concepts/formations.md
+      - Loading data:
+          - user-guide/providers/index.md
+          - Datafactory: user-guide/providers/datafactory.ipynb
+          - Metrica: user-guide/providers/metrica.ipynb
+          - SecondSpectrum: user-guide/providers/secondspectrum.ipynb
+          - SkillCorner: user-guide/providers/skillcorner.ipynb
+          - Sportec: user-guide/providers/sportec.ipynb
+          - Sportscode: user-guide/providers/sportscode.ipynb
+          - Statsbomb: user-guide/providers/statsbomb.ipynb
+          - StatsPerform: user-guide/providers/statsperform.ipynb
+          - TRACAB: user-guide/providers/tracab.ipynb
+          - Wyscout: user-guide/providers/wyscout.ipynb
+      - Transforming data:
           - user-guide/transformations/index.md
-      - State: user-guide/state.md
+          - Pitch dimensions: user-guide/transformations/dimensions.md
+          - Orientation: user-guide/transformations/orientation.md
+      - Processing data:
+        - Event data: user-guide/event-data.md
+        - Tracking data: user-guide/tracking-data.md
+        - Code data: user-guide/code-data.md
+      - Dataframe ouput: user-guide/dataframe/index.md
       - Configuration: user-guide/configuration.md
   - How-to guides:
       - examples/index.md
       - Loading data from external sources: examples/adapter.ipynb
-        # - Event Data: examples/event_data.ipynb
-        # - Tracking Data: examples/tracking_data.ipynb
-        # - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
-        # - Code data: examples/code_data.ipynb
-        # - State: examples/state.ipynb
-        # - Navigating: examples/navigating.ipynb
-        # - Plotting: examples/plotting.ipynb
-        # - Config: examples/config.ipynb
-  - Providers:
-      - providers/index.md
-      - Datafactory: providers/datafactory.ipynb
-      - Metrica: providers/metrica.ipynb
-      - Opta: providers/opta.ipynb
-      - SecondSpectrum: providers/secondspectrum.ipynb
-      - SkillCorner: providers/skillcorner.ipynb
-      - Sportec: providers/sportec.ipynb
-      - Sportscode: providers/sportscode.ipynb
-      - Statsbomb: providers/statsbomb.ipynb
-      - StatsPerform: providers/statsperform.ipynb
-      - TRACAB: providers/tracab.ipynb
-      - Wyscout: providers/wyscout.ipynb
+      - Analyzing SportsCode XML files with DuckDB: 'presentations/pysport-meetup-april-2023/Kloppy x DuckDB.ipynb'
   - Reference:
       - reference/index.md
       - Domain Concepts:
-          - Team: reference/domain/team.md
-          - FormationType: reference/domain/formation-type.md
-          - Player: reference/domain/player.md
-          - Position: reference/domain/position.md
-          - Ground: reference/domain/ground.md
-          - Score: reference/domain/score.md
-          - Provider: reference/domain/provider.md
-          - Orientation: reference/domain/orientation.md
-      - Datasets:
-          - Event Data:
-              - Overview: reference/event-data/index.md
-              - Event Types:
-                  - Oveview: reference/event-data/event-types/index.md
-                  - Pass: reference/event-data/event-types/pass.md
-              - Qualifiers:
-                  - Overview: reference/event-data/qualifiers/index.md
-                  - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
-          - Tracking Data:
-              - Overview: reference/tracking-data/index.md
-          - Code Data:
-              - Overview: reference/code-data/index.md
-          - Metadata:
-              - Overview: reference/metadata/index.md
+          - reference/domain/index.md
+          - EventDataset: reference/domain/event-dataset.md
+          - TrackingDataset: reference/domain/tracking-dataset.md
+          - CodeDataset: reference/domain/code-dataset.md
+          - Metadata: 
+              - reference/domain/metadata/index.md
+              - Team: 
+                - reference/domain/metadata/team/index.md
+                - FormationType: reference/domain/metadata/team/formation-type.md
+                - Player: 
+                  - reference/domain/metadata/team/player/index.md
+                  - Position: reference/domain/metadata/team/player/position.md
+              - Ground: reference/domain/ground.md
+              - Score: reference/domain/score.md
+              - Provider: reference/domain/provider.md
+              - Orientation: reference/domain/orientation.md
+      - Data loaders:
+          - Datafactory: reference/providers/datafactory.md
+          - Metrica: reference/providers/metrica.md
+          - SecondSpectrum: reference/providers/secondspectrum.md
+          - SkillCorner: reference/providers/skillcorner.md
+          - Sportec: reference/providers/sportec.md
+          - Sportscode: reference/providers/sportscode.md
+          - Statsbomb: reference/providers/statsbomb.md
+          - StatsPerform: reference/providers/statsperform.md
+          - TRACAB: reference/providers/tracab.md
+          - Wyscout: reference/providers/wyscout.md
+      - Event Data Model:
+        - reference/event-data/index.md
+        - Event Types:
+            - Oveview: reference/event-data/event-types/index.md
+            - Pass: reference/event-data/event-types/pass.md
+        - Qualifiers:
+            - Overview: reference/event-data/qualifiers/index.md
+            - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
   - Development:
       - Issues: 'issues.md'
       - Contributing: 'contributing.md'

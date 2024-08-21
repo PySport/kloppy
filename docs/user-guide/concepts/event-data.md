@@ -10,14 +10,4 @@ from kloppy import statsbomb
 dataset = statsbomb.load_open_data()
 ```
 
-An event data feed is deserialized into an EventDataset that groups all events of a single game and provides you with utility functions to navigate and visualize the dataset. Examples illustrating how to load data from other sources can be found in … The following tutorials explain how to analyse the data:
-
-Loading event stream data
-Navigating event stream data
-Visualizing event stream data
-Attribute transformers
-Defining custom Event classes
-Synchronizing event data with tracking data
-Transforming to a Pandas or Polars dataframe format
-
 In the reminder of this section we describe the standardized data model that kloppy uses for representing event data.

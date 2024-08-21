@@ -1,5 +1,5 @@
-# Transformations
+# Dataset transformations
 
 !!! example
 
-    This page should explain how dataset transformations work.
+    This chapter should explain how dataset transformations work.

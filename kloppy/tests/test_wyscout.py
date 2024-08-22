@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -74,6 +74,11 @@ class TestWyscoutV2:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=2863.708369
         ) + timedelta(seconds=2999.70982)
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2499773"
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id("190078343")
@@ -179,6 +184,34 @@ class TestWyscoutV3:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             minutes=20, seconds=47
         ) + timedelta(minutes=50, seconds=35)
+
+    def test_enriched_metadata(self, dataset: EventDataset):
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2020, 8, 2, 18, 45, tzinfo=timezone.utc
+            )
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "38"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2852835"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "S. Mihajlović"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "M. Longo"
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(663292348)

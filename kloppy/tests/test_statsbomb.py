@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from pathlib import Path
 from typing import cast
 
@@ -73,6 +73,13 @@ def dataset() -> EventDataset:
         lineup_data=f"{API_URL}/lineups/3794687.json",
         three_sixty_data=f"{API_URL}/three-sixty/3794687.json",
         coordinates="statsbomb",
+        additional_metadata={
+            "date": datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc),
+            "game_week": "7",
+            "game_id": "3888787",
+            "home_coach": "R. Martínez Montoliù",
+            "away_coach": "F. Fernandes da Costa Santos",
+        },
     )
     assert dataset.dataset_type == DatasetType.EVENT
     return dataset
@@ -193,6 +200,32 @@ class TestStatsBombMetadata:
             dataset.metadata.flags
             == DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE
         )
+
+    def test_enriched_metadata(self, dataset):
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc)
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "7"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "3888787"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "R. Martínez Montoliù"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "F. Fernandes da Costa Santos"
 
 
 class TestStatsBombEvent:

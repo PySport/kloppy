@@ -136,6 +136,10 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                 for period in meta_data_parser.extract_periods()
             }
             teams_list = list(meta_data_parser.extract_lineups())
+            score = meta_data_parser.extract_score()
+            date = meta_data_parser.extract_date()
+            game_week = meta_data_parser.extract_game_week()
+            game_id = meta_data_parser.extract_game_id()
 
         with performance_logging("Loading tracking data", logger=logger):
             tracking_data = inputs.raw_data.read().decode("ascii").splitlines()
@@ -192,12 +196,15 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             teams=teams_list,
             periods=list(periods.values()),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            score=None,
+            score=score,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.STATSPERFORM,
             flags=DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return TrackingDataset(

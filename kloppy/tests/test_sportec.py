@@ -203,3 +203,38 @@ class TestSportecTrackingData:
             only_alive=True,
         )
         assert len(dataset) == 199
+
+    def test_enriched_metadata(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+        )
+
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2020, 6, 5, 18, 30, 0, 210000, tzinfo=timezone.utc
+            )
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "30"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "DFL-MAT-003BN1"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "C. Streich"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "M. Rose"

@@ -2,7 +2,8 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import NamedTuple, Optional, Union, IO
-from datetime import timedelta
+from datetime import timedelta, timezone
+from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -126,8 +127,15 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                 pitch_length=sportec_metadata.x_max,
                 pitch_width=sportec_metadata.y_max,
             )
+            home_coach = sportec_metadata.home_coach
+            away_coach = sportec_metadata.away_coach
 
         with performance_logging("parse raw data", logger=logger):
+            date = parse(
+                match_root.MatchInformation.General.attrib["KickoffTime"]
+            ).astimezone(timezone.utc)
+            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
+            game_id = match_root.MatchInformation.General.attrib["MatchId"]
 
             def _iter():
                 player_map = {}
@@ -229,6 +237,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             provider=Provider.SPORTEC,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return TrackingDataset(

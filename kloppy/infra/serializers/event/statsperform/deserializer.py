@@ -240,7 +240,9 @@ formations = {
 }
 
 
-def _parse_pass(raw_event: OptaEvent) -> Dict:
+def _parse_pass(
+    raw_event: OptaEvent, next_event: OptaEvent, next_next_event: OptaEvent
+) -> Dict:
     if raw_event.outcome:
         result = PassResult.COMPLETE
     else:
@@ -250,6 +252,21 @@ def _parse_pass(raw_event: OptaEvent) -> Dict:
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     qualifiers = pass_qualifiers + overall_qualifiers
+
+    # Set the end location of a deflected pass to the start location
+    # of the next action and the outcome to "success" if the deflected
+    # pass reached a teammate
+    if next_event is not None and next_next_event is not None:
+        if (
+            next_event.type_id == EVENT_TYPE_BALL_TOUCH
+            and next_event.outcome == 1
+            and next_next_event.contestant_id == raw_event.contestant_id
+        ):
+            result = PassResult.COMPLETE
+            receiver_coordinates = Point(
+                x=next_next_event.x,
+                y=next_next_event.y,
+            )
 
     return dict(
         result=result,
@@ -623,9 +640,14 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             possession_team = None
             events = []
             for idx, raw_event in enumerate(raw_events):
-                next_event_elm = (
+                next_event = (
                     raw_events[idx + 1]
                     if (idx + 1) < len(raw_events)
+                    else None
+                )
+                next_next_event = (
+                    raw_events[idx + 2]
+                    if (idx + 2) < len(raw_events)
                     else None
                 )
                 period = next(
@@ -688,7 +710,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     )
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
-                        pass_event_kwargs = _parse_pass(raw_event)
+                        pass_event_kwargs = _parse_pass(
+                            raw_event, next_event, next_next_event
+                        )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
@@ -750,7 +774,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         EVENT_TYPE_BLOCKED_PASS,
                     ):
                         interception_event_kwargs = _parse_interception(
-                            raw_event, team, next_event_elm
+                            raw_event, team, next_event
                         )
                         event = self.event_factory.build_interception(
                             **interception_event_kwargs,

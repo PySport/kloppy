@@ -4,73 +4,152 @@ repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
 edit_uri: blob/master/docs/
 extra_css: [style.css]
-
-# TODO: set-up Google Analytics project to track
-google_analytics: null 
-
+google_analytics: null # TODO: set-up Google Analytics project to track
 theme:
   name: material
   custom_dir: docs/overrides
-
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.tracking
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - content.tooltips
 nav:
-  - Home: index.md
-  - Open-data: open-data.md
-  - Getting-started:
-      - Datafactory: getting-started/datafactory.ipynb
-      - Metrica: getting-started/metrica.ipynb
-      - Opta: getting-started/opta.ipynb
-      - SecondSpectrum: getting-started/secondspectrum.ipynb
-      - SkillCorner: getting-started/skillcorner.ipynb
-      - Sportec: getting-started/sportec.ipynb
-      - Sportscode: getting-started/sportscode.ipynb
-      - Statsbomb: getting-started/statsbomb.ipynb
-      - StatsPerform: getting-started/statsperform.ipynb
-      - TRACAB: getting-started/tracab.ipynb
-      - Wyscout: getting-started/wyscout.ipynb
-  - Examples:
-    - Event Data: examples/event_data.ipynb
-    - Tracking Data: examples/tracking_data.ipynb
-    - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
-    - Code data: examples/code_data.ipynb
-    - State: examples/state.ipynb
-    - Navigating: examples/navigating.ipynb
-    - Plotting: examples/plotting.ipynb
-    - Config: examples/config.ipynb
-    - Adapters: examples/adapter.ipynb
-#  - API Reference:
-#    - Domain:
-#      - Common: api/domain/common.md
-#      - Pitch: api/domain/pitch.md
-#      - Tracking: api/domain/tracking.md
-#      - Event: api/domain/event.md
-  - Providers: 'providers.md'
-  - Other:
-    - Issues: 'issues.md'
-    - Contributing: 'contributing.md'
-    - Sponsors: 'sponsors.md'
-    - About: 'about.md'
-    - Changelog: 'changelog.md'
-    - License: 'license.md'
-
+  - User guide:
+      - index.md
+      - Getting started: user-guide/getting-started.md
+      - Installation: user-guide/installation.md
+      - Concepts:
+          - user-guide/concepts/index.md
+          - Event data: user-guide/concepts/event-data.md
+          - Tracking data: user-guide/concepts/tracking-data.md
+          - Code data: user-guide/concepts/code-data.md
+          - Metadata: user-guide/concepts/metadata.md
+          - Coordinates: user-guide/concepts/coordinates.md
+          - Time: user-guide/concepts/time.md
+          - Positions: user-guide/concepts/positions.md
+          - Formations: user-guide/concepts/formations.md
+      - Loading data:
+          - user-guide/providers/index.md
+          - Datafactory: user-guide/providers/datafactory.ipynb
+          - Metrica: user-guide/providers/metrica.ipynb
+          - SecondSpectrum: user-guide/providers/secondspectrum.ipynb
+          - SkillCorner: user-guide/providers/skillcorner.ipynb
+          - Sportec: user-guide/providers/sportec.ipynb
+          - Sportscode: user-guide/providers/sportscode.ipynb
+          - Statsbomb: user-guide/providers/statsbomb.ipynb
+          - StatsPerform: user-guide/providers/statsperform.ipynb
+          - TRACAB: user-guide/providers/tracab.ipynb
+          - Wyscout: user-guide/providers/wyscout.ipynb
+      - Transforming data:
+          - user-guide/transformations/index.md
+          - Pitch dimensions: user-guide/transformations/dimensions.md
+          - Orientation: user-guide/transformations/orientation.md
+      - Processing data:
+          - Event data: user-guide/event-data.md
+          - Tracking data: user-guide/tracking-data.md
+          - Code data: user-guide/code-data.md
+      - Dataframe ouput: user-guide/dataframe/index.md
+      - Configuration: user-guide/configuration.md
+  - How-to guides:
+      - examples/index.md
+      - Loading data from external sources: examples/adapter.ipynb
+      - Analyzing SportsCode XML files with DuckDB: 'presentations/pysport-meetup-april-2023/Kloppy x DuckDB.ipynb'
+  - Reference:
+      - reference/index.md
+      - Domain Concepts:
+          - reference/domain/index.md
+          - EventDataset: reference/domain/event-dataset.md
+          - TrackingDataset: reference/domain/tracking-dataset.md
+          - CodeDataset: reference/domain/code-dataset.md
+          - Metadata:
+              - reference/domain/metadata/index.md
+              - Team:
+                  - reference/domain/metadata/team/index.md
+                  - FormationType: reference/domain/metadata/team/formation-type.md
+                  - Player:
+                      - reference/domain/metadata/team/player/index.md
+                      - Position: reference/domain/metadata/team/player/position.md
+              - Ground: reference/domain/ground.md
+              - Score: reference/domain/score.md
+              - Provider: reference/domain/provider.md
+              - Orientation: reference/domain/orientation.md
+      - Data loaders:
+          - Datafactory: reference/providers/datafactory.md
+          - Metrica: reference/providers/metrica.md
+          - SecondSpectrum: reference/providers/secondspectrum.md
+          - SkillCorner: reference/providers/skillcorner.md
+          - Sportec: reference/providers/sportec.md
+          - Sportscode: reference/providers/sportscode.md
+          - Statsbomb: reference/providers/statsbomb.md
+          - StatsPerform: reference/providers/statsperform.md
+          - TRACAB: reference/providers/tracab.md
+          - Wyscout: reference/providers/wyscout.md
+      - Event Data Model:
+          - reference/event-data/index.md
+          - Event Types:
+              - Overview: reference/event-data/event-types/index.md
+              - Generic: reference/event-data/event-types/generic.md
+              - Pass: reference/event-data/event-types/pass.md
+              - Shot: reference/event-data/event-types/shot.md
+              - Take on: reference/event-data/event-types/take_on.md
+              - Carry: reference/event-data/event-types/carry.md
+              - Clearance: reference/event-data/event-types/clearance.md
+              - Interception: reference/event-data/event-types/interception.md
+              - Duel: reference/event-data/event-types/duel.md
+              - Substitution: reference/event-data/event-types/substitution.md
+              - Card: reference/event-data/event-types/card.md
+              - Player on: reference/event-data/event-types/player_on.md
+              - Player off: reference/event-data/event-types/player_off.md
+              - Recovery: reference/event-data/event-types/recovery.md
+              - Miscontrol: reference/event-data/event-types/miscontrol.md
+              - Ball out: reference/event-data/event-types/ball_out.md
+              - Foul committed: reference/event-data/event-types/foul_committed.md
+              - Goalkeeper: reference/event-data/event-types/goalkeeper.md
+              - Formation change: reference/event-data/event-types/formation_change.md
+          - Qualifiers:
+              - Overview: reference/event-data/qualifiers/index.md
+              - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
+  - Development:
+      - Issues: 'issues.md'
+      - Contributing: 'contributing.md'
+      - Sponsors: 'sponsors.md'
+      - About: 'about.md'
+      - License: 'license.md'
+  - Releases: 'changelog.md'
 plugins:
   - mkdocs-jupyter:
+      include: ["*.ipynb"]
       include_source: True
   - search
+  - autorefs
+  - macros:
+      module_name: docs/utils/macros
+      j2_comment_start_string: '$#'
+      j2_comment_end_string: '#$'
   - mkdocstrings:
-      default_handler: python
       handlers:
         python:
           rendering:
-            show_source: true
-            show_root_heading: true
-            heading_level: 3
-      watch:
-        - kloppy
+            inherited_members: true
+            merge_init_into_class: true
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
   - exclude:
       glob:
         - presentations/*
-
 markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.details
   - pymdownx.highlight:
       use_pygments: true
       linenums: true
@@ -78,5 +157,13 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: python
+          class: python
+          validator: !!python/name:markdown_exec.validator
+          format: !!python/name:markdown_exec.formatter
   - footnotes
+watch:
+  - mkdocs.yml
+  - kloppy

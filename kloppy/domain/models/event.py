@@ -724,8 +724,9 @@ class Event(DataRecord, ABC):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class GenericEvent(Event):
-    """
-    GenericEvent
+    """GenericEvent
+
+    Unrecognised event type.
 
     Attributes:
         event_type (EventType): `EventType.GENERIC` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -739,8 +740,9 @@ class GenericEvent(Event):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
-    """
-    ShotEvent
+    """ShotEvent
+
+    An attempt to score a goal.
 
     Attributes:
         event_type (EventType): `EventType.SHOT` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -759,8 +761,9 @@ class ShotEvent(Event):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
-    """
-    PassEvent
+    """PassEvent
+
+    The attempted delivery of the ball from one player to another player on the same team.
 
     Attributes:
         event_type (EventType): `EventType.PASS` (See [`EventType`][kloppy.domain.models.event.EventType])

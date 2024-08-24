@@ -43,13 +43,16 @@ def convert_to_md_table(df: pd.DataFrame, markdown_kwargs: dict) -> str:
     # Escape any pipe characters, | to \|
     # See https://github.com/astanin/python-tabulate/issues/241
     df.columns = [
-        replace_unescaped_pipes(c) if isinstance(c, str) else c for c in df.columns
+        replace_unescaped_pipes(c) if isinstance(c, str) else c
+        for c in df.columns
     ]
 
     # Avoid deprecated applymap warning on pandas>=2.0
     # See https://github.com/timvink/mkdocs-table-reader-plugin/issues/55
     if pd.__version__ >= "2.1.0":
-        df = df.map(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
+        df = df.map(
+            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
+        )
     else:
         df = df.applymap(
             lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
@@ -86,7 +89,9 @@ def define_env(env):
 
         for event_type, event_type_spec in spec["event_types"].items():
             event_name = eval(
-                kloppy[event_type.replace("kloppy.", "")].members["event_name"].value
+                kloppy[event_type.replace("kloppy.", "")]
+                .members["event_name"]
+                .value
             )
             row = [f"[{event_name}][{event_type}]"]
             for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
@@ -94,17 +99,23 @@ def define_env(env):
                     status = event_type_spec["providers"][provider_key].get(
                         "status", "unknown"
                     )
-                    implementation = event_type_spec["providers"][provider_key].get(
-                        "implementation", "unknown"
-                    )
+                    implementation = event_type_spec["providers"][
+                        provider_key
+                    ].get("implementation", "unknown")
                     if status == "parsed":
-                        row += [f':material-check:{{ title="{implementation}" }}']
+                        row += [
+                            f':material-check:{{ title="{implementation}" }}'
+                        ]
                     elif status == "not implemented":
-                        row += [':material-progress-helper:{ title="not implemented" }']
+                        row += [
+                            ':material-progress-helper:{ title="not implemented" }'
+                        ]
                     elif status == "not supported":
                         row += [':material-close:{ title="not supported" }']
                 else:
-                    row += [':material-progress-question:{ title="Status unkown" }']
+                    row += [
+                        ':material-progress-question:{ title="Status unkown" }'
+                    ]
             data += [row]
 
         table = convert_to_md_table(
@@ -122,7 +133,9 @@ def define_env(env):
             spec = yaml.safe_load(file)
 
         class_spec = kloppy[x.replace("kloppy.", "")]
-        docstring = Docstring(class_spec.docstring.value, lineno=1).parse("google")
+        docstring = Docstring(class_spec.docstring.value, lineno=1).parse(
+            "google"
+        )
 
         attr_docstrings = next(
             (d.value for d in docstring if d.kind.name == "attributes"), list()
@@ -137,27 +150,41 @@ def define_env(env):
         for attr in attr_docstrings:
             row = [attr.name, attr.annotation, attr.description]
             if attr.name in spec["event_types"][x].get("attributes", {}):
-                attr_spec = spec["event_types"][x]["attributes"][attr.name].get(
-                    "providers", {}
-                )
-                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                attr_spec = spec["event_types"][x]["attributes"][
+                    attr.name
+                ].get("providers", {})
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
                     if provider_key in attr_spec:
-                        status = attr_spec[provider_key].get("status", "unknown")
+                        status = attr_spec[provider_key].get(
+                            "status", "unknown"
+                        )
                         implementation = attr_spec[provider_key].get(
                             "implementation", "unknown"
                         )
                         if status == "parsed":
-                            row += [f':material-check:{{ title="{implementation}" }}']
+                            row += [
+                                f':material-check:{{ title="{implementation}" }}'
+                            ]
                         elif status == "not implemented":
                             row += [
                                 ':material-progress-helper:{ title="not implemented" }'
                             ]
                         elif status == "not supported":
-                            row += [':material-close:{ title="not supported" }']
+                            row += [
+                                ':material-close:{ title="not supported" }'
+                            ]
                     else:
-                        row += [':material-progress-question:{ title="Status unkown" }']
+                        row += [
+                            ':material-progress-question:{ title="Status unkown" }'
+                        ]
             else:
-                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
                     row += ["-"]
             data += [row]
 

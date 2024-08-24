@@ -261,7 +261,9 @@ class Qualifier(ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
+        return camelcase_to_snakecase(
+            removes_suffix(type(self).__name__, "Qualifier")
+        )
 
 
 @dataclass
@@ -604,8 +606,12 @@ class Event(DataRecord, ABC):
             for event_id in self.related_event_ids
         ]
 
-    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
-        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
+    def get_related_event(
+        self, type_: Union[str, EventType]
+    ) -> Optional["Event"]:
+        event_type = (
+            EventType[type_.upper()] if isinstance(type_, str) else type_
+        )
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -669,7 +675,9 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
+                raise InvalidFilterError(
+                    f"Don't know how to apply filter {filter_}"
+                )
 
             if event_type:
                 try:
@@ -1100,11 +1108,15 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
-    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
+    @deprecated(
+        "to_pandas will be removed in the future. Please use to_df instead."
+    )
     def to_pandas(
         self,
         record_converter: Callable[[Event], Dict] = None,
-        additional_columns: Dict[str, Union[Callable[[Event], Any], Any]] = None,
+        additional_columns: Dict[
+            str, Union[Callable[[Event], Any], Any]
+        ] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd
@@ -1132,7 +1144,9 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
+        return pd.DataFrame.from_records(
+            map(generic_record_converter, self.records)
+        )
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":

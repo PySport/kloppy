@@ -1,0 +1,218 @@
+event_types:
+  kloppy.domain.GenericEvent:
+    providers:
+      statsbomb:
+        status: parsed
+      statsperform:
+        status: parsed
+      wyscout_v2:
+        status: parsed
+      wyscout_v3:
+        status: parsed
+      datafactory:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: parsed
+  kloppy.domain.PassEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 30/"Pass"
+      statsperform:
+        status: parsed
+        implementation: event type 1/”Pass” or 2/”Offside pass”
+      wyscout_v2:
+        status: parsed
+        implementation: "event type 8/”Pass” or subtype 30/”Corner”, 31/”Free kick”,  32/”Free kick (cross)”, 34/”Goal kick”, 36/”Throw in” "
+    attributes:
+      receive_timestamp:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: null
+      receiver_coordinates:
+        statsbomb:
+          status: parsed
+          implementation: null
+      receiver_player:
+        statsbomb:
+          status: parsed
+          implementation: null
+  kloppy.domain.ShotEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 16/"Shot" or 20/"Own goal against"
+      statsperform:
+        status: parsed
+        implementation: event type 13/”Shot (miss)” or 14/”Shot (post)” or 15/”Shot (saved)” or 16/”Shot (goal)”
+      wyscout_v2:
+        status: parsed
+        implementation: event type 10/”Shot” or subtype 33/”Free kick (shot)”, 35/”Penalty”
+  kloppy.domain.TakeOnEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 14/”Dribble”
+      statsperform:
+        status: parsed
+        implementation: event type 3/”Take on”
+      wyscout_v2:
+        status: not implemented
+        implementation: null
+  kloppy.domain.CarryEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 43/”Carry”
+      statsperform:
+        status: not supported
+        implementation: null
+      wyscout_v2:
+        status: unknown
+        implementation: null
+  kloppy.domain.ClearanceEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: "event type 9/”Clearance” or a keeper sweeper clearance event (23/”Goalkeeper” event with type 27/”Keeper sweeper” and outcome 48/”Clear”) in which the goalkeeper uses their head or feet"
+      statsperform:
+        status: parsed
+        implementation: event type 12/”Clearance”
+      wyscout_v2:
+        status: parsed
+        implementation: subevent type 71/”Clearance”
+  kloppy.domain.InterceptionEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 10/” Interception” or event type 30/”Pass” with type 64/”One touch interception”
+      statsperform:
+        status: parsed
+        implementation: event type 8/”Interception” or 74/”Blocked pass”
+      wyscout_v2:
+        status: parsed
+        implementation: null
+  kloppy.domain.DuelEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 4/”Duel” or 33/”Fifty-Fifty” or events with attribute “aerial_won”
+      statsperform:
+        status: parsed
+        implementation: event type 7/”Tackle” or 44/”Aerial” or 67/”Fifty-fifty”
+      wyscout_v2:
+        status: parsed
+        implementation: event type 1/”Duel”
+  kloppy.domain.SubstitutionEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 19/”Substition”
+      statsperform:
+        status: not implemented
+        implementation: event type 18/”Player off” and 19/”Player on”
+      wyscout_v2:
+        status: not implemented
+        implementation: null
+  kloppy.domain.CardEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 24/”Bad behaviour” or 22/”Foul committed”
+      statsperform:
+        status: parsed
+        implementation: event type 17/”Card”
+      wyscout_v2:
+        status: parsed
+        implementation: event type 2/”Foul” with tag 1701, 1702 or 1703
+  kloppy.domain.PlayerOnEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 26/”Player On”
+      statsperform:
+        status: not implemented
+        implementation: event type 21/”Player returns”
+      wyscout_v2:
+        status: not implemented
+        implementation:
+  kloppy.domain.PlayerOffEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 27/”Player Off”
+      statsperform:
+        status: not implemented
+        implementation: event type 20/”Player retired”
+      wyscout_v2:
+        status: not implemented
+        implementation:
+  kloppy.domain.RecoveryEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: "event type 2/”Ball Recovery” or a keeper sweeper claim event  (23/”Goalkeeper” event with with type 27/”Keeper sweeper” and outcome 47/”Claim”)   in which the goalkeeper does not use their hands "
+      statsperform:
+        status: parsed
+        implementation: event type 49/”Recovery”
+      wyscout_v2:
+        status: parsed
+        implementation: subevent 70/”Acceleration” or 72/”Touch” without tag 1302
+  kloppy.domain.MiscontrolEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 38/”Miscontrol”
+      statsperform:
+        status: parsed
+        implementation: event type 61/”Ball touch” with outcome 0.
+      wyscout_v2:
+        status: parsed
+        implementation: subevent 72/”Touch” with tag 1302
+  kloppy.domain.BallOutEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: "events with attribute “out” or StatsBomb event type 30/”Pass”, 16/”Shot”, 10/” Interception”, 4/”Duel” or 23/”Goalkeeper” with an outcome  corresponding to ball going out "
+      statsperform:
+        status: parsed
+        implementation: even type 5/”Ball out” or 6/”Corner awarded”
+      wyscout_v2:
+        status: parsed
+        implementation: event type 5/”Interruption”
+  kloppy.domain.FoulCommittedEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 22/”Foul committed”
+      statsperform:
+        status: parsed
+        implementation: event type 4/”Foul committed” with outcome 0
+      wyscout_v2:
+        status: parsed
+        implementation: event type 2/”Foul”
+  kloppy.domain.GoalkeeperEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: "event type 23/”Goalkeeper”. Some goalkeeper events are parsed as a clearance and recovery.  See CLEARANCE and RECOVERY for details. "
+      statsperform:
+        status: parsed
+        implementation: event type 10/”Save”  or 11/”Claim” or 41/”Punch” or 52/”Keeper pick-up” or 54/”Smother”
+      wyscout_v2:
+        status: parsed
+        implementation: event type 9/”Save”
+  kloppy.domain.FormationChangeEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 36/”Tactical Shift”
+      statsperform:
+        status: parsed
+        implementation: event type 40/”Formation change”
+      wyscout_v2:
+        status: not implemented
+        implementation: null

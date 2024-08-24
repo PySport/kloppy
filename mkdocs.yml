@@ -50,9 +50,9 @@ nav:
           - Pitch dimensions: user-guide/transformations/dimensions.md
           - Orientation: user-guide/transformations/orientation.md
       - Processing data:
-        - Event data: user-guide/event-data.md
-        - Tracking data: user-guide/tracking-data.md
-        - Code data: user-guide/code-data.md
+          - Event data: user-guide/event-data.md
+          - Tracking data: user-guide/tracking-data.md
+          - Code data: user-guide/code-data.md
       - Dataframe ouput: user-guide/dataframe/index.md
       - Configuration: user-guide/configuration.md
   - How-to guides:
@@ -66,14 +66,14 @@ nav:
           - EventDataset: reference/domain/event-dataset.md
           - TrackingDataset: reference/domain/tracking-dataset.md
           - CodeDataset: reference/domain/code-dataset.md
-          - Metadata: 
+          - Metadata:
               - reference/domain/metadata/index.md
-              - Team: 
-                - reference/domain/metadata/team/index.md
-                - FormationType: reference/domain/metadata/team/formation-type.md
-                - Player: 
-                  - reference/domain/metadata/team/player/index.md
-                  - Position: reference/domain/metadata/team/player/position.md
+              - Team:
+                  - reference/domain/metadata/team/index.md
+                  - FormationType: reference/domain/metadata/team/formation-type.md
+                  - Player:
+                      - reference/domain/metadata/team/player/index.md
+                      - Position: reference/domain/metadata/team/player/position.md
               - Ground: reference/domain/ground.md
               - Score: reference/domain/score.md
               - Provider: reference/domain/provider.md
@@ -90,13 +90,30 @@ nav:
           - TRACAB: reference/providers/tracab.md
           - Wyscout: reference/providers/wyscout.md
       - Event Data Model:
-        - reference/event-data/index.md
-        - Event Types:
-            - Oveview: reference/event-data/event-types/index.md
-            - Pass: reference/event-data/event-types/pass.md
-        - Qualifiers:
-            - Overview: reference/event-data/qualifiers/index.md
-            - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
+          - reference/event-data/index.md
+          - Event Types:
+              - Overview: reference/event-data/event-types/index.md
+              - Generic: reference/event-data/event-types/generic.md
+              - Pass: reference/event-data/event-types/pass.md
+              - Shot: reference/event-data/event-types/shot.md
+              - Take on: reference/event-data/event-types/take_on.md
+              - Carry: reference/event-data/event-types/carry.md
+              - Clearance: reference/event-data/event-types/clearance.md
+              - Interception: reference/event-data/event-types/interception.md
+              - Duel: reference/event-data/event-types/duel.md
+              - Substitution: reference/event-data/event-types/substitution.md
+              - Card: reference/event-data/event-types/card.md
+              - Player on: reference/event-data/event-types/player_on.md
+              - Player off: reference/event-data/event-types/player_off.md
+              - Recovery: reference/event-data/event-types/recovery.md
+              - Miscontrol: reference/event-data/event-types/miscontrol.md
+              - Ball out: reference/event-data/event-types/ball_out.md
+              - Foul committed: reference/event-data/event-types/foul_committed.md
+              - Goalkeeper: reference/event-data/event-types/goalkeeper.md
+              - Formation change: reference/event-data/event-types/formation_change.md
+          - Qualifiers:
+              - Overview: reference/event-data/qualifiers/index.md
+              - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
   - Development:
       - Issues: 'issues.md'
       - Contributing: 'contributing.md'
@@ -109,6 +126,11 @@ plugins:
       include: ["*.ipynb"]
       include_source: True
   - search
+  - autorefs
+  - macros:
+      module_name: docs/utils/macros
+      j2_comment_start_string: '$#'
+      j2_comment_end_string: '#$'
   - mkdocstrings:
       handlers:
         python:
@@ -123,6 +145,10 @@ plugins:
         - presentations/*
 markdown_extensions:
   - admonition
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.details
   - pymdownx.highlight:
       use_pygments: true

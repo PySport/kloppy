@@ -132,6 +132,8 @@ EVENT_QUALIFIER_RED_CARD = 33
 
 EVENT_QUALIFIER_COUNTER_ATTACK = 23
 
+EVENT_TYPE_PLAYER_OFF = 18
+EVENT_TYPE_PLAYER_ON = 19
 EVENT_QUALIFIER_TEAM_FORMATION = 130
 EVENT_QUALIFIER_FORMATION_PLAYER_IDS = 30
 EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS = 131
@@ -312,6 +314,21 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
         player_positions[player] = position
 
     return dict(formation_type=formation, player_positions=player_positions)
+
+
+def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
+    replacement_player = None
+    position = None
+    if next_event.type_id == EVENT_TYPE_PLAYER_ON:
+        replacement_player = team.get_player_by_id(next_event.player_id)
+
+    raw_position_line = next_event.qualifiers.get(44)
+    if raw_position_line:
+        position = Position(
+            position_id=raw_position_line, name=raw_position_line
+        )
+
+    return dict(replacement_player=replacement_player, position=position)
 
 
 def _parse_shot(raw_event: OptaEvent) -> Dict:
@@ -797,6 +814,17 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **formation_change_event_kwargs,
                             **generic_event_kwargs,
                         )
+                    elif raw_event.type_id == EVENT_TYPE_PLAYER_OFF:
+                        substitution_event_kwargs = _parse_substitution(
+                            next_event_elm, team
+                        )
+                        event = self.event_factory.build_substitution(
+                            result=None,
+                            qualifiers=None,
+                            **substitution_event_kwargs,
+                            **generic_event_kwargs,
+                        )
+
                     elif raw_event.type_id == EVENT_TYPE_CARD:
                         generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_event)

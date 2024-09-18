@@ -2,7 +2,7 @@ import pytz
 import math
 from typing import Dict, List, NamedTuple, IO, Optional
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from kloppy.domain import (
     EventDataset,
@@ -805,6 +805,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id == EVENT_TYPE_FORMATION_CHANGE:
+                        generic_event_kwargs["timestamp"] = max(
+                            timedelta(0), generic_event_kwargs["timestamp"]
+                        )
                         formation_change_event_kwargs = (
                             _parse_formation_change(raw_event, team)
                         )
@@ -815,6 +818,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id == EVENT_TYPE_PLAYER_OFF:
+                        generic_event_kwargs["timestamp"] = max(
+                            timedelta(0), generic_event_kwargs["timestamp"]
+                        )
                         substitution_event_kwargs = _parse_substitution(
                             next_event_elm, team
                         )

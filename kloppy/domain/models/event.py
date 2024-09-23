@@ -1078,17 +1078,18 @@ class EventDataset(Dataset[Event]):
             elif isinstance(event, FormationChangeEvent):
                 if event.player_positions:
                     for player, position in event.player_positions.items():
-                        last_time, last_position = player.positions.last(
-                            include_time=True
-                        )
-                        if last_position != position:
-                            # Only update when the position changed
-                            if event.time - last_time < max_leeway:
-                                # Often the formation change is detected a couple of seconds after a Substitution.
-                                # In this case we need to use the time of the Substitution
-                                player.positions.set(last_time, position)
-                            else:
-                                player.positions.set(event.time, position)
+                        if len(player.positions.items):
+                            last_time, last_position = player.positions.last(
+                                include_time=True
+                            )
+                            if last_position != position:
+                                # Only update when the position changed
+                                if event.time - last_time < max_leeway:
+                                    # Often the formation change is detected a couple of seconds after a Substitution.
+                                    # In this case we need to use the time of the Substitution
+                                    player.positions.set(last_time, position)
+                                else:
+                                    player.positions.set(event.time, position)
 
     @property
     def events(self):

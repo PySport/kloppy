@@ -1071,7 +1071,7 @@ class EventDataset(Dataset[Event]):
                 event.replacement_player.set_position(
                     event.time,
                     event.replacement_player.starting_position
-                    or event.player.position,
+                    or event.player.positions.last(default=None),
                 )
                 event.player.set_position(event.time, None)
 

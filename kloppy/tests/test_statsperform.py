@@ -102,7 +102,7 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             home_player
         ] == Point(x=68.689, y=39.75)
-        assert home_player.position == "Defender"
+        assert home_player.starting_position == "Defender"
         assert home_player.jersey_no == 32
         assert home_player.starting
         assert home_player.team == home_team
@@ -113,13 +113,14 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             away_player
         ] == Point(x=30.595, y=44.022)
-        assert away_player.position == "Defender"
+        assert away_player.starting_position == "Defender"
         assert away_player.jersey_no == 2
         assert away_player.starting
         assert away_player.team == away_team
 
         away_substitute = away_team.players[15]
         assert away_substitute.jersey_no == 18
+        assert away_substitute.starting_position == "Substitute"
         assert not away_substitute.starting
         assert away_substitute.team == away_team
 
@@ -289,7 +290,7 @@ class TestStatsPerformTracking:
         )
 
         assert tracking_dataset.records[1].ball_coordinates == Point3D(
-            x=50.615 / 105, y=1 - 35.325 / 68, z=0.0
+            x=50.615 / 105, y=35.325 / 68, z=0.0
         )
 
         # Check normalised pitch dimensions

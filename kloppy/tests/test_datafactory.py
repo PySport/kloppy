@@ -43,7 +43,7 @@ class TestDatafactory:
         assert player.player_id == "38804"
         assert player.jersey_no == 1
         assert str(player) == "Daniel Bold"
-        assert player.position == Position.unknown()
+        assert player.starting_position is None
         assert player.starting
 
         assert dataset.metadata.periods[0].id == 1

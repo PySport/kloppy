@@ -396,7 +396,7 @@ class TestTracabMeta4:
 
         # No need to check frames, since we do that in TestTracabDATTracking
         # The only difference in this test is the meta data file structure
-        
+
         # make sure player data is only in the frame when the player is at the pitch
         assert "12170" in [
             player.player_id
@@ -417,7 +417,7 @@ class TestTracabMeta4:
         player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
             1
         )
-        
+
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)

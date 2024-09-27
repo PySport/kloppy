@@ -134,7 +134,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             raise ValueError("Please specify a value for 'raw_data'")
 
     @staticmethod
-    def create_team(team_data, ground, start_frame_id, id_suffix="Id", player_item="Player"):
+    def create_team(
+        team_data, ground, start_frame_id, id_suffix="Id", player_item="Player"
+    ):
         team = Team(
             team_id=str(team_data[f"Team{id_suffix}"]),
             name=html.unescape(team_data["ShortName"]),
@@ -158,18 +160,17 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         return team
 
-    
     def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
         with performance_logging("Loading metadata", logger=logger):
             meta_data = objectify.fromstring(inputs.meta_data.read())
-            
+
             periods = []
             orientation = None
-            
-            if hasattr(meta_data, 'match'):
+
+            if hasattr(meta_data, "match"):
                 id_suffix = "Id"
                 player_item = "Player"
-                
+
                 match = meta_data.match
                 frame_rate = int(match.attrib["iFrameRateFps"])
                 pitch_size_width = float(
@@ -193,16 +194,16 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                                 ),
                             )
                         )
-            elif hasattr(meta_data, 'Phase1StartFrame'):
-                id_suffix = 'ID'
-                player_item = 'item'
-                
-                frame_rate = int(meta_data['FrameRate'])
-                pitch_size_width = float(meta_data['PitchLongSide']) / 100
-                pitch_size_height = float(meta_data['PitchShortSide']) / 100
+            elif hasattr(meta_data, "Phase1StartFrame"):
+                id_suffix = "ID"
+                player_item = "item"
+
+                frame_rate = int(meta_data["FrameRate"])
+                pitch_size_width = float(meta_data["PitchLongSide"]) / 100
+                pitch_size_height = float(meta_data["PitchShortSide"]) / 100
                 for i in [1, 2, 3, 4, 5]:
-                    start_frame_id = int(meta_data[f'Phase{i}StartFrame'])
-                    end_frame_id = int(meta_data[f'Phase{i}EndFrame']) 
+                    start_frame_id = int(meta_data[f"Phase{i}StartFrame"])
+                    end_frame_id = int(meta_data[f"Phase{i}EndFrame"])
                     if start_frame_id != 0 or end_frame_id != 0:
                         periods.append(
                             Period(
@@ -215,25 +216,33 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                                 ),
                             )
                         )
-                        
-                orientation = Orientation.HOME_AWAY if bool(meta_data['Phase1HomeGKLeft']) else Orientation.AWAY_HOME
+
+                orientation = (
+                    Orientation.HOME_AWAY
+                    if bool(meta_data["Phase1HomeGKLeft"])
+                    else Orientation.AWAY_HOME
+                )
             else:
-                raise NotImplementedError("""This 'meta_data' format is currently not supported...""")
+                raise NotImplementedError(
+                    """This 'meta_data' format is currently not supported..."""
+                )
 
             if hasattr(meta_data, "HomeTeam") and hasattr(
                 meta_data, "AwayTeam"
             ):
                 home_team = self.create_team(
-                    meta_data["HomeTeam"], Ground.HOME, 
-                    start_frame_id=start_frame_id, 
+                    meta_data["HomeTeam"],
+                    Ground.HOME,
+                    start_frame_id=start_frame_id,
                     id_suffix=id_suffix,
-                    player_item=player_item
+                    player_item=player_item,
                 )
                 away_team = self.create_team(
-                    meta_data["AwayTeam"], Ground.AWAY, 
-                    start_frame_id=start_frame_id, 
+                    meta_data["AwayTeam"],
+                    Ground.AWAY,
+                    start_frame_id=start_frame_id,
                     id_suffix=id_suffix,
-                    player_item=player_item
+                    player_item=player_item,
                 )
             else:
                 home_team = Team(

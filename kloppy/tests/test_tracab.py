@@ -50,6 +50,11 @@ def xml_meta3_data(base_dir: Path) -> Path:
 
 
 @pytest.fixture(scope="session")
+def xml_meta4_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "tracab_meta_4.xml"
+
+
+@pytest.fixture(scope="session")
 def dat_raw_data(base_dir: Path) -> Path:
     return base_dir / "files" / "tracab_raw.dat"
 
@@ -352,6 +357,67 @@ class TestTracabMeta3:
             1
         )
 
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
+
+
+class TestTracabMeta4:
+    def test_correct_deserialization(
+        self, xml_meta4_data: Path, dat_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=xml_meta4_data,
+            raw_data=dat_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+        )
+
+        # Check metadata
+        assert dataset.metadata.provider == Provider.TRACAB
+        assert dataset.dataset_type == DatasetType.TRACKING
+        assert len(dataset.records) == 7
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=73940, microseconds=320000
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=76656, microseconds=320000
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=77684, microseconds=560000
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=80717, microseconds=320000
+        )
+
+        # No need to check frames, since we do that in TestTracabDATTracking
+        # The only difference in this test is the meta data file structure
+        
+        # make sure player data is only in the frame when the player is at the pitch
+        assert "12170" in [
+            player.player_id
+            for player in dataset.records[0].players_data.keys()
+        ]
+        assert "12170" not in [
+            player.player_id
+            for player in dataset.records[6].players_data.keys()
+        ]
+
+    def test_correct_normalized_deserialization(
+        self, xml_meta4_data: Path, dat_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=xml_meta4_data, raw_data=dat_raw_data, only_alive=False
+        )
+
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
+        )
+        
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)

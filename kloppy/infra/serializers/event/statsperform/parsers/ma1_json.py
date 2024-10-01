@@ -18,6 +18,13 @@ class MA1JSONParser(OptaJSONParser):
         for period in match_details["period"]:
             period_start_raw = period.get("start")
             period_end_raw = period.get("end")
+            if not period_end_raw:
+                game_end_suspension_stop = next(
+                    suspension_stop
+                    for suspension_stop in period["suspension"]
+                    if suspension_stop["reason"] == "early end"
+                )
+                period_end_raw = game_end_suspension_stop["start"]
             parsed_periods.append(
                 Period(
                     id=period["id"],
@@ -27,7 +34,7 @@ class MA1JSONParser(OptaJSONParser):
                     if period_start_raw
                     else None,
                     end_timestamp=datetime.strptime(
-                        period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
+                        period_end_raw, "%Y-%m-%dT%H:%M:%SZ"
                     ).replace(tzinfo=pytz.utc)
                     if period_end_raw
                     else None,

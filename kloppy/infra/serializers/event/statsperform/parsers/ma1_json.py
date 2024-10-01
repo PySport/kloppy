@@ -16,15 +16,21 @@ class MA1JSONParser(OptaJSONParser):
         match_details = live_data["matchDetails"]
         parsed_periods = []
         for period in match_details["period"]:
+            period_start_raw = period.get("start")
+            period_end_raw = period.get("end")
             parsed_periods.append(
                 Period(
                     id=period["id"],
                     start_timestamp=datetime.strptime(
-                        period["start"], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                        period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=pytz.utc)
+                    if period_start_raw
+                    else None,
                     end_timestamp=datetime.strptime(
-                        period["end"], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                        period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=pytz.utc)
+                    if period_end_raw
+                    else None,
                 )
             )
         return parsed_periods

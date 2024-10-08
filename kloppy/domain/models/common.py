@@ -849,7 +849,9 @@ class DataRecord(ABC):
     timestamp: float
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
-    statistics: Optional[List[Statistic]] = field(default_factory=list)
+    statistics: Optional[List[Statistic]] = field(
+        init=False, default_factory=list
+    )
 
     @property
     @abstractmethod

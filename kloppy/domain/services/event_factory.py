@@ -65,7 +65,13 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
             f"The following arguments were skipped: {skipped_kwargs}"
         )
 
-    return event_cls(**relevant_kwargs)
+    event = event_cls(**relevant_kwargs)
+
+    statistics = all_kwargs.get("statistics", [])
+    if statistics:
+        event.statistics = statistics
+
+    return event
 
 
 class EventFactory:

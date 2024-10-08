@@ -34,6 +34,7 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     GoalkeeperActionType,
     CounterAttackQualifier,
+    ExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -131,6 +132,8 @@ EVENT_QUALIFIER_RED_CARD = 33
 EVENT_QUALIFIER_COUNTER_ATTACK = 23
 
 EVENT_QUALIFIER_TEAM_FORMATION = 130
+
+EVENT_QUALIFIER_XG = 321
 
 event_type_names = {
     1: "pass",
@@ -347,12 +350,18 @@ def _parse_shot(raw_event: OptaEvent) -> Dict:
                 y=100 - result_coordinates.y,
             )
 
-    return dict(
+    event_info = dict(
         coordinates=coordinates,
         result=result,
         result_coordinates=result_coordinates,
         qualifiers=qualifiers,
     )
+
+    xg_value = raw_event.qualifiers.get(EVENT_QUALIFIER_XG)
+    if xg_value:
+        event_info["statistics"] = [ExpectedGoals(value=float(xg_value))]
+
+    return event_info
 
 
 def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:

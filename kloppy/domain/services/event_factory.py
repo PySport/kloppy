@@ -23,6 +23,7 @@ from kloppy.domain import (
     SubstitutionEvent,
     GoalkeeperEvent,
 )
+from kloppy.domain.models.event import PressureEvent
 
 T = TypeVar("T")
 
@@ -128,3 +129,6 @@ class EventFactory:
 
     def build_goalkeeper_event(self, **kwargs) -> GoalkeeperEvent:
         return create_event(GoalkeeperEvent, **kwargs)
+
+    def build_pressure_event(self, **kwargs) -> PressureEvent:
+        return create_event(PressureEvent, **kwargs)

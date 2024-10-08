@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime, timezone
+
 import pytest
 
 from kloppy.domain import (
@@ -9,6 +11,7 @@ from kloppy.domain import (
     Provider,
     SetPieceType,
     DatasetType,
+    Position,
 )
 
 from kloppy import datafactory
@@ -40,19 +43,30 @@ class TestDatafactory:
         assert player.player_id == "38804"
         assert player.jersey_no == 1
         assert str(player) == "Daniel Bold"
-        assert player.position is None  # not set
+        assert player.starting_position is None
         assert player.starting
 
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=0,
-            end_timestamp=2912,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == datetime(
+            2011, 11, 11, 9, 0, 13, 0, timezone.utc
         )
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=2700,
-            end_timestamp=5710,
+        assert dataset.metadata.periods[0].end_timestamp == datetime(
+            2011, 11, 11, 9, 48, 45, 0, timezone.utc
         )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == datetime(
+            2011, 11, 11, 10, 3, 45, 0, timezone.utc
+        )
+        assert dataset.metadata.periods[1].end_timestamp == datetime(
+            2011, 11, 11, 10, 53, 55, 0, timezone.utc
+        )
+
+        assert dataset.events[0].timestamp == timedelta(
+            seconds=3
+        )  # kickoff first half
+        assert dataset.events[473].timestamp == timedelta(
+            seconds=4
+        )  # kickoff second half
 
         assert dataset.events[0].coordinates == Point(0.01, 0.01)
 
@@ -63,4 +77,5 @@ class TestDatafactory:
     def test_correct_normalized_deserialization(self, event_data: str):
         dataset = datafactory.load(event_data=event_data)
 
-        assert dataset.events[0].coordinates == Point(0.505, 0.505)
+        assert dataset.events[0].coordinates.x == pytest.approx(0.505, 0.001)
+        assert dataset.events[0].coordinates.y == pytest.approx(0.505, 0.001)

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import Enum
 from typing import (
     Dict,
@@ -16,6 +17,7 @@ from kloppy.domain.models.common import (
     DatasetType,
     AttackingDirection,
     OrientationError,
+    Position,
 )
 from kloppy.utils import (
     camelcase_to_snakecase,
@@ -29,7 +31,7 @@ from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
 
-from ...exceptions import OrphanedRecordError, InvalidFilterError
+from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
 
 if TYPE_CHECKING:
     from .tracking import Frame
@@ -217,6 +219,7 @@ class EventType(Enum):
         BALL_OUT (EventType):
         FOUL_COMMITTED (EventType):
         GOALKEEPER (EventType):
+        PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
     """
 
@@ -238,6 +241,7 @@ class EventType(Enum):
     BALL_OUT = "BALL_OUT"
     FOUL_COMMITTED = "FOUL_COMMITTED"
     GOALKEEPER = "GOALKEEPER"
+    PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
 
     def __repr__(self):
@@ -354,6 +358,7 @@ class PassType(Enum):
     THROUGH_BALL = "THROUGH_BALL"
     CHIPPED_PASS = "CHIPPED_PASS"
     FLICK_ON = "FLICK_ON"
+    SHOT_ASSIST = "SHOT_ASSIST"
     ASSIST = "ASSIST"
     ASSIST_2ND = "ASSIST_2ND"
     SWITCH_OF_PLAY = "SWITCH_OF_PLAY"
@@ -698,8 +703,6 @@ class Event(DataRecord, ABC):
             return True
 
     def __str__(self):
-        m, s = divmod(self.timestamp, 60)
-
         event_type = (
             self.__class__.__name__
             if not isinstance(self, GenericEvent)
@@ -709,7 +712,7 @@ class Event(DataRecord, ABC):
         return (
             f"<{event_type} "
             f"event_id='{self.event_id}' "
-            f"time='P{self.period.id}T{m:02.0f}:{s:02.0f}' "
+            f"time='{self.time}' "
             f"player='{self.player}' "
             f"result='{self.result}'>"
         )
@@ -878,6 +881,7 @@ class SubstitutionEvent(Event):
     """
 
     replacement_player: Player
+    position: Optional[Position] = None
 
     event_type: EventType = EventType.SUBSTITUTION
     event_name: str = "substitution"
@@ -944,6 +948,7 @@ class FormationChangeEvent(Event):
     """
 
     formation_type: FormationType
+    player_positions: Optional[Dict[Player, Position]] = None
 
     event_type: EventType = EventType.FORMATION_CHANGE
     event_name: str = "formation_change"
@@ -1024,6 +1029,24 @@ class GoalkeeperEvent(Event):
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class PressureEvent(Event):
+    """
+    PressureEvent
+
+    Attributes:
+        event_type (EventType): `EventType.Pressure` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"pressure"`,
+        end_timestamp (float):
+    """
+
+    end_timestamp: float
+
+    event_type: EventType = EventType.PRESSURE
+    event_name: str = "pressure"
+
+
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset
@@ -1038,6 +1061,34 @@ class EventDataset(Dataset[Event]):
     records: List[Event]
 
     dataset_type: DatasetType = DatasetType.EVENT
+
+    def _update_player_positions(self):
+        """Update player positions based on Substitution and TacticalShift events."""
+        max_leeway = timedelta(seconds=60)
+
+        for event in self.events:
+            if isinstance(event, SubstitutionEvent):
+                event.replacement_player.set_position(
+                    event.time,
+                    event.replacement_player.starting_position
+                    or event.player.positions.last(default=None),
+                )
+                event.player.set_position(event.time, None)
+
+            elif isinstance(event, FormationChangeEvent):
+                if event.player_positions:
+                    for player, position in event.player_positions.items():
+                        last_time, last_position = player.positions.last(
+                            include_time=True
+                        )
+                        if last_position != position:
+                            # Only update when the position changed
+                            if event.time - last_time < max_leeway:
+                                # Often the formation change is detected a couple of seconds after a Substitution.
+                                # In this case we need to use the time of the Substitution
+                                player.positions.set(last_time, position)
+                            else:
+                                player.positions.set(event.time, position)
 
     @property
     def events(self):
@@ -1093,6 +1144,18 @@ class EventDataset(Dataset[Event]):
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
         )
+
+    def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
+        if type_ == "minutes_played":
+            from kloppy.domain.services.aggregators.minutes_played import (
+                MinutesPlayedAggregator,
+            )
+
+            aggregator = MinutesPlayedAggregator(**aggregator_kwargs)
+        else:
+            raise KloppyError(f"No aggregator {type_} not found")
+
+        return aggregator.aggregate(self)
 
 
 __all__ = [

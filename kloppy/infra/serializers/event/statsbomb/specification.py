@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import Enum, EnumMeta
 from typing import List, Dict, Optional, NamedTuple, Union
 
@@ -26,6 +27,7 @@ from kloppy.domain import (
     FormationType,
     ExpectedGoals,
     PostShotExpectedGoals,
+    Position,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
@@ -363,7 +365,9 @@ class PASS(EVENT):
             pass_dict["end_location"],
             self.fidelity_version,
         )
-        receive_timestamp = timestamp + self.raw_event.get("duration", 0.0)
+        receive_timestamp = timestamp + timedelta(
+            seconds=self.raw_event.get("duration", 0.0)
+        )
 
         if "outcome" in pass_dict:
             outcome_id = pass_dict["outcome"]["id"]
@@ -719,7 +723,8 @@ class CARRY(EVENT):
         carry_dict = self.raw_event["carry"]
         carry_event = event_factory.build_carry(
             qualifiers=None,
-            end_timestamp=timestamp + self.raw_event.get("duration", 0),
+            end_timestamp=timestamp
+            + timedelta(seconds=self.raw_event.get("duration", 0)),
             result=CarryResult.COMPLETE,
             end_coordinates=parse_coordinates(
                 carry_dict["end_location"],
@@ -1148,6 +1153,25 @@ class BALL_RECOVERY(EVENT):
         return [recovery_event]
 
 
+class PRESSURE(EVENT):
+    """StatsBomb 17/Pressure event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        end_timestamp = generic_event_kwargs["timestamp"] + timedelta(
+            seconds=self.raw_event.get("duration", 0.0)
+        )
+
+        pressure_event = event_factory.build_pressure_event(
+            result=None,
+            qualifiers=None,
+            end_timestamp=end_timestamp,
+            **generic_event_kwargs,
+        )
+        return [pressure_event]
+
+
 class TACTICAL_SHIFT(EVENT):
     """StatsBomb 36/Tactical shift event."""
 
@@ -1155,11 +1179,21 @@ class TACTICAL_SHIFT(EVENT):
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
         formation = FORMATIONS[self.raw_event["tactics"]["formation"]]
+        player_positions = {}
+        team = generic_event_kwargs["team"]
+        for player in self.raw_event["tactics"]["lineup"]:
+            player_positions[
+                team.get_player_by_id(player["player"]["id"])
+            ] = Position(
+                position_id=str(player["position"]["id"]),
+                name=player["position"]["name"],
+            )
 
         formation_change_event = event_factory.build_formation_change(
             result=None,
             qualifiers=None,
             formation_type=formation,
+            player_positions=player_positions,
             **generic_event_kwargs,
         )
         return [formation_change_event]
@@ -1238,8 +1272,11 @@ def _get_pass_qualifiers(pass_dict: Dict) -> List[PassQualifier]:
             add_qualifier(PassType.HEAD_PASS)
         elif body_part_id == BODYPART.KEEPER_ARM:
             add_qualifier(PassType.HAND_PASS)
+    if "shot_assist" in pass_dict:
+        add_qualifier(PassType.SHOT_ASSIST)
     if "goal_assist" in pass_dict:
         add_qualifier(PassType.ASSIST)
+        add_qualifier(PassType.SHOT_ASSIST)
     return qualifiers
 
 
@@ -1291,6 +1328,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.PLAYER_ON: PLAYER_ON,
         EVENT_TYPE.PLAYER_OFF: PLAYER_OFF,
         EVENT_TYPE.BALL_RECOVERY: BALL_RECOVERY,
+        EVENT_TYPE.PRESSURE: PRESSURE,
         EVENT_TYPE.TACTICAL_SHIFT: TACTICAL_SHIFT,
     }
     event_type = EVENT_TYPE(raw_event["type"])

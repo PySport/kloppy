@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 
 from kloppy.domain import (
@@ -32,16 +34,27 @@ class TestMetricaCsvTracking:
         assert len(dataset.records) == 6
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.HOME_AWAY
-        assert dataset.metadata.periods[0] == Period(
-            id=1,
-            start_timestamp=0.04,
-            end_timestamp=0.12,
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=0.0
         )
-        assert dataset.metadata.periods[1] == Period(
-            id=2,
-            start_timestamp=5800.16,
-            end_timestamp=5800.24,
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=0.12
         )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=5800.12
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=5800.24
+        )
+
+        # check timestamps
+        assert dataset.records[0].frame_id == 1  # period 1
+        assert dataset.records[0].timestamp == timedelta(seconds=0.04)
+        assert dataset.records[1].timestamp == timedelta(seconds=0.08)
+        assert dataset.records[3].frame_id == 145004  # period 2
+        assert dataset.records[3].timestamp == timedelta(seconds=0.04)
 
         # make sure data is loaded correctly (including flip y-axis)
         home_player = dataset.metadata.teams[0].players[0]

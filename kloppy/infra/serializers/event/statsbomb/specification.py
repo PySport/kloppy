@@ -35,6 +35,7 @@ from kloppy.infra.serializers.event.statsbomb.helpers import (
     get_team_by_id,
     get_period_by_id,
     parse_coordinates,
+    parse_obv_values,
 )
 
 
@@ -249,6 +250,7 @@ class EVENT:
         )
 
     def _parse_generic_kwargs(self) -> Dict:
+        game_state_value = parse_obv_values(self.raw_event)
         return {
             "period": self.period,
             "timestamp": parse_str_ts(self.raw_event["timestamp"]),
@@ -267,6 +269,7 @@ class EVENT:
             ),
             "related_event_ids": self.raw_event.get("related_events", []),
             "raw_event": self.raw_event,
+            "statistics": [game_state_value] if game_state_value else [],
         }
 
     def _create_aerial_won_event(
@@ -493,7 +496,6 @@ class SHOT(EVENT):
         qualifiers = _get_set_piece_qualifiers(
             EVENT_TYPE.SHOT, shot_dict
         ) + _get_body_part_qualifiers(shot_dict)
-        shot_statistics = []
 
         for statistic_cls, prop_name in {
             ExpectedGoals: "statsbomb_xg",
@@ -501,7 +503,9 @@ class SHOT(EVENT):
         }.items():
             value = shot_dict.get(prop_name, None)
             if value is not None:
-                shot_statistics.append(statistic_cls(value=value))
+                generic_event_kwargs["statistics"].append(
+                    statistic_cls(value=value)
+                )
 
         shot_event = event_factory.build_shot(
             result=result,
@@ -510,7 +514,6 @@ class SHOT(EVENT):
                 shot_dict["end_location"],
                 self.fidelity_version,
             ),
-            statistics=shot_statistics,
             **generic_event_kwargs,
         )
 

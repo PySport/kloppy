@@ -500,7 +500,7 @@ class SHOT(EVENT):
             PostShotExpectedGoals: "shot_execution_xg",
         }.items():
             value = shot_dict.get(prop_name, None)
-            if value:
+            if value is not None:
                 shot_statistics.append(statistic_cls(value=value))
 
         shot_event = event_factory.build_shot(

@@ -44,6 +44,8 @@ from kloppy.domain import (
     Team,
     FormationType,
     CarryResult,
+    ExpectedGoals,
+    PostShotExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
@@ -130,6 +132,15 @@ def _parse_shot(raw_event: Dict) -> Dict:
     elif raw_event["shot"]["bodyPart"] == "right_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
+    statistics = []
+    for statistic_cls, prop_name in {
+        ExpectedGoals: "xg",
+        PostShotExpectedGoals: "postShotXg",
+    }.items():
+        value = raw_event["shot"].get(prop_name, None)
+        if value is not None:
+            statistics.append(statistic_cls(value=value))
+
     return {
         "result": result,
         "result_coordinates": Point(
@@ -137,6 +148,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
             y=float(0),
         ),
         "qualifiers": qualifiers,
+        "statistics": statistics,
     }
 
 

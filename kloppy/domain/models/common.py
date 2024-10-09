@@ -896,6 +896,74 @@ class DatasetFlag(Flag):
 
 
 @dataclass
+class Statistic(ABC):
+    name: str = field(init=False)
+
+
+@dataclass
+class ScalarStatistic(Statistic):
+    value: float
+
+
+@dataclass
+class ExpectedGoals(ScalarStatistic):
+    """Expected goals"""
+
+    def __post_init__(self):
+        self.name = "xG"
+
+
+@dataclass
+class PostShotExpectedGoals(ScalarStatistic):
+    """Post-shot expected goals"""
+
+    def __post_init__(self):
+        self.name = "PSxG"
+
+
+@dataclass
+class GameStateValue(Statistic):
+    """Game state value"""
+
+    gsv_scoring_before: Optional[float] = field(default=None)
+    gsv_scoring_after: Optional[float] = field(default=None)
+    gsv_conceding_before: Optional[float] = field(default=None)
+    gsv_conceding_after: Optional[float] = field(default=None)
+
+    def __post_init__(self):
+        self.name = "GSV"
+
+    @property
+    def gsv_scoring_net(self) -> Optional[float]:
+        return (
+            None
+            if None in (self.gsv_scoring_before, self.gsv_scoring_after)
+            else self.gsv_scoring_after - self.gsv_scoring_before
+        )
+
+    @property
+    def gsv_conceding_net(self) -> Optional[float]:
+        return (
+            None
+            if None in (self.gsv_conceding_before, self.gsv_conceding_after)
+            else self.gsv_conceding_after - self.gsv_conceding_before
+        )
+
+    @property
+    def value(self) -> Optional[float]:
+        if None in (
+            self.gsv_scoring_before,
+            self.gsv_scoring_after,
+            self.gsv_conceding_before,
+            self.gsv_conceding_after,
+        ):
+            return None
+        return (self.gsv_scoring_after - self.gsv_scoring_before) - (
+            self.gsv_conceding_after - self.gsv_conceding_before
+        )
+
+
+@dataclass
 class DataRecord(ABC):
     """
     DataRecord
@@ -914,6 +982,9 @@ class DataRecord(ABC):
     timestamp: timedelta
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
+    statistics: Optional[List[Statistic]] = field(
+        init=False, default_factory=list
+    )
 
     @property
     @abstractmethod

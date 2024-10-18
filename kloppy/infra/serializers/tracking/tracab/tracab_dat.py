@@ -24,6 +24,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
@@ -112,19 +113,23 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         else:
             raise DeserializationError(f"Unknown ball state: {ball_state}")
 
-        return Frame(
-            frame_id=frame_id,
-            timestamp=timedelta(seconds=frame_id / frame_rate)
-            - period.start_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
-            ball_state=ball_state,
-            ball_owning_team=ball_owning_team,
-            players_data=players_data,
-            period=period,
-            other_data={},
+        frame = create_frame(
+            **dict(
+                frame_id=frame_id,
+                timestamp=timedelta(seconds=frame_id / frame_rate)
+                - period.start_timestamp,
+                ball_coordinates=Point3D(
+                    float(ball_x), float(ball_y), float(ball_z)
+                ),
+                ball_state=ball_state,
+                ball_owning_team=ball_owning_team,
+                players_data=players_data,
+                period=period,
+                other_data={},
+            )
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):

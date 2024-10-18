@@ -25,6 +25,7 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestHelpers:
@@ -65,34 +66,38 @@ class TestHelpers:
         tracking_data = TrackingDataset(
             metadata=metadata,
             records=[
-                Frame(
-                    frame_id=1,
-                    timestamp=0.1,
-                    ball_owning_team=teams[0],
-                    ball_state=None,
-                    period=periods[0],
-                    players_data={},
-                    other_data=None,
-                    ball_coordinates=Point3D(x=100, y=-50, z=0),
+                create_frame(
+                    **dict(
+                        frame_id=1,
+                        timestamp=0.1,
+                        ball_owning_team=teams[0],
+                        ball_state=None,
+                        period=periods[0],
+                        players_data={},
+                        other_data=None,
+                        ball_coordinates=Point3D(x=100, y=-50, z=0),
+                    )
                 ),
-                Frame(
-                    frame_id=2,
-                    timestamp=0.2,
-                    ball_owning_team=teams[1],
-                    ball_state=None,
-                    period=periods[1],
-                    players_data={
-                        Player(
-                            team=home_team, player_id="home_1", jersey_no=1
-                        ): PlayerData(
-                            coordinates=Point(x=15, y=35),
-                            distance=0.03,
-                            speed=10.5,
-                            other_data={"extra_data": 1},
-                        )
-                    },
-                    other_data={"extra_data": 1},
-                    ball_coordinates=Point3D(x=0, y=50, z=1),
+                create_frame(
+                    **dict(
+                        frame_id=2,
+                        timestamp=0.2,
+                        ball_owning_team=teams[1],
+                        ball_state=None,
+                        period=periods[1],
+                        players_data={
+                            Player(
+                                team=home_team, player_id="home_1", jersey_no=1
+                            ): PlayerData(
+                                coordinates=Point(x=15, y=35),
+                                distance=0.03,
+                                speed=10.5,
+                                other_data={"extra_data": 1},
+                            )
+                        },
+                        other_data={"extra_data": 1},
+                        ball_coordinates=Point3D(x=0, y=50, z=1),
+                    )
                 ),
             ],
         )

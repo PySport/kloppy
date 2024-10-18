@@ -980,11 +980,9 @@ class DataRecord(ABC):
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
     timestamp: timedelta
+    statistics: List[Statistic]
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
-    statistics: Optional[List[Statistic]] = field(
-        init=False, default_factory=list
-    )
 
     @property
     @abstractmethod

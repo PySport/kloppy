@@ -12,6 +12,7 @@ from kloppy.domain import (
     PlayerData,
     GameStateValue,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 
@@ -146,15 +147,19 @@ def parse_freeze_frame(
         + event.timestamp.total_seconds() * FREEZE_FRAME_FPS
     )
 
-    return Frame(
-        frame_id=frame_id,
-        ball_coordinates=Point3D(
-            x=event.coordinates.x, y=event.coordinates.y, z=0
-        ),
-        players_data=players_data,
-        period=event.period,
-        timestamp=event.timestamp,
-        ball_state=event.ball_state,
-        ball_owning_team=event.ball_owning_team,
-        other_data={"visible_area": visible_area},
+    frame = create_frame(
+        **dict(
+            frame_id=frame_id,
+            ball_coordinates=Point3D(
+                x=event.coordinates.x, y=event.coordinates.y, z=0
+            ),
+            players_data=players_data,
+            period=event.period,
+            timestamp=event.timestamp,
+            ball_state=event.ball_state,
+            ball_owning_team=event.ball_owning_team,
+            other_data={"visible_area": visible_area},
+        )
     )
+
+    return frame

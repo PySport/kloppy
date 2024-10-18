@@ -48,6 +48,9 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     if "freeze_frame" not in kwargs:
         kwargs["freeze_frame"] = None
 
+    if "statistics" not in kwargs:
+        kwargs["statistics"] = []
+
     all_kwargs = dict(**kwargs, **extra_kwargs)
 
     relevant_kwargs = {
@@ -67,10 +70,6 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
         )
 
     event = event_cls(**relevant_kwargs)
-
-    statistics = all_kwargs.get("statistics", [])
-    if statistics:
-        event.statistics = statistics
 
     return event
 

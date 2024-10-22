@@ -41,9 +41,9 @@ def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
-        ground=Ground.HOME
-        if team_elm.attrib["Role"] == "home"
-        else Ground.AWAY,
+        ground=(
+            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
+        ),
     )
     team.players = [
         Player(
@@ -53,13 +53,15 @@ def _team_from_xml_elm(team_elm) -> Team:
             name=player_elm.attrib["Shortname"],
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
-            starting_position=Position(
-                position_id=None,
-                name=player_elm.attrib["PlayingPosition"],
-                coordinates=None,
-            )
-            if "PlayingPosition" in player_elm.attrib
-            else None,
+            starting_position=(
+                Position(
+                    position_id=None,
+                    name=player_elm.attrib["PlayingPosition"],
+                    coordinates=None,
+                )
+                if "PlayingPosition" in player_elm.attrib
+                else None
+            ),
             starting=player_elm.attrib["Starting"] == "true",
         )
         for player_elm in team_elm.Players.iterchildren("Player")

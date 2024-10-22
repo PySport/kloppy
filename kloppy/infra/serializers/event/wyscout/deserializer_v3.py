@@ -87,6 +87,15 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         team_id=wyId,
         name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
+        starting_formation=formations[
+            next(
+                iter(
+                    raw_events["formations"][wyId]["1H"][
+                        next(iter(raw_events["formations"][wyId]["1H"]))
+                    ]
+                )
+            )
+        ],
     )
     team.players = [
         Player(

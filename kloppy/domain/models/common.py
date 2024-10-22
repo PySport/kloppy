@@ -235,11 +235,16 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position_id: Union[int, str]):
+    def get_player_by_position(self, position_id: Union[int, str], time: Time):
         position_id = str(position_id)
         for player in self.players:
-            if player.position and player.position.position_id == position_id:
-                return player
+            if player.positions.items:
+                player_position = player.positions.value_at(time)
+                if (
+                    player_position
+                    and player_position.position_id == position_id
+                ):
+                    return player
 
         return None
 

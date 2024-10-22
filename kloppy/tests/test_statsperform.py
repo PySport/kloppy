@@ -14,6 +14,7 @@ from kloppy.domain import (
     Provider,
     SportVUCoordinateSystem,
     TrackingDataset,
+    Time,
 )
 from kloppy.exceptions import KloppyError
 
@@ -161,6 +162,25 @@ class TestStatsPerformEvent:
             pitch_width=None,
         )
         assert len(event_dataset.records) == 1652
+
+        substitution_events = event_dataset.find_all("substitution")
+        assert len(substitution_events) == 9
+
+        m_wintzheimer = event_dataset.metadata.teams[0].get_player_by_id(
+            "aksjicf4keobpav3tuujngell"
+        )
+        b_jatta = event_dataset.metadata.teams[0].get_player_by_id(
+            "3mp7p8tytgkbwi8itxl5mfkrt"
+        )
+
+        first_sub = substitution_events[0]
+
+        assert first_sub.time == Time(
+            period=event_dataset.metadata.periods[1],
+            timestamp=timedelta(seconds=946, microseconds=475000),
+        )
+        assert first_sub.player == m_wintzheimer
+        assert first_sub.replacement_player == b_jatta
 
 
 class TestStatsPerformTracking:

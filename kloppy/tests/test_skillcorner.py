@@ -25,6 +25,20 @@ class TestSkillCornerTracking:
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/skillcorner_structured_data.json"
 
+    @pytest.fixture
+    def raw_data_timestamp(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_structured_data_timestamp.json"
+
+    def test_correct_deserialization_timestamp(
+        self, raw_data_timestamp: Path, meta_data: Path
+    ):
+        skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data_timestamp,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+        )
+
     def test_correct_deserialization(self, raw_data: Path, meta_data: Path):
         dataset = skillcorner.load(
             meta_data=meta_data,

@@ -10,7 +10,9 @@ from kloppy.domain import (
     Period,
     Player,
     PlayerData,
+    GameStateValue,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 
@@ -18,6 +20,25 @@ def parse_str_ts(timestamp: str) -> float:
     """Parse a HH:mm:ss string timestamp into number of seconds."""
     h, m, s = timestamp.split(":")
     return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
+
+
+def parse_obv_values(raw_event: dict) -> Optional[GameStateValue]:
+    game_state_values_data = {}
+    obv_mapping = {
+        "obv_for_before": "gsv_scoring_before",
+        "obv_against_before": "gsv_conceding_before",
+        "obv_for_after": "gsv_scoring_after",
+        "obv_against_after": "gsv_conceding_after",
+    }
+    for sb_name, kloppy_name in obv_mapping.items():
+        obv_value = raw_event.get(sb_name)
+        if obv_value is not None:
+            game_state_values_data[kloppy_name] = obv_value
+
+    if game_state_values_data:
+        game_state_value = GameStateValue(**game_state_values_data)
+
+        return game_state_value
 
 
 def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
@@ -126,15 +147,19 @@ def parse_freeze_frame(
         + event.timestamp.total_seconds() * FREEZE_FRAME_FPS
     )
 
-    return Frame(
-        frame_id=frame_id,
-        ball_coordinates=Point3D(
-            x=event.coordinates.x, y=event.coordinates.y, z=0
-        ),
-        players_data=players_data,
-        period=event.period,
-        timestamp=event.timestamp,
-        ball_state=event.ball_state,
-        ball_owning_team=event.ball_owning_team,
-        other_data={"visible_area": visible_area},
+    frame = create_frame(
+        **dict(
+            frame_id=frame_id,
+            ball_coordinates=Point3D(
+                x=event.coordinates.x, y=event.coordinates.y, z=0
+            ),
+            players_data=players_data,
+            period=event.period,
+            timestamp=event.timestamp,
+            ball_state=event.ball_state,
+            ball_owning_team=event.ball_owning_team,
+            other_data={"visible_area": visible_area},
+        )
     )
+
+    return frame

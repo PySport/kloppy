@@ -20,6 +20,7 @@ from kloppy.domain import (
     Player,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -188,16 +189,18 @@ class MetricaCSVTrackingDataDeserializer(
                     **away_partial_frame.players_data,
                 }
 
-                frame = Frame(
-                    frame_id=frame_id,
-                    timestamp=timedelta(seconds=frame_id / frame_rate)
-                    - period.start_timestamp,
-                    ball_coordinates=home_partial_frame.ball_coordinates,
-                    players_data=players_data,
-                    period=period,
-                    ball_state=None,
-                    ball_owning_team=None,
-                    other_data={},
+                frame = create_frame(
+                    **dict(
+                        frame_id=frame_id,
+                        timestamp=timedelta(seconds=frame_id / frame_rate)
+                        - period.start_timestamp,
+                        ball_coordinates=home_partial_frame.ball_coordinates,
+                        players_data=players_data,
+                        period=period,
+                        ball_state=None,
+                        ball_owning_team=None,
+                        other_data={},
+                    )
                 )
 
                 frame = transformer.transform_frame(frame)

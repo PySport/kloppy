@@ -21,6 +21,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import performance_logging
 
@@ -157,42 +158,44 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                             continue
 
                         if i % sample == 0:
-                            yield Frame(
-                                frame_id=frame_id,
-                                timestamp=timedelta(
-                                    seconds=(
-                                        frame_id
-                                        # Do subtraction with integers to prevent floating errors
-                                        - period.start_timestamp.seconds
-                                        * sportec_metadata.fps
-                                    )
-                                    / sportec_metadata.fps
-                                ),
-                                ball_owning_team=home_team
-                                if ball_data["BallPossession"] == "1"
-                                else away_team,
-                                ball_state=BallState.ALIVE
-                                if ball_data["BallStatus"] == "1"
-                                else BallState.DEAD,
-                                period=period,
-                                players_data={
-                                    player_map[player_id]: PlayerData(
-                                        coordinates=Point(
-                                            x=float(raw_player_data["X"]),
-                                            y=float(raw_player_data["Y"]),
-                                        ),
-                                        speed=float(raw_player_data["S"]),
-                                    )
-                                    for player_id, raw_player_data in frame_data.items()
-                                    if player_id != "ball"
-                                },
-                                other_data={},
-                                ball_coordinates=Point3D(
-                                    x=float(ball_data["X"]),
-                                    y=float(ball_data["Y"]),
-                                    z=float(ball_data["Z"]),
-                                ),
-                                ball_speed=float(ball_data["S"]),
+                            yield create_frame(
+                                **dict(
+                                    frame_id=frame_id,
+                                    timestamp=timedelta(
+                                        seconds=(
+                                            frame_id
+                                            # Do subtraction with integers to prevent floating errors
+                                            - period.start_timestamp.seconds
+                                            * sportec_metadata.fps
+                                        )
+                                        / sportec_metadata.fps
+                                    ),
+                                    ball_owning_team=home_team
+                                    if ball_data["BallPossession"] == "1"
+                                    else away_team,
+                                    ball_state=BallState.ALIVE
+                                    if ball_data["BallStatus"] == "1"
+                                    else BallState.DEAD,
+                                    period=period,
+                                    players_data={
+                                        player_map[player_id]: PlayerData(
+                                            coordinates=Point(
+                                                x=float(raw_player_data["X"]),
+                                                y=float(raw_player_data["Y"]),
+                                            ),
+                                            speed=float(raw_player_data["S"]),
+                                        )
+                                        for player_id, raw_player_data in frame_data.items()
+                                        if player_id != "ball"
+                                    },
+                                    other_data={},
+                                    ball_coordinates=Point3D(
+                                        x=float(ball_data["X"]),
+                                        y=float(ball_data["Y"]),
+                                        z=float(ball_data["Z"]),
+                                    ),
+                                    ball_speed=float(ball_data["S"]),
+                                )
                             )
 
             frames = []

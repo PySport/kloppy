@@ -25,6 +25,7 @@ from kloppy.domain import (
     DEFAULT_PITCH_WIDTH,
 )
 from kloppy.domain.models.event import Event
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import KloppyError
 
 
@@ -196,57 +197,63 @@ class DatasetTransformer:
         return frame
 
     def __change_frame_coordinate_system(self, frame: Frame):
-        return Frame(
-            # doesn't change
-            timestamp=frame.timestamp,
-            frame_id=frame.frame_id,
-            ball_owning_team=frame.ball_owning_team,
-            ball_state=frame.ball_state,
-            period=frame.period,
-            # changes
-            ball_coordinates=self.__change_point_coordinate_system(
-                frame.ball_coordinates
-            ),
-            ball_speed=frame.ball_speed,
-            players_data={
-                key: PlayerData(
-                    coordinates=self.__change_point_coordinate_system(
-                        player_data.coordinates
-                    ),
-                    distance=player_data.distance,
-                    speed=player_data.speed,
-                    other_data=player_data.other_data,
-                )
-                for key, player_data in frame.players_data.items()
-            },
-            other_data=frame.other_data,
+        frame = create_frame(
+            **dict(
+                # doesn't change
+                timestamp=frame.timestamp,
+                frame_id=frame.frame_id,
+                ball_owning_team=frame.ball_owning_team,
+                ball_state=frame.ball_state,
+                period=frame.period,
+                # changes
+                ball_coordinates=self.__change_point_coordinate_system(
+                    frame.ball_coordinates
+                ),
+                ball_speed=frame.ball_speed,
+                players_data={
+                    key: PlayerData(
+                        coordinates=self.__change_point_coordinate_system(
+                            player_data.coordinates
+                        ),
+                        distance=player_data.distance,
+                        speed=player_data.speed,
+                        other_data=player_data.other_data,
+                    )
+                    for key, player_data in frame.players_data.items()
+                },
+                other_data=frame.other_data,
+            )
         )
+        return frame
 
     def __change_frame_dimensions(self, frame: Frame):
-        return Frame(
-            # doesn't change
-            timestamp=frame.timestamp,
-            frame_id=frame.frame_id,
-            ball_owning_team=frame.ball_owning_team,
-            ball_state=frame.ball_state,
-            period=frame.period,
-            # changes
-            ball_coordinates=self.change_point_dimensions(
-                frame.ball_coordinates
-            ),
-            players_data={
-                key: PlayerData(
-                    coordinates=self.change_point_dimensions(
-                        player_data.coordinates
-                    ),
-                    distance=player_data.distance,
-                    speed=player_data.speed,
-                    other_data=player_data.other_data,
-                )
-                for key, player_data in frame.players_data.items()
-            },
-            other_data=frame.other_data,
+        frame = create_frame(
+            **dict(
+                # doesn't change
+                timestamp=frame.timestamp,
+                frame_id=frame.frame_id,
+                ball_owning_team=frame.ball_owning_team,
+                ball_state=frame.ball_state,
+                period=frame.period,
+                # changes
+                ball_coordinates=self.change_point_dimensions(
+                    frame.ball_coordinates
+                ),
+                players_data={
+                    key: PlayerData(
+                        coordinates=self.change_point_dimensions(
+                            player_data.coordinates
+                        ),
+                        distance=player_data.distance,
+                        speed=player_data.speed,
+                        other_data=player_data.other_data,
+                    )
+                    for key, player_data in frame.players_data.items()
+                },
+                other_data=frame.other_data,
+            )
         )
+        return frame
 
     def __change_point_coordinate_system(
         self, point: Union[Point, Point3D, None]
@@ -292,18 +299,21 @@ class DatasetTransformer:
                 other_data=data.other_data,
             )
 
-        return Frame(
-            # doesn't change
-            timestamp=frame.timestamp,
-            frame_id=frame.frame_id,
-            ball_owning_team=frame.ball_owning_team,
-            ball_state=frame.ball_state,
-            period=frame.period,
-            # changes
-            ball_coordinates=self.flip_point(frame.ball_coordinates),
-            players_data=players_data,
-            other_data=frame.other_data,
+        frame = create_frame(
+            **dict(
+                # doesn't change
+                timestamp=frame.timestamp,
+                frame_id=frame.frame_id,
+                ball_owning_team=frame.ball_owning_team,
+                ball_state=frame.ball_state,
+                period=frame.period,
+                # changes
+                ball_coordinates=self.flip_point(frame.ball_coordinates),
+                players_data=players_data,
+                other_data=frame.other_data,
+            )
         )
+        return frame
 
     def transform_event(self, event: Event) -> Event:
         # Change coordinate system

@@ -397,6 +397,19 @@ class TestOptaShotEvent:
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
 
+    def test_goal(self, dataset: EventDataset):
+        """Test if goals are correctly deserialized"""
+        goal = dataset.get_event_by_id("2614247749")
+        assert goal.result == ShotResult.GOAL
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.9780699610710144
+        )
+
 
 class TestOptaDuelEvent:
     """Tests related to deserialzing duel events"""

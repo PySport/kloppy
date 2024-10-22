@@ -11,6 +11,7 @@ from kloppy.domain import (
     PlayerData,
     DatasetTransformer,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
@@ -73,17 +74,19 @@ class MetricaEPTSTrackingDataDeserializer(
                     other_data=other_data,
                 )
 
-        frame = Frame(
-            frame_id=row["frame_id"],
-            timestamp=timestamp,
-            ball_owning_team=None,
-            ball_state=None,
-            period=period,
-            players_data=players_data,
-            other_data={},
-            ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
-            ),
+        frame = create_frame(
+            **dict(
+                frame_id=row["frame_id"],
+                timestamp=timestamp,
+                ball_owning_team=None,
+                ball_state=None,
+                period=period,
+                players_data=players_data,
+                other_data={},
+                ball_coordinates=Point3D(
+                    x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
+                ),
+            )
         )
 
         if transformer:

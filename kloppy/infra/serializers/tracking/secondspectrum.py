@@ -24,6 +24,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import Readable, performance_logging
 
@@ -95,17 +96,21 @@ class SecondSpectrumDeserializer(
                     coordinates=Point(float(x), float(y)), speed=speed
                 )
 
-        return Frame(
-            frame_id=frame_id,
-            timestamp=frame_timestamp,
-            ball_coordinates=ball_coordinates,
-            ball_speed=ball_speed,
-            ball_state=ball_state,
-            ball_owning_team=ball_owning_team,
-            players_data=players_data,
-            period=period,
-            other_data={},
+        frame = create_frame(
+            **dict(
+                frame_id=frame_id,
+                timestamp=frame_timestamp,
+                ball_coordinates=ball_coordinates,
+                ball_speed=ball_speed,
+                ball_state=ball_state,
+                ball_owning_team=ball_owning_team,
+                players_data=players_data,
+                period=period,
+                other_data={},
+            )
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):

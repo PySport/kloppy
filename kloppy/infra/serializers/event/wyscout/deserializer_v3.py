@@ -453,25 +453,55 @@ def _create_timestamp_timedelta(
     return time_delta
 
 
-def get_home_away_team_formation(event, team):
+def _validate_formation(formation: str) -> bool:
+    formation_parts = formation.split("-")
+    formation_ints = [int(part) for part in formation_parts]
+    total_players = sum(formation_ints)
+
+    return total_players == 10
+
+
+def _get_team_formation(team_formation, last_formations, team_id):
+    return (
+        formations[team_formation]
+        if _validate_formation(team_formation)
+        else formations[last_formations[team_id]]
+    )
+
+
+def get_home_away_team_formation(event, team, last_formations):
+    team_formation = event["team"]["formation"]
+    team_id = str(event["team"]["id"])
+    opponent_formation = event["opponentTeam"]["formation"]
+    opponent_team_id = str(event["opponentTeam"]["id"])
+
     if team.ground == Ground.HOME:
-        current_home_team_formation = formations[event["team"]["formation"]]
-        current_away_team_formation = formations[
-            event["opponentTeam"]["formation"]
-        ]
+        home_team_formation = _get_team_formation(
+            team_formation, last_formations, team_id
+        )
+        away_team_formation = _get_team_formation(
+            opponent_formation, last_formations, opponent_team_id
+        )
     elif team.ground == Ground.AWAY:
-        current_away_team_formation = formations[event["team"]["formation"]]
-        current_home_team_formation = formations[
-            event["opponentTeam"]["formation"]
-        ]
+        away_team_formation = _get_team_formation(
+            team_formation, last_formations, team_id
+        )
+        home_team_formation = _get_team_formation(
+            opponent_formation, last_formations, opponent_team_id
+        )
     else:
         raise DeserializationError(f"Unknown team_id {team.team_id}")
 
-    return current_home_team_formation, current_away_team_formation
+    if _validate_formation(team_formation):
+        last_formations[team_id] = team_formation
+    if _validate_formation(opponent_formation):
+        last_formations[opponent_team_id] = opponent_formation
+
+    return home_team_formation, away_team_formation
 
 
 def identify_synthetic_formation_change_event(
-    raw_event, raw_next_event, teams, home_team, away_team
+    raw_event, raw_next_event, teams, home_team, away_team, last_formations
 ):
     current_event_team = teams[str(raw_event["team"]["id"])]
     next_event_team = teams[str(raw_next_event["team"]["id"])]
@@ -479,11 +509,15 @@ def identify_synthetic_formation_change_event(
     (
         current_home_team_formation,
         current_away_team_formation,
-    ) = get_home_away_team_formation(raw_event, current_event_team)
+    ) = get_home_away_team_formation(
+        raw_event, current_event_team, last_formations
+    )
     (
         next_home_team_formation,
         next_away_team_formation,
-    ) = get_home_away_team_formation(raw_next_event, next_event_team)
+    ) = get_home_away_team_formation(
+        raw_next_event, next_event_team, last_formations
+    )
     if next_home_team_formation != current_home_team_formation:
         event_formation_change_info[home_team] = {
             "formation_type": next_home_team_formation
@@ -539,6 +573,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
             events = []
 
+            last_formations = {
+                home_team.team_id: home_team.starting_formation,
+                away_team.team_id: away_team.starting_formation,
+            }
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
                 next_period_id = None
@@ -722,7 +760,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if next_event:
                     event_formation_change_info = (
                         identify_synthetic_formation_change_event(
-                            raw_event, next_event, teams, home_team, away_team
+                            raw_event,
+                            next_event,
+                            teams,
+                            home_team,
+                            away_team,
+                            last_formations,
                         )
                     )
                     for (
@@ -731,7 +774,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     ) in event_formation_change_info.items():
                         generic_event_args.update(
                             {
-                                "event_id": f"synthetic-{raw_event['id']}",
+                                "event_id": f"synthetic-{formation_change_team.team_id}-{raw_event['id']}",
                                 "raw_event": None,
                                 "coordinates": None,
                                 "player": None,

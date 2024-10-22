@@ -1019,12 +1019,12 @@
         "y": 16
       },
       "team": {
-          "formation": "4-2-3-1",
+          "formation": "4-3-3",
           "id": 3166,
           "name": "Bologna"
         },
       "opponentTeam": {
-        "formation": "3-4-3",
+        "formation": "4-4-1",
         "id": 3185,
         "name": "Torino"
       },
@@ -1076,7 +1076,7 @@
           "y": 10
         },
         "team": {
-          "formation": "4-2-3-1",
+          "formation": "4-3-3",
           "id": 3166,
           "name": "Bologna"
         },
@@ -1108,12 +1108,12 @@
         "y": 74
       },
       "team": {
-          "formation": "4-2-3-1",
+          "formation": "4-3-3",
           "id": 3166,
           "name": "Bologna"
         },
       "opponentTeam": {
-        "formation": "3-4-3",
+        "formation": "4-4-1",
         "id": 3185,
         "name": "Torino"
       },
@@ -1151,7 +1151,7 @@
           "y": 10
         },
         "team": {
-          "formation": "4-2-3-1",
+          "formation": "4-3-3",
           "id": 3166,
           "name": "Bologna"
         },

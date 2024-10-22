@@ -1062,8 +1062,8 @@ class EventDataset(Dataset[Event]):
 
     dataset_type: DatasetType = DatasetType.EVENT
 
-    def _update_player_positions(self):
-        """Update player positions based on Substitution and TacticalShift events."""
+    def _update_formations_and_positions(self):
+        """Update team formations and player positions based on Substitution and TacticalShift events."""
         max_leeway = timedelta(seconds=60)
 
         for event in self.events:
@@ -1089,6 +1089,24 @@ class EventDataset(Dataset[Event]):
                                 player.positions.set(last_time, position)
                             else:
                                 player.positions.set(event.time, position)
+
+                if event.team.formations.items:
+                    last_time, last_formation = event.team.formations.last(
+                        include_time=True
+                    )
+                    if last_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
+                        )
+
+                elif event.team.starting_formation:
+                    if event.team.starting_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
+                        )
+
+                else:
+                    event.team.formations.set(event.time, event.formation_type)
 
     @property
     def events(self):

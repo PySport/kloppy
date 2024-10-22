@@ -102,9 +102,7 @@ class TestSecondSpectrumTracking:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(
-                1900, 1, 26, 0, 0, tzinfo=timezone.utc
-            )
+            assert date == datetime(1900, 1, 26, 0, 0, tzinfo=timezone.utc)
 
         game_week = dataset.metadata.game_week
         if game_week:

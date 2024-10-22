@@ -36,7 +36,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(self, inputs: StatsBombInputs, additional_metadata) -> EventDataset:
+    def deserialize(
+        self, inputs: StatsBombInputs, additional_metadata
+    ) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 

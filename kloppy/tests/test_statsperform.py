@@ -172,13 +172,10 @@ class TestStatsPerformEvent:
 
     def test_deserialize_all(self, event_dataset: EventDataset):
         assert event_dataset.metadata.provider == Provider.STATSPERFORM
-        assert (
-            event_dataset.metadata.coordinate_system
-            == OptaCoordinateSystem(
-                # StatsPerform does not provide pitch dimensions
-                pitch_length=None,
-                pitch_width=None,
-            )
+        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
+            # StatsPerform does not provide pitch dimensions
+            pitch_length=None,
+            pitch_width=None,
         )
         assert len(event_dataset.records) == 1652
 

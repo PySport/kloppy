@@ -204,9 +204,7 @@ class TestWyscoutV3:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(
-                2020, 8, 2, 18, 45, tzinfo=timezone.utc
-            )
+            assert date == datetime(2020, 8, 2, 18, 45, tzinfo=timezone.utc)
 
         game_week = dataset.metadata.game_week
         if game_week:

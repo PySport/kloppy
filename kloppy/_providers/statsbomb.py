@@ -18,7 +18,7 @@ def load(
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
-    additional_metadata: dict = {}
+    additional_metadata: dict = {},
 ) -> EventDataset:
     """
     Load StatsBomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]

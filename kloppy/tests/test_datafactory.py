@@ -65,9 +65,7 @@ class TestDatafactory:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(
-                2011, 11, 11, 0, 0, tzinfo=timezone.utc
-            )
+            assert date == datetime(2011, 11, 11, 0, 0, tzinfo=timezone.utc)
 
         game_week = dataset.metadata.game_week
         if game_week:

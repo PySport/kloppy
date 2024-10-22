@@ -1,8 +1,9 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
 import warnings
 from typing import Dict, Optional, Union
 import html
+from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -164,6 +165,19 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         with performance_logging("Loading metadata", logger=logger):
             meta_data = objectify.fromstring(inputs.meta_data.read())
 
+            match = meta_data.match
+            frame_rate = int(match.attrib["iFrameRateFps"])
+            pitch_size_width = float(
+                match.attrib["fPitchXSizeMeters"].replace(",", ".")
+            )
+            pitch_size_height = float(
+                match.attrib["fPitchYSizeMeters"].replace(",", ".")
+            )
+            date = parse(meta_data.match.attrib["dtDate"]).astimezone(
+                timezone.utc
+            )
+            game_id = meta_data.match.attrib["iId"]
+
             periods = []
             orientation = None
 
@@ -318,6 +332,8 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
         )
 
         return TrackingDataset(

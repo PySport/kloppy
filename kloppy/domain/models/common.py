@@ -1014,6 +1014,10 @@ class Metadata:
         orientation: See [`Orientation`][kloppy.domain.models.common.Orientation]
         flags:
         provider: See [`Provider`][kloppy.domain.models.common.Provider]
+        date: Date of the game.
+        game_week: Game week (or match day) of the game. It can also be the stage
+        (ex: "8th Finals"), if the game is happening during a cup or a play-off.
+        game_id: Game id of the game from the provider.
     """
 
     teams: List[Team]
@@ -1025,6 +1029,11 @@ class Metadata:
     coordinate_system: CoordinateSystem
     score: Optional[Score] = None
     frame_rate: Optional[float] = None
+    date: Optional[datetime] = None
+    game_week: Optional[str] = None
+    game_id: Optional[str] = None
+    home_coach: Optional[str] = None
+    away_coach: Optional[str] = None
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):

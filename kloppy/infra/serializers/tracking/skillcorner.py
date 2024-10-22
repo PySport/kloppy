@@ -1,8 +1,8 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
+from dateutil.parser import parse
 import warnings
-from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
-from enum import Enum, Flag
+from typing import NamedTuple, IO, Optional, Union
 from collections import Counter
 import numpy as np
 import json
@@ -346,6 +346,25 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
             teams = [home_team, away_team]
 
+            date = metadata.get("date_time")
+            if date:
+                date = parse(date).astimezone(timezone.utc)
+
+            game_id = metadata.get("id")
+            if game_id:
+                game_id = str(game_id)
+
+            home_team_coach = metadata.get("home_team_coach")
+            if home_team_coach is not None:
+                home_coach = f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+
+            away_team_coach = metadata.get("away_team_coach")
+            if away_team_coach is not None:
+                away_coach = f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+
+            if game_id:
+                game_id = str(game_id)
+
             for player_track_obj_id, player in player_dict.items():
                 team_id = player["team_id"]
 
@@ -445,6 +464,10 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return TrackingDataset(

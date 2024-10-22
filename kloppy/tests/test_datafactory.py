@@ -61,6 +61,24 @@ class TestDatafactory:
             2011, 11, 11, 10, 53, 55, 0, timezone.utc
         )
 
+        # Check enriched metadata
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2011, 11, 11, 0, 0, tzinfo=timezone.utc
+            )
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "Final"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "1111111"
+
         assert dataset.events[0].timestamp == timedelta(
             seconds=3
         )  # kickoff first half

@@ -146,6 +146,22 @@ class TestStatsPerformMetadata:
             2020, 8, 23, 12, 56, 30, tzinfo=timezone.utc
         )
 
+    def test_enriched_metadata(self, tracking_dataset: TrackingDataset):
+        date = tracking_dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc)
+
+        game_week = tracking_dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "1"
+
+        game_id = tracking_dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "7ijuqohwgmplbxdj1625sxwfe"
+
 
 class TestStatsPerformEvent:
     """Tests related to deserializing the MA3 event data feed.
@@ -156,10 +172,13 @@ class TestStatsPerformEvent:
 
     def test_deserialize_all(self, event_dataset: EventDataset):
         assert event_dataset.metadata.provider == Provider.STATSPERFORM
-        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
-            # StatsPerform does not provide pitch dimensions
-            pitch_length=None,
-            pitch_width=None,
+        assert (
+            event_dataset.metadata.coordinate_system
+            == OptaCoordinateSystem(
+                # StatsPerform does not provide pitch dimensions
+                pitch_length=None,
+                pitch_width=None,
+            )
         )
         assert len(event_dataset.records) == 1652
 

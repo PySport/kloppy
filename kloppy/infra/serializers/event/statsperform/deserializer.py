@@ -636,6 +636,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             periods = metadata_parser.extract_periods()
             score = metadata_parser.extract_score()
             teams = metadata_parser.extract_lineups()
+            date = events_parser.extract_date()
+            game_week = events_parser.extract_game_week()
+            game_id = events_parser.extract_game_id()
             raw_events = [
                 event
                 for event in events_parser.extract_events()
@@ -876,6 +879,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             if inputs.event_feed.upper() == "F24"
             else Provider.STATSPERFORM,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return EventDataset(

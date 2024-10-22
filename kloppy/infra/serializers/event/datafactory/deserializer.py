@@ -457,6 +457,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             try:
                 date = match["date"]
                 if date:
+                    # TODO: scheduledStart and stadiumGMT should probably be used here too
                     date = parse(date).astimezone(timezone.utc)
             except _parser.ParserError:
                 date = None

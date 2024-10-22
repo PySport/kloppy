@@ -165,19 +165,6 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         with performance_logging("Loading metadata", logger=logger):
             meta_data = objectify.fromstring(inputs.meta_data.read())
 
-            match = meta_data.match
-            frame_rate = int(match.attrib["iFrameRateFps"])
-            pitch_size_width = float(
-                match.attrib["fPitchXSizeMeters"].replace(",", ".")
-            )
-            pitch_size_height = float(
-                match.attrib["fPitchYSizeMeters"].replace(",", ".")
-            )
-            date = parse(meta_data.match.attrib["dtDate"]).astimezone(
-                timezone.utc
-            )
-            game_id = meta_data.match.attrib["iId"]
-
             periods = []
             orientation = None
 
@@ -193,6 +180,11 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 pitch_size_height = float(
                     match.attrib["fPitchYSizeMeters"].replace(",", ".")
                 )
+                date = parse(meta_data.match.attrib["dtDate"]).astimezone(
+                    timezone.utc
+                )
+                game_id = meta_data.match.attrib["iId"]
+
                 for period in match.iterchildren(tag="period"):
                     start_frame_id = int(period.attrib["iStartFrame"])
                     end_frame_id = int(period.attrib["iEndFrame"])
@@ -209,6 +201,8 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                             )
                         )
             elif hasattr(meta_data, "Phase1StartFrame"):
+                date = parse(str(meta_data["Kickoff"]))
+                game_id = str(meta_data["GameID"])
                 id_suffix = "ID"
                 player_item = "item"
 

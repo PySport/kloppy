@@ -100,6 +100,8 @@ class SportecMetadata(NamedTuple):
     x_max: float
     y_max: float
     fps: int
+    home_coach: str
+    away_coach: str
 
 
 def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
@@ -116,10 +118,17 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
 
     home_team = away_team = None
     for team_elm in team_elms:
+        head_coach = [
+            trainer.attrib["Shortname"]
+            for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
+            if trainer.attrib["Role"] == "headcoach"
+        ]
         if team_elm.attrib["Role"] == "home":
             home_team = _team_from_xml_elm(team_elm)
+            home_coach = head_coach[0] if len(head_coach) else None
         elif team_elm.attrib["Role"] == "guest":
             away_team = _team_from_xml_elm(team_elm)
+            away_coach = head_coach[0] if len(head_coach) else None
         else:
             raise DeserializationError(
                 f"Unknown side: {team_elm.attrib['Role']}"
@@ -130,7 +139,10 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    home_score, away_score = match_root.MatchInformation.General.attrib[
+    (
+        home_score,
+        away_score,
+    ) = match_root.MatchInformation.General.attrib[
         "Result"
     ].split(":")
     score = Score(home=int(home_score), away=int(away_score))
@@ -211,6 +223,8 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         x_max=x_max,
         y_max=y_max,
         fps=SPORTEC_FPS,
+        home_coach=home_coach,
+        away_coach=away_coach,
     )
 
 
@@ -421,12 +435,20 @@ class SportecEventDataDeserializer(
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
+            date = parse(
+                match_root.MatchInformation.General.attrib["KickoffTime"]
+            ).astimezone(timezone.utc)
+            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
+            game_id = match_root.MatchInformation.General.attrib["MatchId"]
+
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
             transformer = self.get_transformer(
                 pitch_length=sportec_metadata.x_max,
                 pitch_width=sportec_metadata.y_max,
             )
+            home_coach = sportec_metadata.home_coach
+            away_coach = sportec_metadata.away_coach
 
             periods = []
             period_id = 0
@@ -649,6 +671,11 @@ class SportecEventDataDeserializer(
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return EventDataset(

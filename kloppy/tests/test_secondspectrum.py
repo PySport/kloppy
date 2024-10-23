@@ -1,11 +1,9 @@
-import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from kloppy.domain import (
-    AttackingDirection,
     Orientation,
     Provider,
     Point,
@@ -99,6 +97,22 @@ class TestSecondSpectrumTracking:
         assert pitch_dimensions.x_dim.max == 52.425
         assert pitch_dimensions.y_dim.min == -33.985
         assert pitch_dimensions.y_dim.max == 33.985
+
+        # Check enriched metadata
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(1900, 1, 26, 0, 0, tzinfo=timezone.utc)
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "1"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "1234456"
 
     def test_correct_normalized_deserialization(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path

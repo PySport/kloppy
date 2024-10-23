@@ -12,7 +12,6 @@ from kloppy.domain import Team, Score, Period, PositionType
 
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 
 position_types_mapping: Dict[str, PositionType] = {
@@ -60,6 +59,18 @@ class OptaParser:
 
     def extract_score(self) -> Optional[Score]:
         """Return the score of the game."""
+        return None
+
+    def extract_date(self) -> Optional[str]:
+        """Return the date of the game."""
+        return None
+
+    def extract_game_week(self) -> Optional[str]:
+        """Return the game_week of the game."""
+        return None
+
+    def extract_game_id(self) -> Optional[str]:
+        """Return the game_id of the game."""
         return None
 
     def extract_lineups(self) -> Tuple[Team, Team]:

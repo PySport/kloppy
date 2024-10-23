@@ -14,6 +14,7 @@ from kloppy.domain import (
     Provider,
     SportVUCoordinateSystem,
     TrackingDataset,
+    Time,
 )
 from kloppy.exceptions import KloppyError
 
@@ -145,6 +146,22 @@ class TestStatsPerformMetadata:
             2020, 8, 23, 12, 56, 30, tzinfo=timezone.utc
         )
 
+    def test_enriched_metadata(self, tracking_dataset: TrackingDataset):
+        date = tracking_dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc)
+
+        game_week = tracking_dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "1"
+
+        game_id = tracking_dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "7ijuqohwgmplbxdj1625sxwfe"
+
 
 class TestStatsPerformEvent:
     """Tests related to deserializing the MA3 event data feed.
@@ -161,6 +178,25 @@ class TestStatsPerformEvent:
             pitch_width=None,
         )
         assert len(event_dataset.records) == 1652
+
+        substitution_events = event_dataset.find_all("substitution")
+        assert len(substitution_events) == 9
+
+        m_wintzheimer = event_dataset.metadata.teams[0].get_player_by_id(
+            "aksjicf4keobpav3tuujngell"
+        )
+        b_jatta = event_dataset.metadata.teams[0].get_player_by_id(
+            "3mp7p8tytgkbwi8itxl5mfkrt"
+        )
+
+        first_sub = substitution_events[0]
+
+        assert first_sub.time == Time(
+            period=event_dataset.metadata.periods[1],
+            timestamp=timedelta(seconds=946, microseconds=475000),
+        )
+        assert first_sub.player == m_wintzheimer
+        assert first_sub.replacement_player == b_jatta
 
 
 class TestStatsPerformTracking:

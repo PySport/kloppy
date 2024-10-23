@@ -1,12 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from kloppy.domain import (
-    Period,
     Provider,
-    AttackingDirection,
     Orientation,
     Point,
     Point3D,
@@ -24,6 +22,20 @@ class TestSkillCornerTracking:
     @pytest.fixture
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/skillcorner_structured_data.json"
+
+    @pytest.fixture
+    def raw_data_timestamp(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_structured_data_timestamp.json"
+
+    def test_correct_deserialization_timestamp(
+        self, raw_data_timestamp: Path, meta_data: Path
+    ):
+        skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data_timestamp,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+        )
 
     def test_correct_deserialization(self, raw_data: Path, meta_data: Path):
         dataset = skillcorner.load(
@@ -114,6 +126,29 @@ class TestSkillCornerTracking:
         assert pitch_dimensions.x_dim.max == 52.5
         assert pitch_dimensions.y_dim.min == -34
         assert pitch_dimensions.y_dim.max == 34
+
+        # Check enriched metadata
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(
+                2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc
+            )
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2417"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "Hans-Dieter Flick"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "Lucien Favre"
 
     def test_correct_normalized_deserialization(
         self, meta_data: str, raw_data: str

@@ -31,5 +31,6 @@ jobs:
         pip install black==22.3.0
         black --check .
     - name: Test with pytest
+      if: '!cancelled()'
       run: |
         pytest --color=yes

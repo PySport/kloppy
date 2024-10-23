@@ -1,8 +1,9 @@
 import json
 import logging
 from dataclasses import replace
-from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO
+from datetime import timedelta, timezone
+from dateutil.parser import parse
+from typing import Dict, List
 
 from kloppy.domain import (
     BallOutEvent,
@@ -90,6 +91,15 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         team_id=wyId,
         name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
+        starting_formation=formations[
+            next(
+                iter(
+                    raw_events["formations"][wyId]["1H"][
+                        next(iter(raw_events["formations"][wyId]["1H"]))
+                    ]
+                )
+            )
+        ],
     )
     team.players = [
         Player(
@@ -291,12 +301,12 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     )
 
     if next_event is not None:
-        period_id = int(next_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(next_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             next_event, start_ts, period_id
         )
     else:
-        period_id = int(raw_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(raw_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             raw_event, start_ts, period_id
         )
@@ -520,6 +530,19 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
+def _parse_period_id(raw_period: str) -> int:
+    if "H" in raw_period:
+        period_id = int(raw_period.replace("H", ""))
+    elif "E" in raw_period:
+        period_id = 2 + int(raw_period.replace("E", ""))
+    elif raw_period == "P":
+        period_id = 5
+    else:
+        raise DeserializationError(f"Unknown period {raw_period}")
+
+    return period_id
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -555,6 +578,24 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     for wyId, team in teams.items()
                 ]
             )
+            date = raw_events["match"].get("dateutc")
+            if date:
+                date = parse(date).astimezone(timezone.utc)
+            game_week = raw_events["match"].get("gameweek")
+            if game_week:
+                game_week = str(game_week)
+            game_id = raw_events["events"][0].get("matchId")
+            if game_id:
+                game_id = str(game_id)
+            coaches = raw_events["coaches"]
+            if home_team_id in coaches and "coach" in coaches[home_team_id]:
+                home_coach = coaches[home_team_id]["coach"].get("shortName")
+            else:
+                home_coach = None
+            if away_team_id in coaches and "coach" in coaches[away_team_id]:
+                away_coach = coaches[away_team_id]["coach"].get("shortName")
+            else:
+                away_coach = None
 
             events = []
 
@@ -563,14 +604,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = int(
-                        next_event["matchPeriod"].replace("H", "")
+                    next_period_id = _parse_period_id(
+                        next_event["matchPeriod"]
                     )
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
-                period_id = int(raw_event["matchPeriod"].replace("H", ""))
+                period_id = _parse_period_id(raw_event["matchPeriod"])
 
                 if len(periods) == 0 or periods[-1].id != period_id:
                     periods.append(
@@ -776,6 +817,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return EventDataset(metadata=metadata, records=events)

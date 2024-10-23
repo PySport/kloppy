@@ -167,7 +167,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     teams_list, period, frame_data
                 )
                 frame = transformer.transform_frame(frame)
-                if self.only_alive and frame.ball_state == BallState.DEAD:
+                if not frame.players_data or (
+                    self.only_alive and frame.ball_state == BallState.DEAD
+                ):
                     continue
                 frames.append(frame)
 

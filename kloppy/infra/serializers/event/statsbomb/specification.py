@@ -26,6 +26,7 @@ from kloppy.domain import (
     TakeOnResult,
     FormationType,
     Position,
+    CounterAttackQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
@@ -186,6 +187,20 @@ class BODYPART(Enum, metaclass=TypesEnumMeta):
     NO_TOUCH = 106
 
 
+class PLAY_PATTERN(Enum, metaclass=TypesEnumMeta):
+    """The list of play patterns used in StatsBomb data."""
+
+    REGULAR_PLAY = 1
+    FROM_CORNER = 2
+    FROM_FREE_KICK = 3
+    FROM_THROW_IN = 4
+    OTHER = 5
+    FROM_COUNTER = 6
+    FROM_GOAL_KICK = 7
+    FROM_KEEPER = 8
+    FROM_KICK_OFF = 9
+
+
 class EVENT:
     """Base class for StatsBomb events.
 
@@ -236,7 +251,7 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        return (
+        events = (
             self._create_aerial_won_event(
                 event_factory, **generic_event_kwargs
             )
@@ -245,6 +260,9 @@ class EVENT:
                 event_factory, **generic_event_kwargs
             )
         )
+        for event in events:
+            self._add_play_pattern_qualifiers(event)
+        return events
 
     def _parse_generic_kwargs(self) -> Dict:
         return {
@@ -317,6 +335,16 @@ class EVENT:
             **generic_event_kwargs,
         )
         return [generic_event]
+
+    def _add_play_pattern_qualifiers(self, event: Event) -> Event:
+        pattern_id = PLAY_PATTERN(self.raw_event["play_pattern"]["id"])
+        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
+            if event.qualifiers:
+                event.qualifiers.append(CounterAttackQualifier(True))
+            else:
+                event.qualifiers = [CounterAttackQualifier(True)]
+
+        return event
 
 
 class PASS(EVENT):

@@ -21,7 +21,6 @@ from kloppy.domain import (
     Provider,
     Metadata,
     Player,
-    Position,
     SetPieceQualifier,
     SetPieceType,
     BodyPartQualifier,
@@ -29,10 +28,32 @@ from kloppy.domain import (
     Qualifier,
     CardType,
     AttackingDirection,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
+
+
+position_types_mapping: Dict[str, PositionType] = {
+    "TW": PositionType.Goalkeeper,
+    "IVR": PositionType.RightCenterBack,
+    "IVL": PositionType.LeftCenterBack,
+    "STR": PositionType.Striker,
+    "STL": PositionType.LeftForward,
+    "STZ": PositionType.Striker,
+    "ZO": PositionType.CenterAttackingMidfield,
+    "LV": PositionType.LeftBack,
+    "RV": PositionType.RightBack,
+    "DMR": PositionType.RightDefensiveMidfield,
+    "DRM": PositionType.RightDefensiveMidfield,
+    "DML": PositionType.LeftDefensiveMidfield,
+    "DLM": PositionType.LeftDefensiveMidfield,
+    "ORM": PositionType.RightMidfield,
+    "OLM": PositionType.LeftMidfield,
+    "RA": PositionType.RightWing,
+    "LA": PositionType.LeftWing,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +62,9 @@ def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
-        ground=(
-            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
-        ),
+        ground=Ground.HOME
+        if team_elm.attrib["Role"] == "home"
+        else Ground.AWAY,
     )
     team.players = [
         Player(
@@ -53,14 +74,8 @@ def _team_from_xml_elm(team_elm) -> Team:
             name=player_elm.attrib["Shortname"],
             first_name=player_elm.attrib["FirstName"],
             last_name=player_elm.attrib["LastName"],
-            starting_position=(
-                Position(
-                    position_id=None,
-                    name=player_elm.attrib["PlayingPosition"],
-                    coordinates=None,
-                )
-                if "PlayingPosition" in player_elm.attrib
-                else None
+            starting_position=position_types_mapping.get(
+                player_elm.attrib.get("PlayingPosition"), PositionType.Unknown
             ),
             starting=player_elm.attrib["Starting"] == "true",
         )

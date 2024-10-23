@@ -32,11 +32,11 @@ from kloppy.domain import (
     FormationType,
     SetPieceQualifier,
     SetPieceType,
-    Position,
     ShotResult,
     EventDataset,
     Time,
 )
+from kloppy.domain.models import PositionType
 
 from kloppy.exceptions import DeserializationError
 from kloppy import statsbomb
@@ -148,9 +148,7 @@ class TestStatsBombMetadata:
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
 
-        assert player.starting_position == Position(
-            position_id="18", name="Right Attacking Midfield", coordinates=None
-        )
+        assert player.starting_position == PositionType.RightAttackingMidfield
         assert player.starting
 
         # Substituted players have a position
@@ -165,17 +163,19 @@ class TestStatsBombMetadata:
         period_2 = periods[1]
 
         home_starting_gk = dataset.metadata.teams[0].get_player_by_position(
-            "1", time=Time(period=period_1, timestamp=timedelta(seconds=0))
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
         )
         assert home_starting_gk.player_id == "3509"  # Thibaut Courtois
 
         home_starting_lam = dataset.metadata.teams[0].get_player_by_position(
-            "20", time=Time(period=period_1, timestamp=timedelta(seconds=0))
+            PositionType.LeftAttackingMidfield,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
         )
         assert home_starting_lam.player_id == "3621"  # Eden Hazard
 
         home_ending_lam = dataset.metadata.teams[0].get_player_by_position(
-            "20",
+            PositionType.LeftAttackingMidfield,
             time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
@@ -1149,14 +1149,12 @@ class TestStatsBombTacticalShiftEvent:
             (
                 period1.start_time,
                 period2.start_time,
-                Position(
-                    position_id="12", name="Right Midfield", coordinates=None
-                ),
+                PositionType.RightMidfield,
             ),
             (
                 period2.start_time,
                 period2.end_time,
-                Position(position_id="2", name="Right Back", coordinates=None),
+                PositionType.RightBack,
             ),
         ]
 
@@ -1166,8 +1164,6 @@ class TestStatsBombTacticalShiftEvent:
             (
                 period2.start_time + timedelta(seconds=1362.254),
                 period2.end_time,
-                Position(
-                    position_id="16", name="Left Midfield", coordinates=None
-                ),
+                PositionType.LeftMidfield,
             )
         ]

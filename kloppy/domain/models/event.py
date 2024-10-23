@@ -17,7 +17,7 @@ from kloppy.domain.models.common import (
     DatasetType,
     AttackingDirection,
     OrientationError,
-    Position,
+    PositionType,
 )
 from kloppy.utils import (
     camelcase_to_snakecase,
@@ -881,7 +881,7 @@ class SubstitutionEvent(Event):
     """
 
     replacement_player: Player
-    position: Optional[Position] = None
+    position: Optional[PositionType] = None
 
     event_type: EventType = EventType.SUBSTITUTION
     event_name: str = "substitution"
@@ -948,7 +948,7 @@ class FormationChangeEvent(Event):
     """
 
     formation_type: FormationType
-    player_positions: Optional[Dict[Player, Position]] = None
+    player_positions: Optional[Dict[Player, PositionType]] = None
 
     event_type: EventType = EventType.FORMATION_CHANGE
     event_name: str = "formation_change"

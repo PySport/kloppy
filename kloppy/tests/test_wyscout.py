@@ -18,6 +18,7 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    PassResult,
     FormationType,
     Time,
 )
@@ -241,6 +242,17 @@ class TestWyscoutV3:
         assert dataset.records[2].coordinates == Point(
             0.36417591801878735, 0.7695098039215686
         )
+
+    def test_pass_event(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(663292348)
+        assert pass_event.event_type == EventType.PASS
+        assert pass_event.coordinates == Point(x=52.0, y=47.0)
+        assert pass_event.receiver_coordinates == Point(x=60.0, y=32.0)
+
+        blocked_pass_event = dataset.get_event_by_id(663291838)
+        assert blocked_pass_event.result == PassResult.INCOMPLETE
+        assert blocked_pass_event.coordinates == Point(x=23.0, y=52.0)
+        assert blocked_pass_event.receiver_coordinates == Point(x=100.0, y=0.0)
 
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1331979498)

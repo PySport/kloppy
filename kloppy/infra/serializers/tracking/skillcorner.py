@@ -1,8 +1,8 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, timezone
+from dateutil.parser import parse
 import warnings
-from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
-from enum import Enum, Flag
+from typing import NamedTuple, IO, Optional, Union
 from collections import Counter
 import numpy as np
 import json
@@ -209,18 +209,24 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         return attacking_directions
 
-    def __load_json(self, file):
+    @staticmethod
+    def __replace_timestamp(obj):
+        if "timestamp" in obj:
+            obj["time"] = obj.pop("timestamp")
+        return obj
+
+    def __load_json_raw(self, file):
         if Path(file.name).suffix == ".jsonl":
             data = []
             for line in file:
                 obj = json.loads(line)
-                # for each line rename timestamp to time to make it compatible with existing loader
-                if "timestamp" in obj:
-                    obj["time"] = obj.pop("timestamp")
-                data.append(obj)
+                data.append(self.__replace_timestamp(obj))
             return data
         else:
-            return json.load(file)
+            data = json.load(file)
+            for line in data:
+                line = self.__replace_timestamp(line)
+            return data
 
     @classmethod
     def __get_periods(cls, tracking):
@@ -288,8 +294,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         )
 
     def deserialize(self, inputs: SkillCornerInputs) -> TrackingDataset:
-        metadata = self.__load_json(inputs.meta_data)
-        raw_data = self.__load_json(inputs.raw_data)
+        metadata = json.load(inputs.meta_data)
+        raw_data = self.__load_json_raw(inputs.raw_data)
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
@@ -339,6 +345,25 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ground=Ground.AWAY,
             )
             teams = [home_team, away_team]
+
+            date = metadata.get("date_time")
+            if date:
+                date = parse(date).astimezone(timezone.utc)
+
+            game_id = metadata.get("id")
+            if game_id:
+                game_id = str(game_id)
+
+            home_team_coach = metadata.get("home_team_coach")
+            if home_team_coach is not None:
+                home_coach = f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+
+            away_team_coach = metadata.get("away_team_coach")
+            if away_team_coach is not None:
+                away_coach = f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+
+            if game_id:
+                game_id = str(game_id)
 
             for player_track_obj_id, player in player_dict.items():
                 team_id = player["team_id"]
@@ -439,6 +464,10 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             provider=Provider.SKILLCORNER,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return TrackingDataset(

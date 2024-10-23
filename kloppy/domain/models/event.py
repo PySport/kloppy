@@ -1062,8 +1062,8 @@ class EventDataset(Dataset[Event]):
 
     dataset_type: DatasetType = DatasetType.EVENT
 
-    def _update_player_positions(self):
-        """Update player positions based on Substitution and TacticalShift events."""
+    def _update_formations_and_positions(self):
+        """Update team formations and player positions based on Substitution and TacticalShift events."""
         max_leeway = timedelta(seconds=60)
 
         for event in self.events:
@@ -1071,24 +1071,43 @@ class EventDataset(Dataset[Event]):
                 event.replacement_player.set_position(
                     event.time,
                     event.replacement_player.starting_position
-                    or event.player.position,
+                    or event.player.positions.last(default=None),
                 )
                 event.player.set_position(event.time, None)
 
             elif isinstance(event, FormationChangeEvent):
                 if event.player_positions:
                     for player, position in event.player_positions.items():
-                        last_time, last_position = player.positions.last(
-                            include_time=True
+                        if len(player.positions.items):
+                            last_time, last_position = player.positions.last(
+                                include_time=True
+                            )
+                            if last_position != position:
+                                # Only update when the position changed
+                                if event.time - last_time < max_leeway:
+                                    # Often the formation change is detected a couple of seconds after a Substitution.
+                                    # In this case we need to use the time of the Substitution
+                                    player.positions.set(last_time, position)
+                                else:
+                                    player.positions.set(event.time, position)
+
+                if event.team.formations.items:
+                    last_time, last_formation = event.team.formations.last(
+                        include_time=True
+                    )
+                    if last_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
                         )
-                        if last_position != position:
-                            # Only update when the position changed
-                            if event.time - last_time < max_leeway:
-                                # Often the formation change is detected a couple of seconds after a Substitution.
-                                # In this case we need to use the time of the Substitution
-                                player.positions.set(last_time, position)
-                            else:
-                                player.positions.set(event.time, position)
+
+                elif event.team.starting_formation:
+                    if event.team.starting_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
+                        )
+
+                else:
+                    event.team.formations.set(event.time, event.formation_type)
 
     @property
     def events(self):

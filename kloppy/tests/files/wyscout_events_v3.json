@@ -280,7 +280,8 @@
         "primary": "pass",
         "secondary": [
           "lateral_pass",
-          "short_or_medium_pass"
+          "short_or_medium_pass",
+          "shot_assist"
         ]
       },
       "videoTimestamp": "6.417876"

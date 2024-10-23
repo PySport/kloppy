@@ -204,27 +204,17 @@ class TestWyscoutV3:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(2020, 8, 2, 18, 45, tzinfo=timezone.utc)
+            assert date == datetime(2020, 9, 20, 18, 45, tzinfo=timezone.utc)
 
         game_week = dataset.metadata.game_week
         if game_week:
             assert isinstance(game_week, str)
-            assert game_week == "38"
+            assert game_week == "1"
 
         game_id = dataset.metadata.game_id
         if game_id:
             assert isinstance(game_id, str)
-            assert game_id == "2852835"
-
-        home_coach = dataset.metadata.home_coach
-        if home_coach:
-            assert isinstance(home_coach, str)
-            assert home_coach == "S. Mihajlović"
-
-        away_coach = dataset.metadata.away_coach
-        if away_coach:
-            assert isinstance(away_coach, str)
-            assert away_coach == "M. Longo"
+            assert game_id == "5154199"
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(1927028854)

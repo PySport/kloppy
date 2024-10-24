@@ -79,7 +79,7 @@ class TestSignalityTracking:
         assert home_team.ground == Ground.HOME
         assert len(home_team.players) == 20
 
-        home_team_gk = home_team.get_player_by_id(45)
+        home_team_gk = home_team.get_player_by_id("home_45")
         start_frame_home_team_gk_data = start_frame.players_data[home_team_gk]
         assert start_frame_home_team_gk_data.coordinates == Point(
             x=-47.78, y=0.59
@@ -90,7 +90,7 @@ class TestSignalityTracking:
         assert away_team.ground == Ground.AWAY
         assert len(away_team.players) == 20
 
-        away_team_gk = away_team.get_player_by_id(1)
+        away_team_gk = away_team.get_player_by_id("away_1")
         start_frame_away_team_gk_data = start_frame.players_data[away_team_gk]
         assert start_frame_away_team_gk_data.coordinates == Point(
             x=46.48, y=0.23

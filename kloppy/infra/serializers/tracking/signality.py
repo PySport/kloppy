@@ -83,8 +83,8 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                 player = next(
                     player
                     for player in teams[ix].players
-                    if player.player_id
-                    == str(raw_player_positional_info["jersey_number"])
+                    if player.jersey_no
+                    == raw_player_positional_info["jersey_number"]
                 )
                 player_position = raw_player_positional_info["position"]
                 player_coordinates = Point(
@@ -149,7 +149,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             )
             for player in metadata[f"team_{ground}_players"]:
                 player = Player(
-                    player_id=str(player["jersey_number"]),
+                    player_id=f"{ground}_{(player['jersey_number'])}",
                     name=player["name"],
                     team=team,
                     jersey_no=player["jersey_number"],

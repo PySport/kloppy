@@ -81,19 +81,27 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         for ix, side in enumerate(["home", "away"]):
             for raw_player_positional_info in frame[f"{side}_team"]:
                 player = next(
-                    player
-                    for player in teams[ix].players
-                    if player.jersey_no
-                    == raw_player_positional_info["jersey_number"]
+                    (
+                        player
+                        for player in teams[ix].players
+                        if player.jersey_no
+                        == raw_player_positional_info["jersey_number"]
+                    ),
+                    None,
                 )
-                player_position = raw_player_positional_info["position"]
-                player_coordinates = Point(
-                    x=player_position[0], y=player_position[1]
-                )
-                player_speed = raw_player_positional_info["speed"]
-                players_data[player] = PlayerData(
-                    coordinates=player_coordinates, speed=player_speed
-                )
+                if player:
+                    player_position = raw_player_positional_info["position"]
+                    player_coordinates = Point(
+                        x=player_position[0], y=player_position[1]
+                    )
+                    player_speed = raw_player_positional_info["speed"]
+                    players_data[player] = PlayerData(
+                        coordinates=player_coordinates, speed=player_speed
+                    )
+                else:
+                    logger.debug(
+                        f"Player with jersey no: {raw_player_positional_info['jersey_number']} not found in {side} team"
+                    )
 
         return Frame(
             frame_id=frame_id,
@@ -233,8 +241,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                         frame = self._get_frame_data(
                             teams, period, raw_frame, frame_id_offset
                         )
-                        frame = transformer.transform_frame(frame)
-                        frames.append(frame)
+                        if frame.players_data:
+                            frame = transformer.transform_frame(frame)
+                            frames.append(frame)
                     n += 1
 
         attacking_directions = self._get_signality_attacking_directions(

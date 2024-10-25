@@ -47,6 +47,9 @@ logger = logging.getLogger(__name__)
 EVENT_TYPE_START_PERIOD = 32
 EVENT_TYPE_END_PERIOD = 30
 EVENT_TYPE_DELETED_EVENT = 43
+EVENT_TYPE_START_DELAY = 27
+EVENT_TYPE_END_DELAY = 28
+EVENT_TYPE_OFFSIDE_PROVOKED = 55
 
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
@@ -101,6 +104,16 @@ BALL_OWNING_EVENTS = (
     EVENT_TYPE_RECOVERY,
     EVENT_TYPE_BALL_TOUCH,
 )
+DEAD_BALL_EVENTS = [
+    EVENT_TYPE_BALL_OUT,
+    EVENT_TYPE_CORNER_AWARDED,
+    EVENT_TYPE_SHOT_GOAL,
+    EVENT_TYPE_FOUL_COMMITTED,
+    EVENT_TYPE_CARD,
+    EVENT_TYPE_START_DELAY,
+    EVENT_TYPE_END_DELAY,
+    EVENT_TYPE_OFFSIDE_PROVOKED,
+]
 
 EVENT_QUALIFIER_GOAL_KICK = 124
 EVENT_QUALIFIER_FREE_KICK = 5
@@ -701,12 +714,17 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     if raw_event.type_id in BALL_OWNING_EVENTS:
                         possession_team = team
 
+                    if raw_event.type_id in DEAD_BALL_EVENTS:
+                        ball_state = BallState.DEAD
+                    else:
+                        ball_state = BallState.ALIVE
+
                     generic_event_kwargs = dict(
                         # from DataRecord
                         period=period,
                         timestamp=raw_event.timestamp - period.start_timestamp,
                         ball_owning_team=possession_team,
-                        ball_state=BallState.ALIVE,
+                        ball_state=ball_state,
                         # from Event
                         event_id=raw_event.id,
                         team=team,
@@ -818,7 +836,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id in BALL_OUT_EVENTS:
-                        generic_event_kwargs["ball_state"] = BallState.DEAD
                         event = self.event_factory.build_ball_out(
                             result=None,
                             qualifiers=None,
@@ -852,7 +869,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         )
 
                     elif raw_event.type_id == EVENT_TYPE_CARD:
-                        generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_event)
 
                         event = self.event_factory.build_card(

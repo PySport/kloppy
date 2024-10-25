@@ -274,6 +274,13 @@ class TestOptaPassEvent:
             PassQualifier
         )
 
+    def test_ball_state(self, dataset: EventDataset):
+        """Test if the ball state is correctly set"""
+        events = dataset.find_all("pass")
+        assert all(
+            event.ball_state == BallState.ALIVE for event in events
+        ), "Not all pass ball states are ALIVE"
+
 
 class TestOptaClearanceEvent:
     """Tests related to deserializing clearance events"""
@@ -397,6 +404,7 @@ class TestOptaShotEvent:
         assert own_goal.result == ShotResult.OWN_GOAL
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
+        assert own_goal.ball_state == BallState.DEAD
 
 
 class TestOptaDuelEvent:
@@ -482,3 +490,15 @@ class TestOptaBlockEvent:
         event = dataset.get_event_by_id("1515097981")
         assert event.event_type == EventType.GENERIC
         assert event.event_name == "block"
+
+
+class TestOptaCardEvent:
+    """Tests related to deserialzing card events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all card events"""
+        events = dataset.find_all("card")
+        assert len(events) == 1
+        assert all(
+            event.ball_state == BallState.DEAD for event in events
+        ), "Not all card ball states are ALIVE"

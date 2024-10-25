@@ -166,14 +166,20 @@ def _check_secondary_event_types(
 def _pass_qualifiers(raw_event) -> List[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
 
-    if _check_secondary_event_types(raw_event, ["cross", "cross_blocked"]):
-        qualifiers.append(PassQualifier(PassType.CROSS))
-    elif _check_secondary_event_types(raw_event, ["hand_pass"]):
-        qualifiers.append(PassQualifier(PassType.HAND_PASS))
-    elif _check_secondary_event_types(raw_event, ["head_pass"]):
-        qualifiers.append(PassQualifier(PassType.HEAD_PASS))
-    elif _check_secondary_event_types(raw_event, ["smart_pass"]):
-        qualifiers.append(PassQualifier(PassType.SMART_PASS))
+    qualifier_mapping = {
+        PassType.CROSS: ["cross", "cross_blocked"],
+        PassType.HAND_PASS: ["hand_pass"],
+        PassType.HEAD_PASS: ["head_pass"],
+        PassType.SMART_PASS: ["smart_pass"],
+        PassType.SHOT_ASSIST: ["shot_assist"],
+        PassType.ASSIST: ["assist"],
+    }
+
+    for pass_type, secondary_event_types_values in qualifier_mapping.items():
+        if _check_secondary_event_types(
+            raw_event, secondary_event_types_values
+        ):
+            qualifiers.append(PassQualifier(pass_type))
 
     return qualifiers
 

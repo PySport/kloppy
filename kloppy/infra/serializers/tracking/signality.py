@@ -185,9 +185,6 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         periods = []
         for period_id, p_tracking in enumerate([p1_tracking, p2_tracking], 1):
             first_frame = p_tracking[0]
-            assert (
-                first_frame["match_time"] > 0
-            ), "First frame must have match_time bigger than 0"
             start_time = datetime.utcfromtimestamp(
                 (first_frame["utc_time"] - first_frame["match_time"]) / 1000
             )
@@ -241,7 +238,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                         frame = self._get_frame_data(
                             teams, period, raw_frame, frame_id_offset
                         )
-                        if frame.players_data:
+                        if frame.players_data and frame.timestamp > timedelta(
+                            seconds=0
+                        ):
                             frame = transformer.transform_frame(frame)
                             frames.append(frame)
                     n += 1

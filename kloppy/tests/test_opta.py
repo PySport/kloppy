@@ -27,7 +27,7 @@ from kloppy.domain import (
     Point,
     Point,
     Point3D,
-    Position,
+    PositionType,
     Provider,
     Score,
     SetPieceQualifier,
@@ -106,9 +106,7 @@ class TestOptaMetadata:
         """It should set the correct player position from the events"""
         # Starting players have a position
         player = dataset.metadata.teams[0].get_player_by_id("111319")
-        assert player.positions.last() == Position(
-            position_id="1", name="GK", coordinates=None
-        )
+        assert player.positions.last() == PositionType.Goalkeeper
         assert player.starting
 
         # Substituted players don't have a position
@@ -118,9 +116,7 @@ class TestOptaMetadata:
 
         # LB position is correctly based on Formation_Place
         player = dataset.metadata.teams[0].get_player_by_id("80398")
-        assert player.positions.last() == Position(
-            position_id="3", name="LB", coordinates=None
-        )
+        assert player.positions.last() == PositionType.LeftBack
         assert player.starting
 
     def test_periods(self, dataset):

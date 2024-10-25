@@ -33,7 +33,7 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     GoalkeeperActionType,
     CounterAttackQualifier,
-    Position,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -218,6 +218,13 @@ event_type_names = {
     77: "player off pitch",
 }
 
+position_line_mapping = {
+    "Goalkeeper": PositionType.Goalkeeper,
+    "Defender": PositionType.Defender,
+    "Midfielder": PositionType.Midfielder,
+    "Forward": PositionType.Striker,
+}
+
 
 def _parse_pass(raw_event: OptaEvent) -> Dict:
     if raw_event.outcome:
@@ -308,9 +315,7 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     player_positions = {}
     for player_id, position_id in zip(player_ids, position_ids):
         player = team.get_player_by_id(player_id)
-        position = Position(
-            position_id=position_id, name=positions_mapping[int(position_id)]
-        )
+        position = positions_mapping[int(position_id)]
         player_positions[player] = position
 
     return dict(formation_type=formation, player_positions=player_positions)
@@ -324,9 +329,7 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
 
     raw_position_line = next_event.qualifiers.get(44)
     if raw_position_line:
-        position = Position(
-            position_id=raw_position_line, name=raw_position_line
-        )
+        position = position_line_mapping[raw_position_line]
 
     return dict(replacement_player=replacement_player, position=position)
 

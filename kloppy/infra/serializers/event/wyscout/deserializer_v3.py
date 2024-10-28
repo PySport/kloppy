@@ -593,15 +593,24 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             game_id = raw_events["events"][0].get("matchId")
             if game_id:
                 game_id = str(game_id)
-            coaches = raw_events["coaches"]
-            if home_team_id in coaches and "coach" in coaches[home_team_id]:
-                home_coach = coaches[home_team_id]["coach"].get("shortName")
-            else:
-                home_coach = None
-            if away_team_id in coaches and "coach" in coaches[away_team_id]:
-                away_coach = coaches[away_team_id]["coach"].get("shortName")
-            else:
-                away_coach = None
+            home_coach = None
+            away_coach = None
+            coaches = raw_events.get("coaches")
+            if coaches:
+                if (
+                    home_team_id in coaches
+                    and "coach" in coaches[home_team_id]
+                ):
+                    home_coach = coaches[home_team_id]["coach"].get(
+                        "shortName"
+                    )
+                if (
+                    away_team_id in coaches
+                    and "coach" in coaches[away_team_id]
+                ):
+                    away_coach = coaches[away_team_id]["coach"].get(
+                        "shortName"
+                    )
 
             events = []
 
@@ -633,8 +642,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if next_period_id != period_id:
                     periods[-1] = replace(
                         periods[-1],
-                        end_timestamp=periods[-1].start_timestamp
-                        + timedelta(
+                        end_timestamp=timedelta(
                             seconds=float(
                                 raw_event["second"] + raw_event["minute"] * 60
                             )

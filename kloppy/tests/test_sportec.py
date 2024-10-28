@@ -15,6 +15,7 @@ from kloppy.domain import (
     DatasetType,
     BallState,
     Point3D,
+    PositionType,
 )
 
 from kloppy import sportec
@@ -75,8 +76,7 @@ class TestSportecEventData:
         assert player.player_id == "DFL-OBJ-00001D"
         assert player.jersey_no == 1
         assert str(player) == "A. Schwolow"
-        assert player.starting_position.position_id is None
-        assert player.starting_position.name == "TW"
+        assert player.starting_position == PositionType.Goalkeeper
 
         # Check the qualifiers
         assert dataset.events[25].qualifiers[0].value == SetPieceType.KICK_OFF

@@ -27,7 +27,7 @@ from kloppy.domain import (
     Point,
     Point,
     Point3D,
-    Position,
+    PositionType,
     Provider,
     Score,
     SetPieceQualifier,
@@ -106,9 +106,7 @@ class TestOptaMetadata:
         """It should set the correct player position from the events"""
         # Starting players have a position
         player = dataset.metadata.teams[0].get_player_by_id("111319")
-        assert player.positions.last() == Position(
-            position_id="1", name="GK", coordinates=None
-        )
+        assert player.positions.last() == PositionType.Goalkeeper
         assert player.starting
 
         # Substituted players don't have a position
@@ -118,9 +116,7 @@ class TestOptaMetadata:
 
         # LB position is correctly based on Formation_Place
         player = dataset.metadata.teams[0].get_player_by_id("80398")
-        assert player.positions.last() == Position(
-            position_id="3", name="LB", coordinates=None
-        )
+        assert player.positions.last() == PositionType.LeftBack
         assert player.starting
 
     def test_periods(self, dataset):
@@ -278,6 +274,13 @@ class TestOptaPassEvent:
             PassQualifier
         )
 
+    def test_ball_state(self, dataset: EventDataset):
+        """Test if the ball state is correctly set"""
+        events = dataset.find_all("pass")
+        assert all(
+            event.ball_state == BallState.ALIVE for event in events
+        ), "Not all pass ball states are ALIVE"
+
 
 class TestOptaClearanceEvent:
     """Tests related to deserializing clearance events"""
@@ -401,6 +404,7 @@ class TestOptaShotEvent:
         assert own_goal.result == ShotResult.OWN_GOAL
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
+        assert own_goal.ball_state == BallState.DEAD
 
 
 class TestOptaDuelEvent:
@@ -486,3 +490,15 @@ class TestOptaBlockEvent:
         event = dataset.get_event_by_id("1515097981")
         assert event.event_type == EventType.GENERIC
         assert event.event_name == "block"
+
+
+class TestOptaCardEvent:
+    """Tests related to deserialzing card events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all card events"""
+        events = dataset.find_all("card")
+        assert len(events) == 1
+        assert all(
+            event.ball_state == BallState.DEAD for event in events
+        ), "Not all card ball states are ALIVE"

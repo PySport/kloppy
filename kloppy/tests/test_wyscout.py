@@ -18,8 +18,11 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    PassResult,
     FormationType,
     Time,
+    PassType,
+    PassQualifier,
 )
 
 from kloppy import wyscout
@@ -231,12 +234,30 @@ class TestWyscoutV3:
             x=0.32643853442316295, y=0.5538235294117646
         )
 
+    def test_pass_event(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(663292348)
+        assert pass_event.event_type == EventType.PASS
+        assert pass_event.coordinates == Point(x=52.0, y=47.0)
+        assert pass_event.receiver_coordinates == Point(x=60.0, y=32.0)
+
+        blocked_pass_event = dataset.get_event_by_id(663291838)
+        assert blocked_pass_event.result == PassResult.INCOMPLETE
+        assert blocked_pass_event.coordinates == Point(x=23.0, y=52.0)
+        assert blocked_pass_event.receiver_coordinates == Point(x=100.0, y=0.0)
+
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1927029095)
         assert goalkeeper_event.event_type == EventType.GOALKEEPER
         assert (
             goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
+        )
+
+    def test_shot_assist_event(self, dataset: EventDataset):
+        shot_assist_event = dataset.get_event_by_id(663291837)
+        assert shot_assist_event.event_type == EventType.PASS
+        assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(
+            PassQualifier
         )
 
     def test_shot_event(self, dataset: EventDataset):

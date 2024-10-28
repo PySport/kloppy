@@ -11,7 +11,7 @@ from kloppy.domain import (
     Provider,
     SetPieceType,
     DatasetType,
-    Position,
+    PositionType,
 )
 
 from kloppy import datafactory
@@ -43,7 +43,7 @@ class TestDatafactory:
         assert player.player_id == "38804"
         assert player.jersey_no == 1
         assert str(player) == "Daniel Bold"
-        assert player.starting_position is None
+        assert player.starting_position == None
         assert player.starting
 
         assert dataset.metadata.periods[0].id == 1

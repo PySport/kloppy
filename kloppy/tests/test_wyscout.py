@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -18,6 +18,11 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     Orientation,
+    PassResult,
+    FormationType,
+    Time,
+    PassType,
+    PassQualifier,
 )
 
 from kloppy import wyscout
@@ -74,6 +79,11 @@ class TestWyscoutV2:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=2863.708369
         ) + timedelta(seconds=2999.70982)
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2499773"
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id("190078343")
@@ -178,16 +188,53 @@ class TestWyscoutV3:
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             minutes=20, seconds=47
-        ) + timedelta(minutes=50, seconds=35)
+        ) + timedelta(minutes=69, seconds=35)
+
+        assert (
+            dataset.metadata.teams[0].starting_formation
+            == FormationType.FOUR_TWO_THREE_ONE
+        )
+
+        formation_time_change = Time(
+            dataset.metadata.periods[1], timedelta(minutes=24, seconds=20)
+        )
+        assert (
+            dataset.metadata.teams[0].formations.items[formation_time_change]
+            == FormationType.FOUR_THREE_THREE
+        )
+
+    def test_enriched_metadata(self, dataset: EventDataset):
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(2020, 8, 2, 18, 45, tzinfo=timezone.utc)
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "38"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "2852835"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "S. Mihajlović"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "M. Longo"
 
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(663292348)
         assert kickoff_p1.timestamp == timedelta(minutes=0, seconds=1)
         # Note: the test file is incorrect. The second period start at 45:00
         kickoff_p2 = dataset.get_event_by_id(1331979498)
-        assert kickoff_p2.timestamp == timedelta(
-            minutes=1, seconds=0
-        ) - timedelta(minutes=45)
+        assert kickoff_p2.timestamp == timedelta(seconds=900)
 
     def test_coordinates(self, dataset: EventDataset):
         assert dataset.records[2].coordinates == Point(36.0, 78.0)
@@ -198,12 +245,30 @@ class TestWyscoutV3:
             0.36417591801878735, 0.7695098039215686
         )
 
+    def test_pass_event(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(663292348)
+        assert pass_event.event_type == EventType.PASS
+        assert pass_event.coordinates == Point(x=52.0, y=47.0)
+        assert pass_event.receiver_coordinates == Point(x=60.0, y=32.0)
+
+        blocked_pass_event = dataset.get_event_by_id(663291838)
+        assert blocked_pass_event.result == PassResult.INCOMPLETE
+        assert blocked_pass_event.coordinates == Point(x=23.0, y=52.0)
+        assert blocked_pass_event.receiver_coordinates == Point(x=100.0, y=0.0)
+
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1331979498)
         assert goalkeeper_event.event_type == EventType.GOALKEEPER
         assert (
             goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE
+        )
+
+    def test_shot_assist_event(self, dataset: EventDataset):
+        shot_assist_event = dataset.get_event_by_id(663291837)
+        assert shot_assist_event.event_type == EventType.PASS
+        assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(
+            PassQualifier
         )
 
     def test_shot_event(self, dataset: EventDataset):

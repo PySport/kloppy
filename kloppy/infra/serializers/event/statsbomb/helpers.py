@@ -10,6 +10,7 @@ from kloppy.domain import (
     Period,
     Player,
     PlayerData,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -93,7 +94,9 @@ def parse_freeze_frame(
         elif player_data.get("actor"):
             return event.player
         elif player_data.get("keeper"):
-            return team.get_player_by_position(position_id=1)
+            return team.get_player_by_position(
+                position=PositionType.Goalkeeper, time=event.time
+            )
         else:
             return Player(
                 player_id=f"T{team.team_id}-E{event.event_id}-{i}",

@@ -114,19 +114,17 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             raise DeserializationError(f"Unknown ball state: {ball_state}")
 
         frame = create_frame(
-            **dict(
-                frame_id=frame_id,
-                timestamp=timedelta(seconds=frame_id / frame_rate)
-                - period.start_timestamp,
-                ball_coordinates=Point3D(
-                    float(ball_x), float(ball_y), float(ball_z)
-                ),
-                ball_state=ball_state,
-                ball_owning_team=ball_owning_team,
-                players_data=players_data,
-                period=period,
-                other_data={},
-            )
+            frame_id=frame_id,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
+            ball_coordinates=Point3D(
+                float(ball_x), float(ball_y), float(ball_z)
+            ),
+            ball_state=ball_state,
+            ball_owning_team=ball_owning_team,
+            players_data=players_data,
+            period=period,
+            other_data={},
         )
 
         return frame

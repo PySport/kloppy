@@ -118,16 +118,14 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             players_data[player] = PlayerData(coordinates=Point(x, y))
 
         frame = create_frame(
-            **dict(
-                frame_id=frame_id,
-                timestamp=frame_timestamp,
-                ball_coordinates=ball_coordinates,
-                ball_state=ball_state,
-                ball_owning_team=None,
-                players_data=players_data,
-                period=period,
-                other_data={},
-            )
+            frame_id=frame_id,
+            timestamp=frame_timestamp,
+            ball_coordinates=ball_coordinates,
+            ball_state=ball_state,
+            ball_owning_team=None,
+            players_data=players_data,
+            period=period,
+            other_data={},
         )
 
         return frame

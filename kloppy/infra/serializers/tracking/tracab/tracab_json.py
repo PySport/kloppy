@@ -107,18 +107,16 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             )
 
         frame = create_frame(
-            **dict(
-                frame_id=frame_id,
-                timestamp=timedelta(seconds=frame_id / frame_rate)
-                - period.start_timestamp,
-                ball_coordinates=Point3D(ball_x, ball_y, ball_z),
-                ball_state=ball_state,
-                ball_owning_team=ball_owning_team,
-                ball_speed=ball_speed,
-                players_data=players_data,
-                period=period,
-                other_data={},
-            )
+            frame_id=frame_id,
+            timestamp=timedelta(seconds=frame_id / frame_rate)
+            - period.start_timestamp,
+            ball_coordinates=Point3D(ball_x, ball_y, ball_z),
+            ball_state=ball_state,
+            ball_owning_team=ball_owning_team,
+            ball_speed=ball_speed,
+            players_data=players_data,
+            period=period,
+            other_data={},
         )
 
         return frame

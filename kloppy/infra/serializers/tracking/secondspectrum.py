@@ -97,17 +97,15 @@ class SecondSpectrumDeserializer(
                 )
 
         frame = create_frame(
-            **dict(
-                frame_id=frame_id,
-                timestamp=frame_timestamp,
-                ball_coordinates=ball_coordinates,
-                ball_speed=ball_speed,
-                ball_state=ball_state,
-                ball_owning_team=ball_owning_team,
-                players_data=players_data,
-                period=period,
-                other_data={},
-            )
+            frame_id=frame_id,
+            timestamp=frame_timestamp,
+            ball_coordinates=ball_coordinates,
+            ball_speed=ball_speed,
+            ball_state=ball_state,
+            ball_owning_team=ball_owning_team,
+            players_data=players_data,
+            period=period,
+            other_data={},
         )
 
         return frame

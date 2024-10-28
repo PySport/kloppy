@@ -148,18 +148,16 @@ def parse_freeze_frame(
     )
 
     frame = create_frame(
-        **dict(
-            frame_id=frame_id,
-            ball_coordinates=Point3D(
-                x=event.coordinates.x, y=event.coordinates.y, z=0
-            ),
-            players_data=players_data,
-            period=event.period,
-            timestamp=event.timestamp,
-            ball_state=event.ball_state,
-            ball_owning_team=event.ball_owning_team,
-            other_data={"visible_area": visible_area},
-        )
+        frame_id=frame_id,
+        ball_coordinates=Point3D(
+            x=event.coordinates.x, y=event.coordinates.y, z=0
+        ),
+        players_data=players_data,
+        period=event.period,
+        timestamp=event.timestamp,
+        ball_state=event.ball_state,
+        ball_owning_team=event.ball_owning_team,
+        other_data={"visible_area": visible_area},
     )
 
     return frame

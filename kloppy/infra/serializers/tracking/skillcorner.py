@@ -156,16 +156,14 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             players_data[player] = PlayerData(coordinates=Point(x, y))
 
         frame = create_frame(
-            **dict(
-                frame_id=frame_id,
-                timestamp=frame_time,
-                ball_coordinates=ball_coordinates,
-                players_data=players_data,
-                period=periods[frame_period],
-                ball_state=None,
-                ball_owning_team=ball_owning_team,
-                other_data={},
-            )
+            frame_id=frame_id,
+            timestamp=frame_time,
+            ball_coordinates=ball_coordinates,
+            players_data=players_data,
+            period=periods[frame_period],
+            ball_state=None,
+            ball_owning_team=ball_owning_team,
+            other_data={},
         )
 
         return frame

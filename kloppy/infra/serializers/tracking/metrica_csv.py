@@ -190,17 +190,15 @@ class MetricaCSVTrackingDataDeserializer(
                 }
 
                 frame = create_frame(
-                    **dict(
-                        frame_id=frame_id,
-                        timestamp=timedelta(seconds=frame_id / frame_rate)
-                        - period.start_timestamp,
-                        ball_coordinates=home_partial_frame.ball_coordinates,
-                        players_data=players_data,
-                        period=period,
-                        ball_state=None,
-                        ball_owning_team=None,
-                        other_data={},
-                    )
+                    frame_id=frame_id,
+                    timestamp=timedelta(seconds=frame_id / frame_rate)
+                    - period.start_timestamp,
+                    ball_coordinates=home_partial_frame.ball_coordinates,
+                    players_data=players_data,
+                    period=period,
+                    ball_state=None,
+                    ball_owning_team=None,
+                    other_data={},
                 )
 
                 frame = transformer.transform_frame(frame)

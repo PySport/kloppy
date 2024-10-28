@@ -235,15 +235,15 @@ class TestWyscoutV3:
         )
 
     def test_pass_event(self, dataset: EventDataset):
-        pass_event = dataset.get_event_by_id(663292348)
+        pass_event = dataset.get_event_by_id(1927028486)
         assert pass_event.event_type == EventType.PASS
-        assert pass_event.coordinates == Point(x=52.0, y=47.0)
-        assert pass_event.receiver_coordinates == Point(x=60.0, y=32.0)
+        assert pass_event.coordinates == Point(x=22.0, y=91.0)
+        assert pass_event.receiver_coordinates == Point(x=8.0, y=71.0)
 
-        blocked_pass_event = dataset.get_event_by_id(663291838)
+        blocked_pass_event = dataset.get_event_by_id(1927029452)
         assert blocked_pass_event.result == PassResult.INCOMPLETE
-        assert blocked_pass_event.coordinates == Point(x=23.0, y=52.0)
-        assert blocked_pass_event.receiver_coordinates == Point(x=100.0, y=0.0)
+        assert blocked_pass_event.coordinates == Point(x=96.0, y=85.0)
+        assert blocked_pass_event.receiver_coordinates == Point(x=99.0, y=84.0)
 
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1927029095)
@@ -254,7 +254,7 @@ class TestWyscoutV3:
         )
 
     def test_shot_assist_event(self, dataset: EventDataset):
-        shot_assist_event = dataset.get_event_by_id(663291837)
+        shot_assist_event = dataset.get_event_by_id(1927028561)
         assert shot_assist_event.event_type == EventType.PASS
         assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(
             PassQualifier

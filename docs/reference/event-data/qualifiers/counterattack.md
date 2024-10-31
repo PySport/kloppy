@@ -1,0 +1,3 @@
+# CounterAttackQualifier
+
+::: kloppy.domain.CounterAttackQualifier

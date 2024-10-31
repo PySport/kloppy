@@ -1,4 +1,5 @@
 # Domain concepts
 
-Here should come a table which gives an overview of all objects
-in `kloppy.domain`.
+kloppy defines three types of match datasets: an [`EventDataset`][kloppy.domain.models.event.EventDataset], a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset], and a [`CodeDataset`][kloppy.domain.models.code.CodeDataset]. These datasets describe what happened during a single match.
+
+Each match dataset is linked with a [`Metadata`][kloppy.domain.models.common.Metadata] object, containing all external information describing the match. The metadata contains two [`Team`][kloppy.domain.models.common.Team] entities that describe the line-ups of both teams, the [`Period`][kloppy.domain.models.time.Period] entities that describe the start and end times of each period of the match, the final [`Score`][kloppy.domain.models.common.Score], the [`Provider`][kloppy.domain.models.common.Provider] that collected the data, the [`Orientation`][kloppy.domain.models.common.Orientation] of the data, and the [`CoordinateSystem`][kloppy.domain.models.common.CoordinateSystem] in which the data was recorded.

@@ -63,9 +63,17 @@ nav:
       - reference/index.md
       - Domain Concepts:
           - reference/domain/index.md
-          - EventDataset: reference/domain/event-dataset.md
-          - TrackingDataset: reference/domain/tracking-dataset.md
-          - CodeDataset: reference/domain/code-dataset.md
+          - Dataset:
+              - reference/domain/dataset/index.md
+              - EventDataset: 
+                  - reference/domain/dataset/event-dataset/index.md
+                  - Event: reference/domain/dataset/event-dataset/event.md
+              - TrackingDataset:
+                  - reference/domain/dataset/tracking-dataset/index.md
+                  - Frame: reference/domain/dataset/tracking-dataset/frame.md
+              - CodeDataset: 
+                  - reference/domain/dataset/code-dataset/index.md
+                  - Code: reference/domain/dataset/code-dataset/code.md
           - Metadata:
               - reference/domain/metadata/index.md
               - Team:
@@ -74,10 +82,15 @@ nav:
                   - Player:
                       - reference/domain/metadata/team/player/index.md
                       - Position: reference/domain/metadata/team/player/position.md
-              - Ground: reference/domain/ground.md
-              - Score: reference/domain/score.md
-              - Provider: reference/domain/provider.md
+                  - Ground: reference/domain/metadata/team/ground.md
+              - Score: reference/domain/metadata/score.md
+              - Provider: reference/domain/metadata/provider.md
               - Orientation: reference/domain/orientation.md
+              - CoordinateSystem:
+                - reference/domain/metadata/coordinate-system/index.md
+                - Origin: reference/domain/metadata/coordinate-system/origin.md
+                - VerticalOrientation: reference/domain/metadata/coordinate-system/vertical-orientation.md
+                - PitchDimensions: reference/domain/metadata/coordinate-system/pitch-dimensions.md
       - Data loaders:
           - Datafactory: reference/providers/datafactory.md
           - Metrica: reference/providers/metrica.md
@@ -113,7 +126,13 @@ nav:
               - Formation change: reference/event-data/event-types/formation_change.md
           - Qualifiers:
               - Overview: reference/event-data/qualifiers/index.md
-              - SetPieceQualifier: references/event-data/qualifiers/set-piece.md
+              - BodyPartQualifier: reference/event-data/qualifiers/bodypart.md
+              - CarQualifier: reference/event-data/qualifiers/card.md
+              - CounterAttackQualifier: reference/event-data/qualifiers/counterattack.md
+              - DuelQualifier: reference/event-data/qualifiers/duel.md
+              - GoalKeeperQualifier: reference/event-data/qualifiers/goalkeeper.md
+              - PassQualifier: reference/event-data/qualifiers/pass.md
+              - SetPieceQualifier: reference/event-data/qualifiers/set-piece.md
   - Development:
       - Issues: 'issues.md'
       - Contributing: 'contributing.md'
@@ -134,9 +153,17 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          rendering:
+          options:
+            show_root_heading: true
+            show_if_no_docstring: true
             inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            filters:
+            - '!^_'
             merge_init_into_class: true
+            docstring_section_style: spacy
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
@@ -163,6 +190,8 @@ markdown_extensions:
           class: python
           validator: !!python/name:markdown_exec.validator
           format: !!python/name:markdown_exec.formatter
+  - pymdownx.tabbed:
+      alternate_style: true
   - footnotes
 watch:
   - mkdocs.yml

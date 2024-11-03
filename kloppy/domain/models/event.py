@@ -19,6 +19,7 @@ from kloppy.domain.models.common import (
     OrientationError,
     Position,
 )
+from kloppy.domain.models.time import Time
 from kloppy.utils import (
     camelcase_to_snakecase,
     removes_suffix,
@@ -261,9 +262,7 @@ class Qualifier(ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(
-            removes_suffix(type(self).__name__, "Qualifier")
-        )
+        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
 
 
 @dataclass
@@ -606,12 +605,8 @@ class Event(DataRecord, ABC):
             for event_id in self.related_event_ids
         ]
 
-    def get_related_event(
-        self, type_: Union[str, EventType]
-    ) -> Optional["Event"]:
-        event_type = (
-            EventType[type_.upper()] if isinstance(type_, str) else type_
-        )
+    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
+        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -675,9 +670,7 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(
-                    f"Don't know how to apply filter {filter_}"
-                )
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
 
             if event_type:
                 try:
@@ -724,12 +717,11 @@ class Event(DataRecord, ABC):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class GenericEvent(Event):
-    """GenericEvent
-
+    """
     Unrecognised event type.
 
     Attributes:
-        event_type (EventType): `EventType.GENERIC` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.GENERIC`
         event_name (str): `"generic"`
     """
 
@@ -740,19 +732,19 @@ class GenericEvent(Event):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
-    """ShotEvent
-
-    An attempt to score a goal.
+    """
+    An intentional attempt to score a goal by striking or directing the ball
+    towards the opponent's goal. Own goals are always categorized as a shot too.
 
     Attributes:
-        event_type (EventType): `EventType.SHOT` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"shot"`,
-        result_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
-        result (ShotResult): See [`ShotResult`][kloppy.domain.models.event.ShotResult]
+        event_type (EventType): `EventType.SHOT`
+        event_name (str): `"shot"`
+        result (ShotResult): The outcome of the shot.
+        result_coordinates (Point): End location of the shot. If a shot is blocked, this is the coordinate of the block. If the shot is saved, it is the coordinate where the keeper touched the ball.
     """
 
     result: ShotResult
-    result_coordinates: Point = None
+    result_coordinates: Optional[Point] = None
 
     event_type: EventType = EventType.SHOT
     event_name: str = "shot"
@@ -761,20 +753,19 @@ class ShotEvent(Event):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
-    """PassEvent
-
+    """
     The attempted delivery of the ball from one player to another player on the same team.
 
     Attributes:
-        event_type (EventType): `EventType.PASS` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.PASS`
         event_name (str): `"pass"`
-        receive_timestamp (float):
-        receiver_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
-        receiver_player (Player): See [`Player`][kloppy.domain.models.common.Player]
-        result (PassResult): See [`PassResult`][kloppy.domain.models.event.PassResult]
+        receive_timestamp (Time): The time the pass was received.
+        receiver_coordinates (Point): The coordinates where the pass was received.
+        receiver_player (Player): The intended receiver of the pass.
+        result (PassResult): The pass's outcome.
     """
 
-    receive_timestamp: float
+    receive_timestamp: Time
     receiver_player: Player
     receiver_coordinates: Point
 
@@ -788,7 +779,7 @@ class PassEvent(Event):
 @docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
     """
-    TakeOnEvent
+    An attempt by one player to dribble past an opponent.
 
     Attributes:
         event_type (EventType): `EventType.TAKE_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -806,17 +797,17 @@ class TakeOnEvent(Event):
 @docstring_inherit_attributes(Event)
 class CarryEvent(Event):
     """
-    CarryEvent
+    A player controls the ball at their feet while moving or standing still.
 
     Attributes:
         event_type (EventType): `EventType.CARRY` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"carry"`,
-        end_timestamp (float):
+        event_name (str): `"carry"`
+        end_timestamp (Time):
         end_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
         result (CarryResult): See [`CarryResult`][kloppy.domain.models.event.CarryResult]
     """
 
-    end_timestamp: float
+    end_timestamp: Time
     end_coordinates: Point
 
     result: CarryResult
@@ -829,7 +820,8 @@ class CarryEvent(Event):
 @docstring_inherit_attributes(Event)
 class InterceptionEvent(Event):
     """
-    InterceptionEvent
+    When a player intercepts any pass event between opposition players and
+    prevents the ball reaching its target.
 
     Attributes:
         event_type (EventType): `EventType.INTERCEPTION` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -844,7 +836,9 @@ class InterceptionEvent(Event):
 @docstring_inherit_attributes(Event)
 class ClearanceEvent(Event):
     """
-    ClearanceEvent
+    A defensive action when a player attempts to get the ball away from
+    a dangerous zone on the pitch with no immediate target regarding
+    a recipient for the ball.
 
     Attributes:
         event_type (EventType): `EventType.CLEARANCE` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -859,7 +853,9 @@ class ClearanceEvent(Event):
 @docstring_inherit_attributes(Event)
 class DuelEvent(Event):
     """
-    DuelEvent
+    A contest between two players of opposing sides in the match. Duel events
+    come in pairs: one for the attacking team, one for the defending team.
+    If the duel is a take on, the offensive one has type `TAKE_ON`.
 
     Attributes:
         event_type (EventType): `EventType.DUEL` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -875,11 +871,11 @@ class DuelEvent(Event):
 @docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
     """
-    SubstitutionEvent
+    A player is substituted off the field and replaced by another player.
 
     Attributes:
         event_type (EventType): `EventType.SUBSTITUTION` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"substitution"`,
+        event_name (str): `"substitution"`
         replacement_player (Player): See [`Player`][kloppy.domain.models.common.Player]
     """
 
@@ -894,7 +890,7 @@ class SubstitutionEvent(Event):
 @docstring_inherit_attributes(Event)
 class PlayerOffEvent(Event):
     """
-    PlayerOffEvent
+    A player goes/is carried out of the pitch without a substitution.
 
     Attributes:
         event_type (EventType): `EventType.PLAYER_OFF` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -909,7 +905,7 @@ class PlayerOffEvent(Event):
 @docstring_inherit_attributes(Event)
 class PlayerOnEvent(Event):
     """
-    PlayerOnEvent
+    A player returns to the pitch after a `PlayerOff` event.
 
     Attributes:
         event_type (EventType): `EventType.PLAYER_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -924,7 +920,7 @@ class PlayerOnEvent(Event):
 @docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
-    CardEvent
+    When a player receives a card.
 
     Attributes:
         event_type (EventType): `EventType.CARD` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -942,7 +938,7 @@ class CardEvent(Event):
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """
-    FormationChangeEvent
+    A team alters its formation
 
     Attributes:
         event_type (EventType): `EventType.FORMATION_CHANGE` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -961,7 +957,7 @@ class FormationChangeEvent(Event):
 @docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
     """
-    RecoveryEvent
+    A player gathers a loose ball and gains control of possession for their team.
 
     Attributes:
         event_type (EventType): `EventType.RECOVERY` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -976,7 +972,7 @@ class RecoveryEvent(Event):
 @docstring_inherit_attributes(Event)
 class BallOutEvent(Event):
     """
-    BallOutEvent
+    When the ball goes out of bounds.
 
     Attributes:
         event_type (EventType): `EventType.BALL_OUT` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -991,7 +987,8 @@ class BallOutEvent(Event):
 @docstring_inherit_attributes(Event)
 class MiscontrolEvent(Event):
     """
-    MiscontrolEvent
+    A player unsuccessfully controls the ball and loses possession.
+
     Attributes:
         event_type (EventType): `EventType.MISCONTROL` (See [`EventType`][kloppy.domain.models.event.EventType])
         event_name (str): "miscontrol"
@@ -1005,7 +1002,8 @@ class MiscontrolEvent(Event):
 @docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
-    FoulCommittedEvent
+    Indicates a foul has been committed. The event is defined for the team that
+    commits the foul.
 
     Attributes:
         event_type (EventType): `EventType.FOUL_COMMITTED` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -1020,7 +1018,7 @@ class FoulCommittedEvent(Event):
 @docstring_inherit_attributes(Event)
 class GoalkeeperEvent(Event):
     """
-    GoalkeeperEvent
+    Indicates an action executed by a goalkeeper.
 
     Attributes:
         event_type (EventType): `EventType.GOALKEEPER` (See [`EventType`][kloppy.domain.models.event.EventType])
@@ -1035,15 +1033,15 @@ class GoalkeeperEvent(Event):
 @docstring_inherit_attributes(Event)
 class PressureEvent(Event):
     """
-    PressureEvent
+    A player pressures an opponent to force a mistake.
 
     Attributes:
         event_type (EventType): `EventType.Pressure` (See [`EventType`][kloppy.domain.models.event.EventType])
         event_name (str): `"pressure"`,
-        end_timestamp (float):
+        end_timestamp (Time):
     """
 
-    end_timestamp: float
+    end_timestamp: Time
 
     event_type: EventType = EventType.PRESSURE
     event_name: str = "pressure"
@@ -1108,15 +1106,11 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
         record_converter: Callable[[Event], Dict] = None,
-        additional_columns: Dict[
-            str, Union[Callable[[Event], Any], Any]
-        ] = None,
+        additional_columns: Dict[str, Union[Callable[[Event], Any], Any]] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd
@@ -1144,9 +1138,7 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":

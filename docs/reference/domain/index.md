@@ -1,4 +1,4 @@
-# Domain concepts
+# Domain Concepts
 
 kloppy defines three types of match datasets: an [`EventDataset`][kloppy.domain.models.event.EventDataset], a [`TrackingDataset`][kloppy.domain.models.tracking.TrackingDataset], and a [`CodeDataset`][kloppy.domain.models.code.CodeDataset]. These datasets describe what happened during a single match.
 

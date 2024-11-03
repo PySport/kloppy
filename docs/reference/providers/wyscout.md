@@ -1,2 +1,1 @@
-
-::: kloppy._providers.wyscout
+::: kloppy.wyscout

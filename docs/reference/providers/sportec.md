@@ -1,2 +1,1 @@
-
-::: kloppy._providers.sportec
+::: kloppy.sportec

@@ -1,1 +1,1 @@
-::: kloppy._providers.metrica
+::: kloppy.metrica

@@ -1,2 +1,1 @@
-::: kloppy._providers.statsbomb
-
+::: kloppy.statsbomb

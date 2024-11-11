@@ -91,6 +91,7 @@ class Provider(Enum):
         TRACAB:
         SECONDSPECTRUM:
         OPTA:
+        PFF_FC:
         SKILLCORNER:
         STATSBOMB:
         SPORTEC:
@@ -105,6 +106,7 @@ class Provider(Enum):
     TRACAB = "tracab"
     SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
+    PFF_FC = "pff_fc"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
@@ -698,6 +700,43 @@ class StatsBombCoordinateSystem(CoordinateSystem):
             pitch_width=self.pitch_width,
             standardized=True,
         )
+    
+@dataclass
+class PFF_FCCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.PFF_FC
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self.pitch_length is not None and self.pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
+                pitch_length=self.pitch_length,
+                pitch_width=self.pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
 
 
 class WyscoutCoordinateSystem(CoordinateSystem):
@@ -862,6 +901,7 @@ def build_coordinate_system(
             DatasetType.TRACKING: SportecTrackingDataCoordinateSystem,
         },
         Provider.STATSBOMB: StatsBombCoordinateSystem,
+        Provider.PFF_FC: PFF_FCCoordinateSystem,
         Provider.WYSCOUT: WyscoutCoordinateSystem,
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,

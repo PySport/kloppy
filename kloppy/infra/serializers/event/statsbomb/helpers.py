@@ -206,7 +206,7 @@ def parse_open_matches(competition_id: int, season_id: int, detailed: bool):
             inplace=True,
             errors="ignore",
         )
-        return df
+        return df.sort_values(by="match_date", ascending=False)
     else:
         return df[
             [
@@ -219,7 +219,7 @@ def parse_open_matches(competition_id: int, season_id: int, detailed: bool):
                 "away_team_name",
                 "away_team_id",
             ]
-        ]
+        ].sort_values(by="match_date", ascending=False)
 
 
 def parse_open_competitions(detailed: bool):

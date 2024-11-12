@@ -7,6 +7,10 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
     StatsBombInputs,
 )
+from kloppy.infra.serializers.event.statsbomb.helpers import (
+    parse_open_competitions,
+    parse_open_matches,
+)
 from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike, Source
 
@@ -76,4 +80,16 @@ def load_open_data(
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,
+    )
+
+
+def list_open_competitions(detailed: bool = False):
+    return parse_open_competitions(detailed=detailed)
+
+
+def list_open_matches(
+    competition_id: int, season_id: int, detailed: bool = False
+):
+    return parse_open_matches(
+        competition_id=competition_id, season_id=season_id, detailed=detailed
     )

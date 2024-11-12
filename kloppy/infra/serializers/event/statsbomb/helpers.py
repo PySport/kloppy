@@ -14,6 +14,18 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 
+OPEN_COMPETITIONS_PATH = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/competitions.json"
+OPEN_MATCHES_PATH = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/matches/{competition_id}/{season_id}.json"
+
+import requests as re
+
+
+def get_response(path):
+    response = re.get(path)
+    response.raise_for_status()
+    data = response.json()
+    return data
+
 
 def parse_str_ts(timestamp: str) -> float:
     """Parse a HH:mm:ss string timestamp into number of seconds."""
@@ -141,3 +153,102 @@ def parse_freeze_frame(
         ball_owning_team=event.ball_owning_team,
         other_data={"visible_area": visible_area},
     )
+
+
+def parse_open_matches(competition_id: int, season_id: int, detailed: bool):
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError(
+            "Seems like you don't have pandas installed. Please"
+            " install it using: pip install pandas"
+        )
+    except AttributeError:
+        raise AttributeError(
+            "Seems like you have an older version of pandas installed. Please"
+            " upgrade to at least 1.5 using: pip install pandas>=1.5"
+        )
+
+    path = OPEN_MATCHES_PATH.format(
+        competition_id=competition_id, season_id=season_id
+    )
+    matches = get_response(path)
+    df = pd.json_normalize(matches, sep="_")
+
+    # clean up column names
+    for v in ["competition", "season", "home_team", "away_team"]:
+        df.columns = [x.replace(f"{v}_{v}", v) for x in df.columns]
+
+    if detailed:
+
+        def __flatten_team_managers(df, team_type):
+            # Normalize the team managers, explode to handle list entries within the column, and add prefix for clarity
+            managers_expanded = pd.json_normalize(
+                df[f"{team_type}_managers"].explode(), sep="_"
+            ).add_prefix(f"{team_type}_manager_")
+            return managers_expanded.reset_index(drop=True)
+
+        # Normalize both home and away managers
+        home_managers_expanded = __flatten_team_managers(df, "home_team")
+        away_managers_expanded = __flatten_team_managers(df, "away_team")
+
+        # Concatenate both expanded managers back to the original DataFrame, and drop the original manager columns
+        df = pd.concat(
+            [
+                df.reset_index(drop=True),
+                home_managers_expanded,
+                away_managers_expanded,
+            ],
+            axis=1,
+        )
+        df.drop(
+            columns=["home_team_managers", "away_team_managers"],
+            inplace=True,
+            errors="ignore",
+        )
+        return df
+    else:
+        return df[
+            [
+                "match_id",
+                "match_date",
+                "home_score",
+                "away_score",
+                "home_team_name",
+                "home_team_id",
+                "away_team_name",
+                "away_team_id",
+            ]
+        ]
+
+
+def parse_open_competitions(detailed: bool):
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError(
+            "Seems like you don't have pandas installed. Please"
+            " install it using: pip install pandas"
+        )
+    except AttributeError:
+        raise AttributeError(
+            "Seems like you have an older version of pandas installed. Please"
+            " upgrade to at least 1.5 using: pip install pandas>=1.5"
+        )
+
+    competitions = get_response(OPEN_COMPETITIONS_PATH)
+    df = pd.DataFrame(competitions).sort_values(
+        by="match_available", ascending=False
+    )
+    if detailed:
+        return df
+    else:
+        return df[
+            [
+                "competition_id",
+                "season_id",
+                "country_name",
+                "competition_name",
+                "season_name",
+            ]
+        ]

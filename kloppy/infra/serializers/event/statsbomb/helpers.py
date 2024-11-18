@@ -192,15 +192,6 @@ def parse_open_data(
                         if not "season_id" in matches.columns:
                             matches["season_id"] = season_id
 
-                    elif fmt == "dict":
-                        if not "competition_id" in matches:
-                            matches["competition_id"] = competition_id
-                        if not "season_id" in matches:
-                            matches["season_id"] = season_id
-                    else:
-                        raise ValueError(
-                            "Invalid format. Use 'dataframe' or 'dict'."
-                        )
                     all_matches.append(matches)
         else:
             raise ValueError(

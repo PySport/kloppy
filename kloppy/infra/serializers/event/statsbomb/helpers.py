@@ -14,18 +14,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 
-OPEN_COMPETITIONS_PATH = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/competitions.json"
-OPEN_MATCHES_PATH = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/matches/{competition_id}/{season_id}.json"
-
-import requests as re
-
-
-def get_response(path):
-    response = re.get(path)
-    response.raise_for_status()
-    data = response.json()
-    return data
-
 
 def parse_str_ts(timestamp: str) -> float:
     """Parse a HH:mm:ss string timestamp into number of seconds."""

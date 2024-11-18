@@ -155,100 +155,72 @@ def parse_freeze_frame(
     )
 
 
-def parse_open_matches(competition_id: int, season_id: int, detailed: bool):
+def parse_open_data(
+    competition_id: int = None, season_id: int = None, fmt="dataframe"
+):
     try:
-        import pandas as pd
+        from statsbombpy import sb
+        from statsbombpy.api_client import NoAuthWarning
     except ImportError:
-        raise ImportError(
-            "Seems like you don't have pandas installed. Please"
-            " install it using: pip install pandas"
-        )
-    except AttributeError:
-        raise AttributeError(
-            "Seems like you have an older version of pandas installed. Please"
-            " upgrade to at least 1.5 using: pip install pandas>=1.5"
-        )
+        print("Please install the statsbombpy library to use this function.")
+        return
 
-    path = OPEN_MATCHES_PATH.format(
-        competition_id=competition_id, season_id=season_id
-    )
-    matches = get_response(path)
-    df = pd.json_normalize(matches, sep="_")
-
-    # clean up column names
-    for v in ["competition", "season", "home_team", "away_team"]:
-        df.columns = [x.replace(f"{v}_{v}", v) for x in df.columns]
-
-    if detailed:
-
-        def __flatten_team_managers(df, team_type):
-            # Normalize the team managers, explode to handle list entries within the column, and add prefix for clarity
-            managers_expanded = pd.json_normalize(
-                df[f"{team_type}_managers"].explode(), sep="_"
-            ).add_prefix(f"{team_type}_manager_")
-            return managers_expanded.reset_index(drop=True)
-
-        # Normalize both home and away managers
-        home_managers_expanded = __flatten_team_managers(df, "home_team")
-        away_managers_expanded = __flatten_team_managers(df, "away_team")
-
-        # Concatenate both expanded managers back to the original DataFrame, and drop the original manager columns
-        df = pd.concat(
-            [
-                df.reset_index(drop=True),
-                home_managers_expanded,
-                away_managers_expanded,
-            ],
-            axis=1,
-        )
-        df.drop(
-            columns=["home_team_managers", "away_team_managers"],
-            inplace=True,
-            errors="ignore",
-        )
-        return df.sort_values(by="match_date", ascending=False)
-    else:
-        return df[
-            [
-                "match_id",
-                "match_date",
-                "home_score",
-                "away_score",
-                "home_team_name",
-                "home_team_id",
-                "away_team_name",
-                "away_team_id",
-            ]
-        ].sort_values(by="match_date", ascending=False)
-
-
-def parse_open_competitions(detailed: bool):
+    all_matches = []
     try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError(
-            "Seems like you don't have pandas installed. Please"
-            " install it using: pip install pandas"
-        )
-    except AttributeError:
-        raise AttributeError(
-            "Seems like you have an older version of pandas installed. Please"
-            " upgrade to at least 1.5 using: pip install pandas>=1.5"
-        )
+        if competition_id is not None and season_id is not None:
+            matches = sb.matches(
+                competition_id=competition_id, season_id=season_id, fmt=fmt
+            )
+            all_matches.append(matches)
+        elif competition_id is None and season_id is None:
+            import warnings
 
-    competitions = get_response(OPEN_COMPETITIONS_PATH)
-    df = pd.DataFrame(competitions).sort_values(
-        by="match_available", ascending=False
-    )
-    if detailed:
-        return df
-    else:
-        return df[
-            [
-                "competition_id",
-                "season_id",
-                "country_name",
-                "competition_name",
-                "season_name",
-            ]
-        ]
+            competitions = sb.competitions(fmt="dict")
+            for competition in competitions.values():
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=NoAuthWarning)
+                    competition_id = competition["competition_id"]
+                    season_id = competition["season_id"]
+                    matches = sb.matches(
+                        competition_id=competition_id,
+                        season_id=season_id,
+                        fmt=fmt,
+                    )
+                    if fmt == "dataframe":
+                        if not "competition_id" in matches.columns:
+                            matches["competition_id"] = competition_id
+                        if not "season_id" in matches.columns:
+                            matches["season_id"] = season_id
+
+                    elif fmt == "dict":
+                        if not "competition_id" in matches:
+                            matches["competition_id"] = competition_id
+                        if not "season_id" in matches:
+                            matches["season_id"] = season_id
+                    else:
+                        raise ValueError(
+                            "Invalid format. Use 'dataframe' or 'dict'."
+                        )
+                    all_matches.append(matches)
+        else:
+            raise ValueError(
+                "Invalid input: Both competition_id and season_id must either be provided together or omitted together."
+            )
+
+        if fmt == "dataframe":
+            try:
+                import pandas as pd
+            except ImportError:
+                print(
+                    "Please install the pandas library to use this function."
+                )
+                return
+            combined_matches = pd.concat(all_matches, ignore_index=True)
+            return combined_matches
+        elif fmt == "dict":
+            return all_matches
+        else:
+            raise ValueError("Invalid format. Use 'dataframe' or 'dict'.")
+
+    except Exception as e:
+        raise RuntimeError(f"An error occurred while fetching data: {e}")

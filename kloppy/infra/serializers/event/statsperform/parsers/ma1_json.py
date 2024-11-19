@@ -1,6 +1,6 @@
 """JSON parser for Stats Perform MA1 feeds."""
 import pytz
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional, List, Tuple, Dict
 
 from kloppy.domain import Period, Score, Team, Ground, Player
@@ -16,21 +16,40 @@ class MA1JSONParser(OptaJSONParser):
         match_details = live_data["matchDetails"]
         parsed_periods = []
         for period in match_details["period"]:
+            period_start_raw = period.get("start")
+            period_end_raw = period.get("end")
+            if not period_end_raw:
+                game_end_suspension_stop = next(
+                    suspension_stop
+                    for suspension_stop in period["suspension"]
+                    if suspension_stop["reason"] == "early end"
+                )
+                period_end_raw = game_end_suspension_stop["start"]
             parsed_periods.append(
                 Period(
                     id=period["id"],
                     start_timestamp=datetime.strptime(
-                        period["start"], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                        period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=pytz.utc)
+                    if period_start_raw
+                    else None,
                     end_timestamp=datetime.strptime(
-                        period["end"], "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                        period_end_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=pytz.utc)
+                    if period_end_raw
+                    else None,
                 )
             )
         return parsed_periods
 
     def extract_score(self) -> Optional[Score]:
-        return None
+        live_data = self.root["liveData"]
+        match_details = live_data["matchDetails"]
+        home_score = match_details["scores"]["total"]["home"]
+        away_score = match_details["scores"]["total"]["away"]
+        if home_score is None or away_score is None:
+            return None
+        return Score(home=home_score, away=away_score)
 
     def extract_lineups(self) -> Tuple[Team, Team]:
         teams = {}
@@ -75,6 +94,29 @@ class MA1JSONParser(OptaJSONParser):
         if len(home_team.players) == 0 or len(away_team.players) == 0:
             raise DeserializationError("Lineup incomplete")
         return home_team, away_team
+
+    def extract_date(self) -> Optional[str]:
+        """Return the date of the game."""
+        if "matchInfo" in self.root and "date" in self.root["matchInfo"]:
+            return datetime.strptime(
+                self.root["matchInfo"]["date"], "%Y-%m-%dZ"
+            ).astimezone(timezone.utc)
+        else:
+            return None
+
+    def extract_game_week(self) -> Optional[str]:
+        """Return the game_week of the game."""
+        if "matchInfo" in self.root and "week" in self.root["matchInfo"]:
+            return self.root["matchInfo"]["week"]
+        else:
+            return None
+
+    def extract_game_id(self) -> Optional[str]:
+        """Return the game_id of the game."""
+        if "matchInfo" in self.root and "id" in self.root["matchInfo"]:
+            return self.root["matchInfo"]["id"]
+        else:
+            return None
 
     def _parse_teams(self) -> List[Dict[str, Any]]:
         parsed_teams = []

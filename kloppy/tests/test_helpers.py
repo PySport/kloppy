@@ -61,6 +61,9 @@ class TestHelpers:
             score=None,
             provider=None,
             coordinate_system=None,
+            date="2024-05-19T13:30:00",
+            game_week="35",
+            game_id="2374516",
         )
 
         tracking_data = TrackingDataset(
@@ -171,7 +174,7 @@ class TestHelpers:
         # Create a dataset with the KLOPPY pitch dimensions
         # and HOME_AWAY orientation
         original = self._get_tracking_dataset().transform(
-            to_pitch_dimensions=to_pitch_dimensions,
+            to_pitch_dimensions=to_pitch_dimensions
         )
         assert original.metadata.orientation == Orientation.HOME_AWAY
         assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)

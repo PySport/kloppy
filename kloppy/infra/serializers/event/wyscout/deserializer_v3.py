@@ -1,8 +1,9 @@
 import json
 import logging
 from dataclasses import replace
-from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO
+from datetime import timedelta, timezone
+from dateutil.parser import parse
+from typing import Dict, List
 
 from kloppy.domain import (
     BallOutEvent,
@@ -83,11 +84,24 @@ formations = {
 }
 
 
+def _flip_point(point: Point) -> Point:
+    return Point(x=100 - point.x, y=100 - point.y)
+
+
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     team = Team(
         team_id=wyId,
         name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
+        starting_formation=formations[
+            next(
+                iter(
+                    raw_events["formations"][wyId]["1H"][
+                        next(iter(raw_events["formations"][wyId]["1H"]))
+                    ]
+                )
+            )
+        ],
     )
     team.players = [
         Player(
@@ -164,14 +178,20 @@ def _check_secondary_event_types(
 def _pass_qualifiers(raw_event) -> List[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
 
-    if _check_secondary_event_types(raw_event, ["cross", "cross_blocked"]):
-        qualifiers.append(PassQualifier(PassType.CROSS))
-    elif _check_secondary_event_types(raw_event, ["hand_pass"]):
-        qualifiers.append(PassQualifier(PassType.HAND_PASS))
-    elif _check_secondary_event_types(raw_event, ["head_pass"]):
-        qualifiers.append(PassQualifier(PassType.HEAD_PASS))
-    elif _check_secondary_event_types(raw_event, ["smart_pass"]):
-        qualifiers.append(PassQualifier(PassType.SMART_PASS))
+    qualifier_mapping = {
+        PassType.CROSS: ["cross", "cross_blocked"],
+        PassType.HAND_PASS: ["hand_pass"],
+        PassType.HEAD_PASS: ["head_pass"],
+        PassType.SMART_PASS: ["smart_pass"],
+        PassType.SHOT_ASSIST: ["shot_assist"],
+        PassType.ASSIST: ["assist"],
+    }
+
+    for pass_type, secondary_event_types_values in qualifier_mapping.items():
+        if _check_secondary_event_types(
+            raw_event, secondary_event_types_values
+        ):
+            qualifiers.append(PassQualifier(pass_type))
 
     return qualifiers
 
@@ -179,6 +199,13 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
 def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     pass_result = None
     receiver_player = None
+    if len(raw_event["pass"]["endLocation"]) > 1:
+        receiver_coordinates = Point(
+            x=float(raw_event["pass"]["endLocation"]["x"]),
+            y=float(raw_event["pass"]["endLocation"]["y"]),
+        )
+    else:
+        receiver_coordinates = None
 
     if raw_event["pass"]["accurate"] is True:
         pass_result = PassResult.COMPLETE
@@ -188,24 +215,32 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
+    if raw_event["pass"].get("height") == "blocked":
+        receiver_coordinates = None
+
     if next_event:
         if next_event["type"]["primary"] == "offside":
             pass_result = PassResult.OFFSIDE
         if next_event["type"]["primary"] == "game_interruption":
             if "ball_out" in next_event["type"]["secondary"]:
                 pass_result = PassResult.OUT
+        # Set end coordinates of blocked pass to start coordinates of next event if it is not a game interruption
+        if raw_event["pass"].get("height") == "blocked":
+            next_event_location = Point(
+                x=float(next_event["location"]["x"]),
+                y=float(next_event["location"]["y"]),
+            )
+            if team.team_id == str(next_event["team"]["id"]):
+                receiver_coordinates = next_event_location
+            else:
+                receiver_coordinates = _flip_point(next_event_location)
 
     return {
         "result": pass_result,
         "qualifiers": _pass_qualifiers(raw_event),
         "receive_timestamp": None,
         "receiver_player": receiver_player,
-        "receiver_coordinates": Point(
-            x=float(raw_event["pass"]["endLocation"]["x"]),
-            y=float(raw_event["pass"]["endLocation"]["y"]),
-        )
-        if len(raw_event["pass"]["endLocation"]) > 1
-        else None,
+        "receiver_coordinates": receiver_coordinates,
     }
 
 
@@ -284,12 +319,12 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     )
 
     if next_event is not None:
-        period_id = int(next_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(next_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             next_event, start_ts, period_id
         )
     else:
-        period_id = int(raw_event["matchPeriod"].replace("H", ""))
+        period_id = _parse_period_id(raw_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             raw_event, start_ts, period_id
         )
@@ -513,6 +548,19 @@ def _players_to_dict(players: List[Player]):
     return {player.player_id: player for player in players}
 
 
+def _parse_period_id(raw_period: str) -> int:
+    if "H" in raw_period:
+        period_id = int(raw_period.replace("H", ""))
+    elif "E" in raw_period:
+        period_id = 2 + int(raw_period.replace("E", ""))
+    elif raw_period == "P":
+        period_id = 5
+    else:
+        raise DeserializationError(f"Unknown period {raw_period}")
+
+    return period_id
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -548,6 +596,33 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     for wyId, team in teams.items()
                 ]
             )
+            date = raw_events["match"].get("dateutc")
+            if date:
+                date = parse(date).astimezone(timezone.utc)
+            game_week = raw_events["match"].get("gameweek")
+            if game_week:
+                game_week = str(game_week)
+            game_id = raw_events["events"][0].get("matchId")
+            if game_id:
+                game_id = str(game_id)
+            home_coach = None
+            away_coach = None
+            coaches = raw_events.get("coaches")
+            if coaches:
+                if (
+                    home_team_id in coaches
+                    and "coach" in coaches[home_team_id]
+                ):
+                    home_coach = coaches[home_team_id]["coach"].get(
+                        "shortName"
+                    )
+                if (
+                    away_team_id in coaches
+                    and "coach" in coaches[away_team_id]
+                ):
+                    away_coach = coaches[away_team_id]["coach"].get(
+                        "shortName"
+                    )
 
             events = []
 
@@ -556,14 +631,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = int(
-                        next_event["matchPeriod"].replace("H", "")
+                    next_period_id = _parse_period_id(
+                        next_event["matchPeriod"]
                     )
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
-                period_id = int(raw_event["matchPeriod"].replace("H", ""))
+                period_id = _parse_period_id(raw_event["matchPeriod"])
 
                 if len(periods) == 0 or periods[-1].id != period_id:
                     periods.append(
@@ -579,8 +654,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if next_period_id != period_id:
                     periods[-1] = replace(
                         periods[-1],
-                        end_timestamp=periods[-1].start_timestamp
-                        + timedelta(
+                        end_timestamp=timedelta(
                             seconds=float(
                                 raw_event["second"] + raw_event["minute"] * 60
                             )
@@ -769,6 +843,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             flags=None,
             provider=Provider.WYSCOUT,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
         )
 
         return EventDataset(metadata=metadata, records=events)

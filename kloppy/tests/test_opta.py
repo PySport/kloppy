@@ -409,6 +409,14 @@ class TestOptaShotEvent:
             ).value
             == 0.9780699610710144
         )
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "PSxG"
+            ).value
+            == 0.98
+        )
 
 
 class TestOptaDuelEvent:

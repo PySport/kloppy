@@ -717,6 +717,15 @@ class TestStatsBombShotEvent:
         )
         # An open play shot should not have a set piece qualifier
         assert shot.get_qualifier_value(SetPieceQualifier) is None
+        # A shot event should have a xG value
+        assert (
+            next(
+                statistic
+                for statistic in shot.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.12441643
+        )
 
     def test_free_kick(self, dataset: EventDataset):
         """It should add set piece qualifiers to free kick shots"""

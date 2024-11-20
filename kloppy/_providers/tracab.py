@@ -26,13 +26,14 @@ def load(
     elif file_format == "json":
         deserializer_class = TRACABJSONDeserializer
     else:
-        deserializer_class = identify_deserializer(meta_data, raw_data)
+        deserializer_class = identify_deserializer(raw_data)
 
     deserializer = deserializer_class(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
+        meta_data_extension=get_file_extension(meta_data),
     )
     with open_as_file(meta_data) as meta_data_fp, open_as_file(
         raw_data
@@ -43,15 +44,14 @@ def load(
 
 
 def identify_deserializer(
-    meta_data: FileLike,
     raw_data: FileLike,
 ) -> Union[Type[TRACABDatDeserializer], Type[TRACABJSONDeserializer]]:
-    meta_data_extension = get_file_extension(meta_data)
+
     raw_data_extension = get_file_extension(raw_data)
 
-    if meta_data_extension == ".xml" and raw_data_extension == ".dat":
+    if raw_data_extension == ".dat":
         deserializer = TRACABDatDeserializer
-    elif meta_data_extension == ".json" and raw_data_extension == ".json":
+    elif raw_data_extension == ".json":
         deserializer = TRACABJSONDeserializer
     else:
         raise ValueError(

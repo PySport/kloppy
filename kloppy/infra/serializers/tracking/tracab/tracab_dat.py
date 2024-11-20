@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta, timezone
 import warnings
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Literal
 import html
 from dateutil.parser import parse
 
@@ -31,6 +31,7 @@ from kloppy.exceptions import DeserializationError
 from kloppy.utils import Readable, performance_logging
 
 from .common import TRACABInputs, position_types_mapping
+from .helpers import load_meta_data
 from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
@@ -43,9 +44,11 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = True,
+        meta_data_extension: Literal[".xml", ".json"] = None,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
+        self.meta_data_extension = meta_data_extension
 
     @property
     def provider(self) -> Provider:
@@ -135,135 +138,18 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    @staticmethod
-    def create_team(
-        team_data, ground, start_frame_id, id_suffix="Id", player_item="Player"
-    ):
-        team = Team(
-            team_id=str(team_data[f"Team{id_suffix}"]),
-            name=html.unescape(team_data["ShortName"]),
-            ground=ground,
-        )
-
-        team.players = [
-            Player(
-                player_id=str(player[f"Player{id_suffix}"]),
-                team=team,
-                first_name=html.unescape(player["FirstName"]),
-                last_name=html.unescape(player["LastName"]),
-                name=html.unescape(
-                    player["FirstName"] + " " + player["LastName"]
-                ),
-                jersey_no=int(player["JerseyNo"]),
-                starting=player["StartFrameCount"] == start_frame_id,
-                starting_position=position_types_mapping.get(
-                    player.get("StartingPosition"), PositionType.Unknown
-                ),
-            )
-            for player in team_data["Players"][player_item]
-        ]
-
-        return team
-
     def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
-        with performance_logging("Loading metadata", logger=logger):
-            meta_data = objectify.fromstring(inputs.meta_data.read())
+        (
+            pitch_size_height,
+            pitch_size_width,
+            teams,
+            periods,
+            frame_rate,
+            date,
+            game_id,
+        ) = load_meta_data(self.meta_data_extension, inputs.meta_data)
 
-            periods = []
-            orientation = None
-
-            if hasattr(meta_data, "match"):
-                id_suffix = "Id"
-                player_item = "Player"
-
-                match = meta_data.match
-                frame_rate = int(match.attrib["iFrameRateFps"])
-                pitch_size_width = float(
-                    match.attrib["fPitchXSizeMeters"].replace(",", ".")
-                )
-                pitch_size_height = float(
-                    match.attrib["fPitchYSizeMeters"].replace(",", ".")
-                )
-                date = parse(meta_data.match.attrib["dtDate"]).astimezone(
-                    timezone.utc
-                )
-                game_id = meta_data.match.attrib["iId"]
-
-                for period in match.iterchildren(tag="period"):
-                    start_frame_id = int(period.attrib["iStartFrame"])
-                    end_frame_id = int(period.attrib["iEndFrame"])
-                    if start_frame_id != 0 or end_frame_id != 0:
-                        periods.append(
-                            Period(
-                                id=int(period.attrib["iId"]),
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
-                            )
-                        )
-            elif hasattr(meta_data, "Phase1StartFrame"):
-                date = parse(str(meta_data["Kickoff"]))
-                game_id = str(meta_data["GameID"])
-                id_suffix = "ID"
-                player_item = "item"
-
-                frame_rate = int(meta_data["FrameRate"])
-                pitch_size_width = float(meta_data["PitchLongSide"]) / 100
-                pitch_size_height = float(meta_data["PitchShortSide"]) / 100
-                for i in [1, 2, 3, 4, 5]:
-                    start_frame_id = int(meta_data[f"Phase{i}StartFrame"])
-                    end_frame_id = int(meta_data[f"Phase{i}EndFrame"])
-                    if start_frame_id != 0 or end_frame_id != 0:
-                        periods.append(
-                            Period(
-                                id=i,
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
-                            )
-                        )
-
-                orientation = (
-                    Orientation.HOME_AWAY
-                    if bool(meta_data["Phase1HomeGKLeft"])
-                    else Orientation.AWAY_HOME
-                )
-            else:
-                raise NotImplementedError(
-                    """This 'meta_data' format is currently not supported..."""
-                )
-
-            if hasattr(meta_data, "HomeTeam") and hasattr(
-                meta_data, "AwayTeam"
-            ):
-                home_team = self.create_team(
-                    meta_data["HomeTeam"],
-                    Ground.HOME,
-                    start_frame_id=start_frame_id,
-                    id_suffix=id_suffix,
-                    player_item=player_item,
-                )
-                away_team = self.create_team(
-                    meta_data["AwayTeam"],
-                    Ground.AWAY,
-                    start_frame_id=start_frame_id,
-                    id_suffix=id_suffix,
-                    player_item=player_item,
-                )
-            else:
-                home_team = Team(
-                    team_id="home", name="home", ground=Ground.HOME
-                )
-                away_team = Team(
-                    team_id="away", name="away", ground=Ground.AWAY
-                )
-            teams = [home_team, away_team]
+        orientation = None
 
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(

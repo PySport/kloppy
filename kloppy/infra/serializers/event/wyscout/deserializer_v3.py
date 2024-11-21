@@ -45,6 +45,7 @@ from kloppy.domain import (
     Team,
     FormationType,
     CarryResult,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
@@ -81,36 +82,78 @@ formations = {
     "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
 }
 
+position_types_mapping: Dict[str, PositionType] = {
+    "GK": PositionType.Goalkeeper,
+    "LB": PositionType.LeftBack,
+    "LWB": PositionType.LeftWing,
+    "LB5": PositionType.LeftBack,
+    "LCB": PositionType.LeftCenterBack,
+    "LCB3": PositionType.LeftCenterBack,
+    "CB": PositionType.CenterBack,
+    "RCB": PositionType.RightCenterBack,
+    "RCB3": PositionType.RightCenterBack,
+    "RB": PositionType.RightBack,
+    "RWB": PositionType.RightWing,
+    "RB5": PositionType.RightBack,
+    "LW": PositionType.LeftWing,
+    "LAMF": PositionType.LeftAttackingMidfield,
+    "LCMF3": PositionType.LeftCentralMidfield,
+    "LCMF": PositionType.LeftCentralMidfield,
+    "DMF": PositionType.DefensiveMidfield,
+    "LDMF": PositionType.LeftDefensiveMidfield,
+    "RDMF": PositionType.RightDefensiveMidfield,
+    "RCMF3": PositionType.RightCentralMidfield,
+    "RCMF": PositionType.RightCentralMidfield,
+    "RAMF": PositionType.RightAttackingMidfield,
+    "RW": PositionType.RightWing,
+    "AMF": PositionType.AttackingMidfield,
+    "LWF": PositionType.LeftForward,
+    "CF": PositionType.Striker,
+    "SS": PositionType.Striker,
+    "RWF": PositionType.RightForward,
+}
+
 
 def _flip_point(point: Point) -> Point:
     return Point(x=100 - point.x, y=100 - point.y)
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
+    # Get the first formation description
+    first_period_formation_info = raw_events["formations"][wyId]["1H"]
+    first_formation_descr = next(iter(first_period_formation_info.values()))
+    formation_str, formation_info = next(iter(first_formation_descr.items()))
+
+    # Extract the formation and players' positions
+    starting_formation = formations[formation_str]
+    starting_players_positions = {
+        player_id: position_types_mapping[player_info["position"].upper()]
+        for player_descr in formation_info["players"]
+        for player_id, player_info in player_descr.items()
+    }
+
     team = Team(
         team_id=wyId,
         name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
-        starting_formation=formations[
-            next(
-                iter(
-                    raw_events["formations"][wyId]["1H"][
-                        next(iter(raw_events["formations"][wyId]["1H"]))
-                    ]
-                )
-            )
-        ],
+        starting_formation=starting_formation,
     )
-    team.players = [
-        Player(
-            player_id=str(player["player"]["wyId"]),
-            team=team,
-            jersey_no=None,
-            first_name=player["player"]["firstName"],
-            last_name=player["player"]["lastName"],
+
+    for player in raw_events["players"][wyId]:
+        player_id = str(player["player"]["wyId"])
+        starting_position = starting_players_positions.get(player_id)
+        team.players.append(
+            Player(
+                player_id=player_id,
+                team=team,
+                jersey_no=None,
+                first_name=player["player"]["firstName"],
+                last_name=player["player"]["lastName"],
+                starting=starting_position is not None,
+                starting_position=starting_position,
+            )
         )
-        for player in raw_events["players"][wyId]
-    ]
+
     return team
 
 

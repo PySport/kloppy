@@ -23,6 +23,7 @@ from kloppy.domain import (
     Time,
     PassType,
     PassQualifier,
+    PositionType,
 )
 
 from kloppy import wyscout
@@ -202,6 +203,12 @@ class TestWyscoutV3:
             dataset.metadata.teams[1].formations.items[formation_time_change]
             == FormationType.FOUR_THREE_ONE_TWO
         )
+
+        cr7 = dataset.metadata.teams[0].get_player_by_id("3322")
+
+        assert cr7.full_name == "Cristiano Ronaldo dos Santos Aveiro"
+        assert cr7.starting is True
+        assert cr7.positions.last() == PositionType.Striker
 
     def test_enriched_metadata(self, dataset: EventDataset):
         date = dataset.metadata.date

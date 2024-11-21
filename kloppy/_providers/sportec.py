@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
@@ -81,4 +81,79 @@ def load(
 ) -> EventDataset:
     return load_event(
         event_data, meta_data, event_types, coordinates, event_factory
+    )
+
+
+META_DATA_MAP = {
+    "J03WPY": "48392497",
+    "J03WN1": "48392491",
+    "J03WMX": "48392485",
+    "J03WOH": "48392515",
+    "J03WQQ": "48392488",
+    "J03WOY": "48392503",
+    "J03WR9": "48392494",
+}
+EVENT_DATA_MAP = {
+    "J03WPY": "48392542",
+    "J03WN1": "48392527",
+    "J03WMX": "48392524",
+    "J03WOH": "48392500",
+    "J03WQQ": "48392521",
+    "J03WOY": "48392518",
+    "J03WR9": "48392530",
+}
+TRACKING_DATA_MAP = {
+    "J03WPY": "48392572",
+    "J03WN1": "48392512",
+    "J03WMX": "48392539",
+    "J03WOH": "48392578",
+    "J03WQQ": "48392545",
+    "J03WOY": "48392551",
+    "J03WR9": "48392563",
+}
+
+DATA_URL = "https://figshare.com/ndownloader/files/{file_id}?private_link=1f806cb3e755c6b54e05"
+
+
+def load_open_event_data(
+    match_id: str = "J03WPY",
+    event_types: Optional[List[str]] = None,
+    coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
+) -> EventDataset:
+
+    if not META_DATA_MAP.get(match_id):
+        raise ValueError(
+            f"This match_id is not available, please select from {list(META_DATA_MAP.keys())}"
+        )
+
+    return load_event(
+        event_data=DATA_URL.format(file_id=EVENT_DATA_MAP[match_id]),
+        meta_data=DATA_URL.format(file_id=META_DATA_MAP[match_id]),
+        event_types=event_types,
+        coordinates=coordinates,
+        event_factory=event_factory,
+    )
+
+
+def load_open_tracking_data(
+    match_id: str = "J03WPY",
+    sample_rate: Optional[float] = None,
+    limit: Optional[int] = None,
+    coordinates: Optional[str] = None,
+    only_alive: Optional[bool] = True,
+) -> EventDataset:
+
+    if not META_DATA_MAP.get(match_id):
+        raise ValueError(
+            f"This match_id is not available, please select from {list(META_DATA_MAP.keys())}"
+        )
+
+    return load_tracking(
+        raw_data=DATA_URL.format(file_id=TRACKING_DATA_MAP[match_id]),
+        meta_data=DATA_URL.format(file_id=META_DATA_MAP[match_id]),
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinates=coordinates,
+        only_alive=only_alive,
     )

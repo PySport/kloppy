@@ -319,3 +319,29 @@ class TestWyscoutV3:
         carry_event = dataset.get_event_by_id(1927028490)
         assert carry_event.event_type == EventType.CARRY
         assert carry_event.end_coordinates == Point(17.0, 4.0)
+
+    def test_sub_event(self, dataset: EventDataset):
+        second_period = dataset.metadata.periods[1]
+
+        sub_events = [
+            event
+            for event in dataset.events
+            if event.event_type == EventType.SUBSTITUTION
+        ]
+        assert len(sub_events) == 9
+
+        first_sub_event = sub_events[0]
+        assert first_sub_event.time == Time(
+            period=second_period, timestamp=timedelta(seconds=4)
+        )
+        assert first_sub_event.team.team_id == "3164"
+        assert first_sub_event.player.player_id == "415809"
+        assert first_sub_event.replacement_player.player_id == "703"
+
+        last_sub_event = sub_events[-1]
+        assert last_sub_event.time == Time(
+            period=second_period, timestamp=timedelta(seconds=2192)
+        )
+        assert last_sub_event.team.team_id == "3159"
+        assert last_sub_event.player.player_id == "20461"
+        assert last_sub_event.replacement_player.player_id == "345695"

@@ -592,6 +592,75 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
+def insert_substitution_events(
+    deserializer, events, raw_events, players, teams, periods, transformer
+):
+    # Step 1: Create substitution events
+    substitution_events = []
+    for team_id, periods_subs in raw_events["substitutions"].items():
+        for raw_period, sub_info in periods_subs.items():
+            for raw_seconds, players_info in sub_info.items():
+                subs_out = players_info["out"]
+                subs_in = players_info["in"]
+                for sub_out, sub_in in zip(subs_out, subs_in):
+                    sub_out_player = players[team_id][str(sub_out["playerId"])]
+                    sub_in_player = players[team_id][str(sub_in["playerId"])]
+
+                    # Build the substitution event
+                    sub_event = deserializer.event_factory.build_substitution(
+                        event_id=f"substitution-{sub_out['playerId']}-{sub_in['playerId']}",
+                        ball_owning_team=None,
+                        ball_state=None,
+                        coordinates=Point(x=0, y=0),
+                        player=sub_out_player,
+                        replacement_player=sub_in_player,
+                        team=teams[team_id],
+                        period=periods[int(raw_period[0]) - 1],
+                        timestamp=timedelta(seconds=int(raw_seconds)),
+                        result=None,
+                        raw_event=None,
+                        qualifiers=None,
+                    )
+
+                    if sub_event and deserializer.should_include_event(
+                        sub_event
+                    ):
+                        substitution_events.append(
+                            transformer.transform_event(sub_event)
+                        )
+
+    # Step 2: Sort substitution events globally by period and timestamp
+    substitution_events.sort(key=lambda e: (e.period.id, e.timestamp))
+
+    # Step 3: Merge events and substitutions in ascending order
+    merged_events = []
+    sub_index = 0
+    total_subs = len(substitution_events)
+
+    for event in events:
+        # Insert all substitution events that occur before or at the current event's timestamp
+        while sub_index < total_subs:
+            sub_event = substitution_events[sub_index]
+            if sub_event.period.id < event.period.id or (
+                sub_event.period.id == event.period.id
+                and sub_event.timestamp <= event.timestamp
+            ):
+                merged_events.append(sub_event)
+                sub_index += 1
+            else:
+                break
+
+        # Add the current event to the merged list
+        merged_events.append(event)
+
+    # Step 4: Add any remaining substitution events
+    while sub_index < total_subs:
+        merged_events.append(substitution_events[sub_index])
+        sub_index += 1
+
+    return merged_events
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -864,6 +933,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         if event and self.should_include_event(event):
                             events.append(transformer.transform_event(event))
 
+        all_events = insert_substitution_events(
+            self, events, raw_events, players, teams, periods, transformer
+        )
+
         metadata = Metadata(
             teams=[home_team, away_team],
             periods=periods,
@@ -881,4 +954,4 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_coach=away_coach,
         )
 
-        return EventDataset(metadata=metadata, records=events)
+        return EventDataset(metadata=metadata, records=all_events)

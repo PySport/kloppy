@@ -39,10 +39,9 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with (
-        open_as_file(event_data) as event_data_fp,
-        open_as_file(meta_data) as meta_data_fp,
-    ):
+    with open_as_file(event_data) as event_data_fp, open_as_file(
+        meta_data
+    ) as meta_data_fp:
         return serializer.deserialize(
             SportecEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp
@@ -64,10 +63,9 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with (
-        open_as_file(meta_data) as meta_data_fp,
-        open_as_file(raw_data) as raw_data_fp,
-    ):
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(
+        raw_data
+    ) as raw_data_fp:
         return deserializer.deserialize(
             inputs=SportecTrackingDataInputs(
                 meta_data=meta_data_fp, raw_data=raw_data_fp

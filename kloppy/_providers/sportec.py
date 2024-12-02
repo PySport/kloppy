@@ -145,7 +145,8 @@ def load_open_event_data(
     except HTTPError as e:
         raise HTTPError(
             "Unable to retrieve data. The dataset archive location may have changed. "
-            "Please verify the `kloppy.sportec.DATA_URL` and file mappings. "
+            "Please visit the GitHub Issue at https://github.com/PySport/kloppy/issues/369"
+            "and verify the `kloppy.sportec.DATA_URL` and file mappings. "
             "This issue might be resolved by updating to the latest version of kloppy. "
             "Original error: {}".format(e)
         )
@@ -181,7 +182,8 @@ def load_open_tracking_data(
     except HTTPError as e:
         raise HTTPError(
             "Unable to retrieve data. The dataset archive location may have changed. "
-            "Please verify the `kloppy.sportec.DATA_URL` and file mappings. "
+            "Please visit the GitHub Issue at https://github.com/PySport/kloppy/issues/369"
+            "and verify the `kloppy.sportec.DATA_URL` and file mappings. "
             "This issue might be resolved by updating to the latest version of kloppy. "
             "Original error: {}".format(e)
         )

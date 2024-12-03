@@ -85,7 +85,7 @@ formations = {
 position_types_mapping: Dict[str, PositionType] = {
     "GK": PositionType.Goalkeeper,
     "LB": PositionType.LeftBack,
-    "LWB": PositionType.LeftWing,
+    "LWB": PositionType.LeftWingBack,
     "LB5": PositionType.LeftBack,
     "LCB": PositionType.LeftCenterBack,
     "LCB3": PositionType.LeftCenterBack,
@@ -93,7 +93,7 @@ position_types_mapping: Dict[str, PositionType] = {
     "RCB": PositionType.RightCenterBack,
     "RCB3": PositionType.RightCenterBack,
     "RB": PositionType.RightBack,
-    "RWB": PositionType.RightWing,
+    "RWB": PositionType.RightWingBack,
     "RB5": PositionType.RightBack,
     "LW": PositionType.LeftWing,
     "LAMF": PositionType.LeftAttackingMidfield,
@@ -127,7 +127,9 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     # Extract the formation and players' positions
     starting_formation = formations.get(formation_str)
     starting_players_positions = {
-        player_id: position_types_mapping.get(player_info["position"].upper(), PositionType.Unknown)
+        player_id: position_types_mapping.get(
+            player_info["position"].upper(), PositionType.Unknown
+        )
         for player_descr in formation_info["players"]
         for player_id, player_info in player_descr.items()
     }

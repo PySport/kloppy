@@ -125,7 +125,7 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     formation_str, formation_info = next(iter(first_formation_descr.items()))
 
     # Extract the formation and players' positions
-    starting_formation = formations[formation_str]
+    starting_formation = formations.get(formation_str)
     starting_players_positions = {
         player_id: position_types_mapping[player_info["position"].upper()]
         for player_descr in formation_info["players"]

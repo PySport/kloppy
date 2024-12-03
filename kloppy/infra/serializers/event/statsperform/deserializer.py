@@ -702,6 +702,8 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         f"Set end of period {period.id} to {raw_event.timestamp}"
                     )
                     period.end_timestamp = raw_event.timestamp
+                elif raw_event.type_id == EVENT_TYPE_PLAYER_ON:
+                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet

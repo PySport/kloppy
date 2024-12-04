@@ -144,8 +144,8 @@ def load_meta_data_xml(meta_data):
             pitch_size_height = float(
                 match.attrib["fPitchYSizeMeters"].replace(",", ".")
             )
-            date = parse(meta_data.match.attrib["dtDate"]).astimezone(
-                timezone.utc
+            date = parse(meta_data.match.attrib["dtDate"]).replace(
+                tzinfo=timezone.utc
             )
             game_id = meta_data.match.attrib["iId"]
 

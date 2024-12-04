@@ -174,7 +174,7 @@ class TestTracabDATTracking:
         if date:
             assert isinstance(date, datetime)
             assert date == datetime(
-                2023, 12, 15, 19, 32, 20, tzinfo=timezone.utc
+                2023, 12, 15, 20, 32, 20, tzinfo=timezone.utc
             )
 
         game_week = dataset.metadata.game_week

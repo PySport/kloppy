@@ -141,3 +141,65 @@ def parse_freeze_frame(
         ball_owning_team=event.ball_owning_team,
         other_data={"visible_area": visible_area},
     )
+
+
+def parse_open_data(
+    competition_id: int = None, season_id: int = None, fmt="dataframe"
+):
+    try:
+        from statsbombpy import sb
+        from statsbombpy.api_client import NoAuthWarning
+    except ImportError:
+        print("Please install the statsbombpy library to use this function.")
+        return
+
+    all_matches = []
+    try:
+        if competition_id is not None and season_id is not None:
+            matches = sb.matches(
+                competition_id=competition_id, season_id=season_id, fmt=fmt
+            )
+            all_matches.append(matches)
+        elif competition_id is None and season_id is None:
+            import warnings
+
+            competitions = sb.competitions(fmt="dict")
+            for competition in competitions.values():
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=NoAuthWarning)
+                    competition_id = competition["competition_id"]
+                    season_id = competition["season_id"]
+                    matches = sb.matches(
+                        competition_id=competition_id,
+                        season_id=season_id,
+                        fmt=fmt,
+                    )
+                    if fmt == "dataframe":
+                        if not "competition_id" in matches.columns:
+                            matches["competition_id"] = competition_id
+                        if not "season_id" in matches.columns:
+                            matches["season_id"] = season_id
+
+                    all_matches.append(matches)
+        else:
+            raise ValueError(
+                "Invalid input: Both competition_id and season_id must either be provided together or omitted together."
+            )
+
+        if fmt == "dataframe":
+            try:
+                import pandas as pd
+            except ImportError:
+                print(
+                    "Please install the pandas library to use this function."
+                )
+                return
+            combined_matches = pd.concat(all_matches, ignore_index=True)
+            return combined_matches
+        elif fmt == "dict":
+            return all_matches
+        else:
+            raise ValueError("Invalid format. Use 'dataframe' or 'dict'.")
+
+    except Exception as e:
+        raise RuntimeError(f"An error occurred while fetching data: {e}")

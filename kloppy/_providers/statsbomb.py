@@ -1,5 +1,5 @@
 import warnings
-from typing import Union
+from typing import Union, Literal
 
 from kloppy.config import get_config
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
@@ -7,6 +7,7 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
     StatsBombInputs,
 )
+from kloppy.infra.serializers.event.statsbomb.helpers import parse_open_data
 from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike, Source
 
@@ -76,4 +77,14 @@ def load_open_data(
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,
+    )
+
+
+def list_open_data(
+    fmt: Literal["dataframe", "dict"] = "dataframe",
+    competition_id: int = None,
+    season_id: int = None,
+):
+    return parse_open_data(
+        fmt=fmt, competition_id=competition_id, season_id=season_id
     )

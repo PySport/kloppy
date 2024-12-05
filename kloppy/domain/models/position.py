@@ -92,3 +92,10 @@ class PositionType(Enum):
     @classmethod
     def unknown(cls) -> "PositionType":
         return cls.Unknown
+
+
+class RefereeType:
+    VideoReferee = "Video Referee"
+    Referee = "Referee"
+    Assistant = "Assistant"
+    FourthOfficial = "Fourth Official"

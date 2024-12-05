@@ -18,7 +18,7 @@ from typing import (
     Iterable,
 )
 
-from .position import PositionType
+from .position import PositionType, RefereeType
 
 from ...utils import deprecated
 
@@ -117,6 +117,25 @@ class Provider(Enum):
 
     def __str__(self):
         return self.value
+
+
+@dataclass(frozen=True)
+class Referee:
+    referee_id: str
+    name: str = None
+    first_name: str = None
+    last_name: str = None
+    role: Optional[RefereeType] = None
+
+    @property
+    def full_name(self):
+        if self.name:
+            return self.name
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.role:
+            return f"{self.role}_{self.referee_id}"
+        return self.referee_id
 
 
 @dataclass(frozen=True)

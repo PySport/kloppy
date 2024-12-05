@@ -120,6 +120,10 @@ class TestSportecTrackingData:
         return base_dir / "files/sportec_positional.xml"
 
     @pytest.fixture
+    def raw_data_referee(self, base_dir) -> str:
+        return base_dir / "files/sportec_positional_w_referee.xml"
+
+    @pytest.fixture
     def meta_data(self, base_dir) -> str:
         return base_dir / "files/sportec_meta.xml"
 
@@ -238,3 +242,12 @@ class TestSportecTrackingData:
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "M. Rose"
+
+    def test_referees(self, raw_data_referee: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data_referee,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+        )
+        assert len(dataset.metadata.referees) == 4

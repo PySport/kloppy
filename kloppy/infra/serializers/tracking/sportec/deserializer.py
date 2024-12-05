@@ -249,6 +249,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             game_id=game_id,
             home_coach=home_coach,
             away_coach=away_coach,
+            referees=sportec_metadata.referees,
         )
 
         return TrackingDataset(

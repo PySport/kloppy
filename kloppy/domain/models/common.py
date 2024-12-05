@@ -1035,6 +1035,7 @@ class Metadata:
     game_id: Optional[str] = None
     home_coach: Optional[str] = None
     away_coach: Optional[str] = None
+    referees: Optional[List] = field(default_factory=list)
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):

@@ -230,15 +230,6 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
             
-            teamdict = {
-               home_team_id : "home_team",
-               away_team_id : "away_team",
-            }
-
-            player_to_team_dict = {
-                literal_eval(player['player'])['id']: literal_eval(player['team'])['id']
-        for player in roster_meta_data
-            }
 
             pitch_size_width = literal_eval(metadata[0]["stadium"])["pitchWidth"]
             pitch_size_length = literal_eval(metadata[0]["stadium"])["pitchLength"]

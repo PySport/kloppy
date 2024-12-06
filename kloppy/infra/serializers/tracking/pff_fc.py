@@ -3,10 +3,10 @@ from datetime import timedelta, timezone
 from dateutil.parser import parse
 from typing import NamedTuple, IO, Optional, Union, Dict
 import numpy as np
-import ijson
+import json
 import bz2
-import pandas as pd
-
+import io
+import csv
 from ast import literal_eval
 
 from kloppy.domain import (
@@ -82,9 +82,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
         cls,
         game_id,
         teams,
-        teamdict,
         players,
-        player_to_team_dict,
         periods,
         frame,
     ):
@@ -159,7 +157,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
 
     @classmethod
     def __get_periods(cls, tracking):
-        """gets the Periods contained in the tracking data"""
+        """Gets the Periods contained in the tracking data"""
         periods = {}
 
         _periods = np.array([f["period"] for f in tracking])
@@ -188,27 +186,46 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
 
     
     def __load_json_raw(self, file_path):
-        data = []
+        data = list()
         with bz2.open(file_path, 'rt') as file:
-            json_obj = ijson.items(file, '', multiple_values = True)
-            for item in json_obj:
-                data.append(item)
+            for line in file:
+                data.append(json.loads(line))
 
-                
         return data
+        
+        
+        # with bz2.open(file_path, 'rt') as file:
+        #     for line in file:
+        #         yield json.loads(line)
+
+    def __read_csv(self, file):
+        
+        # Read the content of the BufferedReader
+        file_bytes = file.read()
+        
+        # Decode bytes to a string
+        file_str = file_bytes.decode('utf-8')
+        
+        # Use StringIO to turn the string into a file-like object
+        file_like = io.StringIO(file_str)
+        
+        return list(csv.DictReader(file_like))
 
     def deserialize(self, inputs: PFF_FCTrackingInputs) -> TrackingDataset:
-        metadata = pd.read_csv(inputs.meta_data)
-        roster_meta_data = pd.read_csv(inputs.roster_meta_data)
+        
+        metadata = self.__read_csv(inputs.meta_data)
+        roster_meta_data = self.__read_csv(inputs.roster_meta_data)
         raw_data = self.__load_json_raw(inputs.raw_data)
         
         # Obtain game_id from raw data
         game_id = int(raw_data[0]["gameRefId"])
-        metadata = metadata[metadata['id'] == game_id]
-        roster_meta_data = roster_meta_data[roster_meta_data['game_id'] == game_id]
+        
+        
+        metadata = [row for row in metadata if int(row['id']) == game_id]
+        roster_meta_data = [row for row in roster_meta_data if int(row['game_id']) == game_id]
 
-        home_team_id = literal_eval(metadata.iloc[0]["homeTeam"])["id"]
-        away_team_id =literal_eval(metadata.iloc[0]["awayTeam"])["id"]
+        home_team_id = literal_eval(metadata[0]["homeTeam"])["id"]
+        away_team_id =literal_eval(metadata[0]["awayTeam"])["id"]
         
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
@@ -219,18 +236,18 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
             }
 
             player_to_team_dict = {
-                literal_eval(player.player)['id']: literal_eval(player.team)['id']
-                for player in roster_meta_data.itertuples()
+                literal_eval(player['player'])['id']: literal_eval(player['team'])['id']
+        for player in roster_meta_data
             }
 
-            pitch_size_width = literal_eval(metadata.iloc[0]["stadium"])["pitchWidth"]
-            pitch_size_length = literal_eval(metadata.iloc[0]["stadium"])["pitchLength"]
+            pitch_size_width = literal_eval(metadata[0]["stadium"])["pitchWidth"]
+            pitch_size_length = literal_eval(metadata[0]["stadium"])["pitchLength"]
 
             transformer = self.get_transformer(
                 pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
             
-            date = metadata.iloc[0]["date"]
+            date = metadata[0]["date"]
 
             if date:
                 date = parse(date).astimezone(timezone.utc)
@@ -239,24 +256,24 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
 
             home_team = Team(
                 team_id=home_team_id,
-                name=literal_eval(metadata.iloc[0]["homeTeam"])["name"],
+                name=literal_eval(metadata[0]["homeTeam"])["name"],
                 ground=Ground.HOME,
             )
             away_team = Team(
                 team_id=away_team_id,
-                name=literal_eval(metadata.iloc[0]["awayTeam"])["name"],
+                name=literal_eval(metadata[0]["awayTeam"])["name"],
                 ground=Ground.AWAY,
             )
             teams = [home_team, away_team]
 
 
-            for player in roster_meta_data.itertuples():
-                team_id = literal_eval(player.team)["id"]
-                player_col= literal_eval(player.player)
+            for player in roster_meta_data:
+                team_id = literal_eval(player['team'])["id"]
+                player_col= literal_eval(player['player'])
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
-                shirt_number = player.shirtNumber
-                player_position = player.positionGroupType
+                shirt_number = player['shirtNumber']
+                player_position = player['positionGroupType']
             
                 if team_id == home_team_id:
                     team_string = "HOME"
@@ -265,7 +282,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
                     team_string = "AWAY"
                     team = away_team
 
-                players[team_string][player] = Player(
+                players[team_string][player_id] = Player(
                     player_id=f"{player_id}",
                     team=team,
                     jersey_no=f"{shirt_number}",
@@ -300,9 +317,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
             frame = self._get_frame_data(
                 game_id,
                 teams,
-                teamdict,
                 players,
-                player_to_team_dict,
                 periods,
                 _frame,
             )

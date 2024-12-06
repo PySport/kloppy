@@ -57,7 +57,7 @@ position_types_mapping: Dict[str, PositionType] = {
 
 class PFF_FCTrackingInputs(NamedTuple):
     meta_data: IO[bytes]
-    players_meta_data: IO[bytes]
+    roster_meta_data: IO[bytes]
     raw_data: FileLike
     
 
@@ -199,13 +199,13 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
 
     def deserialize(self, inputs: PFF_FCTrackingInputs) -> TrackingDataset:
         metadata = pd.read_csv(inputs.meta_data)
-        players_metadata = pd.read_csv(inputs.players_meta_data)
+        roster_meta_data = pd.read_csv(inputs.roster_meta_data)
         raw_data = self.__load_json_raw(inputs.raw_data)
         
         # Obtain game_id from raw data
         game_id = int(raw_data[0]["gameRefId"])
         metadata = metadata[metadata['id'] == game_id]
-        players_metadata = players_metadata[players_metadata['game_id'] == game_id]
+        roster_meta_data = roster_meta_data[roster_meta_data['game_id'] == game_id]
 
         home_team_id = literal_eval(metadata.iloc[0]["homeTeam"])["id"]
         away_team_id =literal_eval(metadata.iloc[0]["awayTeam"])["id"]
@@ -220,7 +220,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
 
             player_to_team_dict = {
                 literal_eval(player.player)['id']: literal_eval(player.team)['id']
-                for player in players_metadata.itertuples()
+                for player in roster_meta_data.itertuples()
             }
 
             pitch_size_width = literal_eval(metadata.iloc[0]["stadium"])["pitchWidth"]
@@ -250,7 +250,7 @@ class PFF_FCTrackingDeserializer(TrackingDataDeserializer[PFF_FCTrackingInputs])
             teams = [home_team, away_team]
 
 
-            for player in players_metadata.itertuples():
+            for player in roster_meta_data.itertuples():
                 team_id = literal_eval(player.team)["id"]
                 player_col= literal_eval(player.player)
                 player_id = player_col["id"]

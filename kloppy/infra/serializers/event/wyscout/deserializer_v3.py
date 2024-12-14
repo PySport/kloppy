@@ -109,18 +109,18 @@ def _flip_point(point: Point) -> Point:
     return Point(x=100 - point.x, y=100 - point.y)
 
 
-class ShotZoneResults(Enum):
+class ShotZoneResults(str, Enum):
     GOAL_BOTTOM_LEFT = "glb"
-    GOAL_BOTTOM_RIGHT = "gbr"
-    GOAL_BOTTOM_CENTER = "gbc"
-    GOAL_CENTER_LEFT = "gcl"
+    GOAL_BOTTOM_RIGHT = "grb"
+    GOAL_BOTTOM_CENTER = "gb"
+    GOAL_CENTER_LEFT = "gl"
     GOAL_CENTER = "gc"
-    GOAL_CENTER_RIGHT = "gcr"
-    GOAL_TOP_LEFT = "gtl"
-    GOAL_TOP_RIGHT = "gtr"
-    GOAL_TOP_CENTER = "gtc"
+    GOAL_CENTER_RIGHT = "gr"
+    GOAL_TOP_LEFT = "glt"
+    GOAL_TOP_RIGHT = "grt"
+    GOAL_TOP_CENTER = "gt"
     OUT_BOTTOM_RIGHT = "obr"
-    OUT_BOTTOM_LEFT = "obl"
+    OUT_BOTTOM_LEFT = "olb"
     OUT_RIGHT = "or"
     OUT_LEFT = "ol"
     OUT_LEFT_TOP = "olt"
@@ -182,11 +182,11 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
      --------------------------------
           ||=================||
      -------------------------------
-          || g;l | gt | grt ||
+          || glt | gt | grt ||
      --------------------------------
-      ol || gcl | gc  | gcr || or
+      ol || gl | gc  | gr || or
      --------------------------------
-      olb || glb  | gb | gln || grb
+      olb || glb  | gb | grb || orb
 
       40     45    50    55     60    (y-coordinate of zone)
         44.62               55.38     (y-coordiante of post)
@@ -229,10 +229,12 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
     ):
         return Point(100.0, 40.0)
 
+    # If the shot is blocked, the start location is the best possible estimate
+    # for the shot's end location
     if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
         return Point(
             x=float(raw_event["location"]["x"]),
-            y=float(raw_event["positions"]["y"]),
+            y=float(raw_event["location"]["y"]),
         )
 
     return None

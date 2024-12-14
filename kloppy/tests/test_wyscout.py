@@ -2,31 +2,32 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+
+from kloppy import wyscout
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
-    Point,
-    EventDataset,
-    SetPieceType,
-    SetPieceQualifier,
+    CardQualifier,
+    CardType,
     DatasetType,
     DuelQualifier,
     DuelType,
+    EventDataset,
     EventType,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CardQualifier,
-    CardType,
-    Orientation,
-    PassResult,
     FormationType,
-    Time,
-    PassType,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
+    Orientation,
     PassQualifier,
+    PassResult,
+    PassType,
+    Point,
     PositionType,
+    SetPieceQualifier,
+    SetPieceType,
+    ShotResult,
+    Time,
 )
-
-from kloppy import wyscout
 
 
 @pytest.fixture(scope="session")
@@ -268,12 +269,25 @@ class TestWyscoutV3:
         )
 
     def test_shot_event(self, dataset: EventDataset):
-        shot_event = dataset.get_event_by_id(1927028534)
-        assert shot_event.event_type == EventType.SHOT
+        # a blocked free kick shot
+        blocked_shot_event = dataset.get_event_by_id(1927028534)
+        assert blocked_shot_event.event_type == EventType.SHOT
+        assert blocked_shot_event.result == ShotResult.BLOCKED
+        assert blocked_shot_event.result_coordinates == Point(x=77.0, y=21.0)
         assert (
-            shot_event.get_qualifier_value(SetPieceQualifier)
+            blocked_shot_event.get_qualifier_value(SetPieceQualifier)
             == SetPieceType.FREE_KICK
         )
+        # off target shot
+        off_target_shot = dataset.get_event_by_id(1927028562)
+        assert off_target_shot.event_type == EventType.SHOT
+        assert off_target_shot.result == ShotResult.OFF_TARGET
+        assert off_target_shot.result_coordinates is None
+        # on target shot
+        on_target_shot = dataset.get_event_by_id(1927028637)
+        assert on_target_shot.event_type == EventType.SHOT
+        assert on_target_shot.result == ShotResult.SAVED
+        assert on_target_shot.result_coordinates == Point(100.0, 45.0)
 
     def test_foul_committed_event(self, dataset: EventDataset):
         foul_committed_event = dataset.get_event_by_id(1927028873)

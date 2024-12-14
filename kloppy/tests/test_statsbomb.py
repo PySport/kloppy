@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from pathlib import Path
 from typing import cast
 
@@ -32,10 +32,11 @@ from kloppy.domain import (
     FormationType,
     SetPieceQualifier,
     SetPieceType,
-    Position,
     ShotResult,
     EventDataset,
+    Time,
 )
+from kloppy.domain.models import PositionType
 
 from kloppy.exceptions import DeserializationError
 from kloppy import statsbomb
@@ -46,6 +47,7 @@ from kloppy.domain.models.event import (
     EventType,
     GoalkeeperQualifier,
     GoalkeeperActionType,
+    CounterAttackQualifier,
 )
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     parse_str_ts,
@@ -73,6 +75,13 @@ def dataset() -> EventDataset:
         lineup_data=f"{API_URL}/lineups/3794687.json",
         three_sixty_data=f"{API_URL}/three-sixty/3794687.json",
         coordinates="statsbomb",
+        additional_metadata={
+            "date": datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc),
+            "game_week": "7",
+            "game_id": "3888787",
+            "home_coach": "R. Martínez Montoliù",
+            "away_coach": "F. Fernandes da Costa Santos",
+        },
     )
     assert dataset.dataset_type == DatasetType.EVENT
     return dataset
@@ -138,15 +147,38 @@ class TestStatsBombMetadata:
         """It should set the correct player position from the events"""
         # Starting players get their position from the STARTING_XI event
         player = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert player.position == Position(
-            position_id="18", name="Right Attacking Midfield", coordinates=None
-        )
+
+        assert player.starting_position == PositionType.RightAttackingMidfield
         assert player.starting
 
-        # Substituted players don't have a position
+        # Substituted players have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("5630")
-        assert sub_player.position is None
+        assert sub_player.starting_position is None
+        assert sub_player.positions.last() is not None
         assert not sub_player.starting
+
+        # Get player by position and time
+        periods = dataset.metadata.periods
+        period_1 = periods[0]
+        period_2 = periods[1]
+
+        home_starting_gk = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_gk.player_id == "3509"  # Thibaut Courtois
+
+        home_starting_lam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.LeftAttackingMidfield,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_lam.player_id == "3621"  # Eden Hazard
+
+        home_ending_lam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.LeftAttackingMidfield,
+            time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
+        )
+        assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
     def test_periods(self, dataset):
         """It should create the periods"""
@@ -191,6 +223,32 @@ class TestStatsBombMetadata:
             dataset.metadata.flags
             == DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE
         )
+
+    def test_enriched_metadata(self, dataset):
+        date = dataset.metadata.date
+        if date:
+            assert isinstance(date, datetime)
+            assert date == datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc)
+
+        game_week = dataset.metadata.game_week
+        if game_week:
+            assert isinstance(game_week, str)
+            assert game_week == "7"
+
+        game_id = dataset.metadata.game_id
+        if game_id:
+            assert isinstance(game_id, str)
+            assert game_id == "3888787"
+
+        home_coach = dataset.metadata.home_coach
+        if home_coach:
+            assert isinstance(home_coach, str)
+            assert home_coach == "R. Martínez Montoliù"
+
+        away_coach = dataset.metadata.away_coach
+        if away_coach:
+            assert isinstance(away_coach, str)
+            assert away_coach == "F. Fernandes da Costa Santos"
 
 
 class TestStatsBombEvent:
@@ -288,7 +346,7 @@ class TestStatsBombEvent:
             def get_color(player):
                 if player.team == shot_event.player.team:
                     return "#b94b75"
-                elif player.position.position_id == "1":
+                elif player.starting_position.position_id == "1":
                     return "#c15ca5"
                 else:
                     return "#7f63b8"
@@ -871,6 +929,22 @@ class TestStatsBombDuelEvent:
             DuelType.GROUND,
         ]
 
+    def test_counter_attack_qualifier(self, dataset: EventDataset):
+        duel = dataset.get_event_by_id("9e5281ac-1fee-4a51-b6a5-78e99c22397e")
+        assert duel.get_qualifier_value(CounterAttackQualifier) is True
+
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kick_off.get_qualifier_value(CounterAttackQualifier) is None
+
+        counter_attack_events = [
+            event
+            for event in dataset.events
+            if event.get_qualifier_value(CounterAttackQualifier) is True
+        ]
+        assert len(counter_attack_events) == 26
+
 
 class TestStatsBombGoalkeeperEvent:
     """Tests related to deserializing 30/Goalkeeper events"""
@@ -1055,3 +1129,41 @@ class TestStatsBombTacticalShiftEvent:
             "983cdd00-6f7f-4d62-bfc2-74e4e5b0137f"
         )
         assert formation_change.formation_type == FormationType("4-3-3")
+
+    def test_player_position(self, base_dir):
+        dataset = statsbomb.load(
+            lineup_data=base_dir / "files/statsbomb_lineup.json",
+            event_data=base_dir / "files/statsbomb_event.json",
+        )
+
+        for item in dataset.aggregate("minutes_played", include_position=True):
+            print(
+                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
+            )
+
+        home_team, away_team = dataset.metadata.teams
+        period1, period2 = dataset.metadata.periods
+
+        player = home_team.get_player_by_id(6379)
+        assert player.positions.ranges() == [
+            (
+                period1.start_time,
+                period2.start_time,
+                PositionType.RightMidfield,
+            ),
+            (
+                period2.start_time,
+                period2.end_time,
+                PositionType.RightBack,
+            ),
+        ]
+
+        # This player gets a new position 30 sec after he gets on the pitch, these two positions must be merged
+        player = away_team.get_player_by_id(6935)
+        assert player.positions.ranges() == [
+            (
+                period2.start_time + timedelta(seconds=1362.254),
+                period2.end_time,
+                PositionType.LeftMidfield,
+            )
+        ]

@@ -14,14 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.8, 3.9, "3.10", "3.11"]
-        include:
-          - os: macos-latest
-            python-version: "3.7.16"
-          - os: ubuntu-latest
-            python-version: "3.7"
-          - os: windows-latest
-            python-version: "3.7"
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v4
@@ -38,5 +31,6 @@ jobs:
         pip install black==22.3.0
         black --check .
     - name: Test with pytest
+      if: '!cancelled()'
       run: |
         pytest --color=yes

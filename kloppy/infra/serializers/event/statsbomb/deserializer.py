@@ -12,7 +12,6 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
-    Position,
     Provider,
     Team,
 )
@@ -21,6 +20,7 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 from . import specification as SB
 from .helpers import parse_freeze_frame, parse_str_ts
+from .specification import position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(self, inputs: StatsBombInputs) -> EventDataset:
+    def deserialize(
+        self, inputs: StatsBombInputs, additional_metadata
+    ) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 
@@ -118,6 +120,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             score=None,
             provider=Provider.STATSBOMB,
             coordinate_system=self.transformer.get_to_coordinate_system(),
+            **additional_metadata
         )
         return EventDataset(metadata=metadata, records=events)
 
@@ -176,10 +179,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
         # Create players and teams
         player_positions = {
-            str(player["player"]["id"]): Position(
-                position_id=str(player["position"]["id"]),
-                name=player["position"]["name"],
-            )
+            str(player["player"]["id"]): position_types_mapping[
+                player["position"]["id"]
+            ]
             for raw_event in starting_xi_events
             for player in raw_event["tactics"]["lineup"]
         }
@@ -205,7 +207,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
                     starting=str(player["player_id"]) in player_positions,
-                    position=player_positions.get(str(player["player_id"])),
+                    starting_position=player_positions.get(
+                        str(player["player_id"])
+                    ),
                 )
                 for player in lineup["lineup"]
             ]
@@ -216,27 +220,22 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         return [home_team, away_team]
 
     def create_periods(self, raw_events):
-        half_start_and_end_events = [
-            event.raw_event
-            for event in raw_events.values()
-            if SB.EVENT_TYPE(event.raw_event["type"])
-            in [
-                SB.EVENT_TYPE.HALF_START,
-                SB.EVENT_TYPE.HALF_END,
-            ]
-        ][
-            ::2
-        ]  # recorded for each team, take every other
+        half_start_events = {}
+        half_end_events = {}
+        for event in raw_events.values():
+            event_type = SB.EVENT_TYPE(event.raw_event["type"])
+            period = event.raw_event["period"]
+
+            if event_type == SB.EVENT_TYPE.HALF_START:
+                half_start_events[period] = event.raw_event
+            elif event_type == SB.EVENT_TYPE.HALF_END:
+                half_end_events[period] = event.raw_event
+
         periods = []
         for start_event, end_event in zip_longest(
-            half_start_and_end_events[::2], half_start_and_end_events[1::2]
+            half_start_events.values(), half_end_events.values()
         ):
-            if (
-                start_event is None
-                or SB.EVENT_TYPE(start_event["type"])
-                != SB.EVENT_TYPE.HALF_START
-                or SB.EVENT_TYPE(end_event["type"]) != SB.EVENT_TYPE.HALF_END
-            ):
+            if start_event is None or end_event is None:
                 raise DeserializationError(
                     "Failed to determine start and end time of periods."
                 )

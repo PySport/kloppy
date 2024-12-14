@@ -1,4 +1,3 @@
-import contextlib
 import warnings
 from typing import Union
 
@@ -12,11 +11,6 @@ from kloppy.domain import EventDataset, Optional, List, EventFactory
 from kloppy.io import open_as_file, FileLike, Source
 
 
-@contextlib.contextmanager
-def dummy_context_mgr():
-    yield None
-
-
 def load(
     event_data: FileLike,
     lineup_data: FileLike,
@@ -24,6 +18,7 @@ def load(
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
+    additional_metadata: dict = {},
 ) -> EventDataset:
     """
     Load StatsBomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
@@ -54,6 +49,7 @@ def load(
                 lineup_data=lineup_data_fp,
                 three_sixty_data=three_sixty_data_fp,
             ),
+            additional_metadata=additional_metadata,
         )
 
 

@@ -14,13 +14,18 @@ from kloppy.domain import (
     DatasetFlag,
     AttackingDirection,
     Orientation,
-    Position,
     Point,
+    PositionType,
     Provider,
     build_coordinate_system,
 )
 
 from .models import *
+
+position_types_mapping: Dict[int, PositionType] = {
+    -1: PositionType.Unknown,
+    0: PositionType.Goalkeeper,
+}
 
 
 def noop(x):
@@ -113,34 +118,33 @@ def _load_players(players_elm, team: Team) -> List[Player]:
             jersey_no=int(player_elm.find("ShirtNumber")),
             player_id=player_elm.attrib["id"],
             name=str(player_elm.find("Name")),
-            position=_load_position_data(
+            starting_position=_load_position_data(
                 player_elm.find("ProviderPlayerParameters")
             ),
             attributes=_load_provider_parameters(
                 player_elm.find("ProviderPlayerParameters")
             ),
+            starting=True,  # Not sure if this is correct
         )
         for player_elm in players_elm.iterchildren(tag="Player")
         if player_elm.attrib["teamId"] == team.team_id
     ]
 
 
-def _load_position_data(parent_elm) -> Position:
+def _load_position_data(parent_elm) -> PositionType:
     # TODO: _load_provider_parameters is called twice to set position data
     # and then again to set the attributes. Also, data in position should not
     # be duplicated in attributes either.
     player_provider_parameters = _load_provider_parameters(parent_elm)
-    if "position_index" not in player_provider_parameters:
-        return None
 
-    return Position(
-        position_id=player_provider_parameters["position_index"],
-        name=player_provider_parameters["position_type"],
-        coordinates=Point(
-            player_provider_parameters["position_x"],
-            player_provider_parameters["position_y"],
-        ),
-    )
+    if "position_index" not in player_provider_parameters:
+        position_type = PositionType.Unknown
+    else:
+        position_type = position_types_mapping.get(
+            player_provider_parameters["position_index"], PositionType.Unknown
+        )
+
+    return position_type
 
 
 def _load_data_format_specifications(

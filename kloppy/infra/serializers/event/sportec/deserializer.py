@@ -2,7 +2,6 @@ from collections import OrderedDict
 from typing import Dict, List, NamedTuple, IO
 from datetime import timedelta, datetime, timezone
 import logging
-from dateutil.parser import parse
 from lxml import objectify
 
 from kloppy.domain import (
@@ -277,7 +276,7 @@ SPORTEC_EVENT_BODY_PART_RIGHT_FOOT = "rightLeg"
 
 
 def _parse_datetime(dt_str: str) -> datetime:
-    return parse(dt_str).astimezone(timezone.utc)
+    return datetime.fromisoformat(dt_str)
 
 
 def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
@@ -432,9 +431,9 @@ class SportecEventDataDeserializer(
             event_root = objectify.fromstring(inputs.event_data.read())
 
         with performance_logging("parse data", logger=logger):
-            date = parse(
+            date = datetime.fromisoformat(
                 match_root.MatchInformation.General.attrib["KickoffTime"]
-            ).astimezone(timezone.utc)
+            )
             game_week = match_root.MatchInformation.General.attrib["MatchDay"]
             game_id = match_root.MatchInformation.General.attrib["MatchId"]
 

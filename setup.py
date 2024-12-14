@@ -42,7 +42,6 @@ def setup_package():
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
-            "python-dateutil>=2.8.1,<3",
             "sortedcontainers>=2",
         ],
         extras_require={

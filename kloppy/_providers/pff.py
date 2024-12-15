@@ -1,9 +1,11 @@
-from kloppy.infra.serializers.tracking.pff_fc import (
-    PFF_FCTrackingInputs, PFF_FCTrackingDeserializer
+from kloppy.infra.serializers.tracking.pff import (
+    PFF_TrackingInputs,
+    PFF_TrackingDeserializer,
 )
 
 from kloppy.domain import Optional, TrackingDataset
 from kloppy.io import open_as_file, FileLike
+
 
 def load_tracking(
     meta_data: FileLike,
@@ -14,15 +16,19 @@ def load_tracking(
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
 ) -> TrackingDataset:
-    deserializer = PFF_FCTrackingDeserializer(
+    deserializer = PFF_TrackingDeserializer(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
         include_empty_frames=include_empty_frames,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(roster_meta_data) as roster_meta_data_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(
+        roster_meta_data
+    ) as roster_meta_data_fp:
         return deserializer.deserialize(
-            inputs=PFF_FCTrackingInputs(
-                meta_data=meta_data_fp, roster_meta_data=roster_meta_data_fp, raw_data=raw_data
+            inputs=PFF_TrackingInputs(
+                meta_data=meta_data_fp,
+                roster_meta_data=roster_meta_data_fp,
+                raw_data=raw_data,
             )
         )

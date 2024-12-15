@@ -91,7 +91,7 @@ class Provider(Enum):
         TRACAB:
         SECONDSPECTRUM:
         OPTA:
-        PFF_FC:
+        PFF:
         SKILLCORNER:
         STATSBOMB:
         SPORTEC:
@@ -106,7 +106,7 @@ class Provider(Enum):
     TRACAB = "tracab"
     SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
-    PFF_FC = "pff_fc"
+    PFF = "pff"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
@@ -700,12 +700,13 @@ class StatsBombCoordinateSystem(CoordinateSystem):
             pitch_width=self.pitch_width,
             standardized=True,
         )
-    
+
+
 @dataclass
-class PFF_FCCoordinateSystem(CoordinateSystem):
+class PFFCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
-        return Provider.PFF_FC
+        return Provider.PFF
 
     @property
     def origin(self) -> Origin:
@@ -901,7 +902,7 @@ def build_coordinate_system(
             DatasetType.TRACKING: SportecTrackingDataCoordinateSystem,
         },
         Provider.STATSBOMB: StatsBombCoordinateSystem,
-        Provider.PFF_FC: PFF_FCCoordinateSystem,
+        Provider.PFF: PFFCoordinateSystem,
         Provider.WYSCOUT: WyscoutCoordinateSystem,
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,

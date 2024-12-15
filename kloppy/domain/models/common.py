@@ -738,12 +738,13 @@ class StatsBombCoordinateSystem(CoordinateSystem):
             pitch_width=self.pitch_width,
             standardized=True,
         )
-    
+
+
 @dataclass
-class PFF_FCCoordinateSystem(CoordinateSystem):
+class PFFCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
-        return Provider.PFF_FC
+        return Provider.PFF
 
     @property
     def origin(self) -> Origin:

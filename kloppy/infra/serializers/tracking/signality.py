@@ -1,17 +1,14 @@
 import logging
 from datetime import timedelta, datetime
 import warnings
-from typing import List, Dict, Tuple, NamedTuple, IO, Optional, Union
-from enum import Enum, Flag
+from typing import List, Dict, NamedTuple, IO, Optional, Union
 from collections import Counter
 import numpy as np
 import json
-from pathlib import Path
 
 from kloppy.domain import (
     attacking_direction_from_frame,
     AttackingDirection,
-    DatasetFlag,
     Frame,
     Ground,
     Metadata,
@@ -20,15 +17,10 @@ from kloppy.domain import (
     Player,
     Point,
     Point3D,
-    Position,
     Provider,
-    Score,
     Team,
     TrackingDataset,
     PlayerData,
-    MetricPitchDimensions,
-    Dimension,
-    CoordinateSystem,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,

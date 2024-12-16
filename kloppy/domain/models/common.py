@@ -122,9 +122,9 @@ class Provider(Enum):
 @dataclass(frozen=True)
 class Referee:
     referee_id: str
-    name: str = None
-    first_name: str = None
-    last_name: str = None
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     role: Optional[RefereeType] = None
 
     @property

@@ -792,11 +792,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         else None
                     ),
                     "team": team,
-                    "player": (
-                        players[team_id][player_id]
-                        if player_id != INVALID_PLAYER
-                        else None
-                    ),
                     "player": players[team_id][player_id]
                     if player_id != INVALID_PLAYER
                     and player_id in players[team_id]

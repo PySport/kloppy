@@ -135,7 +135,7 @@ class Referee:
             return f"{self.first_name} {self.last_name}"
         if self.role:
             return f"{self.role}_{self.referee_id}"
-        return self.referee_id
+        return f"referee_{self.referee_id}"
 
 
 @dataclass(frozen=True)

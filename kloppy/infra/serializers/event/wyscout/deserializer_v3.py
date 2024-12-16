@@ -2,45 +2,40 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta, timezone
+from enum import Enum
+from typing import Dict, List, Optional
+
 from dateutil.parser import parse
-from typing import Dict, List
 
 from kloppy.domain import (
-    BallOutEvent,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
+    CarryResult,
     CounterAttackQualifier,
-    Dimension,
-    DuelType,
     DuelQualifier,
     DuelResult,
+    DuelType,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
-    GoalkeeperQualifier,
+    FormationType,
     GoalkeeperActionType,
+    GoalkeeperQualifier,
     Ground,
     InterceptionResult,
     Metadata,
     Orientation,
-    PassEvent,
     PassQualifier,
     PassResult,
     PassType,
     Period,
-    PitchDimensions,
     Player,
     Point,
+    PositionType,
     Provider,
     Qualifier,
-    RecoveryEvent,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    TakeOnEvent,
     TakeOnResult,
     Team,
     FormationType,
@@ -53,7 +48,6 @@ from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
-
 
 logger = logging.getLogger(__name__)
 
@@ -83,37 +77,171 @@ formations = {
     "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
 }
 
+position_types_mapping: Dict[str, PositionType] = {
+    "GK": PositionType.Goalkeeper,
+    "LB": PositionType.LeftBack,
+    "LWB": PositionType.LeftWingBack,
+    "LB5": PositionType.LeftBack,
+    "LCB": PositionType.LeftCenterBack,
+    "LCB3": PositionType.LeftCenterBack,
+    "CB": PositionType.CenterBack,
+    "RCB": PositionType.RightCenterBack,
+    "RCB3": PositionType.RightCenterBack,
+    "RB": PositionType.RightBack,
+    "RWB": PositionType.RightWingBack,
+    "RB5": PositionType.RightBack,
+    "LW": PositionType.LeftWing,
+    "LAMF": PositionType.LeftAttackingMidfield,
+    "LCMF3": PositionType.LeftCentralMidfield,
+    "LCMF": PositionType.LeftCentralMidfield,
+    "DMF": PositionType.DefensiveMidfield,
+    "LDMF": PositionType.LeftDefensiveMidfield,
+    "RDMF": PositionType.RightDefensiveMidfield,
+    "RCMF3": PositionType.RightCentralMidfield,
+    "RCMF": PositionType.RightCentralMidfield,
+    "RAMF": PositionType.RightAttackingMidfield,
+    "RW": PositionType.RightWing,
+    "AMF": PositionType.AttackingMidfield,
+    "LWF": PositionType.LeftForward,
+    "CF": PositionType.Striker,
+    "SS": PositionType.Striker,
+    "RWF": PositionType.RightForward,
+}
+
 
 def _flip_point(point: Point) -> Point:
     return Point(x=100 - point.x, y=100 - point.y)
 
 
+class ShotZoneResults(str, Enum):
+    GOAL_BOTTOM_LEFT = "glb"
+    GOAL_BOTTOM_RIGHT = "grb"
+    GOAL_BOTTOM_CENTER = "gb"
+    GOAL_CENTER_LEFT = "gl"
+    GOAL_CENTER = "gc"
+    GOAL_CENTER_RIGHT = "gr"
+    GOAL_TOP_LEFT = "glt"
+    GOAL_TOP_RIGHT = "grt"
+    GOAL_TOP_CENTER = "gt"
+    OUT_BOTTOM_RIGHT = "obr"
+    OUT_BOTTOM_LEFT = "olb"
+    OUT_RIGHT = "or"
+    OUT_LEFT = "ol"
+    OUT_LEFT_TOP = "olt"
+    OUT_TOP = "ot"
+    OUT_RIGHT_TOP = "ort"
+    BLOCKED = "bc"
+
+
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
+    # Get the first formation description
+    first_period_formation_info = raw_events["formations"][wyId]["1H"]
+    first_formation_descr = next(iter(first_period_formation_info.values()))
+    formation_str, formation_info = next(iter(first_formation_descr.items()))
+
+    # Extract the formation and players' positions
+    starting_formation = formations.get(formation_str)
+    starting_players_positions = {
+        player_id: position_types_mapping.get(
+            player_info["position"].upper(), PositionType.Unknown
+        )
+        for player_descr in formation_info["players"]
+        for player_id, player_info in player_descr.items()
+    }
+
     team = Team(
         team_id=wyId,
         name=raw_events["teams"][wyId]["team"]["officialName"],
         ground=ground,
-        starting_formation=formations[
-            next(
-                iter(
-                    raw_events["formations"][wyId]["1H"][
-                        next(iter(raw_events["formations"][wyId]["1H"]))
-                    ]
-                )
-            )
-        ],
+        starting_formation=starting_formation,
     )
-    team.players = [
-        Player(
-            player_id=str(player["player"]["wyId"]),
-            team=team,
-            jersey_no=None,
-            first_name=player["player"]["firstName"],
-            last_name=player["player"]["lastName"],
+
+    for player in raw_events["players"][wyId]:
+        player_id = str(player["player"]["wyId"])
+        starting_position = starting_players_positions.get(player_id)
+        team.players.append(
+            Player(
+                player_id=player_id,
+                team=team,
+                jersey_no=None,
+                first_name=player["player"]["firstName"],
+                last_name=player["player"]["lastName"],
+                starting=starting_position is not None,
+                starting_position=starting_position,
+            )
         )
-        for player in raw_events["players"][wyId]
-    ]
+
     return team
+
+
+def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags.
+
+    Wyscout does not provide end-coordinates of shots. Instead shots on goal
+    are tagged with a zone. This function maps each of these zones to
+    a coordinate. The zones and corresponding y-coordinate are depicted below.
+
+
+        olt      | ot |      ort
+     --------------------------------
+          ||=================||
+     -------------------------------
+          || glt | gt | grt ||
+     --------------------------------
+      ol || gl | gc  | gr || or
+     --------------------------------
+      olb || glb  | gb | grb || orb
+
+      40     45    50    55     60    (y-coordinate of zone)
+        44.62               55.38     (y-coordiante of post)
+    """
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_CENTER
+    ):
+        return Point(100.0, 50.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_RIGHT
+    ):
+        return Point(100.0, 55.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_LEFT
+    ):
+        return Point(100.0, 45.0)
+
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_TOP:
+        return Point(100.0, 50.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_RIGHT
+    ):
+        return Point(100.0, 60.0)
+
+    if (
+        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT_TOP
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT
+        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_LEFT
+    ):
+        return Point(100.0, 40.0)
+
+    # If the shot is blocked, the start location is the best possible estimate
+    # for the shot's end location
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
+        return Point(
+            x=float(raw_event["location"]["x"]),
+            y=float(raw_event["location"]["y"]),
+        )
+
+    return None
 
 
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
@@ -157,10 +285,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
 
     return {
         "result": result,
-        "result_coordinates": Point(
-            x=float(0),
-            y=float(0),
-        ),
+        "result_coordinates": _create_shot_result_coordinates(raw_event),
         "qualifiers": qualifiers,
         "statistics": statistics,
     }
@@ -644,9 +769,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=0)
-                            if len(periods) == 0
-                            else periods[-1].end_timestamp,
+                            start_timestamp=(
+                                timedelta(seconds=0)
+                                if len(periods) == 0
+                                else periods[-1].end_timestamp
+                            ),
                             end_timestamp=None,
                         )
                     )
@@ -670,16 +797,20 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
-                    "coordinates": Point(
-                        x=float(raw_event["location"]["x"]),
-                        y=float(raw_event["location"]["y"]),
-                    )
-                    if raw_event["location"]
-                    else None,
+                    "coordinates": (
+                        Point(
+                            x=float(raw_event["location"]["x"]),
+                            y=float(raw_event["location"]["y"]),
+                        )
+                        if raw_event["location"]
+                        else None
+                    ),
                     "team": team,
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    else None,
+                    "player": (
+                        players[team_id][player_id]
+                        if player_id != INVALID_PLAYER
+                        else None
+                    ),
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],

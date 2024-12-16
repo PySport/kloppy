@@ -13,6 +13,8 @@ class PositionType(Enum):
     CenterBack = ("Center Back", "CB", "Defender")
     LeftCenterBack = ("Left Center Back", "LCB", "CenterBack")
     RightCenterBack = ("Right Center Back", "RCB", "CenterBack")
+    LeftWingBack = ("Left Wing Back", "LWB", "WingBack")
+    RightWingBack = ("Right Wing Back", "RWB", "WingBack")
 
     Midfielder = ("Midfielder", "MID", None)
     DefensiveMidfield = ("Defensive Midfield", "DM", "Midfielder")

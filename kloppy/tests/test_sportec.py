@@ -149,7 +149,7 @@ class TestSportecTrackingData:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=4000 + 2996.68
         )
-        assert len(dataset.metadata.referees) == 4
+        assert len(dataset.metadata.officials) == 4
 
     def test_load_frames(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
@@ -251,4 +251,4 @@ class TestSportecTrackingData:
             coordinates="sportec",
             only_alive=True,
         )
-        assert len(dataset.metadata.referees) == 4
+        assert len(dataset.metadata.officials) == 4

@@ -131,9 +131,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             home_coach = sportec_metadata.home_coach
             away_coach = sportec_metadata.away_coach
 
-            referee_ids = []
-            if sportec_metadata.referees:
-                referee_ids = [x.referee_id for x in sportec_metadata.referees]
+            official_ids = []
+            if sportec_metadata.officials:
+                official_ids = [
+                    x.official_id for x in sportec_metadata.officials
+                ]
 
         with performance_logging("parse raw data", logger=logger):
             date = parse(
@@ -199,7 +201,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     )
                                     for player_id, raw_player_data in frame_data.items()
                                     if player_id != "ball"
-                                    and player_id not in referee_ids
+                                    and player_id not in official_ids
                                 },
                                 other_data={},
                                 ball_coordinates=Point3D(
@@ -249,7 +251,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             game_id=game_id,
             home_coach=home_coach,
             away_coach=away_coach,
-            referees=sportec_metadata.referees,
+            officials=sportec_metadata.officials,
         )
 
         return TrackingDataset(

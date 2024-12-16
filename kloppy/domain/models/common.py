@@ -18,7 +18,7 @@ from typing import (
     Iterable,
 )
 
-from .position import PositionType, RefereeType
+from .position import PositionType
 
 from ...utils import deprecated
 
@@ -119,13 +119,20 @@ class Provider(Enum):
         return self.value
 
 
+class OfficialType:
+    VideoAssistantReferee = "Video Assistant Referee"
+    MainReferee = "Main Referee"
+    AssistantReferee = "Assistant Referee"
+    FourthOfficial = "Fourth Official"
+
+
 @dataclass(frozen=True)
-class Referee:
-    referee_id: str
+class Official:
+    official_id: str
     name: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    role: Optional[RefereeType] = None
+    role: Optional[OfficialType] = None
 
     @property
     def full_name(self):
@@ -134,8 +141,8 @@ class Referee:
         if self.first_name or self.last_name:
             return f"{self.first_name} {self.last_name}"
         if self.role:
-            return f"{self.role}_{self.referee_id}"
-        return f"referee_{self.referee_id}"
+            return f"{self.role}_{self.official_id}"
+        return f"referee_{self.official_id}"
 
 
 @dataclass(frozen=True)
@@ -1035,7 +1042,7 @@ class Metadata:
     game_id: Optional[str] = None
     home_coach: Optional[str] = None
     away_coach: Optional[str] = None
-    referees: Optional[List] = field(default_factory=list)
+    officials: Optional[List] = field(default_factory=list)
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):

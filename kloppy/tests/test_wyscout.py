@@ -340,10 +340,10 @@ class TestWyscoutV3:
             len(dataset.find_all("formation_change")) == 2
         )  # We shouldn't recognize the change to 4-4-1 as a formation change
         formation_change_event = dataset.get_event_by_id(
-            "synthetic-3166-1397082780"
+            "synthetic-3164-1927029462"
         )
         assert formation_change_event.event_type == EventType.FORMATION_CHANGE
         assert (
             formation_change_event.formation_type
-            == FormationType.FOUR_THREE_THREE
+            == FormationType.FOUR_THREE_ONE_TWO
         )

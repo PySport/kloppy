@@ -119,11 +119,11 @@ class Provider(Enum):
         return self.value
 
 
-class OfficialType:
-    VideoAssistantReferee = "Video Assistant Referee"
-    MainReferee = "Main Referee"
-    AssistantReferee = "Assistant Referee"
-    FourthOfficial = "Fourth Official"
+class OfficialType(Enum):
+    VideoAssistantReferee = "video_assistant_referee"
+    MainReferee = "main_referee"
+    AssistantReferee = "assistant_referee"
+    FourthOfficial = "fourth_official"
 
 
 @dataclass(frozen=True)
@@ -138,11 +138,13 @@ class Official:
     def full_name(self):
         if self.name:
             return self.name
-        if self.first_name or self.last_name:
+        if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
+        if self.last_name:
+            return self.last_name
         if self.role:
             return f"{self.role}_{self.official_id}"
-        return f"referee_{self.official_id}"
+        return f"official_{self.official_id}"
 
 
 @dataclass(frozen=True)

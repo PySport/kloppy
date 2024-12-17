@@ -34,6 +34,7 @@ from kloppy.domain import (
     SetPieceType,
     ShotResult,
     build_coordinate_system,
+    PassResult,
 )
 from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
@@ -244,7 +245,7 @@ class TestOptaPassEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all pass events"""
         events = dataset.find_all("pass")
-        assert len(events) == 15
+        assert len(events) == 16
 
     def test_receiver_coordinates(self, dataset: EventDataset):
         """Test if the receiver coordinates are correctly deserialized"""
@@ -274,6 +275,13 @@ class TestOptaPassEvent:
             PassQualifier
         )
 
+    def test_pass_qualifiers_for_deflected_pass(self, dataset: EventDataset):
+        """Test if the pass type qualfiers are correctly deserialized for deflected passes"""
+        deflected_pass = dataset.get_event_by_id("2509132176")
+        assert deflected_pass.result == PassResult.COMPLETE
+        assert deflected_pass.receiver_coordinates.x == 3.3
+        assert deflected_pass.receiver_coordinates.y == 81.1
+
     def test_ball_state(self, dataset: EventDataset):
         """Test if the ball state is correctly set"""
         events = dataset.find_all("pass")
@@ -302,7 +310,7 @@ class TestOptaShotEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all shot events"""
         events = dataset.find_all("shot")
-        assert len(events) == 3
+        assert len(events) == 4
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the shot event is correctly deserialized"""

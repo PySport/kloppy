@@ -20,7 +20,7 @@ from typing import (
 
 from .position import PositionType
 
-from ...utils import deprecated
+from ...utils import deprecated, snake_case
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -120,14 +120,23 @@ class Provider(Enum):
 
 
 class OfficialType(Enum):
-    VideoAssistantReferee = "video_assistant_referee"
-    MainReferee = "main_referee"
-    AssistantReferee = "assistant_referee"
-    FourthOfficial = "fourth_official"
+    """Enumeration for types of officials (referees)."""
+
+    VideoAssistantReferee = "Video Assistant Referee"
+    MainReferee = "Main Referee"
+    AssistantReferee = "Assistant Referee"
+    FourthOfficial = "Fourth Official"
+
+    def __str__(self):
+        return self.value
 
 
 @dataclass(frozen=True)
 class Official:
+    """
+    Represents an official (referee) with optional names and roles.
+    """
+
     official_id: str
     name: Optional[str] = None
     first_name: Optional[str] = None
@@ -136,6 +145,9 @@ class Official:
 
     @property
     def full_name(self):
+        """
+        Returns the full name of the official, falling back to role-based or ID-based naming.
+        """
         if self.name:
             return self.name
         if self.first_name and self.last_name:
@@ -143,7 +155,7 @@ class Official:
         if self.last_name:
             return self.last_name
         if self.role:
-            return f"{self.role}_{self.official_id}"
+            return f"{snake_case(str(self.role))}_{self.official_id}"
         return f"official_{self.official_id}"
 
 

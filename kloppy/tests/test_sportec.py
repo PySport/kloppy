@@ -16,6 +16,8 @@ from kloppy.domain import (
     BallState,
     Point3D,
     PositionType,
+    OfficialType,
+    Official,
 )
 
 from kloppy import sportec
@@ -252,3 +254,43 @@ class TestSportecTrackingData:
             only_alive=True,
         )
         assert len(dataset.metadata.officials) == 4
+
+        assert (
+            Official(
+                official_id="42",
+                name="Pierluigi Collina",
+                role=OfficialType.MainReferee,
+            ).role.value
+            == "Main Referee"
+        )
+
+        assert (
+            Official(
+                official_id="42",
+                name="Pierluigi Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Pierluigi Collina"
+        )
+        assert (
+            Official(
+                official_id="42",
+                first_name="Pierluigi",
+                last_name="Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Pierluigi Collina"
+        )
+        assert (
+            Official(
+                official_id="42",
+                last_name="Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Collina"
+        )
+        assert (
+            Official(official_id="42", role=OfficialType.MainReferee).full_name
+            == "main_referee_42"
+        )
+        assert Official(official_id="42").full_name == "official_42"

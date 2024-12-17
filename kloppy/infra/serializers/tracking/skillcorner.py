@@ -1,15 +1,14 @@
-import logging
-from datetime import timedelta, timezone
-from dateutil.parser import parse
-import warnings
-from typing import NamedTuple, IO, Optional, Union, Dict
-from collections import Counter
-import numpy as np
 import json
+import logging
+import warnings
+from collections import Counter
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import IO, Dict, NamedTuple, Optional, Union
+
+import numpy as np
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
     AttackingDirection,
     DatasetFlag,
     Frame,
@@ -18,6 +17,7 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
+    PlayerData,
     Point,
     Point3D,
     PositionType,
@@ -25,7 +25,7 @@ from kloppy.domain import (
     Score,
     Team,
     TrackingDataset,
-    PlayerData,
+    attacking_direction_from_frame,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -367,7 +367,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
             date = metadata.get("date_time")
             if date:
-                date = parse(date).astimezone(timezone.utc)
+                date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").replace(
+                    tzinfo=timezone.utc
+                )
 
             game_id = metadata.get("id")
             if game_id:

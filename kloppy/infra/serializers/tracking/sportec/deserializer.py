@@ -2,8 +2,7 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import NamedTuple, Optional, Union, IO
-from datetime import timedelta, timezone
-from dateutil.parser import parse
+from datetime import datetime, timedelta
 
 from lxml import objectify
 
@@ -138,9 +137,9 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                 ]
 
         with performance_logging("parse raw data", logger=logger):
-            date = parse(
+            date = datetime.fromisoformat(
                 match_root.MatchInformation.General.attrib["KickoffTime"]
-            ).astimezone(timezone.utc)
+            )
             game_week = match_root.MatchInformation.General.attrib["MatchDay"]
             game_id = match_root.MatchInformation.General.attrib["MatchId"]
 

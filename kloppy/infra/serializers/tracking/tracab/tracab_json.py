@@ -3,7 +3,7 @@ import warnings
 import json
 import html
 from datetime import timedelta
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Literal
 
 from kloppy.domain import (
     TrackingDataset,
@@ -29,6 +29,7 @@ from kloppy.exceptions import DeserializationError
 from kloppy.utils import Readable, performance_logging
 
 from .common import TRACABInputs, position_types_mapping
+from .helpers import load_meta_data
 from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
@@ -41,9 +42,11 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = True,
+        meta_data_extension: Literal[".xml", ".json"] = None,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
+        self.meta_data_extension = meta_data_extension
 
     @property
     def provider(self) -> Provider:
@@ -125,66 +128,21 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
-    def create_team(self, team_data, ground):
-        team = Team(
-            team_id=str(team_data["TeamID"]),
-            name=html.unescape(team_data["ShortName"]),
-            ground=ground,
-        )
-
-        team.players = [
-            Player(
-                player_id=str(player["PlayerID"]),
-                team=team,
-                first_name=html.unescape(player["FirstName"]),
-                last_name=html.unescape(player["LastName"]),
-                name=html.unescape(
-                    player["FirstName"] + " " + player["LastName"]
-                ),
-                jersey_no=int(player["JerseyNo"]),
-                starting=True if player["StartingPosition"] != "S" else False,
-                starting_position=position_types_mapping.get(
-                    player["StartingPosition"], PositionType.Unknown
-                ),
-            )
-            for player in team_data["Players"]
-        ]
-
-        return team
-
     def deserialize(self, inputs: TRACABInputs) -> TrackingDataset:
-        meta_data = json.load(inputs.meta_data)
+        (
+            pitch_size_length,
+            pitch_size_width,
+            teams,
+            periods,
+            frame_rate,
+            date,
+            game_id,
+        ) = load_meta_data(self.meta_data_extension, inputs.meta_data)
         raw_data = json.load(inputs.raw_data)
 
-        with performance_logging("Loading metadata", logger=logger):
-            frame_rate = meta_data["FrameRate"]
-            pitch_size_width = meta_data["PitchShortSide"] / 100
-            pitch_size_length = meta_data["PitchLongSide"] / 100
-
-            periods = []
-            for period_id in (1, 2, 3, 4):
-                period_start_frame = meta_data[f"Phase{period_id}StartFrame"]
-                period_end_frame = meta_data[f"Phase{period_id}EndFrame"]
-                if period_start_frame != 0 or period_end_frame != 0:
-                    periods.append(
-                        Period(
-                            id=period_id,
-                            start_timestamp=timedelta(
-                                seconds=period_start_frame / frame_rate
-                            ),
-                            end_timestamp=timedelta(
-                                seconds=period_end_frame / frame_rate
-                            ),
-                        )
-                    )
-
-            home_team = self.create_team(meta_data["HomeTeam"], Ground.HOME)
-            away_team = self.create_team(meta_data["AwayTeam"], Ground.AWAY)
-            teams = [home_team, away_team]
-
-            transformer = self.get_transformer(
-                pitch_length=pitch_size_length, pitch_width=pitch_size_width
-            )
+        transformer = self.get_transformer(
+            pitch_length=pitch_size_length, pitch_width=pitch_size_width
+        )
 
         with performance_logging("Loading data", logger=logger):
             raw_data = raw_data["FrameData"]
@@ -248,6 +206,8 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             provider=Provider.TRACAB,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
         )
 
         return TrackingDataset(

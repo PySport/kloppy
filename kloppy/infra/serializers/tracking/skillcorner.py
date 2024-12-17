@@ -1,15 +1,15 @@
-import logging
-from datetime import timedelta, timezone
-from dateutil.parser import parse
-import warnings
-from typing import NamedTuple, IO, Optional, Union, Dict
-from collections import Counter
-import numpy as np
 import json
+import logging
+import warnings
+from collections import Counter
+from datetime import timedelta, timezone
 from pathlib import Path
+from typing import IO, Dict, NamedTuple, Optional, Union
+
+import numpy as np
+from dateutil.parser import parse
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
     AttackingDirection,
     DatasetFlag,
     Frame,
@@ -18,6 +18,7 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
+    PlayerData,
     Point,
     Point3D,
     PositionType,
@@ -25,7 +26,7 @@ from kloppy.domain import (
     Score,
     Team,
     TrackingDataset,
-    PlayerData,
+    attacking_direction_from_frame,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -133,15 +134,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             track_id = frame_record.get("track_id", None)
             group_name = frame_record.get("group_name", None)
 
-            if trackable_object == ball_id:
-                group_name = "ball"
+            if trackable_object == ball_id or group_name == "balls":
+                group_name = "balls"
                 z = frame_record.get("z")
                 if z is not None:
                     z = float(z)
                 ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
-            elif trackable_object in referee_dict.keys():
+            elif (
+                trackable_object in referee_dict.keys()
+                or group_name == "referee"
+            ):
                 group_name = "referee"
                 continue  # Skip Referee Coords
 

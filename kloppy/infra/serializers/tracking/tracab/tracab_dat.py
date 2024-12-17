@@ -1,9 +1,8 @@
 import logging
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import warnings
 from typing import Dict, Optional, Union
 import html
-from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -184,9 +183,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 pitch_size_height = float(
                     match.attrib["fPitchYSizeMeters"].replace(",", ".")
                 )
-                date = parse(meta_data.match.attrib["dtDate"]).astimezone(
-                    timezone.utc
-                )
+                date = datetime.strptime(
+                    meta_data.match.attrib["dtDate"], "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
                 game_id = meta_data.match.attrib["iId"]
 
                 for period in match.iterchildren(tag="period"):
@@ -205,7 +204,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                             )
                         )
             elif hasattr(meta_data, "Phase1StartFrame"):
-                date = parse(str(meta_data["Kickoff"]))
+                date = datetime.strptime(
+                    str(meta_data["Kickoff"]), "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
                 game_id = str(meta_data["GameID"])
                 id_suffix = "ID"
                 player_item = "item"

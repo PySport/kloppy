@@ -1,8 +1,9 @@
-import pytz
 import math
 from typing import Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime, timedelta
+
+import pytz
 
 from kloppy.domain import (
     EventDataset,
@@ -724,6 +725,8 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         f"Set end of period {period.id} to {raw_event.timestamp}"
                     )
                     period.end_timestamp = raw_event.timestamp
+                elif raw_event.type_id == EVENT_TYPE_PLAYER_ON:
+                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet
@@ -793,11 +796,18 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     ):
                         if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
                             if 374 in raw_event.qualifiers:
+                                # Qualifier 374 specifies the actual time of the shot for all goal events
+                                # It uses London timezone for both MA3 and F24 feeds
+                                naive_datetime = datetime.strptime(
+                                    raw_event.qualifiers[374],
+                                    "%Y-%m-%d %H:%M:%S.%f",
+                                )
+                                timezone = pytz.timezone("Europe/London")
+                                aware_datetime = timezone.localize(
+                                    naive_datetime
+                                )
                                 generic_event_kwargs["timestamp"] = (
-                                    datetime.strptime(
-                                        raw_event.qualifiers[374],
-                                        "%Y-%m-%d %H:%M:%S.%f",
-                                    ).replace(tzinfo=pytz.utc)
+                                    aware_datetime.astimezone(pytz.utc)
                                     - period.start_timestamp
                                 )
                         shot_event_kwargs = _parse_shot(raw_event)

@@ -2,11 +2,9 @@ import json
 import logging
 import warnings
 from collections import Counter, defaultdict
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import IO, Dict, NamedTuple, Optional, Union
-
-from dateutil.parser import parse
 
 from kloppy.domain import (
     AttackingDirection,
@@ -371,7 +369,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
             date = metadata.get("date_time")
             if date:
-                date = parse(date).astimezone(timezone.utc)
+                date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").replace(
+                    tzinfo=timezone.utc
+                )
 
             game_id = metadata.get("id")
             if game_id:

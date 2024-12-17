@@ -29,6 +29,8 @@ from kloppy.domain import (
     CardType,
     AttackingDirection,
     PositionType,
+    Official,
+    OfficialType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -53,6 +55,14 @@ position_types_mapping: Dict[str, PositionType] = {
     "OLM": PositionType.LeftMidfield,
     "RA": PositionType.RightWing,
     "LA": PositionType.LeftWing,
+}
+
+referee_types_mapping: Dict[str, OfficialType] = {
+    "referee": OfficialType.MainReferee,
+    "firstAssistant": OfficialType.AssistantReferee,
+    "videoReferee": OfficialType.VideoAssistantReferee,
+    "secondAssistant": OfficialType.AssistantReferee,
+    "fourthOfficial": OfficialType.FourthOfficial,
 }
 
 logger = logging.getLogger(__name__)
@@ -102,6 +112,7 @@ class SportecMetadata(NamedTuple):
     fps: int
     home_coach: str
     away_coach: str
+    officials: List[Official]
 
 
 def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
@@ -213,6 +224,31 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             ]
         )
 
+    if hasattr(match_root, "MatchInformation") and hasattr(
+        match_root.MatchInformation, "Referees"
+    ):
+        officials = []
+        referee_path = objectify.ObjectPath(
+            "PutDataRequest.MatchInformation.Referees"
+        )
+        referee_elms = referee_path.find(match_root).iterchildren(
+            tag="Referee"
+        )
+
+        for referee in referee_elms:
+            ref_attrib = referee.attrib
+            officials.append(
+                Official(
+                    official_id=ref_attrib["PersonId"],
+                    name=ref_attrib["Shortname"],
+                    first_name=ref_attrib["FirstName"],
+                    last_name=ref_attrib["LastName"],
+                    role=referee_types_mapping[ref_attrib["Role"]],
+                )
+            )
+    else:
+        officials = []
+
     return SportecMetadata(
         score=score,
         teams=teams,
@@ -222,6 +258,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         fps=SPORTEC_FPS,
         home_coach=home_coach,
         away_coach=away_coach,
+        officials=officials,
     )
 
 
@@ -673,6 +710,7 @@ class SportecEventDataDeserializer(
             game_id=game_id,
             home_coach=home_coach,
             away_coach=away_coach,
+            officials=sportec_metadata.officials,
         )
 
         return EventDataset(

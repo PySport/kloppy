@@ -131,15 +131,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             track_id = frame_record.get("track_id", None)
             group_name = frame_record.get("group_name", None)
 
-            if trackable_object == ball_id:
-                group_name = "ball"
+            if trackable_object == ball_id or group_name == "balls":
+                group_name = "balls"
                 z = frame_record.get("z")
                 if z is not None:
                     z = float(z)
                 ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
-            elif trackable_object in referee_dict.keys():
+            elif (
+                trackable_object in referee_dict.keys()
+                or group_name == "referee"
+            ):
                 group_name = "referee"
                 continue  # Skip Referee Coords
 

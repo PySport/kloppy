@@ -16,6 +16,8 @@ from kloppy.domain import (
     BallState,
     Point3D,
     PositionType,
+    OfficialType,
+    Official,
 )
 
 from kloppy import sportec
@@ -120,6 +122,10 @@ class TestSportecTrackingData:
         return base_dir / "files/sportec_positional.xml"
 
     @pytest.fixture
+    def raw_data_referee(self, base_dir) -> str:
+        return base_dir / "files/sportec_positional_w_referee.xml"
+
+    @pytest.fixture
     def meta_data(self, base_dir) -> str:
         return base_dir / "files/sportec_meta.xml"
 
@@ -145,6 +151,7 @@ class TestSportecTrackingData:
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             seconds=4000 + 2996.68
         )
+        assert len(dataset.metadata.officials) == 4
 
     def test_load_frames(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
@@ -238,3 +245,52 @@ class TestSportecTrackingData:
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "M. Rose"
+
+    def test_referees(self, raw_data_referee: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data_referee,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+        )
+        assert len(dataset.metadata.officials) == 4
+
+        assert (
+            Official(
+                official_id="42",
+                name="Pierluigi Collina",
+                role=OfficialType.MainReferee,
+            ).role.value
+            == "Main Referee"
+        )
+
+        assert (
+            Official(
+                official_id="42",
+                name="Pierluigi Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Pierluigi Collina"
+        )
+        assert (
+            Official(
+                official_id="42",
+                first_name="Pierluigi",
+                last_name="Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Pierluigi Collina"
+        )
+        assert (
+            Official(
+                official_id="42",
+                last_name="Collina",
+                role=OfficialType.MainReferee,
+            ).full_name
+            == "Collina"
+        )
+        assert (
+            Official(official_id="42", role=OfficialType.MainReferee).full_name
+            == "main_referee_42"
+        )
+        assert Official(official_id="42").full_name == "official_42"

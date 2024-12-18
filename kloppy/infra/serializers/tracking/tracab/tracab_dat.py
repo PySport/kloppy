@@ -1,9 +1,8 @@
 import logging
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import warnings
 from typing import Dict, Optional, Union
 import html
-from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -24,12 +23,13 @@ from kloppy.domain import (
     Player,
     Provider,
     PlayerData,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
 
-from .common import TRACABInputs
+from .common import TRACABInputs, position_types_mapping
 from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
@@ -155,6 +155,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 ),
                 jersey_no=int(player["JerseyNo"]),
                 starting=player["StartFrameCount"] == start_frame_id,
+                starting_position=position_types_mapping.get(
+                    player.get("StartingPosition"), PositionType.Unknown
+                ),
             )
             for player in team_data["Players"][player_item]
         ]
@@ -180,9 +183,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 pitch_size_height = float(
                     match.attrib["fPitchYSizeMeters"].replace(",", ".")
                 )
-                date = parse(meta_data.match.attrib["dtDate"]).astimezone(
-                    timezone.utc
-                )
+                date = datetime.strptime(
+                    meta_data.match.attrib["dtDate"], "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
                 game_id = meta_data.match.attrib["iId"]
 
                 for period in match.iterchildren(tag="period"):
@@ -201,7 +204,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                             )
                         )
             elif hasattr(meta_data, "Phase1StartFrame"):
-                date = parse(str(meta_data["Kickoff"]))
+                date = datetime.strptime(
+                    str(meta_data["Kickoff"]), "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=timezone.utc)
                 game_id = str(meta_data["GameID"])
                 id_suffix = "ID"
                 player_item = "item"

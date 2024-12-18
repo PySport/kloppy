@@ -18,7 +18,9 @@ from typing import (
     Iterable,
 )
 
-from ...utils import deprecated
+from .position import PositionType
+
+from ...utils import deprecated, snake_case
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -33,7 +35,6 @@ else:
 from .pitch import (
     PitchDimensions,
     Unit,
-    Point,
     Dimension,
     NormalizedPitchDimensions,
     MetricPitchDimensions,
@@ -47,7 +48,6 @@ from ...exceptions import (
     OrientationError,
     InvalidFilterError,
     KloppyParameterError,
-    KloppyError,
 )
 
 
@@ -120,18 +120,44 @@ class Provider(Enum):
         return self.value
 
 
-@dataclass(frozen=True)
-class Position:
-    position_id: str
-    name: str
-    coordinates: Optional[Point] = None
+class OfficialType(Enum):
+    """Enumeration for types of officials (referees)."""
+
+    VideoAssistantReferee = "Video Assistant Referee"
+    MainReferee = "Main Referee"
+    AssistantReferee = "Assistant Referee"
+    FourthOfficial = "Fourth Official"
 
     def __str__(self):
-        return self.name
+        return self.value
 
-    @classmethod
-    def unknown(cls) -> "Position":
-        return cls(position_id="", name="Unknown")
+
+@dataclass(frozen=True)
+class Official:
+    """
+    Represents an official (referee) with optional names and roles.
+    """
+
+    official_id: str
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[OfficialType] = None
+
+    @property
+    def full_name(self):
+        """
+        Returns the full name of the official, falling back to role-based or ID-based naming.
+        """
+        if self.name:
+            return self.name
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.last_name:
+            return self.last_name
+        if self.role:
+            return f"{snake_case(str(self.role))}_{self.official_id}"
+        return f"official_{self.official_id}"
 
 
 @dataclass(frozen=True)
@@ -158,8 +184,8 @@ class Player:
 
     # match specific
     starting: bool = False
-    starting_position: Optional[Position] = None
-    positions: TimeContainer[Position] = field(
+    starting_position: Optional[PositionType] = None
+    positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
 
@@ -175,7 +201,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> Optional[Position]:
+    def position(self) -> Optional[PositionType]:
         try:
             return self.positions.last()
         except KeyError:
@@ -192,7 +218,7 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: Optional[Position]):
+    def set_position(self, time: Time, position: Optional[PositionType]):
         self.positions.set(time, position)
 
 
@@ -236,15 +262,11 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position_id: Union[int, str], time: Time):
-        position_id = str(position_id)
+    def get_player_by_position(self, position: PositionType, time: Time):
         for player in self.players:
             if player.positions.items:
                 player_position = player.positions.value_at(time)
-                if (
-                    player_position
-                    and player_position.position_id == position_id
-                ):
+                if player_position and player_position == position:
                     return player
 
         return None
@@ -1074,6 +1096,7 @@ class Metadata:
     game_id: Optional[str] = None
     home_coach: Optional[str] = None
     away_coach: Optional[str] = None
+    officials: Optional[List] = field(default_factory=list)
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
@@ -1138,7 +1161,7 @@ class Dataset(ABC, Generic[T]):
                 if player.starting:
                     player.set_position(
                         start_of_match,
-                        player.starting_position or Position.unknown(),
+                        player.starting_position or PositionType.unknown(),
                     )
 
     def _update_formations_and_positions(self):

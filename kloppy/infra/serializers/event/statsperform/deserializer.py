@@ -1,8 +1,9 @@
-import pytz
 import math
 from typing import Dict, List, NamedTuple, IO, Optional
 import logging
 from datetime import datetime, timedelta
+
+import pytz
 
 from kloppy.domain import (
     EventDataset,
@@ -33,7 +34,7 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     GoalkeeperActionType,
     CounterAttackQualifier,
-    Position,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -47,6 +48,9 @@ logger = logging.getLogger(__name__)
 EVENT_TYPE_START_PERIOD = 32
 EVENT_TYPE_END_PERIOD = 30
 EVENT_TYPE_DELETED_EVENT = 43
+EVENT_TYPE_START_DELAY = 27
+EVENT_TYPE_END_DELAY = 28
+EVENT_TYPE_OFFSIDE_PROVOKED = 55
 
 EVENT_TYPE_PASS = 1
 EVENT_TYPE_OFFSIDE_PASS = 2
@@ -101,6 +105,16 @@ BALL_OWNING_EVENTS = (
     EVENT_TYPE_RECOVERY,
     EVENT_TYPE_BALL_TOUCH,
 )
+DEAD_BALL_EVENTS = [
+    EVENT_TYPE_BALL_OUT,
+    EVENT_TYPE_CORNER_AWARDED,
+    EVENT_TYPE_SHOT_GOAL,
+    EVENT_TYPE_FOUL_COMMITTED,
+    EVENT_TYPE_CARD,
+    EVENT_TYPE_START_DELAY,
+    EVENT_TYPE_END_DELAY,
+    EVENT_TYPE_OFFSIDE_PROVOKED,
+]
 
 EVENT_QUALIFIER_GOAL_KICK = 124
 EVENT_QUALIFIER_FREE_KICK = 5
@@ -218,8 +232,17 @@ event_type_names = {
     77: "player off pitch",
 }
 
+position_line_mapping = {
+    "Goalkeeper": PositionType.Goalkeeper,
+    "Defender": PositionType.Defender,
+    "Midfielder": PositionType.Midfielder,
+    "Forward": PositionType.Striker,
+}
 
-def _parse_pass(raw_event: OptaEvent) -> Dict:
+
+def _parse_pass(
+    raw_event: OptaEvent, next_event: OptaEvent, next_next_event: OptaEvent
+) -> Dict:
     if raw_event.outcome:
         result = PassResult.COMPLETE
     else:
@@ -229,6 +252,21 @@ def _parse_pass(raw_event: OptaEvent) -> Dict:
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     qualifiers = pass_qualifiers + overall_qualifiers
+
+    # Set the end location of a deflected pass to the start location
+    # of the next action and the outcome to "success" if the deflected
+    # pass reached a teammate
+    if next_event is not None and next_next_event is not None:
+        if (
+            next_event.type_id == EVENT_TYPE_BALL_TOUCH
+            and next_event.outcome == 1
+            and next_next_event.contestant_id == raw_event.contestant_id
+        ):
+            result = PassResult.COMPLETE
+            receiver_coordinates = Point(
+                x=next_next_event.x,
+                y=next_next_event.y,
+            )
 
     return dict(
         result=result,
@@ -308,9 +346,7 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     player_positions = {}
     for player_id, position_id in zip(player_ids, position_ids):
         player = team.get_player_by_id(player_id)
-        position = Position(
-            position_id=position_id, name=positions_mapping[int(position_id)]
-        )
+        position = positions_mapping[int(position_id)]
         player_positions[player] = position
 
     return dict(formation_type=formation, player_positions=player_positions)
@@ -324,9 +360,7 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
 
     raw_position_line = next_event.qualifiers.get(44)
     if raw_position_line:
-        position = Position(
-            position_id=raw_position_line, name=raw_position_line
-        )
+        position = position_line_mapping[raw_position_line]
 
     return dict(replacement_player=replacement_player, position=position)
 
@@ -657,9 +691,14 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         f"Unknown team_id {raw_event.contestant_id}"
                     )
 
-                next_event_elm = (
+                next_event = (
                     raw_events[idx + 1]
                     if (idx + 1) < len(raw_events)
+                    else None
+                )
+                next_next_event = (
+                    raw_events[idx + 2]
+                    if (idx + 2) < len(raw_events)
                     else None
                 )
                 period = next(
@@ -686,10 +725,21 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         f"Set end of period {period.id} to {raw_event.timestamp}"
                     )
                     period.end_timestamp = raw_event.timestamp
+                elif raw_event.type_id == EVENT_TYPE_PLAYER_ON:
+                    continue
                 else:
                     if not period.start_timestamp:
                         # not started yet
                         continue
+
+                    if raw_event.contestant_id == teams[0].team_id:
+                        team = teams[0]
+                    elif raw_event.contestant_id == teams[1].team_id:
+                        team = teams[1]
+                    else:
+                        raise DeserializationError(
+                            f"Unknown team_id {raw_event.contestant_id}"
+                        )
 
                     player = None
                     if raw_event.player_id is not None:
@@ -698,12 +748,17 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     if raw_event.type_id in BALL_OWNING_EVENTS:
                         possession_team = team
 
+                    if raw_event.type_id in DEAD_BALL_EVENTS:
+                        ball_state = BallState.DEAD
+                    else:
+                        ball_state = BallState.ALIVE
+
                     generic_event_kwargs = dict(
                         # from DataRecord
                         period=period,
                         timestamp=raw_event.timestamp - period.start_timestamp,
                         ball_owning_team=possession_team,
-                        ball_state=BallState.ALIVE,
+                        ball_state=ball_state,
                         # from Event
                         event_id=raw_event.id,
                         team=team,
@@ -713,7 +768,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     )
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
-                        pass_event_kwargs = _parse_pass(raw_event)
+                        pass_event_kwargs = _parse_pass(
+                            raw_event, next_event, next_next_event
+                        )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,
                             **generic_event_kwargs,
@@ -739,11 +796,18 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     ):
                         if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
                             if 374 in raw_event.qualifiers:
+                                # Qualifier 374 specifies the actual time of the shot for all goal events
+                                # It uses London timezone for both MA3 and F24 feeds
+                                naive_datetime = datetime.strptime(
+                                    raw_event.qualifiers[374],
+                                    "%Y-%m-%d %H:%M:%S.%f",
+                                )
+                                timezone = pytz.timezone("Europe/London")
+                                aware_datetime = timezone.localize(
+                                    naive_datetime
+                                )
                                 generic_event_kwargs["timestamp"] = (
-                                    datetime.strptime(
-                                        raw_event.qualifiers[374],
-                                        "%Y-%m-%d %H:%M:%S.%f",
-                                    ).replace(tzinfo=pytz.utc)
+                                    aware_datetime.astimezone(pytz.utc)
                                     - period.start_timestamp
                                 )
                         shot_event_kwargs = _parse_shot(raw_event)
@@ -775,7 +839,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         EVENT_TYPE_BLOCKED_PASS,
                     ):
                         interception_event_kwargs = _parse_interception(
-                            raw_event, team, next_event_elm
+                            raw_event, team, next_event
                         )
                         event = self.event_factory.build_interception(
                             **interception_event_kwargs,
@@ -815,7 +879,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id in BALL_OUT_EVENTS:
-                        generic_event_kwargs["ball_state"] = BallState.DEAD
                         event = self.event_factory.build_ball_out(
                             result=None,
                             qualifiers=None,
@@ -839,7 +902,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             timedelta(0), generic_event_kwargs["timestamp"]
                         )
                         substitution_event_kwargs = _parse_substitution(
-                            next_event_elm, team
+                            next_event, team
                         )
                         event = self.event_factory.build_substitution(
                             result=None,
@@ -849,7 +912,6 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         )
 
                     elif raw_event.type_id == EVENT_TYPE_CARD:
-                        generic_event_kwargs["ball_state"] = BallState.DEAD
                         card_event_kwargs = _parse_card(raw_event)
 
                         event = self.event_factory.build_card(

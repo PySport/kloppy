@@ -19,6 +19,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
 
@@ -90,31 +91,43 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             ball_coordinates = None
 
         players_data = {}
-        player_info = components[1].split(";")[:-1]
-        for player_data in player_info:
-            player_data = player_data.split(",")
 
-            team_side_id = int(player_data[0])
-            player_id = player_data[1]
-            jersey_no = int(player_data[2])
-            x = float(player_data[3])
-            y = float(player_data[4])
+        if components[1] != ";":  # Check if there are any players in the frame
+            player_info = components[1].split(";")[:-1]
+            for player_data in player_info:
+                player_data = player_data.split(",")
 
-            # Goalkeepers have id 3 and 4
-            if team_side_id > 2:
-                team_side_id = team_side_id - 3
-            team = teams_list[team_side_id]
-            player = team.get_player_by_id(player_id)
+                raw_team_side_id = int(player_data[0])
+                player_id = player_data[1]
+                jersey_no = int(player_data[2])
+                x = float(player_data[3])
+                y = float(player_data[4])
 
-            if not player:
-                player = Player(
-                    player_id=player_id,
-                    team=team,
-                    jersey_no=jersey_no,
-                )
-                team.players.append(player)
+                # Field players have id 0, 1
+                if raw_team_side_id in [0, 1]:
+                    team_side_id = raw_team_side_id
+                # Goalkeepers have id 3 and 4
+                elif raw_team_side_id in [3, 4]:
+                    team_side_id = raw_team_side_id - 3
+                # Referees have id 2
+                elif raw_team_side_id == 2:
+                    continue
+                else:
+                    raise DeserializationError(
+                        f"Unexpected team side id {raw_team_side_id}"
+                    )
+                team = teams_list[team_side_id]
+                player = team.get_player_by_id(player_id)
 
-            players_data[player] = PlayerData(coordinates=Point(x, y))
+                if not player:
+                    player = Player(
+                        player_id=player_id,
+                        team=team,
+                        jersey_no=jersey_no,
+                    )
+                    team.players.append(player)
+
+                players_data[player] = PlayerData(coordinates=Point(x, y))
 
         return Frame(
             frame_id=frame_id,
@@ -169,7 +182,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     teams_list, period, frame_data
                 )
                 frame = transformer.transform_frame(frame)
-                if self.only_alive and frame.ball_state == BallState.DEAD:
+                if not frame.players_data or (
+                    self.only_alive and frame.ball_state == BallState.DEAD
+                ):
                     continue
                 frames.append(frame)
 

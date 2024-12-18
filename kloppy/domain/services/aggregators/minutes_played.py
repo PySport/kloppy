@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import List, NamedTuple, Union
 
-from kloppy.domain import EventDataset, Player, Position, Time
+from kloppy.domain import EventDataset, Player, Time, PositionType
 from kloppy.domain.services.aggregators.aggregator import (
     EventDatasetAggregator,
 )
@@ -16,7 +16,7 @@ class MinutesPlayed(NamedTuple):
 
 class MinutesPlayedPerPosition(NamedTuple):
     player: Player
-    position: Position
+    position: PositionType
     start_time: Time
     end_time: Time
     duration: timedelta

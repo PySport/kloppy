@@ -1,11 +1,9 @@
 import json
 import logging
 from dataclasses import replace
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional
-
-from dateutil.parser import parse
 
 from kloppy.domain import (
     BodyPart,
@@ -723,7 +721,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             )
             date = raw_events["match"].get("dateutc")
             if date:
-                date = parse(date).astimezone(timezone.utc)
+                date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S").replace(
+                    tzinfo=timezone.utc
+                )
             game_week = raw_events["match"].get("gameweek")
             if game_week:
                 game_week = str(game_week)

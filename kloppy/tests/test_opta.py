@@ -61,11 +61,11 @@ def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
     assert _parse_f24_datetime("2018-09-23T15:02:13.608") == datetime(
-        2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
     assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
-        2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc
     )
 
 
@@ -325,7 +325,7 @@ class TestOptaShotEvent:
         )
 
     def test_timestamp_goal(self, dataset: EventDataset):
-        """Check timestamp from qualifier in case of goal"""
+        """Check timestamp from qualifier 374 in case of goal"""
         goal = dataset.get_event_by_id("2318695229")
         assert goal.timestamp == (
             _parse_f24_datetime("2018-09-23T16:07:48.525")  # event timestamp

@@ -1,6 +1,6 @@
-from math import ceil, isnan
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
+from math import ceil, isnan
 from typing import Any, Callable, Dict, List, Optional, Union
 
 try:
@@ -21,10 +21,12 @@ from .pitch import Point
 
 try:
     import numpy as np
+except ImportError:
+    np = None
+try:
     from scipy.signal import savgol_filter
 except ImportError:
     savgol_filter = None
-    np = None
 
 
 @dataclass

@@ -1,17 +1,14 @@
-site_name: kloppy 3.14.0
+site_name: kloppy 3.16.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'GitHub'
 edit_uri: blob/master/docs/
 extra_css: [style.css]
-
 # TODO: set-up Google Analytics project to track
-google_analytics: null 
-
+google_analytics: null
 theme:
   name: material
   custom_dir: docs/overrides
-
 nav:
   - Home: index.md
   - Open-data: open-data.md
@@ -28,30 +25,29 @@ nav:
       - TRACAB: getting-started/tracab.ipynb
       - Wyscout: getting-started/wyscout.ipynb
   - Examples:
-    - Event Data: examples/event_data.ipynb
-    - Tracking Data: examples/tracking_data.ipynb
-    - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
-    - Code data: examples/code_data.ipynb
-    - State: examples/state.ipynb
-    - Navigating: examples/navigating.ipynb
-    - Plotting: examples/plotting.ipynb
-    - Config: examples/config.ipynb
-    - Adapters: examples/adapter.ipynb
-#  - API Reference:
-#    - Domain:
-#      - Common: api/domain/common.md
-#      - Pitch: api/domain/pitch.md
-#      - Tracking: api/domain/tracking.md
-#      - Event: api/domain/event.md
+      - Event Data: examples/event_data.ipynb
+      - Tracking Data: examples/tracking_data.ipynb
+      - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
+      - Code data: examples/code_data.ipynb
+      - State: examples/state.ipynb
+      - Navigating: examples/navigating.ipynb
+      - Plotting: examples/plotting.ipynb
+      - Config: examples/config.ipynb
+      - Adapters: examples/adapter.ipynb
+        #  - API Reference:
+        #    - Domain:
+        #      - Common: api/domain/common.md
+        #      - Pitch: api/domain/pitch.md
+        #      - Tracking: api/domain/tracking.md
+        #      - Event: api/domain/event.md
   - Providers: 'providers.md'
   - Other:
-    - Issues: 'issues.md'
-    - Contributing: 'contributing.md'
-    - Sponsors: 'sponsors.md'
-    - About: 'about.md'
-    - Changelog: 'changelog.md'
-    - License: 'license.md'
-
+      - Issues: 'issues.md'
+      - Contributing: 'contributing.md'
+      - Sponsors: 'sponsors.md'
+      - About: 'about.md'
+      - Changelog: 'changelog.md'
+      - License: 'license.md'
 plugins:
   - mkdocs-jupyter:
       include_source: True
@@ -69,7 +65,6 @@ plugins:
   - exclude:
       glob:
         - presentations/*
-
 markdown_extensions:
   - pymdownx.highlight:
       use_pygments: true

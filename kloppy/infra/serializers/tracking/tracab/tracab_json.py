@@ -1,35 +1,34 @@
+import html
+import json
 import logging
 import warnings
-import json
-import html
 from datetime import timedelta
 from typing import Dict, Optional, Union
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Detection,
     Frame,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    Metadata,
-    Ground,
-    Player,
     Provider,
-    Detection,
-    Position,
+    Team,
+    TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.models import PositionType
 from kloppy.exceptions import DeserializationError
-
 from kloppy.utils import Readable, performance_logging
 
-from .common import TRACABInputs
 from ..deserializer import TrackingDataDeserializer
+from .common import TRACABInputs, position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -133,20 +132,6 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             ground=ground,
         )
 
-        def parse_player_position(
-            starting_position: str, current_position: str
-        ):
-            if starting_position != "S":
-                return Position(
-                    position_id=starting_position, name=starting_position
-                )
-            elif current_position != "S" and current_position != "O":
-                return Position(
-                    position_id=current_position, name=current_position
-                )
-            else:
-                return None
-
         team.players = [
             Player(
                 player_id=str(player["PlayerID"]),
@@ -158,8 +143,8 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 ),
                 jersey_no=int(player["JerseyNo"]),
                 starting=True if player["StartingPosition"] != "S" else False,
-                starting_position=parse_player_position(
-                    player["StartingPosition"], player["CurrentPosition"]
+                starting_position=position_types_mapping.get(
+                    player["StartingPosition"], PositionType.Unknown
                 ),
             )
             for player in team_data["Players"]

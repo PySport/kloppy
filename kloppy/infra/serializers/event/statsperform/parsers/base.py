@@ -8,11 +8,19 @@ from typing import Tuple, List, Optional, IO, Dict
 
 from lxml import objectify
 
-from kloppy.domain import Team, Score, Period
+from kloppy.domain import Team, Score, Period, PositionType
 
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import List, Optional
+
+
+position_types_mapping: Dict[str, PositionType] = {
+    "Goalkeeper": PositionType.Goalkeeper,
+    "Defender": PositionType.Defender,
+    "Midfielder": PositionType.Midfielder,
+    "Striker": PositionType.Attacker,
+    "Substitute": PositionType.Unknown,
+}
 
 
 @dataclass
@@ -51,6 +59,18 @@ class OptaParser:
 
     def extract_score(self) -> Optional[Score]:
         """Return the score of the game."""
+        return None
+
+    def extract_date(self) -> Optional[datetime]:
+        """Return the date of the game."""
+        return None
+
+    def extract_game_week(self) -> Optional[str]:
+        """Return the game_week of the game."""
+        return None
+
+    def extract_game_id(self) -> Optional[str]:
+        """Return the game_id of the game."""
         return None
 
     def extract_lineups(self) -> Tuple[Team, Team]:

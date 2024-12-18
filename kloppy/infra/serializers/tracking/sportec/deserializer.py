@@ -1,33 +1,32 @@
 import logging
 import warnings
 from collections import defaultdict
-from typing import NamedTuple, Optional, Union, IO
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import IO, NamedTuple, Optional, Union
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Detection,
     Frame,
+    Metadata,
+    Orientation,
+    Period,
     Point,
     Point3D,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
     Provider,
-    Detection,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
-
-from kloppy.utils import performance_logging
-
-from ..deserializer import TrackingDataDeserializer
 from kloppy.infra.serializers.event.sportec.deserializer import (
     sportec_metadata_from_xml_elm,
 )
+from kloppy.utils import performance_logging
+
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
@@ -121,13 +120,27 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         with performance_logging("parse metadata", logger=logger):
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
+
             periods = sportec_metadata.periods
             transformer = self.get_transformer(
                 pitch_length=sportec_metadata.x_max,
                 pitch_width=sportec_metadata.y_max,
             )
+            home_coach = sportec_metadata.home_coach
+            away_coach = sportec_metadata.away_coach
+
+            official_ids = []
+            if sportec_metadata.officials:
+                official_ids = [
+                    x.official_id for x in sportec_metadata.officials
+                ]
 
         with performance_logging("parse raw data", logger=logger):
+            date = datetime.fromisoformat(
+                match_root.MatchInformation.General.attrib["KickoffTime"]
+            )
+            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
+            game_id = match_root.MatchInformation.General.attrib["MatchId"]
 
             def _iter():
                 player_map = {}
@@ -194,6 +207,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                         )
                                         for player_id, raw_player_data in frame_data.items()
                                         if player_id != "ball"
+                                        and player_id not in official_ids
                                     },
                                 },
                                 other_data={},
@@ -233,6 +247,12 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             provider=Provider.SPORTEC,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
+            home_coach=home_coach,
+            away_coach=away_coach,
+            officials=sportec_metadata.officials,
         )
 
         return TrackingDataset(

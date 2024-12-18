@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import List, Dict
 
 import numpy as np
@@ -49,23 +49,22 @@ def attacking_directions_from_multi_frames(
     x-coords might not reflect the attacking direction.
     """
     attacking_directions = {}
-    frame_period_ids = np.array([_frame.period.id for _frame in frames])
-    frame_attacking_directions = np.array(
-        [
-            attacking_direction_from_frame(frame)
-            if len(frame.players_data) > 0
-            else AttackingDirection.NOT_SET
-            for frame in frames
-        ]
-    )
 
+    # Group attacking directions by period ID
+    period_direction_map = defaultdict(list)
+    for frame in frames:
+        if len(frame.players_data) > 0:
+            direction = attacking_direction_from_frame(frame)
+        else:
+            direction = AttackingDirection.NOT_SET
+        period_direction_map[frame.period.id].append(direction)
+
+    # Determine the most common attacking direction for each period
     for period in periods:
         period_id = period.id
-        if period_id in frame_period_ids:
-            count = Counter(
-                frame_attacking_directions[frame_period_ids == period_id]
-            )
-            attacking_directions[period_id] = count.most_common()[0][0]
+        if period_id in period_direction_map:
+            count = Counter(period_direction_map[period_id])
+            attacking_directions[period_id] = count.most_common(1)[0][0]
         else:
             attacking_directions[period_id] = AttackingDirection.NOT_SET
 

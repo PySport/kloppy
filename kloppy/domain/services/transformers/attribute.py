@@ -1,3 +1,4 @@
+import sys
 from abc import ABC, abstractmethod
 import math
 from typing import Dict, Any, Set, Type, Union, List, Optional
@@ -23,6 +24,18 @@ from kloppy.exceptions import (
     KloppyParameterError,
 )
 from kloppy.utils import camelcase_to_snakecase
+
+py_version = sys.version_info
+if py_version >= (3, 8):
+    from typing import get_args
+
+
+def _get_generic_type_arg(cls):
+    t = cls.__orig_bases__[0]
+    if py_version >= (3, 8):
+        return get_args(t)[0]
+    else:
+        return t.__args__[0]
 
 
 class OneHotEncoder:
@@ -125,7 +138,7 @@ class DistanceToOwnGoalTransformer(EventAttributeTransformer):
 def create_transformer_from_qualifier(
     qualifier_type: Type[EnumQualifier],
 ) -> Type[EventAttributeTransformer]:
-    enum_ = qualifier_type.__annotations__["value"]
+    enum_ = _get_generic_type_arg(qualifier_type)
     name = camelcase_to_snakecase(enum_.__name__)
     options = [e.value for e in enum_]
 

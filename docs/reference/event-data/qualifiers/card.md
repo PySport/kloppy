@@ -1,5 +1,1 @@
-# CardQualifier
-
-::: kloppy.domain.CardQualifier
-
-::: kloppy.domain.CardType
+{{ render_qualifier("kloppy.domain.CardQualifier", "kloppy.domain.CardType") }}

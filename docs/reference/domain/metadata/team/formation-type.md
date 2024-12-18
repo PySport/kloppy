@@ -1,1 +1,3 @@
+# FormationType
+
 ::: kloppy.domain.FormationType

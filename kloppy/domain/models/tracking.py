@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Callable, Union, Any
+from typing import Dict, Optional, Callable, Union, Any
 
 from kloppy.domain.models.common import DatasetType
 
@@ -7,6 +7,7 @@ from .common import Dataset, DataRecord, Player
 from .pitch import Point, Point3D
 from kloppy.utils import (
     deprecated,
+    docstring_inherit_attributes,
 )
 
 
@@ -19,7 +20,18 @@ class PlayerData:
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(DataRecord)
 class Frame(DataRecord):
+    """
+    Tracking data frame.
+
+    Attributes:
+        frame_id: The unique identifier of the frame. Aias for `record_id`.
+        ball_coordinates: The coordinates of the ball
+        players_data: A dictionary containing the tracking data for each player.
+        ball_speed: The speed of the ball
+        other_data: A dictionary containing additional data
+    """
     frame_id: int
     players_data: Dict[Player, PlayerData]
     other_data: Dict[str, Any]
@@ -39,9 +51,17 @@ class Frame(DataRecord):
 
 
 @dataclass
+@docstring_inherit_attributes(Dataset)
 class TrackingDataset(Dataset[Frame]):
-    records: List[Frame]
+    """
+    A tracking dataset.
 
+    Attributes:
+        dataset_type (DatasetType): `"DatasetType.TRACKING"`
+        frames (List[Frame]): A list of frames. Alias for `records`.
+        frame_rate (float): The frame rate (in Hertz) at which the data was recorded.
+        metadata (Metadata): Metadata of the tracking dataset.
+    """
     dataset_type: DatasetType = DatasetType.TRACKING
 
     @property
@@ -57,10 +77,10 @@ class TrackingDataset(Dataset[Frame]):
     )
     def to_pandas(
         self,
-        record_converter: Callable[[Frame], Dict] = None,
-        additional_columns: Dict[
+        record_converter: Optional[Callable[[Frame], Dict]] = None,
+        additional_columns: Optional[Dict[
             str, Union[Callable[[Frame], Any], Any]
-        ] = None,
+        ]] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd

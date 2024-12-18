@@ -1,5 +1,1 @@
-# DuelQualifier
-
-::: kloppy.domain.DuelQualifier
-
-::: kloppy.domain.DuelType
+{{ render_qualifier("kloppy.domain.DuelQualifier", "kloppy.domain.DuelType") }}

@@ -11,7 +11,16 @@ DEFAULT_PITCH_WIDTH = 68.0
 
 
 class Unit(Enum):
-    """Unit to measure distances on a pitch."""
+    """
+    Unit to measure distances on a pitch.
+
+    Attributes:
+        METERS (str): Meters
+        YARDS (str): Yards
+        CENTIMETERS (str): Centimeters
+        FEET (str): Feet
+        NORMED (str): Normalized to a unit square
+    """
 
     METERS = "m"
     YARDS = "y"
@@ -87,7 +96,8 @@ class Point3D(Point):
 
 @dataclass(frozen=True)
 class Dimension:
-    """Limits of pitch boundaries along a single axis.
+    """
+    Limits of pitch boundaries along a single axis.
 
     Attributes:
         min: Minimal possible value within this dimension
@@ -112,13 +122,12 @@ class Dimension:
 
 @dataclass
 class PitchDimensions:
-    """Specifies the dimensions of a pitch.
+    """
+    Specifies the dimensions of a pitch.
 
     Attributes:
         x_dim: Limits of pitch boundaries in longitudinal direction.
-            See [`Dimension`][kloppy.domain.models.pitch.Dimension]
         y_dim: Limits of pitch boundaries in lateral direction.
-            See [`Dimension`][kloppy.domain.models.pitch.Dimension]
         standardized: Used to denote standardized pitch dimensions where data
             is scaled along the axes independent of the actual dimensions of
             the pitch. To get non-distored calculations, the `length` and
@@ -543,7 +552,8 @@ class PitchDimensions:
 
 @dataclass
 class MetricPitchDimensions(PitchDimensions):
-    """The standard pitch dimensions in meters by IFAB regulations.
+    """
+    The standard pitch dimensions in meters by IFAB regulations.
 
     For national matches, the length of the pitch can be between 90 and 120
     meters, and the width can be between 45 and 90 meters. For international
@@ -569,7 +579,8 @@ class MetricPitchDimensions(PitchDimensions):
 
 @dataclass
 class ImperialPitchDimensions(PitchDimensions):
-    """The standard pitch dimensions in yards by IFAB regulations.
+    """
+    The standard pitch dimensions in yards by IFAB regulations.
 
     For national matches, the length of the pitch can be between 100 and 130
     yards, and the width can be between 50 and 100 yards. For international
@@ -595,7 +606,8 @@ class ImperialPitchDimensions(PitchDimensions):
 
 @dataclass
 class NormalizedPitchDimensions(MetricPitchDimensions):
-    """The standard pitch dimensions in normalized units.
+    """
+    The standard pitch dimensions in normalized units.
 
     The pitch dimensions are normalized to a unit square, where the length
     and width of the pitch are 1. All other dimensions are scaled accordingly.

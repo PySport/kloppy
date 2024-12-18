@@ -8,7 +8,6 @@ from typing import (
     Generic,
     List,
     Tuple,
-    NamedTuple,
     Literal,
 )
 
@@ -28,10 +27,14 @@ class Period:
         start_timestamp: The UTC datetime of the kick-off or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's kick-off
+        start_time: Same as `start_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
         end_timestamp: The UTC datetime of the final whistle or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's final whistle
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
+        end_time: Same as `end_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
+        duration: The length of the period.
+        prev_period: Period before this period.
+        next_period: Period after this period.
     """
 
     id: int
@@ -94,6 +97,16 @@ class Period:
 
 @dataclass
 class Time:
+    """
+    A point in time during a match.
+
+    A time is defined by a period and a timestamp. The timestamp is the time
+    elapsed since the start of the period.
+
+    Attributes:
+        period: A period in a match.
+        timestamp: The time elapsed since the start of the period.
+    """
     period: "Period"
     timestamp: timedelta
 

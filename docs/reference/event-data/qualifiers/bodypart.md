@@ -1,5 +1,1 @@
-# BodyPartQualifier
-
-::: kloppy.domain.BodyPartQualifier
-
-::: kloppy.domain.BodyPart
+{{ render_qualifier("kloppy.domain.BodyPartQualifier", "kloppy.domain.BodyPart") }}

@@ -1,5 +1,1 @@
-# GoalkeeperQualifier
-
-::: kloppy.domain.GoalkeeperQualifier
-
-::: kloppy.domain.GoalkeeperActionType
+{{ render_qualifier("kloppy.domain.GoalkeeperQualifier", "kloppy.domain.GoalkeeperActionType") }}

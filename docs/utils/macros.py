@@ -1,7 +1,7 @@
 """
 Mkdocs-macros module
 """
-
+import warnings
 import yaml
 import griffe
 import pandas as pd
@@ -297,5 +297,104 @@ def define_env(env):
 
         return f"""
 <p><span class="doc-section-title">{description}</span></p>
+{table}
+"""
+
+
+    @env.macro
+    def render_qualifier(x, y):
+        # Load spec file
+        with open("docs/reference/providers/spec.yaml", "r") as file:
+            spec = {**_DEFAULT_EVENT_TYPE_SPEC, **yaml.safe_load(file)["qualifiers"][x]}
+
+        # Parse docstring of event type
+        qualifier_spec = kloppy[x.replace("kloppy.", "")]
+        qualifier_docstring = Docstring(qualifier_spec.docstring.value, lineno=1).parse("google")
+        value_spec = kloppy[y.replace("kloppy.", "")]
+        value_docstring = Docstring(value_spec.docstring.value, lineno=1).parse("google")
+
+        # Get qualifier value type
+        attr_docstrings = next(
+            (d.value for d in qualifier_docstring if d.kind.name == "attributes"), list()
+        )
+
+        # Create table
+        columns, data = ["Name", "Type", "Description"], []
+        for provider_name in _EVENT_DATA_PROVIDERS.values():
+            columns += [provider_name]
+
+        # Create a row for each attribute
+        for attr in attr_docstrings:
+            row = []
+            row += [attr.name]
+            # anchor = qualifier_spec.members[attr.name].annotation.canonical_path
+            # if anchor.startswith("kloppy."):
+            #     row += [f"[`{attr.annotation}`][{anchor}]"]
+            # else:
+            row += [f"`{attr.annotation}`"]
+            row += [attr.description]
+
+            # Check if there is a record in the spec file for the attribute
+            if attr.name in spec["attributes"]:
+                attr_spec = spec["attributes"][attr.name]
+                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                    row += [render_provider_spec(attr_spec, provider_key)]
+            else:
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
+                    row += ["-"]
+
+            data += [row]
+
+        # Get qualifier value type
+        attr_docstrings = next(
+            (d.value for d in value_docstring if d.kind.name == "attributes"), list()
+        )
+
+        # Create a row for each attribute
+        for attr in attr_docstrings:
+            row = [""]
+            row += [attr.name]
+            # anchor = value_spec.members[attr.name].annotation.canonical_path
+            # if anchor.startswith("kloppy."):
+            #     row += [f"[`{attr.annotation}`][{anchor}]"]
+            # else:
+            #     row += [f"`{attr.annotation}`"]
+            row += [attr.description]
+
+            # Check if there is a record in the spec file for the attribute
+            if attr.name in spec["values"]:
+                attr_spec = spec["values"][attr.name]
+                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                    row += [render_provider_spec(attr_spec, provider_key)]
+            else:
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
+                    row += ["-"]
+
+            data += [row]
+
+        description = qualifier_docstring[0].value
+
+        table = convert_to_md_table(
+            pd.DataFrame(data, columns=columns), {"index": False}
+        )
+
+        return f"""
+<h2 id="{x}" class="doc doc-heading">
+    <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>
+    <span class="doc doc-object-name doc-class-name">{x}</span>
+    <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+    </span>
+</h2>
+
+{description}
+
+<p><span class="doc-section-title">Attributes</span></p>
 {table}
 """

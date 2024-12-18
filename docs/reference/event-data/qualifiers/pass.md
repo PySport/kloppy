@@ -1,5 +1,1 @@
-# PassQualifier
-
-::: kloppy.domain.PassQualifier
-
-::: kloppy.domain.PassType
+{{ render_qualifier("kloppy.domain.PassQualifier", "kloppy.domain.PassType") }}

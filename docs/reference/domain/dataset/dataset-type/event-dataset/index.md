@@ -1,1 +1,3 @@
+# EventDataset
+
 ::: kloppy.domain.EventDataset

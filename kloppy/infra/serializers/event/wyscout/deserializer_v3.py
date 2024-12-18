@@ -1,5 +1,6 @@
 import json
 import logging
+import warnings
 from dataclasses import replace
 from datetime import timedelta, timezone
 from enum import Enum
@@ -40,7 +41,7 @@ from kloppy.domain import (
     Team,
 )
 from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging
+from kloppy.utils import performance_logging, DeserializationWarning
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
@@ -780,6 +781,17 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         str(raw_event["possession"]["team"]["id"])
                     ]
 
+                if player_id == INVALID_PLAYER:
+                    player = None
+                elif player_id not in players[team_id]:
+                    player = None
+                    warnings.warn(
+                        f"Player {player_id} not listed in the team performing the event.",
+                        DeserializationWarning,
+                    )
+                else:
+                    player = players[team_id][player_id]
+
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
@@ -792,10 +804,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         else None
                     ),
                     "team": team,
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    and player_id in players[team_id]
-                    else None,
+                    "player": player,
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],

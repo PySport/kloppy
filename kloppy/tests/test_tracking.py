@@ -1,28 +1,37 @@
-from math import sqrt, isnan
-import numpy as np
+from math import isnan, sqrt
 
+import numpy as np
 import pytest
 
 from kloppy.domain import (
-    Period,
     DatasetFlag,
-    Point,
-    TrackingDataset,
-    NormalizedPitchDimensions,
-    Dimension,
-    Orientation,
-    Frame,
-    Metadata,
-    Team,
-    Ground,
-    Player,
     Detection,
+    Dimension,
+    Frame,
+    Ground,
+    Metadata,
+    NormalizedPitchDimensions,
+    Orientation,
+    Period,
+    Player,
+    Point,
     Point3D,
+    Team,
+    TrackingDataset,
 )
 
 
 class TestTrackingDataset:
     def _get_tracking_dataset(self):
+        """Create a dummy tracking dataset.
+
+        The dataset contains a single player moving in a straight line with
+        the ball on their feet. During the first second (or 25 frames), the
+        player does not move. During the next four seconds (or 100 frames),
+        the player moves at a constant speed.
+
+        No player was detected in frame 10.
+        """
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         home_team.players = [
             Player(team=home_team, player_id=f"home_1", jersey_no=1)
@@ -76,7 +85,41 @@ class TestTrackingDataset:
                     },
                     other_data={"extra_data": 1},
                 )
-                for i in range(25)  # not moving for one second
+                for i in range(10)  # not moving for one second
+            ]
+            + [
+                Frame(
+                    frame_id=10,
+                    timestamp=10 / 25,
+                    ball_owning_team=teams[0],
+                    ball_state=None,
+                    period=periods[0],
+                    objects={
+                        "ball": Detection(
+                            coordinates=Point3D(x=0, y=0, z=0),
+                        )
+                    },
+                    other_data={"extra_data": 1},
+                )
+            ]
+            + [
+                Frame(
+                    frame_id=i,
+                    timestamp=i / 25,
+                    ball_owning_team=teams[0],
+                    ball_state=None,
+                    period=periods[0],
+                    objects={
+                        "ball": Detection(
+                            coordinates=Point3D(x=0, y=0, z=0),
+                        ),
+                        home_team.players[0]: Detection(
+                            coordinates=Point(x=0, y=0),
+                        ),
+                    },
+                    other_data={"extra_data": 1},
+                )
+                for i in range(14)  # not moving for one second
             ]
             + [
                 Frame(
@@ -100,64 +143,59 @@ class TestTrackingDataset:
         )
         return tracking_data
 
-    def test_compute_kinematics(self):
-        dataset = (
-            self._get_tracking_dataset()
-            .compute_ball_kinematics(
-                # disable all filters
-                n_smooth_speed=1,
-                n_smooth_acc=1,
-                filter_type=None,
-                copy=True,
-            )
-            .compute_player_kinematics(
-                # disable all filters
-                n_smooth_speed=1,
-                n_smooth_acc=1,
-                filter_type=None,
-                copy=False,
-            )
-        )
-
-        ball_speeds = [frame.ball_data.speed for frame in dataset.records]
-        # The ball speed is not defined for the first frame
-        assert isnan(ball_speeds[0])
-        # The ball ball does not move for the first 25 frames
-        assert ball_speeds[1:25] == pytest.approx([0] * 24)
-        # The ball moves with a constant speed in the next 100 frames
-        assert ball_speeds[26:] == pytest.approx(
-            [sqrt(105**2 + 68**2) / 4] * 99
-        )
-
-        ball_accelerations = [
-            frame.ball_data.acceleration for frame in dataset.records
-        ]
-        # The ball acceleration is not defined for the first frame
-        assert isnan(ball_accelerations[0])
-        # The ball only accelerates at the 26th frame
-        assert ball_accelerations[25] == pytest.approx(0)
-        assert np.nanargmax(ball_accelerations) == 26
-        assert ball_accelerations[27] == pytest.approx(0)
-
-        # It should also compute the speed and acceleration for the players
-        for player in dataset.metadata.teams[0].players:
-            player_speeds = [
-                frame.players_data[player].speed for frame in dataset.records
-            ]
-            assert player_speeds[26:] == pytest.approx(
-                [sqrt(105**2 + 68**2) / 4] * 99
-            )
-            player_accelerations = [
-                frame.players_data[player].acceleration
-                for frame in dataset.records
-            ]
-            assert np.nanargmax(player_accelerations) == 26
-
-    def test_compute_kinematics_with_filter(self):
+    def test_ball_data(self):
         dataset = self._get_tracking_dataset()
-        dataset.compute_ball_kinematics(
-            n_smooth_speed=2, n_smooth_acc=2, filter_type="savitzky_golay"
+        frame = dataset[0]
+        assert frame.ball_data == Detection(
+            coordinates=Point3D(x=0, y=0, z=0),
         )
-        dataset.compute_ball_kinematics(
-            n_smooth_speed=2, n_smooth_acc=2, filter_type="moving_average"
+        assert frame.ball_coordinates == Point3D(x=0, y=0, z=0)
+        assert frame.ball_speed is None
+
+    def test_players_data(self):
+        dataset = self._get_tracking_dataset()
+        frame = dataset[0]
+        assert frame.players_data == {
+            dataset.metadata.teams[0].players[0]: Detection(
+                coordinates=Point(x=0, y=0),
+            )
+        }
+        assert frame.players_coordinates == {
+            dataset.metadata.teams[0].players[0]: Point(x=0, y=0),
+        }
+
+    def test_getitem(self):
+        dataset = self._get_tracking_dataset()
+        frame = dataset[0]
+
+        assert frame["ball"] == Detection(
+            coordinates=Point3D(x=0, y=0, z=0),
+        )
+        assert frame["home_1"] == Detection(
+            coordinates=Point(x=0, y=0),
+        )
+        assert frame[dataset.metadata.teams[0].players[0]] == Detection(
+            coordinates=Point(x=0, y=0),
+        )
+        assert frame["home_2"] is None
+
+    def test_trajectories(self):
+        dataset = self._get_tracking_dataset()
+
+        ball_trajectories = dataset.trajectories("ball")
+        assert len(ball_trajectories) == 1
+        assert ball_trajectories[0].start_frame == 0
+        assert ball_trajectories[0].end_frame == 124
+        assert len(ball_trajectories[0].detections) == 125
+        assert ball_trajectories[0].detections[0] == Detection(
+            coordinates=Point3D(x=0, y=0, z=0)
+        )
+
+        player_trajectories = dataset.trajectories("home_1")
+        assert len(player_trajectories) == 2
+        assert player_trajectories[0].start_frame == 0
+        assert player_trajectories[0].end_frame == 9
+        assert len(player_trajectories[0].detections) == 10
+        assert player_trajectories[0].detections[0] == Detection(
+            coordinates=Point(x=0, y=0)
         )

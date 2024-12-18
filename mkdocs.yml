@@ -106,14 +106,15 @@ nav:
                       - Unit: reference/domain/metadata/coordinate-system/pitch-dimensions/unit.md
                       - Dimension: reference/domain/metadata/coordinate-system/pitch-dimensions/dimension.md
       - Data loaders:
-          - Datafactory: reference/providers/datafactory.md
-          - Metrica: reference/providers/metrica.md
-          - SecondSpectrum: reference/providers/secondspectrum.md
+          - DataFactory: reference/providers/datafactory.md
+          - Hudl Sportscode: reference/providers/sportscode.md
+          - Opta: reference/providers/opta.md
+          - Hudl Statsbomb: reference/providers/statsbomb.md
+          - Metrica Sports: reference/providers/metrica.md
+          - Second Spectrum: reference/providers/secondspectrum.md
           - SkillCorner: reference/providers/skillcorner.md
-          - Sportec: reference/providers/sportec.md
-          - Sportscode: reference/providers/sportscode.md
-          - Statsbomb: reference/providers/statsbomb.md
-          - StatsPerform: reference/providers/statsperform.md
+          - Sportec Solutions: reference/providers/sportec.md
+          - Stats Perform: reference/providers/statsperform.md
           - TRACAB: reference/providers/tracab.md
           - Wyscout: reference/providers/wyscout.md
       - Event Data Model:

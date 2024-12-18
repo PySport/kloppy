@@ -1,7 +1,7 @@
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, TrackingDataset, EventFactory
+from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.exceptions import KloppyError
 from kloppy.infra.serializers.event.metrica import (
     MetricaJsonEventDataDeserializer,
@@ -25,12 +25,26 @@ def load_tracking_csv(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
 ) -> TrackingDataset:
+    """
+    Load Metrica Sports CSV tracking data.
+
+    Args:
+        home_data: The raw tracking data for the home team.
+        away_data: The raw tracking data for the away team.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+
+    Returns:
+        The parsed tracking data.
+    """
     deserializer = MetricaCSVTrackingDataDeserializer(
         sample_rate=sample_rate, limit=limit, coordinate_system=coordinates
     )
-    with open_as_file(home_data) as home_data_fp, open_as_file(
-        away_data
-    ) as away_data_fp:
+    with (
+        open_as_file(home_data) as home_data_fp,
+        open_as_file(away_data) as away_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=MetricaCSVTrackingDataInputs(
                 home_data=home_data_fp, away_data=away_data_fp
@@ -45,12 +59,23 @@ def load_tracking_epts(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
 ) -> TrackingDataset:
+    """
+    Load Metrica Sports EPTS tracking data.
+
+    Args:
+        meta_data: A xml feed containing the match meta data.
+        raw_data: A feed containing the raw tracking data in the EPTS format.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+
+    Returns:
+        The parsed tracking data.
+    """
     deserializer = MetricaEPTSTrackingDataDeserializer(
         sample_rate=sample_rate, limit=limit, coordinate_system=coordinates
     )
-    with open_as_file(raw_data) as raw_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with open_as_file(raw_data) as raw_data_fp, open_as_file(meta_data) as meta_data_fp:
         return deserializer.deserialize(
             inputs=MetricaEPTSTrackingDataInputs(
                 raw_data=raw_data_fp, meta_data=meta_data_fp
@@ -65,15 +90,28 @@ def load_event(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
+    """Load Metrica Sports JSON event data.
+
+    Args:
+        event_data: A json feed containing the raw event data.
+        meta_data: A xml feed containing the match meta data.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
+
+    Returns:
+        The parsed event data.
+    """
     deserializer = MetricaJsonEventDataDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
 
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=MetricaJsonEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp
@@ -87,6 +125,20 @@ def load_open_data(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
 ) -> TrackingDataset:
+    """Load Metrica Sports open data.
+
+    This function loads tracking data directly from Metrica's open data
+    GitHub repository.
+
+    Args:
+        match_id: The id of the match to load data for.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+
+    Returns:
+        The parsed event data.
+    """
     if match_id == "1" or match_id == 1:
         return load_tracking_csv(
             home_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
@@ -118,6 +170,4 @@ def load_open_data(
             coordinates=coordinates,
         )
     else:
-        raise KloppyError(
-            f"Don't know where to fetch Metrica open data for {match_id}"
-        )
+        raise KloppyError(f"Don't know where to fetch Metrica open data for {match_id}")

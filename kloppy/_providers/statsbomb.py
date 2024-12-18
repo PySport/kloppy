@@ -2,13 +2,13 @@ import warnings
 from typing import Union
 
 from kloppy.config import get_config
+from kloppy.domain import EventDataset, EventFactory, List, Optional
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
 from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
     StatsBombInputs,
 )
-from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike, Source
+from kloppy.io import FileLike, Source, open_as_file
 
 
 def load(
@@ -21,15 +21,21 @@ def load(
     additional_metadata: dict = {},
 ) -> EventDataset:
     """
-    Load StatsBomb event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    Load StatsBomb event data.
 
-    Parameters:
-        event_data: filename of json containing the events
-        lineup_data: filename of json containing the lineup information
-        three_sixty_data: filename of json containing the 360 data
-        event_types:
-        coordinates:
-        event_factory:
+    Args:
+        event_data: JSON feed with the raw event data of a game.
+        lineup_data: JSON feed with the corresponding lineup information of the game.
+        three_sixty_data: JSON feed with the 360 freeze frame data of the game.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
+        additional_metadata: A dict with additional data that will be added to
+            the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
+            for a list of possible keys.
+
+    Returns:
+        The parsed event data.
     """
     deserializer = StatsBombDeserializer(
         event_types=event_types,
@@ -38,11 +44,13 @@ def load(
         or get_config("event_factory")
         or StatsBombEventFactory(),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(three_sixty_data, optional=True)
-    ) as three_sixty_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(three_sixty_data, optional=True)
+        ) as three_sixty_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=StatsBombInputs(
                 event_data=event_data_fp,
@@ -59,6 +67,21 @@ def load_open_data(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
+    """
+    Load StatsBomb open data.
+
+    This function loads event data directly from the StatsBomb open data
+    GitHub repository.
+
+    Args:
+        match_id: The id of the match to load data for.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
+
+    Returns:
+        The parsed event data.
+    """
     warnings.warn(
         "\n\nYou are about to use StatsBomb public data."
         "\nBy using this data, you are agreeing to the user agreement. "

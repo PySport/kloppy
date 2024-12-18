@@ -1,5 +1,3 @@
-"""Functions to load Stats Perform data."""
-
 from typing import List, Optional
 
 from kloppy.config import get_config
@@ -39,9 +37,7 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=meta_data_fp,
@@ -64,25 +60,23 @@ def load_event(
     """Load Stats Perform event data.
 
     Args:
-        ma1_data: MA1 json or xml feed containing the lineup information
-        ma3_data: MA3 json or xml feed containing the events
-        pitch_length: length of the pitch (in meters)
-        pitch_width: width of the pitch (in meters)
-        event_types: list of event types to load
-        coordinates: coordinate system to use
-        event_factory: a custom event factory
+        ma1_data: A MA1 json or xml feed containing the lineup information.
+        ma3_data: A MA3 json or xml feed containing the events.
+        pitch_length: The length of the pitch (in meters).
+        pitch_width: The width of the pitch (in meters).
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
 
     Returns:
-        EventDataset: the loaded event data
+        The parsed event data.
     """
     deserializer = StatsPerformEventDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),  # type: ignore
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma3_data
-    ) as ma3_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma3_data) as ma3_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformEventInputs(
                 meta_data=ma1_data_fp,
@@ -110,18 +104,18 @@ def load_tracking(
     Load Stats Perform tracking data.
 
     Args:
-        ma1_data: json or xml feed containing the lineup information
-        ma25_data: txt file linked in the MA25 Match Tracking Feed; also known as an OPT file
-        tracking_system: system that generated the tracking data
-        pitch_length: length of the pitch (in meters)
-        pitch_width: width of the pitch (in meters)
-        sample_rate: sample the data at a specific rate
-        limit: limit the number of frames loaded
-        coordinates: coordinate system to use
-        only_alive: only include frames in which the game is not paused
+        ma1_data: A json or xml feed containing the lineup information.
+        ma25_data: A txt file linked in the MA25 Match Tracking Feed; also known as an OPT file.
+        tracking_system: The system that generated the tracking data.
+        pitch_length: The length of the pitch (in meters).
+        pitch_width: The width of the pitch (in meters).
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        only_alive: Only include frames in which the game is not paused.
 
     Returns:
-        TrackingDataset: the loaded tracking data
+        The parsed tracking data.
     """
     deserializer = StatsPerformTrackingDeserializer(
         provider=Provider[tracking_system.upper()],
@@ -130,9 +124,7 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma25_data
-    ) as ma25_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma25_data) as ma25_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=ma1_data_fp,

@@ -1,3 +1,3 @@
 # Position
 
-::: kloppy.domain.Position
+::: kloppy.domain.PositionType

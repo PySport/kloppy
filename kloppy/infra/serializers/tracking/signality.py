@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta, datetime
 import warnings
-from typing import List, Dict, NamedTuple, IO, Optional, Union
+from typing import List, Dict, NamedTuple, IO, Optional, Union, Iterable
 from collections import Counter
 import numpy as np
 import json
@@ -21,10 +21,12 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
     PlayerData,
+    attacking_directions_from_multi_frames,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
+from kloppy.io import FileLike
 from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
@@ -33,8 +35,7 @@ logger = logging.getLogger(__name__)
 class SignalityInputs(NamedTuple):
     meta_data: IO[bytes]
     venue_information: IO[bytes]
-    p1_raw_data: IO[bytes]
-    p2_raw_data: IO[bytes]
+    raw_data_feeds: Iterable[IO[bytes]]
 
 
 class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
@@ -107,38 +108,6 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         )
 
     @classmethod
-    def _get_signality_attacking_directions(
-        cls, frames: List[Frame], periods: List[Period]
-    ) -> Dict[int, AttackingDirection]:
-        """
-        with only partial tracking data we cannot rely on a single frame to
-        infer the attacking directions as a simple average of only some players
-        x-coords might not reflect the attacking direction.
-        """
-        attacking_directions = {}
-        frame_period_ids = np.array([_frame.period.id for _frame in frames])
-        frame_attacking_directions = np.array(
-            [
-                attacking_direction_from_frame(frame)
-                if len(frame.players_data) > 0
-                else AttackingDirection.NOT_SET
-                for frame in frames
-            ]
-        )
-
-        for period in periods:
-            period_id = period.id
-            if period_id in frame_period_ids:
-                count = Counter(
-                    frame_attacking_directions[frame_period_ids == period_id]
-                )
-                attacking_directions[period_id] = count.most_common()[0][0]
-            else:
-                attacking_directions[period_id] = AttackingDirection.NOT_SET
-
-        return attacking_directions
-
-    @classmethod
     def __create_teams(cls, metadata) -> List[Team]:
         teams = []
         for ground in [Ground.HOME, Ground.AWAY]:
@@ -172,10 +141,10 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         return frame_rate
 
     @classmethod
-    def __get_periods(cls, p1_tracking, p2_tracking) -> List[Period]:
+    def __get_periods(cls, raw_data_feeds) -> List[Period]:
         """gets the Periods contained in the tracking data"""
         periods = []
-        for period_id, p_tracking in enumerate([p1_tracking, p2_tracking], 1):
+        for period_id, p_tracking in enumerate(raw_data_feeds, 1):
             first_frame = p_tracking[0]
             start_time = datetime.utcfromtimestamp(
                 (first_frame["utc_time"] - first_frame["match_time"]) / 1000
@@ -200,13 +169,15 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
     def deserialize(self, inputs: SignalityInputs) -> TrackingDataset:
         metadata = json.load(inputs.meta_data)
         venue_information = json.load(inputs.venue_information)
-        p1_raw_data = json.load(inputs.p1_raw_data)
-        p2_raw_data = json.load(inputs.p2_raw_data)
+        raw_data_feeds = [
+            json.load(raw_data_feed) for raw_data_feed in inputs.raw_data_feeds
+        ]
+        p1_raw_data = raw_data_feeds[0]
 
         with performance_logging("Loading metadata", logger=logger):
             frame_rate = self.__get_frame_rate(p1_raw_data)
             teams = self.__create_teams(metadata)
-            periods = self.__get_periods(p1_raw_data, p2_raw_data)
+            periods = self.__get_periods(raw_data_feeds)
             pitch_size_length = venue_information["pitch_size"][0]
             pitch_size_width = venue_information["pitch_size"][1]
 
@@ -216,7 +187,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
 
         with performance_logging("Loading data", logger=logger):
             frames = []
-            for period, p_raw_data in zip(periods, [p1_raw_data, p2_raw_data]):
+            for period, p_raw_data in zip(periods, raw_data_feeds):
                 n = 0
                 sample = 1.0 / self.sample_rate
                 if period.id == 1:
@@ -237,7 +208,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                             frames.append(frame)
                     n += 1
 
-        attacking_directions = self._get_signality_attacking_directions(
+        attacking_directions = attacking_directions_from_multi_frames(
             frames, periods
         )
         if attacking_directions[1] == AttackingDirection.LTR:

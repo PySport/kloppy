@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 from pathlib import Path
+from typing import List
 
 import pytest
 
@@ -25,24 +26,21 @@ class TestSignalityTracking:
         return base_dir / "files/signality_venue_information.json"
 
     @pytest.fixture
-    def p1_raw_data(self, base_dir) -> Path:
-        return base_dir / "files/signality_p1_raw_data_subset.json"
-
-    @pytest.fixture
-    def p2_raw_data(self, base_dir) -> Path:
-        return base_dir / "files/signality_p2_raw_data_subset.json"
+    def raw_data_feeds(self, base_dir) -> List[Path]:
+        return [
+            base_dir / "files/signality_p1_raw_data_subset.json",
+            base_dir / "files/signality_p2_raw_data_subset.json",
+        ]
 
     def test_correct_deserialization(
         self,
-        p1_raw_data: Path,
-        p2_raw_data: Path,
+        raw_data_feeds: List[Path],
         meta_data: Path,
         venue_information: Path,
     ):
         dataset = signality.load(
             meta_data=meta_data,
-            p1_raw_data=p1_raw_data,
-            p2_raw_data=p2_raw_data,
+            raw_data_feeds=raw_data_feeds,
             venue_information=venue_information,
             coordinates="signality",
         )

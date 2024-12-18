@@ -26,6 +26,7 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
     PlayerData,
+    attacking_directions_from_multi_frames,
 )
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -179,35 +180,6 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
         else:
             raise ValueError("Invalid timestring format")
-
-    @classmethod
-    def _get_skillcorner_attacking_directions(cls, frames, periods):
-        """
-        with only partial tracking data we cannot rely on a single frame to
-        infer the attacking directions as a simple average of only some players
-        x-coords might not reflect the attacking direction.
-        """
-        attacking_directions = {}
-        frame_period_ids = np.array([_frame.period.id for _frame in frames])
-        frame_attacking_directions = np.array(
-            [
-                attacking_direction_from_frame(frame)
-                if len(frame.players_data) > 0
-                else AttackingDirection.NOT_SET
-                for frame in frames
-            ]
-        )
-
-        for period_id in periods.keys():
-            if period_id in frame_period_ids:
-                count = Counter(
-                    frame_attacking_directions[frame_period_ids == period_id]
-                )
-                attacking_directions[period_id] = count.most_common()[0][0]
-            else:
-                attacking_directions[period_id] = AttackingDirection.NOT_SET
-
-        return attacking_directions
 
     @staticmethod
     def __replace_timestamp(obj):
@@ -438,8 +410,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 if self.limit and n_frames >= self.limit:
                     break
 
-        attacking_directions = self._get_skillcorner_attacking_directions(
-            frames, periods
+        attacking_directions = attacking_directions_from_multi_frames(
+            frames, list(periods.values())
         )
         if attacking_directions[1] == AttackingDirection.LTR:
             orientation = Orientation.HOME_AWAY

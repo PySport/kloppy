@@ -955,44 +955,62 @@ class PostShotExpectedGoals(ScalarStatistic):
 
 
 @dataclass
-class GameStateValue(Statistic):
-    """Game state value"""
+class ActionValue(Statistic):
+    """Action value"""
 
-    gsv_scoring_before: Optional[float] = field(default=None)
-    gsv_scoring_after: Optional[float] = field(default=None)
-    gsv_conceding_before: Optional[float] = field(default=None)
-    gsv_conceding_after: Optional[float] = field(default=None)
+    provider: Provider
+    action_value_scoring_before: Optional[float] = field(default=None)
+    action_value_scoring_after: Optional[float] = field(default=None)
+    action_value_conceding_before: Optional[float] = field(default=None)
+    action_value_conceding_after: Optional[float] = field(default=None)
 
     def __post_init__(self):
-        self.name = "GSV"
+        provider_action_value_mapping = {
+            Provider.STATSBOMB: "OBV",
+            Provider.STATSPERFORM: "PV",
+        }
+        self.name = provider_action_value_mapping.get(self.provider, "AV")
 
     @property
-    def gsv_scoring_net(self) -> Optional[float]:
+    def offensive_value(self) -> Optional[float]:
         return (
             None
-            if None in (self.gsv_scoring_before, self.gsv_scoring_after)
-            else self.gsv_scoring_after - self.gsv_scoring_before
+            if None
+            in (
+                self.action_value_scoring_before,
+                self.action_value_scoring_after,
+            )
+            else self.action_value_scoring_after
+            - self.action_value_scoring_before
         )
 
     @property
-    def gsv_conceding_net(self) -> Optional[float]:
+    def defensive_value(self) -> Optional[float]:
         return (
             None
-            if None in (self.gsv_conceding_before, self.gsv_conceding_after)
-            else self.gsv_conceding_after - self.gsv_conceding_before
+            if None
+            in (
+                self.action_value_conceding_before,
+                self.action_value_conceding_after,
+            )
+            else self.action_value_conceding_after
+            - self.action_value_conceding_before
         )
 
     @property
     def value(self) -> Optional[float]:
         if None in (
-            self.gsv_scoring_before,
-            self.gsv_scoring_after,
-            self.gsv_conceding_before,
-            self.gsv_conceding_after,
+            self.action_value_scoring_before,
+            self.action_value_scoring_after,
+            self.action_value_conceding_before,
+            self.action_value_conceding_after,
         ):
             return None
-        return (self.gsv_scoring_after - self.gsv_scoring_before) - (
-            self.gsv_conceding_after - self.gsv_conceding_before
+        return (
+            self.action_value_scoring_after - self.action_value_scoring_before
+        ) - (
+            self.action_value_conceding_after
+            - self.action_value_conceding_before
         )
 
 

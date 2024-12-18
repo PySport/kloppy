@@ -11,7 +11,8 @@ from kloppy.domain import (
     Player,
     PlayerData,
     PositionType,
-    GameStateValue,
+    ActionValue,
+    Provider,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
@@ -23,13 +24,13 @@ def parse_str_ts(timestamp: str) -> float:
     return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
 
 
-def parse_obv_values(raw_event: dict) -> Optional[GameStateValue]:
-    game_state_values_data = {}
+def parse_obv_values(raw_event: dict) -> Optional[ActionValue]:
+    game_state_values_data = {"provider": Provider.STATSBOMB}
     obv_mapping = {
-        "obv_for_before": "gsv_scoring_before",
-        "obv_against_before": "gsv_conceding_before",
-        "obv_for_after": "gsv_scoring_after",
-        "obv_against_after": "gsv_conceding_after",
+        "obv_for_before": "action_value_scoring_before",
+        "obv_against_before": "action_value_conceding_before",
+        "obv_for_after": "action_value_scoring_after",
+        "obv_against_after": "action_value_conceding_after",
     }
     for sb_name, kloppy_name in obv_mapping.items():
         obv_value = raw_event.get(sb_name)
@@ -37,7 +38,7 @@ def parse_obv_values(raw_event: dict) -> Optional[GameStateValue]:
             game_state_values_data[kloppy_name] = obv_value
 
     if game_state_values_data:
-        game_state_value = GameStateValue(**game_state_values_data)
+        game_state_value = ActionValue(**game_state_values_data)
 
         return game_state_value
 

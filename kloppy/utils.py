@@ -169,7 +169,3 @@ class DeprecatedEnumValue:
             stacklevel=2,
         )
         return self.value
-
-
-class DeserializationWarning(Warning):
-    pass

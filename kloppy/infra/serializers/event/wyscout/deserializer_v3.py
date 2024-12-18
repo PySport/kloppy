@@ -40,8 +40,8 @@ from kloppy.domain import (
     TakeOnResult,
     Team,
 )
-from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging, DeserializationWarning
+from kloppy.exceptions import DeserializationError, DeserializationWarning
+from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
@@ -786,7 +786,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 elif player_id not in players[team_id]:
                     player = None
                     warnings.warn(
-                        f"Player {player_id} not listed in the team performing the event.",
+                        f"Event {raw_event['id']} was performed by player {player_id} and team {team_id}, "
+                        f"but the player does not appear to be part of that team's lineup. "
+                        f"Handled by setting the event's player to None.",
                         DeserializationWarning,
                     )
                 else:

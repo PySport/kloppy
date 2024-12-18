@@ -184,8 +184,8 @@ class TestTrackingDataset:
 
         ball_trajectories = dataset.trajectories("ball")
         assert len(ball_trajectories) == 1
-        assert ball_trajectories[0].start_frame == 0
-        assert ball_trajectories[0].end_frame == 124
+        assert ball_trajectories[0].start_frame.frame_id == 0
+        assert ball_trajectories[0].end_frame.frame_id == 124
         assert len(ball_trajectories[0].detections) == 125
         assert ball_trajectories[0].detections[0] == Detection(
             coordinates=Point3D(x=0, y=0, z=0)
@@ -193,8 +193,8 @@ class TestTrackingDataset:
 
         player_trajectories = dataset.trajectories("home_1")
         assert len(player_trajectories) == 2
-        assert player_trajectories[0].start_frame == 0
-        assert player_trajectories[0].end_frame == 9
+        assert player_trajectories[0].start_frame.frame_id == 0
+        assert player_trajectories[0].end_frame.frame_id == 9
         assert len(player_trajectories[0].detections) == 10
         assert player_trajectories[0].detections[0] == Detection(
             coordinates=Point(x=0, y=0)

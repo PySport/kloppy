@@ -45,8 +45,8 @@ class Trajectory:
     """
 
     trackable_object: Union[Player, str]
-    start_frame: int
-    end_frame: int
+    start_frame: "Frame"
+    end_frame: "Frame"
     detections: List[Detection]
 
     def __iter__(self):
@@ -158,19 +158,19 @@ class TrackingDataset(Dataset[Frame]):
                     # a new trajectory
                     current_trajectory = Trajectory(
                         trackable_object=trackable_object,
-                        start_frame=frame.frame_id,
-                        end_frame=frame.frame_id,
+                        start_frame=frame,
+                        end_frame=frame,
                         detections=[detection],
                     )
                 elif (
                     frame.prev_record is not None
                     and frame.prev_record.frame_id
-                    == current_trajectory.end_frame
+                    == current_trajectory.end_frame.frame_id
                     and frame.prev_record.period.id == frame.period.id
                 ):
                     # and it was tracked in the previous frame --> extend the
                     # current trajectory
-                    current_trajectory.end_frame = frame.frame_id
+                    current_trajectory.end_frame = frame
                     current_trajectory.detections.append(detection)
                 else:
                     # but a frame is missing or a new period started --> finish
@@ -178,8 +178,8 @@ class TrackingDataset(Dataset[Frame]):
                     trajectories.append(current_trajectory)
                     current_trajectory = Trajectory(
                         trackable_object=trackable_object,
-                        start_frame=frame.frame_id,
-                        end_frame=frame.frame_id,
+                        start_frame=frame,
+                        end_frame=frame,
                         detections=[detection],
                     )
             else:

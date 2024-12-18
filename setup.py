@@ -50,6 +50,7 @@ def setup_package():
                 "pandas>=2",
                 "black==22.3.0",
                 "polars>=0.16.6",
+                "scipy>=1.5.0",
                 "pyarrow",
                 "pytest-lazy-fixture",
                 "s3fs",

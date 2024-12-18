@@ -7,3 +7,4 @@ pytest-lazy-fixture
 pandas>=1.0.0
 polars>=0.16.6
 pre-commit
+scipy>=1.5.0

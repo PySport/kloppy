@@ -1,36 +1,35 @@
-import logging
-from datetime import datetime, timedelta, timezone
-import warnings
-from typing import Dict, Optional, Union
 import html
+import logging
+import warnings
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, Union
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Detection,
     Frame,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
-    Ground,
-    Player,
-    Provider,
-    PlayerData,
     PositionType,
+    Provider,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.exceptions import DeserializationError
-
 from kloppy.utils import Readable, performance_logging
 
-from .common import TRACABInputs, position_types_mapping
 from ..deserializer import TrackingDataDeserializer
+from .common import TRACABInputs, position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +72,6 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
 
             player = team.get_player_by_jersey_number(jersey_no)
-
             if not player:
                 player = Player(
                     player_id=f"{team.ground}_{jersey_no}",
@@ -82,7 +80,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
                 team.players.append(player)
 
-            players_data[player] = PlayerData(
+            players_data[player] = Detection(
                 coordinates=Point(float(x), float(y)), speed=float(speed)
             )
 
@@ -94,6 +92,11 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             ball_owning_team,
             ball_state,
         ) = ball.rstrip(";").split(",")[:6]
+
+        ball_data = Detection(
+            coordinates=Point3D(float(ball_x), float(ball_y), float(ball_z)),
+            speed=float(ball_speed),
+        )
 
         frame_id = int(frame_id)
 
@@ -117,12 +120,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
-            ball_coordinates=Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            ),
+            objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            players_data=players_data,
             period=period,
             other_data={},
         )

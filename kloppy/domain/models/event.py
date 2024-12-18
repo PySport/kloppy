@@ -19,7 +19,7 @@ from kloppy.domain.models.common import (
     DatasetType,
     AttackingDirection,
     OrientationError,
-    Position,
+    PositionType,
 )
 from kloppy.domain.models.time import Time
 from kloppy.utils import (
@@ -278,7 +278,9 @@ class Qualifier(Generic[QualifierType], ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
+        return camelcase_to_snakecase(
+            removes_suffix(type(self).__name__, "Qualifier")
+        )
 
 
 @dataclass
@@ -291,7 +293,9 @@ class BoolQualifier(Qualifier[bool], ABC):
         return {f"is_{self.name}": self.value}
 
 
-class EnumQualifier(Qualifier[EnumQualifierType], Generic[EnumQualifierType], ABC):
+class EnumQualifier(
+    Qualifier[EnumQualifierType], Generic[EnumQualifierType], ABC
+):
     """
     An event qualifier with a set of possible values.
     """
@@ -348,7 +352,7 @@ class PassType(Enum):
     PassType
 
     Attributes:
-        CROSS (PassType): A ball played in from wide areas into the box. 
+        CROSS (PassType): A ball played in from wide areas into the box.
         HAND_PASS (PassType): A pass given with a player’s hand.
         HEAD_PASS (PassType): A pass given with a player's head.
         HIGH_PASS (PassType): A pass that goes above shoulder level at peak height.
@@ -654,8 +658,12 @@ class Event(DataRecord, ABC):
             for event_id in self.related_event_ids
         ]
 
-    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
-        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
+    def get_related_event(
+        self, type_: Union[str, EventType]
+    ) -> Optional["Event"]:
+        event_type = (
+            EventType[type_.upper()] if isinstance(type_, str) else type_
+        )
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -719,7 +727,9 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
+                raise InvalidFilterError(
+                    f"Don't know how to apply filter {filter_}"
+                )
 
             if event_type:
                 try:
@@ -932,7 +942,7 @@ class SubstitutionEvent(Event):
     """
 
     replacement_player: Player
-    position: Optional[Position] = None
+    position: Optional[PositionType] = None
 
     event_type: EventType = EventType.SUBSTITUTION
     event_name: str = "substitution"
@@ -1000,7 +1010,7 @@ class FormationChangeEvent(Event):
     """
 
     formation_type: FormationType
-    player_positions: Optional[Dict[Player, Position]] = None
+    player_positions: Optional[Dict[Player, PositionType]] = None
 
     event_type: EventType = EventType.FORMATION_CHANGE
     event_name: str = "formation_change"
@@ -1114,8 +1124,8 @@ class EventDataset(Dataset[Event]):
 
     dataset_type: DatasetType = DatasetType.EVENT
 
-    def _update_player_positions(self):
-        """Update player positions based on Substitution and TacticalShift events."""
+    def _update_formations_and_positions(self):
+        """Update team formations and player positions based on Substitution and TacticalShift events."""
         max_leeway = timedelta(seconds=60)
 
         for event in self.events:
@@ -1130,17 +1140,36 @@ class EventDataset(Dataset[Event]):
             elif isinstance(event, FormationChangeEvent):
                 if event.player_positions:
                     for player, position in event.player_positions.items():
-                        last_time, last_position = player.positions.last(
-                            include_time=True
+                        if len(player.positions.items):
+                            last_time, last_position = player.positions.last(
+                                include_time=True
+                            )
+                            if last_position != position:
+                                # Only update when the position changed
+                                if event.time - last_time < max_leeway:
+                                    # Often the formation change is detected a couple of seconds after a Substitution.
+                                    # In this case we need to use the time of the Substitution
+                                    player.positions.set(last_time, position)
+                                else:
+                                    player.positions.set(event.time, position)
+
+                if event.team.formations.items:
+                    last_time, last_formation = event.team.formations.last(
+                        include_time=True
+                    )
+                    if last_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
                         )
-                        if last_position != position:
-                            # Only update when the position changed
-                            if event.time - last_time < max_leeway:
-                                # Often the formation change is detected a couple of seconds after a Substitution.
-                                # In this case we need to use the time of the Substitution
-                                player.positions.set(last_time, position)
-                            else:
-                                player.positions.set(event.time, position)
+
+                elif event.team.starting_formation:
+                    if event.team.starting_formation != event.formation_type:
+                        event.team.formations.set(
+                            event.time, event.formation_type
+                        )
+
+                else:
+                    event.team.formations.set(event.time, event.formation_type)
 
     @property
     def events(self):
@@ -1157,11 +1186,15 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
-    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
+    @deprecated(
+        "to_pandas will be removed in the future. Please use to_df instead."
+    )
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Event], Dict]] = None,
-        additional_columns: Optional[Dict[str, Union[str, Callable[[Event], Any]]]] = None,
+        additional_columns: Optional[
+            Dict[str, Union[str, Callable[[Event], Any]]]
+        ] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd
@@ -1189,7 +1222,9 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
+        return pd.DataFrame.from_records(
+            map(generic_record_converter, self.records)
+        )
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":

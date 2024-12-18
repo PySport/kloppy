@@ -25,6 +25,7 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestHelpers:
@@ -60,12 +61,15 @@ class TestHelpers:
             score=None,
             provider=None,
             coordinate_system=None,
+            date="2024-05-19T13:30:00",
+            game_week="35",
+            game_id="2374516",
         )
 
         tracking_data = TrackingDataset(
             metadata=metadata,
             records=[
-                Frame(
+                create_frame(
                     frame_id=1,
                     timestamp=0.1,
                     ball_owning_team=teams[0],
@@ -75,7 +79,7 @@ class TestHelpers:
                     other_data=None,
                     ball_coordinates=Point3D(x=100, y=-50, z=0),
                 ),
-                Frame(
+                create_frame(
                     frame_id=2,
                     timestamp=0.2,
                     ball_owning_team=teams[1],
@@ -170,7 +174,7 @@ class TestHelpers:
         # Create a dataset with the KLOPPY pitch dimensions
         # and HOME_AWAY orientation
         original = self._get_tracking_dataset().transform(
-            to_pitch_dimensions=to_pitch_dimensions,
+            to_pitch_dimensions=to_pitch_dimensions
         )
         assert original.metadata.orientation == Orientation.HOME_AWAY
         assert original.frames[0].ball_coordinates == Point3D(x=1, y=0, z=0)

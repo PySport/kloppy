@@ -5,20 +5,22 @@ from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from enum import Enum, Flag
 from typing import (
+    Any,
+    Callable,
     Dict,
+    Generic,
+    Iterable,
     List,
     Optional,
-    Callable,
-    Union,
-    Any,
     TypeVar,
-    Generic,
+    Union,
     overload,
-    Iterable,
 )
+
 from typing_extensions import Unpack
 
-from ...utils import deprecated
+from ...utils import deprecated, snake_case
+from .position import PositionType
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -30,24 +32,23 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 
-from .pitch import (
-    PitchDimensions,
-    Unit,
-    Point,
-    Dimension,
-    NormalizedPitchDimensions,
-    MetricPitchDimensions,
-    ImperialPitchDimensions,
-    OptaPitchDimensions,
-    WyscoutPitchDimensions,
-)
-from .formation import FormationType
-from .time import Time, Period, TimeContainer
 from ...exceptions import (
-    OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    OrientationError,
 )
+from .formation import FormationType
+from .pitch import (
+    Dimension,
+    ImperialPitchDimensions,
+    MetricPitchDimensions,
+    NormalizedPitchDimensions,
+    OptaPitchDimensions,
+    PitchDimensions,
+    Unit,
+    WyscoutPitchDimensions,
+)
+from .time import Period, Time, TimeContainer
 
 
 @dataclass
@@ -123,27 +124,44 @@ class Provider(Enum):
         return self.value
 
 
-@dataclass(frozen=True)
-class Position:
-    """
-    A player's position on the field.
+class OfficialType(Enum):
+    """Enumeration for types of officials (referees)."""
 
-    Attributes:
-        position_id (str): A unique identifier for the position.
-        name (str): The name of the position.
-        coordinates (Point, optional): The coordinates of the position on the field.
-    """
-
-    position_id: str
-    name: str
-    coordinates: Optional[Point] = None
+    VideoAssistantReferee = "Video Assistant Referee"
+    MainReferee = "Main Referee"
+    AssistantReferee = "Assistant Referee"
+    FourthOfficial = "Fourth Official"
 
     def __str__(self):
-        return self.name
+        return self.value
 
-    @classmethod
-    def unknown(cls) -> "Position":
-        return cls(position_id="", name="Unknown")
+
+@dataclass(frozen=True)
+class Official:
+    """
+    Represents an official (referee) with optional names and roles.
+    """
+
+    official_id: str
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[OfficialType] = None
+
+    @property
+    def full_name(self):
+        """
+        Returns the full name of the official, falling back to role-based or ID-based naming.
+        """
+        if self.name:
+            return self.name
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.last_name:
+            return self.last_name
+        if self.role:
+            return f"{snake_case(str(self.role))}_{self.official_id}"
+        return f"official_{self.official_id}"
 
 
 @dataclass(frozen=True)
@@ -177,8 +195,8 @@ class Player:
 
     # match specific
     starting: bool = False
-    starting_position: Optional[Position] = None
-    positions: TimeContainer[Position] = field(
+    starting_position: Optional[PositionType] = None
+    positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
 
@@ -194,7 +212,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> Optional[Position]:
+    def position(self) -> Optional[PositionType]:
         try:
             return self.positions.last()
         except KeyError:
@@ -211,7 +229,7 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: Optional[Position]):
+    def set_position(self, time: Time, position: Optional[PositionType]):
         self.positions.set(time, position)
 
 
@@ -232,6 +250,9 @@ class Team:
     name: str
     ground: Ground
     starting_formation: Optional[FormationType] = None
+    formations: TimeContainer[FormationType] = field(
+        default_factory=TimeContainer, compare=False
+    )
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
@@ -262,20 +283,22 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position_id: Union[int, str]) -> Optional[Player]:
-        """Get a player by their position.
+    def get_player_by_position(self, position: PositionType, time: Time):
+        """Get a player by their position at a given time.
 
         Args:
-            position_id (int or str): The identifier of the position.
+            position (PositionType): The position.
+            time (Time): The time for which the position should be retrieved.
 
         Returns:
             Player: The player with the given position or `None` if no player
                     with that position is found.
         """
-        position_id = str(position_id)
         for player in self.players:
-            if player.starting_position and player.starting_position.position_id == position_id:
-                return player
+            if player.positions.items:
+                player_position = player.positions.value_at(time)
+                if player_position and player_position == position:
+                    return player
 
         return None
 
@@ -296,6 +319,9 @@ class Team:
                 return player
 
         return None
+
+    def set_formation(self, time: Time, formation: Optional[FormationType]):
+        self.formations.set(time, formation)
 
 
 class BallState(Enum):
@@ -473,6 +499,7 @@ class VerticalOrientation(Enum):
         TOP_TO_BOTTOM: The y coordinate increases from top to bottom of the pitch.
         BOTTOM_TO_TOP: The y coordinate decreases from top to bottom of the pitch.
     """
+
     TOP_TO_BOTTOM = "top-to-bottom"
     BOTTOM_TO_TOP = "bottom-to-top"
 
@@ -517,6 +544,7 @@ class CoordinateSystem(ABC):
         pitch_length (float, optional): The real length of the pitch.
         pitch_width (float, optional): The real width of the pitch.
     """
+
     pitch_length: Optional[float] = None
     pitch_width: Optional[float] = None
 
@@ -611,9 +639,10 @@ class MetricaCoordinateSystem(KloppyCoordinateSystem):
     are 105m x 68m.
 
     Notes:
-        The Metrica coordinate system is the same as the 
+        The Metrica coordinate system is the same as the
         [`KloppyCoordinateSystem`][kloppy.domain.KloppyCoordinateSystem].
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
@@ -627,6 +656,7 @@ class TracabCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the center and the y-axis oriented from
     bottom to top. The coordinates are in centimeters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.TRACAB
@@ -671,6 +701,7 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the center and the y-axis oriented from
     bottom to top. The coordinates are in meters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.SECONDSPECTRUM
@@ -715,6 +746,7 @@ class OptaCoordinateSystem(CoordinateSystem):
     Uses a normalized pitch with the origin at the bottom left and the y-axis
     oriented from bottom to top. The coordinates range from 0 to 100.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.OPTA
@@ -742,6 +774,7 @@ class SportecEventDataCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the bottom left and the y-axis oriented
     from top to bottom. The coordinates are in meters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -773,6 +806,7 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the center and the y-axis oriented
     from bottom to top. The coordinates are in meters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -818,6 +852,7 @@ class StatsBombCoordinateSystem(CoordinateSystem):
     oriented from top to bottom. The x-coordinates range from 0 to 120 and
     the y-coordinates range from 0 to 80.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.STATSBOMB
@@ -848,6 +883,7 @@ class WyscoutCoordinateSystem(CoordinateSystem):
     Uses a normalized pitch with the origin at the top left and the y-axis
     oriented from top to bottom. The coordinates range from 0 to 100.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.WYSCOUT
@@ -875,6 +911,7 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the center and the y-axis oriented
     from bottom to top. The coordinates are in meters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.SKILLCORNER
@@ -919,6 +956,7 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
     Uses a normalized pitch with the origin at the top left and the y-axis
     oriented from top to bottom. The coordinates range from -1 to 1.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.DATAFACTORY
@@ -959,6 +997,7 @@ class SportVUCoordinateSystem(CoordinateSystem):
     Uses a pitch with the origin at the top left and the y-axis oriented
     from top to bottom. The coordinates are in meters.
     """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTVU
@@ -1054,6 +1093,85 @@ class DatasetFlag(Flag):
 
 
 @dataclass
+class Statistic(ABC):
+    name: str = field(init=False)
+
+
+@dataclass
+class ScalarStatistic(Statistic):
+    value: float
+
+
+@dataclass
+class ExpectedGoals(ScalarStatistic):
+    """Expected goals"""
+
+    def __post_init__(self):
+        self.name = "xG"
+
+
+@dataclass
+class PostShotExpectedGoals(ScalarStatistic):
+    """Post-shot expected goals"""
+
+    def __post_init__(self):
+        self.name = "PSxG"
+
+
+@dataclass
+class ActionValue(Statistic):
+    """Action value"""
+
+    name: str
+    action_value_scoring_before: Optional[float] = field(default=None)
+    action_value_scoring_after: Optional[float] = field(default=None)
+    action_value_conceding_before: Optional[float] = field(default=None)
+    action_value_conceding_after: Optional[float] = field(default=None)
+
+    @property
+    def offensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_scoring_before,
+                self.action_value_scoring_after,
+            )
+            else self.action_value_scoring_after
+            - self.action_value_scoring_before
+        )
+
+    @property
+    def defensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_conceding_before,
+                self.action_value_conceding_after,
+            )
+            else self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+    @property
+    def value(self) -> Optional[float]:
+        if None in (
+            self.action_value_scoring_before,
+            self.action_value_scoring_after,
+            self.action_value_conceding_before,
+            self.action_value_conceding_after,
+        ):
+            return None
+        return (
+            self.action_value_scoring_after - self.action_value_scoring_before
+        ) - (
+            self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+
+@dataclass
 class DataRecord(ABC):
     """
     Base class for a data record in a dataset.
@@ -1076,6 +1194,7 @@ class DataRecord(ABC):
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
     timestamp: timedelta
+    statistics: List[Statistic]
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 
@@ -1163,6 +1282,10 @@ class Metadata:
     dimensions, the orientation, the provider, and more.
 
     Attributes:
+        game_id: Game id of the game from the provider.
+        date: Date of the game.
+        game_week: Game week (or match day) of the game. It can also be the stage
+        (ex: "8th Finals"), if the game is happening during a cup or a play-off.
         periods: List of [`Period`][kloppy.domain.models.common.Period] entities.
         teams: `[home_team, away_team]`.
         coordinate_system: The coordinate system in which the data is provided.
@@ -1184,6 +1307,12 @@ class Metadata:
     provider: Provider
     score: Optional[Score] = None
     frame_rate: Optional[float] = None
+    date: Optional[datetime] = None
+    game_week: Optional[str] = None
+    game_id: Optional[str] = None
+    home_coach: Optional[str] = None
+    away_coach: Optional[str] = None
+    officials: Optional[List] = field(default_factory=list)
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
@@ -1242,7 +1371,7 @@ class Dataset(ABC, Generic[T]):
             )
 
         self._init_player_positions()
-        self._update_player_positions()
+        self._update_formations_and_positions()
 
     def _init_player_positions(self):
         start_of_match = self.metadata.periods[0].start_time
@@ -1251,10 +1380,10 @@ class Dataset(ABC, Generic[T]):
                 if player.starting:
                     player.set_position(
                         start_of_match,
-                        player.starting_position or Position.unknown(),
+                        player.starting_position or PositionType.unknown(),
                     )
 
-    def _update_player_positions(self):
+    def _update_formations_and_positions(self):
         """Update player positions based on the events for example."""
         pass
 
@@ -1466,7 +1595,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install pandas"
                 )
 
-            return DataFrame.from_dict(self.to_dict(*columns, orient="list", **named_columns))
+            return DataFrame.from_dict(
+                self.to_dict(*columns, orient="list", **named_columns)
+            )
         elif engine == "polars":
             try:
                 from polars import from_dict
@@ -1476,7 +1607,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install polars"
                 )
 
-            return from_dict(self.to_dict(*columns, orient="list", **named_columns))
+            return from_dict(
+                self.to_dict(*columns, orient="list", **named_columns)
+            )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
 

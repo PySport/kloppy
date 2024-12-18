@@ -61,9 +61,9 @@ class CodeDataset(Dataset[Code]):
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Code], Dict]] = None,
-        additional_columns: Optional[Dict[
-            str, Union[Callable[[Code], Any], Any]
-        ]] = None,
+        additional_columns: Optional[
+            Dict[str, Union[Callable[[Code], Any], Any]]
+        ] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd

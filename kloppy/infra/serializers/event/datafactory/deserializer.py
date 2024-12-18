@@ -1,8 +1,8 @@
 import json
 import logging
-from datetime import timedelta, datetime, timezone
 from dataclasses import replace
-from typing import Dict, List, Tuple, Union, IO, NamedTuple
+from datetime import datetime, timedelta, timezone
+from typing import IO, Dict, List, NamedTuple, Tuple, Union
 
 from kloppy.domain import (
     AttackingDirection,
@@ -39,7 +39,6 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import Readable, performance_logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -434,7 +433,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     + status_update["time"]
                     + match["stadiumGMT"],
                     "%Y%m%d%H:%M:%S%z",
-                ).astimezone(timezone.utc)
+                )
                 half = status_update["t"]["half"]
                 if status_update["type"] == DF_EVENT_TYPE_STATUS_MATCH_START:
                     half = 1
@@ -452,6 +451,22 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     periods[half] = replace(
                         periods[half], end_timestamp=timestamp
                     )
+
+            try:
+                date = match["date"]
+                if date:
+                    # TODO: scheduledStart and stadiumGMT should probably be used here too
+                    date = datetime.strptime(date, "%Y%m%d").replace(
+                        tzinfo=timezone.utc
+                    )
+            except ValueError:
+                date = None
+            game_week = match.get("week", None)
+            if game_week:
+                game_week = str(game_week)
+            game_id = match.get("matchId", None)
+            if game_id:
+                game_id = str(game_id)
 
             # exclude goals, already listed as shots too
             incidences.pop(DF_EVENT_CLASS_GOALS)
@@ -613,6 +628,9 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             score=score,
             provider=Provider.DATAFACTORY,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_week=game_week,
+            game_id=game_id,
         )
 
         return EventDataset(

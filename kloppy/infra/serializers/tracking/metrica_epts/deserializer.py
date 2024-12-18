@@ -11,6 +11,7 @@ from kloppy.domain import (
     PlayerData,
     DatasetTransformer,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
@@ -79,7 +80,7 @@ class MetricaEPTSTrackingDataDeserializer(
                     other_data=other_data,
                 )
 
-        frame = Frame(
+        frame = create_frame(
             frame_id=row["frame_id"],
             timestamp=timestamp,
             ball_owning_team=None,

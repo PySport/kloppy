@@ -1,8 +1,8 @@
 import json
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import warnings
-from typing import Tuple, Dict, Optional, Union, NamedTuple, IO
+from typing import Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
 
@@ -23,7 +23,9 @@ from kloppy.domain import (
     Player,
     Provider,
     PlayerData,
+    Score,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import Readable, performance_logging
 
@@ -95,7 +97,7 @@ class SecondSpectrumDeserializer(
                     coordinates=Point(float(x), float(y)), speed=speed
                 )
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,
@@ -106,6 +108,8 @@ class SecondSpectrumDeserializer(
             period=period,
             other_data={},
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
@@ -290,16 +294,34 @@ class SecondSpectrumDeserializer(
             )
             orientation = Orientation.NOT_SET
 
+        if metadata:
+            score = Score(
+                home=metadata["homeScore"], away=metadata["awayScore"]
+            )
+            year, month, day = (
+                metadata["year"],
+                metadata["month"],
+                metadata["day"],
+            )
+            date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
+            game_id = metadata["ssiId"]
+        else:
+            score = None
+            date = None
+            game_id = None
+
         metadata = Metadata(
             teams=teams,
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            score=None,
+            score=score,
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.SECONDSPECTRUM,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
+            date=date,
+            game_id=game_id,
         )
 
         return TrackingDataset(

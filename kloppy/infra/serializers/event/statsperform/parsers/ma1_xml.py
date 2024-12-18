@@ -1,11 +1,11 @@
 """XML parser for Stats Perform MA1 feeds."""
 
-import pytz
-from datetime import datetime
-from typing import Any, Optional, List, Dict, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
-from kloppy.domain import Period, Score, Team, Ground, Player
+from kloppy.domain import Ground, Period, Player, Score, Team
 from kloppy.exceptions import DeserializationError
+
 from .base import OptaXMLParser
 
 
@@ -23,10 +23,10 @@ class MA1XMLParser(OptaXMLParser):
                     id=int(period.get("id")),
                     start_timestamp=datetime.strptime(
                         period.get("start"), "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                    ).replace(tzinfo=timezone.utc),
                     end_timestamp=datetime.strptime(
                         period.get("end"), "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc),
+                    ).replace(tzinfo=timezone.utc),
                 )
             )
         return parsed_periods

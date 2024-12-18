@@ -48,6 +48,9 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     if "freeze_frame" not in kwargs:
         kwargs["freeze_frame"] = None
 
+    if "statistics" not in kwargs:
+        kwargs["statistics"] = []
+
     all_kwargs = dict(**kwargs, **extra_kwargs)
 
     relevant_kwargs = {
@@ -66,7 +69,9 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
             f"The following arguments were skipped: {skipped_kwargs}"
         )
 
-    return event_cls(**relevant_kwargs)
+    event = event_cls(**relevant_kwargs)
+
+    return event
 
 
 class EventFactory:

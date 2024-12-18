@@ -27,13 +27,14 @@ from kloppy.domain import (
     Point,
     Point,
     Point3D,
-    Position,
+    PositionType,
     Provider,
     Score,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
     build_coordinate_system,
+    PassResult,
 )
 from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
@@ -60,11 +61,11 @@ def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
     assert _parse_f24_datetime("2018-09-23T15:02:13.608") == datetime(
-        2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
     assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
-        2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc
     )
 
 
@@ -106,17 +107,18 @@ class TestOptaMetadata:
         """It should set the correct player position from the events"""
         # Starting players have a position
         player = dataset.metadata.teams[0].get_player_by_id("111319")
-        assert player.starting_position == Position(
-            position_id="1", name="Goalkeeper", coordinates=None
-        )
+        assert player.positions.last() == PositionType.Goalkeeper
         assert player.starting
 
         # Substituted players don't have a position
         sub_player = dataset.metadata.teams[0].get_player_by_id("88022")
-        assert sub_player.starting_position == Position(
-            position_id="0", name="Substitute", coordinates=None
-        )
+        assert len(sub_player.positions.items) == 0
         assert not sub_player.starting
+
+        # LB position is correctly based on Formation_Place
+        player = dataset.metadata.teams[0].get_player_by_id("80398")
+        assert player.positions.last() == PositionType.LeftBack
+        assert player.starting
 
     def test_periods(self, dataset):
         """It should create the periods"""
@@ -238,12 +240,12 @@ class TestOptaEvent:
 
 
 class TestOptaPassEvent:
-    """Tests related to deserialzing pass events"""
+    """Tests related to deserializing pass events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all pass events"""
         events = dataset.find_all("pass")
-        assert len(events) == 15
+        assert len(events) == 16
 
     def test_receiver_coordinates(self, dataset: EventDataset):
         """Test if the receiver coordinates are correctly deserialized"""
@@ -273,9 +275,23 @@ class TestOptaPassEvent:
             PassQualifier
         )
 
+    def test_pass_qualifiers_for_deflected_pass(self, dataset: EventDataset):
+        """Test if the pass type qualfiers are correctly deserialized for deflected passes"""
+        deflected_pass = dataset.get_event_by_id("2509132176")
+        assert deflected_pass.result == PassResult.COMPLETE
+        assert deflected_pass.receiver_coordinates.x == 3.3
+        assert deflected_pass.receiver_coordinates.y == 81.1
+
+    def test_ball_state(self, dataset: EventDataset):
+        """Test if the ball state is correctly set"""
+        events = dataset.find_all("pass")
+        assert all(
+            event.ball_state == BallState.ALIVE for event in events
+        ), "Not all pass ball states are ALIVE"
+
 
 class TestOptaClearanceEvent:
-    """Tests related to deserialzing clearance events"""
+    """Tests related to deserializing clearance events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all clearance events"""
@@ -289,12 +305,12 @@ class TestOptaClearanceEvent:
 
 
 class TestOptaShotEvent:
-    """Tests related to deserialzing shot events"""
+    """Tests related to deserializing shot events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all shot events"""
         events = dataset.find_all("shot")
-        assert len(events) == 3
+        assert len(events) == 4
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the shot event is correctly deserialized"""
@@ -309,7 +325,7 @@ class TestOptaShotEvent:
         )
 
     def test_timestamp_goal(self, dataset: EventDataset):
-        """Check timestamp from qualifier in case of goal"""
+        """Check timestamp from qualifier 374 in case of goal"""
         goal = dataset.get_event_by_id("2318695229")
         assert goal.timestamp == (
             _parse_f24_datetime("2018-09-23T16:07:48.525")  # event timestamp
@@ -396,10 +412,32 @@ class TestOptaShotEvent:
         assert own_goal.result == ShotResult.OWN_GOAL
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
+        assert own_goal.ball_state == BallState.DEAD
+
+    def test_goal(self, dataset: EventDataset):
+        """Test if goals are correctly deserialized"""
+        goal = dataset.get_event_by_id("2614247749")
+        assert goal.result == ShotResult.GOAL
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.9780699610710144
+        )
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "PSxG"
+            ).value
+            == 0.98
+        )
 
 
 class TestOptaDuelEvent:
-    """Tests related to deserialzing duel events"""
+    """Tests related to deserializing duel events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all duel events"""
@@ -419,7 +457,7 @@ class TestOptaDuelEvent:
 
 
 class TestOptaGoalkeeperEvent:
-    """Tests related to deserialzing goalkeeper events"""
+    """Tests related to deserializing goalkeeper events"""
 
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all goalkeeper events"""
@@ -456,7 +494,7 @@ class TestOptaGoalkeeperEvent:
 
 
 class TestOptaInterceptionEvent:
-    """Tests related to deserialzing interception events"""
+    """Tests related to deserializing interception events"""
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the interception event is correctly deserialized"""
@@ -465,9 +503,31 @@ class TestOptaInterceptionEvent:
 
 
 class TestOptaMiscontrolEvent:
-    """Tests related to deserialzing miscontrol events"""
+    """Tests related to deserializing miscontrol events"""
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the miscontrol event is correctly deserialized"""
         event = dataset.get_event_by_id("2509132175")
         assert event.event_type == EventType.MISCONTROL
+
+
+class TestOptaBlockEvent:
+    """Tests related to deserializing block events"""
+
+    def test_correct_deserialization(self, dataset: EventDataset):
+        """Test if the block event is correctly deserialized"""
+        event = dataset.get_event_by_id("1515097981")
+        assert event.event_type == EventType.GENERIC
+        assert event.event_name == "block"
+
+
+class TestOptaCardEvent:
+    """Tests related to deserialzing card events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all card events"""
+        events = dataset.find_all("card")
+        assert len(events) == 1
+        assert all(
+            event.ball_state == BallState.DEAD for event in events
+        ), "Not all card ball states are ALIVE"

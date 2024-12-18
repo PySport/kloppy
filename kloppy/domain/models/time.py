@@ -107,6 +107,7 @@ class Time:
         period: A period in a match.
         timestamp: The time elapsed since the start of the period.
     """
+
     period: "Period"
     timestamp: timedelta
 

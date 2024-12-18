@@ -32,6 +32,7 @@ class Frame(DataRecord):
         ball_speed: The speed of the ball
         other_data: A dictionary containing additional data
     """
+
     frame_id: int
     players_data: Dict[Player, PlayerData]
     other_data: Dict[str, Any]
@@ -62,6 +63,7 @@ class TrackingDataset(Dataset[Frame]):
         frame_rate (float): The frame rate (in Hertz) at which the data was recorded.
         metadata (Metadata): Metadata of the tracking dataset.
     """
+
     dataset_type: DatasetType = DatasetType.TRACKING
 
     @property
@@ -78,9 +80,9 @@ class TrackingDataset(Dataset[Frame]):
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Frame], Dict]] = None,
-        additional_columns: Optional[Dict[
-            str, Union[Callable[[Frame], Any], Any]
-        ]] = None,
+        additional_columns: Optional[
+            Dict[str, Union[Callable[[Frame], Any], Any]]
+        ] = None,
     ) -> "DataFrame":
         try:
             import pandas as pd

@@ -25,7 +25,10 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     FormationType,
-    Position,
+    PositionType,
+    CounterAttackQualifier,
+    ExpectedGoals,
+    PostShotExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
@@ -33,6 +36,7 @@ from kloppy.infra.serializers.event.statsbomb.helpers import (
     get_team_by_id,
     get_period_by_id,
     parse_coordinates,
+    parse_obv_values,
 )
 
 
@@ -97,6 +101,34 @@ FORMATIONS = {
     5221: FormationType.FIVE_TWO_TWO_ONE,
     532: FormationType.FIVE_THREE_TWO,
     541: FormationType.FIVE_FOUR_ONE,
+}
+
+position_types_mapping: Dict[int, PositionType] = {
+    1: PositionType.Goalkeeper,  # Provider: Goalkeeper
+    2: PositionType.RightBack,  # Provider: Right Back
+    3: PositionType.RightCenterBack,  # Provider: Right Center Back
+    4: PositionType.CenterBack,  # Provider: Center Back
+    5: PositionType.LeftCenterBack,  # Provider: Left Center Back
+    6: PositionType.LeftBack,  # Provider: Left Back
+    7: PositionType.RightBack,  # Provider: Right Wing Back (mapped to Right Back)
+    8: PositionType.LeftBack,  # Provider: Left Wing Back (mapped to Left Back)
+    9: PositionType.RightDefensiveMidfield,  # Provider: Right Defensive Midfield
+    10: PositionType.CenterDefensiveMidfield,  # Provider: Center Defensive Midfield
+    11: PositionType.LeftDefensiveMidfield,  # Provider: Left Defensive Midfield
+    12: PositionType.RightMidfield,  # Provider: Right Midfield
+    13: PositionType.RightCentralMidfield,  # Provider: Right Center Midfield
+    14: PositionType.CenterMidfield,  # Provider: Center Midfield
+    15: PositionType.LeftCentralMidfield,  # Provider: Left Center Midfield
+    16: PositionType.LeftMidfield,  # Provider: Left Midfield
+    17: PositionType.RightWing,  # Provider: Right Wing
+    18: PositionType.RightAttackingMidfield,  # Provider: Right Attacking Midfield
+    19: PositionType.CenterAttackingMidfield,  # Provider: Center Attacking Midfield
+    20: PositionType.LeftAttackingMidfield,  # Provider: Left Attacking Midfield
+    21: PositionType.LeftWing,  # Provider: Left Wing
+    22: PositionType.RightForward,  # Provider: Right Center Forward (mapped to Right Forward)
+    23: PositionType.Striker,  # Provider: Striker
+    24: PositionType.LeftForward,  # Provider: Left Center Forward (mapped to Left Forward)
+    25: PositionType.Attacker,  # Provider: Secondary Striker (mapped to Attacker)
 }
 
 
@@ -186,6 +218,20 @@ class BODYPART(Enum, metaclass=TypesEnumMeta):
     NO_TOUCH = 106
 
 
+class PLAY_PATTERN(Enum, metaclass=TypesEnumMeta):
+    """The list of play patterns used in StatsBomb data."""
+
+    REGULAR_PLAY = 1
+    FROM_CORNER = 2
+    FROM_FREE_KICK = 3
+    FROM_THROW_IN = 4
+    OTHER = 5
+    FROM_COUNTER = 6
+    FROM_GOAL_KICK = 7
+    FROM_KEEPER = 8
+    FROM_KICK_OFF = 9
+
+
 class EVENT:
     """Base class for StatsBomb events.
 
@@ -236,7 +282,7 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        return (
+        events = (
             self._create_aerial_won_event(
                 event_factory, **generic_event_kwargs
             )
@@ -245,8 +291,12 @@ class EVENT:
                 event_factory, **generic_event_kwargs
             )
         )
+        for event in events:
+            self._add_play_pattern_qualifiers(event)
+        return events
 
     def _parse_generic_kwargs(self) -> Dict:
+        game_state_value = parse_obv_values(self.raw_event)
         return {
             "period": self.period,
             "timestamp": parse_str_ts(self.raw_event["timestamp"]),
@@ -265,6 +315,7 @@ class EVENT:
             ),
             "related_event_ids": self.raw_event.get("related_events", []),
             "raw_event": self.raw_event,
+            "statistics": [game_state_value] if game_state_value else [],
         }
 
     def _create_aerial_won_event(
@@ -317,6 +368,16 @@ class EVENT:
             **generic_event_kwargs,
         )
         return [generic_event]
+
+    def _add_play_pattern_qualifiers(self, event: Event) -> Event:
+        pattern_id = PLAY_PATTERN(self.raw_event["play_pattern"]["id"])
+        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
+            if event.qualifiers:
+                event.qualifiers.append(CounterAttackQualifier(True))
+            else:
+                event.qualifiers = [CounterAttackQualifier(True)]
+
+        return event
 
 
 class PASS(EVENT):
@@ -491,6 +552,16 @@ class SHOT(EVENT):
         qualifiers = _get_set_piece_qualifiers(
             EVENT_TYPE.SHOT, shot_dict
         ) + _get_body_part_qualifiers(shot_dict)
+
+        for statistic_cls, prop_name in {
+            ExpectedGoals: "statsbomb_xg",
+            PostShotExpectedGoals: "shot_execution_xg",
+        }.items():
+            value = shot_dict.get(prop_name, None)
+            if value is not None:
+                generic_event_kwargs["statistics"].append(
+                    statistic_cls(value=value)
+                )
 
         shot_event = event_factory.build_shot(
             result=result,
@@ -1172,10 +1243,7 @@ class TACTICAL_SHIFT(EVENT):
         for player in self.raw_event["tactics"]["lineup"]:
             player_positions[
                 team.get_player_by_id(player["player"]["id"])
-            ] = Position(
-                position_id=str(player["position"]["id"]),
-                name=player["position"]["name"],
-            )
+            ] = position_types_mapping[player["position"]["id"]]
 
         formation_change_event = event_factory.build_formation_change(
             result=None,

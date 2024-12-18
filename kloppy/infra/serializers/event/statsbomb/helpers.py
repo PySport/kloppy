@@ -25,7 +25,7 @@ def parse_str_ts(timestamp: str) -> float:
 
 
 def parse_obv_values(raw_event: dict) -> Optional[ActionValue]:
-    game_state_values_data = {"provider": Provider.STATSBOMB}
+    game_state_values_data = {}
     obv_mapping = {
         "obv_for_before": "action_value_scoring_before",
         "obv_against_before": "action_value_conceding_before",
@@ -38,7 +38,7 @@ def parse_obv_values(raw_event: dict) -> Optional[ActionValue]:
             game_state_values_data[kloppy_name] = obv_value
 
     if game_state_values_data:
-        game_state_value = ActionValue(**game_state_values_data)
+        game_state_value = ActionValue(name="OBV", **game_state_values_data)
 
         return game_state_value
 

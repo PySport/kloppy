@@ -958,18 +958,11 @@ class PostShotExpectedGoals(ScalarStatistic):
 class ActionValue(Statistic):
     """Action value"""
 
-    provider: Provider
+    name: str
     action_value_scoring_before: Optional[float] = field(default=None)
     action_value_scoring_after: Optional[float] = field(default=None)
     action_value_conceding_before: Optional[float] = field(default=None)
     action_value_conceding_after: Optional[float] = field(default=None)
-
-    def __post_init__(self):
-        provider_action_value_mapping = {
-            Provider.STATSBOMB: "OBV",
-            Provider.STATSPERFORM: "PV",
-        }
-        self.name = provider_action_value_mapping.get(self.provider, "AV")
 
     @property
     def offensive_value(self) -> Optional[float]:

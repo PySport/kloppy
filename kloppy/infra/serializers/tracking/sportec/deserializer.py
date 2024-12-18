@@ -21,6 +21,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import performance_logging
 
@@ -172,7 +173,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                             continue
 
                         if i % sample == 0:
-                            yield Frame(
+                            yield create_frame(
                                 frame_id=frame_id,
                                 timestamp=timedelta(
                                     seconds=(

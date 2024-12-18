@@ -25,6 +25,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -174,7 +175,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
             players_data[player] = PlayerData(coordinates=Point(x, y))
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_time,
             ball_coordinates=ball_coordinates,
@@ -184,6 +185,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             ball_owning_team=ball_owning_team,
             other_data={},
         )
+
+        return frame
 
     @classmethod
     def _timestamp_from_timestring(cls, timestring):

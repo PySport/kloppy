@@ -344,18 +344,24 @@ class TestWyscoutV3:
         ]
         assert len(sub_events) == 9
 
+        assert all(
+            sub_events[i].time < sub_events[i + 1].time
+            or sub_events[i].time == sub_events[i + 1].time
+            for i in range(len(sub_events) - 1)
+        ), "Substitution events are not in ascending order by time"
+
         first_sub_event = sub_events[0]
         assert first_sub_event.time == Time(
             period=second_period, timestamp=timedelta(seconds=4)
         )
         assert first_sub_event.team.team_id == "3164"
-        assert first_sub_event.player.player_id == "415809"
-        assert first_sub_event.replacement_player.player_id == "703"
+        assert first_sub_event.player.player_id == "21006"
+        assert first_sub_event.replacement_player.player_id == "20689"
 
         last_sub_event = sub_events[-1]
         assert last_sub_event.time == Time(
             period=second_period, timestamp=timedelta(seconds=2192)
         )
         assert last_sub_event.team.team_id == "3159"
-        assert last_sub_event.player.player_id == "20461"
-        assert last_sub_event.replacement_player.player_id == "345695"
+        assert last_sub_event.player.player_id == "472363"
+        assert last_sub_event.replacement_player.player_id == "105334"

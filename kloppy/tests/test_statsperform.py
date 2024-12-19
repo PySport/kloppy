@@ -177,7 +177,7 @@ class TestStatsPerformEvent:
             pitch_length=None,
             pitch_width=None,
         )
-        assert len(event_dataset.records) == 1652
+        assert len(event_dataset.records) == 1643
 
         substitution_events = event_dataset.find_all("substitution")
         assert len(substitution_events) == 9

@@ -61,7 +61,7 @@ class OptaParser:
         """Return the score of the game."""
         return None
 
-    def extract_date(self) -> Optional[str]:
+    def extract_date(self) -> Optional[datetime]:
         """Return the date of the game."""
         return None
 

@@ -131,6 +131,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         frame_id = frame["frameNum"]
         frame_timestamp = timedelta(seconds=frame["periodElapsedTime"])
 
+        # for k, v in frame.items():
+        #     print(k, v)
+
+        print(frame["game_event"])
+
+        print("-----")
         # Ball coordinates
         ball_smoothed = frame.get("ballsSmoothed")
         if ball_smoothed:

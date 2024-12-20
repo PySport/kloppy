@@ -698,6 +698,14 @@ class TestStatsBombPassEvent:
         )
         assert pass_event.next().event_name == "Ball Receipt*"
         assert pass_event.next().next().event_name == "ball_out"
+        assert (
+            pass_event.next().next().event_id
+            == "out-ac99f2ec-8138-4061-9bd3-bdc79ae7358e"
+        )
+        assert (
+            pass_event.next().next().raw_event["id"]
+            == "36c7ed4c-031e-4dd4-8557-3d9b8ee8762f"
+        )
 
 
 class TestStatsBombShotEvent:
@@ -753,11 +761,19 @@ class TestStatsBombShotEvent:
 
     def test_synthetic_out_events(self, dataset: EventDataset):
         """It should add synthetic ball out events after the goalkeeper event."""
-        pass_event = dataset.get_event_by_id(
+        shot_event = dataset.get_event_by_id(
             "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
         )
-        assert pass_event.next().event_name == "Goal Keeper"
-        assert pass_event.next().next().event_name == "ball_out"
+        assert shot_event.next().event_name == "Goal Keeper"
+        assert shot_event.next().next().event_name == "ball_out"
+        assert (
+            shot_event.next().next().event_id
+            == "out-64c5cfad-86a3-4d61-86c8-8784a4834682"
+        )
+        assert (
+            shot_event.next().next().raw_event["id"]
+            == "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
+        )
 
 
 class TestStatsBombInterceptionEvent:

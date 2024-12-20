@@ -30,7 +30,6 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
 )
-from kloppy.domain.models.event import GoalkeeperEvent
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     get_period_by_id,
@@ -293,7 +292,13 @@ class EVENT:
             )
         )
         for event in events:
-            self._add_play_pattern_qualifiers(event)
+            play_pattern_qualifiers = _get_play_pattern_qualifiers(
+                event.raw_event
+            )
+            if len(play_pattern_qualifiers) > 0:
+                event.qualifiers = (
+                    event.qualifiers or []
+                ) + play_pattern_qualifiers
         return events
 
     def _parse_generic_kwargs(self) -> Dict:
@@ -369,16 +374,6 @@ class EVENT:
             **generic_event_kwargs,
         )
         return [generic_event]
-
-    def _add_play_pattern_qualifiers(self, event: Event) -> Event:
-        pattern_id = PLAY_PATTERN(self.raw_event["play_pattern"]["id"])
-        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
-            if event.qualifiers:
-                event.qualifiers.append(CounterAttackQualifier(True))
-            else:
-                event.qualifiers = [CounterAttackQualifier(True)]
-
-        return event
 
 
 class PASS(EVENT):
@@ -532,6 +527,7 @@ class BALL_RECEIPT(EVENT):
                         pass_dict["end_location"],
                         self.fidelity_version,
                     )
+                    generic_event_kwargs["raw_event"] = related_event.raw_event
 
                     ball_out_event = event_factory.build_ball_out(
                         result=None,
@@ -1129,6 +1125,7 @@ class GOALKEEPER(EVENT):
                         shot_dict["end_location"],
                         self.fidelity_version,
                     )
+                    generic_event_kwargs["raw_event"] = related_event.raw_event
 
                     ball_out_event = event_factory.build_ball_out(
                         result=None,
@@ -1434,6 +1431,16 @@ def _get_set_piece_qualifiers(
             set_piece_type = sb_to_kloppy_set_piece_mapping[type_id]
             return [SetPieceQualifier(value=set_piece_type)]
 
+    return []
+
+
+def _get_play_pattern_qualifiers(
+    event_dict: Dict,
+) -> List[CounterAttackQualifier]:
+    if "play_pattern" in event_dict:
+        pattern_id = PLAY_PATTERN(event_dict["play_pattern"]["id"])
+        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
+            return [CounterAttackQualifier(value=True)]
     return []
 
 

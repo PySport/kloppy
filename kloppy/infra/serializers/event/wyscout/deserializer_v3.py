@@ -619,11 +619,11 @@ def _validate_formation(formation: str) -> bool:
     return total_players == 10
 
 
-def _get_team_formation(team_formation, last_formations, team_id):
+def _get_team_formation(team_formation):
     return (
         formations[team_formation]
         if _validate_formation(team_formation)
-        else formations[last_formations[team_id]]
+        else FormationType.UNKNOWN
     )
 
 
@@ -634,26 +634,16 @@ def get_home_away_team_formation(event, team, last_formations):
     opponent_team_id = str(event["opponentTeam"]["id"])
 
     if team.ground == Ground.HOME:
-        home_team_formation = _get_team_formation(
-            team_formation, last_formations, team_id
-        )
-        away_team_formation = _get_team_formation(
-            opponent_formation, last_formations, opponent_team_id
-        )
+        home_team_formation = _get_team_formation(team_formation)
+        away_team_formation = _get_team_formation(opponent_formation)
     elif team.ground == Ground.AWAY:
-        away_team_formation = _get_team_formation(
-            team_formation, last_formations, team_id
-        )
-        home_team_formation = _get_team_formation(
-            opponent_formation, last_formations, opponent_team_id
-        )
+        away_team_formation = _get_team_formation(team_formation)
+        home_team_formation = _get_team_formation(opponent_formation)
     else:
         raise DeserializationError(f"Unknown team_id {team.team_id}")
 
-    if _validate_formation(team_formation):
-        last_formations[team_id] = team_formation
-    if _validate_formation(opponent_formation):
-        last_formations[opponent_team_id] = opponent_formation
+    last_formations[team_id] = team_formation
+    last_formations[opponent_team_id] = opponent_formation
 
     return home_team_formation, away_team_formation
 

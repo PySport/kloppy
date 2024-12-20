@@ -1,58 +1,54 @@
 import os
 from collections import defaultdict
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import cast
 
 import pytest
 
+import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy import statsbomb
 from kloppy.domain import (
-    build_coordinate_system,
-    AttackingDirection,
-    TakeOnResult,
-    Dimension,
     BallState,
-    ImperialPitchDimensions,
-    CardQualifier,
-    DatasetFlag,
-    CarryResult,
-    InterceptionResult,
-    SubstitutionEvent,
     BodyPart,
     BodyPartQualifier,
+    CardQualifier,
+    CarryResult,
+    DatasetFlag,
     DatasetType,
+    Dimension,
     DuelQualifier,
-    DuelType,
     DuelResult,
+    DuelType,
+    EventDataset,
+    FormationType,
+    ImperialPitchDimensions,
+    InterceptionResult,
     Orientation,
     PassResult,
     Point,
     Point3D,
     Provider,
-    FormationType,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
-    EventDataset,
+    SubstitutionEvent,
+    TakeOnResult,
     Time,
+    build_coordinate_system,
 )
 from kloppy.domain.models import PositionType
-
-from kloppy.exceptions import DeserializationError
-from kloppy import statsbomb
 from kloppy.domain.models.event import (
     CardType,
+    CounterAttackQualifier,
+    EventType,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     PassQualifier,
     PassType,
-    EventType,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
 )
-from kloppy.infra.serializers.event.statsbomb.helpers import (
-    parse_str_ts,
-)
-import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy.exceptions import DeserializationError
+from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 
 ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -695,6 +691,14 @@ class TestStatsBombPassEvent:
         ]
         assert duel.result == DuelResult.WON
 
+    def test_synthetic_out_events(self, dataset: EventDataset):
+        """It should add synthetic ball out events after the (failed) receipt."""
+        pass_event = dataset.get_event_by_id(
+            "36c7ed4c-031e-4dd4-8557-3d9b8ee8762f"
+        )
+        assert pass_event.next().event_name == "Ball Receipt*"
+        assert pass_event.next().next().event_name == "ball_out"
+
 
 class TestStatsBombShotEvent:
     """Tests related to deserialzing 16/Shot events"""
@@ -746,6 +750,14 @@ class TestStatsBombShotEvent:
             DuelType.AERIAL,
         ]
         assert duel.result == DuelResult.WON
+
+    def test_synthetic_out_events(self, dataset: EventDataset):
+        """It should add synthetic ball out events after the goalkeeper event."""
+        pass_event = dataset.get_event_by_id(
+            "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
+        )
+        assert pass_event.next().event_name == "Goal Keeper"
+        assert pass_event.next().next().event_name == "ball_out"
 
 
 class TestStatsBombInterceptionEvent:

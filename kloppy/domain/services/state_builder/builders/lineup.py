@@ -24,16 +24,16 @@ class LineupStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Lineup:
         return Lineup(
             players=(
-                set(
+                {
                     player
                     for player in dataset.metadata.teams[0].players
                     if player.starting
-                )
-                | set(
+                }
+                | {
                     player
                     for player in dataset.metadata.teams[1].players
                     if player.starting
-                )
+                }
             )
         )
 

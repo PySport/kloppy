@@ -8,7 +8,7 @@ from kloppy.domain import EventFactory
 try:
     from typing import TypedDict
 except ImportError:
-    from mypy_extensions import TypedDict
+    from typing import TypedDict
 
 try:
     from typing import Literal

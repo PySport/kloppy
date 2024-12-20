@@ -22,10 +22,7 @@ from .position import PositionType
 
 from ...utils import deprecated, snake_case
 
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
+from typing import Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self

@@ -1,3 +1,40 @@
 .md-grid {
     max-width: 65rem;
 }
+
+table.dataframe {
+	    border-collapse: initial;
+    border-spacing: 0;
+	background-color: var(--md-default-bg-color);
+	border: .05rem solid var(--md-typeset-table-color);
+	border-radius: .1rem;
+	display: inline-block;
+	font-size: .64rem;
+	max-width: 100%;
+	overflow: auto;
+	touch-action: auto;
+}
+table.dataframe td:not([align]), table.dataset th:not([align]) {
+    text-align: left;
+}
+table.dataframe th {
+    font-weight: 700;
+    min-width: 5rem;
+    padding: .9375em 1.25em;
+    vertical-align: top;
+}
+table.dataframe tbody tr {
+    transition: background-color 125ms;
+}
+table.dataframe td {
+    border-top: .05rem solid var(--md-typeset-table-color);
+    padding: .9375em 1.25em;
+    vertical-align: top;
+}
+
+table.dataframe td>:last-child, table.dataframe th>:last-child {
+    margin-bottom: 0;
+}
+table.dataframe td>:first-child, table.dataframe th>:first-child {
+    margin-top: 0;
+}

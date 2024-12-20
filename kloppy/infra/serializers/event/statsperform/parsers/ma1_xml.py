@@ -1,9 +1,11 @@
 """XML parser for Stats Perform MA1 feeds."""
-from datetime import datetime, timezone
-from typing import Any, Optional, List, Dict, Tuple
 
-from kloppy.domain import Period, Score, Team, Ground, Player
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from kloppy.domain import Ground, Period, Player, Score, Team
 from kloppy.exceptions import DeserializationError
+
 from .base import OptaXMLParser
 
 
@@ -39,9 +41,11 @@ class MA1XMLParser(OptaXMLParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=Ground.HOME
-                if parsed_team["ground"] == "home"
-                else Ground.AWAY,
+                ground=(
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
+                ),
             )
 
         for parsed_player in self._parse_players():

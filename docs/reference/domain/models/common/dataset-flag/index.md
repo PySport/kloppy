@@ -1,0 +1,3 @@
+# DatasetFlag
+
+::: kloppy.domain.DatasetFlag

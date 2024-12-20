@@ -3,38 +3,43 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from typing import (
-    Dict,
-    List,
-    Type,
-    Union,
+    TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
+    Generic,
+    List,
     Optional,
-    TYPE_CHECKING,
+    Type,
+    TypeVar,
+    Union,
 )
 
 from kloppy.domain.models.common import (
-    DatasetType,
     AttackingDirection,
+    DatasetType,
     OrientationError,
     PositionType,
 )
+from kloppy.domain.models.time import Time
 from kloppy.utils import (
-    camelcase_to_snakecase,
-    removes_suffix,
-    docstring_inherit_attributes,
-    deprecated,
     DeprecatedEnumValue,
+    camelcase_to_snakecase,
+    deprecated,
+    docstring_inherit_attributes,
+    removes_suffix,
 )
 
+from ...exceptions import InvalidFilterError, KloppyError, OrphanedRecordError
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
 
-from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
-
 if TYPE_CHECKING:
     from .tracking import Frame
+
+QualifierType = TypeVar("QualifierType")
+EnumQualifierType = TypeVar("EnumQualifierType", bound=Enum)
 
 
 class ResultType(Enum):
@@ -249,36 +254,49 @@ class EventType(Enum):
 
 
 @dataclass
-class Qualifier(ABC):
-    value: None
+class Qualifier(Generic[QualifierType], ABC):
+    """
+    An event qualifier.
+
+    Qualifiers are linked to events and provide more detailed information
+    about the specific event that occurred. Each event can have a series of
+    qualifiers describing it.
+
+    Attributes:
+        name (str): The name of the qualifier.
+        value (object, optional): Contains any related information.
+    """
+
+    value: QualifierType
 
     @abstractmethod
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, QualifierType]:
         """
-        Return the qualifier as a dict
+        Return the qualifier as a dict.
         """
-        pass
 
     @property
     def name(self):
-        return camelcase_to_snakecase(
-            removes_suffix(type(self).__name__, "Qualifier")
-        )
+        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
 
 
 @dataclass
-class BoolQualifier(Qualifier, ABC):
-    value: bool
+class BoolQualifier(Qualifier[bool], ABC):
+    """
+    An event qualifier with a true/false value.
+    """
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, bool]:
         return {f"is_{self.name}": self.value}
 
 
-class EnumQualifier(Qualifier, ABC):
-    value: Enum
+class EnumQualifier(Qualifier[EnumQualifierType], Generic[EnumQualifierType], ABC):
+    """
+    An event qualifier with a set of possible values.
+    """
 
-    def to_dict(self):
-        return {f"{self.name}_type": self.value.value}
+    def to_dict(self) -> Dict[str, EnumQualifierType]:
+        return {f"{self.name}_type": self.value}
 
 
 class SetPieceType(Enum):
@@ -286,12 +304,12 @@ class SetPieceType(Enum):
     SetPieceType
 
     Attributes:
-        GOAL_KICK (SetPieceType):
-        FREE_KICK (SetPieceType):
-        THROW_IN (SetPieceType):
-        CORNER_KICK (SetPieceType):
-        PENALTY (SetPieceType):
-        KICK_OFF (SetPieceType):
+        GOAL_KICK (SetPieceType): A goal kick.
+        FREE_KICK (SetPieceType): A free kick.
+        THROW_IN (SetPieceType): A throw in.
+        CORNER_KICK (SetPieceType): A corner kick.
+        PENALTY (SetPieceType): A penalty kick.
+        KICK_OFF (SetPieceType): A kick off at the beginning of a match or after scoring.
     """
 
     GOAL_KICK = "GOAL_KICK"
@@ -303,27 +321,25 @@ class SetPieceType(Enum):
 
 
 @dataclass
-class SetPieceQualifier(EnumQualifier):
+class SetPieceQualifier(EnumQualifier[SetPieceType]):
     """
-    SetPieceQualifier
+    Indicates that a pass or shot was a set piece.
 
     Attributes:
-        value: Specifies the type of set piece
+        name (str): `"set_piece"`
+        value (SetPieceType): The type of set piece
     """
-
-    value: SetPieceType
 
 
 @dataclass
-class CardQualifier(EnumQualifier):
+class CardQualifier(EnumQualifier[CardType]):
     """
-    CardQualifier
+    Indicates that a card was given.
 
     Attributes:
-        value: Specifies the type card
+        name (str): `"card"`
+        value (CardType): Specifies the type of card.
     """
-
-    value: CardType
 
 
 class PassType(Enum):
@@ -331,20 +347,20 @@ class PassType(Enum):
     PassType
 
     Attributes:
-        CROSS (PassType):
-        HAND_PASS (PassType):
-        HEAD_PASS (PassType):
-        HIGH_PASS (PassType):
-        LAUNCH (PassType):
-        SIMPLE_PASS (PassType):
-        SMART_PASS (PassType):
-        LONG_BALL (PassType)
-        THROUGH_BALL (PassType)
-        CHIPPED_PASS (PassType)
-        FLICK_ON (PassType)
-        ASSIST (PassType)
-        ASSIST_2ND (PassType)
-        SWITCH_OF_PLAY (PassType)
+        CROSS (PassType): A ball played in from wide areas into the box.
+        HAND_PASS (PassType): A pass given with a player’s hand.
+        HEAD_PASS (PassType): A pass given with a player's head.
+        HIGH_PASS (PassType): A pass that goes above shoulder level at peak height.
+        LAUNCH (PassType): A long forward pass that does not appear to have a specific target.
+        SIMPLE_PASS (PassType): A standard pass without complex maneuvers.
+        SMART_PASS (PassType): A creative and penetrative pass attempting to break defensive lines.
+        LONG_BALL (PassType): A pass that travels at least 32 meters.
+        THROUGH_BALL (PassType): A pass played into space behind the defense.
+        CHIPPED_PASS (PassType): A pass lifted into the air.
+        FLICK_ON (PassType): A pass where a player 'flicks' the ball on towards a teammate using their head.
+        ASSIST (PassType): A pass leading directly to a goal.
+        ASSIST_2ND (PassType): A pass leading to another pass which then leads to a goal.
+        SWITCH_OF_PLAY (PassType): Any pass which crosses the centre zone of the pitch and in length travels more than 50% of the width of the pitch.
     """
 
     CROSS = "CROSS"
@@ -365,8 +381,14 @@ class PassType(Enum):
 
 
 @dataclass
-class PassQualifier(EnumQualifier):
-    value: PassType
+class PassQualifier(EnumQualifier[PassType]):
+    """
+    Specifies the pass type.
+
+    Attributes:
+        name (str): `"pass"`
+        value (PassType): The pass type.
+    """
 
 
 class BodyPart(Enum):
@@ -378,17 +400,14 @@ class BodyPart(Enum):
         LEFT_FOOT (BodyPart): Pass or Shot with left foot, save with left foot (for goalkeepers).
         HEAD (BodyPart): Pass or Shot with head, save with head (for goalkeepers).
         OTHER (BodyPart): Other body part (chest, back, etc.), for Pass and Shot.
-        HEAD_OTHER (BodyPart): Pass or Shot with head or other body part. Only used when the
-                               data provider does not distinguish between HEAD and OTHER.
+        HEAD_OTHER (BodyPart): Pass or Shot with head or other body part. Only used when the data provider does not distinguish between HEAD and OTHER.
         BOTH_HANDS (BodyPart): Goalkeeper only. Save with both hands.
         CHEST (BodyPart): Goalkeeper only. Save with chest.
         LEFT_HAND (BodyPart): Goalkeeper only. Save with left hand.
         RIGHT_HAND (BodyPart): Goalkeeper only. Save with right hand.
         DROP_KICK (BodyPart): Pass is a keeper drop kick.
         KEEPER_ARM (BodyPart): Pass thrown from keepers hands.
-        NO_TOUCH (BodyPart): Pass only. A player deliberately let the pass go past him
-                             instead of receiving it to deliver to a teammate behind him.
-                             (Also known as a "dummy").
+        NO_TOUCH (BodyPart): Pass only. A player deliberately let the pass go past him instead of receiving it to deliver to a teammate behind him. (Also known as a "dummy").
     """
 
     RIGHT_FOOT = "RIGHT_FOOT"
@@ -408,8 +427,14 @@ class BodyPart(Enum):
 
 
 @dataclass
-class BodyPartQualifier(EnumQualifier):
-    value: BodyPart
+class BodyPartQualifier(EnumQualifier[BodyPart]):
+    """
+    Specifies the body part used to perform an action.
+
+    Attributes:
+        name (str): `"body_part"`
+        value (BodyPart): The body part.
+    """
 
 
 class GoalkeeperAction(Enum):
@@ -421,8 +446,7 @@ class GoalkeeperAction(Enum):
         CLAIM (GoalkeeperAction): Goalkeeper catches cross.
         PUNCH (GoalkeeperAction): Goalkeeper punches ball clear.
         PICK_UP (GoalkeeperAction): Goalkeeper picks up ball.
-        SMOTHER (GoalkeeperAction): Goalkeeper coming out to dispossess a player,
-                                  equivalent to a tackle for an outfield player.
+        SMOTHER (GoalkeeperAction): Goalkeeper coming out to dispossess a player, equivalent to a tackle for an outfield player.
         REFLEX (GoalkeeperAction): Goalkeeper performs a reflex to save a ball.
         SAVE_ATTEMPT (GoalkeeperAction): Goalkeeper attempting to save a shot.
     """
@@ -445,8 +469,7 @@ class GoalkeeperActionType(Enum):
         CLAIM (GoalkeeperActionType): Goalkeeper catches cross.
         PUNCH (GoalkeeperActionType): Goalkeeper punches ball clear.
         PICK_UP (GoalkeeperActionType): Goalkeeper picks up ball.
-        SMOTHER (GoalkeeperActionType): Goalkeeper coming out to dispossess a player,
-                                  equivalent to a tackle for an outfield player.
+        SMOTHER (GoalkeeperActionType): Goalkeeper coming out to dispossess a player, equivalent to a tackle for an outfield player.
         REFLEX (GoalkeeperActionType): Goalkeeper performs a reflex to save a ball.
         SAVE_ATTEMPT (GoalkeeperActionType): Goalkeeper attempting to save a shot.
     """
@@ -462,8 +485,14 @@ class GoalkeeperActionType(Enum):
 
 
 @dataclass
-class GoalkeeperQualifier(EnumQualifier):
-    value: GoalkeeperActionType
+class GoalkeeperQualifier(EnumQualifier[GoalkeeperActionType]):
+    """
+    Specifies the goalkeeper action type.
+
+    Attributes:
+        name (str): `"goalkeeper"`
+        value (GoalkeeperActionType): The goal keeper action type.
+    """
 
 
 class DuelType(Enum):
@@ -485,13 +514,25 @@ class DuelType(Enum):
 
 
 @dataclass
-class DuelQualifier(EnumQualifier):
-    value: DuelType
+class DuelQualifier(EnumQualifier[DuelType]):
+    """
+    Specifies the duel type.
+
+    Attributes:
+        name (str): `"duel"`
+        value (DuelType): The duel type.
+    """
 
 
 @dataclass
 class CounterAttackQualifier(BoolQualifier):
-    pass
+    """
+    Indicates whether an event was part of a counter attack.
+
+    Attributes:
+        name (str): `"body_part"`
+        value (BoolQualifier): True if the event was part of a counter attack; otherwise False.
+    """
 
 
 @dataclass
@@ -501,13 +542,25 @@ class Event(DataRecord, ABC):
     Abstract event baseclass. All other event classes inherit from this class.
 
     Attributes:
-        event_id: identifier given by provider
-        team: See [`Team`][kloppy.domain.models.common.Team]
-        player: See [`Player`][kloppy.domain.models.common.Player]
-        coordinates: Coordinates where event happened. See [`Point`][kloppy.domain.models.pitch.Point]
-        raw_event: Dict
-        state: Dict[str, Any]
-        qualifiers: See [`Qualifier`][kloppy.domain.models.event.Qualifier]
+        event_id: Event identifier given by provider. Alias for `record_id`.
+        event_type: The type of event.
+        event_name: Name of the event type.
+        time: Time in the match the event takes place.
+        coordinates: Coordinates where event happened.
+        result: The outcome of the event.
+        team: Team related to the event.
+        player: Player related to the event.
+        ball_owning_team: Team in control of the ball during the event.
+        ball_state: Whether the ball is in play.
+        qualifiers: A list of qualifiers providing additional information about the event.
+        raw_event: The data provider's raw representation of the event.
+        dataset: A reference to the dataset the event is part of.
+        prev_record: A reference to the previous event.
+        next_record: A reference to the next event.
+        related_event_ids: Event identifiers of related events.
+        freeze_frame: A snapshot with the location of other players at the time of the event.
+        attacking_direction: The playing direction of `team` during the event.
+        state: Additional game state information.
     """
 
     event_id: str
@@ -517,7 +570,7 @@ class Event(DataRecord, ABC):
 
     result: Optional[ResultType]
 
-    raw_event: Dict
+    raw_event: object
     state: Dict[str, Any]
     related_event_ids: List[str]
 
@@ -540,7 +593,7 @@ class Event(DataRecord, ABC):
         raise NotImplementedError
 
     @property
-    def attacking_direction(self):
+    def attacking_direction(self) -> AttackingDirection:
         if (
             self.dataset
             and self.dataset.metadata
@@ -606,12 +659,8 @@ class Event(DataRecord, ABC):
             for event_id in self.related_event_ids
         ]
 
-    def get_related_event(
-        self, type_: Union[str, EventType]
-    ) -> Optional["Event"]:
-        event_type = (
-            EventType[type_.upper()] if isinstance(type_, str) else type_
-        )
+    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
+        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -675,9 +724,7 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(
-                    f"Don't know how to apply filter {filter_}"
-                )
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
 
             if event_type:
                 try:
@@ -725,10 +772,14 @@ class Event(DataRecord, ABC):
 @docstring_inherit_attributes(Event)
 class GenericEvent(Event):
     """
-    GenericEvent
+    Unrecognised event type.
+
+    By default, all events are deserialized as `GenericEvent` objects.
+    Some events may be converted into more specialized event types, such as
+    a [`PassEvent`][kloppy.domain.models.event.PassEvent] object.
 
     Attributes:
-        event_type (EventType): `EventType.GENERIC` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.GENERIC`
         event_name (str): `"generic"`
     """
 
@@ -740,17 +791,18 @@ class GenericEvent(Event):
 @docstring_inherit_attributes(Event)
 class ShotEvent(Event):
     """
-    ShotEvent
+    An intentional attempt to score a goal by striking or directing the ball
+    towards the opponent's goal. Own goals are always categorized as a shot too.
 
     Attributes:
-        event_type (EventType): `EventType.SHOT` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"shot"`,
-        result_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
-        result (ShotResult): See [`ShotResult`][kloppy.domain.models.event.ShotResult]
+        event_type (EventType): `EventType.SHOT`
+        event_name (str): `"shot"`
+        result (ShotResult): The outcome of the shot.
+        result_coordinates (Point): End location of the shot. If a shot is blocked, this is the coordinate of the block. If the shot is saved, it is the coordinate where the keeper touched the ball.
     """
 
     result: ShotResult
-    result_coordinates: Point = None
+    result_coordinates: Optional[Point] = None
 
     event_type: EventType = EventType.SHOT
     event_name: str = "shot"
@@ -760,18 +812,18 @@ class ShotEvent(Event):
 @docstring_inherit_attributes(Event)
 class PassEvent(Event):
     """
-    PassEvent
+    The attempted delivery of the ball from one player to another player on the same team.
 
     Attributes:
-        event_type (EventType): `EventType.PASS` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.PASS`
         event_name (str): `"pass"`
-        receive_timestamp (float):
-        receiver_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
-        receiver_player (Player): See [`Player`][kloppy.domain.models.common.Player]
-        result (PassResult): See [`PassResult`][kloppy.domain.models.event.PassResult]
+        receive_timestamp (Time): The time the pass was received.
+        receiver_coordinates (Point): The coordinates where the pass was received.
+        receiver_player (Player): The intended receiver of the pass.
+        result (PassResult): The pass's outcome.
     """
 
-    receive_timestamp: float
+    receive_timestamp: Time
     receiver_player: Player
     receiver_coordinates: Point
 
@@ -785,12 +837,12 @@ class PassEvent(Event):
 @docstring_inherit_attributes(Event)
 class TakeOnEvent(Event):
     """
-    TakeOnEvent
+    An attempt by one player to dribble past an opponent.
 
     Attributes:
-        event_type (EventType): `EventType.TAKE_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"take_on"`,
-        result (TakeOnResult): See [`TakeOnResult`][kloppy.domain.models.event.TakeOnResult]
+        event_type (EventType): `EventType.TAKE_ON`
+        event_name (str): `"take_on"`
+        result (TakeOnResult): The take-on's outcome.
     """
 
     result: TakeOnResult
@@ -803,17 +855,17 @@ class TakeOnEvent(Event):
 @docstring_inherit_attributes(Event)
 class CarryEvent(Event):
     """
-    CarryEvent
+    A player controls the ball at their feet while moving or standing still.
 
     Attributes:
-        event_type (EventType): `EventType.CARRY` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"carry"`,
-        end_timestamp (float):
-        end_coordinates (Point): See [`Point`][kloppy.domain.models.pitch.Point]
-        result (CarryResult): See [`CarryResult`][kloppy.domain.models.event.CarryResult]
+        event_type (EventType): `EventType.CARRY`
+        event_name (str): `"carry"`
+        end_timestamp (Time): Duration of the carry.
+        end_coordinates (Point): Coordinate on the pitch where the carry ended.
+        result (CarryResult): The carry's outcome.
     """
 
-    end_timestamp: float
+    end_timestamp: Time
     end_coordinates: Point
 
     result: CarryResult
@@ -826,10 +878,11 @@ class CarryEvent(Event):
 @docstring_inherit_attributes(Event)
 class InterceptionEvent(Event):
     """
-    InterceptionEvent
+    When a player intercepts any pass event between opposition players and
+    prevents the ball reaching its target.
 
     Attributes:
-        event_type (EventType): `EventType.INTERCEPTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.INTERCEPTION`
         event_name (str): `"interception"`
     """
 
@@ -841,10 +894,12 @@ class InterceptionEvent(Event):
 @docstring_inherit_attributes(Event)
 class ClearanceEvent(Event):
     """
-    ClearanceEvent
+    A defensive action when a player attempts to get the ball away from
+    a dangerous zone on the pitch with no immediate target regarding
+    a recipient for the ball.
 
     Attributes:
-        event_type (EventType): `EventType.CLEARANCE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.CLEARANCE`
         event_name (str): `"clearance"`
     """
 
@@ -856,12 +911,13 @@ class ClearanceEvent(Event):
 @docstring_inherit_attributes(Event)
 class DuelEvent(Event):
     """
-    DuelEvent
+    A contest between two players of opposing sides in the match. Duel events
+    come in pairs: one for the attacking team, one for the defending team.
+    If the duel is a take on, the offensive one has type `TAKE_ON`.
 
     Attributes:
-        event_type (EventType): `EventType.DUEL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.DUEL`
         event_name (str): `"duel"`
-
     """
 
     event_type: EventType = EventType.DUEL
@@ -872,12 +928,12 @@ class DuelEvent(Event):
 @docstring_inherit_attributes(Event)
 class SubstitutionEvent(Event):
     """
-    SubstitutionEvent
+    A player is substituted off the field and replaced by another player.
 
     Attributes:
-        event_type (EventType): `EventType.SUBSTITUTION` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"substitution"`,
-        replacement_player (Player): See [`Player`][kloppy.domain.models.common.Player]
+        event_type (EventType): `EventType.SUBSTITUTION`
+        event_name (str): `"substitution"`
+        replacement_player (Player): The player coming on the pitch.
     """
 
     replacement_player: Player
@@ -891,10 +947,10 @@ class SubstitutionEvent(Event):
 @docstring_inherit_attributes(Event)
 class PlayerOffEvent(Event):
     """
-    PlayerOffEvent
+    A player goes/is carried out of the pitch without a substitution.
 
     Attributes:
-        event_type (EventType): `EventType.PLAYER_OFF` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.PLAYER_OFF`
         event_name (str): `"player_off"`
     """
 
@@ -906,10 +962,10 @@ class PlayerOffEvent(Event):
 @docstring_inherit_attributes(Event)
 class PlayerOnEvent(Event):
     """
-    PlayerOnEvent
+    A player returns to the pitch after a `PlayerOff` event.
 
     Attributes:
-        event_type (EventType): `EventType.PLAYER_ON` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.PLAYER_ON`
         event_name (str): `"player_on"`
     """
 
@@ -921,12 +977,12 @@ class PlayerOnEvent(Event):
 @docstring_inherit_attributes(Event)
 class CardEvent(Event):
     """
-    CardEvent
+    When a player receives a card.
 
     Attributes:
-        event_type (EventType): `EventType.CARD` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.CARD`
         event_name (str): `"card"`
-        card_type: See [`CardType`][kloppy.domain.models.event.CardType]
+        card_type (CardType): Attribute specifying the card.
     """
 
     card_type: CardType
@@ -939,12 +995,13 @@ class CardEvent(Event):
 @docstring_inherit_attributes(Event)
 class FormationChangeEvent(Event):
     """
-    FormationChangeEvent
+    A team alters its formation
 
     Attributes:
-        event_type (EventType): `EventType.FORMATION_CHANGE` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.FORMATION_CHANGE`
         event_name (str): `"card"`
-        formation_type: See [`FormationType`][kloppy.domain.models.formation.FormationType]
+        formation_type (FormationType): The new formation being used.
+        player_positions (dict[Player, Position], optional): The players and their positions.
     """
 
     formation_type: FormationType
@@ -958,10 +1015,10 @@ class FormationChangeEvent(Event):
 @docstring_inherit_attributes(Event)
 class RecoveryEvent(Event):
     """
-    RecoveryEvent
+    A player gathers a loose ball and gains control of possession for their team.
 
     Attributes:
-        event_type (EventType): `EventType.RECOVERY` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.RECOVERY`
         event_name (str): "recovery"
     """
 
@@ -973,10 +1030,10 @@ class RecoveryEvent(Event):
 @docstring_inherit_attributes(Event)
 class BallOutEvent(Event):
     """
-    BallOutEvent
+    When the ball goes out of bounds.
 
     Attributes:
-        event_type (EventType): `EventType.BALL_OUT` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.BALL_OUT`
         event_name (str): "ball_out"
     """
 
@@ -988,9 +1045,10 @@ class BallOutEvent(Event):
 @docstring_inherit_attributes(Event)
 class MiscontrolEvent(Event):
     """
-    MiscontrolEvent
+    A player unsuccessfully controls the ball and loses possession.
+
     Attributes:
-        event_type (EventType): `EventType.MISCONTROL` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.MISCONTROL`
         event_name (str): "miscontrol"
     """
 
@@ -1002,10 +1060,11 @@ class MiscontrolEvent(Event):
 @docstring_inherit_attributes(Event)
 class FoulCommittedEvent(Event):
     """
-    FoulCommittedEvent
+    Indicates a foul has been committed. The event is defined for the team that
+    commits the foul.
 
     Attributes:
-        event_type (EventType): `EventType.FOUL_COMMITTED` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.FOUL_COMMITTED`
         event_name (str): "foul_committed"
     """
 
@@ -1017,10 +1076,10 @@ class FoulCommittedEvent(Event):
 @docstring_inherit_attributes(Event)
 class GoalkeeperEvent(Event):
     """
-    GoalkeeperEvent
+    Indicates an action executed by a goalkeeper.
 
     Attributes:
-        event_type (EventType): `EventType.GOALKEEPER` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_type (EventType): `EventType.GOALKEEPER`
         event_name (str): "goalkeeper"
     """
 
@@ -1032,33 +1091,31 @@ class GoalkeeperEvent(Event):
 @docstring_inherit_attributes(Event)
 class PressureEvent(Event):
     """
-    PressureEvent
+    A player pressures an opponent to force a mistake.
 
     Attributes:
-        event_type (EventType): `EventType.Pressure` (See [`EventType`][kloppy.domain.models.event.EventType])
-        event_name (str): `"pressure"`,
-        end_timestamp (float):
+        event_type (EventType): `EventType.Pressure`
+        event_name (str): `"pressure"`
+        end_timestamp (Time): When the pressing ended.
     """
 
-    end_timestamp: float
+    end_timestamp: Time
 
     event_type: EventType = EventType.PRESSURE
     event_name: str = "pressure"
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(Dataset)
 class EventDataset(Dataset[Event]):
     """
-    EventDataset
+    An event stream dataset.
 
     Attributes:
-        metadata: See [`Metadata`][kloppy.domain.models.common.Metadata]
-        records (List[Event]): See [`Event`][kloppy.domain.models.event.Event]
-        dataset_type: `DatasetType.EVENT` (See [`DatasetType`][kloppy.domain.models.common.DatasetType])
-        events: alias for `records`
+        dataset_type (DatasetType): `"DatasetType.EVENT"`
+        events (List[Event]): A list of events. Alias for `records`.
+        metadata (Metadata): Metadata for the dataset.
     """
-
-    records: List[Event]
 
     dataset_type: DatasetType = DatasetType.EVENT
 
@@ -1096,15 +1153,11 @@ class EventDataset(Dataset[Event]):
                         include_time=True
                     )
                     if last_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 elif event.team.starting_formation:
                     if event.team.starting_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 else:
                     event.team.formations.set(event.time, event.formation_type)
@@ -1113,25 +1166,23 @@ class EventDataset(Dataset[Event]):
     def events(self):
         return self.records
 
-    def get_event_by_id(self, event_id: str) -> Event:
+    def get_event_by_id(self, event_id: str) -> Optional[Event]:
         return self.get_record_by_id(event_id)
 
     def add_state(self, *builder_keys):
         """
-        See [add_state][kloppy.domain.services.state_builder.add_state]
+        See [`add_state`][kloppy.domain.services.state_builder.add_state]
         """
         from kloppy.domain.services.state_builder import add_state
 
         return add_state(self, *builder_keys)
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
-        record_converter: Callable[[Event], Dict] = None,
-        additional_columns: Dict[
-            str, Union[Callable[[Event], Any], Any]
+        record_converter: Optional[Callable[[Event], Dict]] = None,
+        additional_columns: Optional[
+            Dict[str, Union[str, Callable[[Event], Any]]]
         ] = None,
     ) -> "DataFrame":
         try:
@@ -1143,9 +1194,7 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import (
-                DefaultEventTransformer,
-            )
+            from ..services.transformers.attribute import DefaultEventTransformer
 
             record_converter = DefaultEventTransformer()
 
@@ -1160,9 +1209,7 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":
@@ -1223,4 +1270,6 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "BoolQualifier",
+    "PressureEvent",
 ]

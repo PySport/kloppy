@@ -16,6 +16,7 @@ from kloppy.domain import (
     DuelResult,
     DuelType,
     EventDataset,
+    ExpectedGoals,
     FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
@@ -30,6 +31,7 @@ from kloppy.domain import (
     Player,
     Point,
     PositionType,
+    PostShotExpectedGoals,
     Provider,
     Qualifier,
     SetPieceQualifier,
@@ -37,10 +39,6 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     Team,
-    FormationType,
-    CarryResult,
-    ExpectedGoals,
-    PostShotExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.utils import performance_logging

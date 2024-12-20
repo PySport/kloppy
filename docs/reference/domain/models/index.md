@@ -83,7 +83,21 @@ First, we descibe the concepts related to each of these three dataset types. Nex
 
 ### EventDataset
 
-An [`EventDataset`][kloppy.domain.EventDataset] is a sequence of [`Event`][kloppy.domain.Event] entities. Each [`Event`][kloppy.domain.Event] is annotated with an [`EventType`][kloppy.domain.EventType], a [`Time`][kloppy.domain.Time] entity describing when the event happend, a [`Team`][kloppy.domain.Team] and [`Player`][kloppy.domain.Player], a [`Point`][kloppy.domain.Point] on the pitch where the event happend, a [`ResultType`][kloppy.domain.ResultType] describing the outcome of the event, a list of [`Qualifier`][kloppy.domain.Qualifier] entities and optionally a tracking data [`Frame`][kloppy.domain.Frame], the ball owning [`Team`][kloppy.domain.Team], [`AttackingDirection`][kloppy.domain.AttackingDirection] of the team executing the event and the [`BallState`][kloppy.domain.BallState].
+An [`EventDataset`][kloppy.domain.EventDataset] is a sequence of [`Event`][kloppy.domain.Event] entities. Each [`Event`][kloppy.domain.Event] is annotated with a set of attributes that describe the event:
+
+- an [`EventType`][kloppy.domain.EventType],
+- a [`Time`][kloppy.domain.Time] when the event happend,
+- a [`Team`][kloppy.domain.Team] involved in the event,
+- a [`Player`][kloppy.domain.Player] involved in the event,
+- a [`Point`][kloppy.domain.Point] on the pitch where the event happened,
+- a [`ResultType`][kloppy.domain.ResultType] describing the outcome of the event,
+- a list of [`Qualifier`][kloppy.domain.Qualifier] entities,
+- the ball owning [`Team`][kloppy.domain.Team],
+- the [`AttackingDirection`][kloppy.domain.AttackingDirection] of the team executing the event,
+- the [`BallState`][kloppy.domain.BallState] during the event, and
+- optionally a tracking data [`Frame`][kloppy.domain.Frame].
+
+Depending on the [`EventType`][kloppy.domain.EventType] an event can have additional attributes.
 
 ```python exec="true" html="true"
 import subprocess
@@ -113,101 +127,10 @@ Event: {
   +ball_owning_team: Team
   +ball_state: BallState
 }
+direction: right
 EventDataset -- Event: {
   source-arrowhead: 1
   target-arrowhead: 1
-}
-
-EventType: {
-  shape: class
-}
-Time: {
-  shape: class
-}
-Team: {
-  shape: class
-}
-Player: {
-  shape: class
-}
-Point: {
-  shape: class
-}
-ResultType: {
-  shape: class
-}
-Qualifier: {
-  shape: class
-}
-Frame: {
-  shape: class
-}
-
-Event -- EventType: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Time: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Team: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Player: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Point: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- ResultType: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Qualifier: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Event -- Frame: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-
-Period: {
-  shape: class
-}
-Time -- Period: +has {
-  source-arrowhead: 1
-  target-arrowhead: 2
-}
-Ground: {
-  shape: class
-}
-Team -- Ground: +has {
-  source-arrowhead: 1
-  target-arrowhead: 2
-}
-FormationType: {
-  shape: class
-}
-Team -- FormationType: +has {
-  source-arrowhead: 1
-  target-arrowhead: 2
-}
-Team -- Player: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
-}
-Position: {
-  shape: class
-}
-Player -- Position: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
 }
 """
 
@@ -218,6 +141,8 @@ print(svg)
 ```
 
 ### TrackingDataset
+
+A [`TrackingDataset`][kloppy.domain.TrackingDataset] is a sequence of [`Frame`][kloppy.domain.Frame] entities. Each frame describes the locations of the ball and the players as a [`Point`][kloppy.domain.Point] on the pitch at a particular [`Time`][kloppy.domain.Time].
 
 ```python exec="true" html="true"
 import subprocess
@@ -240,97 +165,11 @@ Frame: {
   +ball_owning_team: Team
   +ball_state: BallState
 }
+direction: right
 TrackingDataset -- Frame: +has {
   source-arrowhead: 1
   target-arrowhead: *
 }
-Time: {
-  shape: class
-}
-Period: {
-  shape: class
-}
-Time -- Period: +has {
-  source-arrowhead: *
-  target-arrowhead: 1
-}
-Frame -- Time: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-Point: {
-  shape: class
-  link: reference/domain/Point
-}
-Frame -- Point: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-Player: {
-  shape: class
-}
-Team -- Player: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
-}
-Frame -- Player: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Position: {
-  shape: class
-}
-Player -- Position: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
-}
-
-Player -- Point: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-Team: {
-  shape: class
-}
-Ground: {
-  shape: class
-}
-Team -- Ground: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-FormationType: {
-  shape: class
-}
-Team -- FormationType: +has {
-  source-arrowhead: *
-  target-arrowhead: 1
-}
-
-Frame -- Team: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-BallState: {
-  shape: class
-}
-Frame -- BallState: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-AttackingDirection: {
-  shape: class
-}
-Frame -- AttackingDirection: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
 """
 
 # We simply run `d2` in a subprocess, passing it our diagram as input and capturing its output to print it.
@@ -339,6 +178,10 @@ print(svg)
 ```
 
 ### CodeDataset
+
+
+A [`CodeDataset`][kloppy.domain.CodeDataset] is a sequence of [`Code`][kloppy.domain.Code] entities.
+
 
 ```python exec="true" html="true"
 import subprocess
@@ -360,77 +203,11 @@ Code: {
   +ball_owning_team: Team
   +ball_state: BallState
 }
+direction: right
 CodeDataset -- Code: +has {
   source-arrowhead: 1
   target-arrowhead: *
 }
-Code -- Time: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-Code -- Team: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-Time: {
-  shape: class
-}
-Period: {
-  shape: class
-}
-Time -- Period: +has {
-  source-arrowhead: *
-  target-arrowhead: 1
-}
-Team: {
-  shape: class
-}
-Ground: {
-  shape: class
-}
-Team -- Ground: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-FormationType: {
-  shape: class
-}
-Team -- FormationType: +has {
-  source-arrowhead: *
-  target-arrowhead: 1
-}
-Player: {
-  shape: class
-}
-Team -- Player: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
-}
-Position: {
-  shape: class
-}
-Player -- Position: +has {
-  source-arrowhead: 1
-  target-arrowhead: *
-}
-
-BallState: {
-  shape: class
-}
-Code -- BallState: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
-AttackingDirection: {
-  shape: class
-}
-Code -- AttackingDirection: +has {
-  source-arrowhead: 1
-  target-arrowhead: 1
-}
-
 """
 
 # We simply run `d2` in a subprocess, passing it our diagram as input and capturing its output to print it.
@@ -440,7 +217,7 @@ print(svg)
 
 ## Metadata
 
-Each match dataset is linked with a [`Metadata`][kloppy.domain.Metadata] object, containing all external information describing the match. The metadata contains two [`Team`][kloppy.domain.Team] entities that describe the line-ups of both teams, the [`Period`][kloppy.domain.Period] entities that describe the start and end times of each period of the match, the final [`Score`][kloppy.domain.Score], the [`Provider`][kloppy.domain.Provider] that collected the data, the [`Orientation`][kloppy.domain.Orientation] (i.e., playing direction) of both teams, and the [`CoordinateSystem`][kloppy.domain.CoordinateSystem] in which locations are defined.
+Each [`Dataset`][kloppy.domain.Dataset] is linked with a [`Metadata`][kloppy.domain.Metadata] object, containing all external information describing the match. The metadata contains two [`Team`][kloppy.domain.Team] entities that describe the line-ups of both teams, the [`Period`][kloppy.domain.Period] entities that describe the start and end times of each period of the match, the final [`Score`][kloppy.domain.Score], the [`Provider`][kloppy.domain.Provider] that collected the data, the [`Orientation`][kloppy.domain.Orientation] (i.e., playing direction) of both teams, and the [`CoordinateSystem`][kloppy.domain.CoordinateSystem] in which locations are defined.
 
 ```python exec="true" html="true"
 import subprocess
@@ -453,13 +230,7 @@ Dataset -- Metadata: +has {
   source-arrowhead: 1
   target-arrowhead: 1
 }
-Period: {
-  shape: class
-}
-Metadata -- Period: +has {
-  source-arrowhead: 1
-  target-arrowhead: 2
-}
+
 Team: {
   shape: class
 }
@@ -496,6 +267,23 @@ Player -- Position: +has {
   target-arrowhead: *
 }
 
+Period: {
+  shape: class
+}
+Metadata -- Period: +has {
+  source-arrowhead: 1
+  target-arrowhead: 2
+}
+
+
+Orientation: {
+  shape: class
+}
+Metadata -- Orientation: +has {
+  source-arrowhead: 1
+  target-arrowhead: 2
+}
+
 CoordinateSystem: {
   shape: class
 }
@@ -524,13 +312,6 @@ CoordinateSystem -- PitchDimensions: +has {
   source-arrowhead: 1
   target-arrowhead: 1
 }
-Orientation: {
-  shape: class
-}
-Metadata -- Orientation: +has {
-  source-arrowhead: 1
-  target-arrowhead: 2
-}
 Provider: {
   shape: class
 }
@@ -555,6 +336,6 @@ Metadata -- DatasetFlag: +has {
 """
 
 # We simply run `d2` in a subprocess, passing it our diagram as input and capturing its output to print it.
-svg = subprocess.check_output(["d2", "-", "-"], input=diagram, stderr=subprocess.DEVNULL, text=True)
+svg = subprocess.check_output(["d2", "--sketch", "-", "-"], input=diagram, stderr=subprocess.DEVNULL, text=True)
 print(svg)
 ```

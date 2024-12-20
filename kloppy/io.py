@@ -9,15 +9,7 @@ import os
 import urllib.parse
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper
-from typing import (
-    IO,
-    BinaryIO,
-    ContextManager,
-    Generator,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import IO, BinaryIO, ContextManager, Generator, Optional, Tuple, Union
 
 from kloppy.config import get_config
 from kloppy.exceptions import InputNotFoundError
@@ -44,6 +36,7 @@ class Source:
         skip_if_missing (bool): Whether to skip the file if it is missing. Defaults to False.
 
     Example:
+
         >>> open_as_file(Source.create("example.csv", optional=True))
     """
 
@@ -77,9 +70,7 @@ def _file_or_path_to_binary_stream(
     """
     assert binary_mode in ("rb", "wb", "ab")
 
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         # If file_or_path is a path-like object, open it and return the binary stream
         return open(os.fspath(file_or_path), binary_mode), True  # type: ignore
 
@@ -92,8 +83,7 @@ def _file_or_path_to_binary_stream(
         return file_or_path, False  # type: ignore
 
     raise TypeError(
-        f"Unsupported type for {file_or_path}, "
-        f"{file_or_path.__class__.__name__}."
+        f"Unsupported type for {file_or_path}, " f"{file_or_path.__class__.__name__}."
     )
 
 
@@ -287,6 +277,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
         Exception: If the extension cannot be determined.
 
     Example:
+
         >>> get_file_extension("example.xml.gz")
         '.xml'
         >>> get_file_extension(Path("example.txt"))
@@ -294,9 +285,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
         >>> get_file_extension(Source(data="example.csv"))
         '.csv'
     """
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         path = os.fspath(file_or_path)  # type: ignore
         for ext in [".gz", ".xz", ".bz2"]:
             if path.endswith(ext):
@@ -392,6 +381,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         TypeError: If the input type is not supported.
 
     Example:
+
         >>> with open_as_file("example.txt") as f:
         ...     contents = f.read()
 

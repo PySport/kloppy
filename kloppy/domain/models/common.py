@@ -32,11 +32,7 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 
-from ...exceptions import (
-    InvalidFilterError,
-    KloppyParameterError,
-    OrientationError,
-)
+from ...exceptions import InvalidFilterError, KloppyParameterError, OrientationError
 from .formation import FormationType
 from .pitch import (
     Dimension,
@@ -283,7 +279,9 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position: PositionType, time: Time):
+    def get_player_by_position(
+        self, position: PositionType, time: Time
+    ) -> Optional[Player]:
         """Get a player by their position at a given time.
 
         Args:
@@ -469,9 +467,7 @@ class AttackingDirection(Enum):
                     return AttackingDirection.LTR
                 if ball_owning_team.ground == Ground.AWAY:
                     return AttackingDirection.RTL
-                raise OrientationError(
-                    "Invalid ball_owning_team: %s", ball_owning_team
-                )
+                raise OrientationError("Invalid ball_owning_team: %s", ball_owning_team)
             return AttackingDirection.NOT_SET
         if orientation == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team is None:
@@ -673,12 +669,8 @@ class TracabCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -718,12 +710,8 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -823,12 +811,8 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -928,12 +912,8 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self.pitch_length is not None and self.pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
+                y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
                 pitch_length=self.pitch_length,
                 pitch_width=self.pitch_width,
                 standardized=False,
@@ -1137,8 +1117,7 @@ class ActionValue(Statistic):
                 self.action_value_scoring_before,
                 self.action_value_scoring_after,
             )
-            else self.action_value_scoring_after
-            - self.action_value_scoring_before
+            else self.action_value_scoring_after - self.action_value_scoring_before
         )
 
     @property
@@ -1150,8 +1129,7 @@ class ActionValue(Statistic):
                 self.action_value_conceding_before,
                 self.action_value_conceding_after,
             )
-            else self.action_value_conceding_after
-            - self.action_value_conceding_before
+            else self.action_value_conceding_after - self.action_value_conceding_before
         )
 
     @property
@@ -1163,11 +1141,8 @@ class ActionValue(Statistic):
             self.action_value_conceding_after,
         ):
             return None
-        return (
-            self.action_value_scoring_after - self.action_value_scoring_before
-        ) - (
-            self.action_value_conceding_after
-            - self.action_value_conceding_before
+        return (self.action_value_scoring_after - self.action_value_scoring_before) - (
+            self.action_value_conceding_after - self.action_value_conceding_before
         )
 
 
@@ -1285,7 +1260,7 @@ class Metadata:
         game_id: Game id of the game from the provider.
         date: Date of the game.
         game_week: Game week (or match day) of the game. It can also be the stage
-        (ex: "8th Finals"), if the game is happening during a cup or a play-off.
+            (ex: "8th Finals"), if the game is happening during a cup or a play-off.
         periods: List of [`Period`][kloppy.domain.models.common.Period] entities.
         teams: `[home_team, away_team]`.
         coordinate_system: The coordinate system in which the data is provided.
@@ -1294,7 +1269,8 @@ class Metadata:
         flags: Flags describing what optional data is available in the dataset.
         provider: The provider of the dataset.
         score: The final score of the match.
-        frame_rate: The frame rate (in Hertz) at which the data was recorded. Only for tracking data.
+        frame_rate: The frame rate (in Hertz) at which the data was recorded.
+            Only for tracking data.
         attributes: Additional metadata.
     """
 
@@ -1323,9 +1299,7 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=(
-                    self.periods[i + 1] if i + 1 < len(self.periods) else None
-                ),
+                next_=(self.periods[i + 1] if i + 1 < len(self.periods) else None),
             )
 
 
@@ -1365,9 +1339,7 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=(
-                    self.records[i + 1] if i + 1 < len(self.records) else None
-                ),
+                next_=(self.records[i + 1] if i + 1 < len(self.records) else None),
             )
 
         self._init_player_positions()
@@ -1408,14 +1380,17 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_):
+    def filter(self, filter_: Union[str, Callable[[T], bool]]):
         """
         Filter all records used `filter_`
 
-        Arguments:
-            filter_:
+        Args:
+            filter_: The filter to be used to filter the records. It can be a
+                callable that takes a record and returns a boolean, or a string
+                representing a css-like selector.
 
         Examples:
+
             >>> from kloppy.domain import EventType
             >>> dataset = dataset.filter(lambda event: event.event_type == EventType.PASS)
             >>> dataset = dataset.filter('pass')
@@ -1426,9 +1401,7 @@ class Dataset(ABC, Generic[T]):
         )
 
     def map(self, mapper):
-        return replace(
-            self, records=[mapper(record) for record in self.records]
-        )
+        return replace(self, records=[mapper(record) for record in self.records])
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
@@ -1485,8 +1458,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1494,8 +1466,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1505,9 +1476,7 @@ class Dataset(ABC, Generic[T]):
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(
-            *columns, **named_columns
-        )
+        transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
         iterator = map(transformer, self.records)
         if as_list:
             return list(iterator)
@@ -1607,9 +1576,7 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install polars"
                 )
 
-            return from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
+            return from_dict(self.to_dict(*columns, orient="list", **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
 

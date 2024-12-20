@@ -23,7 +23,7 @@ def load(
     Args:
         meta_data: A json or xml feed containing the meta data.
         raw_data: A json feed containing the raw tracking data.
-        additional_metadata: A dict with additional data that will be added to
+        additional_meta_data: A dict with additional data that will be added to
             the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
             for a list of possible keys.
         sample_rate: Sample the data at a specific rate.

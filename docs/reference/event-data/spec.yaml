@@ -15,6 +15,67 @@ event_types:
         status: parsed
       metrica_json:
         status: parsed
+    attributes:
+      time:
+        providers:
+          statsbomb:
+            status: parsed
+      coordinates:
+        providers:
+          statsbomb:
+            status: parsed
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+      team:
+        providers:
+          statsbomb:
+            status: parsed
+      player:
+        providers:
+          statsbomb:
+            status: parsed
+      ball_owning_team:
+        providers:
+          statsbomb:
+            status: parsed
+      ball_state:
+        providers:
+          statsbomb:
+            status: parsed
+      raw_event:
+        providers:
+          statsbomb:
+            status: parsed
+      dataset:
+        providers:
+          statsbomb:
+            status: parsed
+      prev_record:
+        providers:
+          statsbomb:
+            status: parsed
+      next_record:
+        providers:
+          statsbomb:
+            status: parsed
+      related_event_ids:
+        providers:
+          statsbomb:
+            status: parsed
+      freeze_frame:
+        providers:
+          statsbomb:
+            status: parsed
+      attacking_direction:
+        providers:
+          statsbomb:
+            status: parsed
+      state:
+        providers:
+          statsbomb:
+            status: parsed
   kloppy.domain.PassEvent:
     providers:
       statsbomb:
@@ -154,9 +215,6 @@ event_types:
         implementation: event type 43/'Carry'
       statsperform:
         status: not supported
-        implementation: null
-      wyscout_v2:
-        status: unknown
         implementation: null
     attributes:
       end_timestamp:
@@ -335,6 +393,11 @@ event_types:
       wyscout_v2:
         status: parsed
         implementation: event type 9/'Save'
+  kloppy.domain.PressureEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 17/'Pressure'
   kloppy.domain.FormationChangeEvent:
     providers:
       statsbomb:

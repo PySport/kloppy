@@ -29,7 +29,6 @@ def load_event(
     Args:
         event_data: XML feed with the raw event data of a game.
         meta_data: XML feed containing the metadata of the game.
-        three_sixty_data: JSON feed with the 360 freeze frame data of the game.
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
@@ -204,7 +203,7 @@ def load_open_tracking_data(
         match_id (str, optional):
             Match-ID of one of the matches. Defaults to `'J03WPY'`. See below
             for available matches.
-        sampe_rate:
+        sample_rate:
         limit:
         coordinates:
         only_alive:

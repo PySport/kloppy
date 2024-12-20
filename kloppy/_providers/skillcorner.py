@@ -25,7 +25,6 @@ def load(
         sample_rate: Sample the data at a specific rate.
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
-        only_alive: Only include frames in which the game is not paused.
         include_empty_frames: Include frames in which no objects were tracked.
 
     Returns:
@@ -61,7 +60,6 @@ def load_open_data(
         sample_rate: Sample the data at a specific rate.
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
-        only_alive: Only include frames in which the game is not paused.
         include_empty_frames: Include frames in which no objects were tracked.
 
     Returns:

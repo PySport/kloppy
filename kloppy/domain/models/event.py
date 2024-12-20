@@ -3,38 +3,37 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from typing import (
-    Dict,
-    List,
-    Type,
-    Union,
+    TYPE_CHECKING,
     Any,
     Callable,
-    Optional,
-    TypeVar,
+    Dict,
     Generic,
-    TYPE_CHECKING,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
 )
 
 from kloppy.domain.models.common import (
-    DatasetType,
     AttackingDirection,
+    DatasetType,
     OrientationError,
     PositionType,
 )
 from kloppy.domain.models.time import Time
 from kloppy.utils import (
-    camelcase_to_snakecase,
-    removes_suffix,
-    docstring_inherit_attributes,
-    deprecated,
     DeprecatedEnumValue,
+    camelcase_to_snakecase,
+    deprecated,
+    docstring_inherit_attributes,
+    removes_suffix,
 )
 
+from ...exceptions import InvalidFilterError, KloppyError, OrphanedRecordError
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
-
-from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
 
 if TYPE_CHECKING:
     from .tracking import Frame
@@ -278,9 +277,7 @@ class Qualifier(Generic[QualifierType], ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(
-            removes_suffix(type(self).__name__, "Qualifier")
-        )
+        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
 
 
 @dataclass
@@ -293,9 +290,7 @@ class BoolQualifier(Qualifier[bool], ABC):
         return {f"is_{self.name}": self.value}
 
 
-class EnumQualifier(
-    Qualifier[EnumQualifierType], Generic[EnumQualifierType], ABC
-):
+class EnumQualifier(Qualifier[EnumQualifierType], Generic[EnumQualifierType], ABC):
     """
     An event qualifier with a set of possible values.
     """
@@ -548,18 +543,24 @@ class Event(DataRecord, ABC):
 
     Attributes:
         event_id: Event identifier given by provider. Alias for `record_id`.
-        event_type: Type of event.
+        event_type: The type of event.
         event_name: Name of the event type.
+        time: Time in the match the event takes place.
+        coordinates: Coordinates where event happened.
+        result: The outcome of the event.
         team: Team related to the event.
         player: Player related to the event.
-        coordinates: Coordinates where event happened.
-        result: Outcome of the event.
-        attacking_direction: Attacking direction of `team`.
+        ball_owning_team: Team in control of the ball during the event.
+        ball_state: Whether the ball is in play.
+        qualifiers: A list of qualifiers providing additional information about the event.
         raw_event: The data provider's raw representation of the event.
-        state: Additional game state information.
+        dataset: A reference to the dataset the event is part of.
+        prev_record: A reference to the previous event.
+        next_record: A reference to the next event.
         related_event_ids: Event identifiers of related events.
-        qualifiers: Event qualifiers.
         freeze_frame: A snapshot with the location of other players at the time of the event.
+        attacking_direction: The playing direction of `team` during the event.
+        state: Additional game state information.
     """
 
     event_id: str
@@ -592,7 +593,7 @@ class Event(DataRecord, ABC):
         raise NotImplementedError
 
     @property
-    def attacking_direction(self):
+    def attacking_direction(self) -> AttackingDirection:
         if (
             self.dataset
             and self.dataset.metadata
@@ -658,12 +659,8 @@ class Event(DataRecord, ABC):
             for event_id in self.related_event_ids
         ]
 
-    def get_related_event(
-        self, type_: Union[str, EventType]
-    ) -> Optional["Event"]:
-        event_type = (
-            EventType[type_.upper()] if isinstance(type_, str) else type_
-        )
+    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
+        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -727,9 +724,7 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(
-                    f"Don't know how to apply filter {filter_}"
-                )
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
 
             if event_type:
                 try:
@@ -1158,15 +1153,11 @@ class EventDataset(Dataset[Event]):
                         include_time=True
                     )
                     if last_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 elif event.team.starting_formation:
                     if event.team.starting_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 else:
                     event.team.formations.set(event.time, event.formation_type)
@@ -1186,9 +1177,7 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Event], Dict]] = None,
@@ -1205,9 +1194,7 @@ class EventDataset(Dataset[Event]):
             )
 
         if not record_converter:
-            from ..services.transformers.attribute import (
-                DefaultEventTransformer,
-            )
+            from ..services.transformers.attribute import DefaultEventTransformer
 
             record_converter = DefaultEventTransformer()
 
@@ -1222,9 +1209,7 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":
@@ -1285,4 +1270,6 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "BoolQualifier",
+    "PressureEvent",
 ]

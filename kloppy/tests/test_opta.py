@@ -61,11 +61,11 @@ def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
     assert _parse_f24_datetime("2018-09-23T15:02:13.608") == datetime(
-        2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
     assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
-        2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc
     )
 
 
@@ -325,7 +325,7 @@ class TestOptaShotEvent:
         )
 
     def test_timestamp_goal(self, dataset: EventDataset):
-        """Check timestamp from qualifier in case of goal"""
+        """Check timestamp from qualifier 374 in case of goal"""
         goal = dataset.get_event_by_id("2318695229")
         assert goal.timestamp == (
             _parse_f24_datetime("2018-09-23T16:07:48.525")  # event timestamp
@@ -413,6 +413,27 @@ class TestOptaShotEvent:
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
         assert own_goal.ball_state == BallState.DEAD
+
+    def test_goal(self, dataset: EventDataset):
+        """Test if goals are correctly deserialized"""
+        goal = dataset.get_event_by_id("2614247749")
+        assert goal.result == ShotResult.GOAL
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.9780699610710144
+        )
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "PSxG"
+            ).value
+            == 0.98
+        )
 
 
 class TestOptaDuelEvent:

@@ -24,6 +24,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.domain.models import PositionType
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
@@ -105,7 +106,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 f"Unknown ball state: {raw_ball_position['BallStatus']}"
             )
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
@@ -117,6 +118,8 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             period=period,
             other_data={},
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):

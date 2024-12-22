@@ -180,6 +180,18 @@ class TestStatsBombMetadata:
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
+    def test_get_player_by_position_works_with_subs(self, dataset):
+
+        event_uuid = "0f525aa9-70f4-4f85-8a8d-6103722aee50"
+        event = [  # pick out the event record in question
+            event for event in dataset if event.event_id == event_uuid
+        ][0]
+
+        keeper = event.team.get_player_by_position(
+            PositionType.Goalkeeper, time=event.time
+        )
+        assert keeper.player_id == "5205"  # Rui Pedro dos Santos Patrício
+
     def test_periods(self, dataset):
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2

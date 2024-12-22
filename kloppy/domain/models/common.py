@@ -264,7 +264,10 @@ class Team:
     def get_player_by_position(self, position: PositionType, time: Time):
         for player in self.players:
             if player.positions.items:
-                player_position = player.positions.value_at(time)
+                try:
+                    player_position = player.positions.value_at(time)
+                except KeyError:  # player that is subbed in later
+                    continue
                 if player_position and player_position == position:
                     return player
 

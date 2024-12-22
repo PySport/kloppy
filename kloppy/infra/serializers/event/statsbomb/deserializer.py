@@ -78,36 +78,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     if self.should_include_event(event):
                         # Transform event to the coordinate system
                         event = self.transformer.transform_event(event)
-
-                        # Add freeze_frame information
-                        if "freeze_frame" in event.raw_event.get("shot", {}):
-                            event.freeze_frame = self.transformer.transform_frame(
-                                parse_freeze_frame(
-                                    freeze_frame=event.raw_event["shot"][
-                                        "freeze_frame"
-                                    ],
-                                    home_team=teams[0],
-                                    away_team=teams[1],
-                                    event=event,
-                                    fidelity_version=data_version.shot_fidelity_version,
-                                )
-                            )
-
-                        if (
-                            not event.freeze_frame
-                            and event.event_id in three_sixty_data
-                        ):
-                            freeze_frame = three_sixty_data[event.event_id]
-                            event.freeze_frame = self.transformer.transform_frame(
-                                parse_freeze_frame(
-                                    freeze_frame=freeze_frame["freeze_frame"],
-                                    home_team=teams[0],
-                                    away_team=teams[1],
-                                    event=event,
-                                    fidelity_version=data_version.xy_fidelity_version,
-                                    visible_area=freeze_frame["visible_area"],
-                                )
-                            )
                         events.append(event)
 
         metadata = Metadata(
@@ -122,7 +92,32 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             coordinate_system=self.transformer.get_to_coordinate_system(),
             **additional_metadata
         )
-        return EventDataset(metadata=metadata, records=events)
+        # breakpoint()
+        dataset = EventDataset(metadata=metadata, records=events)
+        for event in dataset:
+            if "freeze_frame" in event.raw_event.get("shot", {}):
+                event.freeze_frame = self.transformer.transform_frame(
+                    parse_freeze_frame(
+                        freeze_frame=event.raw_event["shot"]["freeze_frame"],
+                        home_team=teams[0],
+                        away_team=teams[1],
+                        event=event,
+                        fidelity_version=data_version.shot_fidelity_version,
+                    )
+                )
+            if not event.freeze_frame and event.event_id in three_sixty_data:
+                freeze_frame = three_sixty_data[event.event_id]
+                event.freeze_frame = self.transformer.transform_frame(
+                    parse_freeze_frame(
+                        freeze_frame=freeze_frame["freeze_frame"],
+                        home_team=teams[0],
+                        away_team=teams[1],
+                        event=event,
+                        fidelity_version=data_version.xy_fidelity_version,
+                        visible_area=freeze_frame["visible_area"],
+                    )
+                )
+        return dataset
 
     def load_data(self, inputs: StatsBombInputs):
         raw_events = {}
@@ -185,7 +180,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             for raw_event in starting_xi_events
             for player in raw_event["tactics"]["lineup"]
         }
-
         starting_formations = {
             raw_event["team"]["id"]: FormationType(
                 "-".join(list(str(raw_event["tactics"]["formation"])))

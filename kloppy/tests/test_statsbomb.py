@@ -180,6 +180,17 @@ class TestStatsBombMetadata:
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
+    def test_freeze_frame_loads_correctly(self, dataset):
+        event_uuid = "0f525aa9-70f4-4f85-8a8d-6103722aee50"
+        event = [  # pick out the event record in question
+            event for event in dataset if event.event_id == event_uuid
+        ][0]
+
+        keeper = list(event.freeze_frame.players_coordinates.keys())[
+            0
+        ]  # keeper happens to be first
+        assert keeper.player_id == "5205"  # Rui Pedro dos Santos Patrício
+
     def test_get_player_by_position_works_with_subs(self, dataset):
 
         event_uuid = "0f525aa9-70f4-4f85-8a8d-6103722aee50"

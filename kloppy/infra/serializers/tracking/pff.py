@@ -61,9 +61,7 @@ class PFF_TrackingInputs(NamedTuple):
     raw_data: FileLike
 
 
-class PFF_TrackingDeserializer(
-    TrackingDataDeserializer[PFF_TrackingInputs]
-):
+class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -81,7 +79,6 @@ class PFF_TrackingDeserializer(
     @classmethod
     def _get_frame_data(
         cls,
-        game_id,
         teams,
         players,
         periods,
@@ -89,9 +86,15 @@ class PFF_TrackingDeserializer(
     ):
         # Get Frame information
         frame_period = frame["period"]
-        frame_id = str(game_id) + " - " + str(frame["frameNum"])
-        frame_time = frame["periodGameClockTime"]
+        frame_id = frame["frameNum"]
+        frame_timestamp = timedelta(seconds=frame["periodGameClockTime"])
 
+        # for k, v in frame.items():
+        #     print(k, v)
+
+        print(frame["game_event"])
+
+        print("-----")
         # Ball coordinates
         if frame.get("ballsSmoothed") is not None:
             ball_x = frame.get("ballsSmoothed", {}).get("x")
@@ -150,7 +153,7 @@ class PFF_TrackingDeserializer(
 
         return Frame(
             frame_id=frame_id,
-            timestamp=frame_time,
+            timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame_period],
@@ -189,17 +192,15 @@ class PFF_TrackingDeserializer(
     def __load_json_raw(self, file_path):
         data = list()
         with bz2.open(file_path, "rt") as file:
-            for line in file:
+            for i, line in enumerate(file):
+                # improve reading speed by cutting of first loading step
+                if self.limit and i >= (self.limit / self.sample_rate):
+                    break
                 data.append(json.loads(line))
 
         return data
 
-        # with bz2.open(file_path, 'rt') as file:
-        #     for line in file:
-        #         yield json.loads(line)
-
     def __read_csv(self, file):
-
         # Read the content of the BufferedReader
         file_bytes = file.read()
 
@@ -221,42 +222,48 @@ class PFF_TrackingDeserializer(
         game_id = int(raw_data[0]["gameRefId"])
 
         metadata = [row for row in metadata if int(row["id"]) == game_id]
+        if not metadata:
+            raise ValueError(
+                "The game_id of this game is not contained within the provided metadata.csv"
+            )
+
+        home_team = literal_eval(metadata[0]["homeTeam"])
+        away_team = literal_eval(metadata[0]["awayTeam"])
+        stadium = literal_eval(metadata[0]["stadium"])
+        video_data = literal_eval(metadata[0]["videos"])
+
         roster_meta_data = [
             row for row in roster_meta_data if int(row["game_id"]) == game_id
         ]
 
-        home_team_id = literal_eval(metadata[0]["homeTeam"])["id"]
-        away_team_id = literal_eval(metadata[0]["awayTeam"])["id"]
+        home_team_id = home_team["id"]
+        away_team_id = away_team["id"]
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
 
-            pitch_size_width = literal_eval(metadata[0]["stadium"])[
-                "pitchWidth"
-            ]
-            pitch_size_length = literal_eval(metadata[0]["stadium"])[
-                "pitchLength"
-            ]
+            pitch_size_width = stadium["pitchWidth"]
+            pitch_size_length = stadium["pitchLength"]
 
             transformer = self.get_transformer(
                 pitch_length=pitch_size_length, pitch_width=pitch_size_width
             )
 
-            date = metadata[0]["date"]
+            date = metadata[0].get("date")
 
             if date:
-                date = parse(date).astimezone(timezone.utc)
+                date = parse(date).replace(tzinfo=timezone.utc)
 
             players = {"HOME": {}, "AWAY": {}}
 
             home_team = Team(
                 team_id=home_team_id,
-                name=literal_eval(metadata[0]["homeTeam"])["name"],
+                name=home_team["name"],
                 ground=Ground.HOME,
             )
             away_team = Team(
                 team_id=away_team_id,
-                name=literal_eval(metadata[0]["awayTeam"])["name"],
+                name=away_team["name"],
                 ground=Ground.AWAY,
             )
             teams = [home_team, away_team]
@@ -264,6 +271,7 @@ class PFF_TrackingDeserializer(
             for player in roster_meta_data:
                 team_id = literal_eval(player["team"])["id"]
                 player_col = literal_eval(player["player"])
+
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
                 shirt_number = player["shirtNumber"]
@@ -277,10 +285,10 @@ class PFF_TrackingDeserializer(
                     team = away_team
 
                 players[team_string][player_id] = Player(
-                    player_id=f"{player_id}",
+                    player_id=player_id,
                     team=team,
-                    jersey_no=f"{shirt_number}",
-                    name=f"{player_name}",
+                    jersey_no=shirt_number,
+                    name=player_name,
                     starting_position=position_types_mapping.get(
                         player_position
                     ),
@@ -311,7 +319,6 @@ class PFF_TrackingDeserializer(
             # or if include_empty_frames == True
             # if self.include_empty_frames:
             frame = self._get_frame_data(
-                game_id,
                 teams,
                 players,
                 periods,
@@ -332,7 +339,7 @@ class PFF_TrackingDeserializer(
             teams=teams,
             periods=sorted(periods.values(), key=lambda p: p.id),
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            frame_rate=10,
+            frame_rate=video_data["fps"],
             orientation=orientation,
             provider=Provider.PFF,
             flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),

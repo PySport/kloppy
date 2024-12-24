@@ -9,8 +9,6 @@ from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Detection,
-    Frame,
     Ground,
     Metadata,
     Orientation,
@@ -20,6 +18,7 @@ from kloppy.domain import (
     Point3D,
     Provider,
     Team,
+    TrackedObjectState,
     TrackingDataset,
     attacking_direction_from_frame,
 )
@@ -75,7 +74,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
             player = team.get_player_by_jersey_number(jersey_no)
             if player:
-                players_data[player] = Detection(
+                players_data[player] = TrackedObjectState(
                     coordinates=Point(x, y), speed=speed
                 )
             else:
@@ -88,7 +87,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         ball_y = raw_ball_position["Y"]
         ball_z = raw_ball_position["Z"]
         ball_speed = raw_ball_position["Speed"]
-        ball_data = Detection(
+        ball_data = TrackedObjectState(
             coordinates=Point3D(ball_x, ball_y, ball_z), speed=ball_speed
         )
         if raw_ball_position["BallOwningTeam"] == "H":
@@ -112,7 +111,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
-            objects={"ball": ball_data, **players_data},
+            tracked_objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             period=period,

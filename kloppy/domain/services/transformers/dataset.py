@@ -1,28 +1,26 @@
 import warnings
 from dataclasses import fields, replace
-
-from kloppy.domain.models.tracking import Detection
-from typing import Union, Optional
+from typing import Optional, Union
 
 from kloppy.domain import (
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
     AttackingDirection,
+    CoordinateSystem,
     Dataset,
     DatasetFlag,
+    DatasetType,
     EventDataset,
     Frame,
     Orientation,
-    PitchDimensions,
     Period,
+    PitchDimensions,
     Point,
     Point3D,
+    Provider,
     Team,
     TrackingDataset,
-    CoordinateSystem,
-    Provider,
     build_coordinate_system,
-    DatasetType,
-    DEFAULT_PITCH_LENGTH,
-    DEFAULT_PITCH_WIDTH,
 )
 from kloppy.domain.models.event import Event
 from kloppy.exceptions import KloppyError
@@ -204,7 +202,7 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            objects={
+            tracked_objects={
                 trackable_object: replace(
                     detection,
                     coordinates=self.__change_point_coordinate_system(
@@ -213,7 +211,7 @@ class DatasetTransformer:
                 )
                 if detection is not None
                 else None
-                for trackable_object, detection in frame.objects.items()
+                for trackable_object, detection in frame.tracked_objects.items()
             },
             other_data=frame.other_data,
             statistics=frame.statistics,
@@ -228,7 +226,7 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            objects={
+            tracked_objects={
                 trackable_object: replace(
                     detection,
                     coordinates=self.change_point_dimensions(
@@ -237,7 +235,7 @@ class DatasetTransformer:
                 )
                 if detection is not None
                 else None
-                for trackable_object, detection in frame.objects.items()
+                for trackable_object, detection in frame.tracked_objects.items()
             },
             other_data=frame.other_data,
             statistics=frame.statistics,
@@ -286,14 +284,14 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            objects={
+            tracked_objects={
                 trackable_object: replace(
                     detection,
                     coordinates=self.flip_point(detection.coordinates),
                 )
                 if detection is not None
                 else None
-                for trackable_object, detection in frame.objects.items()
+                for trackable_object, detection in frame.tracked_objects.items()
             },
             other_data=frame.other_data,
             statistics=frame.statistics,

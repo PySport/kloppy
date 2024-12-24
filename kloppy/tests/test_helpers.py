@@ -10,7 +10,6 @@ from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
     Dimension,
-    Frame,
     Ground,
     Metadata,
     MetricaCoordinateSystem,
@@ -18,11 +17,11 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
-    Detection,
     Point,
     Point3D,
     Provider,
     Team,
+    TrackedObjectState,
     TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
@@ -76,8 +75,8 @@ class TestHelpers:
                     ball_state=None,
                     period=periods[0],
                     other_data=None,
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=100, y=-50, z=0),
                         )
                     },
@@ -88,13 +87,13 @@ class TestHelpers:
                     ball_owning_team=teams[1],
                     ball_state=None,
                     period=periods[1],
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=0, y=50, z=1),
                         ),
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
-                        ): Detection(
+                        ): TrackedObjectState(
                             coordinates=Point(x=15, y=35),
                             distance=0.03,
                             speed=10.5,

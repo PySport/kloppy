@@ -1,13 +1,6 @@
-from math import isnan, sqrt
-
-import numpy as np
-import pytest
-
 from kloppy.domain import (
     DatasetFlag,
-    Detection,
     Dimension,
-    Frame,
     Ground,
     Metadata,
     NormalizedPitchDimensions,
@@ -17,8 +10,10 @@ from kloppy.domain import (
     Point,
     Point3D,
     Team,
+    TrackedObjectState,
     TrackingDataset,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestTrackingDataset:
@@ -69,17 +64,17 @@ class TestTrackingDataset:
         tracking_data = TrackingDataset(
             metadata=metadata,
             records=[
-                Frame(
+                create_frame(
                     frame_id=i,
                     timestamp=i / 25,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=0, y=0, z=0),
                         ),
-                        home_team.players[0]: Detection(
+                        home_team.players[0]: TrackedObjectState(
                             coordinates=Point(x=0, y=0),
                         ),
                     },
@@ -88,14 +83,14 @@ class TestTrackingDataset:
                 for i in range(10)  # not moving for one second
             ]
             + [
-                Frame(
+                create_frame(
                     frame_id=10,
                     timestamp=10 / 25,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=0, y=0, z=0),
                         )
                     },
@@ -103,17 +98,17 @@ class TestTrackingDataset:
                 )
             ]
             + [
-                Frame(
+                create_frame(
                     frame_id=i,
                     timestamp=i / 25,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=0, y=0, z=0),
                         ),
-                        home_team.players[0]: Detection(
+                        home_team.players[0]: TrackedObjectState(
                             coordinates=Point(x=0, y=0),
                         ),
                     },
@@ -122,17 +117,17 @@ class TestTrackingDataset:
                 for i in range(14)  # not moving for one second
             ]
             + [
-                Frame(
+                create_frame(
                     frame_id=25 + i,
                     timestamp=(25 + i) / 25,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
-                    objects={
-                        "ball": Detection(
+                    tracked_objects={
+                        "ball": TrackedObjectState(
                             coordinates=Point3D(x=0 + i, y=0 + i, z=0)
                         ),
-                        home_team.players[0]: Detection(
+                        home_team.players[0]: TrackedObjectState(
                             coordinates=Point(x=0 + i, y=0 + i),
                         ),
                     },
@@ -146,7 +141,7 @@ class TestTrackingDataset:
     def test_ball_data(self):
         dataset = self._get_tracking_dataset()
         frame = dataset[0]
-        assert frame.ball_data == Detection(
+        assert frame.ball_data == TrackedObjectState(
             coordinates=Point3D(x=0, y=0, z=0),
         )
         assert frame.ball_coordinates == Point3D(x=0, y=0, z=0)
@@ -156,7 +151,7 @@ class TestTrackingDataset:
         dataset = self._get_tracking_dataset()
         frame = dataset[0]
         assert frame.players_data == {
-            dataset.metadata.teams[0].players[0]: Detection(
+            dataset.metadata.teams[0].players[0]: TrackedObjectState(
                 coordinates=Point(x=0, y=0),
             )
         }
@@ -168,13 +163,15 @@ class TestTrackingDataset:
         dataset = self._get_tracking_dataset()
         frame = dataset[0]
 
-        assert frame["ball"] == Detection(
+        assert frame["ball"] == TrackedObjectState(
             coordinates=Point3D(x=0, y=0, z=0),
         )
-        assert frame["home_1"] == Detection(
+        assert frame["home_1"] == TrackedObjectState(
             coordinates=Point(x=0, y=0),
         )
-        assert frame[dataset.metadata.teams[0].players[0]] == Detection(
+        assert frame[
+            dataset.metadata.teams[0].players[0]
+        ] == TrackedObjectState(
             coordinates=Point(x=0, y=0),
         )
         assert frame["home_2"] is None
@@ -187,7 +184,7 @@ class TestTrackingDataset:
         assert ball_trajectories[0].start_frame.frame_id == 0
         assert ball_trajectories[0].end_frame.frame_id == 124
         assert len(ball_trajectories[0].detections) == 125
-        assert ball_trajectories[0].detections[0] == Detection(
+        assert ball_trajectories[0].detections[0] == TrackedObjectState(
             coordinates=Point3D(x=0, y=0, z=0)
         )
 
@@ -196,6 +193,6 @@ class TestTrackingDataset:
         assert player_trajectories[0].start_frame.frame_id == 0
         assert player_trajectories[0].end_frame.frame_id == 9
         assert len(player_trajectories[0].detections) == 10
-        assert player_trajectories[0].detections[0] == Detection(
+        assert player_trajectories[0].detections[0] == TrackedObjectState(
             coordinates=Point(x=0, y=0)
         )

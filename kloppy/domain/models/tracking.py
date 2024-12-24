@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from math import isnan
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -10,20 +10,23 @@ except ImportError:
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import deprecated
 
-from .common import DataRecord, Dataset, Player
+from .common import DataRecord, Dataset, Official, Player
 from .pitch import Point
+
+TrackedObject = Union[Literal["ball"], Player, Official]
 
 
 @dataclass
-class Detection:
-    """A single detection of a trackable object in a frame.
+class TrackedObjectState:
+    """
+    The state of a trackable object in a frame.
 
     Attributes:
-        coordinates: The coordinates of the object in the frame.
+        coordinates: The coordinates of the object.
         distance: The distance the object has traveled since the previous frame.
-        speed: The speed of the object in the frame.
-        acceleration: The acceleration of the object in the frame.
-        other_data: Additional data about the object in the frame.
+        speed: The speed of the object.
+        acceleration: The acceleration of the object.
+        other_data: Additional data about the object.
     """
 
     coordinates: Point
@@ -35,19 +38,21 @@ class Detection:
 
 @dataclass
 class Trajectory:
-    """Detections of a trackable object over a sequence of consecutive frames.
+    """
+    Detections of a trackable object over a sequence of consecutive frames.
 
     Attributes:
-        trackable_object: The object being tracked. Either a player or "ball".
-        start_frame: The frame number of the first detection in the trajectory.
-        end_frame: The frame number of the last detection in the trajectory.
-        detections: A list of Detection objects, one for each frame in the trajectory.
+        tracked_object: The object being tracked. Either a player, official or "ball".
+        start_frame: The frame of the first detection in the trajectory.
+        end_frame: The frame of the last detection in the trajectory.
+        detections: A list of [`Detection`][kloppy.domain.Detection] objects,
+            one for each frame in the trajectory.
     """
 
-    trackable_object: Union[Player, str]
+    tracked_object: TrackedObject
     start_frame: "Frame"
     end_frame: "Frame"
-    detections: List[Detection]
+    detections: List[TrackedObjectState]
 
     def __iter__(self):
         return iter(self.detections)
@@ -58,8 +63,22 @@ class Trajectory:
 
 @dataclass(repr=False)
 class Frame(DataRecord):
+    """
+    A tracking data frame.
+
+    Attributes:
+        frame_id: The unique identifier of the frame. Aias for `record_id`.
+        tracked_objects: A dictionary containing the tracking data for each object.
+        ball_ball: The tracking data for the ball.
+        ball_coordinates: The coordinates of the ball. Alias for `ball_data.coordinates`.
+        ball_speed: The speed of the ball. Alias for `ball_data.speed`.
+        players_data: A dictionary containing the tracking data for each player.
+        players_coordinates: A dictionary containing the coordinates of each player.
+        other_data: A dictionary containing additional data.
+    """
+
     frame_id: int
-    objects: Dict[Union[Literal["ball"], Player], Detection]
+    tracked_objects: Dict[TrackedObject, TrackedObjectState]
     other_data: Dict[str, Any]
 
     @property
@@ -67,14 +86,14 @@ class Frame(DataRecord):
         return self.frame_id
 
     @property
-    def ball_data(self) -> Optional[Detection]:
-        return self.objects.get("ball")
+    def ball_data(self) -> Optional[TrackedObjectState]:
+        return self.tracked_objects.get("ball")
 
     @property
-    def players_data(self) -> Dict[Player, Detection]:
+    def players_data(self) -> Dict[Player, TrackedObjectState]:
         return {
-            player: detection
-            for player, detection in self.objects.items()
+            player: state
+            for player, state in self.tracked_objects.items()
             if isinstance(player, Player)
         }
 
@@ -129,7 +148,7 @@ class TrackingDataset(Dataset[Frame]):
     def frame_rate(self):
         return self.metadata.frame_rate
 
-    def trajectories(self, trackable_object: Union[Player, Literal["ball"]]):
+    def trajectories(self, tracked_object: TrackedObject):
         """Get trajectories for a specific object.
 
         A trajectory is a continuous track of the locations of a single player
@@ -137,7 +156,7 @@ class TrackingDataset(Dataset[Frame]):
         a player/ball is not tracked in a frame.
 
         Args:
-            trackable_object: The object to get trajectories for. Either a player or "ball".
+            tracked_object: The object to get trajectories for. Either a player or "ball".
 
         Returns:
             A list of Trajectory objects.
@@ -145,42 +164,42 @@ class TrackingDataset(Dataset[Frame]):
         trajectories = []
         current_trajectory = None
         for frame in self.records:
-            detection = frame[trackable_object]
+            state = frame[tracked_object]
             if (
-                detection is not None
-                and detection.coordinates is not None
-                and not isnan(detection.coordinates.x)
-                and not isnan(detection.coordinates.y)
+                state is not None
+                and state.coordinates is not None
+                and not isnan(state.coordinates.x)
+                and not isnan(state.coordinates.y)
             ):
                 # The object is tracked in this frame
                 if current_trajectory is None:
                     # but it was not tracked in the previous frame --> start
                     # a new trajectory
                     current_trajectory = Trajectory(
-                        trackable_object=trackable_object,
+                        tracked_object=tracked_object,
                         start_frame=frame,
                         end_frame=frame,
-                        detections=[detection],
+                        detections=[state],
                     )
                 elif (
                     frame.prev_record is not None
-                    and frame.prev_record.frame_id
+                    and frame.prev_record.record_id
                     == current_trajectory.end_frame.frame_id
                     and frame.prev_record.period.id == frame.period.id
                 ):
                     # and it was tracked in the previous frame --> extend the
                     # current trajectory
                     current_trajectory.end_frame = frame
-                    current_trajectory.detections.append(detection)
+                    current_trajectory.detections.append(state)
                 else:
                     # but a frame is missing or a new period started --> finish
                     # the current trajectory and start a new one
                     trajectories.append(current_trajectory)
                     current_trajectory = Trajectory(
-                        trackable_object=trackable_object,
+                        tracked_object=tracked_object,
                         start_frame=frame,
                         end_frame=frame,
-                        detections=[detection],
+                        detections=[state],
                     )
             else:
                 # The object is not tracked in this frame --> finish the
@@ -193,30 +212,14 @@ class TrackingDataset(Dataset[Frame]):
             trajectories.append(current_trajectory)
         return trajectories
 
-    def _copy_detections(self):
-        """Create a copy of each detection in the tracking dataset."""
-        return replace(
-            self,
-            records=[
-                replace(
-                    record,
-                    objects={
-                        trackable_object: replace(detection)
-                        for trackable_object, detection in record.objects.items()
-                    },
-                )
-                for record in self.records
-            ],
-        )
-
     @deprecated(
         "to_pandas will be removed in the future. Please use to_df instead."
     )
     def to_pandas(
         self,
-        record_converter: Callable[[Frame], Dict] = None,
-        additional_columns: Dict[
-            str, Union[Callable[[Frame], Any], Any]
+        record_converter: Optional[Callable[[Frame], Dict]] = None,
+        additional_columns: Optional[
+            Dict[str, Union[Callable[[Frame], Any], Any]]
         ] = None,
     ) -> "DataFrame":
         try:
@@ -251,4 +254,4 @@ class TrackingDataset(Dataset[Frame]):
         )
 
 
-__all__ = ["Frame", "TrackingDataset", "Detection", "Trajectory"]
+__all__ = ["Frame", "TrackingDataset", "TrackedObjectState", "Trajectory"]

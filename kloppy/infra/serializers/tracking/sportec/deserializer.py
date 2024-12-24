@@ -10,13 +10,13 @@ from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Detection,
     Metadata,
     Orientation,
     Period,
     Point,
     Point3D,
     Provider,
+    TrackedObjectState,
     TrackingDataset,
     attacking_direction_from_frame,
 )
@@ -188,8 +188,8 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                 if ball_data["BallStatus"] == "1"
                                 else BallState.DEAD,
                                 period=period,
-                                objects={
-                                    "ball": Detection(
+                                tracked_objects={
+                                    "ball": TrackedObjectState(
                                         coordinates=Point3D(
                                             x=float(ball_data["X"]),
                                             y=float(ball_data["Y"]),
@@ -198,7 +198,9 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                         speed=float(ball_data["S"]),
                                     ),
                                     **{
-                                        player_map[player_id]: Detection(
+                                        player_map[
+                                            player_id
+                                        ]: TrackedObjectState(
                                             coordinates=Point(
                                                 x=float(raw_player_data["X"]),
                                                 y=float(raw_player_data["Y"]),

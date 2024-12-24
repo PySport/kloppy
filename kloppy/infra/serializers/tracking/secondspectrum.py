@@ -10,7 +10,6 @@ from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Detection,
     Ground,
     Metadata,
     Orientation,
@@ -21,6 +20,7 @@ from kloppy.domain import (
     Provider,
     Score,
     Team,
+    TrackedObjectState,
     TrackingDataset,
     attacking_direction_from_frame,
 )
@@ -62,7 +62,7 @@ class SecondSpectrumDeserializer(
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
-            ball_data = Detection(
+            ball_data = TrackedObjectState(
                 coordinates=Point3D(
                     float(ball_x), float(ball_y), float(ball_z)
                 ),
@@ -92,14 +92,14 @@ class SecondSpectrumDeserializer(
                     )
                     team.players.append(player)
 
-                players_data[player] = Detection(
+                players_data[player] = TrackedObjectState(
                     coordinates=Point(float(x), float(y)), speed=speed
                 )
 
         frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
-            objects={"ball": ball_data, **players_data},
+            tracked_objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             period=period,

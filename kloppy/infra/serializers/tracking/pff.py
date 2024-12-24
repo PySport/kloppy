@@ -134,9 +134,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # for k, v in frame.items():
         #     print(k, v)
 
-        print(frame["game_event"])
+        # print(frame)
 
-        print("-----")
+        # print("-----")
         # Ball coordinates
         ball_smoothed = frame.get("ballsSmoothed")
         if ball_smoothed:

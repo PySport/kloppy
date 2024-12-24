@@ -25,6 +25,7 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestHelpers:
@@ -68,7 +69,7 @@ class TestHelpers:
         tracking_data = TrackingDataset(
             metadata=metadata,
             records=[
-                Frame(
+                create_frame(
                     frame_id=1,
                     timestamp=0.1,
                     ball_owning_team=teams[0],
@@ -81,7 +82,7 @@ class TestHelpers:
                         )
                     },
                 ),
-                Frame(
+                create_frame(
                     frame_id=2,
                     timestamp=0.2,
                     ball_owning_team=teams[1],

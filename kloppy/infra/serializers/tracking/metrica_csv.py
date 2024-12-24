@@ -20,6 +20,7 @@ from kloppy.domain import (
     Player,
     Detection,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -192,7 +193,7 @@ class MetricaCSVTrackingDataDeserializer(
                     **away_partial_frame.players_data,
                 }
 
-                frame = Frame(
+                frame = create_frame(
                     frame_id=frame_id,
                     timestamp=timedelta(seconds=frame_id / frame_rate)
                     - period.start_timestamp,

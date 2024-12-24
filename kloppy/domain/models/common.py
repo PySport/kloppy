@@ -929,6 +929,85 @@ class DatasetFlag(Flag):
 
 
 @dataclass
+class Statistic(ABC):
+    name: str = field(init=False)
+
+
+@dataclass
+class ScalarStatistic(Statistic):
+    value: float
+
+
+@dataclass
+class ExpectedGoals(ScalarStatistic):
+    """Expected goals"""
+
+    def __post_init__(self):
+        self.name = "xG"
+
+
+@dataclass
+class PostShotExpectedGoals(ScalarStatistic):
+    """Post-shot expected goals"""
+
+    def __post_init__(self):
+        self.name = "PSxG"
+
+
+@dataclass
+class ActionValue(Statistic):
+    """Action value"""
+
+    name: str
+    action_value_scoring_before: Optional[float] = field(default=None)
+    action_value_scoring_after: Optional[float] = field(default=None)
+    action_value_conceding_before: Optional[float] = field(default=None)
+    action_value_conceding_after: Optional[float] = field(default=None)
+
+    @property
+    def offensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_scoring_before,
+                self.action_value_scoring_after,
+            )
+            else self.action_value_scoring_after
+            - self.action_value_scoring_before
+        )
+
+    @property
+    def defensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_conceding_before,
+                self.action_value_conceding_after,
+            )
+            else self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+    @property
+    def value(self) -> Optional[float]:
+        if None in (
+            self.action_value_scoring_before,
+            self.action_value_scoring_after,
+            self.action_value_conceding_before,
+            self.action_value_conceding_after,
+        ):
+            return None
+        return (
+            self.action_value_scoring_after - self.action_value_scoring_before
+        ) - (
+            self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+
+@dataclass
 class DataRecord(ABC):
     """
     DataRecord
@@ -945,6 +1024,7 @@ class DataRecord(ABC):
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
     timestamp: timedelta
+    statistics: List[Statistic]
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 

@@ -11,7 +11,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Detection,
-    Frame,
     Metadata,
     Orientation,
     Period,
@@ -21,6 +20,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.event.sportec.deserializer import (
     sportec_metadata_from_xml_elm,
 )
@@ -170,7 +170,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                             continue
 
                         if i % sample == 0:
-                            yield Frame(
+                            yield create_frame(
                                 frame_id=frame_id,
                                 timestamp=timedelta(
                                     seconds=(

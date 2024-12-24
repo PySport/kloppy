@@ -18,6 +18,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
 from kloppy.utils import performance_logging
@@ -129,7 +130,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
 
                 players_data[player] = Detection(coordinates=Point(x, y))
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_state=ball_state,
@@ -138,6 +139,8 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             period=period,
             other_data={},
         )
+
+        return frame
 
     def deserialize(self, inputs: StatsPerformInputs) -> TrackingDataset:
         with performance_logging("Loading meta data", logger=logger):

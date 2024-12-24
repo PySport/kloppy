@@ -11,7 +11,6 @@ from kloppy.domain import (
     BallState,
     DatasetFlag,
     Detection,
-    Frame,
     Ground,
     Metadata,
     Orientation,
@@ -25,6 +24,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import Readable, performance_logging
 
 from .deserializer import TrackingDataDeserializer
@@ -96,7 +96,7 @@ class SecondSpectrumDeserializer(
                     coordinates=Point(float(x), float(y)), speed=speed
                 )
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             objects={"ball": ball_data, **players_data},
@@ -105,6 +105,8 @@ class SecondSpectrumDeserializer(
             period=period,
             other_data={},
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):

@@ -70,6 +70,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         include_empty_frames: Optional[bool] = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
+        self._ball_owning_team = None
         self.include_empty_frames = include_empty_frames
 
     @property
@@ -82,6 +83,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         teams,
         players,
         periods,
+        ball_owning_team,
         frame,
     ):
         # Get Frame information
@@ -92,9 +94,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # for k, v in frame.items():
         #     print(k, v)
 
-        print(frame["game_event"])
+        # print(frame)
 
-        print("-----")
+        # print("-----")
         # Ball coordinates
         if frame.get("ballsSmoothed") is not None:
             ball_x = frame.get("ballsSmoothed", {}).get("x")
@@ -135,7 +137,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                         # player_id = p_id
                         break
 
-                away_player_x = away_player.get("x") if home_player else None
+                away_player_x = away_player.get("x") if away_player else None
                 away_player_y = away_player.get("y") if away_player else None
 
                 player_data = PlayerData(
@@ -143,13 +145,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 )
                 players_data[player] = player_data
 
-        ball_owning_team = None
+        # ball_owning_team = None
 
-        if frame.get("game_event") is not None:
-            for team in teams:
-                if frame["game_event"]["team_id"] is not None:
-                    if team.team_id == frame["game_event"]["team_id"]:
-                        ball_owning_team = team
+        # if frame.get("game_event") is not None:
+        #     for team in teams:
+        #         if frame["game_event"]["team_id"] is not None:
+        #             if team.team_id == frame["game_event"]["team_id"]:
+        #                 ball_owning_team = team
 
         return Frame(
             frame_id=frame_id,
@@ -315,13 +317,20 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         n_frames = 0
         for _frame in _iter():
-            # include frame if there is any tracking data, players or ball.
-            # or if include_empty_frames == True
-            # if self.include_empty_frames:
+            # Find ball owning team
+            game_event = _frame.get("game_event")
+            
+            if game_event:
+                if game_event.get("home_ball") is not None:
+                    self._ball_owning_team = home_team if game_event["home_ball"] else away_team
+
+
+                
             frame = self._get_frame_data(
                 teams,
                 players,
                 periods,
+                self._ball_owning_team,
                 _frame,
             )
 

@@ -23,13 +23,12 @@ def kloppy_load_data(f7, f24):
     events = dataset.transform(
         to_orientation=Orientation.STATIC_HOME_AWAY
     ).to_df(
+        "*",
+        event_name=lambda event: str(getattr(event, "event_name", "")),
+        player_name=lambda event: str(getattr(event, "player", "")),
+        ball_state=lambda event: str(getattr(event, "ball_state", "")),
+        team_name=lambda event: str(getattr(event, "team", "")),
         engine="pandas",
-        additional_columns={
-            "event_name": lambda event: str(getattr(event, "event_name", "")),
-            "player_name": lambda event: str(getattr(event, "player", "")),
-            "ball_state": lambda event: str(getattr(event, "ball_state", "")),
-            "team_name": lambda event: str(getattr(event, "team", "")),
-        },
     )
 
     metadata = dataset.metadata

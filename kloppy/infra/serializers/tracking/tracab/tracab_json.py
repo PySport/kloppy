@@ -9,7 +9,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     Team,

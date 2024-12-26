@@ -8,7 +8,6 @@ from typing import (
     List,
     Mapping,
     Sequence,
-    Text,
     Tuple,
 )
 
@@ -355,7 +354,7 @@ class _Match(Generic[Out]):
 
     def __init__(self, start_pos: int):
         self.start_pos = start_pos
-        self.children: Dict[Text, List[_Match]] = {}
+        self.children: Dict[str, List[_Match]] = {}
         self.trail: List[Out] = []
         self._stack: List[Capture] = []
 
@@ -472,7 +471,7 @@ class Match(Generic[Out]):
 
     # Sub-groups that matched. As several groups could be matching, a list
     # is returned so you can access each one of them.
-    children: Mapping[Text, List["Match"]]
+    children: Mapping[str, List["Match"]]
 
     # Trail of matched items. It's the output of the matcher, not the input
     # tokens.
@@ -637,7 +636,7 @@ class RegExp(Generic[Tok, Out]):
         )
 
     def _de_duplicate(
-        self, stack: Iterator[Explorer[Tok, Out]], key: Text = "signature"
+        self, stack: Iterator[Explorer[Tok, Out]], key: str = "signature"
     ) -> Iterator[Explorer[Tok, Out]]:
         """
         As there is potentially several paths that lead to the same result, we

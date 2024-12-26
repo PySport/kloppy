@@ -10,7 +10,6 @@ from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
     Dimension,
-    Frame,
     Ground,
     Metadata,
     MetricaCoordinateSystem,

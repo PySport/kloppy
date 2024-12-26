@@ -13,7 +13,7 @@ def _parse_f24_datetime(dt_str: str) -> datetime:
         parts = timestamp.split(".")
         if len(parts) == 1:
             return timestamp + ".000"
-        return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
+        return ".".join(parts[:-1] + [f"{int(parts[-1]):03d}"])
 
     dt_str = zero_pad_milliseconds(dt_str)
     naive_datetime = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")

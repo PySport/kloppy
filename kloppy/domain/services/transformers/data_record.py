@@ -44,7 +44,7 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
                         res = column(data_record)
                         if not isinstance(res, dict):
                             raise KloppyError(
-                                f"A function column should return a dictionary"
+                                "A function column should return a dictionary"
                             )
                         row.update(res)
                     else:

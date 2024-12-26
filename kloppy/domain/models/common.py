@@ -11,6 +11,7 @@ from typing import (
     Generic,
     Iterable,
     List,
+    Literal,
     NewType,
     Optional,
     TypeVar,
@@ -20,11 +21,6 @@ from typing import (
 
 from ...utils import deprecated, snake_case
 from .position import PositionType
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self

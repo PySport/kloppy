@@ -11,7 +11,6 @@ from kloppy.domain import (
     Point,
     Point3D,
     PositionType,
-    Provider,
     Team,
 )
 from kloppy.domain.services.frame_factory import create_frame

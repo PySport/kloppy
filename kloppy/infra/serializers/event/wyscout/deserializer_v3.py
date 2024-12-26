@@ -10,13 +10,11 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
-    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     EventDataset,
-    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     Ground,
@@ -714,12 +712,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             home_team = _parse_team(raw_events, home_team_id, Ground.HOME)
             away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
             teams = {home_team_id: home_team, away_team_id: away_team}
-            players = dict(
-                [
-                    (wyId, _players_to_dict(team.players))
-                    for wyId, team in teams.items()
-                ]
-            )
+            players = {
+                wyId: _players_to_dict(team.players)
+                for wyId, team in teams.items()
+            }
             date = raw_events["match"].get("dateutc")
             if date:
                 date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S").replace(

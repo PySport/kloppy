@@ -8,7 +8,6 @@ from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Frame,
     Metadata,
     Orientation,
     Player,

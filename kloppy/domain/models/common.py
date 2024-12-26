@@ -220,6 +220,9 @@ class Player:
     def set_position(self, time: Time, position: Optional[PositionType]):
         self.positions.set(time, position)
 
+    def reset_positions(self):
+        self.positions.__init__()
+
 
 @dataclass
 class Team:
@@ -281,6 +284,9 @@ class Team:
 
     def set_formation(self, time: Time, formation: Optional[FormationType]):
         self.formations.set(time, formation)
+
+    def reset_formations(self):
+        self.formations.__init__()
 
 
 class BallState(Enum):
@@ -1198,6 +1204,7 @@ class Dataset(ABC, Generic[T]):
         start_of_match = self.metadata.periods[0].start_time
         for team in self.metadata.teams:
             for player in team.players:
+                player.reset_positions()
                 if player.starting:
                     player.set_position(
                         start_of_match,

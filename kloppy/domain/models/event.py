@@ -1067,7 +1067,7 @@ class EventDataset(Dataset[Event]):
         max_leeway = timedelta(seconds=60)
 
         for team in self.metadata.teams:
-            team.reset_formations()
+            team.formations.reset()
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):

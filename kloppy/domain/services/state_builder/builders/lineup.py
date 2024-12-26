@@ -10,7 +10,6 @@ from kloppy.domain import (
     PlayerOnEvent,
     CardEvent,
     CardType,
-    Provider,
 )
 from ..builder import StateBuilder
 

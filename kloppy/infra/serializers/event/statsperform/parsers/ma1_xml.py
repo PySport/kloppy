@@ -1,4 +1,5 @@
 """XML parser for Stats Perform MA1 feeds."""
+
 from datetime import datetime, timezone
 from typing import Any, Optional, List, Dict, Tuple
 

@@ -8,7 +8,6 @@ from typing import (
     List,
     Mapping,
     Sequence,
-    Text,
     Tuple,
 )
 

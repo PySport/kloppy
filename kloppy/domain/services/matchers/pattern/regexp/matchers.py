@@ -8,7 +8,6 @@ from typing import (
     Iterator,
     Mapping,
     Sequence,
-    Text,
     Tuple,
     TypeVar,
     Union,
@@ -146,7 +145,7 @@ class KeyHasValue(Matcher):
 
 class Anything(Matcher):
     def __repr__(self):
-        return f"Anything()"
+        return "Anything()"
 
     def match(
         self, token: Tok, trail: Tuple[_TrailItem[Out], ...]

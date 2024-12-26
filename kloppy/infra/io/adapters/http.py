@@ -2,10 +2,11 @@ from typing import BinaryIO
 
 from kloppy.config import get_config
 from kloppy.exceptions import AdapterError, InputNotFoundError
+
 from .adapter import Adapter
 
 try:
-    from js import XMLHttpRequest
+    from js import XMLHttpRequest  # noqa: F401
 
     RUNS_IN_BROWSER = True
 except ImportError:

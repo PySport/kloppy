@@ -1,14 +1,12 @@
 import re
-from typing import List, Tuple, Set, Iterator, IO
+from typing import List, Iterator, IO
 from datetime import timedelta
 
-from kloppy.utils import Readable
 
 from .models import (
     PlayerChannel,
     DataFormatSpecification,
     EPTSMetadata,
-    Channel,
     Sensor,
 )
 

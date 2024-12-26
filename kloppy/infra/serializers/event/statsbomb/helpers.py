@@ -12,7 +12,6 @@ from kloppy.domain import (
     PlayerData,
     PositionType,
     ActionValue,
-    Provider,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError

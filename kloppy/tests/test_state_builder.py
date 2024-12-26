@@ -1,7 +1,7 @@
 from itertools import groupby
 
 from kloppy.domain import EventType, Event, EventDataset, FormationType
-from kloppy.domain.services.state_builder.builder import StateBuilder, T
+from kloppy.domain.services.state_builder.builder import StateBuilder
 from kloppy.utils import performance_logging
 from kloppy import statsbomb
 

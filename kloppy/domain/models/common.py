@@ -5,47 +5,45 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
-    Dict,
-    List,
-    Optional,
-    Callable,
-    Union,
     Any,
-    TypeVar,
+    Callable,
+    Dict,
     Generic,
-    NewType,
-    overload,
     Iterable,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
 )
 
-from .position import PositionType
-
 from ...utils import deprecated, snake_case
-
-from typing import Literal
+from .position import PositionType
 
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-from .pitch import (
-    PitchDimensions,
-    Unit,
-    Dimension,
-    NormalizedPitchDimensions,
-    MetricPitchDimensions,
-    ImperialPitchDimensions,
-    OptaPitchDimensions,
-    WyscoutPitchDimensions,
-)
-from .formation import FormationType
-from .time import Time, Period, TimeContainer
 from ...exceptions import (
-    OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    OrientationError,
 )
+from .formation import FormationType
+from .pitch import (
+    Dimension,
+    ImperialPitchDimensions,
+    MetricPitchDimensions,
+    NormalizedPitchDimensions,
+    OptaPitchDimensions,
+    PitchDimensions,
+    Unit,
+    WyscoutPitchDimensions,
+)
+from .time import Period, Time, TimeContainer
 
 
 @dataclass

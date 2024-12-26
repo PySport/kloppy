@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO, Optional
+from typing import Dict, List, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BodyPart,

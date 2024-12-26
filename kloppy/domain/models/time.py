@@ -8,7 +8,6 @@ from typing import (
     Generic,
     List,
     Tuple,
-    NamedTuple,
     Literal,
 )
 

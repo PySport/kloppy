@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, replace
 from functools import reduce
-from typing import Generic, Text, Union
+from typing import Generic, Union
 
 from .matchers import Matcher, Out, Tok
 

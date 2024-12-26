@@ -120,7 +120,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             score=None,
             provider=Provider.STATSBOMB,
             coordinate_system=self.transformer.get_to_coordinate_system(),
-            **additional_metadata
+            **additional_metadata,
         )
         return EventDataset(metadata=metadata, records=events)
 

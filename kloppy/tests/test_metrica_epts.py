@@ -1,30 +1,21 @@
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
-from pandas import DataFrame
 from lxml import objectify
+from pandas import DataFrame
 
-from kloppy.domain import (
-    Orientation,
-    Point,
-    Point3D,
-    Provider,
-)
-from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
-    load_metadata,
-)
+from kloppy import metrica
+from kloppy.domain import Orientation, Point, Provider
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
+    load_metadata,
 )
 from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
 from kloppy.utils import performance_logging
-
-
-from kloppy import metrica
 
 
 class TestMetricaEPTSTracking:
@@ -73,11 +64,14 @@ class TestMetricaEPTSTracking:
                 assert list(iterator)
 
     def test_read_to_pandas(self, base_dir):
-        with open(
-            base_dir / "files/epts_metrica_metadata.xml", "rb"
-        ) as metadata_fp, open(
-            base_dir / "files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
+        with (
+            open(
+                base_dir / "files/epts_metrica_metadata.xml", "rb"
+            ) as metadata_fp,
+            open(
+                base_dir / "files/epts_metrica_tracking.txt", "rb"
+            ) as raw_data,
+        ):
             metadata = load_metadata(metadata_fp)
             records = read_raw_data(
                 raw_data, metadata, sensor_ids=["position"]
@@ -87,11 +81,14 @@ class TestMetricaEPTSTracking:
         assert "player_Track_1_x" in data_frame.columns
 
     def test_skip_sensors(self, base_dir):
-        with open(
-            base_dir / "files/epts_metrica_metadata.xml", "rb"
-        ) as metadata_fp, open(
-            base_dir / "files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
+        with (
+            open(
+                base_dir / "files/epts_metrica_metadata.xml", "rb"
+            ) as metadata_fp,
+            open(
+                base_dir / "files/epts_metrica_tracking.txt", "rb"
+            ) as raw_data,
+        ):
             metadata = load_metadata(metadata_fp)
             records = read_raw_data(raw_data, metadata, sensor_ids=["speed"])
             data_frame = DataFrame.from_records(records)
@@ -163,11 +160,15 @@ class TestMetricaEPTSTracking:
     def test_read_with_sensor_unused_in_players_and_frame_count_name_modified(
         self, base_dir
     ):
-        with open(
-            base_dir / "files/epts_metrica_metadata_unused_sensor.xml", "rb"
-        ) as metadata_fp, open(
-            base_dir / "files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
+        with (
+            open(
+                base_dir / "files/epts_metrica_metadata_unused_sensor.xml",
+                "rb",
+            ) as metadata_fp,
+            open(
+                base_dir / "files/epts_metrica_tracking.txt", "rb"
+            ) as raw_data,
+        ):
             dataset = metrica.load_tracking_epts(
                 meta_data=metadata_fp, raw_data=raw_data
             )
@@ -182,12 +183,15 @@ class TestMetricaEPTSTracking:
         assert len(dataset.metadata.sensors) == 4
 
     def test_read_empty_player_values(self, base_dir):
-        with open(
-            base_dir / "files/epts_metrica_metadata.xml", "rb"
-        ) as metadata_fp, open(
-            base_dir / "files/epts_metrica_tracking_with_empty_values.txt",
-            "rb",
-        ) as raw_data:
+        with (
+            open(
+                base_dir / "files/epts_metrica_metadata.xml", "rb"
+            ) as metadata_fp,
+            open(
+                base_dir / "files/epts_metrica_tracking_with_empty_values.txt",
+                "rb",
+            ) as raw_data,
+        ):
             dataset = metrica.load_tracking_epts(
                 meta_data=metadata_fp, raw_data=raw_data
             )
@@ -211,3 +215,4 @@ class TestMetricaEPTSTracking:
             base_dir / "files/epts_metrica_metadata_without_score.xml", "rb"
         ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
+            assert metadata.score is None

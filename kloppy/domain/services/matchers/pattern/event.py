@@ -1,18 +1,27 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Tuple, Dict, List, Iterator
+from typing import Callable, Dict, Iterator, List, Tuple
 
 from kloppy.domain import (
+    CarryEvent,
+    Event,
     EventDataset,
     PassEvent,
     ShotEvent,
-    CarryEvent,
     TakeOnEvent,
-    Event,
 )
-from .regexp import *
-from .regexp import _make_match, _TrailItem
+
+from .regexp import (
+    Final,
+    Matcher,
+    Node,
+    Out,
+    RegExp,
+    Tok,
+    _make_match,
+    _TrailItem,
+)
 from .regexp.regexp import _Match
 
 

@@ -13,10 +13,9 @@ from kloppy.domain import (
     Score,
     Team,
 )
-from kloppy.domain.models import PositionType
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser, position_types_mapping
+from .base import OptaXMLParser
 from ..formation_mapping import (
     formation_position_mapping,
     formation_name_mapping,

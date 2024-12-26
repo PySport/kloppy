@@ -8,7 +8,6 @@ import pytest
 
 from kloppy.domain import (
     build_coordinate_system,
-    AttackingDirection,
     TakeOnResult,
     Dimension,
     BallState,

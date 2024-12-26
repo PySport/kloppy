@@ -176,6 +176,12 @@ class TestStatsBombMetadata:
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
+        away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=92)),
+        )
+        assert away_starting_gk.player_id == "5205"  # Rui Patricio
+
     def test_periods(self, dataset):
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2
@@ -541,6 +547,25 @@ class TestStatsBombEvent:
             plt.savefig(
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
             )
+
+    def test_freeze_frame_player_identities(self, dataset: EventDataset):
+        """It should set the identities of the player that executed the event and the goalkeepers."""
+        event = dataset.get_event_by_id("0f525aa9-70f4-4f85-8a8d-6103722aee50")
+        home_team, away_team = dataset.metadata.teams
+        # The goalkeeper should be identified
+        keeper = next(p for p in away_team.players if p.player_id == "5205")
+        assert keeper in event.freeze_frame.players_coordinates
+        # The player that executed the event should be identified
+        player = next(p for p in away_team.players if p.player_id == "5209")
+        assert player in event.freeze_frame.players_coordinates
+        # All other players should be anonymous
+        for player in event.freeze_frame.players_coordinates.keys():
+            if player not in [keeper, player]:
+                assert player.id.startswith(
+                    "T780-E0f525aa9-70f4-4f85-8a8d-6103722aee50-"
+                )
+                assert player.team in [home_team, away_team]
+                assert player.name is None
 
     def test_correct_normalized_deserialization(self):
         """Test if the normalized deserialization is correct"""

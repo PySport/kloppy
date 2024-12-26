@@ -6,6 +6,10 @@ from typing import Any, Optional, List, Dict, Tuple
 from kloppy.domain import Period, Score, Team, Ground, Player
 from kloppy.exceptions import DeserializationError
 from .base import OptaXMLParser
+from ..formation_mapping import (
+    formation_name_mapping,
+    formation_position_mapping,
+)
 
 
 class MA1XMLParser(OptaXMLParser):
@@ -81,6 +85,16 @@ class MA1XMLParser(OptaXMLParser):
         parsed_teams = []
         match_info = self.root.matchInfo
         teams = match_info.contestants.iterchildren(tag="contestant")
+
+        team_formations = {}
+        live_data = self.root.liveData
+        line_ups = live_data.iterchildren(tag="lineUp")
+        for line_up in line_ups:
+            team_id = line_up.get("contestantId")
+            raw_formation = line_up.get("formationUsed")
+            formation = formation_name_mapping[raw_formation]
+            team_formations[team_id] = formation
+
         for team in teams:
             team_attributes = team.attrib
             team_id = team_attributes["id"]
@@ -89,6 +103,7 @@ class MA1XMLParser(OptaXMLParser):
                     "team_id": team_id,
                     "name": team_attributes["name"],
                     "ground": team_attributes["position"],
+                    "starting_formation": team_formations[team_id],
                 }
             )
         return parsed_teams
@@ -99,10 +114,21 @@ class MA1XMLParser(OptaXMLParser):
         line_ups = live_data.iterchildren(tag="lineUp")
         for line_up in line_ups:
             team_id = line_up.get("contestantId")
+            raw_formation = line_up.get("formationUsed")
+            formation = formation_name_mapping[raw_formation]
+
             players = line_up.iterchildren(tag="player")
             for player in players:
                 player_attributes = player.attrib
                 player_id = player_attributes["playerId"]
+                if "formationPlace" in player_attributes:
+                    player_position = formation_position_mapping[formation][
+                        int(player_attributes["formationPlace"])
+                    ]
+                    starting = True
+                else:
+                    player_position = None
+                    starting = False
                 parsed_players.append(
                     {
                         "player_id": player_id,
@@ -111,9 +137,8 @@ class MA1XMLParser(OptaXMLParser):
                         "name": player_attributes["matchName"],
                         "first_name": player_attributes["shortFirstName"],
                         "last_name": player_attributes["shortLastName"],
-                        "starting": player_attributes["position"]
-                        != "Substitute",
-                        "position": player_attributes["position"],
+                        "starting": starting,
+                        "position": player_position,
                     }
                 )
         return parsed_players

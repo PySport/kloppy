@@ -1,58 +1,55 @@
 import os
 from collections import defaultdict
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import cast
 
 import pytest
 
+import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy import statsbomb
 from kloppy.domain import (
-    build_coordinate_system,
     AttackingDirection,
-    TakeOnResult,
-    Dimension,
     BallState,
-    ImperialPitchDimensions,
-    CardQualifier,
-    DatasetFlag,
-    CarryResult,
-    InterceptionResult,
-    SubstitutionEvent,
     BodyPart,
     BodyPartQualifier,
+    CardQualifier,
+    CarryResult,
+    DatasetFlag,
     DatasetType,
+    Dimension,
     DuelQualifier,
-    DuelType,
     DuelResult,
+    DuelType,
+    EventDataset,
+    FormationType,
+    ImperialPitchDimensions,
+    InterceptionResult,
     Orientation,
     PassResult,
     Point,
     Point3D,
     Provider,
-    FormationType,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
-    EventDataset,
+    SubstitutionEvent,
+    TakeOnResult,
     Time,
+    build_coordinate_system,
 )
 from kloppy.domain.models import PositionType
-
-from kloppy.exceptions import DeserializationError
-from kloppy import statsbomb
 from kloppy.domain.models.event import (
     CardType,
+    CounterAttackQualifier,
+    EventType,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     PassQualifier,
     PassType,
-    EventType,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
 )
-from kloppy.infra.serializers.event.statsbomb.helpers import (
-    parse_str_ts,
-)
-import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy.exceptions import DeserializationError
+from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 
 ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -180,28 +177,11 @@ class TestStatsBombMetadata:
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
 
-    def test_freeze_frame_loads_correctly(self, dataset):
-        event_uuid = "0f525aa9-70f4-4f85-8a8d-6103722aee50"
-        event = [  # pick out the event record in question
-            event for event in dataset if event.event_id == event_uuid
-        ][0]
-
-        keeper = list(event.freeze_frame.players_coordinates.keys())[
-            0
-        ]  # keeper happens to be first
-        assert keeper.player_id == "5205"  # Rui Pedro dos Santos Patrício
-
-    def test_get_player_by_position_works_with_subs(self, dataset):
-
-        event_uuid = "0f525aa9-70f4-4f85-8a8d-6103722aee50"
-        event = [  # pick out the event record in question
-            event for event in dataset if event.event_id == event_uuid
-        ][0]
-
-        keeper = event.team.get_player_by_position(
-            PositionType.Goalkeeper, time=event.time
+        away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=92)),
         )
-        assert keeper.player_id == "5205"  # Rui Pedro dos Santos Patrício
+        assert away_starting_gk.player_id == "5205"  # Rui Patricio
 
     def test_periods(self, dataset):
         """It should create the periods"""
@@ -568,6 +548,25 @@ class TestStatsBombEvent:
             plt.savefig(
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
             )
+
+    def test_freeze_frame_player_identities(self, dataset: EventDataset):
+        """It should set the identities of the player that executed the event and the goalkeepers."""
+        event = dataset.get_event_by_id("0f525aa9-70f4-4f85-8a8d-6103722aee50")
+        home_team, away_team = dataset.metadata.teams
+        # The goalkeeper should be identified
+        keeper = next(p for p in away_team.players if p.player_id == "5205")
+        assert keeper in event.freeze_frame.players_coordinates
+        # The player that executed the event should be identified
+        player = next(p for p in away_team.players if p.player_id == "5209")
+        assert player in event.freeze_frame.players_coordinates
+        # All other players should be anonymous
+        for player in event.freeze_frame.players_coordinates.keys():
+            if player not in [keeper, player]:
+                assert player.id.startswith(
+                    "T780-E0f525aa9-70f4-4f85-8a8d-6103722aee50-"
+                )
+                assert player.team in [home_team, away_team]
+                assert player.name is None
 
     def test_correct_normalized_deserialization(self):
         """Test if the normalized deserialization is correct"""

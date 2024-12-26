@@ -1,7 +1,7 @@
-from typing import NamedTuple, IO, Optional
-import logging
 import json
+import logging
 from itertools import zip_longest
+from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (
     DatasetFlag,
@@ -18,6 +18,7 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
+
 from . import specification as SB
 from .helpers import parse_freeze_frame, parse_str_ts
 from .specification import position_types_mapping
@@ -90,9 +91,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             score=None,
             provider=Provider.STATSBOMB,
             coordinate_system=self.transformer.get_to_coordinate_system(),
-            **additional_metadata
+            **additional_metadata,
         )
-        # breakpoint()
         dataset = EventDataset(metadata=metadata, records=events)
         for event in dataset:
             if "freeze_frame" in event.raw_event.get("shot", {}):

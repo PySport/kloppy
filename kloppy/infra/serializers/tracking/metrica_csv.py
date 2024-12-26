@@ -2,30 +2,28 @@ import logging
 import warnings
 from collections import namedtuple
 from datetime import timedelta
-from typing import Tuple, Dict, Iterator, IO, NamedTuple
+from typing import IO, Iterator, NamedTuple
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
-    TrackingDataset,
     AttackingDirection,
-    Frame,
-    Point,
-    Period,
-    Orientation,
-    Provider,
     DatasetFlag,
-    Metadata,
-    Team,
     Ground,
+    Metadata,
+    Orientation,
+    Period,
     Player,
-    PlayerData,
+    Point,
+    Provider,
+    Team,
+    TrackedObjectState,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import Readable, performance_logging
-
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +107,7 @@ class MetricaCSVTrackingDataDeserializer(
                         period=period,
                         frame_id=frame_id,
                         players_data={
-                            player: PlayerData(
+                            player: TrackedObjectState(
                                 coordinates=Point(
                                     x=float(columns[3 + i * 2]),
                                     y=1 - float(columns[3 + i * 2 + 1]),
@@ -184,6 +182,10 @@ class MetricaCSVTrackingDataDeserializer(
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
 
+                ball_data = TrackedObjectState(
+                    coordinates=home_partial_frame.ball_coordinates
+                )
+
                 players_data = {
                     **home_partial_frame.players_data,
                     **away_partial_frame.players_data,
@@ -193,8 +195,7 @@ class MetricaCSVTrackingDataDeserializer(
                     frame_id=frame_id,
                     timestamp=timedelta(seconds=frame_id / frame_rate)
                     - period.start_timestamp,
-                    ball_coordinates=home_partial_frame.ball_coordinates,
-                    players_data=players_data,
+                    tracked_objects={"ball": ball_data, **players_data},
                     period=period,
                     ball_state=None,
                     ball_owning_team=None,

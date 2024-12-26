@@ -1,28 +1,26 @@
 import logging
-from datetime import timedelta
 import warnings
+from datetime import timedelta
 from typing import IO, NamedTuple, Optional, Union
-
 
 from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Frame,
     Metadata,
     Orientation,
     Player,
-    PlayerData,
     Point,
     Point3D,
     Provider,
+    TrackedObjectState,
     TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
+from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
@@ -85,11 +83,13 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         ball_state = BallState.ALIVE if match_status == 0 else BallState.DEAD
 
         if len(components) > 2:
-            ball_data = components[2].split(";")[0].split(",")
-            ball_x, ball_y, ball_z = map(float, ball_data)
-            ball_coordinates = Point3D(ball_x, ball_y, ball_z)
+            raw_ball_data = components[2].split(";")[0].split(",")
+            ball_x, ball_y, ball_z = map(float, raw_ball_data)
+            ball_data = TrackedObjectState(
+                coordinates=Point3D(ball_x, ball_y, ball_z),
+            )
         else:
-            ball_coordinates = None
+            ball_data = None
 
         players_data = {}
 
@@ -119,7 +119,6 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     )
                 team = teams_list[team_side_id]
                 player = team.get_player_by_id(player_id)
-
                 if not player:
                     player = Player(
                         player_id=player_id,
@@ -128,15 +127,16 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     )
                     team.players.append(player)
 
-                players_data[player] = PlayerData(coordinates=Point(x, y))
+                players_data[player] = TrackedObjectState(
+                    coordinates=Point(x, y)
+                )
 
         frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
-            ball_coordinates=ball_coordinates,
             ball_state=ball_state,
             ball_owning_team=None,
-            players_data=players_data,
+            tracked_objects={"ball": ball_data, **players_data},
             period=period,
             other_data={},
         )

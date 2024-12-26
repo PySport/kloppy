@@ -1,34 +1,32 @@
 import logging
 import warnings
 from collections import defaultdict
-from typing import NamedTuple, Optional, Union, IO
 from datetime import datetime, timedelta
+from typing import IO, NamedTuple, Optional, Union
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
-    Frame,
+    BallState,
+    DatasetFlag,
+    Metadata,
+    Orientation,
+    Period,
     Point,
     Point3D,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
     Provider,
-    PlayerData,
+    TrackedObjectState,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-
-from kloppy.utils import performance_logging
-
-from ..deserializer import TrackingDataDeserializer
 from kloppy.infra.serializers.event.sportec.deserializer import (
     sportec_metadata_from_xml_elm,
 )
+from kloppy.utils import performance_logging
+
+from ..deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +161,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                     for i, (frame_id, frame_data) in enumerate(
                         sorted(raw_frames.items())
                     ):
-
                         if "ball" not in frame_data:
                             # Frames without ball data are corrupt.
                             continue
@@ -191,25 +188,31 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                 if ball_data["BallStatus"] == "1"
                                 else BallState.DEAD,
                                 period=period,
-                                players_data={
-                                    player_map[player_id]: PlayerData(
-                                        coordinates=Point(
-                                            x=float(raw_player_data["X"]),
-                                            y=float(raw_player_data["Y"]),
+                                tracked_objects={
+                                    "ball": TrackedObjectState(
+                                        coordinates=Point3D(
+                                            x=float(ball_data["X"]),
+                                            y=float(ball_data["Y"]),
+                                            z=float(ball_data["Z"]),
                                         ),
-                                        speed=float(raw_player_data["S"]),
-                                    )
-                                    for player_id, raw_player_data in frame_data.items()
-                                    if player_id != "ball"
-                                    and player_id not in official_ids
+                                        speed=float(ball_data["S"]),
+                                    ),
+                                    **{
+                                        player_map[
+                                            player_id
+                                        ]: TrackedObjectState(
+                                            coordinates=Point(
+                                                x=float(raw_player_data["X"]),
+                                                y=float(raw_player_data["Y"]),
+                                            ),
+                                            speed=float(raw_player_data["S"]),
+                                        )
+                                        for player_id, raw_player_data in frame_data.items()
+                                        if player_id != "ball"
+                                        and player_id not in official_ids
+                                    },
                                 },
                                 other_data={},
-                                ball_coordinates=Point3D(
-                                    x=float(ball_data["X"]),
-                                    y=float(ball_data["Y"]),
-                                    z=float(ball_data["Z"]),
-                                ),
-                                ball_speed=float(ball_data["S"]),
                             )
 
             frames = []

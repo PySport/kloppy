@@ -1,22 +1,22 @@
 import logging
-from typing import NamedTuple, IO
 from dataclasses import replace
+from typing import IO, NamedTuple
 
 from kloppy.domain import (
-    TrackingDataset,
+    DatasetTransformer,
     Frame,
     Point,
     Point3D,
     Provider,
-    PlayerData,
-    DatasetTransformer,
+    TrackedObjectState,
+    TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import performance_logging
 
-from .metadata import load_metadata, EPTSMetadata
-from .reader import read_raw_data
 from ..deserializer import TrackingDataDeserializer
+from .metadata import EPTSMetadata, load_metadata
+from .reader import read_raw_data
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class MetricaEPTSTrackingDataDeserializer(
                     player_sensor_val = row.get(player_sensor_field_str)
                     other_data.update({sensor.sensor_id: player_sensor_val})
 
-                players_data[player] = PlayerData(
+                players_data[player] = TrackedObjectState(
                     coordinates=Point(
                         x=row[f"player_{player.player_id}_x"],
                         y=row[f"player_{player.player_id}_y"],
@@ -80,11 +80,15 @@ class MetricaEPTSTrackingDataDeserializer(
             ball_owning_team=None,
             ball_state=None,
             period=period,
-            players_data=players_data,
             other_data={},
-            ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
-            ),
+            tracked_objects={
+                "ball": TrackedObjectState(
+                    coordinates=Point3D(
+                        x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
+                    ),
+                ),
+                **players_data,
+            },
         )
 
         if transformer:

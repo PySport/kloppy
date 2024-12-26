@@ -1,36 +1,34 @@
+import html
+import json
 import logging
 import warnings
-import json
-import html
 from datetime import timedelta
 from typing import Dict, Optional, Union
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
-    Frame,
+    BallState,
+    DatasetFlag,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    Metadata,
-    Ground,
-    Player,
     Provider,
-    PlayerData,
+    Team,
+    TrackedObjectState,
+    TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.domain.models import PositionType
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
-
 from kloppy.utils import Readable, performance_logging
 
-from .common import TRACABInputs, position_types_mapping
 from ..deserializer import TrackingDataDeserializer
+from .common import TRACABInputs, position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +74,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
             player = team.get_player_by_jersey_number(jersey_no)
             if player:
-                players_data[player] = PlayerData(
+                players_data[player] = TrackedObjectState(
                     coordinates=Point(x, y), speed=speed
                 )
             else:
@@ -89,6 +87,9 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
         ball_y = raw_ball_position["Y"]
         ball_z = raw_ball_position["Z"]
         ball_speed = raw_ball_position["Speed"]
+        ball_data = TrackedObjectState(
+            coordinates=Point3D(ball_x, ball_y, ball_z), speed=ball_speed
+        )
         if raw_ball_position["BallOwningTeam"] == "H":
             ball_owning_team = teams[0]
         elif raw_ball_position["BallOwningTeam"] == "A":
@@ -110,11 +111,9 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
-            ball_coordinates=Point3D(ball_x, ball_y, ball_z),
+            tracked_objects={"ball": ball_data, **players_data},
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
-            ball_speed=ball_speed,
-            players_data=players_data,
             period=period,
             other_data={},
         )

@@ -1,18 +1,17 @@
 from datetime import timedelta
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from kloppy.domain import (
-    Point,
-    Point3D,
-    Team,
+    ActionValue,
     Event,
     Frame,
     Period,
     Player,
-    PlayerData,
+    Point,
+    Point3D,
     PositionType,
-    ActionValue,
-    Provider,
+    Team,
+    TrackedObjectState,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
@@ -136,14 +135,16 @@ def parse_freeze_frame(
             freeze_frame_player, freeze_frame_team, i
         )
 
-        players_data[player] = PlayerData(
+        players_data[player] = TrackedObjectState(
             coordinates=parse_coordinates(
                 freeze_frame_player["location"], fidelity_version
             )
         )
 
     if event.player not in players_data:
-        players_data[event.player] = PlayerData(coordinates=event.coordinates)
+        players_data[event.player] = TrackedObjectState(
+            coordinates=event.coordinates
+        )
 
     FREEZE_FRAME_FPS = 25
     frame_id = int(
@@ -153,10 +154,14 @@ def parse_freeze_frame(
 
     frame = create_frame(
         frame_id=frame_id,
-        ball_coordinates=Point3D(
-            x=event.coordinates.x, y=event.coordinates.y, z=0
-        ),
-        players_data=players_data,
+        tracked_objects={
+            "ball": TrackedObjectState(
+                coordinates=Point3D(
+                    x=event.coordinates.x, y=event.coordinates.y, z=0
+                ),
+            ),
+            **players_data,
+        },
         period=event.period,
         timestamp=event.timestamp,
         ball_state=event.ball_state,

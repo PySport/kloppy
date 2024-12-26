@@ -957,8 +957,8 @@ class TestStatsBombDuelEvent:
         """It should deserialize all duel and 50/50 events"""
         events = dataset.find_all("duel")
         assert (
-            len(events) == 59 + 4 + 26
-        )  # duels + 50/50 + aerial won attribute
+            len(events) == 59 + 4 + 26 + 4
+        )  # duels + 50/50 + aerial won attribute + failed recoveries
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of duels"""

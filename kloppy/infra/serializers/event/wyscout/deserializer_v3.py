@@ -772,6 +772,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
             events = []
 
+            next_pass_is_kickoff = False
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
                 next_period_id = None
@@ -780,6 +781,14 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     next_period_id = _parse_period_id(
                         next_event["matchPeriod"]
                     )
+
+                if (
+                    idx == 0
+                    or raw_event["matchPeriod"]
+                    != raw_events["events"][idx - 1]["matchPeriod"]
+                    or "conceded_goal" in raw_event["type"]["secondary"]
+                ):
+                    next_pass_is_kickoff = True
 
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
@@ -861,6 +870,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     )
                 elif primary_event_type == "pass":
                     pass_event_args = _parse_pass(raw_event, next_event, team)
+                    # Pass in new period or after goal scored is the kick-off
+                    if next_pass_is_kickoff:
+                        pass_event_args["qualifiers"].append(
+                            SetPieceQualifier(value=SetPieceType.KICK_OFF)
+                        )
+                        next_pass_is_kickoff = False
                     event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )

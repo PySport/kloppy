@@ -374,7 +374,7 @@ class TestHelpers:
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = tracking_data.to_pandas()
+        data_frame = tracking_data.to_df(engine="pandas")
 
         expected_data_frame = DataFrame.from_dict(
             {
@@ -403,7 +403,7 @@ class TestHelpers:
             f24_data=base_dir / "files/opta_f24.xml",
         )
 
-        dataframe = dataset.to_pandas()
+        dataframe = dataset.to_df(engine="pandas")
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
@@ -412,7 +412,7 @@ class TestHelpers:
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
         )
-        df = dataset.to_pandas()
+        df = dataset.to_df(engine="pandas")
         incomplete_passes = df[
             (df.event_type == "PASS") & (df.result == "INCOMPLETE")
         ].reset_index()
@@ -426,11 +426,11 @@ class TestHelpers:
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = tracking_data.to_pandas(
-            additional_columns={
-                "match": "test",
-                "bonus_column": lambda frame: frame.frame_id + 10,
-            },
+        data_frame = tracking_data.to_df(
+            "*",  # Get all default columns
+            match="test",
+            bonus_column=lambda frame: frame.frame_id + 10,
+            engine="pandas",
         )
 
         expected_data_frame = DataFrame.from_dict(

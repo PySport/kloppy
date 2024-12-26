@@ -6,7 +6,7 @@ from lxml import objectify
 from pandas import DataFrame
 
 from kloppy import metrica
-from kloppy.domain import Orientation, Point, Provider
+from kloppy.domain import Orientation, Point, Provider, Score
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
     load_metadata,
@@ -215,4 +215,4 @@ class TestMetricaEPTSTracking:
             base_dir / "files/epts_metrica_metadata_without_score.xml", "rb"
         ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
-            assert metadata.score is None
+            assert metadata.score == Score(home=0, away=0)

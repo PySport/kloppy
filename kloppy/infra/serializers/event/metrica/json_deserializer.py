@@ -1,8 +1,8 @@
-import logging
 import json
+import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, NamedTuple, IO, Optional
+from typing import IO, Dict, List, NamedTuple, Optional
 
 from kloppy.domain import (
     BallState,
@@ -21,11 +21,10 @@ from kloppy.domain import (
     TakeOnResult,
     Team,
 )
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata,
-    DeserializationError,
 )
 from kloppy.utils import performance_logging
 

@@ -1,6 +1,7 @@
 from dataclasses import replace
+from typing import List
 
-from kloppy.domain import EventDataset, List
+from kloppy.domain import EventDataset
 
 # register all of them
 from . import builders as _builders  # noqa: F401

@@ -1,6 +1,5 @@
 import pytest
 
-
 from kloppy import statsbomb
 from kloppy.domain import EventDataset
 
@@ -54,7 +53,7 @@ class TestEvent:
         """
         goals_dataset = dataset.filter("shot.goal")
 
-        df = goals_dataset.to_pandas()
+        df = goals_dataset.to_df(engine="pandas")
         assert df["event_id"].to_list() == [
             "4c7c4ab1-6b9f-4504-a237-249c2e0c549f",
             "683c6752-13bc-4892-94ed-22e1c938f1f7",

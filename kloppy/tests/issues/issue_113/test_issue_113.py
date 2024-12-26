@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from kloppy.domain import Orientation
 from kloppy import opta
+from kloppy.domain import Orientation
 
 
 def kloppy_load_data(f7, f24):
@@ -22,13 +22,13 @@ def kloppy_load_data(f7, f24):
 
     events = dataset.transform(
         to_orientation=Orientation.STATIC_HOME_AWAY
-    ).to_pandas(
-        additional_columns={
-            "event_name": lambda event: str(getattr(event, "event_name", "")),
-            "player_name": lambda event: str(getattr(event, "player", "")),
-            "ball_state": lambda event: str(getattr(event, "ball_state", "")),
-            "team_name": lambda event: str(getattr(event, "team", "")),
-        },
+    ).to_df(
+        "*",
+        event_name=lambda event: str(getattr(event, "event_name", "")),
+        player_name=lambda event: str(getattr(event, "player", "")),
+        ball_state=lambda event: str(getattr(event, "ball_state", "")),
+        team_name=lambda event: str(getattr(event, "team", "")),
+        engine="pandas",
     )
 
     metadata = dataset.metadata

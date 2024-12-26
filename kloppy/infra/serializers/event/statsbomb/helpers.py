@@ -1,17 +1,17 @@
 from datetime import timedelta
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from kloppy.domain import (
-    Point,
-    Point3D,
-    Team,
+    ActionValue,
     Event,
     Frame,
     Period,
     Player,
     PlayerData,
+    Point,
+    Point3D,
     PositionType,
-    ActionValue,
+    Team,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError

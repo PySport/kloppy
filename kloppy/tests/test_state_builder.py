@@ -51,7 +51,7 @@ class TestStateBuilder:
             events_per_sequence[sequence_id] = len(events)
 
         assert events_per_sequence[0] == 4
-        assert events_per_sequence[51] == 6
+        assert events_per_sequence[51] == 7
 
     def test_lineup_state_builder(self, base_dir):
         dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")

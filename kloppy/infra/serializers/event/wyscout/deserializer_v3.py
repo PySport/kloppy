@@ -838,6 +838,17 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     )
                 elif primary_event_type == "pass":
                     pass_event_args = _parse_pass(raw_event, next_event, team)
+                    # Pass in new period or after goal scored is the kick-off
+                    if (
+                        idx == 0
+                        or raw_event["matchPeriod"]
+                        != raw_events["events"][idx - 1]["matchPeriod"]
+                        or "conceded_goal"
+                        in raw_events["events"][idx - 1]["type"]["secondary"]
+                    ):
+                        pass_event_args["qualifiers"].append(
+                            SetPieceQualifier(value=SetPieceType.KICK_OFF)
+                        )
                     event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )

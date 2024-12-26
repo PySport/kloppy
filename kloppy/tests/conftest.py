@@ -1,4 +1,4 @@
-"""Module to store common fixtures. """
+"""Module to store common fixtures."""
 
 from pathlib import Path
 

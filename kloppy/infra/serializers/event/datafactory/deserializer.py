@@ -2,43 +2,34 @@ import json
 import logging
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
-from typing import IO, Dict, List, NamedTuple, Tuple, Union
+from typing import IO, Dict, List, NamedTuple, Tuple
 
 from kloppy.domain import (
-    AttackingDirection,
-    BallOutEvent,
     BallState,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
     DatasetFlag,
     Event,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
     Ground,
     Metadata,
     Orientation,
-    PassEvent,
     PassResult,
     Period,
     Player,
     Point,
     Provider,
     Qualifier,
-    RecoveryEvent,
     Score,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    SubstitutionEvent,
     Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

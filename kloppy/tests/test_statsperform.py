@@ -17,7 +17,6 @@ from kloppy.domain import (
     Time,
     PositionType,
 )
-from kloppy.exceptions import KloppyError
 
 
 @pytest.fixture(scope="module")
@@ -229,9 +228,9 @@ class TestStatsPerformTracking:
             pitch_width=None,
         )
         assert pitch_dimensions.x_dim.min == 0
-        assert pitch_dimensions.x_dim.max == None
+        assert pitch_dimensions.x_dim.max is None
         assert pitch_dimensions.y_dim.min == 0
-        assert pitch_dimensions.y_dim.max == None
+        assert pitch_dimensions.y_dim.max is None
 
     def test_coordinate_system_with_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path

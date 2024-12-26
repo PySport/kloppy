@@ -1,4 +1,5 @@
 """XML parser for Stats Perform MA3 feeds."""
+
 from datetime import datetime, timezone
 from typing import List
 

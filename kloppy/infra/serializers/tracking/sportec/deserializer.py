@@ -10,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     BallState,
@@ -163,7 +162,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                     for i, (frame_id, frame_data) in enumerate(
                         sorted(raw_frames.items())
                     ):
-
                         if "ball" not in frame_data:
                             # Frames without ball data are corrupt.
                             continue

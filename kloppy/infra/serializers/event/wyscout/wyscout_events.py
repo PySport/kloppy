@@ -1,6 +1,3 @@
-from typing import List
-
-
 class DUEL:
     EVENT = 1
 

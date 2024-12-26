@@ -9,15 +9,11 @@ from kloppy._providers.tracab import (
     TRACABDatDeserializer,
 )
 from kloppy.domain import (
-    Period,
-    AttackingDirection,
     Orientation,
     Provider,
     Point,
     Point3D,
     BallState,
-    Team,
-    Ground,
     DatasetType,
 )
 

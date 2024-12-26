@@ -85,7 +85,7 @@ def docstring_inherit_attributes(parent):
     return inherit
 
 
-string_types = (type(b""), type(""))
+string_types = (bytes, str)
 
 
 def deprecated(reason):

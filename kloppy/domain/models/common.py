@@ -1196,6 +1196,7 @@ class Dataset(ABC, Generic[T]):
         start_of_match = self.metadata.periods[0].start_time
         for team in self.metadata.teams:
             for player in team.players:
+                player.positions.reset()
                 if player.starting:
                     player.set_position(
                         start_of_match,

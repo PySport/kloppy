@@ -126,9 +126,7 @@ class MA1XMLParser(OptaXMLParser):
                     ]
                     starting = True
                 else:
-                    player_position = (
-                        None  # or should this be None for substitute?
-                    )
+                    player_position = None
                     starting = False
                 parsed_players.append(
                     {

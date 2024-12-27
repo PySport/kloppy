@@ -246,7 +246,10 @@ position_line_mapping = {
 
 
 def _parse_pass(
-    raw_event: OptaEvent, next_event: OptaEvent, next_next_event: OptaEvent
+    raw_event: OptaEvent,
+    next_event: OptaEvent,
+    next_next_event: OptaEvent,
+    team: Team,
 ) -> Dict:
     if raw_event.outcome:
         result = PassResult.COMPLETE
@@ -255,8 +258,21 @@ def _parse_pass(
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
     pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
+    receiver_player = None
+    receive_timestamp = None
 
     qualifiers = pass_qualifiers + overall_qualifiers
+
+    # Set the receiver_player as the next_event if the pass result is complete,
+    # the ball possession is not changed on the next event and the next event is a
+    # BALL_OWNING_EVENTS.
+    if (
+        result == PassResult.COMPLETE
+        and next_event.contestant_id == team.team_id
+        and next_event.type_id in BALL_OWNING_EVENTS
+    ):
+        receiver_player = team.get_player_by_id(next_event.player_id)
+        receive_timestamp = next_event.timestamp
 
     # Set the end location of a deflected pass to the start location
     # of the next action and the outcome to "success" if the deflected
@@ -276,8 +292,8 @@ def _parse_pass(
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
-        receiver_player=None,
-        receive_timestamp=None,
+        receiver_player=receiver_player,
+        receive_timestamp=receive_timestamp,
         qualifiers=qualifiers,
     )
 
@@ -788,7 +804,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(
-                            raw_event, next_event, next_next_event
+                            raw_event, next_event, next_next_event, team
                         )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,

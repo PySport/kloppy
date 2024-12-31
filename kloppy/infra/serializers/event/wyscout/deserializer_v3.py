@@ -1,3 +1,4 @@
+import bisect
 import json
 import logging
 import warnings
@@ -35,6 +36,7 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     Team,
+    BallState,
     FormationType,
     CarryResult,
     ExpectedGoals,
@@ -683,6 +685,50 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
+def _parse_substitutions(
+    deserializer, raw_events, players, teams, periods, transformer
+):
+    substitution_events = []
+    for team_id, periods_subs in raw_events["substitutions"].items():
+        for raw_period, sub_info in periods_subs.items():
+            for raw_seconds, players_info in sub_info.items():
+                subs_out = players_info["out"]
+                subs_in = players_info["in"]
+                for sub_out, sub_in in zip(subs_out, subs_in):
+                    sub_out_player = players[team_id][str(sub_out["playerId"])]
+                    sub_in_player = players[team_id][str(sub_in["playerId"])]
+
+                    # Build the substitution event
+                    sub_event = deserializer.event_factory.build_substitution(
+                        event_id=f"substitution-{sub_out['playerId']}-{sub_in['playerId']}",
+                        ball_owning_team=None,
+                        ball_state=BallState.DEAD,
+                        coordinates=None,
+                        player=sub_out_player,
+                        replacement_player=sub_in_player,
+                        team=teams[team_id],
+                        period=periods[int(raw_period[0]) - 1],
+                        timestamp=timedelta(seconds=int(raw_seconds)),
+                        result=None,
+                        raw_event=None,
+                        qualifiers=None,
+                    )
+
+                    if sub_event and deserializer.should_include_event(
+                        sub_event
+                    ):
+                        substitution_events.append(
+                            transformer.transform_event(sub_event)
+                        )
+
+    return substitution_events
+
+
+def insert(event, sorted_events):
+    pos = bisect.bisect_left([e.time for e in sorted_events], event.time)
+    sorted_events.insert(pos, event)
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -969,6 +1015,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         )
                         if event and self.should_include_event(event):
                             events.append(transformer.transform_event(event))
+
+        substitution_events = _parse_substitutions(
+            self, raw_events, players, teams, periods, transformer
+        )
+        for sub_event in substitution_events:
+            insert(sub_event, events)
 
         metadata = Metadata(
             teams=[home_team, away_team],

@@ -23,6 +23,7 @@ from kloppy.domain import (
     PlayerData,
     attacking_directions_from_multi_frames,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -96,7 +97,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                         f"Player with jersey no: {raw_player_positional_info['jersey_number']} not found in {side} team"
                     )
 
-        return Frame(
+        return create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,

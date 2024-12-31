@@ -1,5 +1,6 @@
 import json
 import logging
+import warnings
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -9,13 +10,11 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
-    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     EventDataset,
-    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     Ground,
@@ -36,8 +35,12 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     Team,
+    FormationType,
+    CarryResult,
+    ExpectedGoals,
+    PostShotExpectedGoals,
 )
-from kloppy.exceptions import DeserializationError
+from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
@@ -268,10 +271,20 @@ def _parse_shot(raw_event: Dict) -> Dict:
     elif raw_event["shot"]["bodyPart"] == "right_foot":
         qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
+    statistics = []
+    for statistic_cls, prop_name in {
+        ExpectedGoals: "xg",
+        PostShotExpectedGoals: "postShotXg",
+    }.items():
+        value = raw_event["shot"].get(prop_name, None)
+        if value is not None:
+            statistics.append(statistic_cls(value=value))
+
     return {
         "result": result,
         "result_coordinates": _create_shot_result_coordinates(raw_event),
         "qualifiers": qualifiers,
+        "statistics": statistics,
     }
 
 
@@ -699,12 +712,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             home_team = _parse_team(raw_events, home_team_id, Ground.HOME)
             away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
             teams = {home_team_id: home_team, away_team_id: away_team}
-            players = dict(
-                [
-                    (wyId, _players_to_dict(team.players))
-                    for wyId, team in teams.items()
-                ]
-            )
+            players = {
+                wyId: _players_to_dict(team.players)
+                for wyId, team in teams.items()
+            }
             date = raw_events["match"].get("dateutc")
             if date:
                 date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S").replace(
@@ -780,6 +791,19 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         str(raw_event["possession"]["team"]["id"])
                     ]
 
+                if player_id == INVALID_PLAYER:
+                    player = None
+                elif player_id not in players[team_id]:
+                    player = None
+                    warnings.warn(
+                        f"Event {raw_event['id']} was performed by player {player_id} and team {team_id}, "
+                        f"but the player does not appear to be part of that team's lineup. "
+                        f"Handled by setting the event's player to None.",
+                        DeserializationWarning,
+                    )
+                else:
+                    player = players[team_id][player_id]
+
                 generic_event_args = {
                     "event_id": raw_event["id"],
                     "raw_event": raw_event,
@@ -792,11 +816,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         else None
                     ),
                     "team": team,
-                    "player": (
-                        players[team_id][player_id]
-                        if player_id != INVALID_PLAYER
-                        else None
-                    ),
+                    "player": player,
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
                     "period": periods[-1],

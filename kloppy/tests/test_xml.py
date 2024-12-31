@@ -1,11 +1,10 @@
-import os
 from datetime import timedelta
 
 from pandas import DataFrame
 from pandas._testing import assert_frame_equal
 
-from kloppy.domain import Period
 from kloppy import sportscode
+from kloppy.domain import Period
 from kloppy.infra.serializers.code.sportscode import SportsCodeSerializer
 
 
@@ -34,7 +33,7 @@ class TestXMLCodeTracking:
             "Receiver": "Klaas Nøme",
         }
 
-        dataframe = dataset.to_pandas()
+        dataframe = dataset.to_df(engine="pandas")
 
         expected_data_frame = DataFrame.from_dict(
             {

@@ -7,7 +7,6 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
-    BodyPartQualifier,
     CardQualifier,
     CardType,
     CounterAttackQualifier,
@@ -24,7 +23,6 @@ from kloppy.domain import (
     PassQualifier,
     PassType,
     OptaPitchDimensions,
-    Point,
     Point,
     Point3D,
     PositionType,
@@ -413,6 +411,27 @@ class TestOptaShotEvent:
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
         assert own_goal.ball_state == BallState.DEAD
+
+    def test_goal(self, dataset: EventDataset):
+        """Test if goals are correctly deserialized"""
+        goal = dataset.get_event_by_id("2614247749")
+        assert goal.result == ShotResult.GOAL
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.9780699610710144
+        )
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "PSxG"
+            ).value
+            == 0.98
+        )
 
 
 class TestOptaDuelEvent:

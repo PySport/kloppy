@@ -1,12 +1,9 @@
-from collections import Counter, defaultdict
-from typing import List, Dict
+from typing import List
 
-import numpy as np
+from kloppy.domain import AttackingDirection, Frame, Ground
 
-from kloppy.domain import AttackingDirection, Frame, Ground, Period
-
-from .transformers import DatasetTransformer, DatasetTransformerBuilder
 from .event_factory import EventFactory, create_event
+from .transformers import DatasetTransformer, DatasetTransformerBuilder
 
 # NOT YET: from .enrichers import TrackingPossessionEnricher
 
@@ -40,32 +37,10 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
         return AttackingDirection.RTL
 
 
-def attacking_directions_from_multi_frames(
-    frames: List[Frame], periods: List[Period]
-) -> Dict[int, AttackingDirection]:
-    """
-    with only partial tracking data we cannot rely on a single frame to
-    infer the attacking directions as a simple average of only some players
-    x-coords might not reflect the attacking direction.
-    """
-    attacking_directions = {}
-
-    # Group attacking directions by period ID
-    period_direction_map = defaultdict(list)
-    for frame in frames:
-        if len(frame.players_data) > 0:
-            direction = attacking_direction_from_frame(frame)
-        else:
-            direction = AttackingDirection.NOT_SET
-        period_direction_map[frame.period.id].append(direction)
-
-    # Determine the most common attacking direction for each period
-    for period in periods:
-        period_id = period.id
-        if period_id in period_direction_map:
-            count = Counter(period_direction_map[period_id])
-            attacking_directions[period_id] = count.most_common(1)[0][0]
-        else:
-            attacking_directions[period_id] = AttackingDirection.NOT_SET
-
-    return attacking_directions
+__all__ = [
+    "DatasetTransformer",
+    "DatasetTransformerBuilder",
+    "EventFactory",
+    "create_event",
+    "attacking_direction_from_frame",
+]

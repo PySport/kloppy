@@ -640,7 +640,7 @@ def _get_team_formation(team_formation):
     )
 
 
-def get_home_away_team_formation(event, team, last_formations):
+def get_home_away_team_formation(event, team):
     team_formation = event["team"]["formation"]
     team_id = str(event["team"]["id"])
     opponent_formation = event["opponentTeam"]["formation"]
@@ -655,14 +655,11 @@ def get_home_away_team_formation(event, team, last_formations):
     else:
         raise DeserializationError(f"Unknown team_id {team.team_id}")
 
-    last_formations[team_id] = team_formation
-    last_formations[opponent_team_id] = opponent_formation
-
     return home_team_formation, away_team_formation
 
 
 def identify_synthetic_formation_change_event(
-    raw_event, raw_next_event, teams, home_team, away_team, last_formations
+    raw_event, raw_next_event, teams, home_team, away_team
 ):
     current_event_team = teams[str(raw_event["team"]["id"])]
     next_event_team = teams[str(raw_next_event["team"]["id"])]
@@ -670,15 +667,11 @@ def identify_synthetic_formation_change_event(
     (
         current_home_team_formation,
         current_away_team_formation,
-    ) = get_home_away_team_formation(
-        raw_event, current_event_team, last_formations
-    )
+    ) = get_home_away_team_formation(raw_event, current_event_team)
     (
         next_home_team_formation,
         next_away_team_formation,
-    ) = get_home_away_team_formation(
-        raw_next_event, next_event_team, last_formations
-    )
+    ) = get_home_away_team_formation(raw_next_event, next_event_team)
     if next_home_team_formation != current_home_team_formation:
         event_formation_change_info[home_team] = {
             "formation_type": next_home_team_formation
@@ -776,10 +769,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
             events = []
 
-            last_formations = {
-                home_team.team_id: home_team.starting_formation,
-                away_team.team_id: away_team.starting_formation,
-            }
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
                 next_period_id = None
@@ -982,7 +971,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                             teams,
                             home_team,
                             away_team,
-                            last_formations,
                         )
                     )
                     for (

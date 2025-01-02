@@ -406,27 +406,6 @@ class TestHelpers:
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
-    def test_to_pandas_check_pass_receiver(self, base_dir):
-        dataset = opta.load(
-            f7_data=base_dir / "files/opta_f7.xml",
-            f24_data=base_dir / "files/opta_f24.xml",
-        )
-
-        df = dataset.to_pandas()
-        assert (
-            df.receiver_player_id[0] == "76001" and df.event_type[1] == "PASS"
-        )
-        assert (
-            df.receiver_player_id[4] == None
-            and df.event_type[5] == "GENERIC:block"
-        )
-
-        assert (
-            df.receiver_player_id[6] == None
-            and df.event_type[6] == "PASS"
-            and df.ball_owning_team[6] != df.ball_owning_team[7]
-        )
-
     def test_to_pandas_incomplete_pass(self, base_dir):
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",

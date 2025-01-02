@@ -95,6 +95,13 @@ class TestStatsPerformMetadata:
     def test_provider(self, tracking_dataset: TrackingDataset):
         assert tracking_dataset.metadata.provider == Provider.STATSPERFORM
 
+    def test_orientation(self, event_dataset: EventDataset):
+        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
+            # StatsPerform does not provide pitch dimensions
+            pitch_length=None,
+            pitch_width=None,
+        )
+
     def test_teams(self, tracking_dataset: TrackingDataset):
         home_team = tracking_dataset.metadata.teams[0]
         home_player = home_team.players[2]
@@ -172,11 +179,7 @@ class TestStatsPerformEvent:
 
     def test_deserialize_all(self, event_dataset: EventDataset):
         assert event_dataset.metadata.provider == Provider.STATSPERFORM
-        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
-            # StatsPerform does not provide pitch dimensions
-            pitch_length=None,
-            pitch_width=None,
-        )
+
         assert len(event_dataset.records) == 1643
 
         substitution_events = event_dataset.find_all("substitution")
@@ -197,6 +200,33 @@ class TestStatsPerformEvent:
         )
         assert first_sub.player == m_wintzheimer
         assert first_sub.replacement_player == b_jatta
+
+    def test_pass_receiver(self, event_dataset: EventDataset):
+
+        passes = event_dataset.find_all("pass")
+
+        incomplete_passes = [
+            p
+            for p in passes
+            if p.ball_owning_team.team_id
+            != p.next_record.ball_owning_team.team_id
+        ]
+
+        incomplete_pass_receivers = [
+            p for p in incomplete_passes if p.receiver_player is not None
+        ]
+
+        assert (
+            passes[0].receiver_player is not None
+            and passes[0].ball_owning_team
+            == passes[0].next_record.ball_owning_team
+        )
+        assert (
+            passes[0].receiver_player.player_id
+            == passes[0].next_record.player.player_id
+        )
+
+        assert len(incomplete_pass_receivers) == 0
 
 
 class TestStatsPerformTracking:

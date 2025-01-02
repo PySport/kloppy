@@ -9,7 +9,6 @@ from typing import IO, Dict, NamedTuple, Optional, Union
 from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
-    Frame,
     Ground,
     Metadata,
     Orientation,

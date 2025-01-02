@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from typing import Dict, List, NamedTuple, IO
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta, datetime
 import logging
 from lxml import objectify
 
@@ -26,7 +26,6 @@ from kloppy.domain import (
     BodyPart,
     Qualifier,
     CardType,
-    AttackingDirection,
     PositionType,
     Official,
     OfficialType,

@@ -5,50 +5,45 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
-    Dict,
-    List,
-    Optional,
-    Callable,
-    Union,
     Any,
-    TypeVar,
+    Callable,
+    Dict,
     Generic,
-    NewType,
-    overload,
     Iterable,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
 )
 
-from .position import PositionType
-
 from ...utils import deprecated, snake_case
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
+from .position import PositionType
 
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-from .pitch import (
-    PitchDimensions,
-    Unit,
-    Dimension,
-    NormalizedPitchDimensions,
-    MetricPitchDimensions,
-    ImperialPitchDimensions,
-    OptaPitchDimensions,
-    WyscoutPitchDimensions,
-)
-from .formation import FormationType
-from .time import Time, Period, TimeContainer
 from ...exceptions import (
-    OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    OrientationError,
 )
+from .formation import FormationType
+from .pitch import (
+    Dimension,
+    ImperialPitchDimensions,
+    MetricPitchDimensions,
+    NormalizedPitchDimensions,
+    OptaPitchDimensions,
+    PitchDimensions,
+    Unit,
+    WyscoutPitchDimensions,
+)
+from .time import Period, Time, TimeContainer
 
 
 @dataclass
@@ -264,7 +259,10 @@ class Team:
     def get_player_by_position(self, position: PositionType, time: Time):
         for player in self.players:
             if player.positions.items:
-                player_position = player.positions.value_at(time)
+                try:
+                    player_position = player.positions.value_at(time)
+                except KeyError:  # player that is subbed in later
+                    continue
                 if player_position and player_position == position:
                     return player
 
@@ -1198,6 +1196,7 @@ class Dataset(ABC, Generic[T]):
         start_of_match = self.metadata.periods[0].start_time
         for team in self.metadata.teams:
             for player in team.players:
+                player.positions.reset()
                 if player.starting:
                     player.set_position(
                         start_of_match,

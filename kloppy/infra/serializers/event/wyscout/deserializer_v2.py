@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, Tuple, NamedTuple, IO, Optional
+from typing import Dict, List, NamedTuple, IO, Optional
 
 from kloppy.domain import (
     BodyPart,
@@ -177,13 +177,11 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
         result = ShotResult.GOAL
     elif _has_tag(raw_event, 2101):
         result = ShotResult.BLOCKED
-    elif any((_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_POST)):
+    elif any(_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_POST):
         result = ShotResult.POST
-    elif any(
-        (_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_OFF_TARGET)
-    ):
+    elif any(_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_OFF_TARGET):
         result = ShotResult.OFF_TARGET
-    elif any((_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_ON_GOAL)):
+    elif any(_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_ON_GOAL):
         result = ShotResult.SAVED
 
     if next_event["eventId"] == wyscout_events.SAVE.EVENT:
@@ -493,12 +491,10 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
             home_team = _parse_team(raw_events, home_team_id, Ground.HOME)
             away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
             teams = {home_team_id: home_team, away_team_id: away_team}
-            players = dict(
-                [
-                    (wyId, _players_to_dict(team.players))
-                    for wyId, team in teams.items()
-                ]
-            )
+            players = {
+                wyId: _players_to_dict(team.players)
+                for wyId, team in teams.items()
+            }
             game_id = raw_events["events"][0].get("matchId", None)
             if game_id:
                 game_id = str(game_id)
@@ -572,7 +568,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     )
                     new_events.append(foul_event)
                     if any(
-                        (_has_tag(raw_event, tag) for tag in wyscout_tags.CARD)
+                        _has_tag(raw_event, tag) for tag in wyscout_tags.CARD
                     ):
                         card_event_args = _parse_card(raw_event)
                         card_event_id = (

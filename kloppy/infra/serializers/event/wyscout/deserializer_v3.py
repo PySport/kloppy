@@ -255,7 +255,9 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
 
 def _parse_shot(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
-    if raw_event["shot"]["isGoal"] is True:
+    if raw_event["type"]["primary"] == "own_goal":
+        result = ShotResult.OWN_GOAL
+    elif raw_event["shot"]["isGoal"] is True:
         result = ShotResult.GOAL
     elif raw_event["shot"]["onTarget"] is True:
         result = ShotResult.SAVED
@@ -264,25 +266,30 @@ def _parse_shot(raw_event: Dict) -> Dict:
     else:
         result = ShotResult.OFF_TARGET
 
-    if raw_event["shot"]["bodyPart"] == "head_or_other":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
-    elif raw_event["shot"]["bodyPart"] == "left_foot":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
-    elif raw_event["shot"]["bodyPart"] == "right_foot":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
+    if result != ShotResult.OWN_GOAL:
+        result_coordinates = _create_shot_result_coordinates(raw_event)
+        if raw_event["shot"]["bodyPart"] == "head_or_other":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+        elif raw_event["shot"]["bodyPart"] == "left_foot":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
+        elif raw_event["shot"]["bodyPart"] == "right_foot":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
-    statistics = []
-    for statistic_cls, prop_name in {
-        ExpectedGoals: "xg",
-        PostShotExpectedGoals: "postShotXg",
-    }.items():
-        value = raw_event["shot"].get(prop_name, None)
-        if value is not None:
-            statistics.append(statistic_cls(value=value))
+        statistics = []
+        for statistic_cls, prop_name in {
+            ExpectedGoals: "xg",
+            PostShotExpectedGoals: "postShotXg",
+        }.items():
+            value = raw_event["shot"].get(prop_name, None)
+            if value is not None:
+                statistics.append(statistic_cls(value=value))
+    else:
+        result_coordinates = None
+        statistics = []
 
     return {
         "result": result,
-        "result_coordinates": _create_shot_result_coordinates(raw_event),
+        "result_coordinates": result_coordinates,
         "qualifiers": qualifiers,
         "statistics": statistics,
     }
@@ -827,7 +834,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 primary_event_type = raw_event["type"]["primary"]
                 secondary_event_types = raw_event["type"]["secondary"]
-                if primary_event_type == "shot":
+                if (
+                    primary_event_type == "shot"
+                    or primary_event_type == "own_goal"
+                ):
                     shot_event_args = _parse_shot(raw_event)
                     event = self.event_factory.build_shot(
                         **shot_event_args, **generic_event_args

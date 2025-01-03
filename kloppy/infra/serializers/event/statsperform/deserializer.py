@@ -1,49 +1,49 @@
-import math
-from typing import Dict, List, NamedTuple, IO, Optional
 import logging
+import math
 from datetime import datetime, timedelta
+from typing import IO, Dict, List, NamedTuple, Optional
 
 import pytz
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Point,
-    Point3D,
     BallState,
+    BodyPart,
+    BodyPartQualifier,
+    CardQualifier,
+    CardType,
+    CounterAttackQualifier,
     DatasetFlag,
-    Orientation,
-    PassResult,
-    ShotResult,
-    TakeOnResult,
+    DuelQualifier,
     DuelResult,
     DuelType,
-    DuelQualifier,
-    Provider,
-    Metadata,
+    EventDataset,
+    ExpectedGoals,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     InterceptionResult,
-    CardType,
-    CardQualifier,
+    Metadata,
+    Orientation,
+    PassQualifier,
+    PassResult,
+    PassType,
+    Point,
+    Point3D,
+    PositionType,
+    PostShotExpectedGoals,
+    Provider,
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
-    BodyPartQualifier,
-    BodyPart,
-    PassType,
-    PassQualifier,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
-    PositionType,
-    ExpectedGoals,
-    PostShotExpectedGoals,
+    ShotResult,
+    TakeOnResult,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
-from .parsers import get_parser, OptaEvent
-from .formation_mapping import formation_position_mapping, formation_id_mapping
+from .formation_mapping import formation_id_mapping, formation_position_mapping
+from .parsers import OptaEvent, get_parser
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +157,14 @@ EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS = 131
 EVENT_QUALIFIER_XG = 321
 EVENT_QUALIFIER_POST_SHOT_XG = 322
 
+EVENT_TYPE_CHALLENGE = 45
+
+DEFLECT_EVENTS = [
+    EVENT_TYPE_CHALLENGE,
+    EVENT_TYPE_BALL_TOUCH,
+    EVENT_TYPE_BLOCKED_PASS,
+]
+
 event_type_names = {
     1: "pass",
     2: "offside pass",
@@ -245,8 +253,15 @@ position_line_mapping = {
 }
 
 
+def _set_pass_receiver(event: OptaEvent, team: Team):
+    return (team.get_player_by_id(event.player_id), event.timestamp)
+
+
 def _parse_pass(
-    raw_event: OptaEvent, next_event: OptaEvent, next_next_event: OptaEvent
+    raw_event: OptaEvent,
+    next_event: OptaEvent,
+    next_next_event: OptaEvent,
+    team: Team,
 ) -> Dict:
     if raw_event.outcome:
         result = PassResult.COMPLETE
@@ -255,15 +270,29 @@ def _parse_pass(
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
     pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
+    receiver_player = None
+    receive_timestamp = None
 
     qualifiers = pass_qualifiers + overall_qualifiers
+
+    # Set the receiver_player as the next_event if the pass result is complete,
+    # the ball possession is not changed on the next event and the next event is a
+    # BALL_OWNING_EVENTS.
+    if (
+        result == PassResult.COMPLETE
+        and next_event.contestant_id == team.team_id
+        and next_event.type_id in BALL_OWNING_EVENTS
+    ):
+        (receiver_player, receive_timestamp) = _set_pass_receiver(
+            next_event, team
+        )
 
     # Set the end location of a deflected pass to the start location
     # of the next action and the outcome to "success" if the deflected
     # pass reached a teammate
     if next_event is not None and next_next_event is not None:
         if (
-            next_event.type_id == EVENT_TYPE_BALL_TOUCH
+            next_event.type_id in DEFLECT_EVENTS
             and next_event.outcome == 1
             and next_next_event.contestant_id == raw_event.contestant_id
         ):
@@ -272,12 +301,15 @@ def _parse_pass(
                 x=next_next_event.x,
                 y=next_next_event.y,
             )
+            (receiver_player, receive_timestamp) = _set_pass_receiver(
+                next_next_event, team
+            )
 
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
-        receiver_player=None,
-        receive_timestamp=None,
+        receiver_player=receiver_player,
+        receive_timestamp=receive_timestamp,
         qualifiers=qualifiers,
     )
 
@@ -779,7 +811,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         ball_owning_team=possession_team,
                         ball_state=ball_state,
                         # from Event
-                        event_id=raw_event.id,
+                        event_id=str(raw_event.id),
                         team=team,
                         player=player,
                         coordinates=Point(x=raw_event.x, y=raw_event.y),
@@ -788,7 +820,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(
-                            raw_event, next_event, next_next_event
+                            raw_event, next_event, next_next_event, team
                         )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,

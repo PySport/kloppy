@@ -9,13 +9,14 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
+    PassResult,
     Point,
     Point3D,
+    PositionType,
     Provider,
     SportVUCoordinateSystem,
-    TrackingDataset,
     Time,
-    PositionType,
+    TrackingDataset,
 )
 
 
@@ -202,31 +203,28 @@ class TestStatsPerformEvent:
         assert first_sub.replacement_player == b_jatta
 
     def test_pass_receiver(self, event_dataset: EventDataset):
+        """It should impute the intended receiver of a pass."""
+        complete_pass = event_dataset.get_event_by_id("2328589789")
+        assert (
+            complete_pass.receiver_player.player_id
+            == "apdrig6xt1hxub1986s3uh1x"
+        )
 
-        passes = event_dataset.find_all("pass")
-
-        incomplete_passes = [
+        turnover_passes = [
             p
-            for p in passes
-            if p.ball_owning_team.team_id
-            != p.next_record.ball_owning_team.team_id
+            for p in event_dataset.find_all("pass")
+            if p.next_record
+            and p.ball_owning_team != p.next_record.ball_owning_team
         ]
-
-        incomplete_pass_receivers = [
-            p for p in incomplete_passes if p.receiver_player is not None
-        ]
-
-        assert (
-            passes[0].receiver_player is not None
-            and passes[0].ball_owning_team
-            == passes[0].next_record.ball_owning_team
-        )
-        assert (
-            passes[0].receiver_player.player_id
-            == passes[0].next_record.player.player_id
-        )
-
-        assert len(incomplete_pass_receivers) == 0
+        assert all(p.receiver_player is None for p in turnover_passes)
+        failed_pass = event_dataset.get_event_by_id("2328591011")
+        assert failed_pass.receiver_player is None
+        fouled_pass = event_dataset.get_event_by_id("2328589929")
+        assert fouled_pass.receiver_player is None
+        out_pass = event_dataset.get_event_by_id("2328590733")
+        assert out_pass.receiver_player is None
+        deflected_pass = event_dataset.get_event_by_id("2328596237")
+        assert deflected_pass.receiver_player is None
 
 
 class TestStatsPerformTracking:

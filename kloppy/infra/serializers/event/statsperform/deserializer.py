@@ -1,49 +1,49 @@
-import math
-from typing import Dict, List, NamedTuple, IO, Optional
 import logging
+import math
 from datetime import datetime, timedelta
+from typing import IO, Dict, List, NamedTuple, Optional
 
 import pytz
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Point,
-    Point3D,
     BallState,
+    BodyPart,
+    BodyPartQualifier,
+    CardQualifier,
+    CardType,
+    CounterAttackQualifier,
     DatasetFlag,
-    Orientation,
-    PassResult,
-    ShotResult,
-    TakeOnResult,
+    DuelQualifier,
     DuelResult,
     DuelType,
-    DuelQualifier,
-    Provider,
-    Metadata,
+    EventDataset,
+    ExpectedGoals,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     InterceptionResult,
-    CardType,
-    CardQualifier,
+    Metadata,
+    Orientation,
+    PassQualifier,
+    PassResult,
+    PassType,
+    Point,
+    Point3D,
+    PositionType,
+    PostShotExpectedGoals,
+    Provider,
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
-    BodyPartQualifier,
-    BodyPart,
-    PassType,
-    PassQualifier,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
-    PositionType,
-    ExpectedGoals,
-    PostShotExpectedGoals,
+    ShotResult,
+    TakeOnResult,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
-from .parsers import get_parser, OptaEvent
-from .formation_mapping import formation_position_mapping, formation_id_mapping
+from .formation_mapping import formation_id_mapping, formation_position_mapping
+from .parsers import OptaEvent, get_parser
 
 logger = logging.getLogger(__name__)
 
@@ -795,7 +795,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         ball_owning_team=possession_team,
                         ball_state=ball_state,
                         # from Event
-                        event_id=raw_event.id,
+                        event_id=str(raw_event.id),
                         team=team,
                         player=player,
                         coordinates=Point(x=raw_event.x, y=raw_event.y),

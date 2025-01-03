@@ -157,6 +157,14 @@ EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS = 131
 EVENT_QUALIFIER_XG = 321
 EVENT_QUALIFIER_POST_SHOT_XG = 322
 
+EVENT_TYPE_CHALLENGE = 45
+
+DEFLECT_EVENTS = [
+    EVENT_TYPE_CHALLENGE,
+    EVENT_TYPE_BALL_TOUCH,
+    EVENT_TYPE_BLOCKED_PASS,
+]
+
 event_type_names = {
     1: "pass",
     2: "offside pass",
@@ -245,6 +253,10 @@ position_line_mapping = {
 }
 
 
+def _set_pass_receiver(event: OptaEvent, team: Team):
+    return (team.get_player_by_id(event.player_id), event.timestamp)
+
+
 def _parse_pass(
     raw_event: OptaEvent,
     next_event: OptaEvent,
@@ -271,15 +283,16 @@ def _parse_pass(
         and next_event.contestant_id == team.team_id
         and next_event.type_id in BALL_OWNING_EVENTS
     ):
-        receiver_player = team.get_player_by_id(next_event.player_id)
-        receive_timestamp = next_event.timestamp
+        (receiver_player, receive_timestamp) = _set_pass_receiver(
+            next_event, team
+        )
 
     # Set the end location of a deflected pass to the start location
     # of the next action and the outcome to "success" if the deflected
     # pass reached a teammate
     if next_event is not None and next_next_event is not None:
         if (
-            next_event.type_id == EVENT_TYPE_BALL_TOUCH
+            next_event.type_id in DEFLECT_EVENTS
             and next_event.outcome == 1
             and next_next_event.contestant_id == raw_event.contestant_id
         ):
@@ -287,6 +300,9 @@ def _parse_pass(
             receiver_coordinates = Point(
                 x=next_next_event.x,
                 y=next_next_event.y,
+            )
+            (receiver_player, receive_timestamp) = _set_pass_receiver(
+                next_next_event, team
             )
 
     return dict(

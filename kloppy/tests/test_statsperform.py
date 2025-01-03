@@ -210,12 +210,20 @@ class TestStatsPerformEvent:
             == "apdrig6xt1hxub1986s3uh1x"
         )
 
+        deflected_pass = event_dataset.get_event_by_id("2328596237")
+        assert (
+            deflected_pass.receiver_player.player_id
+            == "4wk62n7739xlysrxoky33mf2t"
+        )
+
         turnover_passes = [
             p
             for p in event_dataset.find_all("pass")
             if p.next_record
             and p.ball_owning_team != p.next_record.ball_owning_team
+            and p.result.value != "COMPLETE"
         ]
+
         assert all(p.receiver_player is None for p in turnover_passes)
         failed_pass = event_dataset.get_event_by_id("2328591011")
         assert failed_pass.receiver_player is None
@@ -223,8 +231,6 @@ class TestStatsPerformEvent:
         assert fouled_pass.receiver_player is None
         out_pass = event_dataset.get_event_by_id("2328590733")
         assert out_pass.receiver_player is None
-        deflected_pass = event_dataset.get_event_by_id("2328596237")
-        assert deflected_pass.receiver_player is None
 
 
 class TestStatsPerformTracking:

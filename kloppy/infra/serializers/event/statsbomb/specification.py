@@ -1274,6 +1274,18 @@ class BALL_RECOVERY(EVENT):
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
+        recovery_dict = self.raw_event.get("ball_recovery", {})
+        recovery_failure = recovery_dict.get("recovery_failure", False)
+        if recovery_failure:
+            duel_event = event_factory.build_duel(
+                result=DuelResult.LOST,
+                qualifiers=[
+                    DuelQualifier(value=DuelType.LOOSE_BALL),
+                ],
+                **generic_event_kwargs,
+            )
+            return [duel_event]
+
         recovery_event = event_factory.build_recovery(
             result=None,
             qualifiers=None,

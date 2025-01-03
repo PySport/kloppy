@@ -255,7 +255,9 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
 
 def _parse_shot(raw_event: Dict) -> Dict:
     qualifiers = _generic_qualifiers(raw_event)
-    if raw_event["shot"]["isGoal"] is True:
+    if raw_event["type"]["primary"] == "own_goal":
+        result = ShotResult.OWN_GOAL
+    elif raw_event["shot"]["isGoal"] is True:
         result = ShotResult.GOAL
     elif raw_event["shot"]["onTarget"] is True:
         result = ShotResult.SAVED
@@ -264,25 +266,30 @@ def _parse_shot(raw_event: Dict) -> Dict:
     else:
         result = ShotResult.OFF_TARGET
 
-    if raw_event["shot"]["bodyPart"] == "head_or_other":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
-    elif raw_event["shot"]["bodyPart"] == "left_foot":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
-    elif raw_event["shot"]["bodyPart"] == "right_foot":
-        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
+    if result != ShotResult.OWN_GOAL:
+        result_coordinates = _create_shot_result_coordinates(raw_event)
+        if raw_event["shot"]["bodyPart"] == "head_or_other":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
+        elif raw_event["shot"]["bodyPart"] == "left_foot":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
+        elif raw_event["shot"]["bodyPart"] == "right_foot":
+            qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
 
-    statistics = []
-    for statistic_cls, prop_name in {
-        ExpectedGoals: "xg",
-        PostShotExpectedGoals: "postShotXg",
-    }.items():
-        value = raw_event["shot"].get(prop_name, None)
-        if value is not None:
-            statistics.append(statistic_cls(value=value))
+        statistics = []
+        for statistic_cls, prop_name in {
+            ExpectedGoals: "xg",
+            PostShotExpectedGoals: "postShotXg",
+        }.items():
+            value = raw_event["shot"].get(prop_name, None)
+            if value is not None:
+                statistics.append(statistic_cls(value=value))
+    else:
+        result_coordinates = None
+        statistics = []
 
     return {
         "result": result,
-        "result_coordinates": _create_shot_result_coordinates(raw_event),
+        "result_coordinates": result_coordinates,
         "qualifiers": qualifiers,
         "statistics": statistics,
     }
@@ -622,21 +629,38 @@ def _create_timestamp_timedelta(
     return time_delta
 
 
+def _validate_formation(formation: str) -> bool:
+    formation_parts = formation.split("-")
+    formation_ints = [int(part) for part in formation_parts]
+    total_players = sum(formation_ints)
+
+    return total_players == 10
+
+
+def _get_team_formation(team_formation):
+    return (
+        formations[team_formation]
+        if _validate_formation(team_formation)
+        else FormationType.UNKNOWN
+    )
+
+
 def get_home_away_team_formation(event, team):
+    team_formation = event["team"]["formation"]
+    team_id = str(event["team"]["id"])
+    opponent_formation = event["opponentTeam"]["formation"]
+    opponent_team_id = str(event["opponentTeam"]["id"])
+
     if team.ground == Ground.HOME:
-        current_home_team_formation = formations[event["team"]["formation"]]
-        current_away_team_formation = formations[
-            event["opponentTeam"]["formation"]
-        ]
+        home_team_formation = _get_team_formation(team_formation)
+        away_team_formation = _get_team_formation(opponent_formation)
     elif team.ground == Ground.AWAY:
-        current_away_team_formation = formations[event["team"]["formation"]]
-        current_home_team_formation = formations[
-            event["opponentTeam"]["formation"]
-        ]
+        away_team_formation = _get_team_formation(team_formation)
+        home_team_formation = _get_team_formation(opponent_formation)
     else:
         raise DeserializationError(f"Unknown team_id {team.team_id}")
 
-    return current_home_team_formation, current_away_team_formation
+    return home_team_formation, away_team_formation
 
 
 def identify_synthetic_formation_change_event(
@@ -827,7 +851,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 primary_event_type = raw_event["type"]["primary"]
                 secondary_event_types = raw_event["type"]["secondary"]
-                if primary_event_type == "shot":
+                if (
+                    primary_event_type == "shot"
+                    or primary_event_type == "own_goal"
+                ):
                     shot_event_args = _parse_shot(raw_event)
                     event = self.event_factory.build_shot(
                         **shot_event_args, **generic_event_args
@@ -945,7 +972,11 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if next_event:
                     event_formation_change_info = (
                         identify_synthetic_formation_change_event(
-                            raw_event, next_event, teams, home_team, away_team
+                            raw_event,
+                            next_event,
+                            teams,
+                            home_team,
+                            away_team,
                         )
                     )
                     for (
@@ -954,7 +985,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     ) in event_formation_change_info.items():
                         generic_event_args.update(
                             {
-                                "event_id": f"synthetic-{raw_event['id']}",
+                                "event_id": f"synthetic-{formation_change_team.team_id}-{raw_event['id']}",
                                 "raw_event": None,
                                 "coordinates": None,
                                 "player": None,

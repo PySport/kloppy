@@ -37,6 +37,7 @@ from kloppy.domain import (
 from kloppy.utils import performance_logging
 
 from . import wyscout_events, wyscout_tags
+from .wyscout_tags import GOAL, OWN_GOAL
 from ..deserializer import EventDataDeserializer
 
 logger = logging.getLogger(__name__)
@@ -557,6 +558,17 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     new_events.append(shot_event)
                 elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
                     pass_event_args = _parse_pass(raw_event, next_event)
+                    # Pass in new period or after goal scored is the kick-off
+                    if (
+                        idx == 0
+                        or raw_event["matchPeriod"]
+                        != raw_events["events"][idx - 1]["matchPeriod"]
+                        or _has_tag(raw_events["events"][idx - 1], GOAL)
+                        or _has_tag(raw_events["events"][idx - 1], OWN_GOAL)
+                    ):
+                        pass_event_args["qualifiers"].append(
+                            SetPieceQualifier(value=SetPieceType.KICK_OFF)
+                        )
                     pass_event = self.event_factory.build_pass(
                         **pass_event_args, **generic_event_args
                     )

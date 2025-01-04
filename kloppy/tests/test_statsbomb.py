@@ -957,8 +957,8 @@ class TestStatsBombDuelEvent:
         """It should deserialize all duel and 50/50 events"""
         events = dataset.find_all("duel")
         assert (
-            len(events) == 59 + 4 + 26
-        )  # duels + 50/50 + aerial won attribute
+            len(events) == 59 + 4 + 26 + 4
+        )  # duels + 50/50 + aerial won attribute + failed recoveries
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of duels"""
@@ -1171,10 +1171,21 @@ class TestStatsBombPlayerOnEvent:
 class TestStatsBombRecoveryEvent:
     """Tests related to deserializing 23/Recovery events"""
 
-    def test_deserialize_all(self, dataset: EventDataset):
-        """It should deserialize all ball recovery events"""
+    def test_deserialize_successful(self, dataset: EventDataset):
+        """It should deserialize all successful ball recovery events"""
         events = dataset.find_all("recovery")
-        assert len(events) == 97
+        assert len(events) == 93
+
+    def test_deserialize_failed(self, dataset: EventDataset):
+        """It should deserialize all failed ball recovery events as loose ball duels"""
+        failed_recovery = dataset.get_event_by_id(
+            "0df4c1d6-1c4a-407b-876d-d9ac80fd7eee"
+        )
+        assert failed_recovery.event_type == EventType.DUEL
+        assert failed_recovery.get_qualifier_values(DuelQualifier) == [
+            DuelType.LOOSE_BALL,
+        ]
+        assert failed_recovery.result == DuelResult.LOST
 
 
 class TestStatsBombTacticalShiftEvent:

@@ -42,6 +42,7 @@ from .pitch import (
     PitchDimensions,
     Unit,
     WyscoutPitchDimensions,
+    ImpectPitchDimensions,
 )
 from .time import Period, Time, TimeContainer
 
@@ -94,6 +95,7 @@ class Provider(Enum):
         DATAFACTORY:
         STATSPERFORM:
         SPORTVU:
+        IMPECT:
     """
 
     METRICA = "metrica"
@@ -108,6 +110,7 @@ class Provider(Enum):
     DATAFACTORY = "datafactory"
     STATSPERFORM = "statsperform"
     SPORTVU = "sportvu"
+    IMPECT = "impect"
     OTHER = "other"
 
     def __str__(self):
@@ -855,6 +858,25 @@ class SportVUCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class ImpectCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.IMPECT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return ImpectPitchDimensions()
+
+
 class DatasetType(Enum):
     """
     DatasetType
@@ -905,6 +927,7 @@ def build_coordinate_system(
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
     }
 
     if provider in coordinate_systems:

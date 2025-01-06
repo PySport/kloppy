@@ -159,12 +159,6 @@ EVENT_QUALIFIER_POST_SHOT_XG = 322
 
 EVENT_TYPE_CHALLENGE = 45
 
-DEFLECT_EVENTS = [
-    EVENT_TYPE_CHALLENGE,
-    EVENT_TYPE_BALL_TOUCH,
-    EVENT_TYPE_BLOCKED_PASS,
-]
-
 event_type_names = {
     1: "pass",
     2: "offside pass",
@@ -253,7 +247,7 @@ position_line_mapping = {
 }
 
 
-def _set_pass_receiver(event: OptaEvent, team: Team):
+def _get_pass_receiver(event: OptaEvent, team: Team):
     return (team.get_player_by_id(event.player_id), event.timestamp)
 
 
@@ -283,16 +277,17 @@ def _parse_pass(
         and next_event.contestant_id == team.team_id
         and next_event.type_id in BALL_OWNING_EVENTS
     ):
-        (receiver_player, receive_timestamp) = _set_pass_receiver(
+        (receiver_player, receive_timestamp) = _get_pass_receiver(
             next_event, team
         )
 
-    # Set the end location of a deflected pass to the start location
-    # of the next action and the outcome to "success" if the deflected
-    # pass reached a teammate
+    # Set pass completions based on next events outcome
     if next_event is not None and next_next_event is not None:
+        # Set the end location of a deflected pass to the start location
+        # of the next action and the outcome to "success" if the deflected
+        # pass reached a teammate
         if (
-            next_event.type_id in DEFLECT_EVENTS
+            next_event.type_id == EVENT_TYPE_BALL_TOUCH
             and next_event.outcome == 1
             and next_next_event.contestant_id == raw_event.contestant_id
         ):
@@ -301,7 +296,19 @@ def _parse_pass(
                 x=next_next_event.x,
                 y=next_next_event.y,
             )
-            (receiver_player, receive_timestamp) = _set_pass_receiver(
+
+        # Set the pass receiver information only if the next event is
+        # a 45 CHALLENGE event and the ball still reached a teammate
+        if (
+            next_event.type_id == EVENT_TYPE_CHALLENGE
+            and next_next_event.contestant_id == raw_event.contestant_id
+        ):
+            result = PassResult.COMPLETE
+            receiver_coordinates = Point(
+                x=next_next_event.x,
+                y=next_next_event.y,
+            )
+            (receiver_player, receive_timestamp) = _get_pass_receiver(
                 next_next_event, team
             )
 

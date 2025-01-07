@@ -1,17 +1,12 @@
 import bisect
 import uuid
 from datetime import timedelta
-from typing import List
-
-import pandas as pd
 
 from kloppy.domain import (
     EventDataset,
-    Event,
     EventType,
     BodyPart,
     CarryResult,
-    CarryEvent,
     GenericEvent,
     EventFactory,
     Unit,
@@ -22,36 +17,32 @@ from kloppy.domain.services.event_deducers.event_deducer import (
 
 
 class CarryDeducer(EventDatasetDeduducer):
+    min_carry_length_meters = 3
+    max_carry_length_meters = 60
+    max_carry_duration = timedelta(seconds=10)
+    event_factory = EventFactory()
+
     def deduce(self, dataset: EventDataset):
-        event_factory = EventFactory()
-
-        # TODO: config
-        min_carry_length = 3
-        max_carry_length = 60
-        max_carry_duration = timedelta(seconds=10)
-
-        unit = Unit("m")
-        min_carry_length = unit.convert(
-            dataset.metadata.coordinate_system.pitch_dimensions.unit,
-            min_carry_length,
-        )
-        max_carry_length = unit.convert(
-            dataset.metadata.coordinate_system.pitch_dimensions.unit,
-            max_carry_length,
-        )
+        pitch = dataset.metadata.pitch_dimensions
 
         new_carries = []
         valid_event_types = [
             EventType.PASS,
-            EventType.SHOT,
             EventType.TAKE_ON,
-            EventType.INTERCEPTION,
             EventType.DUEL,
             EventType.RECOVERY,
             EventType.MISCONTROL,
             EventType.GOALKEEPER,
-            EventType.PRESSURE,
         ]
+        valid_next_event_types = [
+            EventType.PASS,
+            EventType.SHOT,
+            EventType.TAKE_ON,
+            EventType.DUEL,
+            EventType.MISCONTROL,
+            EventType.GOALKEEPER,
+        ]
+
         for idx, event in enumerate(dataset.events):
             if event.event_type not in valid_event_types:
                 continue
@@ -61,14 +52,14 @@ class CarryDeducer(EventDatasetDeduducer):
                 next_event = dataset.events[idx + idx_plus]
 
                 if isinstance(next_event, GenericEvent):
-                    idx += 1
+                    idx_plus += 1
                     continue
                 else:
                     generic_next_event = False
                 if not event.team.team_id == next_event.team.team_id:
                     continue
 
-                if next_event.event_type not in valid_event_types:
+                if next_event.event_type not in valid_next_event_types:
                     continue
                 # not headed shot
                 if (
@@ -91,16 +82,19 @@ class CarryDeducer(EventDatasetDeduducer):
 
                 new_coord = next_event.coordinates
 
+                distance_meters = pitch.distance_between(
+                    new_coord, last_coord, Unit.METERS
+                )
                 # Not far enough
-                if new_coord.distance_to(last_coord) < min_carry_length:
+                if distance_meters < self.min_carry_length_meters:
                     continue
                 # Too far
-                if new_coord.distance_to(last_coord) > max_carry_length:
+                if distance_meters > self.max_carry_length_meters:
                     continue
 
                 dt = next_event.timestamp - event.timestamp
                 # not same phase
-                if dt > max_carry_duration:
+                if dt > self.max_carry_duration:
                     continue
                 # not same period
                 if not event.period.id == next_event.period.id:
@@ -115,7 +109,7 @@ class CarryDeducer(EventDatasetDeduducer):
                     )
 
                 generic_event_args = {
-                    "event_id": str(uuid.uuid4()),
+                    "event_id": f"{str(uuid.uuid4())}",
                     "coordinates": last_coord,
                     "team": next_event.team,
                     "player": next_event.player,
@@ -131,7 +125,7 @@ class CarryDeducer(EventDatasetDeduducer):
                     "end_coordinates": new_coord,
                     "end_timestamp": next_event.timestamp,
                 }
-                new_carry = event_factory.build_carry(
+                new_carry = self.event_factory.build_carry(
                     **carry_event_args, **generic_event_args
                 )
                 new_carries.append(new_carry)

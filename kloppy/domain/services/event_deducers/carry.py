@@ -1,24 +1,18 @@
 import bisect
-import math
 from datetime import timedelta
-from typing import List, NamedTuple, Union
+from typing import List
 
 import pandas as pd
 
 from kloppy.domain import (
     EventDataset,
-    Player,
-    Time,
-    PositionType,
     Event,
     EventType,
     BodyPart,
     CarryResult,
     CarryEvent,
     GenericEvent,
-    Point,
     EventFactory,
-    Dimension,
     Unit,
 )
 from kloppy.domain.services.event_deducers.event_deducer import (

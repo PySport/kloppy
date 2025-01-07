@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, NamedTuple
-
-from kloppy.domain import EventDataset, Event
+from kloppy.domain import EventDataset
 
 
 class EventDatasetDeduducer(ABC):

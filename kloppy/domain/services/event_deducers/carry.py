@@ -1,4 +1,5 @@
 import bisect
+import uuid
 from datetime import timedelta
 from typing import List
 
@@ -25,36 +26,39 @@ class CarryDeducer(EventDatasetDeduducer):
         event_factory = EventFactory()
 
         # TODO: config
-        min_dribble_length = 3
-        max_dribble_length = 60
-        max_dribble_duration = timedelta(seconds=10)
+        min_carry_length = 3
+        max_carry_length = 60
+        max_carry_duration = timedelta(seconds=10)
 
         unit = Unit("m")
-        min_dribble_length = unit.convert(
+        min_carry_length = unit.convert(
             dataset.metadata.coordinate_system.pitch_dimensions.unit,
-            min_dribble_length,
+            min_carry_length,
         )
-        max_dribble_length = unit.convert(
+        max_carry_length = unit.convert(
             dataset.metadata.coordinate_system.pitch_dimensions.unit,
-            max_dribble_length,
+            max_carry_length,
         )
 
         new_carries = []
+        valid_event_types = [
+            EventType.PASS,
+            EventType.SHOT,
+            EventType.TAKE_ON,
+            EventType.INTERCEPTION,
+            EventType.DUEL,
+            EventType.RECOVERY,
+            EventType.MISCONTROL,
+            EventType.GOALKEEPER,
+            EventType.PRESSURE,
+        ]
         for idx, event in enumerate(dataset.events):
-            if isinstance(event, GenericEvent):
+            if event.event_type not in valid_event_types:
                 continue
-            if event.event_type in [
-                EventType.FOUL_COMMITTED,
-                EventType.CARD,
-                EventType.SUBSTITUTION,
-                EventType.FORMATION_CHANGE,
-                EventType.CLEARANCE,
-            ]:
-                continue
-            idx_sum = 1
+            idx_plus = 1
             generic_next_event = True
-            while idx + idx_sum < len(dataset.events) and generic_next_event:
-                next_event = dataset.events[idx + idx_sum]
+            while idx + idx_plus < len(dataset.events) and generic_next_event:
+                next_event = dataset.events[idx + idx_plus]
 
                 if isinstance(next_event, GenericEvent):
                     idx += 1
@@ -64,12 +68,7 @@ class CarryDeducer(EventDatasetDeduducer):
                 if not event.team.team_id == next_event.team.team_id:
                     continue
 
-                if next_event.event_type in [
-                    EventType.FOUL_COMMITTED,
-                    EventType.CARD,
-                    EventType.SUBSTITUTION,
-                    EventType.FORMATION_CHANGE,
-                ]:
+                if next_event.event_type not in valid_event_types:
                     continue
                 # not headed shot
                 if (
@@ -93,15 +92,15 @@ class CarryDeducer(EventDatasetDeduducer):
                 new_coord = next_event.coordinates
 
                 # Not far enough
-                if new_coord.distance_to(last_coord) < min_dribble_length:
+                if new_coord.distance_to(last_coord) < min_carry_length:
                     continue
                 # Too far
-                if new_coord.distance_to(last_coord) > max_dribble_length:
+                if new_coord.distance_to(last_coord) > max_carry_length:
                     continue
 
                 dt = next_event.timestamp - event.timestamp
                 # not same phase
-                if dt > max_dribble_duration:
+                if dt > max_carry_duration:
                     continue
                 # not same period
                 if not event.period.id == next_event.period.id:
@@ -116,7 +115,7 @@ class CarryDeducer(EventDatasetDeduducer):
                     )
 
                 generic_event_args = {
-                    "event_id": 1,  # TODO: generate event id
+                    "event_id": str(uuid.uuid4()),
                     "coordinates": last_coord,
                     "team": next_event.team,
                     "player": next_event.player,

@@ -141,4 +141,3 @@ class CarryDeducer(EventDatasetDeduducer):
                 [e.time for e in dataset.events], new_carry.time
             )
             dataset.records.insert(pos, new_carry)
-        print(f"total carries: {len(new_carries)}/{len(dataset.events)}")

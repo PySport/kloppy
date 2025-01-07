@@ -12,7 +12,7 @@ from kloppy.utils import performance_logging
 from kloppy import statsbomb, statsperform
 
 
-class TestStateBuilder:
+class TestEventDeducer:
     """"""
 
     def _load_dataset(self, base_dir, base_filename="statsperform"):
@@ -29,9 +29,6 @@ class TestStateBuilder:
             dataset.add_deduced_event(EventType.CARRY)
         carry = dataset.find("carry")
         index = dataset.events.index(carry)
-        print(carry)
         # Assert end location is equal to start location of next action
         assert carry.end_coordinates == dataset.events[index + 1].coordinates
         assert carry.player == dataset.events[index + 1].player
-
-        print(dataset.to_df()[:40].to_string())

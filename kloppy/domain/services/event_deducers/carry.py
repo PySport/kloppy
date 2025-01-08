@@ -26,19 +26,15 @@ class CarryDeducer(EventDatasetDeduducer):
         pitch = dataset.metadata.pitch_dimensions
 
         new_carries = []
+
         valid_event_types = [
-            EventType.PASS,
-            EventType.TAKE_ON,
-            EventType.DUEL,
-            EventType.RECOVERY,
-            EventType.MISCONTROL,
-            EventType.GOALKEEPER,
-        ]
-        valid_next_event_types = [
             EventType.PASS,
             EventType.SHOT,
             EventType.TAKE_ON,
+            EventType.CLEARANCE,
+            EventType.INTERCEPTION,
             EventType.DUEL,
+            EventType.RECOVERY,
             EventType.MISCONTROL,
             EventType.GOALKEEPER,
         ]
@@ -51,7 +47,10 @@ class CarryDeducer(EventDatasetDeduducer):
             while idx + idx_plus < len(dataset.events) and generic_next_event:
                 next_event = dataset.events[idx + idx_plus]
 
-                if isinstance(next_event, GenericEvent):
+                if next_event.event_type in [
+                    EventType.GENERIC,
+                    EventType.PRESSURE,
+                ]:
                     idx_plus += 1
                     continue
                 else:
@@ -59,7 +58,7 @@ class CarryDeducer(EventDatasetDeduducer):
                 if not event.team.team_id == next_event.team.team_id:
                     continue
 
-                if next_event.event_type not in valid_next_event_types:
+                if next_event.event_type not in valid_event_types:
                     continue
                 # not headed shot
                 if (

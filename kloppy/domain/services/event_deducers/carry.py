@@ -101,6 +101,8 @@ class CarryDeducer(EventDatasetDeduducer):
 
                 if hasattr(event, "end_timestamp"):
                     last_timestamp = event.end_timestamp
+                elif hasattr(event, "receive_timestamp"):
+                    last_timestamp = event.receive_timestamp
                 else:
                     last_timestamp = (
                         event.timestamp

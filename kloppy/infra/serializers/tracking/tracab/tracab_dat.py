@@ -41,9 +41,10 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
+        fps_output: Optional[float] = None,
         only_alive: Optional[bool] = True,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(limit, sample_rate, coordinate_system, fps_output)
         self.only_alive = only_alive
 
     @property
@@ -336,6 +337,9 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             date=date,
             game_id=game_id,
         )
+
+        if self.fps_output:
+            frames = transformer.transform_frames_for_fps_output(frames=frames, fps_output=self.fps_output)
 
         return TrackingDataset(
             records=frames,

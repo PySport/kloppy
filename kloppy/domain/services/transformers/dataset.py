@@ -1,8 +1,13 @@
+import datetime
+import math
 import warnings
+from collections import defaultdict
 from dataclasses import fields, replace
 
 from kloppy.domain.models.tracking import PlayerData
 from typing import Union, Optional
+
+import numpy as np
 
 from kloppy.domain import (
     AttackingDirection,
@@ -367,6 +372,68 @@ class DatasetTransformer:
 
     def get_to_coordinate_system(self) -> Optional[CoordinateSystem]:
         return self._to_coordinate_system
+
+    @staticmethod
+    def transform_frames_for_fps_output(
+        frames: list[Frame], fps_output: float
+    ) -> list[Frame]:
+        output_frames = []
+
+        frames_per_period = defaultdict(lambda: [])
+        for frame in frames:
+            frames_per_period[frame.period].append(frame)
+
+        for period, frames_for_period in frames_per_period.items():
+            timeframe = (
+                frames_for_period[-1].timestamp
+                - frames_for_period[0].timestamp
+            )
+            nr_frames = math.floor(fps_output * timeframe.total_seconds()) + 1
+
+            frame_idx = 0
+            for i in range(nr_frames):
+                ts = i * (1 / fps_output)
+                ts = datetime.timedelta(seconds=ts)
+
+                if frames_for_period[frame_idx].timestamp == ts:
+                    output_frames.append(frames_for_period[frame_idx])
+                    continue
+                elif frames_for_period[frame_idx + 1].timestamp == ts:
+                    output_frames.append(frames_for_period[frame_idx])
+                    break
+
+                while frames_for_period[frame_idx + 1].timestamp < ts:
+                    frame_idx += 1
+
+                r = (ts - frames_for_period[frame_idx].timestamp) / (
+                    frames_for_period[frame_idx + 1].timestamp
+                    - frames_for_period[frame_idx].timestamp
+                )
+
+                xyz1 = frames_for_period[frame_idx].ball_coordinates
+                xyz2 = frames_for_period[frame_idx + 1].ball_coordinates
+                ball_x = xyz1.x + r * (xyz2.x - xyz1.x)
+                ball_y = xyz1.y + r * (xyz2.y - xyz1.y)
+                ball_z = xyz1.z + r * (xyz2.z - xyz1.z)
+
+                # TODO: interpolate player coordinates
+
+                frame = Frame(
+                    frame_id=0,  # ??
+                    timestamp=ts,
+                    ball_coordinates=Point3D(ball_x, ball_y, ball_z),
+                    ball_state=frames_for_period[frame_idx].ball_state,
+                    ball_owning_team=frames_for_period[
+                        frame_idx
+                    ].ball_owning_team,
+                    players_data={},  # TODO
+                    period=period,
+                    other_data={},
+                    statistics=frames_for_period[frame_idx].statistics,
+                )
+                output_frames.append(frame)
+
+        return output_frames
 
     @classmethod
     def transform_dataset(

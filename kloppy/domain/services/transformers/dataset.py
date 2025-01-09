@@ -388,7 +388,10 @@ class DatasetTransformer:
                 frames_for_period[-1].timestamp
                 - frames_for_period[0].timestamp
             )
-            nr_frames = math.floor(fps_output * timeframe.total_seconds()) + 1
+            if isinstance(timeframe, datetime.timedelta):
+                timeframe = timeframe.total_seconds()
+
+            nr_frames = math.floor(fps_output * timeframe) + 1
 
             frame_idx = 0
             for i in range(nr_frames):
@@ -442,11 +445,13 @@ class DatasetTransformer:
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
         to_coordinate_system: Optional[CoordinateSystem] = None,
+        fps_output: Optional[float] = None,
     ) -> Dataset:
         if (
             to_pitch_dimensions is None
             and to_orientation is None
             and to_coordinate_system is None
+            and fps_output is None
         ):
             return dataset
 
@@ -519,6 +524,12 @@ class DatasetTransformer:
                 transformer.transform_frame(record)
                 for record in dataset.records
             ]
+
+            if fps_output:
+                frames = cls.transform_frames_for_fps_output(
+                    frames, fps_output
+                )
+                metadata.frame_rate = fps_output
 
             return TrackingDataset(
                 metadata=metadata,

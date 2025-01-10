@@ -55,6 +55,18 @@ def dataset(base_dir) -> EventDataset:
     return dataset
 
 
+@pytest.fixture(scope="module")
+def dataset_f73(base_dir) -> EventDataset:
+    """Load Opta data for FC København - FC Nordsjælland"""
+    dataset = opta.load(
+        f7_data=base_dir / "files" / "opta_f7.xml",
+        f24_data=base_dir / "files" / "opta_f73.xml",
+        coordinates="opta",
+    )
+    assert dataset.dataset_type == DatasetType.EVENT
+    return dataset
+
+
 def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
@@ -431,6 +443,18 @@ class TestOptaShotEvent:
                 if statistic.name == "PSxG"
             ).value
             == 0.98
+        )
+
+    def test_shot_xg(self, dataset_f73: EventDataset):
+        """Test if expected goals are correctly deserialized"""
+        shot = dataset_f73.get_event_by_id("2318695229")
+        assert (
+            next(
+                statistic
+                for statistic in shot.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.75
         )
 
 

@@ -408,11 +408,17 @@ def _parse_shot(raw_event: OptaEvent) -> Dict:
                 y=100 - result_coordinates.y,
             )
 
+    statistics = []
+    if 321 in raw_event.qualifiers:
+        xg_value = float(raw_event.qualifiers[321])
+        statistics.append(ExpectedGoals(value=xg_value))
+
     event_info = dict(
         coordinates=coordinates,
         result=result,
         result_coordinates=result_coordinates,
         qualifiers=qualifiers,
+        statistics=statistics,
     )
 
     statistics = []

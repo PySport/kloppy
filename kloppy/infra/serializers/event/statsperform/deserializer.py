@@ -257,60 +257,56 @@ def _parse_pass(
     next_next_event: OptaEvent,
     team: Team,
 ) -> Dict:
-    if raw_event.outcome:
-        result = PassResult.COMPLETE
-    else:
-        result = PassResult.INCOMPLETE
+    result = (
+        PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
+    )
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
-    pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
-    overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
-    receiver_player = None
-    receive_timestamp = None
+    qualifiers = _get_pass_qualifiers(
+        raw_event.qualifiers
+    ) + _get_event_qualifiers(raw_event.qualifiers)
 
-    qualifiers = pass_qualifiers + overall_qualifiers
-
-    # Set the receiver_player as the next_event if the pass result is complete,
-    # the ball possession is not changed on the next event and the next event is a
-    # BALL_OWNING_EVENTS.
-    if (
-        result == PassResult.COMPLETE
-        and next_event.contestant_id == team.team_id
-        and next_event.type_id in BALL_OWNING_EVENTS
-    ):
-        (receiver_player, receive_timestamp) = _get_pass_receiver(
-            next_event, team
-        )
-
-    # Set pass completions based on next events outcome
-    if next_event is not None and next_next_event is not None:
-        # Set the end location of a deflected pass to the start location
-        # of the next action and the outcome to "success" if the deflected
-        # pass reached a teammate
+    # Look for a ball receipt event based on the result and sequence of events
+    ball_receipt_event = None
+    if result == PassResult.COMPLETE and next_event is not None:
         if (
-            next_event.type_id == EVENT_TYPE_BALL_TOUCH
-            and next_event.outcome == 1
-            and next_next_event.contestant_id == raw_event.contestant_id
+            next_event.contestant_id == team.team_id
+            and next_event.type_id in BALL_OWNING_EVENTS
         ):
-            result = PassResult.COMPLETE
-            receiver_coordinates = Point(
-                x=next_next_event.x,
-                y=next_next_event.y,
-            )
-
-        # Set the pass receiver information only if the next event is
-        # a 45 CHALLENGE event and the ball still reached a teammate
-        if (
+            ball_receipt_event = next_event
+        elif (
             next_event.type_id == EVENT_TYPE_CHALLENGE
-            and next_next_event.contestant_id == raw_event.contestant_id
+            and next_next_event is not None
+            and next_next_event.contestant_id == team.team_id
+            and next_next_event.type_id in BALL_OWNING_EVENTS
         ):
-            result = PassResult.COMPLETE
-            receiver_coordinates = Point(
-                x=next_next_event.x,
-                y=next_next_event.y,
-            )
-            (receiver_player, receive_timestamp) = _get_pass_receiver(
-                next_next_event, team
-            )
+            ball_receipt_event = next_next_event
+    # Assign the receiver_player and receive_timestamp
+    # if a ball_receipt_event was found
+    if (
+        ball_receipt_event is not None
+        and ball_receipt_event.player_id is not None
+    ):
+        receiver_player = team.get_player_by_id(ball_receipt_event.player_id)
+        receive_timestamp = ball_receipt_event.timestamp
+    else:
+        receiver_player = None
+        receive_timestamp = None
+
+    # Set the end location of a deflected pass to the start location
+    # of the next action and the outcome to "success" if the deflected
+    # pass reached a teammate
+    if (
+        next_event is not None
+        and next_next_event is not None
+        and next_event.type_id == EVENT_TYPE_BALL_TOUCH
+        and next_event.outcome == 1
+        and next_next_event.contestant_id == raw_event.contestant_id
+    ):
+        result = PassResult.COMPLETE
+        receiver_coordinates = Point(
+            x=next_next_event.x,
+            y=next_next_event.y,
+        )
 
     return dict(
         result=result,

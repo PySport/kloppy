@@ -1186,6 +1186,17 @@ class EventDataset(Dataset[Event]):
 
         return aggregator.aggregate(self)
 
+    def add_deduced_event(self, event_type_: EventType):
+        if event_type_ == EventType.CARRY:
+            from kloppy.domain.services.event_deducers.carry import (
+                CarryDeducer,
+            )
+
+            deducer = CarryDeducer()
+        else:
+            raise KloppyError(f"Not possible to deduce {event_type_}")
+        deducer.deduce(self)
+
 
 __all__ = [
     "EnumQualifier",

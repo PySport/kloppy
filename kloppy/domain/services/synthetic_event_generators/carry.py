@@ -57,16 +57,15 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                 if next_event.event_type not in valid_event_types:
                     continue
                 # not headed shot
-                if (
-                    (hasattr(next_event, "body_part"))
-                    and (next_event.event_type == EventType.SHOT)
-                    and (
-                        next_event.body_part.type.isin(
-                            [BodyPart.HEAD, BodyPart.HEAD_OTHER]
-                        )
-                    )
-                ):
-                    continue
+                if next_event.qualifiers:
+                    for qualifier in next_event.qualifiers:
+                        if (
+                            qualifier.name == "body_part"
+                            and next_event.event_type == EventType.SHOT
+                            and qualifier.value
+                            in [BodyPart.HEAD, BodyPart.HEAD_OTHER]
+                        ):
+                            continue
 
                 if hasattr(event, "end_coordinates"):
                     last_coord = event.end_coordinates

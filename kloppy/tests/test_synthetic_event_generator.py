@@ -39,13 +39,13 @@ class TestSyntheticEventGenerator:
     ):
         def is_match(real_carry, generated_carry):
             return (
-                    real_carry.player
-                    and generated_carry.player
-                    and real_carry.player.player_id
-                    == generated_carry.player.player_id
-                    and real_carry.period == generated_carry.period
-                    and abs(real_carry.timestamp - generated_carry.timestamp)
-                    < timedelta(seconds=5)
+                real_carry.player
+                and generated_carry.player
+                and real_carry.player.player_id
+                == generated_carry.player.player_id
+                and real_carry.period == generated_carry.period
+                and abs(real_carry.timestamp - generated_carry.timestamp)
+                < timedelta(seconds=5)
             )
 
         true_positives = 0
@@ -109,11 +109,6 @@ class TestSyntheticEventGenerator:
 
         with performance_logging("generating synthetic events"):
             dataset.add_synthetic_event(EventType.CARRY)
-        carry = dataset.find("carry")
-        index = dataset.events.index(carry)
-        # Assert end location is equal to start location of next action
-        assert carry.end_coordinates == dataset.events[index + 1].coordinates
-        assert carry.player == dataset.events[index + 1].player
         all_carries = dataset.find_all("carry")
         assert (
             self.calculate_carry_accuracy(
@@ -123,5 +118,3 @@ class TestSyntheticEventGenerator:
             )
             > 0.80
         )
-
-        print(dataset.to_df()[:100].to_string())

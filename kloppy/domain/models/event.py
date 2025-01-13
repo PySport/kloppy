@@ -1204,9 +1204,12 @@ class EventDataset(Dataset[Event]):
             from kloppy.domain.services.synthetic_event_generators.carry import (
                 SyntheticCarryGenerator,
             )
+
             synthetic_event_generator = SyntheticCarryGenerator(event_factory)
         else:
-            raise KloppyError(f"Not possible to generate synthetic {event_type_}")
+            raise KloppyError(
+                f"Not possible to generate synthetic {event_type_}"
+            )
         synthetic_event_generator.add_synthetic_event(self)
 
 

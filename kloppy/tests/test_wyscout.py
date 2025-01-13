@@ -355,12 +355,21 @@ class TestWyscoutV3:
         assert pass_event_kick_off_first_half.event_type == EventType.PASS
         assert pass_event_kick_off_second_half.event_type == EventType.PASS
         assert pass_event_kick_off_after_goal.event_type == EventType.PASS
-        assert SetPieceType.KICK_OFF in pass_event_kick_off_first_half.get_qualifier_values(
-            SetPieceQualifier
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_first_half.get_qualifier_values(
+                SetPieceQualifier
+            )
         )
-        assert SetPieceType.KICK_OFF in pass_event_kick_off_second_half.get_qualifier_values(
-            SetPieceQualifier
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_second_half.get_qualifier_values(
+                SetPieceQualifier
+            )
         )
-        assert SetPieceType.KICK_OFF in pass_event_kick_off_after_goal.get_qualifier_values(
-            SetPieceQualifier
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_after_goal.get_qualifier_values(
+                SetPieceQualifier
+            )
         )

@@ -39,8 +39,8 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
             if event.event_type not in valid_event_types:
                 continue
             idx_plus = 1
-            generic_next_event = True
-            while idx + idx_plus < len(dataset.events) and generic_next_event:
+            go_to_next_event = True
+            while idx + idx_plus < len(dataset.events) and go_to_next_event:
                 next_event = dataset.events[idx + idx_plus]
 
                 if next_event.event_type in [
@@ -50,22 +50,12 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     idx_plus += 1
                     continue
                 else:
-                    generic_next_event = False
+                    go_to_next_event = False
                 if not event.team.team_id == next_event.team.team_id:
                     continue
 
                 if next_event.event_type not in valid_event_types:
                     continue
-                # not headed shot
-                if next_event.qualifiers:
-                    for qualifier in next_event.qualifiers:
-                        if (
-                            qualifier.name == "body_part"
-                            and next_event.event_type == EventType.SHOT
-                            and qualifier.value
-                            in [BodyPart.HEAD, BodyPart.HEAD_OTHER]
-                        ):
-                            continue
 
                 if hasattr(event, "end_coordinates"):
                     last_coord = event.end_coordinates
@@ -92,6 +82,14 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     continue
                 # not same period
                 if not event.period.id == next_event.period.id:
+                    continue
+
+                # not headed shot
+                if next_event.event_type == EventType.SHOT and any(
+                    qualifier.name == "body_part"
+                    and qualifier.value in [BodyPart.HEAD, BodyPart.HEAD_OTHER]
+                    for qualifier in next_event.qualifiers or []
+                ):
                     continue
 
                 if hasattr(event, "end_timestamp"):

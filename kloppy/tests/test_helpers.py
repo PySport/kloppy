@@ -28,7 +28,7 @@ from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestHelpers:
-    def _get_tracking_dataset(self):
+    def _get_tracking_dataset(self, extended: bool = False):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
         teams = [home_team, away_team]
@@ -65,22 +65,60 @@ class TestHelpers:
             game_id="2374516",
         )
 
-        tracking_data = TrackingDataset(
-            metadata=metadata,
-            records=[
+        records = [
+            create_frame(
+                frame_id=1,
+                timestamp=0.1,
+                ball_owning_team=teams[0],
+                ball_state=None,
+                period=periods[0],
+                players_data={},
+                other_data=None,
+                ball_coordinates=Point3D(x=100, y=-50, z=0),
+            )
+        ]
+
+        if extended:
+            records.append(
                 create_frame(
-                    frame_id=1,
-                    timestamp=0.1,
+                    frame_id=2,
+                    timestamp=5.1,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
                     players_data={},
                     other_data=None,
-                    ball_coordinates=Point3D(x=100, y=-50, z=0),
-                ),
+                    ball_coordinates=Point3D(x=90, y=10, z=0),
+                )
+            )
+
+        records.append(
+            create_frame(
+                frame_id=3 if extended else 2,
+                timestamp=0.2,
+                ball_owning_team=teams[1],
+                ball_state=None,
+                period=periods[1],
+                players_data={
+                    Player(
+                        team=home_team, player_id="home_1", jersey_no=1
+                    ): PlayerData(
+                        coordinates=Point(x=15, y=35),
+                        distance=0.03,
+                        speed=10.5,
+                        other_data={"extra_data": 1},
+                    )
+                },
+                other_data={"extra_data": 1},
+                ball_coordinates=Point3D(x=0, y=50, z=1),
+            )
+        )
+
+        if extended:
+            records.append(
                 create_frame(
-                    frame_id=2,
-                    timestamp=0.2,
+                    frame_id=4,
+                    timestamp=1.2,
                     ball_owning_team=teams[1],
                     ball_state=None,
                     period=periods[1],
@@ -88,18 +126,53 @@ class TestHelpers:
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
                         ): PlayerData(
-                            coordinates=Point(x=15, y=35),
-                            distance=0.03,
+                            coordinates=Point(x=17, y=39),
+                            distance=0.13,
                             speed=10.5,
                             other_data={"extra_data": 1},
                         )
                     },
                     other_data={"extra_data": 1},
-                    ball_coordinates=Point3D(x=0, y=50, z=1),
-                ),
-            ],
+                    ball_coordinates=Point3D(x=14, y=46, z=0),
+                )
+            )
+
+            records.append(
+                create_frame(
+                    frame_id=5,
+                    timestamp=2.7,
+                    ball_owning_team=teams[1],
+                    ball_state=None,
+                    period=periods[1],
+                    players_data={
+                        Player(
+                            team=home_team, player_id="home_1", jersey_no=1
+                        ): PlayerData(
+                            coordinates=Point(x=20, y=36),
+                            distance=0.18,
+                            speed=5,
+                            other_data={"extra_data": 1},
+                        )
+                    },
+                    other_data={"extra_data": 1},
+                    ball_coordinates=Point3D(x=30, y=36, z=0),
+                )
+            )
+
+        tracking_data = TrackingDataset(
+            metadata=metadata,
+            records=records,
         )
         return tracking_data
+
+    def test_fps_transform(self):
+        tracking_data = self._get_tracking_dataset(extended=True)
+
+        transformed_dataset = tracking_data.transform(fps_output=2)
+
+        print(f'{transformed_dataset.records=}')
+
+        # TODO add test cases
 
     def test_transform(self):
         tracking_data = self._get_tracking_dataset()

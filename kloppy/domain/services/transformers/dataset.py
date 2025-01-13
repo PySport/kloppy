@@ -379,59 +379,135 @@ class DatasetTransformer:
     ) -> list[Frame]:
         output_frames = []
 
+        def _timestamp_total_sec(
+            timestamp: Union[datetime.timedelta, float]
+        ) -> float:
+            if isinstance(timestamp, datetime.timedelta):
+                return timestamp.total_seconds()
+            return timestamp
+
         frames_per_period = defaultdict(lambda: [])
         for frame in frames:
             frames_per_period[frame.period].append(frame)
 
         for period, frames_for_period in frames_per_period.items():
-            timeframe = (
+            if len(frames_for_period) <= 1:
+                raise ValueError(
+                    "Cannot perform fps transformation on less then 2 frames (per period)"
+                )
+
+            timeframe = _timestamp_total_sec(
                 frames_for_period[-1].timestamp
                 - frames_for_period[0].timestamp
             )
-            if isinstance(timeframe, datetime.timedelta):
-                timeframe = timeframe.total_seconds()
-
             nr_frames = math.floor(fps_output * timeframe) + 1
 
             frame_idx = 0
             for i in range(nr_frames):
-                ts = i * (1 / fps_output)
-                ts = datetime.timedelta(seconds=ts)
+                start_ts_sec = _timestamp_total_sec(
+                    frames_for_period[0].timestamp
+                )
+                ts = start_ts_sec + i * (1 / fps_output)
 
-                if frames_for_period[frame_idx].timestamp == ts:
-                    output_frames.append(frames_for_period[frame_idx])
+                frame, frame_next = (
+                    frames_for_period[frame_idx],
+                    frames_for_period[frame_idx + 1],
+                )
+                sec_idx = _timestamp_total_sec(frame.timestamp)
+                sec_idx_next = _timestamp_total_sec(frame_next.timestamp)
+
+                if sec_idx == ts:
+                    output_frames.append(frame)
                     continue
-                elif frames_for_period[frame_idx + 1].timestamp == ts:
-                    output_frames.append(frames_for_period[frame_idx])
-                    break
 
-                while frames_for_period[frame_idx + 1].timestamp < ts:
+                if sec_idx_next == ts:
+                    output_frames.append(frame_next)
+                    frame_idx += 1
+                    continue
+
+                while (
+                    sec_idx_next < ts
+                    and frame_idx < len(frames_for_period) - 1
+                ):
                     frame_idx += 1
 
-                r = (ts - frames_for_period[frame_idx].timestamp) / (
-                    frames_for_period[frame_idx + 1].timestamp
-                    - frames_for_period[frame_idx].timestamp
-                )
+                if frame_idx == len(frames_for_period) - 1:
+                    output_frames.append(frame)
+                    break
 
-                xyz1 = frames_for_period[frame_idx].ball_coordinates
-                xyz2 = frames_for_period[frame_idx + 1].ball_coordinates
+                frame, frame_next = (
+                    frames_for_period[frame_idx],
+                    frames_for_period[frame_idx + 1],
+                )
+                sec_idx = _timestamp_total_sec(frame.timestamp)
+                sec_idx_next = _timestamp_total_sec(frame_next.timestamp)
+
+                r = (ts - sec_idx) / (sec_idx_next - sec_idx)
+
+                xyz1 = frame.ball_coordinates
+                xyz2 = frame_next.ball_coordinates
                 ball_x = xyz1.x + r * (xyz2.x - xyz1.x)
                 ball_y = xyz1.y + r * (xyz2.y - xyz1.y)
                 ball_z = xyz1.z + r * (xyz2.z - xyz1.z)
 
-                # TODO: interpolate player coordinates
+                ball_speed = None
+                if (
+                    frame.ball_speed is not None
+                    and frame_next.ball_speed is not None
+                ):
+                    ball_speed = frame.ball_speed + r * (
+                        frame_next.ball_speed - frame.ball_speed
+                    )
+
+                new_player_data = {}
+                for player, player_data in frame.players_data.items():
+                    if player not in frame_next.players_data:
+                        continue
+
+                    player_data_next = frame_next.players_data[player]
+
+                    player_coo = player_data.coordinates
+                    player_coo_next = player_data_next.coordinates
+                    x = player_coo.x + r * (player_coo_next.x - player_coo.x)
+                    y = player_coo.y + r * (player_coo_next.y - player_coo.y)
+
+                    distance = None
+                    if (
+                        player_data.distance is not None
+                        and player_data_next.distance is not None
+                    ):
+                        distance = player_data.distance + r * (
+                            player_data_next.distance - player_data.distance
+                        )
+
+                    speed = None
+                    if (
+                        player_data.speed is not None
+                        and player_data_next.speed is not None
+                    ):
+                        speed = player_data.speed + r * (
+                            player_data_next.speed - player_data.speed
+                        )
+
+                    new_player_data[player] = PlayerData(
+                        coordinates=Point(x=x, y=y),
+                        distance=distance,
+                        speed=speed,
+                        other_data=player_data.other_data,
+                    )
 
                 frame = Frame(
                     frame_id=0,  # ??
-                    timestamp=ts,
+                    timestamp=datetime.timedelta(seconds=ts),
                     ball_coordinates=Point3D(ball_x, ball_y, ball_z),
                     ball_state=frames_for_period[frame_idx].ball_state,
+                    ball_speed=ball_speed,
                     ball_owning_team=frames_for_period[
                         frame_idx
                     ].ball_owning_team,
-                    players_data={},  # TODO
+                    players_data=new_player_data,
                     period=period,
-                    other_data={},
+                    other_data=frames_for_period[frame_idx].other_data,
                     statistics=frames_for_period[frame_idx].statistics,
                 )
                 output_frames.append(frame)

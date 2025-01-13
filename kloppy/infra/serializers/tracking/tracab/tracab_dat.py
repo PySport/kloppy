@@ -338,9 +338,6 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             game_id=game_id,
         )
 
-        if self.fps_output:
-            frames = transformer.transform_frames_for_fps_output(frames=frames, fps_output=self.fps_output)
-
         return TrackingDataset(
             records=frames,
             metadata=metadata,

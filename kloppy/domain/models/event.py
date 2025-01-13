@@ -30,7 +30,6 @@ from kloppy.utils import (
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
-from ...config import get_config
 
 from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
 
@@ -1199,13 +1198,12 @@ class EventDataset(Dataset[Event]):
         Raises:
             KloppyError: If the event type is not supported or invalid.
         """
-        event_factory = get_config("event_factory")
         if event_type_ == EventType.CARRY:
             from kloppy.domain.services.synthetic_event_generators.carry import (
                 SyntheticCarryGenerator,
             )
 
-            synthetic_event_generator = SyntheticCarryGenerator(event_factory)
+            synthetic_event_generator = SyntheticCarryGenerator()
         else:
             raise KloppyError(
                 f"Not possible to generate synthetic {event_type_}"

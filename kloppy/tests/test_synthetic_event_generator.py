@@ -1,15 +1,9 @@
 from datetime import timedelta
-from itertools import groupby
 
 from kloppy.domain import (
     EventType,
-    Event,
-    EventDataset,
-    FormationType,
-    CarryEvent,
     Unit,
 )
-from kloppy.domain.services.state_builder.builder import StateBuilder
 from kloppy.utils import performance_logging
 from kloppy import statsbomb, statsperform
 

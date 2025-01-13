@@ -1,4 +1,3 @@
-import bisect
 import uuid
 from datetime import timedelta
 
@@ -7,8 +6,8 @@ from kloppy.domain import (
     EventType,
     BodyPart,
     CarryResult,
-    EventFactory,
     Unit,
+    EventFactory,
 )
 from kloppy.domain.services.synthetic_event_generators.synthetic_event_generator import (
     SyntheticEventGenerator,
@@ -19,14 +18,10 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
     min_length_meters = 3
     max_length_meters = 60
     max_duration = timedelta(seconds=10)
-
-    def __init__(self, event_factory):
-        self.event_factory = event_factory
+    event_factory = EventFactory()
 
     def add_synthetic_event(self, dataset: EventDataset):
         pitch = dataset.metadata.pitch_dimensions
-
-        new_carries = []
 
         valid_event_types = [
             EventType.PASS,
@@ -101,13 +96,9 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     continue
 
                 if hasattr(event, "end_timestamp"):
-                    last_timestamp = event.end_timestamp + timedelta(
-                        seconds=0.1
-                    )
+                    last_timestamp = event.end_timestamp
                 elif hasattr(event, "receive_timestamp"):
-                    last_timestamp = event.receive_timestamp + timedelta(
-                        seconds=0.1
-                    )
+                    last_timestamp = event.receive_timestamp
                 else:
                     last_timestamp = (
                         event.timestamp
@@ -115,7 +106,7 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     )
 
                 generic_event_args = {
-                    "event_id": f"{str(uuid.uuid4())}",
+                    "event_id": f"synthetic-{str(uuid.uuid4())}",
                     "coordinates": last_coord,
                     "team": next_event.team,
                     "player": next_event.player,
@@ -123,7 +114,7 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     "ball_state": event.ball_state,
                     "period": next_event.period,
                     "timestamp": last_timestamp,
-                    "raw_event": {},
+                    "raw_event": None,
                 }
                 carry_event_args = {
                     "result": CarryResult.COMPLETE,
@@ -134,10 +125,4 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                 new_carry = self.event_factory.build_carry(
                     **carry_event_args, **generic_event_args
                 )
-                new_carries.append(new_carry)
-
-        for new_carry in new_carries:
-            pos = bisect.bisect_left(
-                [e.time for e in dataset.events], new_carry.time
-            )
-            dataset.records.insert(pos, new_carry)
+                dataset.records.insert(idx + idx_plus, new_carry)

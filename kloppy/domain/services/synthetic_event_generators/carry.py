@@ -7,22 +7,23 @@ from kloppy.domain import (
     EventType,
     BodyPart,
     CarryResult,
-    GenericEvent,
     EventFactory,
     Unit,
 )
-from kloppy.domain.services.event_deducers.event_deducer import (
-    EventDatasetDeduducer,
+from kloppy.domain.services.synthetic_event_generators.synthetic_event_generator import (
+    SyntheticEventGenerator,
 )
 
 
-class CarryDeducer(EventDatasetDeduducer):
-    min_carry_length_meters = 3
-    max_carry_length_meters = 60
-    max_carry_duration = timedelta(seconds=10)
-    event_factory = EventFactory()
+class SyntheticCarryGenerator(SyntheticEventGenerator):
+    min_length_meters = 3
+    max_length_meters = 60
+    max_duration = timedelta(seconds=10)
 
-    def deduce(self, dataset: EventDataset):
+    def __init__(self, event_factory):
+        self.event_factory = event_factory
+
+    def add_synthetic_event(self, dataset: EventDataset):
         pitch = dataset.metadata.pitch_dimensions
 
         new_carries = []
@@ -85,15 +86,15 @@ class CarryDeducer(EventDatasetDeduducer):
                     new_coord, last_coord, Unit.METERS
                 )
                 # Not far enough
-                if distance_meters < self.min_carry_length_meters:
+                if distance_meters < self.min_length_meters:
                     continue
                 # Too far
-                if distance_meters > self.max_carry_length_meters:
+                if distance_meters > self.max_length_meters:
                     continue
 
                 dt = next_event.timestamp - event.timestamp
                 # not same phase
-                if dt > self.max_carry_duration:
+                if dt > self.max_duration:
                     continue
                 # not same period
                 if not event.period.id == next_event.period.id:

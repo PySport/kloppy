@@ -14,7 +14,7 @@ from kloppy.utils import performance_logging
 from kloppy import statsbomb, statsperform
 
 
-class TestEventDeducer:
+class TestSyntheticEventGenerator:
     """"""
 
     def _load_dataset_statsperform(
@@ -35,45 +35,45 @@ class TestEventDeducer:
         )
 
     def calculate_carry_accuracy(
-        self, real_carries, deduced_carries, real_carries_with_min_length
+        self, real_carries, generated_carries, real_carries_with_min_length
     ):
-        def is_match(real_carry, deduced_carry):
+        def is_match(real_carry, generated_carry):
             return (
-                real_carry.player
-                and deduced_carry.player
-                and real_carry.player.player_id
-                == deduced_carry.player.player_id
-                and real_carry.period == deduced_carry.period
-                and abs(real_carry.timestamp - deduced_carry.timestamp)
-                < timedelta(seconds=5)
+                    real_carry.player
+                    and generated_carry.player
+                    and real_carry.player.player_id
+                    == generated_carry.player.player_id
+                    and real_carry.period == generated_carry.period
+                    and abs(real_carry.timestamp - generated_carry.timestamp)
+                    < timedelta(seconds=5)
             )
 
         true_positives = 0
         matched_real_carries = set()
-        for deduced_carry in deduced_carries:
+        for generated_carry in generated_carries:
             for idx, real_carry in enumerate(real_carries):
                 if idx in matched_real_carries:
                     continue
-                if is_match(real_carry, deduced_carry):
+                if is_match(real_carry, generated_carry):
                     true_positives += 1
                     matched_real_carries.add(idx)
                     break
 
         false_negatives = 0
-        matched_deduced_carries = set()
+        matched_generated_carries = set()
         for real_carry in real_carries_with_min_length:
             found_match = False
-            for idx, deduced_carry in enumerate(deduced_carries):
-                if idx in matched_deduced_carries:
+            for idx, generated_carry in enumerate(generated_carries):
+                if idx in matched_generated_carries:
                     continue
-                if is_match(real_carry, deduced_carry):
+                if is_match(real_carry, generated_carry):
                     found_match = True
-                    matched_deduced_carries.add(idx)
+                    matched_generated_carries.add(idx)
                     break
             if not found_match:
                 false_negatives += 1
 
-        false_positives = len(deduced_carries) - true_positives
+        false_positives = len(generated_carries) - true_positives
 
         accuracy = true_positives / (
             true_positives + false_positives + false_negatives
@@ -86,7 +86,7 @@ class TestEventDeducer:
 
         return accuracy
 
-    def test_carry_deducer(self, base_dir):
+    def test_synthetic_carry_generator(self, base_dir):
         dataset_with_carries = self._load_dataset_statsbomb(base_dir)
         pitch = dataset_with_carries.metadata.pitch_dimensions
 
@@ -107,8 +107,8 @@ class TestEventDeducer:
             ],
         )
 
-        with performance_logging("deduce_events"):
-            dataset.add_deduced_event(EventType.CARRY)
+        with performance_logging("generating synthetic events"):
+            dataset.add_synthetic_event(EventType.CARRY)
         carry = dataset.find("carry")
         index = dataset.events.index(carry)
         # Assert end location is equal to start location of next action
@@ -123,3 +123,5 @@ class TestEventDeducer:
             )
             > 0.80
         )
+
+        print(dataset.to_df()[:100].to_string())

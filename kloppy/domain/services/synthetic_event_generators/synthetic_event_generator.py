@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from kloppy.domain import EventDataset
 
 
-class EventDatasetDeduducer(ABC):
+class SyntheticEventGenerator(ABC):
     @abstractmethod
-    def deduce(self, dataset: EventDataset) -> EventDataset:
+    def add_synthetic_event(self, dataset: EventDataset) -> EventDataset:
         raise NotImplementedError

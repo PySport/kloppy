@@ -30,6 +30,7 @@ from kloppy.utils import (
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
+from ...config import get_config
 
 from ...exceptions import OrphanedRecordError, InvalidFilterError, KloppyError
 
@@ -1186,16 +1187,27 @@ class EventDataset(Dataset[Event]):
 
         return aggregator.aggregate(self)
 
-    def add_deduced_event(self, event_type_: EventType):
-        if event_type_ == EventType.CARRY:
-            from kloppy.domain.services.event_deducers.carry import (
-                CarryDeducer,
-            )
+    def add_synthetic_event(self, event_type_: EventType):
+        """
+        Adds synthetic events of the specified type. This method analyses the stream of events and inserts
+        synthetic events at the appropriate points within the dataset.
 
-            deducer = CarryDeducer()
+        Args:
+            event_type_ (EventType): The type of event to generate. (See [`EventType`][kloppy.domain.models.event.EventType])
+            Supported event types are currently only [EventType.CARRY]
+
+        Raises:
+            KloppyError: If the event type is not supported or invalid.
+        """
+        event_factory = get_config("event_factory")
+        if event_type_ == EventType.CARRY:
+            from kloppy.domain.services.synthetic_event_generators.carry import (
+                SyntheticCarryGenerator,
+            )
+            synthetic_event_generator = SyntheticCarryGenerator(event_factory)
         else:
-            raise KloppyError(f"Not possible to deduce {event_type_}")
-        deducer.deduce(self)
+            raise KloppyError(f"Not possible to generate synthetic {event_type_}")
+        synthetic_event_generator.add_synthetic_event(self)
 
 
 __all__ = [

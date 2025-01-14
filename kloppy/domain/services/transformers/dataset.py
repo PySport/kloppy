@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import fields, replace
 
 from kloppy.domain.models.tracking import PlayerData
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 import numpy as np
 
@@ -375,8 +375,8 @@ class DatasetTransformer:
 
     @staticmethod
     def transform_frames_for_fps_output(
-        frames: list[Frame], fps_output: float
-    ) -> list[Frame]:
+        frames: List[Frame], fps_output: float
+    ) -> List[Frame]:
         output_frames = []
 
         def _timestamp_total_sec(

@@ -1,4 +1,5 @@
 import sys
+from collections import defaultdict
 
 import pytest
 from pandas import DataFrame
@@ -140,7 +141,7 @@ class TestHelpers:
             records.append(
                 create_frame(
                     frame_id=5,
-                    timestamp=2.7,
+                    timestamp=2.8,
                     ball_owning_team=teams[1],
                     ball_state=None,
                     period=periods[1],
@@ -170,9 +171,52 @@ class TestHelpers:
 
         transformed_dataset = tracking_data.transform(fps_output=2)
 
-        print(f'{transformed_dataset.records=}')
+        frames_per_period = defaultdict(lambda: [])
+        for frame in transformed_dataset.records:
+            frames_per_period[frame.period.id].append(frame)
 
-        # TODO add test cases
+        assert len(transformed_dataset.records) == 17
+        assert len(frames_per_period[1]) == 11
+        assert len(frames_per_period[2]) == 6
+
+        ball_x_interpolated = [100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90]
+        ball_y_interpolated = [
+            -50,
+            -44,
+            -38,
+            -32,
+            -26,
+            -20,
+            -14,
+            -8,
+            -2,
+            4,
+            10,
+        ]
+        for i, frame in enumerate(frames_per_period[1]):
+            assert round(frame.ball_coordinates.x, 8) == ball_x_interpolated[i]
+            assert round(frame.ball_coordinates.y, 8) == ball_y_interpolated[i]
+
+        player = Player(
+            team=Team(team_id="home", name="home", ground=Ground.HOME),
+            player_id="home_1",
+            jersey_no=1,
+        )
+        player_x_interpolated = [15, 16, 17, 17.9375, 18.875, 19.8125]
+        player_y_interpolated = [35, 37, 39, 38.0625, 37.125, 36.1875]
+
+        for i, frame in enumerate(frames_per_period[2]):
+            assert (
+                round(frame.players_data[player].coordinates.x, 8)
+                == player_x_interpolated[i]
+            )
+            assert (
+                round(frame.players_data[player].coordinates.y, 8)
+                == player_y_interpolated[i]
+            )
+
+        transformed_dataset_2 = tracking_data.transform(fps_output=10)
+        assert len(transformed_dataset_2.records) == 77
 
     def test_transform(self):
         tracking_data = self._get_tracking_dataset()

@@ -175,8 +175,12 @@ class MA1JSONParser(OptaJSONParser):
                         "team_id": team_id,
                         "jersey_no": player["shirtNumber"],
                         "name": player["matchName"],
-                        "first_name": player["shortFirstName"],
-                        "last_name": player["shortLastName"],
+                        "first_name": player["shortFirstName"]
+                        if "shortFirstName" in player
+                        else player["firstName"],
+                        "last_name": player["shortLastName"]
+                        if "shortLastName" in player
+                        else player["lastName"],
                         "starting": starting,
                         "position": player_position,
                     }

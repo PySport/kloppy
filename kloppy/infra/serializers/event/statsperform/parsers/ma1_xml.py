@@ -135,8 +135,12 @@ class MA1XMLParser(OptaXMLParser):
                         "team_id": team_id,
                         "jersey_no": int(player_attributes["shirtNumber"]),
                         "name": player_attributes["matchName"],
-                        "first_name": player_attributes["shortFirstName"],
-                        "last_name": player_attributes["shortLastName"],
+                        "first_name": player_attributes["shortFirstName"]
+                        if "shortFirstName" in player_attributes
+                        else player_attributes["firstName"],
+                        "last_name": player_attributes["shortLastName"]
+                        if "shortLastName" in player_attributes
+                        else player_attributes["lastName"],
                         "starting": starting,
                         "position": player_position,
                     }

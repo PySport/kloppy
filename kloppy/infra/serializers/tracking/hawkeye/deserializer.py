@@ -32,7 +32,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.utils import performance_logging
-from kloppy.io import FileLike, open_as_file
+from kloppy.io import FileLike, open_as_file, get_file_extension
 from kloppy.exceptions import DeserializationError
 
 from ..deserializer import TrackingDataDeserializer
@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 class HawkEyeInputs(NamedTuple):
     ball_feeds: Iterable[FileLike]
     player_centroid_feeds: Iterable[FileLike]
+    meta_data: Optional[FileLike] = None
     show_progress: Optional[bool] = False
 
 
@@ -61,6 +62,8 @@ class HawkEyeObjectIdentifier:
 class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     def __init__(
         self,
+        pitch_width: Optional[float] = 68.0,
+        pitch_length: Optional[float] = 105.0,
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
@@ -69,6 +72,8 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
         self.object_id: HawkEyeObjectIdentifier = None
+        self.pitch_width = pitch_width
+        self.pitch_length = pitch_length
 
     @property
     def provider(self) -> Provider:
@@ -122,23 +127,46 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 return
         
         self.object_id = HawkEyeObjectIdentifier.HE_ID
+    
+    @staticmethod
+    def __infer_frame_rate(ball_tracking_data, n_samples=25):
+        total_time_difference = 0
 
+        for i in range(len(ball_tracking_data["samples"]["ball"]) - 1):
+            current_time = ball_tracking_data["samples"]["ball"][i]["time"]
+            next_time = ball_tracking_data["samples"]["ball"][i + 1]["time"]
+            
+            time_difference = next_time - current_time
+            total_time_difference += time_difference
+            
+            if i >= n_samples - 1:
+                break
+            
+        return int(1 / (total_time_difference / n_samples))
+    
+    @staticmethod
+    def __parse_meta_data(meta_data):
+        if meta_data is None:
+            return 
+            
+        meta_data_extension = get_file_extension(meta_data)
+        
     def deserialize(self, inputs: HawkEyeInputs) -> TrackingDataset:
-        # FIXME: these parameters should be passed to the deserializer or fetched from the metadata
-        frame_rate = 25
-        pitch_size_length = 105
-        pitch_size_width = 68
-
+        
+        self.__parse_meta_data(inputs.meta_data)
+            
         transformer = self.get_transformer(
-            pitch_length=pitch_size_length,
-            pitch_width=pitch_size_width,
+            pitch_length=self.pitch_length,
+            pitch_width=self.pitch_width,
         )
+        
 
         parsed_teams = {}
         parsed_players = {}
         parsed_periods = {}
         parsed_periods = {}
         parsed_frames = {}
+        frame_rate = None
 
         it = list(zip_longest(inputs.ball_feeds, inputs.player_centroid_feeds))
         if inputs.show_progress:
@@ -155,7 +183,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 ball_tracking_data = json.load(ball_data_fp)
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
-                
+            
+            if frame_rate is not None:
+                frame_rate = self.__infer_frame_rate(ball_tracking_data)
             self.__get_identifier_variable(player_tracking_data)
             
             # Parse the teams, players and periods. A value can be added by
@@ -178,7 +208,8 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                     **self.__parse_periods(ball_tracking_data["segments"]),
                     **parsed_periods,
                 }
-
+                
+            
             # Parse the ball tracking data
             period_id = ball_tracking_data["sequences"]["segment"]
             minute = ball_tracking_data["sequences"]["match-minute"] - 1

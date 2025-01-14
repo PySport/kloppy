@@ -124,6 +124,10 @@ class TestStatsPerformMetadata:
         assert not away_substitute.starting
         assert away_substitute.team == away_team
 
+        home_gk = home_team.get_player_by_id("6wfwy94p5bm0zv3aku0urfq39")
+        assert home_gk.first_name == "Benjamin Pascal"
+        assert home_gk.last_name == "Lecomte"
+
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
         assert tracking_dataset.metadata.periods[0].id == 1

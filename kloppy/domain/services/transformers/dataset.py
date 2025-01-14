@@ -37,6 +37,7 @@ class DatasetTransformer:
         to_coordinate_system: Optional[CoordinateSystem] = None,
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
+        overlay_teams: bool = False,
     ):
         if (
             from_pitch_dimensions
@@ -73,9 +74,13 @@ class DatasetTransformer:
                     "You must specify the source CoordinateSystem when specifying the target CoordinateSystem"
                 )
             self._to_pitch_dimensions = to_coordinate_system.pitch_dimensions
+        else:
+            self._to_pitch_dimensions = self._from_pitch_dimensions
 
         self._from_orientation = from_orientation
         self._to_orientation = to_orientation
+
+        self._overlay_teams = overlay_teams
         if (
             from_orientation
             and not to_orientation
@@ -184,6 +189,9 @@ class DatasetTransformer:
         # Change dimensions
         elif self._needs_pitch_dimensions_change:
             frame = self.__change_frame_dimensions(frame)
+
+        elif self._overlay_teams:
+            frame = self.transform_frame_overlay_teams(frame)
 
         # Flip frame based on orientation
         if self._needs_orientation_change:
@@ -308,6 +316,55 @@ class DatasetTransformer:
             statistics=frame.statistics,
         )
 
+    def _get_overlay_players_coordinates(
+        self,
+        player_data: PlayerData,
+        player_team: Team,
+        ball_owning_team: Team,
+        attacking_direction: AttackingDirection,
+    ):
+        if attacking_direction == AttackingDirection.RTL:
+            if player_team != ball_owning_team:
+                player_data.coordinates = self.flip_point(
+                    player_data.coordinates
+                )
+        else:
+            if player_team == ball_owning_team:
+                player_data.coordinates = self.flip_point(
+                    player_data.coordinates
+                )
+
+        return player_data
+
+    def transform_frame_overlay_teams(self, frame: Frame):
+        players_data = {
+            player: self._get_overlay_players_coordinates(
+                player_data,
+                player.team,
+                frame.ball_owning_team,
+                frame.attacking_direction,
+            )
+            for player, player_data in frame.players_data.items()
+        }
+
+        ball_coordinates = frame.ball_coordinates
+        if frame.attacking_direction != AttackingDirection.RTL:
+            ball_coordinates = self.flip_point(ball_coordinates)
+
+        return Frame(
+            # doesn't change
+            timestamp=frame.timestamp,
+            frame_id=frame.frame_id,
+            ball_owning_team=frame.ball_owning_team,
+            ball_state=frame.ball_state,
+            period=frame.period,
+            other_data=frame.other_data,
+            statistics=frame.statistics,
+            # changes
+            ball_coordinates=ball_coordinates,
+            players_data=players_data,
+        )
+
     def transform_event(self, event: Event) -> Event:
         # Change coordinate system
         if self._needs_coordinate_system_change:
@@ -375,11 +432,13 @@ class DatasetTransformer:
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
         to_coordinate_system: Optional[CoordinateSystem] = None,
+        overlay_teams: bool = False,
     ) -> Dataset:
         if (
             to_pitch_dimensions is None
             and to_orientation is None
             and to_coordinate_system is None
+            and overlay_teams is False
         ):
             return dataset
 
@@ -391,8 +450,20 @@ class DatasetTransformer:
                     "Cannot transform to BALL_OWNING_TEAM orientation when "
                     "dataset doesn't contain ball owning team data"
                 )
-
-        if to_pitch_dimensions is not None:
+        if overlay_teams:
+            transformer = cls(
+                from_pitch_dimensions=dataset.metadata.pitch_dimensions,
+                from_orientation=dataset.metadata.orientation,
+                to_orientation=to_orientation,
+                to_pitch_dimensions=to_pitch_dimensions,
+                overlay_teams=overlay_teams,
+            )
+            metadata = replace(
+                dataset.metadata,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+            )
+        elif to_pitch_dimensions is not None:
             # Transform the pitch dimensions and optionally the orientation
             transformer = cls(
                 from_pitch_dimensions=dataset.metadata.pitch_dimensions,
@@ -418,7 +489,6 @@ class DatasetTransformer:
                 dataset.metadata,
                 coordinate_system=to_coordinate_system,
                 pitch_dimensions=to_coordinate_system.pitch_dimensions,
-                orientation=to_orientation,
             )
 
         else:

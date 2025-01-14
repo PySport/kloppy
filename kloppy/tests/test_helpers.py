@@ -371,6 +371,118 @@ class TestHelpers:
         assert coordinates.x == 1 - coordinates_transformed.x
         assert coordinates.y == 1 - coordinates_transformed.y
 
+    def test_transform_overlay_teams_frames(self, base_dir):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        transformed_frame = dataset.transform(overlay_teams=True)
+
+        ## Assert frame with attacking direction right-to-left
+
+        home_players_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                0
+            ].players_coordinates.items()
+            if dataset.metadata.teams[0].get_player_by_id(player.player_id)
+        ]
+        converted_home_players_coordinates = [
+            coordinates
+            for player, coordinates in transformed_frame.frames[
+                0
+            ].players_coordinates.items()
+            if dataset.metadata.teams[0].get_player_by_id(player.player_id)
+        ]
+
+        away_players_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                0
+            ].players_coordinates.items()
+            if dataset.metadata.teams[1].get_player_by_id(player.player_id)
+        ]
+        converted_away_players_coordinates = [
+            coordinates
+            for player, coordinates in transformed_frame.frames[
+                0
+            ].players_coordinates.items()
+            if dataset.metadata.teams[1].get_player_by_id(player.player_id)
+        ]
+
+        assert all(
+            [a == b]
+            for a, b in zip(
+                home_players_coordinates, converted_home_players_coordinates
+            )
+        )
+
+        assert all(
+            [a != b]
+            for a, b in zip(
+                away_players_coordinates, converted_away_players_coordinates
+            )
+        )
+
+        assert (
+            dataset.frames[0].ball_coordinates
+            == transformed_frame.frames[0].ball_coordinates
+        )
+
+        ## Assert frame with attacking direction with left-to-right
+
+        home_players_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                4
+            ].players_coordinates.items()
+            if dataset.metadata.teams[0].get_player_by_id(player.player_id)
+        ]
+        converted_home_players_coordinates = [
+            coordinates
+            for player, coordinates in transformed_frame.frames[
+                4
+            ].players_coordinates.items()
+            if dataset.metadata.teams[0].get_player_by_id(player.player_id)
+        ]
+
+        away_players_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                4
+            ].players_coordinates.items()
+            if dataset.metadata.teams[1].get_player_by_id(player.player_id)
+        ]
+        converted_away_players_coordinates = [
+            coordinates
+            for player, coordinates in transformed_frame.frames[
+                4
+            ].players_coordinates.items()
+            if dataset.metadata.teams[1].get_player_by_id(player.player_id)
+        ]
+
+        assert all(
+            [a != b]
+            for a, b in zip(
+                home_players_coordinates, converted_home_players_coordinates
+            )
+        )
+
+        assert all(
+            [a == b]
+            for a, b in zip(
+                away_players_coordinates, converted_away_players_coordinates
+            )
+        )
+
+        assert (
+            dataset.frames[4].ball_coordinates
+            != transformed_frame.frames[4].ball_coordinates
+        )
+
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 

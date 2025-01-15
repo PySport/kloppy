@@ -1,5 +1,6 @@
 import uuid
 from datetime import timedelta
+from typing import Optional
 
 from kloppy.domain import (
     EventDataset,
@@ -15,10 +16,11 @@ from kloppy.domain.services.synthetic_event_generators.synthetic_event_generator
 
 
 class SyntheticCarryGenerator(SyntheticEventGenerator):
-    min_length_meters = 3
-    max_length_meters = 60
-    max_duration = timedelta(seconds=10)
-    event_factory = EventFactory()
+    def __init__(self, event_factory: Optional[EventFactory] = None, **kwargs):
+        self.event_factory = event_factory or EventFactory()
+        self.min_length_meters = kwargs.get("min_length_meters") or 3
+        self.max_length_meters = kwargs.get("max_length_meters") or 60
+        self.max_duration = kwargs.get("max_duration") or timedelta(seconds=10)
 
     def add_synthetic_event(self, dataset: EventDataset):
         pitch = dataset.metadata.pitch_dimensions

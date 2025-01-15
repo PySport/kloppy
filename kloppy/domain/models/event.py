@@ -1186,25 +1186,36 @@ class EventDataset(Dataset[Event]):
 
         return aggregator.aggregate(self)
 
-    def add_synthetic_event(self, event_type_: EventType, event_factory_=None):
+    def add_synthetic_event(
+        self, event_type_: EventType, event_factory_=None, **kwargs
+    ):
         """
-        Adds synthetic events of the specified type. This method analyses the stream of events and inserts
-        synthetic events at the appropriate points within the dataset.
+        Adds synthetic events of the specified type to the event dataset. This method analyzes the stream of
+        events and inserts synthetic events at the appropriate points within the dataset based on the event type.
 
         Args:
-            event_type_ (EventType): The type of event to generate. (See [`EventType`][kloppy.domain.models.event.EventType])
-            Supported event types are currently only [EventType.CARRY]
-            event_factory_ (EventFactory): Optional event factory to generate the events
+            event_type_ (EventType): The type of event to generate. The supported event types are currently:
+                - `EventType.CARRY`: Generates carry events.
+            event_factory_ (Optional[EventFactory]): An optional event factory to create the events. If not provided,
+                a default event factory will be used.
+            **kwargs: Additional configuration parameters passed to the specific synthetic event generator class.
+                The expected parameters depend on the type of event being generated (e.g., `SyntheticCarryGenerator`).
 
         Raises:
-            KloppyError: If the event type is not supported or invalid.
+            KloppyError: If the provided `event_type_` is not supported or invalid.
+
+        Example:
+            To generate a synthetic carry event:
+                add_synthetic_event(EventType.CARRY, event_factory=my_event_factory, min_length_meters=3, max_length_meters=60, max_duration=timedelta(seconds=10))
         """
         if event_type_ == EventType.CARRY:
             from kloppy.domain.services.synthetic_event_generators.carry import (
                 SyntheticCarryGenerator,
             )
 
-            synthetic_event_generator = SyntheticCarryGenerator(event_factory_)
+            synthetic_event_generator = SyntheticCarryGenerator(
+                event_factory_, **kwargs
+            )
         else:
             raise KloppyError(
                 f"Not possible to generate synthetic {event_type_}"

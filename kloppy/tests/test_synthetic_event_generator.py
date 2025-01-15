@@ -84,14 +84,22 @@ class TestSyntheticEventGenerator:
         dataset_with_carries = self._load_dataset_statsbomb(base_dir)
         pitch = dataset_with_carries.metadata.pitch_dimensions
 
+        min_length_meters = 3
+        max_length_meters = 60
+        max_duration = timedelta(seconds=10)
+
         all_statsbomb_caries = dataset_with_carries.find_all("carry")
-        all_statsbomb_caries_with_min_length = [
+        all_qualifying_statsbomb_queries = [
             carry
             for carry in all_statsbomb_caries
-            if pitch.distance_between(
-                carry.coordinates, carry.end_coordinates, Unit.METERS
+            if (
+                min_length_meters
+                <= pitch.distance_between(
+                    carry.coordinates, carry.end_coordinates, Unit.METERS
+                )
+                <= max_length_meters
+                and carry.end_timestamp - carry.timestamp < max_duration
             )
-            >= 3
         ]
 
         dataset = self._load_dataset_statsbomb(
@@ -102,13 +110,18 @@ class TestSyntheticEventGenerator:
         )
 
         with performance_logging("generating synthetic events"):
-            dataset.add_synthetic_event(EventType.CARRY)
+            dataset.add_synthetic_event(
+                EventType.CARRY,
+                min_length_meters=min_length_meters,
+                max_length_meters=max_length_meters,
+                max_duration=max_duration,
+            )
         all_carries = dataset.find_all("carry")
         assert (
             self.calculate_carry_accuracy(
                 all_statsbomb_caries,
                 all_carries,
-                all_statsbomb_caries_with_min_length,
+                all_qualifying_statsbomb_queries,
             )
             > 0.80
         )

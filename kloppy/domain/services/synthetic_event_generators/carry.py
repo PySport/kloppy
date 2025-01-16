@@ -103,9 +103,8 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                         event.timestamp
                         + (next_event.timestamp - event.timestamp) / 10
                     )
-
                 generic_event_args = {
-                    "event_id": f"synthetic-{str(uuid.uuid4())}",
+                    "event_id": f"carry-{event.event_id}",
                     "coordinates": last_coord,
                     "team": next_event.team,
                     "player": next_event.player,

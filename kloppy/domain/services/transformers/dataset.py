@@ -430,6 +430,11 @@ class DatasetTransformer:
                     and frame_idx < len(frames_for_period) - 1
                 ):
                     frame_idx += 1
+                    frame, frame_next = (
+                        frames_for_period[frame_idx],
+                        frames_for_period[frame_idx + 1],
+                    )
+                    sec_idx_next = _timestamp_total_sec(frame_next.timestamp)
 
                 if frame_idx == len(frames_for_period) - 1:
                     output_frames.append(frame)

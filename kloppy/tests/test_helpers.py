@@ -5,7 +5,7 @@ import pytest
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from kloppy import opta, statsbomb, tracab
+from kloppy import opta, statsbomb, tracab, sportec
 from kloppy.config import config_context
 from kloppy.domain import (
     AttackingDirection,
@@ -166,7 +166,7 @@ class TestHelpers:
         )
         return tracking_data
 
-    def test_fps_transform(self):
+    def test_fps_transform(self, base_dir):
         tracking_data = self._get_tracking_dataset(extended=True)
 
         transformed_dataset = tracking_data.transform(fps_output=2)
@@ -217,6 +217,15 @@ class TestHelpers:
 
         transformed_dataset_2 = tracking_data.transform(fps_output=10)
         assert len(transformed_dataset_2.records) == 77
+
+        raw_data = base_dir / "files/sportec_positional.xml"
+        meta_data = base_dir / "files/sportec_meta.xml"
+
+        dataset = sportec.load_tracking(
+            raw_data=raw_data, meta_data=meta_data, coordinates="sportec"
+        )
+        transformed_dataset = dataset.transform(fps_output=10)
+        assert len(transformed_dataset.records) == 80
 
     def test_transform(self):
         tracking_data = self._get_tracking_dataset()

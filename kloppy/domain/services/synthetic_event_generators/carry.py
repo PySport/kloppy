@@ -94,9 +94,15 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                 ):
                     continue
 
-                if hasattr(event, "end_timestamp"):
+                if (
+                    hasattr(event, "end_timestamp")
+                    and event.end_timestamp is not None
+                ):
                     last_timestamp = event.end_timestamp
-                elif hasattr(event, "receive_timestamp"):
+                elif (
+                    hasattr(event, "receive_timestamp")
+                    and event.receive_timestamp is not None
+                ):
                     last_timestamp = event.receive_timestamp
                 else:
                     last_timestamp = (

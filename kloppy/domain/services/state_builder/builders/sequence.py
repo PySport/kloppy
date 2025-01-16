@@ -28,6 +28,7 @@ class Sequence:
 
 
 class SequenceStateBuilder(StateBuilder):
+    # current_sequence is mutable by design so every event in the sequence can be updated with the correct times
     current_sequence: Sequence
 
     def initial_state(self, dataset: EventDataset) -> Sequence:
@@ -37,13 +38,14 @@ class SequenceStateBuilder(StateBuilder):
         return self.current_sequence
 
     def reduce_before(self, state: Sequence, event: Event) -> Sequence:
+        # Set the start time of the sequence if it is not set yet
+        if self.current_sequence.start is None:
+            self.current_sequence.start = event.time
+
         if isinstance(event, OPEN_SEQUENCE) and (
             state.team != event.team
             or event.get_qualifier_value(SetPieceQualifier)
         ):
-            # Finalize the current sequence
-            self.current_sequence.end = event.time
-
             # Start a new sequence
             self.current_sequence = replace(
                 state,
@@ -57,16 +59,17 @@ class SequenceStateBuilder(StateBuilder):
         return state
 
     def reduce_after(self, state: Sequence, event: Event) -> Sequence:
-        if isinstance(event, CLOSE_SEQUENCE):
-            # Finalize the current sequence
-            self.current_sequence.end = event.time
+        # Always update the end time of the sequence
+        # This ensures sequences without CLOSE_SEQUENCE events still have the correct time
+        self.current_sequence.end = event.time
 
+        if isinstance(event, CLOSE_SEQUENCE):
             # Start a new sequence
             self.current_sequence = replace(
                 state,
                 sequence_id=state.sequence_id + 1,
                 team=None,
-                start=event.time,
+                start=None,
                 end=None,
             )
             state = self.current_sequence

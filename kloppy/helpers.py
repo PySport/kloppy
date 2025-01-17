@@ -19,6 +19,8 @@ def transform(
         Union[CoordinateSystem, Provider, str]
     ] = None,
     overlay_teams: bool = False,
+    horizontal_mirror: bool = False,
+    vertical_mirror: bool = False,
 ) -> Dataset:
     # convert raw orientation to object
     if to_orientation is not None and isinstance(to_orientation, str):
@@ -45,4 +47,6 @@ def transform(
         to_coordinate_system=to_coordinate_system,
         to_pitch_dimensions=to_pitch_dimensions,
         overlay_teams=overlay_teams,
+        horizontal_mirror=horizontal_mirror,
+        vertical_mirror=vertical_mirror,
     )

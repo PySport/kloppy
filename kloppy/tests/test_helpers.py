@@ -371,6 +371,62 @@ class TestHelpers:
         assert coordinates.x == 1 - coordinates_transformed.x
         assert coordinates.y == 1 - coordinates_transformed.y
 
+    def test_mirror_frame_horizontally(self, base_dir):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        mirrored_frame = dataset.transform(horizontal_mirror=True)
+
+        original_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                0
+            ].players_coordinates.items()
+        ]
+        mirror_coordinates = [
+            coordinates
+            for player, coordinates in mirrored_frame.frames[
+                0
+            ].players_coordinates.items()
+        ]
+
+        assert all(
+            [a == Point(b.x * -1, b.y)]
+            for a, b in zip(mirror_coordinates, original_coordinates)
+        )
+
+    def test_mirror_frame_vertically(self, base_dir):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        mirrored_frame = dataset.transform(horizontal_mirror=True)
+
+        original_coordinates = [
+            coordinates
+            for player, coordinates in dataset.frames[
+                0
+            ].players_coordinates.items()
+        ]
+        mirror_coordinates = [
+            coordinates
+            for player, coordinates in mirrored_frame.frames[
+                0
+            ].players_coordinates.items()
+        ]
+
+        assert all(
+            [a == Point(b.x, b.y * -1)]
+            for a, b in zip(mirror_coordinates, original_coordinates)
+        )
+
     def test_transform_overlay_teams_frames(self, base_dir):
         dataset = tracab.load(
             meta_data=base_dir / "files/tracab_meta.xml",

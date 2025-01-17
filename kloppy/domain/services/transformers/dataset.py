@@ -1,8 +1,9 @@
 import warnings
 from dataclasses import fields, replace
 
+from kloppy.domain.models.common import Player
 from kloppy.domain.models.tracking import PlayerData
-from typing import Union, Optional
+from typing import Dict, Union, Optional
 
 from kloppy.domain import (
     AttackingDirection,
@@ -38,6 +39,8 @@ class DatasetTransformer:
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
         overlay_teams: bool = False,
+        horizontal_mirror: bool = False,
+        vertical_mirror: bool = False,
     ):
         if (
             from_pitch_dimensions
@@ -81,6 +84,8 @@ class DatasetTransformer:
         self._to_orientation = to_orientation
 
         self._overlay_teams = overlay_teams
+        self._horizontal_mirror = horizontal_mirror
+        self._vertical_mirror = vertical_mirror
         if (
             from_orientation
             and not to_orientation
@@ -133,19 +138,31 @@ class DatasetTransformer:
         if not point:
             return None
 
-        x_base = self._to_pitch_dimensions.x_dim.to_base(point.x)
-        y_base = self._to_pitch_dimensions.y_dim.to_base(point.y)
-
-        x_base = 1 - x_base
-        y_base = 1 - y_base
-
-        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
-        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
+        x = self.mirror_horizontally(point.x)
+        y = self.mirror_vertically(point.y)
 
         if isinstance(point, Point3D):
             return Point3D(x=x, y=y, z=point.z)
         else:
             return Point(x=x, y=y)
+
+    def mirror_horizontally(self, x_point: float) -> float:
+        x_base = self._to_pitch_dimensions.x_dim.to_base(x_point)
+
+        x_base = 1 - x_base
+
+        x = self._to_pitch_dimensions.x_dim.from_base(x_base)
+
+        return x
+
+    def mirror_vertically(self, y_point: float) -> float:
+        y_base = self._to_pitch_dimensions.y_dim.to_base(y_point)
+
+        y_base = 1 - y_base
+
+        y = self._to_pitch_dimensions.y_dim.from_base(y_base)
+
+        return y
 
     def __needs_flip(
         self,
@@ -192,6 +209,13 @@ class DatasetTransformer:
 
         elif self._overlay_teams:
             frame = self.transform_frame_overlay_teams(frame)
+
+        elif self._vertical_mirror or self._horizontal_mirror:
+            frame = self.transform_mirror(
+                frame=frame,
+                vertical_mirror=self._vertical_mirror,
+                horizontal_mirror=self._horizontal_mirror,
+            )
 
         # Flip frame based on orientation
         if self._needs_orientation_change:
@@ -316,40 +340,39 @@ class DatasetTransformer:
             statistics=frame.statistics,
         )
 
-    def _get_overlay_players_coordinates(
+    def _needs_mirror(self, player: Player, team: Team | None):
+        return (team and team.team_id == player.team.team_id) or not team
+
+    def transform_mirror(
         self,
-        player_data: PlayerData,
-        player_team: Team,
-        ball_owning_team: Team,
-        attacking_direction: AttackingDirection,
+        frame: Frame,
+        team: Team | None = None,
+        vertical_mirror: bool = False,
+        horizontal_mirror: bool = False,
     ):
-        if attacking_direction == AttackingDirection.RTL:
-            if player_team != ball_owning_team:
-                player_data.coordinates = self.flip_point(
-                    player_data.coordinates
-                )
-        else:
-            if player_team == ball_owning_team:
-                player_data.coordinates = self.flip_point(
-                    player_data.coordinates
-                )
+        players_data = {}
 
-        return player_data
-
-    def transform_frame_overlay_teams(self, frame: Frame):
         players_data = {
-            player: self._get_overlay_players_coordinates(
-                player_data,
-                player.team,
-                frame.ball_owning_team,
-                frame.attacking_direction,
+            player: PlayerData(
+                coordinates=Point(
+                    x=(
+                        self.mirror_horizontally(player_data.coordinates.x)
+                        if horizontal_mirror
+                        else player_data.coordinates.x
+                    ),
+                    y=(
+                        self.mirror_vertically(player_data.coordinates.y)
+                        if vertical_mirror
+                        else player_data.coordinates.y
+                    ),
+                ),
+                distance=player_data.distance,
+                speed=player_data.speed,
+                other_data=player_data.other_data,
             )
             for player, player_data in frame.players_data.items()
+            if self._needs_mirror(player, team)
         }
-
-        ball_coordinates = frame.ball_coordinates
-        if frame.attacking_direction != AttackingDirection.RTL:
-            ball_coordinates = self.flip_point(ball_coordinates)
 
         return Frame(
             # doesn't change
@@ -361,9 +384,34 @@ class DatasetTransformer:
             other_data=frame.other_data,
             statistics=frame.statistics,
             # changes
-            ball_coordinates=ball_coordinates,
-            players_data=players_data,
+            ball_coordinates=frame.ball_coordinates,
+            players_data={**frame.players_data, **players_data},
         )
+
+    def transform_frame_overlay_teams(self, frame: Frame):
+
+        if frame.attacking_direction == AttackingDirection.RTL:
+            left_team = [
+                team
+                for team in frame.dataset.metadata.teams
+                if team.team_id != frame.ball_owning_team.team_id
+            ][0]
+            frame = self.transform_mirror(
+                frame, left_team, vertical_mirror=True, horizontal_mirror=True
+            )
+        else:
+            frame = self.transform_mirror(
+                frame,
+                frame.ball_owning_team,
+                vertical_mirror=True,
+                horizontal_mirror=True,
+            )
+            frame.ball_coordinates = Point(
+                x=self.mirror_horizontally(frame.ball_coordinates.x),
+                y=self.mirror_vertically(frame.ball_coordinates.y),
+            )
+
+        return frame
 
     def transform_event(self, event: Event) -> Event:
         # Change coordinate system
@@ -433,12 +481,16 @@ class DatasetTransformer:
         to_orientation: Optional[Orientation] = None,
         to_coordinate_system: Optional[CoordinateSystem] = None,
         overlay_teams: bool = False,
+        horizontal_mirror: bool = False,
+        vertical_mirror: bool = False,
     ) -> Dataset:
         if (
             to_pitch_dimensions is None
             and to_orientation is None
             and to_coordinate_system is None
             and overlay_teams is False
+            and horizontal_mirror is False
+            and vertical_mirror is False
         ):
             return dataset
 
@@ -457,6 +509,20 @@ class DatasetTransformer:
                 to_orientation=to_orientation,
                 to_pitch_dimensions=to_pitch_dimensions,
                 overlay_teams=overlay_teams,
+            )
+            metadata = replace(
+                dataset.metadata,
+                pitch_dimensions=to_pitch_dimensions,
+                orientation=to_orientation,
+            )
+        elif horizontal_mirror or vertical_mirror:
+            transformer = cls(
+                from_pitch_dimensions=dataset.metadata.pitch_dimensions,
+                from_orientation=dataset.metadata.orientation,
+                to_orientation=to_orientation,
+                to_pitch_dimensions=to_pitch_dimensions,
+                horizontal_mirror=horizontal_mirror,
+                vertical_mirror=vertical_mirror,
             )
             metadata = replace(
                 dataset.metadata,

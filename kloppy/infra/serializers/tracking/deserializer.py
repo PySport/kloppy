@@ -18,6 +18,7 @@ class TrackingDataDeserializer(ABC, Generic[T]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
+        fps_output: Optional[float] = None,
     ):
         if not limit:
             limit = 0
@@ -26,6 +27,8 @@ class TrackingDataDeserializer(ABC, Generic[T]):
         if not sample_rate:
             sample_rate = 1.0
         self.sample_rate = sample_rate
+
+        self.fps_output = fps_output
 
         self.transformer_builder = DatasetTransformerBuilder(coordinate_system)
 

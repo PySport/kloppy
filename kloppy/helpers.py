@@ -18,6 +18,7 @@ def transform(
     to_coordinate_system: Optional[
         Union[CoordinateSystem, Provider, str]
     ] = None,
+    fps_output: Optional[float] = None,
 ) -> Dataset:
     # convert raw orientation to object
     if to_orientation is not None and isinstance(to_orientation, str):
@@ -43,4 +44,5 @@ def transform(
         to_orientation=to_orientation,
         to_coordinate_system=to_coordinate_system,
         to_pitch_dimensions=to_pitch_dimensions,
+        fps_output=fps_output,
     )

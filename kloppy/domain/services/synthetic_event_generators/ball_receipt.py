@@ -2,7 +2,6 @@ from typing import Optional
 
 from kloppy.domain import (
     EventDataset,
-    EventType,
     EventFactory,
     PassResult,
     PassEvent,
@@ -40,7 +39,7 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
 
         for idx, event in enumerate(dataset.events):
             if (
-                event.event_type == EventType.PASS
+                isinstance(event, PassEvent)
                 and event.result == PassResult.COMPLETE
             ):
                 idx_plus = 1
@@ -69,6 +68,10 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
                     idx_plus += 1
 
                 if result is not None:
+                    receive_timestamp = event.receive_timestamp or (
+                        event.timestamp
+                        + (next_event.timestamp - event.timestamp) / 10
+                    )
                     generic_event_args = {
                         "event_id": f"ball_receipt-{event.event_id}",
                         "coordinates": event.receiver_coordinates,
@@ -77,7 +80,7 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
                         "ball_owning_team": event.ball_owning_team,
                         "ball_state": event.ball_state,
                         "period": event.period,
-                        "timestamp": event.receive_timestamp,
+                        "timestamp": receive_timestamp,
                         "raw_event": None,
                     }
                     ball_receipt_event_args = {

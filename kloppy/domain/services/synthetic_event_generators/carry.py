@@ -22,7 +22,7 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
         self.max_length_meters = kwargs.get("max_length_meters") or 60
         self.max_duration = kwargs.get("max_duration") or timedelta(seconds=10)
 
-    def add_synthetic_event(self, dataset: EventDataset):
+    def add_synthetic_event(self, dataset: EventDataset) -> EventDataset:
         pitch = dataset.metadata.pitch_dimensions
 
         valid_event_types = [
@@ -130,3 +130,4 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
                     **carry_event_args, **generic_event_args
                 )
                 dataset.records.insert(idx + idx_plus, new_carry)
+        return dataset

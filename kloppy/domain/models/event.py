@@ -1220,7 +1220,7 @@ class EventDataset(Dataset[Event]):
             raise KloppyError(
                 f"Not possible to generate synthetic {event_type_}"
             )
-        synthetic_event_generator.add_synthetic_event(self)
+        return synthetic_event_generator.add_synthetic_event(self)
 
 
 __all__ = [

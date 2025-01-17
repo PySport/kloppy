@@ -110,7 +110,7 @@ class TestSyntheticEventGenerator:
         )
 
         with performance_logging("generating synthetic events"):
-            dataset.add_synthetic_event(
+            dataset = dataset.add_synthetic_event(
                 EventType.CARRY,
                 min_length_meters=min_length_meters,
                 max_length_meters=max_length_meters,

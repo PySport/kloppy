@@ -3,12 +3,10 @@ from collections import defaultdict
 from datetime import timedelta, timezone
 from dateutil.parser import parse
 from typing import NamedTuple, IO, Optional, Union, Dict
-import numpy as np
 import json
 import bz2
 import io
 import csv
-from ast import literal_eval
 
 from kloppy.domain import (
     attacking_direction_from_frame,
@@ -96,13 +94,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         frame_id = frame["frameNum"]
         frame_timestamp = timedelta(seconds=frame["periodGameClockTime"])
 
-        # for k, v in frame.items():
-        #     print(k, v)
-
-        # print(frame)
-
-        # print("-----")
-        
         # Ball coordinates
         ball_smoothed = frame.get("ballsSmoothed")
         if ball_smoothed:
@@ -122,37 +113,25 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Player coordinates
         players_data = {}
 
-        if frame["homePlayersSmoothed"] is not None:
-            for home_player in frame["homePlayersSmoothed"]:
-                for p_id, player in players["HOME"].items():
-                    if player.jersey_no == str(home_player["jerseyNum"]):
-                        # player_id = p_id
-                        break
-
-                home_player_x = home_player.get("x") if home_player else None
-                home_player_y = home_player.get("y") if home_player else None
-
-                player_data = PlayerData(
-                    coordinates=Point(home_player_x, home_player_y)
-                )
-                players_data[player] = player_data
-
-        if frame["awayPlayersSmoothed"] is not None:
-            for away_player in frame["awayPlayersSmoothed"]:
-                for p_id, player in players["AWAY"].items():
-                    if player.jersey_no == str(away_player["jerseyNum"]):
-                        # player_id = p_id
-                        break
-
-                away_player_x = away_player.get("x") if away_player else None
-                away_player_y = away_player.get("y") if away_player else None
-
-                player_data = PlayerData(
-                    coordinates=Point(away_player_x, away_player_y)
-                )
-                players_data[player] = player_data
-
+        # Helper function to map players
+        def map_players(players_smoothed, team):
+            if players_smoothed is None:
+                return
         
+            for player_info in players_smoothed:
+                jersey_num = str(player_info.get("jerseyNum"))
+                player = next((p for p in players[team].values() if p.jersey_no == jersey_num), None)
+        
+                if player:
+                    player_x = player_info.get("x")
+                    player_y = player_info.get("y")
+                    player_data = PlayerData(coordinates=Point(player_x, player_y))
+                    players_data[player] = player_data
+        
+        # Process home and away players
+        map_players(frame.get("homePlayersSmoothed"), "HOME")
+        map_players(frame.get("awayPlayersSmoothed"), "AWAY")
+
         return Frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
@@ -338,19 +317,16 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     # Find ball owning team
                     game_event = frame.get("game_event")
                     
-                    if game_event:
-                        if game_event.get("home_ball") is not None:
-                            self._ball_owning_team = home_team if game_event["home_ball"] else away_team
+                    if game_event and game_event.get("home_ball") is not None:
+                        self._ball_owning_team = home_team if game_event["home_ball"] else away_team
                 
-                    if frame_period is not None:
-                        if n % sample == 0:
-                            yield frame, frame_period
-                        n += 1
+                    if frame_period is not None and n % sample == 0:
+                        yield frame, frame_period
+                    n += 1
 
-        frames = []
-        et_frames = []
-
+        frames, et_frames = [], []
         n_frames = 0
+        
         for _frame, _frame_period in _iter():
             # Create Frame object
             frame = self._get_frame_data(

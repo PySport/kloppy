@@ -18,7 +18,7 @@ from kloppy.domain import (
     GoalkeeperEvent,
     GenericEvent,
 )
-from kloppy.domain.models.event import PressureEvent
+from kloppy.domain.models.event import PressureEvent, SetPieceQualifier
 from kloppy.domain.services.synthetic_event_generators.synthetic_event_generator import (
     SyntheticEventGenerator,
 )
@@ -63,6 +63,8 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
             if not isinstance(next_event, VALID_EVENT):
                 continue
             if not event.team.team_id == next_event.team.team_id:
+                continue
+            if next_event.get_qualifier_value(SetPieceQualifier) is not None:
                 continue
             if hasattr(event, "end_coordinates"):
                 last_coord = event.end_coordinates

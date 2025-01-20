@@ -241,21 +241,22 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             key=possible_attacking_directions.get,
         )
 
-    def __check_att_direction(self, et_frames, check_frames_counter):
-        '''Check attacking team direction'''
-        
+    def __check_att_direction(self, et_frames, n_samples: int = 25):
+        """Check attacking team direction"""
+
         possible_attacking_directions = defaultdict(int)
-        
+
         # Iterate over the required frames
-        for i in range(check_frames_counter):
+        for i in range(n_samples):
             attacking_direction = attacking_direction_from_frame(et_frames[i])
             possible_attacking_directions[attacking_direction] += 1
-        
-    
+
         # Return attacking_direction
-        return max(possible_attacking_directions, key=possible_attacking_directions.get)
-       
-       
+        return max(
+            possible_attacking_directions,
+            key=possible_attacking_directions.get,
+        )
+
     def deserialize(self, inputs: PFF_TrackingInputs) -> TrackingDataset:
         # Load datasets
         metadata = self.__read_csv(inputs.meta_data)

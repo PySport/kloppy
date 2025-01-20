@@ -302,7 +302,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             raise KeyError("The key 'homeTeamStartLeft' does not exist in metadata.")
             
         orientation = Orientation.HOME_AWAY if metadata.get("homeTeamStartLeft") else Orientation.AWAY_HOME
-        first_period_attacking_direction = AttackingDirection.LTR if metadata.get("homeTeamStartLeft") else AttackingDirection().RTL
+        first_period_attacking_direction = AttackingDirection.LTR if metadata.get("homeTeamStartLeft") else AttackingDirection.RTL
         
         with performance_logging("Loading data", logger=logger):
 

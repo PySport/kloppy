@@ -87,8 +87,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         ball_owning_team,
         frame,
     ):
-        '''Gets a Frame'''
-        
+        """Gets a Frame"""
+
         # Get Frame information
         frame_period = frame["period"]
         frame_id = frame["frameNum"]
@@ -100,13 +100,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             ball_x = ball_smoothed.get("x")
             ball_y = ball_smoothed.get("y")
             ball_z = ball_smoothed.get("z")
-        
+
             ball_coordinates = Point3D(
                 x=float(ball_x) if ball_x is not None else None,
                 y=float(ball_y) if ball_y is not None else None,
                 z=float(ball_z) if ball_z is not None else None,
             )
-            
+
         else:
             ball_coordinates = Point3D(x=None, y=None, z=None)
 
@@ -117,17 +117,26 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         def map_players(players_smoothed, team):
             if players_smoothed is None:
                 return
-        
+
             for player_info in players_smoothed:
                 jersey_num = str(player_info.get("jerseyNum"))
-                player = next((p for p in players[team].values() if p.jersey_no == jersey_num), None)
-        
+                player = next(
+                    (
+                        p
+                        for p in players[team].values()
+                        if p.jersey_no == jersey_num
+                    ),
+                    None,
+                )
+
                 if player:
                     player_x = player_info.get("x")
                     player_y = player_info.get("y")
-                    player_data = PlayerData(coordinates=Point(player_x, player_y))
+                    player_data = PlayerData(
+                        coordinates=Point(player_x, player_y)
+                    )
                     players_data[player] = player_data
-        
+
         # Process home and away players
         map_players(frame.get("homePlayersSmoothed"), "HOME")
         map_players(frame.get("awayPlayersSmoothed"), "AWAY")
@@ -145,25 +154,29 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
     @classmethod
     def __get_periods(cls, tracking, frame_rate):
-        """Gets the Periods contained in the tracking data"""        
+        """Gets the Periods contained in the tracking data"""
         periods = {}
         frames_by_period = defaultdict(list)
-        
+
         for frame in tracking:
             if frame["period"] is not None:
                 frames_by_period[frame["period"]].append(frame)
-        
+
         for period, frames in frames_by_period.items():
             periods[period] = Period(
                 id=period,
-                start_timestamp=timedelta(seconds=frames[0]["frameNum"] / frame_rate),
-                end_timestamp=timedelta(seconds=frames[-1]["frameNum"] / frame_rate),
+                start_timestamp=timedelta(
+                    seconds=frames[0]["frameNum"] / frame_rate
+                ),
+                end_timestamp=timedelta(
+                    seconds=frames[-1]["frameNum"] / frame_rate
+                ),
             )
-            
+
         return periods
 
     def __load_json_raw(self, file_path):
-        '''Load raw JSON file'''
+        """Load raw JSON file"""
         data = list()
         with bz2.open(file_path, "rt") as file:
             for i, line in enumerate(file):
@@ -175,7 +188,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         return data
 
     def __read_csv(self, file):
-        '''Load CSV file'''
+        """Load CSV file"""
         # Read the content of the BufferedReader
         file_bytes = file.read()
 
@@ -186,23 +199,23 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         file_like = io.StringIO(file_str)
 
         return list(csv.DictReader(file_like))
-    
 
-    def __check_att_direction(self, et_frames, check_frames_counter):
-        '''Check attacking team direction'''
-        
+    def __check_att_direction(self, et_frames, n_samples: int = 25):
+        """Check attacking team direction"""
+
         possible_attacking_directions = defaultdict(int)
-        
+
         # Iterate over the required frames
-        for i in range(check_frames_counter):
+        for i in range(n_samples):
             attacking_direction = attacking_direction_from_frame(et_frames[i])
             possible_attacking_directions[attacking_direction] += 1
-        
-    
+
         # Return attacking_direction
-        return max(possible_attacking_directions, key=possible_attacking_directions.get)
-       
-       
+        return max(
+            possible_attacking_directions,
+            key=possible_attacking_directions.get,
+        )
+
     def deserialize(self, inputs: PFF_TrackingInputs) -> TrackingDataset:
         # Load datasets
         metadata = self.__read_csv(inputs.meta_data)
@@ -214,8 +227,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         # Filter metadata for the specific game_id
         metadata = [row for row in metadata if int(row["id"]) == game_id][0]
-        
-        
+
         if not metadata:
             raise ValueError(
                 "The game_id of this game is not contained within the provided metadata.csv"
@@ -226,7 +238,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         away_team = json.loads(metadata["awayTeam"].replace("'", '"'))
         stadium = json.loads(metadata["stadium"].replace("'", '"'))
         video_data = json.loads(metadata["videos"].replace("'", '"'))
-        
+
         # Obtain frame rate
         frame_rate = video_data["fps"]
 
@@ -282,7 +294,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 elif team_id == away_team_id:
                     team_string = "AWAY"
                     team = away_team
-                    
+
                 # Create Player object
                 players[team_string][player_id] = Player(
                     player_id=player_id,
@@ -299,11 +311,21 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         # Check if home team plays left or right and assign orientation accordingly.
         if "homeTeamStartLeft" not in metadata:
-            raise KeyError("The key 'homeTeamStartLeft' does not exist in metadata.")
-            
-        orientation = Orientation.HOME_AWAY if metadata.get("homeTeamStartLeft") else Orientation.AWAY_HOME
-        first_period_attacking_direction = AttackingDirection.LTR if metadata.get("homeTeamStartLeft") else AttackingDirection.RTL
-        
+            raise KeyError(
+                "The key 'homeTeamStartLeft' does not exist in metadata."
+            )
+
+        orientation = (
+            Orientation.HOME_AWAY
+            if metadata.get("homeTeamStartLeft")
+            else Orientation.AWAY_HOME
+        )
+        first_period_attacking_direction = (
+            AttackingDirection.LTR
+            if metadata.get("homeTeamStartLeft")
+            else AttackingDirection.RTL
+        )
+
         with performance_logging("Loading data", logger=logger):
 
             def _iter():
@@ -313,61 +335,80 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 for frame in raw_data:
                     # Identify Period
                     frame_period = frame.get("period")
-                    
+
                     # Find ball owning team
                     game_event = frame.get("game_event")
-                    
+
                     if game_event and game_event.get("home_ball") is not None:
-                        self._ball_owning_team = home_team if game_event["home_ball"] else away_team
-                
+                        self._ball_owning_team = (
+                            home_team if game_event["home_ball"] else away_team
+                        )
+
                     if frame_period is not None and n % sample == 0:
                         yield frame, frame_period
                     n += 1
 
         frames, et_frames = [], []
         n_frames = 0
-        
+
         for _frame, _frame_period in _iter():
             # Create Frame object
             frame = self._get_frame_data(
-                    teams,
-                    players,
-                    periods,
-                    self._ball_owning_team,
-                    _frame,
+                teams,
+                players,
+                periods,
+                self._ball_owning_team,
+                _frame,
             )
-            
-            # if Regular Time  
+
+            # if Regular Time
             if _frame_period in {1, 2}:
                 frames.append(frame)
-                
+
             # else if extra time
             elif _frame_period in {3, 4}:
                 et_frames.append(frame)
-            
+
             n_frames += 1
 
             if self.limit and n_frames >= self.limit:
                 break
-                    
+
         if et_frames:
-            et_attacking_direction = self.__check_att_direction(et_frames, check_frames_counter = 25)
-           
+            et_attacking_direction = self.__check_att_direction(
+                et_frames, n_samples=25
+            )
+
             # If first period and third period attacking direction for home team is inconsistent, flip the direction of the extra time frames
             if first_period_attacking_direction != et_attacking_direction:
                 for et_frame in et_frames:
                     # Loop through each PlayerData in the players_data dictionary
                     for player, player_data in et_frame.players_data.items():
-                        if player_data.coordinates and player_data.coordinates.x is not None and player_data.coordinates.y is not None:
+                        if (
+                            player_data.coordinates
+                            and player_data.coordinates.x is not None
+                            and player_data.coordinates.y is not None
+                        ):
                             # Create a new Point with multiplied coordinates for each player
-                            player_data.coordinates = Point(-player_data.coordinates.x, -player_data.coordinates.y)  
-                    
+                            player_data.coordinates = Point(
+                                -player_data.coordinates.x,
+                                -player_data.coordinates.y,
+                            )
+
                     # Multiply the x and y coordinates of the ball by -1
-                    if et_frame.ball_coordinates and et_frame.ball_coordinates.x is not None and et_frame.ball_coordinates.y is not None:
-                        et_frame.ball_coordinates = Point3D(-et_frame.ball_coordinates.x, -et_frame.ball_coordinates.y, et_frame.ball_coordinates.z)
-                    
+                    if (
+                        et_frame.ball_coordinates
+                        and et_frame.ball_coordinates.x is not None
+                        and et_frame.ball_coordinates.y is not None
+                    ):
+                        et_frame.ball_coordinates = Point3D(
+                            -et_frame.ball_coordinates.x,
+                            -et_frame.ball_coordinates.y,
+                            et_frame.ball_coordinates.z,
+                        )
+
         frames.extend(et_frames)
-            
+
         metadata = Metadata(
             teams=teams,
             periods=sorted(periods.values(), key=lambda p: p.id),

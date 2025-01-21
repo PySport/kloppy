@@ -14,13 +14,13 @@ def load_tracking(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    include_empty_frames: Optional[bool] = False,
+    only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
     deserializer = PFF_TrackingDeserializer(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
-        include_empty_frames=include_empty_frames,
+        only_alive=only_alive,
     )
     with open_as_file(meta_data) as meta_data_fp, open_as_file(
         roster_meta_data

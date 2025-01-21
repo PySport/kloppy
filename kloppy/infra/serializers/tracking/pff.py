@@ -1,4 +1,5 @@
 import logging
+from ast import literal_eval
 from collections import defaultdict
 from datetime import timedelta, timezone
 from dateutil.parser import parse
@@ -7,6 +8,7 @@ import json
 import bz2
 import io
 import csv
+from enum import Enum
 
 from kloppy.domain import (
     attacking_direction_from_frame,
@@ -25,6 +27,7 @@ from kloppy.domain import (
     Provider,
     Team,
     TrackingDataset,
+    BallState,
 )
 
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -56,6 +59,31 @@ position_types_mapping: Dict[str, PositionType] = {
 }
 
 
+class GameEventType:
+    """
+    GameEventType
+
+    Type of game event - may be “FIRSTKICKOFF” (first half kick-o
+    “SECONDKICKOFF” (second half kick-off), "THIRDKICKOFF" or "FOURTHKICKOFF",
+    “END” (end of half), "G" (ball hits post, bar or corner flag and stays in play),
+    “OFF” (player off), “ON” (player on), “OTB” (on-the-ball event), “OUT” (ball
+    out-of-play), “SUB” (substitution) or “VID” (video missing).
+    """
+
+    FIRSTKICKOFF = "FIRSTKICKOFF"
+    SECONDKICKOFF = "SECONDKICKOFF"
+    THIRDKICKOFF = "THIRDKICKOFF"
+    FOURTHKICKOFF = "FOURTHKICKOFF"
+    END = "END"
+    G = "G"
+    OFF = "OFF"
+    ON = "ON"
+    OTB = "OTB"
+    OUT = "OUT"
+    SUB = "SUB"
+    VID = "VID"
+
+
 class PFF_TrackingInputs(NamedTuple):
     meta_data: IO[bytes]
     roster_meta_data: IO[bytes]
@@ -68,11 +96,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
-        include_empty_frames: Optional[bool] = False,
+        only_alive: Optional[bool] = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
+        self.only_alive = only_alive
+
         self._ball_owning_team = None
-        self.include_empty_frames = include_empty_frames
+        self._ball_state = BallState.DEAD
 
     @property
     def provider(self) -> Provider:
@@ -81,10 +111,10 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
     @classmethod
     def _get_frame_data(
         cls,
-        teams,
         players,
         periods,
         ball_owning_team,
+        ball_state,
         frame,
     ):
         """Gets a Frame"""
@@ -92,7 +122,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Get Frame information
         frame_period = frame["period"]
         frame_id = frame["frameNum"]
-        frame_timestamp = timedelta(seconds=frame["periodGameClockTime"])
+        frame_timestamp = timedelta(seconds=frame["periodElapsedTime"])
 
         # Ball coordinates
         ball_smoothed = frame.get("ballsSmoothed")
@@ -101,14 +131,18 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             ball_y = ball_smoothed.get("y")
             ball_z = ball_smoothed.get("z")
 
-            ball_coordinates = Point3D(
-                x=float(ball_x) if ball_x is not None else None,
-                y=float(ball_y) if ball_y is not None else None,
-                z=float(ball_z) if ball_z is not None else None,
-            )
+            if ball_x is None or ball_y is None or ball_z is None:
+                ball_coordinates = None
+
+            else:
+                ball_coordinates = Point3D(
+                    x=float(ball_x) if ball_x is not None else None,
+                    y=float(ball_y) if ball_y is not None else None,
+                    z=float(ball_z) if ball_z is not None else None,
+                )
 
         else:
-            ball_coordinates = Point3D(x=None, y=None, z=None)
+            ball_coordinates = None
 
         # Player coordinates
         players_data = {}
@@ -147,7 +181,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame_period],
-            ball_state=None,
+            ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             other_data={},
         )
@@ -234,10 +268,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             )
 
         # Get metadata variables
-        home_team = json.loads(metadata["homeTeam"].replace("'", '"'))
-        away_team = json.loads(metadata["awayTeam"].replace("'", '"'))
-        stadium = json.loads(metadata["stadium"].replace("'", '"'))
-        video_data = json.loads(metadata["videos"].replace("'", '"'))
+        home_team = literal_eval(metadata["homeTeam"])
+        away_team = literal_eval(metadata["awayTeam"])
+        stadium = literal_eval(metadata["stadium"])
+        video_data = literal_eval(metadata["videos"])
+        game_week = metadata["week"]
 
         # Obtain frame rate
         frame_rate = video_data["fps"]
@@ -280,8 +315,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-                team_id = json.loads(player["team"].replace("'", '"'))["id"]
-                player_col = json.loads(player["player"].replace("'", '"'))
+                team_id = literal_eval(player["team"])["id"]
+                player_col = literal_eval(player["player"])
 
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
@@ -304,6 +339,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     starting_position=position_types_mapping.get(
                         player_position
                     ),
+                    starting=None,
                 )
 
             home_team.players = list(players["HOME"].values())
@@ -315,50 +351,76 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 "The key 'homeTeamStartLeft' does not exist in metadata."
             )
 
+        is_home_team_left = metadata.get("homeTeamStartLeft").lower() == "true"
         orientation = (
             Orientation.HOME_AWAY
-            if metadata.get("homeTeamStartLeft")
+            if is_home_team_left
             else Orientation.AWAY_HOME
         )
         first_period_attacking_direction = (
             AttackingDirection.LTR
-            if metadata.get("homeTeamStartLeft")
+            if is_home_team_left
             else AttackingDirection.RTL
         )
 
         with performance_logging("Loading data", logger=logger):
 
             def _iter():
-                n = 0
                 sample = 1.0 / self.sample_rate
 
-                for frame in raw_data:
+                for n, frame in enumerate(raw_data):
                     # Identify Period
                     frame_period = frame.get("period")
 
                     # Find ball owning team
                     game_event = frame.get("game_event")
 
-                    if game_event and game_event.get("home_ball") is not None:
-                        self._ball_owning_team = (
-                            home_team if game_event["home_ball"] else away_team
-                        )
+                    if game_event:
+                        game_event_type = game_event.get("game_event_type")
+
+                        if game_event_type in (
+                            GameEventType.OUT,
+                            GameEventType.END,
+                        ):
+                            self._ball_state = BallState.DEAD
+                        elif game_event_type in (
+                            GameEventType.FIRSTKICKOFF,
+                            GameEventType.SECONDKICKOFF,
+                            GameEventType.THIRDKICKOFF,
+                            GameEventType.FOURTHKICKOFF,
+                            GameEventType.OTB,
+                        ):
+                            self._ball_state = BallState.ALIVE
+                        else:
+                            # for other events leave ball state as is
+                            pass
+
+                        if game_event.get("home_ball") is not None:
+                            self._ball_owning_team = (
+                                home_team
+                                if game_event["home_ball"]
+                                else away_team
+                            )
+
+                    if self.only_alive and self._ball_state == BallState.DEAD:
+                        continue
 
                     if frame_period is not None and n % sample == 0:
                         yield frame, frame_period
-                    n += 1
 
         frames, et_frames = [], []
         n_frames = 0
 
         for _frame, _frame_period in _iter():
-            # Create Frame object
-            frame = self._get_frame_data(
-                teams,
-                players,
-                periods,
-                self._ball_owning_team,
-                _frame,
+            # Create and transform Frame object
+            frame = transformer.transform_frame(
+                self._get_frame_data(
+                    players,
+                    periods,
+                    self._ball_owning_team,
+                    self._ball_state,
+                    _frame,
+                )
             )
 
             # if Regular Time
@@ -383,7 +445,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             if first_period_attacking_direction != et_attacking_direction:
                 for et_frame in et_frames:
                     # Loop through each PlayerData in the players_data dictionary
-                    for player, player_data in et_frame.players_data.items():
+                    for _, player_data in et_frame.players_data.items():
                         if (
                             player_data.coordinates
                             and player_data.coordinates.x is not None
@@ -416,10 +478,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.PFF,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_id=game_id,
+            game_week=game_week,
         )
 
         return TrackingDataset(

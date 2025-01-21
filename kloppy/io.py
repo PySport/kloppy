@@ -544,8 +544,10 @@ def _check_path_type(input_: Union[str, Iterable], contains: str = None):
             if fs.isfile(path) and (
                 not contains or contains in os.path.basename(path)
             ):
-                valid_paths.append(path)
-        return sorted(valid_paths, key=__natural_sort_key)
+                valid_paths.append(str(path))
+        print(valid_paths)
+        valid_paths = sorted(valid_paths, key=__natural_sort_key)
+        return valid_paths
     else:
         raise ValueError(
             "Unknown path type, supported types are Iterable (list of file paths), a folder path, or an individual file path."

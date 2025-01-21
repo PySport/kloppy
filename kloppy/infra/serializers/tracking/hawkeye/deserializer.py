@@ -63,6 +63,16 @@ class HawkEyeObjectIdentifier:
 
     PRIORITY_IDS = [FIFA_ID, UEFA_ID, HE_ID]
 
+    @classmethod
+    def get_identifier_variable(cls, player_tracking_data):
+        player_object = player_tracking_data["details"]["players"][0]["id"]
+
+        object_id = cls.HE_ID
+        for identifier in cls.PRIORITY_IDS:
+            if player_object.get(identifier):
+                return identifier
+        return object_id
+
 
 class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     def __init__(
@@ -133,16 +143,6 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 starting_position=player["role"]["name"],
             )
         return parsed_players
-
-    def __get_identifier_variable(self, player_tracking_data):
-        player_object = player_tracking_data["details"]["players"][0]["id"]
-
-        for identifier in HawkEyeObjectIdentifier.PRIORITY_IDS:
-            if player_object.get(identifier):
-                self.object_id = identifier
-                return
-
-        self.object_id = HawkEyeObjectIdentifier.HE_ID
 
     @staticmethod
     def __infer_frame_rate(ball_tracking_data, n_samples=25):
@@ -270,7 +270,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
 
-            self.__get_identifier_variable(player_tracking_data)
+            self.object_id = HawkEyeObjectIdentifier.get_identifier_variable(
+                player_tracking_data
+            )
 
             if frame_rate is None:
                 frame_rate = self.__infer_frame_rate(ball_tracking_data)

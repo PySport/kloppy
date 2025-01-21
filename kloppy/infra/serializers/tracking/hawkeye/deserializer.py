@@ -384,7 +384,8 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                             parsed_frames[frame_id] = Frame(
                                 frame_id=frame_id,
                                 timestamp=timedelta(
-                                    minutes=minute, seconds=centroid["time"]
+                                    minutes=period_minute,
+                                    seconds=centroid["time"],
                                 ),
                                 ball_coordinates=Point3D(
                                     float("nan"), float("nan"), float("nan")

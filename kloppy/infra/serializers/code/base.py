@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Dict, Generic, TypeVar
+from typing import Generic, TypeVar
 
-from kloppy.utils import Readable
 from kloppy.domain import CodeDataset
 
 

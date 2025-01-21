@@ -3,9 +3,7 @@ from datetime import timedelta
 import pytest
 
 from kloppy.domain import (
-    Period,
     Provider,
-    AttackingDirection,
     Orientation,
     Point,
     DatasetType,

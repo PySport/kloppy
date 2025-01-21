@@ -220,6 +220,7 @@ class DatasetTransformer:
                 for key, player_data in frame.players_data.items()
             },
             other_data=frame.other_data,
+            statistics=frame.statistics,
         )
 
     def __change_frame_dimensions(self, frame: Frame):
@@ -246,6 +247,7 @@ class DatasetTransformer:
                 for key, player_data in frame.players_data.items()
             },
             other_data=frame.other_data,
+            statistics=frame.statistics,
         )
 
     def __change_point_coordinate_system(
@@ -303,6 +305,7 @@ class DatasetTransformer:
             ball_coordinates=self.flip_point(frame.ball_coordinates),
             players_data=players_data,
             other_data=frame.other_data,
+            statistics=frame.statistics,
         )
 
     def transform_event(self, event: Event) -> Event:

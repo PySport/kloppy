@@ -8,7 +8,6 @@ from typing import (
     Iterator,
     Mapping,
     Sequence,
-    Text,
     Tuple,
     TypeVar,
     Union,
@@ -36,7 +35,7 @@ class _TrailItem(Generic[Out]):
     """
 
     item: Out
-    data: Dict[Text, Sequence[Text]]
+    data: Dict[str, Sequence[str]]
 
     @property
     def _comparable(self):
@@ -108,7 +107,7 @@ class OutOf(Matcher):
 
 
 class AttributeHasValue(Matcher):
-    def __init__(self, attribute: Text, value: Any):
+    def __init__(self, attribute: str, value: Any):
         self.attribute = attribute
         self.value = value
 
@@ -146,7 +145,7 @@ class KeyHasValue(Matcher):
 
 class Anything(Matcher):
     def __repr__(self):
-        return f"Anything()"
+        return "Anything()"
 
     def match(
         self, token: Tok, trail: Tuple[_TrailItem[Out], ...]

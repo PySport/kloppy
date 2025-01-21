@@ -19,7 +19,7 @@ def load(
 
     Parameters:
         f7_data: F7 xml feed containing the lineup information
-        f24_data: F24 xml feed containing the events
+        f24_data: F24 or F73 xml feed containing the events
         event_types:
         coordinates:
         event_factory:

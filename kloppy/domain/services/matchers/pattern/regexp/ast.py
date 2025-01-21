@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, replace
 from functools import reduce
-from typing import Generic, Text, Union
+from typing import Generic, Union
 
 from .matchers import Matcher, Out, Tok
 
@@ -37,12 +37,12 @@ class Node(Generic[Tok, Out]):
 
         return Alternation(self, other)
 
-    def __getitem__(self, item: Text):
+    def __getitem__(self, item: str):
         """
         Generates a capture group
         """
 
-        if not isinstance(item, Text):
+        if not isinstance(item, str):
             raise KeyError("Cannot capture with a key other than a string")
 
         return Capture(name=item, statement=self)
@@ -192,7 +192,7 @@ class Capture(DumbHash, Node):
     Represents a capture group around the statement
     """
 
-    name: Text
+    name: str
     statement: Node = field(repr=False)
 
     def copy(self):

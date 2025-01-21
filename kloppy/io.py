@@ -206,7 +206,7 @@ def _open(
     "raw", no compression is used.
     """
     if mode not in ("rb", "wb", "ab"):
-        raise ValueError("Mode '{}' not supported".format(mode))
+        raise ValueError(f"Mode '{mode}' not supported")
     filepath = _filepath_from_path_or_filelike(filename)
 
     if format not in (None, "gz", "xz", "bz2", "raw"):

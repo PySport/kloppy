@@ -88,7 +88,6 @@ class TestPFFTracking:
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[2].id == 3
         assert dataset.metadata.periods[3].id == 4
-
         # Check Pitch Dimensions
         pitch_dimensions = dataset.metadata.pitch_dimensions
         assert pitch_dimensions.x_dim.min == -52.5

@@ -92,7 +92,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Get Frame information
         frame_period = frame["period"]
         frame_id = frame["frameNum"]
-        frame_timestamp = timedelta(seconds=frame["periodGameClockTime"])
+        frame_timestamp = timedelta(seconds=frame["periodElapsedTime"])
 
         # Ball coordinates
         ball_smoothed = frame.get("ballsSmoothed")
@@ -101,14 +101,18 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             ball_y = ball_smoothed.get("y")
             ball_z = ball_smoothed.get("z")
         
-            ball_coordinates = Point3D(
-                x=float(ball_x) if ball_x is not None else None,
-                y=float(ball_y) if ball_y is not None else None,
-                z=float(ball_z) if ball_z is not None else None,
-            )
+            if ball_x is None or ball_y is None or ball_z is None:
+                ball_coordinates = None
+                
+            else:
+                ball_coordinates = Point3D(
+                    x=float(ball_x) if ball_x is not None else None,
+                    y=float(ball_y) if ball_y is not None else None,
+                    z=float(ball_z) if ball_z is not None else None,
+                )
             
         else:
-            ball_coordinates = Point3D(x=None, y=None, z=None)
+            ball_coordinates = None
 
         # Player coordinates
         players_data = {}
@@ -152,6 +156,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         for frame in tracking:
             if frame["period"] is not None:
                 frames_by_period[frame["period"]].append(frame)
+
         
         for period, frames in frames_by_period.items():
             periods[period] = Period(
@@ -226,6 +231,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         away_team = json.loads(metadata["awayTeam"].replace("'", '"'))
         stadium = json.loads(metadata["stadium"].replace("'", '"'))
         video_data = json.loads(metadata["videos"].replace("'", '"'))
+        game_week = metadata["week"]
         
         # Obtain frame rate
         frame_rate = video_data["fps"]
@@ -292,6 +298,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     starting_position=position_types_mapping.get(
                         player_position
                     ),
+                    starting=None
                 )
 
             home_team.players = list(players["HOME"].values())
@@ -307,10 +314,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         with performance_logging("Loading data", logger=logger):
 
             def _iter():
-                n = 0
                 sample = 1.0 / self.sample_rate
 
-                for frame in raw_data:
+                for n, frame in enumerate(raw_data):
                     # Identify Period
                     frame_period = frame.get("period")
                     
@@ -322,19 +328,20 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 
                     if frame_period is not None and n % sample == 0:
                         yield frame, frame_period
-                    n += 1
 
         frames, et_frames = [], []
         n_frames = 0
         
         for _frame, _frame_period in _iter():
-            # Create Frame object
-            frame = self._get_frame_data(
+            # Create and transform Frame object
+            frame = transformer.transform_frame(
+                self._get_frame_data(
                     teams,
                     players,
                     periods,
                     self._ball_owning_team,
                     _frame,
+                )
             )
             
             # if Regular Time  
@@ -357,7 +364,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             if first_period_attacking_direction != et_attacking_direction:
                 for et_frame in et_frames:
                     # Loop through each PlayerData in the players_data dictionary
-                    for player, player_data in et_frame.players_data.items():
+                    for _, player_data in et_frame.players_data.items():
                         if player_data.coordinates and player_data.coordinates.x is not None and player_data.coordinates.y is not None:
                             # Create a new Point with multiplied coordinates for each player
                             player_data.coordinates = Point(-player_data.coordinates.x, -player_data.coordinates.y)  
@@ -375,10 +382,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.PFF,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag.BALL_OWNING_TEAM,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_id=game_id,
+            game_week=game_week
         )
 
         return TrackingDataset(

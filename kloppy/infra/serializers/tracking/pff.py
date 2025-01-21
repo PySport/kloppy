@@ -1,4 +1,5 @@
 import logging
+from ast import literal_eval
 from collections import defaultdict
 from datetime import timedelta, timezone
 from dateutil.parser import parse
@@ -227,10 +228,10 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             )
 
         # Get metadata variables
-        home_team = json.loads(metadata["homeTeam"].replace("'", '"'))
-        away_team = json.loads(metadata["awayTeam"].replace("'", '"'))
-        stadium = json.loads(metadata["stadium"].replace("'", '"'))
-        video_data = json.loads(metadata["videos"].replace("'", '"'))
+        home_team = literal_eval(metadata["homeTeam"])
+        away_team = literal_eval(metadata["awayTeam"])
+        stadium = literal_eval(metadata["stadium"])
+        video_data = literal_eval(metadata["videos"])
         game_week = metadata["week"]
         
         # Obtain frame rate
@@ -274,8 +275,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-                team_id = json.loads(player["team"].replace("'", '"'))["id"]
-                player_col = json.loads(player["player"].replace("'", '"'))
+                team_id = literal_eval(player["team"])["id"]
+                player_col = literal_eval(player["player"])
 
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
@@ -307,9 +308,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Check if home team plays left or right and assign orientation accordingly.
         if "homeTeamStartLeft" not in metadata:
             raise KeyError("The key 'homeTeamStartLeft' does not exist in metadata.")
-            
-        orientation = Orientation.HOME_AWAY if metadata.get("homeTeamStartLeft") else Orientation.AWAY_HOME
-        first_period_attacking_direction = AttackingDirection.LTR if metadata.get("homeTeamStartLeft") else AttackingDirection().RTL
+         
+        # Set orientation
+        is_home_team_left = metadata.get("homeTeamStartLeft").lower() == 'true'
+        orientation = Orientation.HOME_AWAY if is_home_team_left else Orientation.AWAY_HOME
+        first_period_attacking_direction = AttackingDirection.LTR if is_home_team_left else AttackingDirection.RTL
         
         with performance_logging("Loading data", logger=logger):
 

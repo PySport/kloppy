@@ -26,6 +26,11 @@ class TestPFFTracking:
     @pytest.fixture
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/pff_10517.jsonl.bz2"
+    
+    @pytest.fixture
+    def raw_data_1(self, base_dir) -> str:
+        return base_dir / "files/pff_3812.jsonl.bz2"
+    
 
     def test_correct_deserialization(self, raw_data: Path, meta_data: Path, rosters_meta_data: Path):
         # Raw data is obtained by grabbing first and last 25 frames of each period
@@ -125,7 +130,24 @@ class TestPFFTracking:
 
         # Check Ball coordinates
         assert dataset.records[0].ball_coordinates == Point3D(x=0.42, y=1.59, z=0.39)
-
+        
+    
+    def test_orientation(self, raw_data_1: Path, meta_data: Path, rosters_meta_data: Path):
+        # Raw data is obtained by grabbing first and last 25 frames of each period
+         dataset = pff.load_tracking(
+             meta_data=meta_data,
+             roster_meta_data=rosters_meta_data,
+             raw_data=raw_data_1,
+             coordinates="pff"
+         )
+         
+         # Check Orientation
+         assert dataset.metadata.orientation == Orientation.AWAY_HOME
+         
+         # Check Player name with apostrophe (') in it
+         assert dataset.metadata.teams[0].players[1].name == "Moussa N'Diaye"
+         
+         
 
     def test_correct_normalized_deserialization(self, raw_data: Path, meta_data: Path, rosters_meta_data: Path):
         # Raw data is obtained by grabbing first and last 25 frames of each period

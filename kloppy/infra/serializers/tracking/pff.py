@@ -323,8 +323,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-                team_id = json.loads(player["team"].replace("'", '"'))["id"]
-                player_col = json.loads(player["player"].replace("'", '"'))
+                team_id = literal_eval(player["team"])["id"]
+                player_col = literal_eval(player["player"])
 
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]

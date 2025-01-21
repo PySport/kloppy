@@ -1,7 +1,11 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from dateutil.parser import parse
 import warnings
+import re
+from lxml import objectify
+
 from typing import (
     IO,
     Any,
@@ -53,11 +57,12 @@ class HawkEyeInputs(NamedTuple):
 
 
 class HawkEyeObjectIdentifier:
-    FIFA_ID = 'fifaId'
-    UEFA_ID = 'uefaId'
-    HE_ID = 'heId'
-    
+    FIFA_ID = "fifaId"
+    UEFA_ID = "uefaId"
+    HE_ID = "heId"
+
     PRIORITY_IDS = [FIFA_ID, UEFA_ID, HE_ID]
+
 
 class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     def __init__(
@@ -67,13 +72,15 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
-        only_alive: Optional[bool] = True,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
-        self.only_alive = only_alive
         self.object_id: HawkEyeObjectIdentifier = None
         self.pitch_width = pitch_width
         self.pitch_length = pitch_length
+
+        self._game_id = None
+        self._game_week = None
+        self._game_date = None
 
     @property
     def provider(self) -> Provider:
@@ -85,15 +92,24 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     ) -> Dict[str, Period]:
         parsed_periods = {}
         for period in raw_periods:
+            if period["segment"] == 0:
+                continue
             period_id = period["segment"]
+
             parsed_periods[period_id] = Period(
                 id=period_id,
-                start_timestamp=datetime.strptime(period["startTimeUTC"], '%Y-%m-%dT%H:%M:%S.%fZ'),
-                end_timestamp=datetime.strptime(period["endTimeUTC"], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                start_timestamp=datetime.strptime(
+                    period["startTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
+                end_timestamp=datetime.strptime(
+                    period["endTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
             )
         return parsed_periods
 
-    def __parse_teams(self, raw_teams: List[Dict[str, Any]]) -> Dict[str, Team]:
+    def __parse_teams(
+        self, raw_teams: List[Dict[str, Any]]
+    ) -> Dict[str, Team]:
         parsed_teams = {}
         for team in raw_teams:
             team_id = team["id"][self.object_id]
@@ -117,17 +133,17 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 starting_position=player["role"]["name"],
             )
         return parsed_players
-    
+
     def __get_identifier_variable(self, player_tracking_data):
-        player_object = player_tracking_data['details']['players'][0]['id']
-        
+        player_object = player_tracking_data["details"]["players"][0]["id"]
+
         for identifier in HawkEyeObjectIdentifier.PRIORITY_IDS:
             if player_object.get(identifier):
                 self.object_id = identifier
                 return
-        
+
         self.object_id = HawkEyeObjectIdentifier.HE_ID
-    
+
     @staticmethod
     def __infer_frame_rate(ball_tracking_data, n_samples=25):
         total_time_difference = 0
@@ -135,31 +151,101 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         for i in range(len(ball_tracking_data["samples"]["ball"]) - 1):
             current_time = ball_tracking_data["samples"]["ball"][i]["time"]
             next_time = ball_tracking_data["samples"]["ball"][i + 1]["time"]
-            
+
             time_difference = next_time - current_time
             total_time_difference += time_difference
-            
+
             if i >= n_samples - 1:
                 break
-            
+
         return int(1 / (total_time_difference / n_samples))
-    
-    @staticmethod
-    def __parse_meta_data(meta_data):
+
+    def __parse_meta_data_json(self, meta_data):
+        with open_as_file(meta_data) as meta_data_fp:
+            meta_data = json.load(meta_data_fp)
+
+        kick_off_time = meta_data.get("KickOffTime")
+        match_day = re.search(r"\d+", meta_data.get("MatchDay"))
+        game_week = match_day.group() if match_day else None
+
+        stadium = meta_data.get("Stadium")
+        self.pitch_length = (
+            stadium.get("PitchLength", self.pitch_length)
+            if stadium
+            else self.pitch_length
+        )
+        self.pitch_width = (
+            stadium.get("PitchWidth", self.pitch_width)
+            if stadium
+            else self.pitch_width
+        )
+
+        self._game_id = meta_data.get("MatchId")
+        self._game_date = (
+            parse(kick_off_time.get("DateTime")).replace(tzinfo=timezone.utc)
+            if kick_off_time
+            else None
+        )
+        self._game_week = game_week
+
+    def __parse_meta_data_xml(self, meta_data):
+        with open_as_file(meta_data) as meta_data_fp:
+            root = objectify.fromstring(meta_data_fp.read())
+
+        game_id = getattr(root, "id", None)
+        date = (
+            getattr(root.kickOffTime, "dateTime", None)
+            if hasattr(root, "kickOffTime")
+            else None
+        )
+        game_week_attr = (
+            getattr(root.matchday, "name", None)
+            if hasattr(root, "matchday")
+            else None
+        )
+        self.pitch_length = (
+            getattr(root.stadium.pitch, "length", self.pitch_length)
+            if hasattr(root.stadium, "pitch")
+            else self.pitch_length
+        )
+        self.pitch_width = (
+            getattr(root.stadium.pitch, "width", self.pitch_width)
+            if hasattr(root.stadium, "pitch")
+            else self.pitch_width
+        )
+
+        if date:
+            date = parse(str(date)).replace(tzinfo=timezone.utc)
+        if game_week_attr:
+            match_day = re.search(r"\d+", str(game_week_attr))
+            game_week = match_day.group() if match_day else None
+
+        self._game_id = str(game_id) if game_id else None
+        self._game_date = date
+        self._game_week = game_week
+
+    def __parse_meta_data(self, meta_data):
         if meta_data is None:
-            return 
-            
+            return
+
         meta_data_extension = get_file_extension(meta_data)
-        
+        if meta_data_extension == ".xml":
+            return self.__parse_meta_data_xml(meta_data)
+        elif meta_data_extension == ".json":
+            return self.__parse_meta_data_json(meta_data)
+        else:
+            raise ValueError(
+                "Metadata only supports .json and .xml file formats..."
+            )
+
     def deserialize(self, inputs: HawkEyeInputs) -> TrackingDataset:
-        
+
         self.__parse_meta_data(inputs.meta_data)
-            
+
         transformer = self.get_transformer(
             pitch_length=self.pitch_length,
             pitch_width=self.pitch_width,
         )
-        
 
         parsed_teams = {}
         parsed_players = {}
@@ -183,11 +269,17 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 ball_tracking_data = json.load(ball_data_fp)
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
-            
-            if frame_rate is not None:
-                frame_rate = self.__infer_frame_rate(ball_tracking_data)
+
             self.__get_identifier_variable(player_tracking_data)
-            
+
+            if frame_rate is None:
+                frame_rate = self.__infer_frame_rate(ball_tracking_data)
+
+            if not self._game_id:
+                self._game_id = ball_tracking_data["details"]["match"]["id"][
+                    self.object_id
+                ]
+
             # Parse the teams, players and periods. A value can be added by
             # later feeds, but we will not overwrite existing values.
             with performance_logging("Parsing meta data", logger=logger):
@@ -208,22 +300,34 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                     **self.__parse_periods(ball_tracking_data["segments"]),
                     **parsed_periods,
                 }
-                
-            
+
             # Parse the ball tracking data
             period_id = ball_tracking_data["sequences"]["segment"]
             minute = ball_tracking_data["sequences"]["match-minute"] - 1
+
+            period_minute = (
+                minute
+                if period_id == 1
+                else (minute - 45)
+                if period_id == 2
+                else (minute - 90)
+                if period_id == 3
+                else (minute - 105)
+                if period_id == 4
+                else (minute - 120)
+            )
+
             with performance_logging(
                 "Parsing ball tracking data", logger=logger
             ):
                 for detection in ball_tracking_data["samples"]["ball"]:
                     frame_id = int(
-                        (minute * 60 + detection["time"]) * frame_rate
+                        (minute * 60 + float(detection["time"])) * frame_rate
                     )
                     parsed_frames[frame_id] = Frame(
                         frame_id=frame_id,
                         timestamp=timedelta(
-                            minutes=minute, seconds=detection["time"]
+                            minutes=period_minute, seconds=detection["time"]
                         ),
                         ball_coordinates=Point3D(
                             x=detection["pos"][0],
@@ -241,7 +345,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             # Parse the player tracking data
             _period_id = player_tracking_data["sequences"]["segment"]
             _minute = player_tracking_data["sequences"]["match-minute"] - 1
-            
+
             if _period_id != period_id or _minute != minute:
                 raise DeserializationError(
                     "The feed for ball tracking and player tracking are not in sync"
@@ -255,7 +359,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                         "Goalkeeper",
                     ]:
                         continue
-                    player = parsed_players[detection["personId"][self.object_id]]
+                    player = parsed_players[
+                        detection["personId"][self.object_id]
+                    ]
                     for centroid in detection["centroid"]:
                         frame_id = int(
                             (minute * 60 + centroid["time"]) * frame_rate
@@ -336,6 +442,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             provider=Provider.HAWKEYE,
             flags=None,
             coordinate_system=transformer.get_to_coordinate_system(),
+            game_id=self._game_id,
+            date=self._game_date,
+            game_week=self._game_week,
         )
 
         return TrackingDataset(

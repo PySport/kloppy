@@ -8,6 +8,8 @@ import lzma
 import os
 import gzip
 import urllib.parse
+import re
+from urllib.parse import urlparse
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
@@ -17,6 +19,7 @@ from typing import (
     Generator,
     Optional,
     Tuple,
+    Iterable,
     Union,
 )
 
@@ -468,3 +471,82 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         return _open(input_)  # type: ignore
 
     raise TypeError(f"Unsupported input type: {type(input_)}")
+
+
+def __natural_sort_key(s):
+    # Split string into list of chunks for natural sorting
+    return [
+        int(text) if text.isdigit() else text.lower()
+        for text in re.split(r"(\d+)", s)
+    ]
+
+
+def __init_fsspec(input_):
+    input_ = str(input_)
+    try:
+        import fsspec
+    except (ImportError, ModuleNotFoundError):
+        raise ImportError(
+            "Seems like you don't have fsspec installed. Please"
+            " install it using: pip install fsspec"
+        )
+    # Extract protocol (e.g., 's3', 'gcs', 'file')
+    parsed_path = urlparse(input_)
+    protocol = parsed_path.scheme or "file"
+    # Create filesystem object
+    fs = fsspec.filesystem(protocol)
+    return fs, protocol
+
+
+def _list_files_in_folder_path(
+    input_, contains: str = None, sort_natural: bool = True
+):
+    # Collect file paths
+    fs, protocol = __init_fsspec(input_)
+
+    file_paths = []
+    for path in fs.find(input_):
+        if fs.isfile(path):  # Check if it's a file
+            if contains is None or contains in path:  # Filter by substring
+                path = protocol + "//:" + path if protocol != "file" else path
+                file_paths.append(path)
+
+    # Sort naturally if enabled
+    if sort_natural:
+        file_paths = sorted(file_paths, key=__natural_sort_key)
+
+    return file_paths
+
+
+def _check_path_type(input_: Union[str, Iterable], contains: str = None):
+    # Parse input path to extract protocol
+    if isinstance(input_, (str, os.PathLike)):
+        fs, protocol = __init_fsspec(input_)
+        # Check if input_ is a directory
+        if fs.isdir(input_):
+            return _list_files_in_folder_path(input_=input_, contains=contains)
+
+        # Check if input_ is an individual file
+        elif fs.isfile(input_):
+            if not contains or contains in os.path.basename(input_):
+                return [input_]
+            else:
+                raise ValueError(
+                    f"File path needs to include {contains} as a substring."
+                )
+    elif isinstance(input_, Iterable) and not isinstance(
+        input_, (str, bytes, os.PathLike)
+    ):
+        # Process a list of file paths
+        valid_paths = []
+        for path in input_:
+            fs, protocol = __init_fsspec(path)
+            if fs.isfile(path) and (
+                not contains or contains in os.path.basename(path)
+            ):
+                valid_paths.append(path)
+        return valid_paths
+    else:
+        raise ValueError(
+            "Unknown path type, supported types are Iterable (list of file paths), a folder path, or an individual file path."
+        )

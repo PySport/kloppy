@@ -5,7 +5,7 @@ from kloppy.infra.serializers.tracking.hawkeye import (
     HawkEyeDeserializer,
     HawkEyeInputs,
 )
-from kloppy.io import FileLike
+from kloppy.io import FileLike, _check_path_type
 
 
 def load(
@@ -17,17 +17,20 @@ def load(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,  # TODO: not implemented
     show_progress: Optional[bool] = False,
 ) -> TrackingDataset:
-        
+
+    ball_feeds = _check_path_type(ball_feeds, contains="samples.ball")
+    player_centroid_feeds = _check_path_type(
+        player_centroid_feeds, contains="samples.centroids"
+    )
+
     deserializer = HawkEyeDeserializer(
         pitch_width=pitch_width,
         pitch_length=pitch_length,
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
-        only_alive=only_alive,
     )
     return deserializer.deserialize(
         inputs=HawkEyeInputs(

@@ -878,7 +878,7 @@ class HawkEyeCoordinateSystem(CoordinateSystem):
             y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
             pitch_length=self.pitch_length,
             pitch_width=self.pitch_width,
-            standardized=False
+            standardized=False,
         )
 
 

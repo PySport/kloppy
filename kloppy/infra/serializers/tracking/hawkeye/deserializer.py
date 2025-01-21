@@ -342,6 +342,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                         players_data={},
                         period=parsed_periods[period_id],
                         other_data={},
+                        statistics=[],
                     )
 
             # Parse the player tracking data
@@ -395,6 +396,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                                 players_data={player: player_data},
                                 period=parsed_periods[period_id],
                                 other_data={},
+                                statistics=[],
                             )
 
             if self.limit and len(parsed_frames) >= self.limit:

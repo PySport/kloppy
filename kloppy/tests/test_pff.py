@@ -24,21 +24,21 @@ class TestPFFTracking:
         return base_dir / "files" / "pff_rosters.csv"
 
     @pytest.fixture
-    def raw_data(self, base_dir) -> str:
+    def raw_data_home_starts_left(self, base_dir) -> str:
         return base_dir / "files" / "pff_10517.jsonl.bz2"
 
     @pytest.fixture
-    def raw_data_1(self, base_dir) -> str:
+    def raw_data_home_starts_right(self, base_dir) -> str:
         return base_dir / "files" / "pff_3812.jsonl.bz2"
 
     def test_correct_deserialization_alive_only(
-        self, raw_data: Path, meta_data: Path, rosters_meta_data: Path
+        self, raw_data_home_starts_left: Path, meta_data: Path, rosters_meta_data: Path
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
             meta_data=meta_data,
             roster_meta_data=rosters_meta_data,
-            raw_data=raw_data,
+            raw_data=raw_data_home_starts_left,
             coordinates="pff",
             only_alive=True,
         )
@@ -59,13 +59,13 @@ class TestPFFTracking:
         assert dataset.metadata.periods[3].id == 4
 
     def test_correct_deserialization(
-        self, raw_data: Path, meta_data: Path, rosters_meta_data: Path
+        self, raw_data_home_starts_left: Path, meta_data: Path, rosters_meta_data: Path
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
             meta_data=meta_data,
             roster_meta_data=rosters_meta_data,
-            raw_data=raw_data,
+            raw_data=raw_data_home_starts_left,
             coordinates="pff",
             only_alive=False,
         )
@@ -160,13 +160,13 @@ class TestPFFTracking:
         )
 
     def test_orientation(
-        self, raw_data_1: Path, meta_data: Path, rosters_meta_data: Path
+        self, raw_data_home_starts_right: Path, meta_data: Path, rosters_meta_data: Path
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
             meta_data=meta_data,
             roster_meta_data=rosters_meta_data,
-            raw_data=raw_data_1,
+            raw_data=raw_data_home_starts_right,
             coordinates="pff",
         )
 
@@ -177,13 +177,13 @@ class TestPFFTracking:
         assert dataset.metadata.teams[0].players[1].name == "Moussa N'Diaye"
 
     def test_correct_normalized_deserialization(
-        self, raw_data: Path, meta_data: Path, rosters_meta_data: Path
+        self, raw_data_home_starts_left: Path, meta_data: Path, rosters_meta_data: Path
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
             meta_data=meta_data,
             roster_meta_data=rosters_meta_data,
-            raw_data=raw_data,
+            raw_data=raw_data_home_starts_left,
         )
 
         # Check Pitch Dimensions

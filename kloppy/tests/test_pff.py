@@ -17,19 +17,19 @@ from kloppy import pff
 class TestPFFTracking:
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
-        return base_dir / "files/pff_metadata.csv"
+        return base_dir / "files" / "pff_metadata.csv"
 
     @pytest.fixture
     def rosters_meta_data(self, base_dir) -> str:
-        return base_dir / "files/pff_rosters.csv"
+        return base_dir / "files" / "pff_rosters.csv"
 
     @pytest.fixture
     def raw_data(self, base_dir) -> str:
-        return base_dir / "files/pff_10517.jsonl.bz2"
+        return base_dir / "files" / "pff_10517.jsonl.bz2"
 
     @pytest.fixture
     def raw_data_1(self, base_dir) -> str:
-        return base_dir / "files/pff_3812.jsonl.bz2"
+        return base_dir / "files" / "pff_3812.jsonl.bz2"
 
     def test_correct_deserialization_alive_only(
         self, raw_data: Path, meta_data: Path, rosters_meta_data: Path
@@ -134,13 +134,13 @@ class TestPFFTracking:
         assert dataset.metadata.teams[0].players[0].player_id == "13222"
         assert dataset.metadata.teams[0].players[0].name == "Nahuel Molina"
         assert dataset.metadata.teams[0].players[0].team.team_id == "364"
-        assert dataset.metadata.teams[0].players[0].jersey_no == "26"
+        assert dataset.metadata.teams[0].players[0].jersey_no == 26
 
         # make sure PFF ID is used as player ID for Away Player
         assert dataset.metadata.teams[1].players[0].player_id == "4622"
         assert dataset.metadata.teams[1].players[0].name == "Kingsley Coman"
         assert dataset.metadata.teams[1].players[0].team.team_id == "363"
-        assert dataset.metadata.teams[1].players[0].jersey_no == "20"
+        assert dataset.metadata.teams[1].players[0].jersey_no == 20
 
         # Check Home Player coordinates
         home_player = dataset.metadata.teams[0].players[4]  # Julian Alvarez

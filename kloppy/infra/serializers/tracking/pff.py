@@ -51,11 +51,11 @@ position_types_mapping: Dict[str, PositionType] = {
     "CM": PositionType.CenterMidfield,  # Provider: CM
     "LW": PositionType.LeftWing,  # Provider: LW
     "RW": PositionType.RightWing,  # Provider: RW
-    "D": PositionType.CenterBack,  # Provider: D (mapped to CenterBack)
+    "D": PositionType.Defender,  # Provider: D (mapped to CenterBack)
     "CF": PositionType.Striker,  # Provider: CF
-    "M": PositionType.CenterMidfield,  # Provider: M (mapped to CenterMidfield),
+    "M": PositionType.Midfielder,  # Provider: M (mapped to CenterMidfield),
     "GK": PositionType.Goalkeeper,  # Provider: GK
-    "F": PositionType.Striker,  # Provider: CF
+    "F": PositionType.Attacker,  # Provider: CF
 }
 
 
@@ -63,31 +63,41 @@ class GameEventType:
     """
     GameEventType
 
-    Type of game event - may be “FIRSTKICKOFF” (first half kick-o
-    “SECONDKICKOFF” (second half kick-off), "THIRDKICKOFF" or "FOURTHKICKOFF",
-    “END” (end of half), "G" (ball hits post, bar or corner flag and stays in play),
-    “OFF” (player off), “ON” (player on), “OTB” (on-the-ball event), “OUT” (ball
-    out-of-play), “SUB” (substitution) or “VID” (video missing).
+    Type of game event.
+
+    Attributes:
+        FIRST_KICK_OFF: First half kick-off.
+        SECOND_KICK_OFF: Second half kick-off.
+        THIRD_KICK_OFF: Third half kick-off (if applicable).
+        FOURTH_KICK_OFF: Fourth half kick-off (if applicable).
+        PERIOD_END: End of half.
+        STAYS_IN_PLAY: Ball hits post, bar, or corner flag and stays in play.
+        PLAYER_OFF: Player off.
+        PLAYER_ON: Player on.
+        ON_THE_BALL: On-the-ball event.
+        BALL_OUT: Ball out-of-play.
+        SUBSTITUTION: Substitution event.
+        VIDEO_MISSING: Video data missing.
     """
 
-    FIRSTKICKOFF = "FIRSTKICKOFF"
-    SECONDKICKOFF = "SECONDKICKOFF"
-    THIRDKICKOFF = "THIRDKICKOFF"
-    FOURTHKICKOFF = "FOURTHKICKOFF"
-    END = "END"
-    G = "G"
-    OFF = "OFF"
-    ON = "ON"
-    OTB = "OTB"
-    OUT = "OUT"
-    SUB = "SUB"
-    VID = "VID"
+    FIRST_KICK_OFF = "FIRSTKICKOFF"
+    SECOND_KICK_OFF = "SECONDKICKOFF"
+    THIRD_KICK_OFF = "THIRDKICKOFF"
+    FOURTH_KICK_OFF = "FOURTHKICKOFF"
+    PERIOD_END = "END"
+    STAYS_IN_PLAY = "G"
+    PLAYER_OFF = "OFF"
+    PLAYER_ON = "ON"
+    ON_THE_BALL = "OTB"
+    BALL_OUT = "OUT"
+    SUBSTITUTION = "SUB"
+    VIDEO_MISSING = "VID"
 
 
 class PFF_TrackingInputs(NamedTuple):
     meta_data: IO[bytes]
     roster_meta_data: IO[bytes]
-    raw_data: FileLike
+    raw_data: IO[bytes]
 
 
 class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
@@ -131,13 +141,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             ball_y = ball_smoothed.get("y")
             ball_z = ball_smoothed.get("z")
 
-            if ball_x is None or ball_y is None or ball_z is None:
+            if ball_x is None or ball_y is None:
                 ball_coordinates = None
-
             else:
                 ball_coordinates = Point3D(
-                    x=float(ball_x) if ball_x is not None else None,
-                    y=float(ball_y) if ball_y is not None else None,
+                    x=float(ball_x),
+                    y=float(ball_y),
                     z=float(ball_z) if ball_z is not None else None,
                 )
 
@@ -153,7 +162,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 return
 
             for player_info in players_smoothed:
-                jersey_num = str(player_info.get("jerseyNum"))
+                jersey_num = int(player_info.get("jerseyNum"))
                 player = next(
                     (
                         p
@@ -166,6 +175,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 if player:
                     player_x = player_info.get("x")
                     player_y = player_info.get("y")
+
                     player_data = PlayerData(
                         coordinates=Point(player_x, player_y)
                     )
@@ -192,7 +202,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         periods = {}
         frames_by_period = defaultdict(list)
 
-        for frame in tracking:
+        for raw_frame in tracking:
+            frame = json.loads(raw_frame)
             if frame["period"] is not None:
                 frames_by_period[frame["period"]].append(frame)
 
@@ -208,18 +219,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             )
 
         return periods
-
-    def __load_json_raw(self, file_path):
-        """Load raw JSON file"""
-        data = list()
-        with bz2.open(file_path, "rt") as file:
-            for i, line in enumerate(file):
-                # improve reading speed by cutting of first loading step
-                if self.limit and i >= (self.limit / self.sample_rate):
-                    break
-                data.append(json.loads(line))
-
-        return data
 
     def __read_csv(self, file):
         """Load CSV file"""
@@ -254,17 +253,18 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Load datasets
         metadata = self.__read_csv(inputs.meta_data)
         roster_meta_data = self.__read_csv(inputs.roster_meta_data)
-        raw_data = self.__load_json_raw(inputs.raw_data)
+        raw_data = inputs.raw_data.readlines()
 
         # Obtain game_id from raw data
-        game_id = int(raw_data[0]["gameRefId"])
+        first_line = json.loads(raw_data[0])
+        game_id = int(first_line["gameRefId"])
 
         # Filter metadata for the specific game_id
         metadata = [row for row in metadata if int(row["id"]) == game_id][0]
 
         if not metadata:
             raise ValueError(
-                "The game_id of this game is not contained within the provided metadata.csv"
+                "The game_id of this game is not contained within the provided meta data file"
             )
 
         # Get metadata variables
@@ -320,7 +320,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
-                shirt_number = player["shirtNumber"]
+                shirt_number = int(player["shirtNumber"])
                 player_position = player["positionGroupType"]
 
                 if team_id == home_team_id:
@@ -368,7 +368,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             def _iter():
                 sample = 1.0 / self.sample_rate
 
-                for n, frame in enumerate(raw_data):
+                for n, raw_frame in enumerate(raw_data):
+                    frame = json.loads(raw_frame)
                     # Identify Period
                     frame_period = frame.get("period")
 
@@ -379,16 +380,16 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                         game_event_type = game_event.get("game_event_type")
 
                         if game_event_type in (
-                            GameEventType.OUT,
-                            GameEventType.END,
+                            GameEventType.BALL_OUT,
+                            GameEventType.PERIOD_END,
                         ):
                             self._ball_state = BallState.DEAD
                         elif game_event_type in (
-                            GameEventType.FIRSTKICKOFF,
-                            GameEventType.SECONDKICKOFF,
-                            GameEventType.THIRDKICKOFF,
-                            GameEventType.FOURTHKICKOFF,
-                            GameEventType.OTB,
+                            GameEventType.FIRST_KICK_OFF,
+                            GameEventType.SECOND_KICK_OFF,
+                            GameEventType.THIRD_KICK_OFF,
+                            GameEventType.FOURTH_KICK_OFF,
+                            GameEventType.ON_THE_BALL,
                         ):
                             self._ball_state = BallState.ALIVE
                         else:
@@ -401,6 +402,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                                 if game_event["home_ball"]
                                 else away_team
                             )
+
+                    if self.limit and n + 1 >= (self.limit / self.sample_rate):
+                        break
 
                     if self.only_alive and self._ball_state == BallState.DEAD:
                         continue

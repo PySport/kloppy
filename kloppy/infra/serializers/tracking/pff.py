@@ -145,8 +145,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 ball_coordinates = None
             else:
                 ball_coordinates = Point3D(
-                    x=float(ball_x) if ball_x is not None else None,
-                    y=float(ball_y) if ball_y is not None else None,
+                    x=float(ball_x),
+                    y=float(ball_y),
                     z=float(ball_z) if ball_z is not None else None,
                 )
 

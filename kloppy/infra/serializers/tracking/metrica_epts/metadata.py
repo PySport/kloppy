@@ -1,26 +1,32 @@
-from typing import IO
+import warnings
 from datetime import timedelta
+from typing import IO, Dict, List, Optional, Tuple, Union
 
 from lxml import objectify
-import warnings
 
 from kloppy.domain import (
+    AttackingDirection,
+    DatasetFlag,
+    Dimension,
+    Ground,
+    NormalizedPitchDimensions,
+    Orientation,
     Period,
     PitchDimensions,
-    NormalizedPitchDimensions,
-    Dimension,
-    Score,
-    Ground,
-    DatasetFlag,
-    AttackingDirection,
-    Orientation,
-    Point,
+    Player,
     PositionType,
     Provider,
+    Score,
+    Team,
     build_coordinate_system,
 )
 
-from .models import *
+from .models import (
+    DataFormatSpecification,
+    EPTSMetadata,
+    PlayerChannel,
+    Sensor,
+)
 
 position_types_mapping: Dict[int, PositionType] = {
     -1: PositionType.Unknown,
@@ -48,7 +54,7 @@ def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
 
 def _load_periods(
     metadata_elm, team_map: dict, frame_rate: int
-) -> List[Period]:
+) -> Tuple[List[Period], AttackingDirection]:
     global_config_elm = metadata_elm.find("GlobalConfig")
     provider_params = _load_provider_parameters(
         global_config_elm.find("ProviderGlobalParameters")
@@ -189,7 +195,7 @@ def _load_pitch_dimensions(
         return None
 
 
-def _parse_provider(provider_name: Union[str, None]) -> Provider:
+def _parse_provider(provider_name: Union[str, None]) -> Optional[Provider]:
     if provider_name:
         if provider_name == "Metrica Sports":
             return Provider.METRICA
@@ -202,14 +208,16 @@ def _parse_provider(provider_name: Union[str, None]) -> Provider:
         return None
 
 
-def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
+def _load_provider(
+    metadata_elm, provider: Optional[Provider] = None
+) -> Optional[Provider]:
     provider_path = objectify.ObjectPath("Metadata.GlobalConfig.ProviderName")
     provider_name = provider_path.find(metadata_elm)
     provider_from_file = _parse_provider(provider_name)
     if provider:
         if provider_from_file and provider_from_file != provider:
             warnings.warn(
-                f"Given provider name is different to the name of the Provider read from the XML-file",
+                "Given provider name is different to the name of the Provider read from the XML-file",
                 Warning,
             )
     else:
@@ -218,7 +226,7 @@ def _load_provider(metadata_elm, provider: Provider = None) -> Provider:
 
 
 def load_metadata(
-    metadata_file: IO[bytes], provider: Provider = None
+    metadata_file: IO[bytes], provider: Optional[Provider] = None
 ) -> EPTSMetadata:
     root = objectify.fromstring(metadata_file.read())
     metadata = root.find("Metadata")
@@ -274,9 +282,7 @@ def load_metadata(
     }
 
     _all_players = [
-        player
-        for key, value in teams_metadata.items()
-        for player in value.players
+        player for value in teams_metadata.values() for player in value.players
     ]
 
     _player_map = {player.player_id: player for player in _all_players}

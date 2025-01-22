@@ -1,9 +1,8 @@
 import logging
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import warnings
 from typing import Dict, Optional, Union, Literal
 import html
-from dateutil.parser import parse
 
 from lxml import objectify
 
@@ -11,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     Team,
@@ -26,6 +24,7 @@ from kloppy.domain import (
     PlayerData,
     PositionType,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 from kloppy.utils import Readable, performance_logging
@@ -117,7 +116,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
         else:
             raise DeserializationError(f"Unknown ball state: {ball_state}")
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=timedelta(seconds=frame_id / frame_rate)
             - period.start_timestamp,
@@ -130,6 +129,8 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
             period=period,
             other_data={},
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):

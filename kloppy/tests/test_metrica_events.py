@@ -5,9 +5,7 @@ import pytest
 from kloppy import metrica
 from kloppy.domain import (
     Orientation,
-    Period,
     Provider,
-    AttackingDirection,
     SetPieceType,
     BodyPart,
     EventDataset,

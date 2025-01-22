@@ -40,3 +40,7 @@ class UnknownEncoderError(KloppyError):
 
 class KloppyParameterError(KloppyError):
     pass
+
+
+class DeserializationWarning(Warning):
+    pass

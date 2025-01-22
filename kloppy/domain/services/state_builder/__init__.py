@@ -1,10 +1,10 @@
 from dataclasses import replace
+from typing import List
 
-from kloppy.domain import List, EventDataset
+from kloppy.domain import EventDataset
 
 # register all of them
-from . import builders as _builders
-
+from . import builders as _builders  # noqa: F401
 from .registered import create_state_builder
 
 

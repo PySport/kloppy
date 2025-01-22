@@ -81,6 +81,7 @@ class FormationType(Enum):
     FIVE_TWO_TWO_ONE = "5-2-2-1"
     FIVE_THREE_TWO = "5-3-2"
     FIVE_FOUR_ONE = "5-4-1"
+    UNKNOWN = "Unknown"
 
     def __str__(self):
         return self.value

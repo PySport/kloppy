@@ -493,6 +493,7 @@ def __init_fsspec(input_):
     # Extract protocol (e.g., 's3', 'gcs', 'file')
     parsed_path = urlparse(input_)
     protocol = parsed_path.scheme or "file"
+
     # Create filesystem object
     fs = fsspec.filesystem(protocol)
     return fs, protocol
@@ -545,7 +546,6 @@ def _check_path_type(input_: Union[str, Iterable], contains: str = None):
                 not contains or contains in os.path.basename(path)
             ):
                 valid_paths.append(str(path))
-        print(valid_paths)
         valid_paths = sorted(valid_paths, key=__natural_sort_key)
         return valid_paths
     else:

@@ -400,11 +400,8 @@ class DatasetTransformer:
                 to_pitch_dimensions=to_pitch_dimensions,
                 to_orientation=to_orientation,
             )
-            metadata = replace(
-                dataset.metadata,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-            )
+            dataset.metadata.pitch_dimensions = to_pitch_dimensions
+            dataset.metadata.orientation = to_orientation
 
         elif to_coordinate_system is not None:
             # Transform the coordinate system and optionally the orientation
@@ -414,12 +411,11 @@ class DatasetTransformer:
                 to_coordinate_system=to_coordinate_system,
                 to_orientation=to_orientation,
             )
-            metadata = replace(
-                dataset.metadata,
-                coordinate_system=to_coordinate_system,
-                pitch_dimensions=to_coordinate_system.pitch_dimensions,
-                orientation=to_orientation,
+            dataset.metadata.coordinate_system = to_coordinate_system
+            dataset.metadata.pitch_dimensions = (
+                to_coordinate_system.pitch_dimensions
             )
+            dataset.metadata.orientation = to_orientation
 
         else:
             # Only transform the orientation
@@ -442,10 +438,7 @@ class DatasetTransformer:
                     "Cannot transform orientation when the dataset doesn't "
                     "contain the pitch dimensions or a coordinate system"
                 )
-            metadata = replace(
-                dataset.metadata,
-                orientation=to_orientation,
-            )
+            dataset.metadata.orientation = to_orientation
 
         if isinstance(dataset, TrackingDataset):
             frames = [
@@ -454,7 +447,7 @@ class DatasetTransformer:
             ]
 
             return TrackingDataset(
-                metadata=metadata,
+                metadata=dataset.metadata,
                 records=frames,
             )
         elif isinstance(dataset, EventDataset):
@@ -463,7 +456,7 @@ class DatasetTransformer:
             ]
 
             return EventDataset(
-                metadata=metadata,
+                metadata=dataset.metadata,
                 records=events,
             )
         else:

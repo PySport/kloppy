@@ -232,13 +232,10 @@ class TestHelpers:
         # Transform to ACTION_EXECUTING_TEAM orientation
         # this should be identical to BALL_OWNING_TEAM for tracking data
         transform4 = transform3.transform(
-            to_orientation=Orientation.ACTION_EXECUTING_TEAM,
+            to_orientation=Orientation.BALL_OWNING_TEAM,
             to_pitch_dimensions=to_pitch_dimensions,
         )
-        assert (
-            transform4.metadata.orientation
-            == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert transform4.metadata.orientation == Orientation.BALL_OWNING_TEAM
         assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
         for frame_t3, frame_t4 in zip(transform3.frames, transform4.frames):
             assert frame_t3.ball_coordinates == frame_t4.ball_coordinates
@@ -272,7 +269,7 @@ class TestHelpers:
         transformed_dataset = dataset.transform(
             to_coordinate_system=Provider.METRICA
         )
-        transformerd_coordinate_system = MetricaCoordinateSystem(
+        transformed_coordinate_system = MetricaCoordinateSystem(
             pitch_length=dataset.metadata.coordinate_system.pitch_length,
             pitch_width=dataset.metadata.coordinate_system.pitch_width,
         )
@@ -280,17 +277,18 @@ class TestHelpers:
         assert transformed_dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
+
         assert (
             transformed_dataset.metadata.orientation
             == dataset.metadata.orientation
         )
         assert (
             transformed_dataset.metadata.coordinate_system
-            == transformerd_coordinate_system
+            == transformed_coordinate_system
         )
         assert (
             transformed_dataset.metadata.pitch_dimensions
-            == transformerd_coordinate_system.pitch_dimensions
+            == transformed_coordinate_system.pitch_dimensions
         )
 
     def test_transform_event_data(self, base_dir):

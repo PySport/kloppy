@@ -1,0 +1,3091 @@
+{
+  "meta": [],
+  "events": [
+    {
+      "id": 1927028854,
+      "matchId": 5154199,
+      "matchPeriod": "1H",
+      "minute": 0,
+      "second": 3,
+      "matchTimestamp": "00:00:03.211",
+      "videoTimestamp": "4.211804",
+      "relatedEventId": 1927028859,
+      "type": {
+        "primary": "pass",
+        "secondary": [
+          "back_pass",
+          "short_or_medium_pass"
+        ]
+      },
+      "location": {
+        "x": 51,
+        "y": 51
+      },
+      "team": {
+        "id": 3164,
+        "name": "Sampdoria",
+        "formation": "4-5-1"
+      },
+      "opponentTeam": {
+        "id": 3159,
+        "name": "Juventus",
+        "formation": "3-4-2-1"
+      },
+      "player": {
+        "id": 239298,
+        "name": "F. Bonazzoli",
+        "position": "CF"
+      },
+      "pass": {
+        "accurate": true,
+        "angle": 180,
+        "height": null,
+        "length": 18,
+        "recipient": {
+          "id": 21006,
+          "name": "L. Tonelli",
+          "position": "RCB"
+        },
+        "endLocation": {
+          "x": 34,
+          "y": 52
+        }
+      },
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": null,
+      "possession": {
+        "id": 1927028854,
+        "duration": "8.693585",
+        "types": [
+          "attack"
+        ],
+        "eventsNumber": 7,
+        "eventIndex": 0,
+        "startLocation": {
+          "x": 51,
+          "y": 51
+        },
+        "endLocation": {
+          "x": 86,
+          "y": 98
+        },
+        "team": {
+          "id": 3164,
+          "name": "Sampdoria",
+          "formation": "4-5-1"
+        },
+        "attack": {
+          "withShot": false,
+          "withShotOnGoal": false,
+          "withGoal": false,
+          "flank": "right",
+          "xg": 0
+        }
+      }
+    },
+    {
+      "id": 1927028859,
+      "matchId": 5154199,
+      "matchPeriod": "1H",
+      "minute": 0,
+      "second": 4,
+      "matchTimestamp": "00:00:04.227",
+      "videoTimestamp": "5.227381",
+      "relatedEventId": 1927028860,
+      "type": {
+        "primary": "own_goal",
+        "secondary": [
+          "back_pass",
+          "head_pass",
+          "pass",
+          "recovery",
+          "counterpressing_recovery",
+          "short_or_medium_pass"
+        ]
+      },
+      "location": {
+        "x": 11,
+        "y": 51
+      },
+      "team": {
+        "id": 3164,
+        "name": "Sampdoria",
+        "formation": "4-5-1"
+      },
+      "opponentTeam": {
+        "id": 3159,
+        "name": "Juventus",
+        "formation": "3-4-2-1"
+      },
+      "player": {
+        "id": 1,
+        "name": "H. Vanaken",
+        "position": "CAM"
+      },
+      "pass": {
+        "accurate": true,
+        "angle": -170,
+        "height": "high",
+        "length": 11,
+        "recipient": {
+          "id": 215503,
+          "name": "O. Colley",
+          "position": "LCB"
+        },
+        "endLocation": {
+          "x": 1,
+          "y": 49
+        }
+      },
+      "shot": null,
+      "groundDuel": null,
+      "aerialDuel": null,
+      "infraction": null,
+      "carry": null,
+      "possession": {
+        "id": 1927028854,
+        "duration": "8.693585",
+        "types": [
+          "attack"
+        ],
+        "eventsNumber": 7,
+        "eventIndex": 1,
+        "startLocation": {
+          "x": 51,
+          "y": 51
+        },
+        "endLocation": {
+          "x": 86,
+          "y": 98
+        },
+        "team": {
+          "id": 3164,
+          "name": "Sampdoria",
+          "formation": "4-5-1"
+        },
+        "attack": {
+          "withShot": false,
+          "withShotOnGoal": false,
+          "withGoal": false,
+          "flank": "right",
+          "xg": 0
+        }
+      }
+    }
+  ],
+  "match": {
+    "wyId": 5154199,
+    "gsmId": 5154199,
+    "label": "Juventus - Sampdoria, 3 - 0",
+    "date": "September 20, 2020 at 8:45:00 PM GMT+2",
+    "dateutc": "2020-09-20 18:45:00",
+    "status": "Played",
+    "duration": "Regular",
+    "winner": 3159,
+    "competitionId": 524,
+    "seasonId": 186353,
+    "roundId": 4422711,
+    "gameweek": 1,
+    "teamsData": {
+      "3159": {
+        "teamId": 3159,
+        "side": "home",
+        "score": 3,
+        "scoreHT": 1,
+        "scoreET": 0,
+        "scoreP": 0,
+        "coachId": 679990,
+        "hasFormation": 1,
+        "formation": {
+          "lineup": [
+            {
+              "playerId": 489124,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "54",
+              "redCards": "0",
+              "shirtNumber": 38,
+              "assists": "0"
+            },
+            {
+              "playerId": 20751,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 16,
+              "assists": "0"
+            },
+            {
+              "playerId": 472363,
+              "goals": "1",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 44,
+              "assists": "0"
+            },
+            {
+              "playerId": 20461,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 3,
+              "assists": "0"
+            },
+            {
+              "playerId": 209117,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 25,
+              "assists": "0"
+            },
+            {
+              "playerId": 7870,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 8,
+              "assists": "1"
+            },
+            {
+              "playerId": 3322,
+              "goals": "1",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 7,
+              "assists": "0"
+            },
+            {
+              "playerId": 70083,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 13,
+              "assists": "0"
+            },
+            {
+              "playerId": 20459,
+              "goals": "1",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 19,
+              "assists": "0"
+            },
+            {
+              "playerId": 471348,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 14,
+              "assists": "0"
+            },
+            {
+              "playerId": 7849,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 1,
+              "assists": "0"
+            }
+          ],
+          "bench": [
+            {
+              "playerId": 255256,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 5,
+              "assists": "0"
+            },
+            {
+              "playerId": 21128,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 31,
+              "assists": "0"
+            },
+            {
+              "playerId": 134427,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 24,
+              "assists": "0"
+            },
+            {
+              "playerId": 20455,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 77,
+              "assists": "0"
+            },
+            {
+              "playerId": 485096,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 40,
+              "assists": "0"
+            },
+            {
+              "playerId": 472395,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 41,
+              "assists": "0"
+            },
+            {
+              "playerId": 496673,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 39,
+              "assists": "0"
+            },
+            {
+              "playerId": 105334,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 11,
+              "assists": "0"
+            },
+            {
+              "playerId": 20395,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 2,
+              "assists": "0"
+            },
+            {
+              "playerId": 345695,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 28,
+              "assists": "0"
+            },
+            {
+              "playerId": 361807,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 30,
+              "assists": "0"
+            }
+          ],
+          "substitutions": [
+            {
+              "minute": 67,
+              "playerIn": 20395,
+              "playerOut": 489124,
+              "assists": "0"
+            },
+            {
+              "minute": 78,
+              "playerIn": 361807,
+              "playerOut": 20751,
+              "assists": "0"
+            },
+            {
+              "minute": 82,
+              "playerIn": 105334,
+              "playerOut": 472363,
+              "assists": "0"
+            },
+            {
+              "minute": 83,
+              "playerIn": 345695,
+              "playerOut": 20461,
+              "assists": "0"
+            }
+          ]
+        }
+      },
+      "3164": {
+        "teamId": 3164,
+        "side": "away",
+        "score": 0,
+        "scoreHT": 0,
+        "scoreET": 0,
+        "scoreP": 0,
+        "coachId": 20508,
+        "hasFormation": 1,
+        "formation": {
+          "lineup": [
+            {
+              "playerId": 415809,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 12,
+              "assists": "0"
+            },
+            {
+              "playerId": 21006,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "4",
+              "redCards": "0",
+              "shirtNumber": 21,
+              "assists": "0"
+            },
+            {
+              "playerId": 449978,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 26,
+              "assists": "0"
+            },
+            {
+              "playerId": 239298,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 9,
+              "assists": "0"
+            },
+            {
+              "playerId": 237057,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 18,
+              "assists": "0"
+            },
+            {
+              "playerId": 20876,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 6,
+              "assists": "0"
+            },
+            {
+              "playerId": 99833,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 24,
+              "assists": "0"
+            },
+            {
+              "playerId": 257027,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 1,
+              "assists": "0"
+            },
+            {
+              "playerId": 354547,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 14,
+              "assists": "0"
+            },
+            {
+              "playerId": 215503,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 15,
+              "assists": "0"
+            },
+            {
+              "playerId": 222964,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 3,
+              "assists": "0"
+            }
+          ],
+          "bench": [
+            {
+              "playerId": 263433,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 25,
+              "assists": "0"
+            },
+            {
+              "playerId": 372408,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 20,
+              "assists": "0"
+            },
+            {
+              "playerId": 391740,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 5,
+              "assists": "0"
+            },
+            {
+              "playerId": 134429,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 28,
+              "assists": "0"
+            },
+            {
+              "playerId": 21331,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 30,
+              "assists": "0"
+            },
+            {
+              "playerId": 434154,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 4,
+              "assists": "0"
+            },
+            {
+              "playerId": 21004,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 19,
+              "assists": "0"
+            },
+            {
+              "playerId": 20479,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 27,
+              "assists": "0"
+            },
+            {
+              "playerId": 20689,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 11,
+              "assists": "0"
+            },
+            {
+              "playerId": 449472,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 38,
+              "assists": "0"
+            },
+            {
+              "playerId": 703,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 22,
+              "assists": "0"
+            },
+            {
+              "playerId": 20446,
+              "goals": "0",
+              "ownGoals": "0",
+              "yellowCards": "0",
+              "redCards": "0",
+              "shirtNumber": 8,
+              "assists": "0"
+            }
+          ],
+          "substitutions": [
+            {
+              "minute": 46,
+              "playerIn": 20479,
+              "playerOut": 415809,
+              "assists": "0"
+            },
+            {
+              "minute": 46,
+              "playerIn": 20689,
+              "playerOut": 21006,
+              "assists": "0"
+            },
+            {
+              "minute": 46,
+              "playerIn": 703,
+              "playerOut": 449978,
+              "assists": "0"
+            },
+            {
+              "minute": 70,
+              "playerIn": 449472,
+              "playerOut": 239298,
+              "assists": "0"
+            },
+            {
+              "minute": 70,
+              "playerIn": 20446,
+              "playerOut": 237057,
+              "assists": "0"
+            }
+          ]
+        }
+      }
+    },
+    "venue": null,
+    "referees": [
+      {
+        "refereeId": 396780,
+        "role": "referee"
+      },
+      {
+        "refereeId": 378959,
+        "role": "firstAssistant"
+      },
+      {
+        "refereeId": 420139,
+        "role": "secondAssistant"
+      },
+      {
+        "refereeId": 393581,
+        "role": "fourthOfficial"
+      },
+      {
+        "refereeId": 0,
+        "role": "firstAdditionalAssistant"
+      },
+      {
+        "refereeId": 0,
+        "role": "secondAdditionalAssistant"
+      }
+    ],
+    "hasDataAvailable": true
+  },
+  "formations": {
+    "3159": {
+      "1H": {
+        "0": {
+          "3-4-2-1": {
+            "id": 2589485,
+            "scheme": "3-4-2-1",
+            "matchPeriod": "1H",
+            "startSec": 0,
+            "endSec": 3987,
+            "players": [
+              {
+                "209117": {
+                  "playerId": 209117,
+                  "position": "rcmf"
+                }
+              },
+              {
+                "489124": {
+                  "playerId": 489124,
+                  "position": "lwb"
+                }
+              },
+              {
+                "20461": {
+                  "playerId": 20461,
+                  "position": "lcb3"
+                }
+              },
+              {
+                "20459": {
+                  "playerId": 20459,
+                  "position": "cb"
+                }
+              },
+              {
+                "471348": {
+                  "playerId": 471348,
+                  "position": "lcmf"
+                }
+              },
+              {
+                "70083": {
+                  "playerId": 70083,
+                  "position": "rcb3"
+                }
+              },
+              {
+                "7849": {
+                  "playerId": 7849,
+                  "position": "gk"
+                }
+              },
+              {
+                "20751": {
+                  "playerId": 20751,
+                  "position": "rwb"
+                }
+              },
+              {
+                "3322": {
+                  "playerId": 3322,
+                  "position": "cf"
+                }
+              },
+              {
+                "7870": {
+                  "playerId": 7870,
+                  "position": "amf"
+                }
+              },
+              {
+                "472363": {
+                  "playerId": 472363,
+                  "position": "amf"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "2H": {
+        "1278": {
+          "3-4-2-1": {
+            "id": 2589662,
+            "scheme": "3-4-2-1",
+            "matchPeriod": "2H",
+            "startSec": 1278,
+            "endSec": 1951,
+            "players": [
+              {
+                "7870": {
+                  "playerId": 7870,
+                  "position": "amf"
+                }
+              },
+              {
+                "472363": {
+                  "playerId": 472363,
+                  "position": "amf"
+                }
+              },
+              {
+                "20395": {
+                  "playerId": 20395,
+                  "position": "rwb"
+                }
+              },
+              {
+                "209117": {
+                  "playerId": 209117,
+                  "position": "rcmf"
+                }
+              },
+              {
+                "20461": {
+                  "playerId": 20461,
+                  "position": "lcb3"
+                }
+              },
+              {
+                "20459": {
+                  "playerId": 20459,
+                  "position": "cb"
+                }
+              },
+              {
+                "471348": {
+                  "playerId": 471348,
+                  "position": "lcmf"
+                }
+              },
+              {
+                "70083": {
+                  "playerId": 70083,
+                  "position": "rcb3"
+                }
+              },
+              {
+                "7849": {
+                  "playerId": 7849,
+                  "position": "gk"
+                }
+              },
+              {
+                "20751": {
+                  "playerId": 20751,
+                  "position": "lwb"
+                }
+              },
+              {
+                "3322": {
+                  "playerId": 3322,
+                  "position": "cf"
+                }
+              }
+            ]
+          }
+        },
+        "1951": {
+          "3-4-2-1": {
+            "id": 2589672,
+            "scheme": "3-4-2-1",
+            "matchPeriod": "2H",
+            "startSec": 1951,
+            "endSec": 2192,
+            "players": [
+              {
+                "70083": {
+                  "playerId": 70083,
+                  "position": "rcb3"
+                }
+              },
+              {
+                "7849": {
+                  "playerId": 7849,
+                  "position": "gk"
+                }
+              },
+              {
+                "3322": {
+                  "playerId": 3322,
+                  "position": "cf"
+                }
+              },
+              {
+                "7870": {
+                  "playerId": 7870,
+                  "position": "amf"
+                }
+              },
+              {
+                "361807": {
+                  "playerId": 361807,
+                  "position": "rcmf"
+                }
+              },
+              {
+                "472363": {
+                  "playerId": 472363,
+                  "position": "amf"
+                }
+              },
+              {
+                "20395": {
+                  "playerId": 20395,
+                  "position": "lwb"
+                }
+              },
+              {
+                "209117": {
+                  "playerId": 209117,
+                  "position": "lcmf"
+                }
+              },
+              {
+                "20461": {
+                  "playerId": 20461,
+                  "position": "lcb3"
+                }
+              },
+              {
+                "20459": {
+                  "playerId": 20459,
+                  "position": "cb"
+                }
+              },
+              {
+                "471348": {
+                  "playerId": 471348,
+                  "position": "rwb"
+                }
+              }
+            ]
+          }
+        },
+        "2192": {
+          "3-4-2-1": {
+            "id": 2589677,
+            "scheme": "3-4-2-1",
+            "matchPeriod": "2H",
+            "startSec": 2192,
+            "endSec": 2824,
+            "players": [
+              {
+                "20395": {
+                  "playerId": 20395,
+                  "position": "lwb"
+                }
+              },
+              {
+                "209117": {
+                  "playerId": 209117,
+                  "position": "rcmf"
+                }
+              },
+              {
+                "105334": {
+                  "playerId": 105334,
+                  "position": "amf"
+                }
+              },
+              {
+                "20459": {
+                  "playerId": 20459,
+                  "position": "cb"
+                }
+              },
+              {
+                "471348": {
+                  "playerId": 471348,
+                  "position": "rwb"
+                }
+              },
+              {
+                "70083": {
+                  "playerId": 70083,
+                  "position": "rcb3"
+                }
+              },
+              {
+                "7849": {
+                  "playerId": 7849,
+                  "position": "gk"
+                }
+              },
+              {
+                "3322": {
+                  "playerId": 3322,
+                  "position": "cf"
+                }
+              },
+              {
+                "7870": {
+                  "playerId": 7870,
+                  "position": "amf"
+                }
+              },
+              {
+                "345695": {
+                  "playerId": 345695,
+                  "position": "lcb3"
+                }
+              },
+              {
+                "361807": {
+                  "playerId": 361807,
+                  "position": "lcmf"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "3164": {
+      "1H": {
+        "0": {
+          "4-5-1": {
+            "id": 2589548,
+            "scheme": "4-5-1",
+            "matchPeriod": "1H",
+            "startSec": 0,
+            "endSec": 2713,
+            "players": [
+              {
+                "237057": {
+                  "playerId": 237057,
+                  "position": "rcmf3"
+                }
+              },
+              {
+                "20876": {
+                  "playerId": 20876,
+                  "position": "dmf"
+                }
+              },
+              {
+                "354547": {
+                  "playerId": 354547,
+                  "position": "lcmf3"
+                }
+              },
+              {
+                "415809": {
+                  "playerId": 415809,
+                  "position": "rw"
+                }
+              },
+              {
+                "215503": {
+                  "playerId": 215503,
+                  "position": "lcb"
+                }
+              },
+              {
+                "257027": {
+                  "playerId": 257027,
+                  "position": "gk"
+                }
+              },
+              {
+                "99833": {
+                  "playerId": 99833,
+                  "position": "rb"
+                }
+              },
+              {
+                "449978": {
+                  "playerId": 449978,
+                  "position": "lw"
+                }
+              },
+              {
+                "222964": {
+                  "playerId": 222964,
+                  "position": "lb"
+                }
+              },
+              {
+                "239298": {
+                  "playerId": 239298,
+                  "position": "cf"
+                }
+              },
+              {
+                "21006": {
+                  "playerId": 21006,
+                  "position": "rcb"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "2H": {
+        "4": {
+          "4-3-1-2": {
+            "id": 2589654,
+            "scheme": "4-3-1-2",
+            "matchPeriod": "2H",
+            "startSec": 4,
+            "endSec": 1461,
+            "players": [
+              {
+                "215503": {
+                  "playerId": 215503,
+                  "position": "lcb"
+                }
+              },
+              {
+                "257027": {
+                  "playerId": 257027,
+                  "position": "gk"
+                }
+              },
+              {
+                "99833": {
+                  "playerId": 99833,
+                  "position": "rb"
+                }
+              },
+              {
+                "222964": {
+                  "playerId": 222964,
+                  "position": "lb"
+                }
+              },
+              {
+                "239298": {
+                  "playerId": 239298,
+                  "position": "cf"
+                }
+              },
+              {
+                "237057": {
+                  "playerId": 237057,
+                  "position": "rcmf3"
+                }
+              },
+              {
+                "703": {
+                  "playerId": 703,
+                  "position": "rcb"
+                }
+              },
+              {
+                "20876": {
+                  "playerId": 20876,
+                  "position": "dmf"
+                }
+              },
+              {
+                "354547": {
+                  "playerId": 354547,
+                  "position": "lcmf3"
+                }
+              },
+              {
+                "20479": {
+                  "playerId": 20479,
+                  "position": "ss"
+                }
+              },
+              {
+                "20689": {
+                  "playerId": 20689,
+                  "position": "amf"
+                }
+              }
+            ]
+          }
+        },
+        "1461": {
+          "4-4-2": {
+            "id": 2589686,
+            "scheme": "4-4-2",
+            "matchPeriod": "2H",
+            "startSec": 1461,
+            "endSec": 2824,
+            "players": [
+              {
+                "703": {
+                  "playerId": 703,
+                  "position": "rcb"
+                }
+              },
+              {
+                "20876": {
+                  "playerId": 20876,
+                  "position": "lcmf"
+                }
+              },
+              {
+                "449472": {
+                  "playerId": 449472,
+                  "position": "rw"
+                }
+              },
+              {
+                "354547": {
+                  "playerId": 354547,
+                  "position": "lw"
+                }
+              },
+              {
+                "20479": {
+                  "playerId": 20479,
+                  "position": "cf"
+                }
+              },
+              {
+                "20689": {
+                  "playerId": 20689,
+                  "position": "ss"
+                }
+              },
+              {
+                "215503": {
+                  "playerId": 215503,
+                  "position": "lcb"
+                }
+              },
+              {
+                "257027": {
+                  "playerId": 257027,
+                  "position": "gk"
+                }
+              },
+              {
+                "99833": {
+                  "playerId": 99833,
+                  "position": "rb"
+                }
+              },
+              {
+                "20446": {
+                  "playerId": 20446,
+                  "position": "rcmf"
+                }
+              },
+              {
+                "222964": {
+                  "playerId": 222964,
+                  "position": "lb"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "substitutions": {
+    "3159": {
+      "2H": {
+        "1278": {
+          "in": [
+            {
+              "playerId": 20395
+            }
+          ],
+          "out": [
+            {
+              "playerId": 489124
+            }
+          ]
+        },
+        "1951": {
+          "in": [
+            {
+              "playerId": 361807
+            }
+          ],
+          "out": [
+            {
+              "playerId": 20751
+            }
+          ]
+        },
+        "2192": {
+          "in": [
+            {
+              "playerId": 105334
+            },
+            {
+              "playerId": 345695
+            }
+          ],
+          "out": [
+            {
+              "playerId": 472363
+            },
+            {
+              "playerId": 20461
+            }
+          ]
+        }
+      }
+    },
+    "3164": {
+      "2H": {
+        "4": {
+          "in": [
+            {
+              "playerId": 703
+            },
+            {
+              "playerId": 20479
+            },
+            {
+              "playerId": 20689
+            }
+          ],
+          "out": [
+            {
+              "playerId": 415809
+            },
+            {
+              "playerId": 449978
+            },
+            {
+              "playerId": 21006
+            }
+          ]
+        },
+        "1461": {
+          "in": [
+            {
+              "playerId": 449472
+            },
+            {
+              "playerId": 20446
+            }
+          ],
+          "out": [
+            {
+              "playerId": 239298
+            },
+            {
+              "playerId": 237057
+            }
+          ]
+        }
+      }
+    }
+  },
+  "teams": {
+    "3159": {
+      "team": {
+        "wyId": 3159,
+        "gsmId": 1242,
+        "name": "Juventus",
+        "officialName": "Juventus FC",
+        "city": "Torino",
+        "area": {
+          "id": 380,
+          "alpha2code": "IT",
+          "alpha3code": "ITA",
+          "name": "Italy"
+        },
+        "type": "club",
+        "category": "default",
+        "gender": "male",
+        "children": [
+          {
+            "name": "Juventus U20",
+            "wyId": 76395
+          },
+          {
+            "name": "Juventus U14",
+            "wyId": 65171
+          },
+          {
+            "name": "Juventus Next Gen",
+            "wyId": 63044
+          },
+          {
+            "name": "Juventus U16",
+            "wyId": 32081
+          },
+          {
+            "name": "Juventus U15",
+            "wyId": 20450
+          },
+          {
+            "name": "Juventus U19",
+            "wyId": 26540
+          },
+          {
+            "name": "Juventus U17",
+            "wyId": 32859
+          }
+        ],
+        "imageDataURL": "https://cdn5.wyscout.com/photos/team/public/80_120x120.png"
+      }
+    },
+    "3164": {
+      "team": {
+        "wyId": 3164,
+        "gsmId": 1247,
+        "name": "Sampdoria",
+        "officialName": "UC Sampdoria",
+        "city": "Genova",
+        "area": {
+          "id": 380,
+          "alpha2code": "IT",
+          "alpha3code": "ITA",
+          "name": "Italy"
+        },
+        "type": "club",
+        "category": "default",
+        "gender": "male",
+        "children": [
+          {
+            "name": "Sampdoria U20",
+            "wyId": 76399
+          },
+          {
+            "name": "Sampdoria U14",
+            "wyId": 65449
+          },
+          {
+            "name": "Sampdoria U18",
+            "wyId": 65358
+          },
+          {
+            "name": "Sampdoria U16",
+            "wyId": 36488
+          },
+          {
+            "name": "Sampdoria U17",
+            "wyId": 22302
+          },
+          {
+            "name": "Sampdoria U15",
+            "wyId": 21663
+          },
+          {
+            "name": "Sampdoria U19",
+            "wyId": 3710
+          }
+        ],
+        "imageDataURL": "https://cdn5.wyscout.com/photos/team/public/88_120x120.png"
+      }
+    }
+  },
+  "players": {
+    "3159": [
+      {
+        "player": {
+          "wyId": 489124,
+          "gsmId": 472023,
+          "shortName": "G. Frabotta",
+          "firstName": "Gianluca",
+          "middleName": "",
+          "lastName": "Frabotta",
+          "height": 187,
+          "weight": 70,
+          "birthDate": "1999-06-24",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": 1627,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g472023_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20751,
+          "gsmId": 61414,
+          "shortName": "J. Cuadrado",
+          "firstName": "Juan Guillermo",
+          "middleName": "",
+          "lastName": "Cuadrado Bello",
+          "height": 176,
+          "weight": 72,
+          "birthDate": "1988-05-26",
+          "birthArea": {
+            "id": 170,
+            "alpha2code": "CO",
+            "alpha3code": "COL",
+            "name": "Colombia"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/24886_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 472363,
+          "gsmId": 460405,
+          "shortName": "D. Kulusevski",
+          "firstName": "Dejan",
+          "middleName": "",
+          "lastName": "Kulusevski",
+          "height": 186,
+          "weight": 75,
+          "birthDate": "2000-04-25",
+          "birthArea": {
+            "id": 752,
+            "alpha2code": "SE",
+            "alpha3code": "SWE",
+            "name": "Sweden"
+          },
+          "passportArea": {
+            "id": 807,
+            "alpha2code": "MK",
+            "alpha3code": "MKD",
+            "name": "Macedonia FYR"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "left",
+          "currentTeamId": 1624,
+          "currentNationalTeamId": 7047,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g460405_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20461,
+          "gsmId": 17684,
+          "shortName": "G. Chiellini",
+          "firstName": "Giorgio",
+          "middleName": "",
+          "lastName": "Chiellini",
+          "height": 187,
+          "weight": 86,
+          "birthDate": "1984-08-14",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "retired",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/445_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 209117,
+          "gsmId": 242768,
+          "shortName": "A. Rabiot",
+          "firstName": "Adrien",
+          "middleName": "",
+          "lastName": "Rabiot",
+          "height": 188,
+          "weight": 80,
+          "birthDate": "1995-04-03",
+          "birthArea": {
+            "id": 250,
+            "alpha2code": "FR",
+            "alpha3code": "FRA",
+            "name": "France"
+          },
+          "passportArea": {
+            "id": 250,
+            "alpha2code": "FR",
+            "alpha3code": "FRA",
+            "name": "France"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "left",
+          "currentTeamId": null,
+          "currentNationalTeamId": 4418,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/80854_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 7870,
+          "gsmId": 66532,
+          "shortName": "A. Ramsey",
+          "firstName": "Aaron",
+          "middleName": "",
+          "lastName": "Ramsey",
+          "height": 183,
+          "weight": 76,
+          "birthDate": "1990-12-26",
+          "birthArea": {
+            "id": 1013,
+            "alpha2code": "WA",
+            "alpha3code": "XWA",
+            "name": "Wales"
+          },
+          "passportArea": {
+            "id": 1013,
+            "alpha2code": "WA",
+            "alpha3code": "XWA",
+            "name": "Wales"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 10529,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/12398_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 3322,
+          "gsmId": 382,
+          "shortName": "Cristiano Ronaldo",
+          "firstName": "Cristiano Ronaldo",
+          "middleName": "",
+          "lastName": "dos Santos Aveiro",
+          "height": 187,
+          "weight": 83,
+          "birthDate": "1985-02-05",
+          "birthArea": {
+            "id": 620,
+            "alpha2code": "PT",
+            "alpha3code": "PRT",
+            "name": "Portugal"
+          },
+          "passportArea": {
+            "id": 620,
+            "alpha2code": "PT",
+            "alpha3code": "PRT",
+            "name": "Portugal"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "right",
+          "currentTeamId": 16470,
+          "currentNationalTeamId": 9905,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/5045_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 70083,
+          "gsmId": 75848,
+          "shortName": "Danilo",
+          "firstName": "Danilo Luiz",
+          "middleName": "",
+          "lastName": "da Silva",
+          "height": 184,
+          "weight": 78,
+          "birthDate": "1991-07-15",
+          "birthArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "passportArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": 6380,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/37089_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20459,
+          "gsmId": 3979,
+          "shortName": "L. Bonucci",
+          "firstName": "Leonardo",
+          "middleName": "",
+          "lastName": "Bonucci",
+          "height": 189,
+          "weight": 85,
+          "birthDate": "1987-05-01",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "retired",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/13748_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 471348,
+          "gsmId": 459693,
+          "shortName": "W. McKennie",
+          "firstName": "Weston ",
+          "middleName": "",
+          "lastName": "McKennie",
+          "height": 185,
+          "weight": 84,
+          "birthDate": "1998-08-28",
+          "birthArea": {
+            "id": 840,
+            "alpha2code": "US",
+            "alpha3code": "USA",
+            "name": "United States"
+          },
+          "passportArea": {
+            "id": 840,
+            "alpha2code": "US",
+            "alpha3code": "USA",
+            "name": "United States"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": 8134,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g459693_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 7849,
+          "gsmId": 16085,
+          "shortName": "W. Szczęsny",
+          "firstName": "Wojciech ",
+          "middleName": "",
+          "lastName": "Szczęsny",
+          "height": 195,
+          "weight": 90,
+          "birthDate": "1990-04-18",
+          "birthArea": {
+            "id": 616,
+            "alpha2code": "PL",
+            "alpha3code": "POL",
+            "name": "Poland"
+          },
+          "passportArea": {
+            "id": 616,
+            "alpha2code": "PL",
+            "alpha3code": "POL",
+            "name": "Poland"
+          },
+          "role": {
+            "name": "Goalkeeper",
+            "code2": "GK",
+            "code3": "GKP"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": 13869,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/19133_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 255256,
+          "gsmId": 288085,
+          "shortName": "Arthur",
+          "firstName": "Arthur Henrique",
+          "middleName": "",
+          "lastName": "Ramos de Oliveira Melo",
+          "height": 171,
+          "weight": 73,
+          "birthDate": "1996-08-12",
+          "birthArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "passportArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g288085_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 21128,
+          "gsmId": 95779,
+          "shortName": "C. Pinsoglio",
+          "firstName": "Carlo",
+          "middleName": "",
+          "lastName": "Pinsoglio",
+          "height": 194,
+          "weight": 85,
+          "birthDate": "1990-03-16",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Goalkeeper",
+            "code2": "GK",
+            "code3": "GKP"
+          },
+          "foot": "left",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/37632_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 134427,
+          "gsmId": 162676,
+          "shortName": "D. Rugani",
+          "firstName": "Daniele",
+          "middleName": "",
+          "lastName": "Rugani",
+          "height": 190,
+          "weight": 84,
+          "birthDate": "1994-07-29",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/79321_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20455,
+          "gsmId": 53,
+          "shortName": "G. Buffon",
+          "firstName": "Gianluigi",
+          "middleName": "",
+          "lastName": "Buffon",
+          "height": 192,
+          "weight": 92,
+          "birthDate": "1978-01-28",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Goalkeeper",
+            "code2": "GK",
+            "code3": "GKP"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "retired",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/442_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 485096,
+          "gsmId": 469983,
+          "shortName": "G. Vrioni",
+          "firstName": "Giacomo",
+          "middleName": "",
+          "lastName": "Vrioni",
+          "height": 188,
+          "weight": 79,
+          "birthDate": "1998-10-15",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 8,
+            "alpha2code": "AL",
+            "alpha3code": "ALB",
+            "name": "Albania"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "left",
+          "currentTeamId": 7854,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g469983_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 472395,
+          "gsmId": 460439,
+          "shortName": "H. Nicolussi Caviglia",
+          "firstName": "Hans",
+          "middleName": "",
+          "lastName": "Nicolussi Caviglia",
+          "height": 184,
+          "weight": 79,
+          "birthDate": "2000-06-18",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g460439_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 496673,
+          "gsmId": 477620,
+          "shortName": "M. Portanova",
+          "firstName": "Manolo",
+          "middleName": "",
+          "lastName": "Portanova",
+          "height": 183,
+          "weight": 77,
+          "birthDate": "2000-06-02",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3211,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g477620_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 105334,
+          "gsmId": 65287,
+          "shortName": "Douglas Costa",
+          "firstName": "Douglas ",
+          "middleName": "",
+          "lastName": "Costa de Souza",
+          "height": 172,
+          "weight": 70,
+          "birthDate": "1990-09-14",
+          "birthArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "passportArea": {
+            "id": 76,
+            "alpha2code": "BR",
+            "alpha3code": "BRA",
+            "name": "Brazil"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "left",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/28399_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20395,
+          "gsmId": 158411,
+          "shortName": "M. De Sciglio",
+          "firstName": "Mattia",
+          "middleName": "",
+          "lastName": "De Sciglio",
+          "height": 182,
+          "weight": 78,
+          "birthDate": "1992-10-20",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3159,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/41462_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 345695,
+          "gsmId": 374637,
+          "shortName": "M. Demiral",
+          "firstName": "Merih",
+          "middleName": "",
+          "lastName": "Demiral",
+          "height": 192,
+          "weight": 86,
+          "birthDate": "1998-03-05",
+          "birthArea": {
+            "id": 792,
+            "alpha2code": "TR",
+            "alpha3code": "TUR",
+            "name": "Turkey"
+          },
+          "passportArea": {
+            "id": 792,
+            "alpha2code": "TR",
+            "alpha3code": "TUR",
+            "name": "Turkey"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 16465,
+          "currentNationalTeamId": 4687,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g374637_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 361807,
+          "gsmId": 396178,
+          "shortName": "R. Bentancur",
+          "firstName": "Rodrigo",
+          "middleName": "",
+          "lastName": "Bentancur Colmán",
+          "height": 187,
+          "weight": 73,
+          "birthDate": "1997-06-25",
+          "birthArea": {
+            "id": 858,
+            "alpha2code": "UY",
+            "alpha3code": "URY",
+            "name": "Uruguay"
+          },
+          "passportArea": {
+            "id": 858,
+            "alpha2code": "UY",
+            "alpha3code": "URY",
+            "name": "Uruguay"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 1624,
+          "currentNationalTeamId": 15670,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g396178_100x130.png"
+        }
+      }
+    ],
+    "3164": [
+      {
+        "player": {
+          "wyId": 415809,
+          "gsmId": 433613,
+          "shortName": "F. Depaoli",
+          "firstName": "Fabio",
+          "middleName": "",
+          "lastName": "Depaoli",
+          "height": 182,
+          "weight": 71,
+          "birthDate": "1997-04-24",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g433613_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 21006,
+          "gsmId": 145358,
+          "shortName": "L. Tonelli",
+          "firstName": "Lorenzo",
+          "middleName": "",
+          "lastName": "Tonelli",
+          "height": 183,
+          "weight": 75,
+          "birthDate": "1990-01-17",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/37978_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 449978,
+          "gsmId": 454740,
+          "shortName": "M. Léris",
+          "firstName": "Mehdi",
+          "middleName": "",
+          "lastName": "Léris",
+          "height": 186,
+          "weight": 78,
+          "birthDate": "1998-05-23",
+          "birthArea": {
+            "id": 250,
+            "alpha2code": "FR",
+            "alpha3code": "FRA",
+            "name": "France"
+          },
+          "passportArea": {
+            "id": 12,
+            "alpha2code": "DZ",
+            "alpha3code": "DZA",
+            "name": "Algeria"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3207,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g454740_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 239298,
+          "gsmId": 273833,
+          "shortName": "F. Bonazzoli",
+          "firstName": "Federico",
+          "middleName": "",
+          "lastName": "Bonazzoli",
+          "height": 182,
+          "weight": 74,
+          "birthDate": "1997-05-21",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "left",
+          "currentTeamId": 3235,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g273833_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 237057,
+          "gsmId": 270648,
+          "shortName": "M. Thorsby",
+          "firstName": "Morten",
+          "middleName": "",
+          "lastName": "Thorsby",
+          "height": 188,
+          "weight": 83,
+          "birthDate": "1996-05-05",
+          "birthArea": {
+            "id": 578,
+            "alpha2code": "NO",
+            "alpha3code": "NOR",
+            "name": "Norway"
+          },
+          "passportArea": {
+            "id": 578,
+            "alpha2code": "NO",
+            "alpha3code": "NOR",
+            "name": "Norway"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3193,
+          "currentNationalTeamId": 7336,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g270648_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20876,
+          "gsmId": 21090,
+          "shortName": "A. Ekdal",
+          "firstName": "Albin",
+          "middleName": "",
+          "lastName": "Ekdal",
+          "height": 188,
+          "weight": 82,
+          "birthDate": "1989-07-28",
+          "birthArea": {
+            "id": 752,
+            "alpha2code": "SE",
+            "alpha3code": "SWE",
+            "name": "Sweden"
+          },
+          "passportArea": {
+            "id": 752,
+            "alpha2code": "SE",
+            "alpha3code": "SWE",
+            "name": "Sweden"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 6713,
+          "currentNationalTeamId": 7047,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/9700_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 99833,
+          "gsmId": 123106,
+          "shortName": "B. Bereszyński",
+          "firstName": "Bartosz",
+          "middleName": "",
+          "lastName": "Bereszyński",
+          "height": 183,
+          "weight": 77,
+          "birthDate": "1992-07-12",
+          "birthArea": {
+            "id": 616,
+            "alpha2code": "PL",
+            "alpha3code": "POL",
+            "name": "Poland"
+          },
+          "passportArea": {
+            "id": 616,
+            "alpha2code": "PL",
+            "alpha3code": "POL",
+            "name": "Poland"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": 13869,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/51565_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 257027,
+          "gsmId": 289808,
+          "shortName": "E. Audero",
+          "firstName": "Emil",
+          "middleName": "",
+          "lastName": "Audero Mulyadi",
+          "height": 192,
+          "weight": 83,
+          "birthDate": "1997-01-18",
+          "birthArea": {
+            "id": 360,
+            "alpha2code": "ID",
+            "alpha3code": "IDN",
+            "name": "Indonesia"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Goalkeeper",
+            "code2": "GK",
+            "code3": "GKP"
+          },
+          "foot": "right",
+          "currentTeamId": 3200,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g289808_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 354547,
+          "gsmId": 391087,
+          "shortName": "J. Jankto",
+          "firstName": "Jakub",
+          "middleName": "",
+          "lastName": "Jankto",
+          "height": 184,
+          "weight": 74,
+          "birthDate": "1996-01-19",
+          "birthArea": {
+            "id": 203,
+            "alpha2code": "CZ",
+            "alpha3code": "CZE",
+            "name": "Czech Republic"
+          },
+          "passportArea": {
+            "id": 203,
+            "alpha2code": "CZ",
+            "alpha3code": "CZE",
+            "name": "Czech Republic"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "left",
+          "currentTeamId": 3173,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g391087_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 215503,
+          "gsmId": 246644,
+          "shortName": "O. Colley",
+          "firstName": "Omar",
+          "middleName": "",
+          "lastName": "Colley",
+          "height": 191,
+          "weight": 90,
+          "birthDate": "1992-10-24",
+          "birthArea": {
+            "id": 270,
+            "alpha2code": "GM",
+            "alpha3code": "GMB",
+            "name": "Gambia"
+          },
+          "passportArea": {
+            "id": 270,
+            "alpha2code": "GM",
+            "alpha3code": "GMB",
+            "name": "Gambia"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": 4489,
+          "currentNationalTeamId": 18728,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/68504_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 222964,
+          "gsmId": 256802,
+          "shortName": "T. Augello",
+          "firstName": "Tommaso",
+          "middleName": "",
+          "lastName": "Augello",
+          "height": 180,
+          "weight": 70,
+          "birthDate": "1994-08-30",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": 3173,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g256802_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 263433,
+          "gsmId": 296232,
+          "shortName": "A. Ferrari",
+          "firstName": "Alex",
+          "middleName": "",
+          "lastName": "Ferrari",
+          "height": 191,
+          "weight": 80,
+          "birthDate": "1994-07-01",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/77028_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 372408,
+          "gsmId": 402008,
+          "shortName": "A. La Gumina",
+          "firstName": "Antonino",
+          "middleName": "",
+          "lastName": "La Gumina",
+          "height": 182,
+          "weight": 72,
+          "birthDate": "1996-03-06",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g402008_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 391740,
+          "gsmId": 414054,
+          "shortName": "J. Chabot",
+          "firstName": "Jeffrey Julian",
+          "middleName": "",
+          "lastName": "Chabot",
+          "height": 195,
+          "weight": 85,
+          "birthDate": "1998-02-12",
+          "birthArea": {
+            "id": 276,
+            "alpha2code": "DE",
+            "alpha3code": "DEU",
+            "name": "Germany"
+          },
+          "passportArea": {
+            "id": 250,
+            "alpha2code": "FR",
+            "alpha3code": "FRA",
+            "name": "France"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": 2445,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g414054_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 134429,
+          "gsmId": 180575,
+          "shortName": "L. Capezzi",
+          "firstName": "Leonardo",
+          "middleName": "",
+          "lastName": "Capezzi",
+          "height": 178,
+          "weight": 70,
+          "birthDate": "1995-03-28",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3242,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g180575_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 21331,
+          "gsmId": 91443,
+          "shortName": "N. Ravaglia",
+          "firstName": "Nicola",
+          "middleName": "",
+          "lastName": "Ravaglia",
+          "height": 184,
+          "weight": 78,
+          "birthDate": "1988-12-12",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Goalkeeper",
+            "code2": "GK",
+            "code3": "GKP"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/19312_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 434154,
+          "gsmId": 444205,
+          "shortName": "R. Vieira",
+          "firstName": "Ronaldo",
+          "middleName": "",
+          "lastName": "Vieira Nan",
+          "height": 178,
+          "weight": 70,
+          "birthDate": "1998-07-19",
+          "birthArea": {
+            "id": 624,
+            "alpha2code": "GW",
+            "alpha3code": "GNB",
+            "name": "Guinea-Bissau"
+          },
+          "passportArea": {
+            "id": 826,
+            "alpha2code": "EN",
+            "alpha3code": "XEN",
+            "name": "England"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 3164,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g444205_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 21004,
+          "gsmId": 71499,
+          "shortName": "V. Regini",
+          "firstName": "Vasco",
+          "middleName": "",
+          "lastName": "Regini",
+          "height": 185,
+          "weight": 79,
+          "birthDate": "1990-09-09",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 674,
+            "alpha2code": "SM",
+            "alpha3code": "SMR",
+            "name": "San Marino"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "left",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/13288_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20479,
+          "gsmId": 4164,
+          "shortName": "F. Quagliarella",
+          "firstName": "Fabio",
+          "middleName": "",
+          "lastName": "Quagliarella",
+          "height": 180,
+          "weight": 0,
+          "birthDate": "1983-01-31",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Forward",
+            "code2": "FW",
+            "code3": "FWD"
+          },
+          "foot": "right",
+          "currentTeamId": null,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "retired",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/28_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20689,
+          "gsmId": 91722,
+          "shortName": "G. Ramírez",
+          "firstName": "Gastón Exequiel",
+          "middleName": "",
+          "lastName": "Ramírez Pereyra",
+          "height": 178,
+          "weight": 83,
+          "birthDate": "1990-12-02",
+          "birthArea": {
+            "id": 858,
+            "alpha2code": "UY",
+            "alpha3code": "URY",
+            "name": "Uruguay"
+          },
+          "passportArea": {
+            "id": 858,
+            "alpha2code": "UY",
+            "alpha3code": "URY",
+            "name": "Uruguay"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "left",
+          "currentTeamId": 15633,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/36136_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 449472,
+          "gsmId": -45021,
+          "shortName": "M. Damsgaard",
+          "firstName": "Mikkel",
+          "middleName": "",
+          "lastName": "Damsgaard",
+          "height": 180,
+          "weight": 71,
+          "birthDate": "2000-07-03",
+          "birthArea": {
+            "id": 208,
+            "alpha2code": "DK",
+            "alpha3code": "DNK",
+            "name": "Denmark"
+          },
+          "passportArea": {
+            "id": 208,
+            "alpha2code": "DK",
+            "alpha3code": "DNK",
+            "name": "Denmark"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "right",
+          "currentTeamId": 1669,
+          "currentNationalTeamId": 7712,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/g-45021_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 703,
+          "gsmId": 5803,
+          "shortName": "M. Yoshida",
+          "firstName": "Maya",
+          "middleName": "",
+          "lastName": "Yoshida",
+          "height": 189,
+          "weight": 87,
+          "birthDate": "1988-08-24",
+          "birthArea": {
+            "id": 392,
+            "alpha2code": "JP",
+            "alpha3code": "JPN",
+            "name": "Japan"
+          },
+          "passportArea": {
+            "id": 392,
+            "alpha2code": "JP",
+            "alpha3code": "JPN",
+            "name": "Japan"
+          },
+          "role": {
+            "name": "Defender",
+            "code2": "DF",
+            "code3": "DEF"
+          },
+          "foot": "right",
+          "currentTeamId": 7847,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/37158_100x130.png"
+        }
+      },
+      {
+        "player": {
+          "wyId": 20446,
+          "gsmId": 162670,
+          "shortName": "V. Verre",
+          "firstName": "Valerio",
+          "middleName": "",
+          "lastName": "Verre",
+          "height": 181,
+          "weight": 70,
+          "birthDate": "1994-01-11",
+          "birthArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "passportArea": {
+            "id": 380,
+            "alpha2code": "IT",
+            "alpha3code": "ITA",
+            "name": "Italy"
+          },
+          "role": {
+            "name": "Midfielder",
+            "code2": "MD",
+            "code3": "MID"
+          },
+          "foot": "both",
+          "currentTeamId": 3171,
+          "currentNationalTeamId": null,
+          "gender": "male",
+          "status": "active",
+          "imageDataURL": "https://cdn5.wyscout.com/photos/players/public/56950_100x130.png"
+        }
+      }
+    ]
+  }
+}

@@ -400,6 +400,13 @@ class DatasetTransformer:
                 to_pitch_dimensions=to_pitch_dimensions,
                 to_orientation=to_orientation,
             )
+            if dataset.metadata.coordinate_system is not None:
+                dataset.metadata.coordinate_system.pitch_length = (
+                    to_pitch_dimensions.pitch_length
+                )
+                dataset.metadata.coordinate_system.pitch_width = (
+                    to_pitch_dimensions.pitch_width
+                )
             dataset.metadata.pitch_dimensions = to_pitch_dimensions
             dataset.metadata.orientation = to_orientation
 

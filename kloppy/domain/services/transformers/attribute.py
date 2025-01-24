@@ -57,12 +57,16 @@ class AngleToGoalTransformer(EventAttributeTransformer):
         if not event.coordinates:
             return {"angle_to_goal": None}
 
-        if metadata.pitch_dimensions.width:
+        if metadata.pitch_dimensions.pitch_width:
             # Calculate in metric system
-            event_x = event.coordinates.x * metadata.pitch_dimensions.length
-            event_y = event.coordinates.y * metadata.pitch_dimensions.width
-            goal_x = metadata.pitch_dimensions.length
-            goal_y = metadata.pitch_dimensions.width / 2
+            event_x = (
+                event.coordinates.x * metadata.pitch_dimensions.pitch_length
+            )
+            event_y = (
+                event.coordinates.y * metadata.pitch_dimensions.pitch_width
+            )
+            goal_x = metadata.pitch_dimensions.pitch_length
+            goal_y = metadata.pitch_dimensions.pitch_width / 2
         else:
             event_x = event.coordinates.x
             event_y = event.coordinates.y

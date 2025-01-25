@@ -34,15 +34,14 @@ def setup_package():
             "License :: OSI Approved",
             "Topic :: Scientific/Engineering",
         ],
-        entry_points={
-            "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
-        },
+        entry_points={"console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]},
         install_requires=[
             "lxml>=4.4.0,<5",
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",
+            "fsspec>=2024.12.0",
         ],
         extras_require={
             "test": [

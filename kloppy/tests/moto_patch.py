@@ -2,7 +2,7 @@
 from collections.abc import Awaitable, Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, Union
 from unittest.mock import patch
 
 import aiobotocore
@@ -19,7 +19,7 @@ R = TypeVar("R")
 class _PatchedAWSReponseContent:
     """Patched version of `botocore.awsrequest.AWSResponse.content`"""
 
-    content: bytes | Awaitable[bytes]
+    content: Union[bytes, Awaitable[bytes]]
 
     def __await__(self) -> Iterator[bytes]:
         async def _generate_async() -> bytes:
@@ -58,9 +58,7 @@ class PatchedRetryContext(botocore.retries.standard.RetryContext):
 
     def __init__(self, *args, **kwargs):
         if kwargs.get("http_response"):
-            kwargs["http_response"] = PatchedAWSResponse(
-                kwargs["http_response"]
-            )
+            kwargs["http_response"] = PatchedAWSResponse(kwargs["http_response"])
         super().__init__(*args, **kwargs)
 
 
@@ -82,9 +80,7 @@ def mock_aio_aws() -> Generator[None, None, None]:
             "aiobotocore.endpoint.convert_to_response_dict",
             new=_factory(aiobotocore.endpoint.convert_to_response_dict),
         ),
-        patch(
-            "botocore.retries.standard.RetryContext", new=PatchedRetryContext
-        ),
+        patch("botocore.retries.standard.RetryContext", new=PatchedRetryContext),
         mock_aws(),
     ):
         yield

@@ -130,11 +130,11 @@ class TestExpandInputs:
         file3.write_text("Content of file3")
 
         return {
-            "root": str(tmp_path),
-            "file1": str(file1),
-            "file2": str(file2),
-            "subdir": str(subdir),
-            "file3": str(file3),
+            "root": str(tmp_path.as_posix()),
+            "file1": str(file1.as_posix()),
+            "file2": str(file2.as_posix()),
+            "subdir": str(subdir.as_posix()),
+            "file3": str(file3.as_posix()),
         }
 
     def test_single_file(self, mock_filesystem):

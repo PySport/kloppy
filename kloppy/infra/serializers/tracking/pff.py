@@ -13,7 +13,6 @@ from kloppy.domain import (
     AttackingDirection,
     BallState,
     DatasetFlag,
-    Frame,
     Ground,
     Metadata,
     Orientation,
@@ -28,6 +27,7 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -182,7 +182,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         map_players(frame.get("homePlayersSmoothed"), "HOME")
         map_players(frame.get("awayPlayersSmoothed"), "AWAY")
 
-        return Frame(
+        return create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,

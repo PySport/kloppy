@@ -7,10 +7,8 @@ import logging
 import lzma
 import os
 import re
-from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper
-from pathlib import Path
 from typing import (
     IO,
     Any,
@@ -18,6 +16,7 @@ from typing import (
     Callable,
     ContextManager,
     Generator,
+    Iterable,
     Iterator,
     List,
     Optional,

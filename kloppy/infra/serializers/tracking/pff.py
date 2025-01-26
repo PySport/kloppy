@@ -173,10 +173,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     player_x = player_info.get("x")
                     player_y = player_info.get("y")
 
-                    player_data = PlayerData(
-                        coordinates=Point(player_x, player_y)
-                    )
-                    players_data[player] = player_data
+                    if player_x is not None and player_y is not None:
+                        player_data = PlayerData(
+                            coordinates=Point(player_x, player_y)
+                        )
+                        players_data[player] = player_data
 
         # Process home and away players
         map_players(frame.get("homePlayersSmoothed"), "HOME")

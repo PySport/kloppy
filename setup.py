@@ -34,7 +34,9 @@ def setup_package():
             "License :: OSI Approved",
             "Topic :: Scientific/Engineering",
         ],
-        entry_points={"console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]},
+        entry_points={
+            "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
+        },
         install_requires=[
             "lxml>=4.4.0,<5",
             "requests>=2.0.0,<3",

@@ -1,8 +1,7 @@
 # Attempt to import optional dependencies
-from collections.abc import Awaitable, Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TypeVar, Union
+from typing import Awaitable, Callable, Generator, Iterator, TypeVar, Union
 from unittest.mock import patch
 
 import aiobotocore

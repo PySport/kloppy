@@ -1,18 +1,17 @@
+import csv
+import io
+import json
 import logging
 from ast import literal_eval
 from collections import defaultdict
 from datetime import timedelta, timezone
+from typing import IO, Dict, NamedTuple, Optional, Union
+
 from dateutil.parser import parse
-from typing import NamedTuple, IO, Optional, Union, Dict
-import json
-import bz2
-import io
-import csv
-from enum import Enum
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
     AttackingDirection,
+    BallState,
     DatasetFlag,
     Frame,
     Ground,
@@ -27,35 +26,33 @@ from kloppy.domain import (
     Provider,
     Team,
     TrackingDataset,
-    BallState,
+    attacking_direction_from_frame,
 )
-
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-
 from kloppy.utils import performance_logging
-from kloppy.io import FileLike
 
 logger = logging.getLogger(__name__)
 
 # frame_rate = 10
 
 position_types_mapping: Dict[str, PositionType] = {
-    "CB": PositionType.CenterBack,  # Provider: CB
-    "LCB": PositionType.LeftCenterBack,  # Provider: LCB
-    "RCB": PositionType.RightCenterBack,  # Provider: RCB
-    "LB": PositionType.LeftBack,  # Provider: LB
-    "RB": PositionType.RightBack,  # Provider: RB
-    "DM": PositionType.DefensiveMidfield,  # Provider: DM
-    "CM": PositionType.CenterMidfield,  # Provider: CM
-    "LW": PositionType.LeftWing,  # Provider: LW
-    "RW": PositionType.RightWing,  # Provider: RW
-    "D": PositionType.Defender,  # Provider: D (mapped to CenterBack)
-    "CF": PositionType.Striker,  # Provider: CF
-    "M": PositionType.Midfielder,  # Provider: M (mapped to CenterMidfield),
-    "GK": PositionType.Goalkeeper,  # Provider: GK
-    "F": PositionType.Attacker,  # Provider: CF
+    "CB": PositionType.CenterBack,
+    "LCB": PositionType.LeftCenterBack,
+    "RCB": PositionType.RightCenterBack,
+    "LB": PositionType.LeftBack,
+    "RB": PositionType.RightBack,
+    "DM": PositionType.DefensiveMidfield,
+    "CM": PositionType.CenterMidfield,
+    "LW": PositionType.LeftWing,
+    "RW": PositionType.RightWing,
+    "D": PositionType.Defender,
+    "CF": PositionType.Striker,
+    "M": PositionType.Midfielder,
+    "GK": PositionType.Goalkeeper,
+    "F": PositionType.Attacker,
 }
 
 
@@ -329,6 +326,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 elif team_id == away_team_id:
                     team_string = "AWAY"
                     team = away_team
+                else:
+                    raise DeserializationError(f"Unknown team_id: {team_id}")
 
                 # Create Player object
                 players[team_string][player_id] = Player(
@@ -346,12 +345,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             away_team.players = list(players["AWAY"].values())
 
         # Check if home team plays left or right and assign orientation accordingly.
-        if "homeTeamStartLeft" not in metadata:
-            raise KeyError(
-                "The key 'homeTeamStartLeft' does not exist in metadata."
+        try:
+            is_home_team_left = metadata["homeTeamStartLeft"].lower() == "true"
+        except AttributeError:
+            raise DeserializationError(
+                "The metadata file does not contain the 'homeTeamStartLeft' field"
             )
-
-        is_home_team_left = metadata.get("homeTeamStartLeft").lower() == "true"
         orientation = (
             Orientation.HOME_AWAY
             if is_home_team_left

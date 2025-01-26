@@ -26,6 +26,7 @@ from kloppy.domain import (
     PassQualifier,
     PassResult,
     PassType,
+    Period,
     Point,
     Point3D,
     PositionType,
@@ -247,15 +248,12 @@ position_line_mapping = {
 }
 
 
-def _get_pass_receiver(event: OptaEvent, team: Team):
-    return (team.get_player_by_id(event.player_id), event.timestamp)
-
-
 def _parse_pass(
     raw_event: OptaEvent,
     next_event: OptaEvent,
     next_next_event: OptaEvent,
     team: Team,
+    period: Period,
 ) -> Dict:
     result = (
         PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
@@ -287,7 +285,9 @@ def _parse_pass(
         and ball_receipt_event.player_id is not None
     ):
         receiver_player = team.get_player_by_id(ball_receipt_event.player_id)
-        receive_timestamp = ball_receipt_event.timestamp
+        receive_timestamp = (
+            ball_receipt_event.timestamp - period.start_timestamp
+        )
     else:
         receiver_player = None
         receive_timestamp = None
@@ -307,6 +307,7 @@ def _parse_pass(
             x=next_next_event.x,
             y=next_next_event.y,
         )
+        receive_timestamp = next_next_event.timestamp - period.start_timestamp
 
     return dict(
         result=result,
@@ -823,7 +824,11 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(
-                            raw_event, next_event, next_next_event, team
+                            raw_event,
+                            next_event,
+                            next_next_event,
+                            team,
+                            period,
                         )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,

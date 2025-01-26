@@ -18,11 +18,11 @@ class TestPFFTracking:
 
     @pytest.fixture
     def raw_data_home_starts_left(self, base_dir) -> str:
-        return base_dir / "files" / "pff_10517.jsonl.bz2"
+        return base_dir / "files" / "pff_10517.jsonl"
 
     @pytest.fixture
     def raw_data_home_starts_right(self, base_dir) -> str:
-        return base_dir / "files" / "pff_3812.jsonl.bz2"
+        return base_dir / "files" / "pff_3812.jsonl"
 
     def test_correct_deserialization_alive_only(
         self,

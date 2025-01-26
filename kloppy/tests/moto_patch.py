@@ -75,15 +75,11 @@ def _factory(
 
 
 @contextmanager
-def mock_aio_aws() -> Generator[None, None, None]:
-    with (
-        patch(
-            "aiobotocore.endpoint.convert_to_response_dict",
-            new=_factory(aiobotocore.endpoint.convert_to_response_dict),
-        ),
-        patch(
-            "botocore.retries.standard.RetryContext", new=PatchedRetryContext
-        ),
-        mock_aws(),
-    ):
+def mock_aio_aws():
+    with patch(
+        "aiobotocore.endpoint.convert_to_response_dict",
+        new=_factory(aiobotocore.endpoint.convert_to_response_dict),
+    ) as mock_convert_to_response, patch(
+        "botocore.retries.standard.RetryContext", new=PatchedRetryContext
+    ) as mock_retry_context, mock_aws() as mock_aws_context:
         yield

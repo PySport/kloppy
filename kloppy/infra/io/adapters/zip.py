@@ -8,6 +8,12 @@ from kloppy.exceptions import AdapterError
 from .fsspec import FSSpecAdapter
 
 
+def removeprefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix) :]
+    return text
+
+
 class ZipAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("zip://")
@@ -32,7 +38,7 @@ class ZipAdapter(FSSpecAdapter):
         """
         protocol = self._infer_protocol(url)
         fs = self._get_filesystem(url)
-        url = url.removeprefix("zip://")
+        url = removeprefix(url, "zip://")
         if recursive:
             files = fs.find(url, detail=False)
         else:

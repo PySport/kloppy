@@ -2,6 +2,7 @@ import bz2
 import gzip
 import json
 import lzma
+import sys
 import zipfile
 from io import BytesIO
 from pathlib import Path
@@ -272,6 +273,9 @@ class TestHTTPAdapter:
             assert fp.read() == b"Hello, world!"
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
+)
 class TestS3Adapter:
     @pytest.fixture(scope="class", autouse=True)
     def s3_content(self):

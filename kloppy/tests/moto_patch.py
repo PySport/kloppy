@@ -58,7 +58,9 @@ class PatchedRetryContext(botocore.retries.standard.RetryContext):
 
     def __init__(self, *args, **kwargs):
         if kwargs.get("http_response"):
-            kwargs["http_response"] = PatchedAWSResponse(kwargs["http_response"])
+            kwargs["http_response"] = PatchedAWSResponse(
+                kwargs["http_response"]
+            )
         super().__init__(*args, **kwargs)
 
 
@@ -80,7 +82,9 @@ def mock_aio_aws() -> Generator[None, None, None]:
             "aiobotocore.endpoint.convert_to_response_dict",
             new=_factory(aiobotocore.endpoint.convert_to_response_dict),
         ),
-        patch("botocore.retries.standard.RetryContext", new=PatchedRetryContext),
+        patch(
+            "botocore.retries.standard.RetryContext", new=PatchedRetryContext
+        ),
         mock_aws(),
     ):
         yield

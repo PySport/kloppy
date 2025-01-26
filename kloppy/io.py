@@ -392,7 +392,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
             adapter.read_to_stream(uri, stream)
             stream.seek(0)
         else:
-            raise Exception(f"No adapter found for {uri}")
+            raise AdapterError(f"No adapter found for {uri}")
         return stream
 
     if isinstance(input_, TextIOWrapper):

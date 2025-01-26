@@ -1,10 +1,11 @@
 """XML parser for Opta F24 feeds."""
-import pytz
-from datetime import datetime, timezone
-from typing import List, Optional
-from dateutil.parser import parse
 
-from .base import OptaXMLParser, OptaEvent
+from datetime import datetime
+from typing import List, Optional
+
+import pytz
+
+from .base import OptaEvent, OptaXMLParser
 
 
 def _parse_f24_datetime(dt_str: str) -> datetime:
@@ -12,12 +13,13 @@ def _parse_f24_datetime(dt_str: str) -> datetime:
         parts = timestamp.split(".")
         if len(parts) == 1:
             return timestamp + ".000"
-        return ".".join(parts[:-1] + ["{:03d}".format(int(parts[-1]))])
+        return ".".join(parts[:-1] + [f"{int(parts[-1]):03d}"])
 
     dt_str = zero_pad_milliseconds(dt_str)
-    return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f").replace(
-        tzinfo=pytz.utc
-    )
+    naive_datetime = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f")
+    timezone = pytz.timezone("Europe/London")
+    aware_datetime = timezone.localize(naive_datetime)
+    return aware_datetime.astimezone(pytz.utc)
 
 
 class F24XMLParser(OptaXMLParser):
@@ -54,18 +56,23 @@ class F24XMLParser(OptaXMLParser):
             for event in game_elm.iterchildren("Event")
         ]
 
-    def extract_date(self) -> Optional[str]:
+    def extract_date(self) -> Optional[datetime]:
         """Return the date of the game."""
         game_elm = self.root.find("Game")
-        if game_elm and "game_date" in game_elm.attrib:
-            return parse(game_elm.attrib["game_date"]).astimezone(timezone.utc)
+        if game_elm is not None and "game_date" in game_elm.attrib:
+            naive_datetime = datetime.strptime(
+                game_elm.attrib["game_date"], "%Y-%m-%dT%H:%M:%S"
+            )
+            timezone = pytz.timezone("Europe/London")
+            aware_datetime = timezone.localize(naive_datetime)
+            return aware_datetime.astimezone(pytz.utc)
         else:
             return None
 
     def extract_game_week(self) -> Optional[str]:
         """Return the game_week of the game."""
         game_elm = self.root.find("Game")
-        if game_elm and "matchday" in game_elm.attrib:
+        if game_elm is not None and "matchday" in game_elm.attrib:
             return game_elm.attrib["matchday"]
         else:
             return None
@@ -73,7 +80,7 @@ class F24XMLParser(OptaXMLParser):
     def extract_game_id(self) -> Optional[str]:
         """Return the game_id of the game."""
         game_elm = self.root.find("Game")
-        if game_elm and "id" in game_elm.attrib:
+        if game_elm is not None and "id" in game_elm.attrib:
             return game_elm.attrib["id"]
         else:
             return None

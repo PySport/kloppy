@@ -1,46 +1,35 @@
 import json
 import logging
-from datetime import timedelta, datetime, timezone
-from dateutil.parser import parse, _parser
 from dataclasses import replace
-from typing import Dict, List, Tuple, Union, IO, NamedTuple
+from datetime import datetime, timedelta, timezone
+from typing import IO, Dict, List, NamedTuple, Tuple
 
 from kloppy.domain import (
-    AttackingDirection,
-    BallOutEvent,
     BallState,
     BodyPart,
     BodyPartQualifier,
-    CardEvent,
     CardType,
     DatasetFlag,
     Event,
     EventDataset,
-    FoulCommittedEvent,
-    GenericEvent,
     Ground,
     Metadata,
     Orientation,
-    PassEvent,
     PassResult,
     Period,
     Player,
     Point,
     Provider,
     Qualifier,
-    RecoveryEvent,
     Score,
     SetPieceQualifier,
     SetPieceType,
-    ShotEvent,
     ShotResult,
-    SubstitutionEvent,
     Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import Readable, performance_logging
-
+from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
@@ -435,7 +424,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     + status_update["time"]
                     + match["stadiumGMT"],
                     "%Y%m%d%H:%M:%S%z",
-                ).astimezone(timezone.utc)
+                )
                 half = status_update["t"]["half"]
                 if status_update["type"] == DF_EVENT_TYPE_STATUS_MATCH_START:
                     half = 1
@@ -458,8 +447,10 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                 date = match["date"]
                 if date:
                     # TODO: scheduledStart and stadiumGMT should probably be used here too
-                    date = parse(date).astimezone(timezone.utc)
-            except _parser.ParserError:
+                    date = datetime.strptime(date, "%Y%m%d").replace(
+                        tzinfo=timezone.utc
+                    )
+            except ValueError:
                 date = None
             game_week = match.get("week", None)
             if game_week:

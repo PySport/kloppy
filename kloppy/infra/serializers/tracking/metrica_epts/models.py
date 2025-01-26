@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Union
 
-from kloppy.domain import Team, Player, Metadata
+from kloppy.domain import Player, Metadata
 
 
 # TODO: fill this with from SplitRegisters

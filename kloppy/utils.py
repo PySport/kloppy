@@ -85,7 +85,7 @@ def docstring_inherit_attributes(parent):
     return inherit
 
 
-string_types = (type(b""), type(""))
+string_types = (bytes, str)
 
 
 def deprecated(reason):
@@ -169,3 +169,8 @@ class DeprecatedEnumValue:
             stacklevel=2,
         )
         return self.value
+
+
+def snake_case(s: str) -> str:
+    """Convert a string to snake_case."""
+    return re.sub(r"[\s\-]+", "_", s.strip()).lower()

@@ -1,5 +1,4 @@
 from typing import Optional
-import contextlib
 
 from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.secondspectrum import (

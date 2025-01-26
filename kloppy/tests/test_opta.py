@@ -7,7 +7,6 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
-    BodyPartQualifier,
     CardQualifier,
     CardType,
     CounterAttackQualifier,
@@ -25,7 +24,6 @@ from kloppy.domain import (
     PassType,
     OptaPitchDimensions,
     Point,
-    Point,
     Point3D,
     PositionType,
     Provider,
@@ -34,6 +32,7 @@ from kloppy.domain import (
     SetPieceType,
     ShotResult,
     build_coordinate_system,
+    PassResult,
 )
 from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
@@ -56,15 +55,27 @@ def dataset(base_dir) -> EventDataset:
     return dataset
 
 
+@pytest.fixture(scope="module")
+def dataset_f73(base_dir) -> EventDataset:
+    """Load Opta data for FC København - FC Nordsjælland"""
+    dataset = opta.load(
+        f7_data=base_dir / "files" / "opta_f7.xml",
+        f24_data=base_dir / "files" / "opta_f73.xml",
+        coordinates="opta",
+    )
+    assert dataset.dataset_type == DatasetType.EVENT
+    return dataset
+
+
 def test_parse_f24_datetime():
     """Test if the F24 datetime is correctly parsed"""
     # timestamps have millisecond precision
     assert _parse_f24_datetime("2018-09-23T15:02:13.608") == datetime(
-        2018, 9, 23, 15, 2, 13, 608000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
     assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
-        2018, 9, 23, 15, 2, 14, 39000, tzinfo=timezone.utc
+        2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc
     )
 
 
@@ -244,7 +255,7 @@ class TestOptaPassEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all pass events"""
         events = dataset.find_all("pass")
-        assert len(events) == 15
+        assert len(events) == 16
 
     def test_receiver_coordinates(self, dataset: EventDataset):
         """Test if the receiver coordinates are correctly deserialized"""
@@ -274,6 +285,13 @@ class TestOptaPassEvent:
             PassQualifier
         )
 
+    def test_pass_qualifiers_for_deflected_pass(self, dataset: EventDataset):
+        """Test if the pass type qualfiers are correctly deserialized for deflected passes"""
+        deflected_pass = dataset.get_event_by_id("2509132176")
+        assert deflected_pass.result == PassResult.COMPLETE
+        assert deflected_pass.receiver_coordinates.x == 3.3
+        assert deflected_pass.receiver_coordinates.y == 81.1
+
     def test_ball_state(self, dataset: EventDataset):
         """Test if the ball state is correctly set"""
         events = dataset.find_all("pass")
@@ -302,7 +320,7 @@ class TestOptaShotEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all shot events"""
         events = dataset.find_all("shot")
-        assert len(events) == 3
+        assert len(events) == 4
 
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the shot event is correctly deserialized"""
@@ -317,7 +335,7 @@ class TestOptaShotEvent:
         )
 
     def test_timestamp_goal(self, dataset: EventDataset):
-        """Check timestamp from qualifier in case of goal"""
+        """Check timestamp from qualifier 374 in case of goal"""
         goal = dataset.get_event_by_id("2318695229")
         assert goal.timestamp == (
             _parse_f24_datetime("2018-09-23T16:07:48.525")  # event timestamp
@@ -405,6 +423,39 @@ class TestOptaShotEvent:
         # Use the inverse coordinates of the goal location
         assert own_goal.result_coordinates == Point3D(0.0, 100 - 45.6, 1.9)
         assert own_goal.ball_state == BallState.DEAD
+
+    def test_goal(self, dataset: EventDataset):
+        """Test if goals are correctly deserialized"""
+        goal = dataset.get_event_by_id("2614247749")
+        assert goal.result == ShotResult.GOAL
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.9780699610710144
+        )
+        assert (
+            next(
+                statistic
+                for statistic in goal.statistics
+                if statistic.name == "PSxG"
+            ).value
+            == 0.98
+        )
+
+    def test_shot_xg(self, dataset_f73: EventDataset):
+        """Test if expected goals are correctly deserialized"""
+        shot = dataset_f73.get_event_by_id("2318695229")
+        assert (
+            next(
+                statistic
+                for statistic in shot.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.75
+        )
 
 
 class TestOptaDuelEvent:

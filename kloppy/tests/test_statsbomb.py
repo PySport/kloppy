@@ -1,59 +1,56 @@
 import os
 from collections import defaultdict
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import cast
 
 import pytest
 
+import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy import statsbomb
 from kloppy.domain import (
-    build_coordinate_system,
-    AttackingDirection,
-    TakeOnResult,
-    Dimension,
     BallState,
-    ImperialPitchDimensions,
-    CardQualifier,
-    DatasetFlag,
-    CarryResult,
-    InterceptionResult,
-    SubstitutionEvent,
     BodyPart,
     BodyPartQualifier,
+    CardQualifier,
+    CarryResult,
+    DatasetFlag,
     DatasetType,
+    Dimension,
     DuelQualifier,
-    DuelType,
     DuelResult,
+    DuelType,
+    EventDataset,
+    FormationType,
+    ImperialPitchDimensions,
+    InterceptionResult,
     Orientation,
     PassResult,
     Point,
     Point3D,
     Provider,
-    FormationType,
     SetPieceQualifier,
     SetPieceType,
     PositionType,
     ShotResult,
-    EventDataset,
+    SubstitutionEvent,
+    TakeOnResult,
     Time,
+    build_coordinate_system,
 )
-
-from kloppy.exceptions import DeserializationError
-from kloppy import statsbomb
+from kloppy.domain.models import PositionType
 from kloppy.domain.models.event import (
     CardType,
+    CounterAttackQualifier,
+    EventType,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     PassQualifier,
     PassType,
-    EventType,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
     UnderPressureQualifier,
 )
-from kloppy.infra.serializers.event.statsbomb.helpers import (
-    parse_str_ts,
-)
-import kloppy.infra.serializers.event.statsbomb.specification as SB
+from kloppy.exceptions import DeserializationError
+from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 
 ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -180,6 +177,12 @@ class TestStatsBombMetadata:
             time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
         )
         assert home_ending_lam.player_id == "5633"  # Yannick Ferreira Carrasco
+
+        away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=92)),
+        )
+        assert away_starting_gk.player_id == "5205"  # Rui Patricio
 
     def test_periods(self, dataset):
         """It should create the periods"""
@@ -547,6 +550,25 @@ class TestStatsBombEvent:
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
             )
 
+    def test_freeze_frame_player_identities(self, dataset: EventDataset):
+        """It should set the identities of the player that executed the event and the goalkeepers."""
+        event = dataset.get_event_by_id("0f525aa9-70f4-4f85-8a8d-6103722aee50")
+        home_team, away_team = dataset.metadata.teams
+        # The goalkeeper should be identified
+        keeper = next(p for p in away_team.players if p.player_id == "5205")
+        assert keeper in event.freeze_frame.players_coordinates
+        # The player that executed the event should be identified
+        player = next(p for p in away_team.players if p.player_id == "5209")
+        assert player in event.freeze_frame.players_coordinates
+        # All other players should be anonymous
+        for player in event.freeze_frame.players_coordinates.keys():
+            if player not in [keeper, player]:
+                assert player.id.startswith(
+                    "T780-E0f525aa9-70f4-4f85-8a8d-6103722aee50-"
+                )
+                assert player.team in [home_team, away_team]
+                assert player.name is None
+
     def test_correct_normalized_deserialization(self):
         """Test if the normalized deserialization is correct"""
         dataset = statsbomb.load(
@@ -696,6 +718,22 @@ class TestStatsBombPassEvent:
         ]
         assert duel.result == DuelResult.WON
 
+    def test_synthetic_out_events(self, dataset: EventDataset):
+        """It should add synthetic ball out events after the (failed) receipt."""
+        pass_event = dataset.get_event_by_id(
+            "36c7ed4c-031e-4dd4-8557-3d9b8ee8762f"
+        )
+        assert pass_event.next().event_name == "Ball Receipt*"
+        assert pass_event.next().next().event_name == "ball_out"
+        assert (
+            pass_event.next().next().event_id
+            == "out-ac99f2ec-8138-4061-9bd3-bdc79ae7358e"
+        )
+        assert (
+            pass_event.next().next().raw_event["id"]
+            == "36c7ed4c-031e-4dd4-8557-3d9b8ee8762f"
+        )
+
 
 class TestStatsBombShotEvent:
     """Tests related to deserialzing 16/Shot events"""
@@ -718,6 +756,15 @@ class TestStatsBombShotEvent:
         )
         # An open play shot should not have a set piece qualifier
         assert shot.get_qualifier_value(SetPieceQualifier) is None
+        # A shot event should have a xG value
+        assert (
+            next(
+                statistic
+                for statistic in shot.statistics
+                if statistic.name == "xG"
+            ).value
+            == 0.12441643
+        )
 
     def test_free_kick(self, dataset: EventDataset):
         """It should add set piece qualifiers to free kick shots"""
@@ -738,6 +785,22 @@ class TestStatsBombShotEvent:
             DuelType.AERIAL,
         ]
         assert duel.result == DuelResult.WON
+
+    def test_synthetic_out_events(self, dataset: EventDataset):
+        """It should add synthetic ball out events after the goalkeeper event."""
+        shot_event = dataset.get_event_by_id(
+            "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
+        )
+        assert shot_event.next().event_name == "Goal Keeper"
+        assert shot_event.next().next().event_name == "ball_out"
+        assert (
+            shot_event.next().next().event_id
+            == "out-64c5cfad-86a3-4d61-86c8-8784a4834682"
+        )
+        assert (
+            shot_event.next().next().raw_event["id"]
+            == "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
+        )
 
 
 class TestStatsBombInterceptionEvent:
@@ -1021,7 +1084,7 @@ class TestStatsBombGoalkeeperEvent:
             for event in dataset.events
             if event.get_qualifier_value(UnderPressureQualifier) is True
         ]
-        assert len(under_pressure_events) == 559
+        assert len(under_pressure_events) == 567
 
 
 class TestStatsBombSubstitutionEvent:

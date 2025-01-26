@@ -155,7 +155,7 @@ class DefaultEventTransformer(EventAttributeTransformer):
     ):
         if include and exclude:
             raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
+                "Cannot specify both include as exclude"
             )
 
         self.exclude = exclude or []
@@ -250,7 +250,7 @@ class DefaultFrameTransformer:
     ):
         if include and exclude:
             raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
+                "Cannot specify both include as exclude"
             )
 
         self.exclude = exclude or []
@@ -322,7 +322,7 @@ class DefaultCodeTransformer:
     ):
         if include and exclude:
             raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
+                "Cannot specify both include as exclude"
             )
 
         self.exclude = exclude or []

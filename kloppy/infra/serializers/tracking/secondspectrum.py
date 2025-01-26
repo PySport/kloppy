@@ -10,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     Team,
@@ -25,6 +24,7 @@ from kloppy.domain import (
     PlayerData,
     Score,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import Readable, performance_logging
 
@@ -96,7 +96,7 @@ class SecondSpectrumDeserializer(
                     coordinates=Point(float(x), float(y)), speed=speed
                 )
 
-        return Frame(
+        frame = create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,
@@ -107,6 +107,8 @@ class SecondSpectrumDeserializer(
             period=period,
             other_data={},
         )
+
+        return frame
 
     @staticmethod
     def __validate_inputs(inputs: Dict[str, Readable]):
@@ -153,8 +155,8 @@ class SecondSpectrumDeserializer(
                     first_byte + inputs.meta_data.read()
                 ).match
                 frame_rate = int(match.attrib["iFrameRateFps"])
-                pitch_size_height = float(match.attrib["fPitchYSizeMeters"])
-                pitch_size_width = float(match.attrib["fPitchXSizeMeters"])
+                pitch_size_height = float(match.attrib["fPitchXSizeMeters"])
+                pitch_size_width = float(match.attrib["fPitchYSizeMeters"])
 
                 periods = []
                 for period in match.iterchildren(tag="period"):
@@ -241,7 +243,7 @@ class SecondSpectrumDeserializer(
         # Handles the tracking frame data
         with performance_logging("Loading data", logger=logger):
             transformer = self.get_transformer(
-                pitch_length=pitch_size_width, pitch_width=pitch_size_height
+                pitch_length=pitch_size_height, pitch_width=pitch_size_width
             )
 
             def _iter():

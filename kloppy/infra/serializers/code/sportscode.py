@@ -68,6 +68,7 @@ class SportsCodeDeserializer(CodeDataDeserializer[SportsCodeInputs]):
                 labels=parse_labels(instance),
                 ball_state=None,
                 ball_owning_team=None,
+                statistics=[],
             )
             period.end_timestamp = end_timestamp
             codes.append(code)

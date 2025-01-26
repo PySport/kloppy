@@ -2,13 +2,12 @@ import logging
 import warnings
 from collections import namedtuple
 from datetime import timedelta
-from typing import Tuple, Dict, Iterator, IO, NamedTuple
+from typing import Iterator, IO, NamedTuple
 
 from kloppy.domain import (
     attacking_direction_from_frame,
     TrackingDataset,
     AttackingDirection,
-    Frame,
     Point,
     Period,
     Orientation,
@@ -20,10 +19,11 @@ from kloppy.domain import (
     Player,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 
 logger = logging.getLogger(__name__)
@@ -188,7 +188,7 @@ class MetricaCSVTrackingDataDeserializer(
                     **away_partial_frame.players_data,
                 }
 
-                frame = Frame(
+                frame = create_frame(
                     frame_id=frame_id,
                     timestamp=timedelta(seconds=frame_id / frame_rate)
                     - period.start_timestamp,

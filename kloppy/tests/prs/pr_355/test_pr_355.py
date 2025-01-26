@@ -9,6 +9,7 @@ class TestPR355:
             ma1_data=base_dir / "prs/pr_355/statsperform_tracking_ma1.json",
             ma25_data=base_dir / "files/statsperform_tracking_ma25.txt",
             tracking_system="sportvu",
+            coordinates="sportvu",
         )
 
         assert tracking_dataset.metadata.periods[-1].end_timestamp == datetime(

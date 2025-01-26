@@ -15,8 +15,8 @@ from kloppy.domain import (
     SportVUCoordinateSystem,
     TrackingDataset,
     Time,
+    PositionType,
 )
-from kloppy.exceptions import KloppyError
 
 
 @pytest.fixture(scope="module")
@@ -102,7 +102,7 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             home_player
         ] == Point(x=68.689, y=39.75)
-        assert home_player.starting_position == "Defender"
+        assert home_player.starting_position == PositionType.LeftCenterBack
         assert home_player.jersey_no == 32
         assert home_player.starting
         assert home_player.team == home_team
@@ -113,16 +113,20 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             away_player
         ] == Point(x=30.595, y=44.022)
-        assert away_player.starting_position == "Defender"
+        assert away_player.starting_position == PositionType.RightCenterBack
         assert away_player.jersey_no == 2
         assert away_player.starting
         assert away_player.team == away_team
 
         away_substitute = away_team.players[15]
         assert away_substitute.jersey_no == 18
-        assert away_substitute.starting_position == "Substitute"
+        assert away_substitute.starting_position is None
         assert not away_substitute.starting
         assert away_substitute.team == away_team
+
+        home_gk = home_team.get_player_by_id("6wfwy94p5bm0zv3aku0urfq39")
+        assert home_gk.first_name == "Benjamin Pascal"
+        assert home_gk.last_name == "Lecomte"
 
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
@@ -177,7 +181,7 @@ class TestStatsPerformEvent:
             pitch_length=None,
             pitch_width=None,
         )
-        assert len(event_dataset.records) == 1652
+        assert len(event_dataset.records) == 1643
 
         substitution_events = event_dataset.find_all("substitution")
         assert len(substitution_events) == 9
@@ -228,9 +232,9 @@ class TestStatsPerformTracking:
             pitch_width=None,
         )
         assert pitch_dimensions.x_dim.min == 0
-        assert pitch_dimensions.x_dim.max == None
+        assert pitch_dimensions.x_dim.max is None
         assert pitch_dimensions.y_dim.min == 0
-        assert pitch_dimensions.y_dim.max == None
+        assert pitch_dimensions.y_dim.max is None
 
     def test_coordinate_system_with_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path

@@ -2,8 +2,7 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import NamedTuple, Optional, Union, IO
-from datetime import timedelta, timezone
-from dateutil.parser import parse
+from datetime import datetime, timedelta
 
 from lxml import objectify
 
@@ -11,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     BallState,
@@ -22,6 +20,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
 )
+from kloppy.domain.services.frame_factory import create_frame
 
 from kloppy.utils import performance_logging
 
@@ -122,6 +121,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         with performance_logging("parse metadata", logger=logger):
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
             teams = home_team, away_team = sportec_metadata.teams
+
             periods = sportec_metadata.periods
             transformer = self.get_transformer(
                 pitch_length=sportec_metadata.x_max,
@@ -130,10 +130,16 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             home_coach = sportec_metadata.home_coach
             away_coach = sportec_metadata.away_coach
 
+            official_ids = []
+            if sportec_metadata.officials:
+                official_ids = [
+                    x.official_id for x in sportec_metadata.officials
+                ]
+
         with performance_logging("parse raw data", logger=logger):
-            date = parse(
+            date = datetime.fromisoformat(
                 match_root.MatchInformation.General.attrib["KickoffTime"]
-            ).astimezone(timezone.utc)
+            )
             game_week = match_root.MatchInformation.General.attrib["MatchDay"]
             game_id = match_root.MatchInformation.General.attrib["MatchId"]
 
@@ -165,7 +171,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                             continue
 
                         if i % sample == 0:
-                            yield Frame(
+                            yield create_frame(
                                 frame_id=frame_id,
                                 timestamp=timedelta(
                                     seconds=(
@@ -193,6 +199,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     )
                                     for player_id, raw_player_data in frame_data.items()
                                     if player_id != "ball"
+                                    and player_id not in official_ids
                                 },
                                 other_data={},
                                 ball_coordinates=Point3D(
@@ -242,6 +249,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             game_id=game_id,
             home_coach=home_coach,
             away_coach=away_coach,
+            officials=sportec_metadata.officials,
         )
 
         return TrackingDataset(

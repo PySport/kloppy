@@ -1,11 +1,16 @@
 """JSON parser for Stats Perform MA1 feeds."""
-import pytz
-from datetime import datetime, timezone
-from typing import Any, Optional, List, Tuple, Dict
 
-from kloppy.domain import Period, Score, Team, Ground, Player
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from kloppy.domain import Ground, Period, Player, Score, Team
 from kloppy.exceptions import DeserializationError
+
 from .base import OptaJSONParser
+from ..formation_mapping import (
+    formation_name_mapping,
+    formation_position_mapping,
+)
 
 
 class MA1JSONParser(OptaJSONParser):
@@ -30,12 +35,12 @@ class MA1JSONParser(OptaJSONParser):
                     id=period["id"],
                     start_timestamp=datetime.strptime(
                         period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc)
+                    ).replace(tzinfo=timezone.utc)
                     if period_start_raw
                     else None,
                     end_timestamp=datetime.strptime(
                         period_end_raw, "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=pytz.utc)
+                    ).replace(tzinfo=timezone.utc)
                     if period_end_raw
                     else None,
                 )
@@ -95,12 +100,12 @@ class MA1JSONParser(OptaJSONParser):
             raise DeserializationError("Lineup incomplete")
         return home_team, away_team
 
-    def extract_date(self) -> Optional[str]:
+    def extract_date(self) -> Optional[datetime]:
         """Return the date of the game."""
         if "matchInfo" in self.root and "date" in self.root["matchInfo"]:
             return datetime.strptime(
                 self.root["matchInfo"]["date"], "%Y-%m-%dZ"
-            ).astimezone(timezone.utc)
+            ).replace(tzinfo=timezone.utc)
         else:
             return None
 
@@ -122,6 +127,16 @@ class MA1JSONParser(OptaJSONParser):
         parsed_teams = []
         match_info = self.root["matchInfo"]
         teams = match_info["contestant"]
+
+        team_formations = {}
+        live_data = self.root["liveData"]
+        line_ups = live_data["lineUp"]
+        for line_up in line_ups:
+            team_id = line_up["contestantId"]
+            raw_formation = line_up["formationUsed"]
+            formation = formation_name_mapping[raw_formation]
+            team_formations[team_id] = formation
+
         for team in teams:
             team_id = team["id"]
             parsed_teams.append(
@@ -129,6 +144,7 @@ class MA1JSONParser(OptaJSONParser):
                     "team_id": team_id,
                     "name": team["name"],
                     "ground": team["position"],
+                    "starting_formation": team_formations[team_id],
                 }
             )
         return parsed_teams
@@ -139,19 +155,34 @@ class MA1JSONParser(OptaJSONParser):
         line_ups = live_data["lineUp"]
         for line_up in line_ups:
             team_id = line_up["contestantId"]
+            raw_formation = line_up["formationUsed"]
+            formation = formation_name_mapping[raw_formation]
+
             players = line_up["player"]
             for player in players:
                 player_id = player["playerId"]
+                if "formationPlace" in player:
+                    player_position = formation_position_mapping[formation][
+                        int(player["formationPlace"])
+                    ]
+                    starting = True
+                else:
+                    player_position = None
+                    starting = False
                 parsed_players.append(
                     {
                         "player_id": player_id,
                         "team_id": team_id,
                         "jersey_no": player["shirtNumber"],
                         "name": player["matchName"],
-                        "first_name": player["shortFirstName"],
-                        "last_name": player["shortLastName"],
-                        "starting": player["position"] != "Substitute",
-                        "position": player["position"],
+                        "first_name": player["shortFirstName"]
+                        if "shortFirstName" in player
+                        else player["firstName"],
+                        "last_name": player["shortLastName"]
+                        if "shortLastName" in player
+                        else player["lastName"],
+                        "starting": starting,
+                        "position": player_position,
                     }
                 )
         return parsed_players

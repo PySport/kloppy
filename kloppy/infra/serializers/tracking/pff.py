@@ -218,18 +218,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         return periods
 
-    def __read_csv(self, file):
+    def __read_csv(self, binary_stream: IO[bytes]):
         """Load CSV file"""
-        # Read the content of the BufferedReader
-        file_bytes = file.read()
-
-        # Decode bytes to a string
-        file_str = file_bytes.decode("utf-8")
-
-        # Use StringIO to turn the string into a file-like object
-        file_like = io.StringIO(file_str)
-
-        return list(csv.DictReader(file_like))
+        # Read the binary stream and decode it to a string
+        decoded_stream = io.TextIOWrapper(binary_stream, encoding="utf-8")
+        # Use csv.DictReader to parse the CSV
+        return list(csv.DictReader(decoded_stream))
 
     def __check_att_direction(self, et_frames, n_samples: int = 25):
         """Check attacking team direction"""

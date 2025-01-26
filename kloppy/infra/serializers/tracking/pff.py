@@ -261,7 +261,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         metadata = [row for row in metadata if int(row["id"]) == game_id][0]
 
         if not metadata:
-            raise ValueError(
+            raise DeserializationError(
                 "The game_id of this game is not contained within the provided meta data file"
             )
 

@@ -1119,6 +1119,110 @@ class EventDataset(Dataset[Event]):
                 else:
                     event.team.formations.set(event.time, event.formation_type)
 
+    def insert(
+        self,
+        event: Event,
+        position: Optional[int] = None,
+        before_event_id: Optional[str] = None,
+        after_event_id: Optional[str] = None,
+        timestamp: Optional[timedelta] = None,
+        constraints: Optional[Callable[[Event, "EventDataset"], bool]] = None,
+    ):
+        """
+        Inserts an event into the dataset at the appropriate position.
+
+        Parameters:
+        ----------
+        event : Event
+            The event to be inserted into the dataset.
+
+        position : Optional[int], default=None
+            The exact index where the event should be inserted. If provided,
+            overrides all other positioning parameters.
+
+        before_event_id : Optional[str], default=None
+            The ID of the event before which the new event should be inserted.
+            Ignored if `position` is provided.
+
+        after_event_id : Optional[str], default=None
+            The ID of the event after which the new event should be inserted.
+            Ignored if `position` or `before_event_id` is provided.
+
+        timestamp : Optional[datetime], default=None
+            The timestamp of the event, used to determine its position based
+            on chronological order if no other positional parameters are specified.
+
+        constraints : Optional[Callable[[Event, EventDataset], bool]], default=None
+            A custom function that takes the event and dataset as arguments and
+            evaluates whether the event satisfies specific conditions to determine
+            its position. Useful for more complex insertion logic, such as inserting
+            into a valid contextual window (e.g., dead ball states or possession sequences).
+
+        Returns:
+        -------
+        void
+            The method modifies the dataset in place.
+
+        Raises:
+        ------
+        ValueError
+            If the insertion position cannot be determined or is invalid.
+
+        Notes:
+        ------
+        - If multiple parameters are provided to specify the position, the precedence is:
+          1. `position`
+          2. `before_event_id`
+          3. `after_event_id`
+          4. `timestamp`
+        - If none of the above parameters are specified, the method raises a `ValueError`.
+        """
+        # Determine the insert position based on precedence
+        if position is not None:
+            # If position is provided, use it directly
+            insert_position = position
+        elif before_event_id is not None:
+            # Find the event with the matching `before_event_id` and insert before it
+            insert_position = next(
+                (
+                    i
+                    for i, e in enumerate(self.events)
+                    if e.event_id == before_event_id
+                ),
+                None,
+            )
+            if insert_position is None:
+                raise ValueError(f"No event found with ID {before_event_id}.")
+        elif after_event_id is not None:
+            # Find the event with the matching `after_event_id` and insert after it
+            insert_position = next(
+                (
+                    i + 1
+                    for i, e in enumerate(self.events)
+                    if e.event_id == after_event_id
+                ),
+                None,
+            )
+            if insert_position is None:
+                raise ValueError(f"No event found with ID {after_event_id}.")
+        elif timestamp is not None:
+            # If no position or event IDs are specified, insert based on timestamp
+            insert_position = next(
+                (
+                    i
+                    for i, e in enumerate(self.events)
+                    if e.timestamp > timestamp
+                ),
+                len(self.events),
+            )
+        else:
+            # If no valid positioning logic is provided, raise an error
+            raise ValueError(
+                "Unable to determine insertion position for the event."
+            )
+
+        self.events.insert(insert_position, event)
+
     @property
     def events(self):
         return self.records

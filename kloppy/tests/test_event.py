@@ -1,7 +1,9 @@
+from datetime import timedelta
+
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import EventDataset
+from kloppy.domain import EventDataset, Event, EventFactory, CarryResult
 
 
 class TestEvent:
@@ -87,3 +89,40 @@ class TestEvent:
         assert goals[0].next("shot.goal") == goals[1]
         assert goals[0].next("shot.goal") == goals[2].prev("shot.goal")
         assert goals[2].next("shot.goal") is None
+
+    def test_insert(self, dataset: EventDataset):
+        new_event = EventFactory().build_carry(
+            qualifiers=None,
+            timestamp=timedelta(seconds=700),
+            end_timestamp=timedelta(seconds=701),
+            result=CarryResult.COMPLETE,
+            period=dataset.metadata.periods[0],
+            ball_owning_team=dataset.metadata.teams[0],
+            ball_state="alive",
+            event_id="test-insert-1234",
+            team=dataset.metadata.teams[0],
+            player=dataset.metadata.teams[0].players[0],
+            coordinates=(0.2, 0.3),
+            end_coordinates=(0.22, 0.33),
+            raw_event=None,
+        )
+
+        # insert by position
+        dataset.insert(new_event, position=3)
+        assert dataset.events[3].event_id == "test-insert-1234"
+        del dataset.events[3]  # Remove by index to restore the dataset
+
+        # insert by before_event_id
+        dataset.insert(new_event, before_event_id=dataset.events[100].event_id)
+        assert dataset.events[100].event_id == "test-insert-1234"
+        del dataset.events[100]  # Remove by index to restore the dataset
+
+        # insert by after_event_id
+        dataset.insert(new_event, after_event_id=dataset.events[305].event_id)
+        assert dataset.events[306].event_id == "test-insert-1234"
+        del dataset.events[306]  # Remove by index to restore the dataset
+
+        # insert by timestamp
+        dataset.insert(new_event, timestamp=new_event.timestamp)
+        assert dataset.events[609].event_id == "test-insert-1234"
+        del dataset.events[609]  # Remove by index to restore the dataset

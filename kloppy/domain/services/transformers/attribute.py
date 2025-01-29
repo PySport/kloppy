@@ -8,6 +8,7 @@ from kloppy.domain import (
     Orientation,
     Frame,
     Code,
+    Point,
 )
 from kloppy.domain.models.event import (
     EnumQualifier,
@@ -56,31 +57,23 @@ class AngleToGoalTransformer(EventAttributeTransformer):
 
         if not event.coordinates:
             return {"angle_to_goal": None}
+        delta_x = metadata.pitch_dimensions.distance_between(
+            Point(event.coordinates.x, 0),
+            Point(metadata.pitch_dimensions.x_dim.max, 0),
+        )
+        delta_y = metadata.pitch_dimensions.distance_between(
+            Point(0, event.coordinates.y),
+            Point(
+                0,
+                (
+                    metadata.pitch_dimensions.y_dim.max
+                    + metadata.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            ),
+        )
 
-        if metadata.pitch_dimensions.pitch_width:
-            # Calculate in metric system
-            event_x = (
-                event.coordinates.x * metadata.pitch_dimensions.pitch_length
-            )
-            event_y = (
-                event.coordinates.y * metadata.pitch_dimensions.pitch_width
-            )
-            goal_x = metadata.pitch_dimensions.pitch_length
-            goal_y = metadata.pitch_dimensions.pitch_width / 2
-        else:
-            event_x = event.coordinates.x
-            event_y = event.coordinates.y
-            goal_x = metadata.pitch_dimensions.x_dim.max
-            goal_y = (
-                metadata.pitch_dimensions.y_dim.max
-                + metadata.pitch_dimensions.y_dim.min
-            ) / 2
-
-        return {
-            "angle_to_goal": math.atan2(goal_x - event_x, goal_y - event_y)
-            / math.pi
-            * 180
-        }
+        return {"angle_to_goal": math.atan2(delta_x, delta_y) / math.pi * 180}
 
 
 class DistanceToGoalTransformer(EventAttributeTransformer):

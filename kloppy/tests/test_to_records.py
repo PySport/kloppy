@@ -84,5 +84,28 @@ class TestToRecords:
             "coordinates_y": 40.5,
             "distance_to_goal": 59.50210080324896,
             "distance_to_own_goal": 60.502066080424065,
-            "angle_to_goal": 90.48146580583835,
+            "angle_to_goal": 89.49633196102769,
+        }
+
+    @pytest.mark.parametrize(
+        "coordinate_system", ["statsbomb", "tracab", "opta"]
+    )
+    def test_angle_to_goal_transformer(
+        self, event_data: Path, lineup_data: Path, coordinate_system
+    ):
+        """
+        Make sure calculation of the angle is consistent in different coordinate systems.
+        """
+        dataset = statsbomb.load(
+            lineup_data=lineup_data,
+            event_data=event_data,
+            coordinates=coordinate_system,
+        )
+        records = dataset.filter("pass").to_records(
+            "timestamp",
+            AngleToGoalTransformer(),
+        )
+        assert records[0] == {
+            "timestamp": timedelta(seconds=0.098),
+            "angle_to_goal": 89.49633196102769,
         }

@@ -3,7 +3,13 @@ from datetime import timedelta
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import EventDataset, Event, EventFactory, CarryResult
+from kloppy.domain import (
+    EventDataset,
+    Event,
+    EventFactory,
+    CarryResult,
+    BallState,
+)
 
 
 class TestEvent:
@@ -126,3 +132,18 @@ class TestEvent:
         dataset.insert(new_event, timestamp=new_event.timestamp)
         assert dataset.events[609].event_id == "test-insert-1234"
         del dataset.events[609]  # Remove by index to restore the dataset
+
+        # insert using scoring function
+        def scoring_function(event: Event, dataset: EventDataset):
+            if event.ball_owning_team != dataset.metadata.teams[0]:
+                return 0
+            if event.period != new_event.period:
+                return 0
+            return 1 / abs(
+                event.timestamp.total_seconds()
+                - new_event.timestamp.total_seconds()
+            )
+
+        dataset.insert(new_event, scoring_function=scoring_function)
+        assert dataset.events[607].event_id == "test-insert-1234"
+        del dataset.events[607]  # Remove by index to restore the dataset

@@ -1126,56 +1126,65 @@ class EventDataset(Dataset[Event]):
         before_event_id: Optional[str] = None,
         after_event_id: Optional[str] = None,
         timestamp: Optional[timedelta] = None,
-        constraints: Optional[Callable[[Event, "EventDataset"], bool]] = None,
+        scoring_function: Optional[
+            Callable[[Event, "EventDataset"], float]
+        ] = None,
     ):
         """
-        Inserts an event into the dataset at the appropriate position.
+         Inserts an event into the dataset at the appropriate position.
 
-        Parameters:
-        ----------
-        event : Event
-            The event to be inserted into the dataset.
+         Parameters:
+         ----------
+         event : Event
+             The event to be inserted into the dataset.
 
-        position : Optional[int], default=None
-            The exact index where the event should be inserted. If provided,
-            overrides all other positioning parameters.
+         position : Optional[int], default=None
+             The exact index where the event should be inserted. If provided,
+             overrides all other positioning parameters.
 
-        before_event_id : Optional[str], default=None
-            The ID of the event before which the new event should be inserted.
-            Ignored if `position` is provided.
+         before_event_id : Optional[str], default=None
+             The ID of the event before which the new event should be inserted.
+             Ignored if `position` is provided.
 
-        after_event_id : Optional[str], default=None
-            The ID of the event after which the new event should be inserted.
-            Ignored if `position` or `before_event_id` is provided.
+         after_event_id : Optional[str], default=None
+             The ID of the event after which the new event should be inserted.
+             Ignored if `position` or `before_event_id` is provided.
 
-        timestamp : Optional[datetime], default=None
-            The timestamp of the event, used to determine its position based
-            on chronological order if no other positional parameters are specified.
+         timestamp : Optional[datetime], default=None
+             The timestamp of the event, used to determine its position based
+             on chronological order if no other positional parameters are specified.
 
-        constraints : Optional[Callable[[Event, EventDataset], bool]], default=None
-            A custom function that takes the event and dataset as arguments and
-            evaluates whether the event satisfies specific conditions to determine
-            its position. Useful for more complex insertion logic, such as inserting
-            into a valid contextual window (e.g., dead ball states or possession sequences).
+        scoring_function : Optional[Callable[[Event, EventDataset, int], int]], default=None
+             A custom function that takes the event, dataset, and candidate position as arguments
+             and returns a score indicating how suitable the position is for insertion.
+             Higher scores indicate better placement.
 
-        Returns:
-        -------
-        void
-            The method modifies the dataset in place.
+             This is useful for determining the optimal insertion position when an exact
+             index is not provided. For example, events can be inserted into a valid
+             contextual window based on conditions such as dead ball states, possession sequences,
+             or temporal proximity to similar events.
 
-        Raises:
-        ------
-        ValueError
-            If the insertion position cannot be determined or is invalid.
+             If no valid position is found (i.e., all scores are zero), the
+             insertion will fail with a ValueError.
 
-        Notes:
-        ------
-        - If multiple parameters are provided to specify the position, the precedence is:
-          1. `position`
-          2. `before_event_id`
-          3. `after_event_id`
-          4. `timestamp`
-        - If none of the above parameters are specified, the method raises a `ValueError`.
+         Returns:
+         -------
+         void
+             The method modifies the dataset in place.
+
+         Raises:
+         ------
+         ValueError
+             If the insertion position cannot be determined or is invalid.
+
+         Notes:
+         ------
+         - If multiple parameters are provided to specify the position, the precedence is:
+           1. `position`
+           2. `before_event_id`
+           3. `after_event_id`
+           4. `timestamp`
+         - If none of the above parameters are specified, the method raises a `ValueError`.
         """
         # Determine the insert position based on precedence
         if position is not None:
@@ -1215,8 +1224,21 @@ class EventDataset(Dataset[Event]):
                 ),
                 len(self.events),
             )
+        elif scoring_function is not None:
+            # Evaluate all possible positions using the constraint function
+            scores = [
+                (i, scoring_function(event, self))
+                for i, event in enumerate(self.events)
+            ]
+            # Select the best position with the highest score
+            insert_position, best_score = max(
+                scores, key=lambda x: x[1], default=(None, -1)
+            )
+            if best_score == 0:
+                raise ValueError(
+                    "No valid insertion position found based on the provided scoring function."
+                )
         else:
-            # If no valid positioning logic is provided, raise an error
             raise ValueError(
                 "Unable to determine insertion position for the event."
             )

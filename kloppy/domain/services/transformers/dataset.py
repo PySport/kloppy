@@ -1,30 +1,31 @@
 import warnings
 from dataclasses import fields, replace
-
-from kloppy.domain.models.tracking import PlayerData
-from typing import Union, Optional
+from typing import Optional, Union
 
 from kloppy.domain import (
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
     AttackingDirection,
+    CoordinateSystem,
+    CustomCoordinateSystem,
     Dataset,
     DatasetFlag,
+    DatasetType,
     EventDataset,
     Frame,
     Orientation,
-    PitchDimensions,
     Period,
+    PitchDimensions,
     Point,
     Point3D,
+    Provider,
+    ProviderCoordinateSystem,
     Team,
     TrackingDataset,
-    CoordinateSystem,
-    Provider,
     build_coordinate_system,
-    DatasetType,
-    DEFAULT_PITCH_LENGTH,
-    DEFAULT_PITCH_WIDTH,
 )
 from kloppy.domain.models.event import Event
+from kloppy.domain.models.tracking import PlayerData
 from kloppy.exceptions import KloppyError
 
 
@@ -144,8 +145,8 @@ class DatasetTransformer:
 
     def __needs_flip(
         self,
-        ball_owning_team: Team,
         period: Period,
+        ball_owning_team: Optional[Team] = None,
         action_executing_team: Optional[Team] = None,
     ) -> bool:
         if (
@@ -188,8 +189,8 @@ class DatasetTransformer:
         # Flip frame based on orientation
         if self._needs_orientation_change:
             if self.__needs_flip(
-                ball_owning_team=frame.ball_owning_team,
                 period=frame.period,
+                ball_owning_team=frame.ball_owning_team,
             ):
                 frame = self.__flip_frame(frame)
 
@@ -320,8 +321,8 @@ class DatasetTransformer:
         # Flip event based on orientation
         if self._needs_orientation_change:
             if self.__needs_flip(
-                ball_owning_team=event.ball_owning_team,
                 period=event.period,
+                ball_owning_team=event.ball_owning_team,
                 action_executing_team=event.team,
             ):
                 event = self.__flip_event(event)
@@ -394,17 +395,35 @@ class DatasetTransformer:
 
         if to_pitch_dimensions is not None:
             # Transform the pitch dimensions and optionally the orientation
-            transformer = cls(
-                from_pitch_dimensions=dataset.metadata.pitch_dimensions,
-                from_orientation=dataset.metadata.orientation,
-                to_pitch_dimensions=to_pitch_dimensions,
-                to_orientation=to_orientation,
-            )
-            metadata = replace(
-                dataset.metadata,
-                pitch_dimensions=to_pitch_dimensions,
-                orientation=to_orientation,
-            )
+            if dataset.metadata.coordinate_system is None:
+                transformer = cls(
+                    from_pitch_dimensions=dataset.metadata.pitch_dimensions,
+                    from_orientation=dataset.metadata.orientation,
+                    to_pitch_dimensions=to_pitch_dimensions,
+                    to_orientation=to_orientation,
+                )
+                metadata = replace(
+                    dataset.metadata,
+                    pitch_dimensions=to_pitch_dimensions,
+                    orientation=to_orientation,
+                )
+            else:
+                to_coordinate_system = CustomCoordinateSystem(
+                    origin=dataset.metadata.coordinate_system.origin,
+                    pitch_dimensions=to_pitch_dimensions,
+                    vertical_orientation=dataset.metadata.coordinate_system.vertical_orientation,
+                )
+                transformer = cls(
+                    from_coordinate_system=dataset.metadata.coordinate_system,
+                    from_orientation=dataset.metadata.orientation,
+                    to_coordinate_system=to_coordinate_system,
+                    to_orientation=to_orientation,
+                )
+                metadata = replace(
+                    dataset.metadata,
+                    coordinate_system=to_coordinate_system,
+                    orientation=to_orientation,
+                )
 
         elif to_coordinate_system is not None:
             # Transform the coordinate system and optionally the orientation
@@ -417,7 +436,6 @@ class DatasetTransformer:
             metadata = replace(
                 dataset.metadata,
                 coordinate_system=to_coordinate_system,
-                pitch_dimensions=to_coordinate_system.pitch_dimensions,
                 orientation=to_orientation,
             )
 
@@ -532,9 +550,19 @@ class DatasetTransformerBuilder:
             and not_standardized
             and missing_dimensions
         ):
+            from_coordinate_system_name = (
+                from_coordinate_system.provider
+                if isinstance(from_coordinate_system, ProviderCoordinateSystem)
+                else "custom"
+            )
+            to_coordinate_system_name = (
+                to_coordinate_system.provider
+                if isinstance(to_coordinate_system, ProviderCoordinateSystem)
+                else "custom"
+            )
             warnings.warn(
                 "The pitch dimensions are required to transform coordinates "
-                f"from {from_coordinate_system.provider} to {to_coordinate_system.provider}. "
+                f"from {from_coordinate_system_name} to {to_coordinate_system_name}. "
                 f"Using default pitch dimensions ({DEFAULT_PITCH_LENGTH} x {DEFAULT_PITCH_WIDTH}). "
                 "This might result in inaccurate coordinates."
             )

@@ -293,6 +293,54 @@ class TestHelpers:
             == transformerd_coordinate_system.pitch_dimensions
         )
 
+    def test_transform_to_pitch_dimensions_with_coordinate_system(
+        self, base_dir
+    ):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
+        )
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
+
+        transformed_dataset = dataset.transform(
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            ),
+        )
+        assert transformed_dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.5039705882352942)
+
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
+        )
+        assert (
+            transformed_dataset.metadata.coordinate_system.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
+        )
+
     def test_transform_event_data(self, base_dir):
         """Make sure event data that's in ACTION_EXECUTING orientation is
         transformed correctly"""

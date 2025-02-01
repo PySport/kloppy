@@ -4,11 +4,11 @@ import pytest
 
 from kloppy import statsbomb
 from kloppy.domain import (
-    EventDataset,
-    Event,
-    EventFactory,
-    CarryResult,
     BallState,
+    CarryResult,
+    Event,
+    EventDataset,
+    EventFactory,
 )
 
 
@@ -147,3 +147,35 @@ class TestEvent:
         dataset.insert(new_event, scoring_function=scoring_function)
         assert dataset.events[607].event_id == "test-insert-1234"
         del dataset.events[607]  # Remove by index to restore the dataset
+
+        # update references
+        dataset.insert(new_event, position=1)
+        assert dataset.events[0].next_record.event_id == "test-insert-1234"
+        assert (
+            dataset.events[1].prev_record.event_id
+            == dataset.events[0].event_id
+        )
+        assert dataset.events[1].event_id == "test-insert-1234"
+        assert (
+            dataset.events[1].next_record.event_id
+            == dataset.events[2].event_id
+        )
+        assert dataset.events[2].prev_record.event_id == "test-insert-1234"
+
+        dataset.insert(new_event, position=0)
+        assert dataset.events[0].prev_record is None
+        assert dataset.events[0].event_id == "test-insert-1234"
+        assert (
+            dataset.events[0].next_record.event_id
+            == dataset.events[1].event_id
+        )
+        assert dataset.events[1].prev_record.event_id == "test-insert-1234"
+
+        dataset.insert(new_event, position=len(dataset))
+        assert dataset.events[-2].next_record.event_id == "test-insert-1234"
+        assert (
+            dataset.events[-1].prev_record.event_id
+            == dataset.events[-2].event_id
+        )
+        assert dataset.events[-1].event_id == "test-insert-1234"
+        assert dataset.events[-1].next_record is None

@@ -1,7 +1,6 @@
 import json
 import logging
 import warnings
-from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import IO, Dict, NamedTuple, Optional, Union
@@ -22,7 +21,7 @@ from kloppy.domain import (
     Score,
     Team,
     TrackingDataset,
-    attacking_direction_from_frame,
+    attacking_directions_from_multi_frames,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -201,34 +200,6 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             )
         else:
             raise ValueError("Invalid timestring format")
-
-    @classmethod
-    def _get_skillcorner_attacking_directions(cls, frames, periods):
-        """
-        with only partial tracking data we cannot rely on a single frame to
-        infer the attacking directions as a simple average of only some players
-        x-coords might not reflect the attacking direction.
-        """
-        attacking_directions = {}
-
-        # Group attacking directions by period ID
-        period_direction_map = defaultdict(list)
-        for frame in frames:
-            if len(frame.players_data) > 0:
-                direction = attacking_direction_from_frame(frame)
-            else:
-                direction = AttackingDirection.NOT_SET
-            period_direction_map[frame.period.id].append(direction)
-
-        # Determine the most common attacking direction for each period
-        for period_id in periods.keys():
-            if period_id in period_direction_map:
-                count = Counter(period_direction_map[period_id])
-                attacking_directions[period_id] = count.most_common(1)[0][0]
-            else:
-                attacking_directions[period_id] = AttackingDirection.NOT_SET
-
-        return attacking_directions
 
     @staticmethod
     def __replace_timestamp(obj):
@@ -464,8 +435,8 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 if self.limit and n_frames >= self.limit:
                     break
 
-        attacking_directions = self._get_skillcorner_attacking_directions(
-            frames, periods
+        attacking_directions = attacking_directions_from_multi_frames(
+            frames, list(periods.values())
         )
         if attacking_directions[1] == AttackingDirection.LTR:
             orientation = Orientation.HOME_AWAY

@@ -192,6 +192,8 @@ plugins:
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
+            extensions:
+              - griffe_generics
   - exclude:
       glob:
         - presentations/*

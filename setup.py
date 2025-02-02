@@ -43,6 +43,7 @@ def setup_package():
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",
+            "fsspec>=2024.12.0",
         ],
         extras_require={
             "test": [

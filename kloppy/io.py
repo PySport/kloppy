@@ -6,21 +6,25 @@ import gzip
 import logging
 import lzma
 import os
-import urllib.parse
+import re
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
     IO,
+    Any,
     BinaryIO,
+    Callable,
     ContextManager,
     Generator,
+    Iterable,
+    Iterator,
+    List,
     Optional,
     Tuple,
     Union,
 )
 
-from kloppy.config import get_config
-from kloppy.exceptions import InputNotFoundError
+from kloppy.exceptions import AdapterError, InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
 
 logger = logging.getLogger(__name__)
@@ -47,12 +51,12 @@ class Source:
         >>> open_as_file(Source.create("example.csv", optional=True))
     """
 
-    data: FileOrPath
+    data: Optional[FileOrPath]
     optional: bool = False
     skip_if_missing: bool = False
 
     @classmethod
-    def create(cls, input_: "FileLike", **kwargs):
+    def create(cls, input_: Optional[FileOrPath], **kwargs):
         if isinstance(input_, Source):
             return replace(input_, **kwargs)
         return Source(data=input_, **kwargs)
@@ -92,8 +96,7 @@ def _file_or_path_to_binary_stream(
         return file_or_path, False  # type: ignore
 
     raise TypeError(
-        f"Unsupported type for {file_or_path}, "
-        f"{file_or_path.__class__.__name__}."
+        f"Unsupported type for {file_or_path}, {file_or_path.__class__.__name__}."
     )
 
 
@@ -176,30 +179,30 @@ def _open(
     format: Optional[str] = None,
 ) -> BinaryIO:
     """
-    A replacement for the "open" function that can also read and write
-    compressed files transparently. The supported compression formats are gzip,
-    bzip2 and xz. Filename can be a string, a Path or a file object.
+        A replacement for the "open" function that can also read and write
+        compressed files transparently. The supported compression formats are gzip,
+        bzip2 and xz. Filename can be a string, a Path or a file object.
 
-    When writing, the file format is chosen based on the file name extension:
-    - .gz uses gzip compression
-    - .bz2 uses bzip2 compression
+        When writing, the file format is chosen based on the file name extension:
+        - .gz uses gzip compression
+        - .bz2 uses bzip2 compression
     - .xz uses xz/lzma compression
-    - otherwise, no compression is used
+        - otherwise, no compression is used
 
-    When reading, if a file name extension is available, the format is detected
-    using it, but if not, the format is detected from the contents.
+        When reading, if a file name extension is available, the format is detected
+        using it, but if not, the format is detected from the contents.
 
-    mode can be: 'rb', 'ab', or 'wb'.
+        mode can be: 'rb', 'ab', or 'wb'.
 
-    compresslevel is the compression level for writing to gzip, and xz.
-    This parameter is ignored for the other compression formats.
-    If set to None, a default depending on the format is used:
-    gzip: 6, xz: 6.
+        compresslevel is the compression level for writing to gzip, and xz.
+        This parameter is ignored for the other compression formats.
+        If set to None, a default depending on the format is used:
+        gzip: 6, xz: 6.
 
-    format overrides the autodetection of input and output formats. This can be
-    useful when compressed output needs to be written to a file without an
-    extension. Possible values are "gz", "xz", "bz2" and "raw". In case of
-    "raw", no compression is used.
+        format overrides the autodetection of input and output formats. This can be
+        useful when compressed output needs to be written to a file without an
+        extension. Possible values are "gz", "xz", "bz2" and "raw". In case of
+        "raw", no compression is used.
     """
     if mode not in ("rb", "wb", "ab"):
         raise ValueError(f"Mode '{mode}' not supported")
@@ -311,55 +314,6 @@ def get_file_extension(file_or_path: FileLike) -> str:
     )
 
 
-def get_local_cache_stream(
-    url: str, cache_dir: str, mode: str = "rb", format: Optional[str] = None
-) -> Tuple[BinaryIO, Union[bool, str]]:
-    """Get a stream to the local cache file for the given URL.
-
-    Compressed files are read transparently. The supported compression formats
-    are gzip, bzip2 and xz.
-
-    Args:
-        url (str): The URL to cache.
-        cache_dir (str): The directory where the cache file will be stored.
-        mode (str): The mode in which to open the cache file. Must be one of
-            'rb', 'wb', or 'ab'. Defaults to 'ab'.
-        format (str): Overrides the autodetection of input and output formats.
-            Possible values are "gz", "xz", "bz2" and "raw". In case of "raw",
-            no compression is used..
-
-    Returns:
-        Tuple[BinaryIO, bool | str]: A tuple containing a binary stream to the
-        local cache file and the path to the cache file if it already
-        exists and is non-empty, otherwise False.
-
-    Note:
-        - If the specified cache directory does not exist, it will be created.
-        - If the cache file  does not exist, it will be created and will be
-          named after the URL.
-
-    Example:
-        >>> stream, exists = get_local_cache_stream("https://example.com/data", "./cache")
-    """
-    assert mode in ("rb", "wb", "ab")
-
-    # Ensure the cache directory exists
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-
-    # Generate the local filename based on the URL
-    filename = urllib.parse.quote_plus(url)
-    local_filename = f"{cache_dir}/{filename}"
-
-    # Ensure the file exists by opening it in append-binary mode, creating it if necessary
-    file_exists_and_non_empty = (
-        os.path.exists(local_filename) and os.path.getsize(local_filename) > 0
-    )
-    file = _open(local_filename, mode, format=format)
-
-    return file, file_exists_and_non_empty
-
-
 @contextlib.contextmanager
 def dummy_context_mgr() -> Generator[None, None, None]:
     yield
@@ -388,7 +342,8 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         BinaryIO: A binary stream to the input object.
 
     Raises:
-        InputNotFoundError: If the input file is not found.
+        ValueError: If the input is required but not provided.
+        InputNotFoundError: If the input file is not found and should not be skipped.
         TypeError: If the input type is not supported.
 
     Example:
@@ -406,14 +361,17 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         if input_.data is None and input_.optional:
             # This saves us some additional code in every vendor specific code
             return dummy_context_mgr()
-
-        try:
-            return open_as_file(input_.data)
-        except InputNotFoundError:
-            if input_.skip_if_missing:
-                logging.info(f"Input {input_.data} not found. Skipping")
-                return dummy_context_mgr()
-            raise
+        elif input_.data is None:
+            raise ValueError("Input required but not provided.")
+        else:
+            try:
+                return open_as_file(input_.data)
+            except InputNotFoundError as exc:
+                if input_.skip_if_missing:
+                    logging.info(f"Input {input_.data} not found. Skipping")
+                    return dummy_context_mgr()
+                else:
+                    raise exc
 
     if isinstance(input_, str) and ("{" in input_ or "<" in input_):
         # If input_ is a JSON or XML string, return it as a binary stream
@@ -429,33 +387,11 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
 
         adapter = get_adapter(uri)
         if adapter:
-            cache_dir = get_config("cache")
-            assert cache_dir is None or isinstance(cache_dir, str)
-            if cache_dir:
-                stream, local_cache_file = get_local_cache_stream(
-                    uri, cache_dir, "ab", format="raw"
-                )
-            else:
-                stream, local_cache_file = BytesIO(), None
-
-            if not local_cache_file:
-                logger.info(f"Retrieving {uri}")
-                adapter.read_to_stream(uri, stream)
-                logger.info("Retrieval complete")
-            else:
-                logger.info(f"Using local cached file {local_cache_file}")
-
-            if cache_dir:
-                stream.close()
-                stream, _ = get_local_cache_stream(uri, cache_dir, "rb")
-            else:
-                stream.seek(0)
-
+            stream = BytesIO()
+            adapter.read_to_stream(uri, stream)
+            stream.seek(0)
         else:
-            if not os.path.exists(uri):
-                raise InputNotFoundError(f"File {uri} does not exist")
-
-            stream = _open(uri, "rb")
+            raise AdapterError(f"No adapter found for {uri}")
         return stream
 
     if isinstance(input_, TextIOWrapper):
@@ -467,3 +403,110 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         return _open(input_)  # type: ignore
 
     raise TypeError(f"Unsupported input type: {type(input_)}")
+
+
+def _natural_sort_key(path: str) -> List[Union[int, str]]:
+    # Split string into list of chunks for natural sorting
+    return [
+        int(text) if text.isdigit() else text.lower()
+        for text in re.split(r"(\d+)", path)
+    ]
+
+
+def expand_inputs(
+    inputs: Union[FileLike, Iterable[FileLike]],
+    regex_filter: Optional[str] = None,
+    sort_key: Optional[Callable[[str], Any]] = None,
+) -> Iterator[FileLike]:
+    """
+    Process input data to a list of file-like objects.
+
+    This function resolves the input data to a list of file-like objects
+    that can be opened with [`open_as_file`][kloppy.io.open_as_file].
+    The input data can be any of the types supported by `open_as_file`,
+    including a list of these input types or a directory.
+
+    If the input is a directory, the directory is expanded to a list of files,
+    which are then filtered using a regex pattern and sorted using a custom key.
+
+    If the input is a list of file-like objects, these are assumed to be in the
+    correct order and are returned as is.
+
+    Args:
+        inputs: The input object, a list of input objects, or a directory with input objects to be opened.
+        regex_filter: A regex pattern to filter files (only applies to directories).
+        sort_key: A callable to define sorting logic for files (only applies to directories).
+          If not provided, files are sorted as ["file1.txt", "file2.txt", "file10.txt"].
+
+    Returns:
+        An iterator over the resolved file paths or stream content.
+    """
+
+    def is_file(uri):
+        adapter = get_adapter(uri)
+        if adapter:
+            return adapter.is_file(uri)
+        raise AdapterError(f"No adapter found for {uri}")
+
+    def is_directory(uri):
+        adapter = get_adapter(uri)
+        if adapter:
+            return adapter.is_directory(uri)
+        raise AdapterError(f"No adapter found for {uri}")
+
+    def process_expansion(files):
+        """
+        Process a list of files by filtering and sorting them.
+
+        Args:
+            files: List of file URIs to process.
+
+        Returns:
+            A sorted and filtered list of file URIs.
+        """
+        files = [f for f in files if not is_directory(f)]
+
+        if regex_filter:
+            pattern = re.compile(regex_filter)
+            files = [f for f in files if pattern.search(f)]
+
+        files.sort(key=sort_key or _natural_sort_key)
+        return files
+
+    if isinstance(inputs, (str, os.PathLike)):
+        uri = _filepath_from_path_or_filelike(inputs)
+
+        if is_directory(uri):
+            adapter = get_adapter(uri)
+            if adapter:
+                yield from process_expansion(
+                    adapter.list_directory(uri, recursive=True)
+                )
+            else:
+                raise AdapterError(f"No adapter found for {uri}")
+        elif is_file(uri):
+            yield uri
+        else:
+            raise InputNotFoundError(f"Invalid path or file: {inputs}")
+
+    elif isinstance(inputs, Iterable):
+        for item in inputs:
+            if isinstance(item, (str, os.PathLike)):
+                uri = _filepath_from_path_or_filelike(item)
+                if is_file(uri):
+                    yield uri
+                elif is_directory(uri):
+                    adapter = get_adapter(uri)
+                    if adapter:
+                        yield from process_expansion(
+                            adapter.list_directory(uri, recursive=True)
+                        )
+                    else:
+                        raise AdapterError(f"No adapter found for {uri}")
+                else:
+                    raise InputNotFoundError(f"Invalid path or file: {item}")
+            else:
+                yield item
+
+    else:
+        yield inputs

@@ -1,0 +1,15 @@
+<Match>
+    <id>288226</id>
+    <kickOffTime>
+        <dateTime>2024-01-01T10:08:38.979Z</dateTime>
+    </kickOffTime>
+    <matchday>
+        <name>MD1</name>
+    </matchday>
+    <stadium>
+        <pitch>
+            <length>106</length>
+            <width>69</width>
+        </pitch>
+    </stadium>
+</Match>

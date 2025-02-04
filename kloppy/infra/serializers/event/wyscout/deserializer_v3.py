@@ -314,6 +314,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         PassType.SMART_PASS: ["smart_pass"],
         PassType.SHOT_ASSIST: ["shot_assist"],
         PassType.ASSIST: ["assist"],
+        PassType.THROUGH_BALL: ["through_pass"],
     }
 
     for pass_type, secondary_event_types_values in qualifier_mapping.items():

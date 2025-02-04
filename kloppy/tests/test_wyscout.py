@@ -373,3 +373,10 @@ class TestWyscoutV3:
                 SetPieceQualifier
             )
         )
+
+    def test_through_ball_qualifier(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(1927028612)
+        assert pass_event.event_type == EventType.PASS
+        assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(
+            PassQualifier
+        )

@@ -1146,7 +1146,8 @@ class EventDataset(Dataset[Event]):
             scoring_function (Optional[Callable[[Event, EventDataset], float]]): A custom
                 function that takes the event and dataset as arguments and returns a score
                 indicating how suitable the position is for insertion. Higher scores indicate
-                better placement. If no valid position is found (i.e., all scores are zero),
+                better placement. The new event will be inserted before the event that gives
+                the maximum score. If no valid position is found (i.e., all scores are zero),
                 the insertion will fail with a ValueError. Defaults to None.
 
         Raises:

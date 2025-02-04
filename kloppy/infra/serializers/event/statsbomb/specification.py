@@ -296,6 +296,14 @@ class EVENT:
         for event in under_pressure_events:
             self._add_under_pressure_qualifier(event)
         events = under_pressure_events + ball_out_events
+        for event in events:
+            play_pattern_qualifiers = _get_play_pattern_qualifiers(
+                event.raw_event
+            )
+            if len(play_pattern_qualifiers) > 0:
+                event.qualifiers = (
+                    event.qualifiers or []
+                ) + play_pattern_qualifiers
 
         return events
 

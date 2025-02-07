@@ -274,38 +274,31 @@ class EVENT:
 
         Args:
             event_factory: The event factory to use to build the event.
-            periods: The periods in the match.
-            teams: The teams in the match.
-            events: All events in the match.
-            data_version: The x/y and shot fidelity versions of the data.
 
         Returns:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        aerial_won_events = self._create_aerial_won_event(
+
+        # create events
+        base_events = self._create_events(
             event_factory, **generic_event_kwargs
         )
-        base_events = self._create_events(
+        aerial_won_events = self._create_aerial_won_event(
             event_factory, **generic_event_kwargs
         )
         ball_out_events = self._create_ball_out_event(
             event_factory, **generic_event_kwargs
         )
-        under_pressure_events = aerial_won_events + base_events
-        for event in under_pressure_events:
-            self._add_under_pressure_qualifier(event)
-        events = under_pressure_events + ball_out_events
-        for event in events:
-            play_pattern_qualifiers = _get_play_pattern_qualifiers(
-                event.raw_event
-            )
-            if len(play_pattern_qualifiers) > 0:
-                event.qualifiers = (
-                    event.qualifiers or []
-                ) + play_pattern_qualifiers
 
-        return events
+        # add qualifiers
+        for event in aerial_won_events + base_events:
+            self._add_under_pressure_qualifier(event)
+        for event in aerial_won_events + base_events + ball_out_events:
+            self._add_play_pattern_qualifiers(event)
+
+        # return events (note: order is important)
+        return aerial_won_events + base_events + ball_out_events
 
     def _parse_generic_kwargs(self) -> Dict:
         game_state_value = parse_obv_values(self.raw_event)
@@ -370,14 +363,22 @@ class EVENT:
             return [ball_out_event]
         return []
 
+    def _add_play_pattern_qualifiers(self, event: Event) -> Event:
+        if "play_pattern" in event.raw_event:
+            pattern_id = PLAY_PATTERN(event.raw_event["play_pattern"]["id"])
+            if pattern_id == PLAY_PATTERN.FROM_COUNTER:
+                q = CounterAttackQualifier(value=True)
+                event.qualifiers = event.qualifiers or []
+                event.qualifiers.append(q)
+        return event
+
     def _add_under_pressure_qualifier(self, event: Event) -> Event:
         if ("under_pressure" in self.raw_event) and (
             self.raw_event["under_pressure"]
         ):
-            if event.qualifiers:
-                event.qualifiers.append(UnderPressureQualifier(True))
-            else:
-                event.qualifiers = [UnderPressureQualifier(True)]
+            q = UnderPressureQualifier(True)
+            event.qualifiers = event.qualifiers or []
+            event.qualifiers.append(q)
 
         return event
 
@@ -1460,16 +1461,6 @@ def _get_set_piece_qualifiers(
             set_piece_type = sb_to_kloppy_set_piece_mapping[type_id]
             return [SetPieceQualifier(value=set_piece_type)]
 
-    return []
-
-
-def _get_play_pattern_qualifiers(
-    event_dict: Dict,
-) -> List[CounterAttackQualifier]:
-    if "play_pattern" in event_dict:
-        pattern_id = PLAY_PATTERN(event_dict["play_pattern"]["id"])
-        if pattern_id == PLAY_PATTERN.FROM_COUNTER:
-            return [CounterAttackQualifier(value=True)]
     return []
 
 

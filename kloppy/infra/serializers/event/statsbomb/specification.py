@@ -30,6 +30,7 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
 )
+from kloppy.domain.models.event import UnderPressureQualifier
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     get_period_by_id,
@@ -282,15 +283,19 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        events = (
-            self._create_aerial_won_event(
-                event_factory, **generic_event_kwargs
-            )
-            + self._create_events(event_factory, **generic_event_kwargs)
-            + self._create_ball_out_event(
-                event_factory, **generic_event_kwargs
-            )
+        aerial_won_events = self._create_aerial_won_event(
+            event_factory, **generic_event_kwargs
         )
+        base_events = self._create_events(
+            event_factory, **generic_event_kwargs
+        )
+        ball_out_events = self._create_ball_out_event(
+            event_factory, **generic_event_kwargs
+        )
+        under_pressure_events = aerial_won_events + base_events
+        for event in under_pressure_events:
+            self._add_under_pressure_qualifier(event)
+        events = under_pressure_events + ball_out_events
         for event in events:
             play_pattern_qualifiers = _get_play_pattern_qualifiers(
                 event.raw_event
@@ -299,6 +304,7 @@ class EVENT:
                 event.qualifiers = (
                     event.qualifiers or []
                 ) + play_pattern_qualifiers
+
         return events
 
     def _parse_generic_kwargs(self) -> Dict:
@@ -363,6 +369,17 @@ class EVENT:
             )
             return [ball_out_event]
         return []
+
+    def _add_under_pressure_qualifier(self, event: Event) -> Event:
+        if ("under_pressure" in self.raw_event) and (
+            self.raw_event["under_pressure"]
+        ):
+            if event.qualifiers:
+                event.qualifiers.append(UnderPressureQualifier(True))
+            else:
+                event.qualifiers = [UnderPressureQualifier(True)]
+
+        return event
 
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs

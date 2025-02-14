@@ -383,12 +383,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 game_id = str(game_id)
 
             home_team_coach = metadata.get("home_team_coach")
-            if home_team_coach is not None:
-                home_coach = f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+            home_coach = (
+                f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+                if home_team_coach is not None
+                else None
+            )
 
             away_team_coach = metadata.get("away_team_coach")
-            if away_team_coach is not None:
-                away_coach = f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+            away_coach = (
+                f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+                if away_team_coach is not None
+                else None
+            )
 
             if game_id:
                 game_id = str(game_id)

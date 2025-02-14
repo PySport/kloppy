@@ -125,3 +125,17 @@ class TestSyntheticEventGenerator:
             )
             > 0.80
         )
+
+    def test_synthetic_ball_receipt_generator(self, base_dir):
+
+        dataset = self._load_dataset_statsbomb(
+            base_dir,
+        )
+
+        with performance_logging("generating synthetic events"):
+            dataset = dataset.add_synthetic_event(
+                EventType.BALL_RECEIPT,
+            )
+        all_receivals = dataset.find_all("ball_receipt")
+        print(dataset.to_df()[:100].to_string())
+        print(len(all_receivals))

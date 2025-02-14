@@ -184,6 +184,26 @@ class InterceptionResult(ResultType):
         return self == self.SUCCESS
 
 
+class BallReceiptResult(ResultType):
+    """
+    BallReceiptResult
+
+    Attributes:
+        COMPLETE (BallReceiptResult): Complete ball receipt
+        INCOMPLETE (BallReceiptResult): Incomplete ball receipt
+    """
+
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the ball receipt was complete
+        """
+        return self == self.COMPLETE
+
+
 class CardType(Enum):
     """
     CardType
@@ -221,6 +241,7 @@ class EventType(Enum):
         GOALKEEPER (EventType):
         PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
+        BALL_RECEIPT (EventType):
     """
 
     GENERIC = "generic"
@@ -243,6 +264,7 @@ class EventType(Enum):
     GOALKEEPER = "GOALKEEPER"
     PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    BALL_RECEIPT = "BALL_RECEIPT"
 
     def __repr__(self):
         return self.value
@@ -1051,6 +1073,20 @@ class PressureEvent(Event):
     event_name: str = "pressure"
 
 
+class BallReceiptEvent(Event):
+    """
+    BallReceiptEvent
+
+    Attributes:
+        event_type (EventType): `EventType.BALL_RECEIPT` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"ball_receipt"`
+    """
+
+    event_type: EventType = EventType.BALL_RECEIPT
+    event_name: str = "ball_receipt"
+    result: BallReceiptResult
+
+
 @dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
@@ -1221,6 +1257,14 @@ class EventDataset(Dataset[Event]):
             synthetic_event_generator = SyntheticCarryGenerator(
                 event_factory_, **kwargs
             )
+        elif event_type_ == EventType.BALL_RECEIPT:
+            from kloppy.domain.services.synthetic_event_generators.ball_receipt import (
+                SyntheticBallReceiptGenerator,
+            )
+
+            synthetic_event_generator = SyntheticBallReceiptGenerator(
+                event_factory_, **kwargs
+            )
         else:
             raise KloppyError(
                 f"Not possible to generate synthetic {event_type_}"
@@ -1275,4 +1319,6 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "BallReceiptEvent",
+    "BallReceiptResult",
 ]

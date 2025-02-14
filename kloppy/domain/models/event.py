@@ -184,6 +184,26 @@ class InterceptionResult(ResultType):
         return self == self.SUCCESS
 
 
+class BallReceiptResult(ResultType):
+    """
+    BallReceiptResult
+
+    Attributes:
+        COMPLETE (BallReceiptResult): Complete ball receipt
+        INCOMPLETE (BallReceiptResult): Incomplete ball receipt
+    """
+
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the ball receipt was complete
+        """
+        return self == self.COMPLETE
+
+
 class CardType(Enum):
     """
     CardType
@@ -221,6 +241,7 @@ class EventType(Enum):
         GOALKEEPER (EventType):
         PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
+        BALL_RECEIPT (EventType):
     """
 
     GENERIC = "generic"
@@ -243,6 +264,7 @@ class EventType(Enum):
     GOALKEEPER = "GOALKEEPER"
     PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    BALL_RECEIPT = "BALL_RECEIPT"
 
     def __repr__(self):
         return self.value
@@ -1051,6 +1073,20 @@ class PressureEvent(Event):
     event_name: str = "pressure"
 
 
+class BallReceiptEvent(Event):
+    """
+    BallReceiptEvent
+
+    Attributes:
+        event_type (EventType): `EventType.BALL_RECEIPT` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"ball_receipt"`
+    """
+
+    event_type: EventType = EventType.BALL_RECEIPT
+    event_name: str = "ball_receipt"
+    result: BallReceiptResult
+
+
 @dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
@@ -1191,6 +1227,50 @@ class EventDataset(Dataset[Event]):
 
         return aggregator.aggregate(self)
 
+    def add_synthetic_event(
+        self, event_type_: EventType, event_factory_=None, **kwargs
+    ):
+        """
+        Adds synthetic events of the specified type to the event dataset. This method analyzes the stream of
+        events and inserts synthetic events at the appropriate points within the dataset based on the event type.
+
+        Args:
+            event_type_ (EventType): The type of event to generate. The supported event types are currently:
+                - `EventType.CARRY`: Generates carry events.
+            event_factory_ (Optional[EventFactory]): An optional event factory to create the events. If not provided,
+                a default event factory will be used.
+            **kwargs: Additional configuration parameters passed to the specific synthetic event generator class.
+                The expected parameters depend on the type of event being generated (e.g., `SyntheticCarryGenerator`).
+
+        Raises:
+            KloppyError: If the provided `event_type_` is not supported or invalid.
+
+        Example:
+            To generate a synthetic carry event:
+                add_synthetic_event(EventType.CARRY, event_factory=my_event_factory, min_length_meters=3, max_length_meters=60, max_duration=timedelta(seconds=10))
+        """
+        if event_type_ == EventType.CARRY:
+            from kloppy.domain.services.synthetic_event_generators.carry import (
+                SyntheticCarryGenerator,
+            )
+
+            synthetic_event_generator = SyntheticCarryGenerator(
+                event_factory_, **kwargs
+            )
+        elif event_type_ == EventType.BALL_RECEIPT:
+            from kloppy.domain.services.synthetic_event_generators.ball_receipt import (
+                SyntheticBallReceiptGenerator,
+            )
+
+            synthetic_event_generator = SyntheticBallReceiptGenerator(
+                event_factory_, **kwargs
+            )
+        else:
+            raise KloppyError(
+                f"Not possible to generate synthetic {event_type_}"
+            )
+        return synthetic_event_generator.add_synthetic_event(self)
+
 
 __all__ = [
     "EnumQualifier",
@@ -1239,4 +1319,6 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "BallReceiptEvent",
+    "BallReceiptResult",
 ]

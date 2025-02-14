@@ -23,6 +23,7 @@ from kloppy.domain import (
     PassType,
     Point,
     PositionType,
+    FormationType,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
@@ -333,3 +334,42 @@ class TestWyscoutV3:
         carry_event = dataset.get_event_by_id(1927028490)
         assert carry_event.event_type == EventType.CARRY
         assert carry_event.end_coordinates == Point(17.0, 4.0)
+
+    def test_formation_change_event(self, dataset: EventDataset):
+        assert (
+            len(dataset.find_all("formation_change")) == 2
+        )  # We shouldn't recognize the change to 4-4-1 as a formation change
+        formation_change_event = dataset.get_event_by_id(
+            "synthetic-3164-1927029462"
+        )
+        assert formation_change_event.event_type == EventType.FORMATION_CHANGE
+        assert (
+            formation_change_event.formation_type
+            == FormationType.FOUR_THREE_ONE_TWO
+        )
+
+    def test_kick_off_qualifier(self, dataset: EventDataset):
+        pass_event_kick_off_first_half = dataset.get_event_by_id(1927028854)
+        pass_event_kick_off_second_half = dataset.get_event_by_id(1927029460)
+        pass_event_kick_off_after_goal = dataset.get_event_by_id(1927030641)
+        assert pass_event_kick_off_first_half.event_type == EventType.PASS
+        assert pass_event_kick_off_second_half.event_type == EventType.PASS
+        assert pass_event_kick_off_after_goal.event_type == EventType.PASS
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_first_half.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_second_half.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_after_goal.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )

@@ -1,6 +1,6 @@
 """XML parser for Stats Perform MA3 feeds."""
-import pytz
-from datetime import datetime
+
+from datetime import datetime, timezone
 from typing import List
 
 from .base import OptaXMLParser, OptaEvent
@@ -9,11 +9,11 @@ from .base import OptaXMLParser, OptaEvent
 def _parse_ma3_datetime(dt_str: str) -> datetime:
     try:
         return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
-            tzinfo=pytz.utc
+            tzinfo=timezone.utc
         )
     except ValueError:
         return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=pytz.utc
+            tzinfo=timezone.utc
         )
 
 

@@ -1,15 +1,14 @@
 from dataclasses import dataclass, field
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import (
-    overload,
-    Union,
-    Optional,
-    TypeVar,
     Generic,
     List,
-    Tuple,
-    NamedTuple,
     Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
 )
 
 from sortedcontainers import SortedDict
@@ -288,3 +287,7 @@ class TimeContainer(Generic[T]):
         item_type = type(self.items.values()[0]).__name__
         str_items = {str(key): value for key, value in self.items.items()}
         return f"TimeContainer[{item_type}]({str_items})"
+
+    def reset(self):
+        """Clears all items from the container."""
+        self.items.clear()

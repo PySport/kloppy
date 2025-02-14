@@ -5,50 +5,45 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
-    Dict,
-    List,
-    Optional,
-    Callable,
-    Union,
     Any,
-    TypeVar,
+    Callable,
+    Dict,
     Generic,
-    NewType,
-    overload,
     Iterable,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
 )
 
+from ...utils import deprecated, snake_case
 from .position import PositionType
-
-from ...utils import deprecated
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-from .pitch import (
-    PitchDimensions,
-    Unit,
-    Dimension,
-    NormalizedPitchDimensions,
-    MetricPitchDimensions,
-    ImperialPitchDimensions,
-    OptaPitchDimensions,
-    WyscoutPitchDimensions,
-)
-from .formation import FormationType
-from .time import Time, Period, TimeContainer
 from ...exceptions import (
-    OrientationError,
     InvalidFilterError,
     KloppyParameterError,
+    OrientationError,
 )
+from .formation import FormationType
+from .pitch import (
+    Dimension,
+    ImperialPitchDimensions,
+    MetricPitchDimensions,
+    NormalizedPitchDimensions,
+    OptaPitchDimensions,
+    PitchDimensions,
+    Unit,
+    WyscoutPitchDimensions,
+)
+from .time import Period, Time, TimeContainer
 
 
 @dataclass
@@ -91,6 +86,7 @@ class Provider(Enum):
         TRACAB:
         SECONDSPECTRUM:
         OPTA:
+        PFF:
         SKILLCORNER:
         STATSBOMB:
         SPORTEC:
@@ -105,6 +101,7 @@ class Provider(Enum):
     TRACAB = "tracab"
     SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
+    PFF = "pff"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
@@ -117,6 +114,46 @@ class Provider(Enum):
 
     def __str__(self):
         return self.value
+
+
+class OfficialType(Enum):
+    """Enumeration for types of officials (referees)."""
+
+    VideoAssistantReferee = "Video Assistant Referee"
+    MainReferee = "Main Referee"
+    AssistantReferee = "Assistant Referee"
+    FourthOfficial = "Fourth Official"
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass(frozen=True)
+class Official:
+    """
+    Represents an official (referee) with optional names and roles.
+    """
+
+    official_id: str
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[OfficialType] = None
+
+    @property
+    def full_name(self):
+        """
+        Returns the full name of the official, falling back to role-based or ID-based naming.
+        """
+        if self.name:
+            return self.name
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.last_name:
+            return self.last_name
+        if self.role:
+            return f"{snake_case(str(self.role))}_{self.official_id}"
+        return f"official_{self.official_id}"
 
 
 @dataclass(frozen=True)
@@ -224,7 +261,10 @@ class Team:
     def get_player_by_position(self, position: PositionType, time: Time):
         for player in self.players:
             if player.positions.items:
-                player_position = player.positions.value_at(time)
+                try:
+                    player_position = player.positions.value_at(time)
+                except KeyError:  # player that is subbed in later
+                    continue
                 if player_position and player_position == position:
                     return player
 
@@ -700,6 +740,44 @@ class StatsBombCoordinateSystem(CoordinateSystem):
         )
 
 
+@dataclass
+class PFFCoordinateSystem(CoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.PFF
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self.pitch_length is not None and self.pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                ),
+                pitch_length=self.pitch_length,
+                pitch_width=self.pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
 class WyscoutCoordinateSystem(CoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -862,6 +940,7 @@ def build_coordinate_system(
             DatasetType.TRACKING: SportecTrackingDataCoordinateSystem,
         },
         Provider.STATSBOMB: StatsBombCoordinateSystem,
+        Provider.PFF: PFFCoordinateSystem,
         Provider.WYSCOUT: WyscoutCoordinateSystem,
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,
@@ -889,6 +968,85 @@ class DatasetFlag(Flag):
 
 
 @dataclass
+class Statistic(ABC):
+    name: str = field(init=False)
+
+
+@dataclass
+class ScalarStatistic(Statistic):
+    value: float
+
+
+@dataclass
+class ExpectedGoals(ScalarStatistic):
+    """Expected goals"""
+
+    def __post_init__(self):
+        self.name = "xG"
+
+
+@dataclass
+class PostShotExpectedGoals(ScalarStatistic):
+    """Post-shot expected goals"""
+
+    def __post_init__(self):
+        self.name = "PSxG"
+
+
+@dataclass
+class ActionValue(Statistic):
+    """Action value"""
+
+    name: str
+    action_value_scoring_before: Optional[float] = field(default=None)
+    action_value_scoring_after: Optional[float] = field(default=None)
+    action_value_conceding_before: Optional[float] = field(default=None)
+    action_value_conceding_after: Optional[float] = field(default=None)
+
+    @property
+    def offensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_scoring_before,
+                self.action_value_scoring_after,
+            )
+            else self.action_value_scoring_after
+            - self.action_value_scoring_before
+        )
+
+    @property
+    def defensive_value(self) -> Optional[float]:
+        return (
+            None
+            if None
+            in (
+                self.action_value_conceding_before,
+                self.action_value_conceding_after,
+            )
+            else self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+    @property
+    def value(self) -> Optional[float]:
+        if None in (
+            self.action_value_scoring_before,
+            self.action_value_scoring_after,
+            self.action_value_conceding_before,
+            self.action_value_conceding_after,
+        ):
+            return None
+        return (
+            self.action_value_scoring_after - self.action_value_scoring_before
+        ) - (
+            self.action_value_conceding_after
+            - self.action_value_conceding_before
+        )
+
+
+@dataclass
 class DataRecord(ABC):
     """
     DataRecord
@@ -905,6 +1063,7 @@ class DataRecord(ABC):
     next_record: Optional["DataRecord"] = field(init=False)
     period: Period
     timestamp: timedelta
+    statistics: List[Statistic]
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 
@@ -1016,6 +1175,7 @@ class Metadata:
     game_id: Optional[str] = None
     home_coach: Optional[str] = None
     away_coach: Optional[str] = None
+    officials: Optional[List] = field(default_factory=list)
     attributes: Optional[Dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
@@ -1077,6 +1237,7 @@ class Dataset(ABC, Generic[T]):
         start_of_match = self.metadata.periods[0].start_time
         for team in self.metadata.teams:
             for player in team.players:
+                player.positions.reset()
                 if player.starting:
                     player.set_position(
                         start_of_match,

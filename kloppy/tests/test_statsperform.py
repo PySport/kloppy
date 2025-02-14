@@ -9,14 +9,15 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
+    PassResult,
     Point,
     Point3D,
+    PositionType,
     Provider,
     SportVUCoordinateSystem,
-    TrackingDataset,
     Time,
+    TrackingDataset,
 )
-from kloppy.exceptions import KloppyError
 
 
 @pytest.fixture(scope="module")
@@ -95,6 +96,13 @@ class TestStatsPerformMetadata:
     def test_provider(self, tracking_dataset: TrackingDataset):
         assert tracking_dataset.metadata.provider == Provider.STATSPERFORM
 
+    def test_orientation(self, event_dataset: EventDataset):
+        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
+            # StatsPerform does not provide pitch dimensions
+            pitch_length=None,
+            pitch_width=None,
+        )
+
     def test_teams(self, tracking_dataset: TrackingDataset):
         home_team = tracking_dataset.metadata.teams[0]
         home_player = home_team.players[2]
@@ -102,7 +110,7 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             home_player
         ] == Point(x=68.689, y=39.75)
-        assert home_player.starting_position == "Defender"
+        assert home_player.starting_position == PositionType.LeftCenterBack
         assert home_player.jersey_no == 32
         assert home_player.starting
         assert home_player.team == home_team
@@ -113,16 +121,20 @@ class TestStatsPerformMetadata:
         assert tracking_dataset.records[0].players_coordinates[
             away_player
         ] == Point(x=30.595, y=44.022)
-        assert away_player.starting_position == "Defender"
+        assert away_player.starting_position == PositionType.RightCenterBack
         assert away_player.jersey_no == 2
         assert away_player.starting
         assert away_player.team == away_team
 
         away_substitute = away_team.players[15]
         assert away_substitute.jersey_no == 18
-        assert away_substitute.starting_position == "Substitute"
+        assert away_substitute.starting_position is None
         assert not away_substitute.starting
         assert away_substitute.team == away_team
+
+        home_gk = home_team.get_player_by_id("6wfwy94p5bm0zv3aku0urfq39")
+        assert home_gk.first_name == "Benjamin Pascal"
+        assert home_gk.last_name == "Lecomte"
 
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
@@ -172,12 +184,8 @@ class TestStatsPerformEvent:
 
     def test_deserialize_all(self, event_dataset: EventDataset):
         assert event_dataset.metadata.provider == Provider.STATSPERFORM
-        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
-            # StatsPerform does not provide pitch dimensions
-            pitch_length=None,
-            pitch_width=None,
-        )
-        assert len(event_dataset.records) == 1652
+
+        assert len(event_dataset.records) == 1643
 
         substitution_events = event_dataset.find_all("substitution")
         assert len(substitution_events) == 9
@@ -197,6 +205,64 @@ class TestStatsPerformEvent:
         )
         assert first_sub.player == m_wintzheimer
         assert first_sub.replacement_player == b_jatta
+
+    def test_pass_receiver(self, event_dataset: EventDataset):
+        """It should impute the intended receiver of a pass."""
+        # Completed passes should get a receiver
+        complete_pass = event_dataset.get_event_by_id("2328589789")
+        assert (
+            complete_pass.receiver_player.player_id
+            == "apdrig6xt1hxub1986s3uh1x"
+        )
+        assert (
+            complete_pass.receive_timestamp
+            == complete_pass.next_record.timestamp
+        )
+
+        # When a pass is challenged the receipt is the next next event
+        challenged_pass = event_dataset.get_event_by_id("2328600271")
+        assert (
+            challenged_pass.receiver_player.player_id
+            == "ci4pwzieoc94uj3i1371bsatx"
+        )
+        assert (
+            challenged_pass.receive_timestamp
+            == challenged_pass.next_record.next_record.timestamp
+        )
+
+        # Passes should be received within 30 seconds
+        assert all(
+            [
+                p.receive_timestamp.total_seconds()
+                - p.timestamp.total_seconds()
+                < 30
+                for p in event_dataset.find_all("pass")
+                if p.receive_timestamp is not None
+            ]
+        )
+
+        # Passes that result in a loss of possession should not have a receiver
+        turnover_passes = [
+            p
+            for p in event_dataset.find_all("pass")
+            if p.next_record
+            and p.ball_owning_team != p.next_record.ball_owning_team
+        ]
+        assert all(p.receiver_player is None for p in turnover_passes)
+
+        # Failed passes should not have a receiver
+        failed_pass = event_dataset.get_event_by_id("2328591011")
+        assert failed_pass.receiver_player is None
+        out_pass = event_dataset.get_event_by_id("2328590733")
+        assert out_pass.receiver_player is None
+
+        # When a pass is interrupted by a foul the receiver is not set
+        fouled_pass = event_dataset.get_event_by_id("2328589929")
+        assert fouled_pass.receiver_player is None
+
+        # Deflected passes should not have a receiver
+        deflected_pass = event_dataset.get_event_by_id("2328596237")
+        assert deflected_pass.receiver_player is None
 
 
 class TestStatsPerformTracking:
@@ -228,9 +294,9 @@ class TestStatsPerformTracking:
             pitch_width=None,
         )
         assert pitch_dimensions.x_dim.min == 0
-        assert pitch_dimensions.x_dim.max == None
+        assert pitch_dimensions.x_dim.max is None
         assert pitch_dimensions.y_dim.min == 0
-        assert pitch_dimensions.y_dim.max == None
+        assert pitch_dimensions.y_dim.max is None
 
     def test_coordinate_system_with_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path

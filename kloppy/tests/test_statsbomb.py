@@ -31,6 +31,7 @@ from kloppy.domain import (
     Provider,
     SetPieceQualifier,
     SetPieceType,
+    PositionType,
     ShotResult,
     SubstitutionEvent,
     TakeOnResult,
@@ -46,6 +47,7 @@ from kloppy.domain.models.event import (
     GoalkeeperQualifier,
     PassQualifier,
     PassType,
+    UnderPressureQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
@@ -916,8 +918,6 @@ class TestStatsBombDribbleEvent:
         )
         # A dribble should have a result
         assert dribble.result == TakeOnResult.INCOMPLETE
-        # A dribble has no qualifiers
-        assert dribble.qualifiers is None
 
     def test_result_out(self, dataset: EventDataset):
         """The result of a dribble can be TakeOnResult.OUT"""
@@ -940,8 +940,6 @@ class TestStatsBombCarryEvent:
         carry = dataset.get_event_by_id("fab6360a-cbc2-45a3-aafa-5f3ec81eb9c7")
         # A carry is always successful
         assert carry.result == CarryResult.COMPLETE
-        # A carry has no qualifiers
-        assert carry.qualifiers is None
         # A carry should have an end location
         assert carry.end_coordinates == Point(21.65, 54.85)
         # A carry should have an end timestamp
@@ -957,8 +955,8 @@ class TestStatsBombDuelEvent:
         """It should deserialize all duel and 50/50 events"""
         events = dataset.find_all("duel")
         assert (
-            len(events) == 59 + 4 + 26
-        )  # duels + 50/50 + aerial won attribute
+            len(events) == 59 + 4 + 26 + 4
+        )  # duels + 50/50 + aerial won attribute + failed recoveries
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of duels"""
@@ -1069,6 +1067,25 @@ class TestStatsBombGoalkeeperEvent:
             GoalkeeperActionType.PICK_UP
         )
 
+    def test_under_pressure(self, dataset: EventDataset):
+        """It should add the under pressure qualifier"""
+        under_pressure = dataset.get_event_by_id(
+            "c2a03c46-c936-4f7b-9b26-72d470a892ef"
+        )
+        assert under_pressure.get_qualifier_value(UnderPressureQualifier)
+
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
+        assert kick_off.get_qualifier_value(UnderPressureQualifier) is None
+
+        under_pressure_events = [
+            event
+            for event in dataset.events
+            if event.get_qualifier_value(UnderPressureQualifier) is True
+        ]
+        assert len(under_pressure_events) == 559
+
 
 class TestStatsBombSubstitutionEvent:
     """Tests related to deserializing 18/Substitution events"""
@@ -1171,10 +1188,21 @@ class TestStatsBombPlayerOnEvent:
 class TestStatsBombRecoveryEvent:
     """Tests related to deserializing 23/Recovery events"""
 
-    def test_deserialize_all(self, dataset: EventDataset):
-        """It should deserialize all ball recovery events"""
+    def test_deserialize_successful(self, dataset: EventDataset):
+        """It should deserialize all successful ball recovery events"""
         events = dataset.find_all("recovery")
-        assert len(events) == 97
+        assert len(events) == 93
+
+    def test_deserialize_failed(self, dataset: EventDataset):
+        """It should deserialize all failed ball recovery events as loose ball duels"""
+        failed_recovery = dataset.get_event_by_id(
+            "0df4c1d6-1c4a-407b-876d-d9ac80fd7eee"
+        )
+        assert failed_recovery.event_type == EventType.DUEL
+        assert failed_recovery.get_qualifier_values(DuelQualifier) == [
+            DuelType.LOOSE_BALL,
+        ]
+        assert failed_recovery.result == DuelResult.LOST
 
 
 class TestStatsBombTacticalShiftEvent:

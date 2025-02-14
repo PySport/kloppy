@@ -25,7 +25,9 @@ from kloppy.domain import (
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
-from kloppy.infra.serializers.tracking.deserializer import TrackingDataDeserializer
+from kloppy.infra.serializers.tracking.deserializer import (
+    TrackingDataDeserializer,
+)
 from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
@@ -137,12 +139,17 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
-            elif trackable_object in referee_dict.keys() or group_name == "referee":
+            elif (
+                trackable_object in referee_dict.keys()
+                or group_name == "referee"
+            ):
                 group_name = "referee"
                 continue  # Skip Referee Coords
 
             if group_name is None:
-                group_name = teamdict.get(player_id_to_team_dict.get(trackable_object))
+                group_name = teamdict.get(
+                    player_id_to_team_dict.get(trackable_object)
+                )
 
                 if group_name == "home_team":
                     player = players["HOME"][trackable_object]
@@ -189,7 +196,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             return timedelta(seconds=60 * float(m) + float(s))
         elif len(parts) == 3:
             h, m, s = parts
-            return timedelta(seconds=3600 * float(h) + 60 * float(m) + float(s))
+            return timedelta(
+                seconds=3600 * float(h) + 60 * float(m) + float(s)
+            )
         else:
             raise ValueError("Invalid timestring format")
 
@@ -263,7 +272,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         # Extract unique periods while filtering out None values
         unique_periods = {
-            frame["period"] for frame in tracking if frame["period"] is not None
+            frame["period"]
+            for frame in tracking
+            if frame["period"] is not None
         }
 
         for period in unique_periods:
@@ -278,8 +289,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             if _frames:
                 periods[period] = Period(
                     id=period,
-                    start_timestamp=timedelta(seconds=_frames[0]["frame"] / frame_rate),
-                    end_timestamp=timedelta(seconds=_frames[-1]["frame"] / frame_rate),
+                    start_timestamp=timedelta(
+                        seconds=_frames[0]["frame"] / frame_rate
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=_frames[-1]["frame"] / frame_rate
+                    ),
                 )
 
         return periods
@@ -338,11 +353,13 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             }
 
             player_dict = {
-                player["trackable_object"]: player for player in metadata["players"]
+                player["trackable_object"]: player
+                for player in metadata["players"]
             }
 
             referee_dict = {
-                ref["trackable_object"]: "referee" for ref in metadata["referees"]
+                ref["trackable_object"]: "referee"
+                for ref in metadata["referees"]
             }
             ball_id = metadata["ball"]["trackable_object"]
 

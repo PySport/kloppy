@@ -49,7 +49,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
                             MinutesPlayed(
                                 player=player,
                                 start_time=_start_time,
-                                end_time=_start_time,
+                                end_time=end_time,
                                 duration=end_time - _start_time,
                             )
                         )

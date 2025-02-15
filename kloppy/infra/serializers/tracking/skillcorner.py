@@ -3,7 +3,6 @@ import logging
 import warnings
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import IO, Dict, NamedTuple, Optional, Union
 
 from kloppy.domain import (
@@ -25,6 +24,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -237,17 +237,33 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         return obj
 
     def __load_json_raw(self, file):
-        if Path(file.name).suffix == ".jsonl":
-            data = []
-            for line in file:
-                obj = json.loads(line)
-                data.append(self.__replace_timestamp(obj))
-            return data
-        else:
-            data = json.load(file)
-            for line in data:
-                line = self.__replace_timestamp(line)
-            return data
+        # Extract the first few bytes
+        start_byte = file.read(1)
+        file.seek(0)
+
+        # Check if it starts with '{' or '['
+        if start_byte == b"[":
+            # It's a JSON array
+            try:
+                data = json.load(file)
+                for line in data:
+                    line = self.__replace_timestamp(line)
+                return data
+            except json.JSONDecodeError:
+                raise DeserializationError("Could not parse JSON data")
+
+        elif start_byte == b"{":
+            # It's a JSONL file
+            try:
+                data = []
+                for line in file:
+                    obj = json.loads(line)
+                    data.append(self.__replace_timestamp(obj))
+                return data
+            except json.JSONDecodeError:
+                raise DeserializationError("Could not parse JSONL data")
+
+        raise DeserializationError("Could not determine raw data format")
 
     @classmethod
     def __get_periods(cls, tracking):

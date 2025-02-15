@@ -1,10 +1,11 @@
-from typing import BinaryIO
+from typing import BinaryIO, List
 
 import pytest
+
 from kloppy import opta
 from kloppy.config import config_context
-from kloppy.domain import Provider, DatasetType
-from kloppy.exceptions import InputNotFoundError
+from kloppy.domain import DatasetType, Provider
+from kloppy.exceptions import AdapterError
 from kloppy.infra.io.adapters import Adapter, adapters
 
 
@@ -38,10 +39,19 @@ class TestAdapter:
                 output.write(fp.read())
                 fp.close()
 
+            def is_directory(self, url: str) -> bool:
+                return False
+
+            def is_file(self, url: str) -> bool:
+                return True
+
+            def list_directory(
+                self, url: str, recursive: bool = True
+            ) -> List[str]:
+                return []
+
         with config_context("cache", None):
-            with pytest.raises(InputNotFoundError):
-                # When our adapter is not registered yet
-                # kloppy will fall back to regular `open`.
+            with pytest.raises(AdapterError):
                 opta.load(f24_data="test123://f24", f7_data="test123://f7")
 
             custom_adapter = CustomAdapter()

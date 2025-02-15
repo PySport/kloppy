@@ -76,6 +76,46 @@ class TestsHawkEyeInputs:
         )
         assert len(dataset) == 6000
 
+    def test_limit(
+        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+    ):
+        dataset = hawkeye.load(
+            ball_feeds=ball_feeds,
+            player_centroid_feeds=player_centroid_feeds,
+            coordinates="hawkeye",
+            limit=10,
+        )
+        assert len(dataset) == 10
+
+    def test_sample_rate(
+        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+    ):
+        dataset = hawkeye.load(
+            ball_feeds=ball_feeds,
+            player_centroid_feeds=player_centroid_feeds,
+            coordinates="hawkeye",
+            sample_rate=1 / 2,
+        )
+        assert len(dataset) == 3000
+        assert dataset.metadata.frame_rate == 50
+
+    def test_override_metadata(
+        self,
+        ball_feeds: List[Path],
+        player_centroid_feeds: List[Path],
+        meta_data_json: Path,
+    ):
+        dataset = hawkeye.load(
+            ball_feeds=ball_feeds,
+            player_centroid_feeds=player_centroid_feeds,
+            meta_data=meta_data_json,
+            pitch_length=120.0,
+            pitch_width=70.0,
+            coordinates="hawkeye",
+        )
+        assert dataset.metadata.coordinate_system.pitch_length == 120.0
+        assert dataset.metadata.coordinate_system.pitch_width == 70.0
+
 
 class TestHawkEyeDeserializer:
     """Tests related to checking the correctness of the deserialization."""

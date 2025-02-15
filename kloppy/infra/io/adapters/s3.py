@@ -24,7 +24,7 @@ class S3Adapter(FSSpecAdapter):
         s3_fs = get_config("adapters.s3.s3fs") or s3fs.S3FileSystem()
 
         if no_cache:
-            return fsspec.filesystem("s3", fs=s3_fs)
+            return s3_fs
         return fsspec.filesystem(
             "simplecache",
             fs=s3_fs,

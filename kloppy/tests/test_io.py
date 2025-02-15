@@ -2,21 +2,19 @@ import bz2
 import gzip
 import json
 import lzma
+import os
 import sys
 import zipfile
 from io import BytesIO
 from pathlib import Path
 
-import boto3
 import pytest
+from botocore.session import Session
+from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 
 from kloppy.config import set_config
 from kloppy.exceptions import InputNotFoundError
 from kloppy.io import expand_inputs, get_file_extension, open_as_file
-
-from .moto_patch import mock_aio_aws
-
-# from moto import mock_aws
 
 
 @pytest.fixture()
@@ -273,39 +271,46 @@ class TestHTTPAdapter:
             assert fp.read() == b"Hello, world!"
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
-)
 class TestS3Adapter:
+    endpoint_uri = "http://127.0.0.1:5555"
+    test_bucket_name = "test-bucket"
+    files = {
+        "testfile.txt": b"Hello, world!",
+        "testfile.txt.gz": gzip.compress(b"Hello, world!"),
+    }
+
     @pytest.fixture(scope="class", autouse=True)
     def s3_content(self):
         """Set up the content to be read from a S3 bucket."""
-        bucket_name = "test-bucket"
+        server = ThreadedMotoServer(ip_address="127.0.0.1", port=5555)
+        server.start()
+        if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+            os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+        if "AWS_ACCESS_KEY_ID" not in os.environ:
+            os.environ["AWS_ACCESS_KEY_ID"] = "foo"
 
-        # Define the content
-        content = "Hello, world!"
-        compressed_content = gzip.compress(b"Hello, world!")
+        session = Session()
+        client = session.create_client(
+            "s3", endpoint_url=self.endpoint_uri, region_name="us-east-1"
+        )
+        client.create_bucket(Bucket=self.test_bucket_name, ACL="public-read")
 
-        # see https://github.com/aio-libs/aiobotocore/issues/755
-        with mock_aio_aws():
-            s3 = boto3.resource("s3", region_name="us-east-1")
-            s3.create_bucket(Bucket=bucket_name)
+        for f, data in self.files.items():
+            client.put_object(Bucket=self.test_bucket_name, Key=f, Body=data)
 
-            # Create and write to a test file
-            s3.Object(bucket_name, "testfile.txt").put(Body=content)
+        yield
 
-            # Create and write to a compressed test file
-            s3.Object(bucket_name, "testfile.txt.gz").put(
-                Body=compressed_content
-            )
+        server.stop()
 
-            yield s3
+    @pytest.fixture(scope="class", autouse=True)
+    def s3fs(self):
+        """Set up the S3FileSystem."""
+        from s3fs import S3FileSystem
 
-            # Cleanup
-            # try:
-            #     s3.delete_bucket(Bucket=bucket_name)
-            # except Exception as e:
-            #     print(f"Error during cleanup: {e}")
+        s3 = S3FileSystem(
+            anon=False, client_kwargs={"endpoint_url": self.endpoint_uri}
+        )
+        set_config("adapters.s3.s3fs", s3)
 
     def test_list_directory(self):
         """It should be able to list the contents of an S3 bucket."""
@@ -314,15 +319,33 @@ class TestS3Adapter:
             "s3://test-bucket/testfile.txt.gz",
         }
 
-    @pytest.mark.skip()
+    def test_s3fs(self):
+        from s3fs import S3FileSystem
+
+        endpoint_uri = "http://127.0.0.1:5555"
+
+        S3FileSystem.clear_instance_cache()
+        s3 = S3FileSystem(
+            anon=False, client_kwargs={"endpoint_url": endpoint_uri}
+        )
+        s3.invalidate_cache()
+        with s3.open("test-bucket/testfile.txt") as f:
+            assert f.read() == b"Hello, world!"
+
     def test_open_as_file(self):
         """It should be able to open a file from an S3 bucket."""
+
+        from s3fs import S3FileSystem
+
+        endpoint_uri = "http://127.0.0.1:5555"
+        s3 = S3FileSystem(
+            anon=False, client_kwargs={"endpoint_url": endpoint_uri}
+        )
+        set_config("adapters.s3.s3fs", s3)
         with open_as_file("s3://test-bucket/testfile.txt") as fp:
             assert fp is not None
-            print(fp.read())
             assert fp.read() == b"Hello, world!"
 
-    @pytest.mark.skip()
     def test_open_as_file_compressed(self):
         """It should be able to open a file from an S3 bucket."""
         with open_as_file("s3://test-bucket/testfile.txt.gz") as fp:

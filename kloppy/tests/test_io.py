@@ -271,6 +271,9 @@ class TestHTTPAdapter:
             assert fp.read() == b"Hello, world!"
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
+)
 class TestS3Adapter:
     endpoint_uri = "http://127.0.0.1:5555"
     test_bucket_name = "test-bucket"

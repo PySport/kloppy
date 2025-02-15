@@ -322,29 +322,8 @@ class TestS3Adapter:
             "s3://test-bucket/testfile.txt.gz",
         }
 
-    def test_s3fs(self):
-        from s3fs import S3FileSystem
-
-        endpoint_uri = "http://127.0.0.1:5555"
-
-        S3FileSystem.clear_instance_cache()
-        s3 = S3FileSystem(
-            anon=False, client_kwargs={"endpoint_url": endpoint_uri}
-        )
-        s3.invalidate_cache()
-        with s3.open("test-bucket/testfile.txt") as f:
-            assert f.read() == b"Hello, world!"
-
     def test_open_as_file(self):
         """It should be able to open a file from an S3 bucket."""
-
-        from s3fs import S3FileSystem
-
-        endpoint_uri = "http://127.0.0.1:5555"
-        s3 = S3FileSystem(
-            anon=False, client_kwargs={"endpoint_url": endpoint_uri}
-        )
-        set_config("adapters.s3.s3fs", s3)
         with open_as_file("s3://test-bucket/testfile.txt") as fp:
             assert fp is not None
             assert fp.read() == b"Hello, world!"

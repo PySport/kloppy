@@ -55,6 +55,8 @@ def setup_package():
                 "pytest-lazy-fixture",
                 "s3fs",
                 "moto[s3]",
+                "flask",
+                "flask-cors",
                 "pytest-httpserver",
             ],
             "development": ["pre-commit==2.6.0"],

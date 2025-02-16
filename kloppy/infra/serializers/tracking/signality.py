@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class SignalityInputs(NamedTuple):
     meta_data: IO[bytes]
     venue_information: IO[bytes]
-    raw_data_feeds: Iterable[IO[bytes]]
+    raw_data_feeds: Iterable[FileLike]
 
 
 class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
@@ -171,7 +171,8 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         metadata = json.load(inputs.meta_data)
         venue_information = json.load(inputs.venue_information)
         raw_data_feeds = [
-            json.load(raw_data_feed) for raw_data_feed in inputs.raw_data_feeds
+            json.load(open(raw_data_feed, "r"))
+            for raw_data_feed in inputs.raw_data_feeds
         ]
         p1_raw_data = raw_data_feeds[0]
 

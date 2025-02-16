@@ -6,7 +6,7 @@ from kloppy.infra.serializers.tracking.signality import (
     SignalityDeserializer,
     SignalityInputs,
 )
-from kloppy.io import FileLike, open_as_file
+from kloppy.io import FileLike, open_as_file, expand_inputs
 
 
 def load(
@@ -35,24 +35,22 @@ def load(
     uses the SignalityDeserializer to process them into a TrackingDataset object. All file
     resources are properly managed to ensure they are closed after use.
     """
+
+    raw_data_feeds = expand_inputs(raw_data_feeds)
+
     deserializer = SignalityDeserializer(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
     )
+
     with open_as_file(meta_data) as meta_data_fp, open_as_file(
         venue_information
     ) as venue_information_fp:
-        # Open each raw_data_feed using open_as_file and store the resulting file pointers
-        with ExitStack() as stack:
-            raw_data_feed_fps = [
-                stack.enter_context(open_as_file(feed))
-                for feed in raw_data_feeds
-            ]
-            return deserializer.deserialize(
-                inputs=SignalityInputs(
-                    meta_data=meta_data_fp,
-                    venue_information=venue_information_fp,
-                    raw_data_feeds=raw_data_feed_fps,
-                )
+        return deserializer.deserialize(
+            inputs=SignalityInputs(
+                meta_data=meta_data_fp,
+                venue_information=venue_information_fp,
+                raw_data_feeds=raw_data_feeds,
             )
+        )

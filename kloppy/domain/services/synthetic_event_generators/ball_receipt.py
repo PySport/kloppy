@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Optional
 
 from kloppy.domain import (
@@ -75,12 +76,14 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
                 if result is not None:
                     receive_timestamp = event.receive_timestamp or (
                         min(
-                            dataset.metadata.pitch_dimensions.distance_between(
-                                event.coordinates,
-                                event.receiver_coordinates,
-                                Unit.METERS,
-                            )
-                            / self.pass_velocity_estimate_ms,
+                            timedelta(
+                                seconds=dataset.metadata.pitch_dimensions.distance_between(
+                                    event.coordinates,
+                                    event.receiver_coordinates,
+                                    Unit.METERS,
+                                )
+                                / self.pass_velocity_estimate_ms
+                            ),
                             next_event.timestamp,
                         )
                     )

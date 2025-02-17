@@ -211,7 +211,7 @@ class MetricaCSVTrackingDataDeserializer(
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         try:

@@ -406,13 +406,12 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         frame_ts = sorted(parsed_frames.keys())
         frames = []
         sample = 1.0 / self.sample_rate
-        for ts in frame_ts:
-            idx = int(ts * frame_rate)
-            if idx % sample == 0:
+        for i, ts in enumerate(frame_ts):
+            if ts % sample == 0:
                 frame = transformer.transform_frame(parsed_frames[ts])
                 frames.append(frame)
 
-                if self.limit and idx >= self.limit:
+                if self.limit and i * (self.sample_rate) + 1 >= self.limit:
                     break
 
         # Add player list to teams

@@ -54,6 +54,33 @@ class TestPFFTracking:
         assert dataset.metadata.periods[2].id == 3
         assert dataset.metadata.periods[3].id == 4
 
+    def test_correct_deserialization_limit_sample(
+        self,
+        raw_data_home_starts_left: Path,
+        meta_data: Path,
+        rosters_meta_data: Path,
+    ):
+        dataset = pff.load_tracking(
+            meta_data=meta_data,
+            roster_meta_data=rosters_meta_data,
+            raw_data=raw_data_home_starts_left,
+            coordinates="pff",
+            only_alive=True,
+            limit=100,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 100
+
+        dataset = pff.load_tracking(
+            meta_data=meta_data,
+            roster_meta_data=rosters_meta_data,
+            raw_data=raw_data_home_starts_left,
+            coordinates="pff",
+            only_alive=True,
+            limit=100,
+        )
+        assert len(dataset.records) == 100
+
     def test_correct_deserialization(
         self,
         raw_data_home_starts_left: Path,

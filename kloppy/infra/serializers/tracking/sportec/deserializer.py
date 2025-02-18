@@ -215,7 +215,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= self.limit:
                     break
 
         try:

@@ -23,6 +23,7 @@ from kloppy.domain import (
     Provider,
     PlayerData,
     Score,
+    PositionType,
 )
 from kloppy.domain.services.frame_factory import create_frame
 
@@ -31,6 +32,31 @@ from kloppy.utils import Readable, performance_logging
 from .deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
+
+
+position_mapping = {
+    "GK": PositionType.Goalkeeper,
+    "RB": PositionType.RightWingBack,
+    "LB": PositionType.LeftWingBack,
+    "DM": PositionType.DefensiveMidfield,
+    "RCB": PositionType.RightCenterBack,
+    "LCB": PositionType.LeftCenterBack,
+    "CF": PositionType.Striker,
+    "AM": PositionType.AttackingMidfield,
+    "RW": PositionType.RightWing,
+    "LW": PositionType.LeftWing,
+    "CMR": PositionType.RightCentralMidfield,
+    "CML": PositionType.LeftCentralMidfield,
+    "CB": PositionType.CenterBack,
+    "WBR": PositionType.RightWingBack,
+    "WBL": PositionType.LeftWingBack,
+    "CM": PositionType.CentralMidfield,
+    "SS": PositionType.CenterAttackingMidfield,
+    "AMR": PositionType.RightAttackingMidfield,
+    "AML": PositionType.LeftAttackingMidfield,
+    "RWB": PositionType.RightWingBack,
+    "LWB": PositionType.LeftWingBack,
+}
 
 
 class SecondSpectrumInputs(NamedTuple):
@@ -228,7 +254,10 @@ class SecondSpectrumDeserializer(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
                                 starting=player_data["position"] != "SUB",
-                                starting_position=player_data["position"],
+                                starting_position=position_mapping.get(
+                                    player_data["position"],
+                                    PositionType.Unknown,
+                                ),
                                 team=team,
                                 jersey_no=int(player_data["number"]),
                                 attributes=player_attributes,

@@ -399,9 +399,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                                 else away_team
                             )
 
-                    if self.limit and n >= (self.limit / self.sample_rate):
-                        break
-
                     if self.only_alive and self._ball_state == BallState.DEAD:
                         continue
 

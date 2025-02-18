@@ -267,14 +267,17 @@ class SecondSpectrumDeserializer(
                     n += 1
 
             frames = []
-            for n, frame_data in enumerate(_iter()):
+            n_frames = 0
+            for frame_data in _iter():
                 period = periods[frame_data["period"] - 1]
 
                 frame = self._frame_from_framedata(teams, period, frame_data)
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if self.limit and n + 1 >= (self.limit / self.sample_rate):
+                n_frames += 1
+
+                if self.limit and n_frames >= self.limit:
                     break
 
         try:

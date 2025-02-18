@@ -38,8 +38,8 @@ def load(
         ball_feeds: The ball tracking data.
         player_centroid_feeds: The player centroid tracking data.
         meta_data: A json or xml file with metadata about the match. Metadata is optional.
-        pitch_length: The length of the pitch (in meters).
-        pitch_width: The width of the pitch (in meters).
+        pitch_length: The length of the pitch (in meters). Ignored if metadata that includes pitch length is provided.
+        pitch_width: The width of the pitch (in meters). Ignored if metadata that includes pitch width is provided.
         sample_rate: Sample the data at a specific rate.
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.

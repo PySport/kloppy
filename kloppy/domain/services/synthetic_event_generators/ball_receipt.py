@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Optional
 
 from kloppy.domain import (
@@ -14,6 +15,7 @@ from kloppy.domain import (
     BallReceiptResult,
     MiscontrolEvent,
     FoulCommittedEvent,
+    Unit,
 )
 from kloppy.domain.services.synthetic_event_generators.synthetic_event_generator import (
     SyntheticEventGenerator,
@@ -34,6 +36,10 @@ POSSESSING_ON_BALL = (
 class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
     def __init__(self, event_factory: Optional[EventFactory] = None, **kwargs):
         self.event_factory = event_factory or EventFactory()
+        # an estimate of the velocity of a pass (expressed in meters/second)
+        self.pass_velocity_estimate_ms = (
+            kwargs.get("pass_velocity_estimate_ms") or 13
+        )
 
     def add_synthetic_event(self, dataset: EventDataset) -> EventDataset:
 
@@ -69,8 +75,17 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
 
                 if result is not None:
                     receive_timestamp = event.receive_timestamp or (
-                        event.timestamp
-                        + (next_event.timestamp - event.timestamp) / 10
+                        min(
+                            timedelta(
+                                seconds=dataset.metadata.pitch_dimensions.distance_between(
+                                    event.coordinates,
+                                    event.receiver_coordinates,
+                                    Unit.METERS,
+                                )
+                                / self.pass_velocity_estimate_ms
+                            ),
+                            next_event.timestamp,
+                        )
                     )
                     generic_event_args = {
                         "event_id": f"ball_receipt-{event.event_id}",

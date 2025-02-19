@@ -137,5 +137,3 @@ class TestSyntheticEventGenerator:
                 EventType.BALL_RECEIPT,
             )
         all_receivals = dataset.find_all("ball_receipt")
-        print(dataset.to_df()[:100].to_string())
-        print(len(all_receivals))

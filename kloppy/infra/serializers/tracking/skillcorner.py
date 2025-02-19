@@ -2,7 +2,6 @@ import json
 import logging
 import warnings
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import IO, Dict, NamedTuple, Optional, Union
 
 from kloppy.domain import (
@@ -24,6 +23,7 @@ from kloppy.domain import (
     attacking_directions_from_multi_frames,
 )
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
@@ -208,17 +208,33 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         return obj
 
     def __load_json_raw(self, file):
-        if Path(file.name).suffix == ".jsonl":
-            data = []
-            for line in file:
-                obj = json.loads(line)
-                data.append(self.__replace_timestamp(obj))
-            return data
-        else:
-            data = json.load(file)
-            for line in data:
-                line = self.__replace_timestamp(line)
-            return data
+        # Extract the first few bytes
+        start_byte = file.read(1)
+        file.seek(0)
+
+        # Check if it starts with '{' or '['
+        if start_byte == b"[":
+            # It's a JSON array
+            try:
+                data = json.load(file)
+                for line in data:
+                    line = self.__replace_timestamp(line)
+                return data
+            except json.JSONDecodeError:
+                raise DeserializationError("Could not parse JSON data")
+
+        elif start_byte == b"{":
+            # It's a JSONL file
+            try:
+                data = []
+                for line in file:
+                    obj = json.loads(line)
+                    data.append(self.__replace_timestamp(obj))
+                return data
+            except json.JSONDecodeError:
+                raise DeserializationError("Could not parse JSONL data")
+
+        raise DeserializationError("Could not determine raw data format")
 
     @classmethod
     def __get_periods(cls, tracking):
@@ -354,12 +370,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 game_id = str(game_id)
 
             home_team_coach = metadata.get("home_team_coach")
-            if home_team_coach is not None:
-                home_coach = f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+            home_coach = (
+                f"{home_team_coach['first_name']} {home_team_coach['last_name']}"
+                if home_team_coach is not None
+                else None
+            )
 
             away_team_coach = metadata.get("away_team_coach")
-            if away_team_coach is not None:
-                away_coach = f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+            away_coach = (
+                f"{away_team_coach['first_name']} {away_team_coach['last_name']}"
+                if away_team_coach is not None
+                else None
+            )
 
             if game_id:
                 game_id = str(game_id)

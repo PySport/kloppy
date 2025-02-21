@@ -1,10 +1,11 @@
 import sys
+from collections import defaultdict
 
 import pytest
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from kloppy import opta, statsbomb, tracab
+from kloppy import opta, statsbomb, tracab, sportec
 from kloppy.config import config_context
 from kloppy.domain import (
     AttackingDirection,
@@ -28,7 +29,7 @@ from kloppy.domain.services.frame_factory import create_frame
 
 
 class TestHelpers:
-    def _get_tracking_dataset(self):
+    def _get_tracking_dataset(self, extended: bool = False):
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
         away_team = Team(team_id="away", name="away", ground=Ground.AWAY)
         teams = [home_team, away_team]
@@ -65,22 +66,60 @@ class TestHelpers:
             game_id="2374516",
         )
 
-        tracking_data = TrackingDataset(
-            metadata=metadata,
-            records=[
+        records = [
+            create_frame(
+                frame_id=1,
+                timestamp=0.1,
+                ball_owning_team=teams[0],
+                ball_state=None,
+                period=periods[0],
+                players_data={},
+                other_data=None,
+                ball_coordinates=Point3D(x=100, y=-50, z=0),
+            )
+        ]
+
+        if extended:
+            records.append(
                 create_frame(
-                    frame_id=1,
-                    timestamp=0.1,
+                    frame_id=2,
+                    timestamp=5.1,
                     ball_owning_team=teams[0],
                     ball_state=None,
                     period=periods[0],
                     players_data={},
                     other_data=None,
-                    ball_coordinates=Point3D(x=100, y=-50, z=0),
-                ),
+                    ball_coordinates=Point3D(x=90, y=10, z=0),
+                )
+            )
+
+        records.append(
+            create_frame(
+                frame_id=3 if extended else 2,
+                timestamp=0.2,
+                ball_owning_team=teams[1],
+                ball_state=None,
+                period=periods[1],
+                players_data={
+                    Player(
+                        team=home_team, player_id="home_1", jersey_no=1
+                    ): PlayerData(
+                        coordinates=Point(x=15, y=35),
+                        distance=0.03,
+                        speed=10.5,
+                        other_data={"extra_data": 1},
+                    )
+                },
+                other_data={"extra_data": 1},
+                ball_coordinates=Point3D(x=0, y=50, z=1),
+            )
+        )
+
+        if extended:
+            records.append(
                 create_frame(
-                    frame_id=2,
-                    timestamp=0.2,
+                    frame_id=4,
+                    timestamp=1.2,
                     ball_owning_team=teams[1],
                     ball_state=None,
                     period=periods[1],
@@ -88,18 +127,105 @@ class TestHelpers:
                         Player(
                             team=home_team, player_id="home_1", jersey_no=1
                         ): PlayerData(
-                            coordinates=Point(x=15, y=35),
-                            distance=0.03,
+                            coordinates=Point(x=17, y=39),
+                            distance=0.13,
                             speed=10.5,
                             other_data={"extra_data": 1},
                         )
                     },
                     other_data={"extra_data": 1},
-                    ball_coordinates=Point3D(x=0, y=50, z=1),
-                ),
-            ],
+                    ball_coordinates=Point3D(x=14, y=46, z=0),
+                )
+            )
+
+            records.append(
+                create_frame(
+                    frame_id=5,
+                    timestamp=2.8,
+                    ball_owning_team=teams[1],
+                    ball_state=None,
+                    period=periods[1],
+                    players_data={
+                        Player(
+                            team=home_team, player_id="home_1", jersey_no=1
+                        ): PlayerData(
+                            coordinates=Point(x=20, y=36),
+                            distance=0.18,
+                            speed=5,
+                            other_data={"extra_data": 1},
+                        )
+                    },
+                    other_data={"extra_data": 1},
+                    ball_coordinates=Point3D(x=30, y=36, z=0),
+                )
+            )
+
+        tracking_data = TrackingDataset(
+            metadata=metadata,
+            records=records,
         )
         return tracking_data
+
+    def test_fps_transform(self, base_dir):
+        tracking_data = self._get_tracking_dataset(extended=True)
+
+        transformed_dataset = tracking_data.transform(fps_output=2)
+
+        frames_per_period = defaultdict(lambda: [])
+        for frame in transformed_dataset.records:
+            frames_per_period[frame.period.id].append(frame)
+
+        assert len(transformed_dataset.records) == 17
+        assert len(frames_per_period[1]) == 11
+        assert len(frames_per_period[2]) == 6
+
+        ball_x_interpolated = [100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90]
+        ball_y_interpolated = [
+            -50,
+            -44,
+            -38,
+            -32,
+            -26,
+            -20,
+            -14,
+            -8,
+            -2,
+            4,
+            10,
+        ]
+        for i, frame in enumerate(frames_per_period[1]):
+            assert round(frame.ball_coordinates.x, 8) == ball_x_interpolated[i]
+            assert round(frame.ball_coordinates.y, 8) == ball_y_interpolated[i]
+
+        player = Player(
+            team=Team(team_id="home", name="home", ground=Ground.HOME),
+            player_id="home_1",
+            jersey_no=1,
+        )
+        player_x_interpolated = [15, 16, 17, 17.9375, 18.875, 19.8125]
+        player_y_interpolated = [35, 37, 39, 38.0625, 37.125, 36.1875]
+
+        for i, frame in enumerate(frames_per_period[2]):
+            assert (
+                round(frame.players_data[player].coordinates.x, 8)
+                == player_x_interpolated[i]
+            )
+            assert (
+                round(frame.players_data[player].coordinates.y, 8)
+                == player_y_interpolated[i]
+            )
+
+        transformed_dataset_2 = tracking_data.transform(fps_output=10)
+        assert len(transformed_dataset_2.records) == 77
+
+        raw_data = base_dir / "files/sportec_positional.xml"
+        meta_data = base_dir / "files/sportec_meta.xml"
+
+        dataset = sportec.load_tracking(
+            raw_data=raw_data, meta_data=meta_data, coordinates="sportec"
+        )
+        transformed_dataset = dataset.transform(fps_output=10)
+        assert len(transformed_dataset.records) == 80
 
     def test_transform(self):
         tracking_data = self._get_tracking_dataset()

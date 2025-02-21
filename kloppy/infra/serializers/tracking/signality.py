@@ -27,7 +27,7 @@ from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.io import FileLike
+from kloppy.io import FileLike, open_as_file
 from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
@@ -170,10 +170,11 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
     def deserialize(self, inputs: SignalityInputs) -> TrackingDataset:
         metadata = json.load(inputs.meta_data)
         venue_information = json.load(inputs.venue_information)
-        raw_data_feeds = [
-            json.load(open(raw_data_feed, "r"))
-            for raw_data_feed in inputs.raw_data_feeds
-        ]
+        raw_data_feeds = []
+        for input_raw_data_feed in inputs.raw_data_feeds:
+            with open_as_file(input_raw_data_feed) as raw_data_feed_fp:
+                raw_data_feed = json.load(raw_data_feed_fp)
+                raw_data_feeds.append(raw_data_feed)
         p1_raw_data = raw_data_feeds[0]
 
         with performance_logging("Loading metadata", logger=logger):

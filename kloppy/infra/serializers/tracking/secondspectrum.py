@@ -130,8 +130,8 @@ class SecondSpectrumDeserializer(
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
                 frame_rate = float(metadata.get("fps", 25.0))
-                pitch_size_height = float(metadata["pitchLength"])
-                pitch_size_width = float(metadata["pitchWidth"])
+                pitch_size_height = float(metadata["data"]["pitchLength"])
+                pitch_size_width = float(metadata["data"]["pitchWidth"])
 
                 periods = []
                 for period in metadata["periods"]:

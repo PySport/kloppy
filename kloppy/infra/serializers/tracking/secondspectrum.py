@@ -129,7 +129,7 @@ class SecondSpectrumDeserializer(
             if first_byte == b"{":
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
-                frame_rate = int(metadata["fps"])
+                frame_rate = float(metadata.get("fps", 25.0))
                 pitch_size_height = float(metadata["pitchLength"])
                 pitch_size_width = float(metadata["pitchWidth"])
 

@@ -130,13 +130,13 @@ class SecondSpectrumDeserializer(
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
                 frame_rate = float(metadata.get("fps", 25.0))
-                pitch_size_height = float(metadata["data"]["pitchLength"])
-                pitch_size_width = float(metadata["data"]["pitchWidth"])
+                pitch_size_height = float(metadata["data"].get("pitchLength", 104.8512))
+                pitch_size_width = float(metadata["data"].get("pitchWidth", 67.9704))
 
                 periods = []
                 for period in metadata["periods"]:
-                    start_frame_id = int(period["startFrameIdx"])
-                    end_frame_id = int(period["endFrameIdx"])
+                    start_frame_id = int(period["startFrameClock"])
+                    end_frame_id = int(period["endFrameClock"])
                     if start_frame_id != 0 or end_frame_id != 0:
                         # Frame IDs are unix timestamps (in milliseconds)
                         periods.append(

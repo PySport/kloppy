@@ -189,6 +189,8 @@ class SecondSpectrumDeserializer(
                         metadata = json.loads(
                             inputs.additional_meta_data.read()
                         )
+                    else:
+                        metadata = metadata
 
                     home_team_id = metadata["homeTeam"]["externalIds"]["optaId"]
                     away_team_id = metadata["awayTeam"]["externalIds"]["optaId"]
@@ -304,7 +306,7 @@ class SecondSpectrumDeserializer(
                 metadata["day"],
             )
             date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
-            game_id = metadata["ssiId"]
+            game_id = metadata["id"]
         else:
             score = None
             date = None

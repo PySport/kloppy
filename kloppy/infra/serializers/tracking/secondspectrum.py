@@ -134,6 +134,7 @@ class SecondSpectrumDeserializer(
                 pitch_size_width = float(metadata["data"].get("pitchWidth", 67.9704))
 
                 periods = []
+                metadata = metadata["data"]
                 for period in metadata["periods"]:
                     start_frame_id = int(period["startFrameClock"])
                     end_frame_id = int(period["endFrameClock"])
@@ -189,8 +190,8 @@ class SecondSpectrumDeserializer(
                             inputs.additional_meta_data.read()
                         )
 
-                    home_team_id = metadata["homeOptaId"]
-                    away_team_id = metadata["awayOptaId"]
+                    home_team_id = metadata["homeTeam"]["externalIds"]["optaId"]
+                    away_team_id = metadata["awayTeam"]["externalIds"]["optaId"]
 
                     # Tries to parse (short) team names from the description string
                     try:
@@ -221,7 +222,7 @@ class SecondSpectrumDeserializer(
                             player_attributes = {
                                 k: v
                                 for k, v in player_data.items()
-                                if k in ["ssiId", "optaUuid"]
+                                if k in ["id", "optaId"]
                             }
 
                             player = Player(

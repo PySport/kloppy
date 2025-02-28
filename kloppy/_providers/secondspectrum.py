@@ -1,9 +1,13 @@
 from typing import Optional
 
-from kloppy.domain import TrackingDataset
+from kloppy.domain import TrackingDataset, EventDataset, EventFactory
 from kloppy.infra.serializers.tracking.secondspectrum import (
     SecondSpectrumDeserializer,
     SecondSpectrumInputs,
+)
+from kloppy.infra.serializers.event.secondspectrum import (
+    SecondSpectrumEventDataDeserializer,
+    SecondSpectrumEventDataInputs,
 )
 from kloppy.io import FileLike, open_as_file, Source
 
@@ -35,3 +39,34 @@ def load(
                 additional_meta_data=additional_meta_data_fp,
             )
         )
+
+def load_event_data(
+    meta_data: FileLike,
+    event_data: FileLike,
+    coordinates: Optional[str] = None,
+) -> EventDataset:
+    """Load SecondSpectrum event data.
+
+    Parameters
+    ----------
+    meta_data: str
+        Path to metadata json file
+    event_data: str
+        Path to event data json file
+    coordinates: str, optional
+        Coordinate system to transform the coordinates to
+
+    Returns
+    -------
+    EventDataset
+    """
+    deserializer = SecondSpectrumEventDataDeserializer(coordinate_system=coordinates)
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(event_data) as event_data_fp:
+        return deserializer.deserialize(
+            inputs=SecondSpectrumEventDataInputs(
+                meta_data=meta_data_fp,
+                event_data=event_data_fp,
+                additional_meta_data=None,
+            )
+        )
+    

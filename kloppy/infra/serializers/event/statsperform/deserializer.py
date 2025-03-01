@@ -731,9 +731,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             periods = metadata_parser.extract_periods()
             score = metadata_parser.extract_score()
             teams = metadata_parser.extract_lineups()
-            date = events_parser.extract_date()
-            game_week = events_parser.extract_game_week()
-            game_id = events_parser.extract_game_id()
+            date = metadata_parser.extract_date()
+            game_week = metadata_parser.extract_game_week()
+            game_id = metadata_parser.extract_game_id()
             raw_events = [
                 event
                 for event in events_parser.extract_events()

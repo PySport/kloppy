@@ -1149,6 +1149,12 @@ class EventDataset(Dataset[Event]):
                 better placement. The new event will be inserted before the event that gives
                 the maximum score. If no valid position is found (i.e., all scores are zero),
                 the insertion will fail with a ValueError. Defaults to None.
+            scoring_function (Optional[Callable[[Event, EventDataset], float]]): A custom
+                function that takes the event and dataset as arguments and returns a score
+                indicating how suitable the position is for insertion. Negative scores mean
+                insertion should happen **before** the highest-scoring event, while positive
+                scores mean insertion should happen **after** the highest-scoring event.
+                If all scores are zero, the insertion will fail with a ValueError.
 
         Raises:
             ValueError: If the insertion position cannot be determined or is invalid.
@@ -1210,20 +1216,21 @@ class EventDataset(Dataset[Event]):
                 for i, event in enumerate(self.records)
             ]
             # Select the best position with the highest score
-            insert_position, best_score = max(
-                scores, key=lambda x: x[1], default=(None, -1)
+            best_index, best_score = max(
+                scores, key=lambda x: abs(x[1]), default=(0, -1)
             )
             if best_score == 0:
                 raise ValueError(
                     "No valid insertion position found based on the provided scoring function."
                 )
 
+            # Insert after if score is positive, before if score is negative
+            insert_position = best_index + 1 if best_score > 0 else best_index
+
         else:
             raise ValueError(
                 "Unable to determine insertion position for the event."
             )
-
-        assert insert_position is not None
 
         # Insert the event at the determined position
         self.records.insert(insert_position, event)

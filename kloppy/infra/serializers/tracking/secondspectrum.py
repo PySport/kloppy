@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 position_mapping = {
     "GK": PositionType.Goalkeeper,
-    "RB": PositionType.RightWingBack,
-    "LB": PositionType.LeftWingBack,
+    "RB": PositionType.RightBack,
+    "LB": PositionType.LeftBack,
     "DM": PositionType.DefensiveMidfield,
     "RCB": PositionType.RightCenterBack,
     "LCB": PositionType.LeftCenterBack,

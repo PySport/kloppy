@@ -325,7 +325,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             def _iter():
                 sample = 1.0 / self.sample_rate
 
-                for n, raw_frame in enumerate(raw_data):
+                n = 0
+
+                for raw_frame in raw_data:
                     frame = json.loads(raw_frame)
                     # Identify Period
                     frame_period = frame.get("period")
@@ -360,14 +362,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                                 else away_team
                             )
 
-                    if self.limit and n + 1 >= (self.limit / self.sample_rate):
-                        break
-
                     if self.only_alive and self._ball_state == BallState.DEAD:
                         continue
 
                     if frame_period is not None and n % sample == 0:
                         yield frame, frame_period
+
+                    n += 1
 
         frames, et_frames = [], []
         n_frames = 0

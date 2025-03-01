@@ -923,8 +923,7 @@ class SportVUCoordinateSystem(ProviderCoordinateSystem):
         )
 
 
-@dataclass
-class HawkEyeCoordinateSystem(CoordinateSystem):
+class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.HAWKEYE
@@ -939,13 +938,26 @@ class HawkEyeCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return MetricPitchDimensions(
-            x_dim=Dimension(-1 * self.pitch_length / 2, self.pitch_length / 2),
-            y_dim=Dimension(-1 * self.pitch_width / 2, self.pitch_width / 2),
-            pitch_length=self.pitch_length,
-            pitch_width=self.pitch_width,
-            standardized=False,
-        )
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
 
 
 class DatasetType(Enum):

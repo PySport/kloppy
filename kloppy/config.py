@@ -22,6 +22,7 @@ Config = TypedDict(
         "event_factory": Optional[EventFactory],
         "adapters.http.basic_authentication": Optional[str],
         "adapters.s3.s3fs": Optional[Any],
+        "adapters.zip.fo": Optional[str],
         "dataframe.engine": Optional[
             Union[Literal["pandas"], Literal["polars"]]
         ],
@@ -35,6 +36,7 @@ CONFIG_KEYS = Literal[
     "event_factory",
     "adapters.http.basic_authentication",
     "adapters.s3.s3fs",
+    "adapters.zip.fo",
     "dataframe.engine",
 ]
 
@@ -49,6 +51,7 @@ _default_config: Config = {
     "event_factory": None,
     "adapters.http.basic_authentication": None,
     "adapters.s3.s3fs": None,
+    "adapters.zip.fo": None,
     "dataframe.engine": "pandas",
 }
 

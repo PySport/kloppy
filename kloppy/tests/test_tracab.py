@@ -112,6 +112,28 @@ def meta_tracking_assertions(dataset):
 
 
 class TestTracabJSONTracking:
+    def test_correct_deserialization_limit_sample(
+        self, json_meta_data: Path, json_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=json_meta_data,
+            raw_data=json_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+            limit=4,
+        )
+        assert len(dataset) == 4
+
+        dataset = tracab.load(
+            meta_data=json_meta_data,
+            raw_data=json_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+            limit=4,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 4
+
     def test_correct_deserialization(
         self, json_meta_data: Path, json_raw_data: Path
     ):

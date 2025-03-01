@@ -19,6 +19,7 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.domain import PositionType
 from kloppy.exceptions import DeserializationError
 from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
@@ -124,6 +125,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                         player_id=player_id,
                         team=team,
                         jersey_no=jersey_no,
+                        starting_position=PositionType.Unknown,
                     )
                     team.players.append(player)
 

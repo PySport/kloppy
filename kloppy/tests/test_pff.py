@@ -60,6 +60,7 @@ class TestPFFTracking:
         meta_data: Path,
         rosters_meta_data: Path,
     ):
+
         dataset = pff.load_tracking(
             meta_data=meta_data,
             roster_meta_data=rosters_meta_data,
@@ -67,7 +68,6 @@ class TestPFFTracking:
             coordinates="pff",
             only_alive=True,
             limit=100,
-            sample_rate=(1 / 2),
         )
         assert len(dataset.records) == 100
 
@@ -78,6 +78,7 @@ class TestPFFTracking:
             coordinates="pff",
             only_alive=True,
             limit=100,
+            sample_rate=(1 / 2),
         )
         assert len(dataset.records) == 100
 

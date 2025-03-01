@@ -30,6 +30,7 @@ class TestSecondSpectrumTracking:
     def test_correct_deserialization_limit_sample(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
+
         dataset = secondspectrum.load(
             meta_data=meta_data,
             raw_data=raw_data,

@@ -277,20 +277,9 @@ class TestStatsPerformTracking:
     def test_flags(self, tracking_dataset):
         assert tracking_dataset.metadata.flags == DatasetFlag.BALL_STATE
 
-    def test_coordinate_system_with_pitch_dimensions(
+    def test_correct_deserialization_limit_sample(
         self, tracking_data: Path, tracking_metadata_xml: Path
     ):
-        tracking_dataset = statsperform.load_tracking(
-            ma1_data=tracking_metadata_xml,
-            ma25_data=tracking_data,
-            tracking_system="sportvu",
-            coordinates="sportvu",
-            pitch_length=105,
-            pitch_width=68,
-            limit=100,
-            sample_rate=(1 / 2),
-        )
-        assert len(tracking_dataset.records) == 100
 
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
@@ -299,9 +288,21 @@ class TestStatsPerformTracking:
             coordinates="sportvu",
             pitch_length=105,
             pitch_width=68,
-            limit=100,
+            limit=50,
         )
-        assert len(tracking_dataset.records) == 100
+        assert len(tracking_dataset.records) == 50
+
+        tracking_dataset = statsperform.load_tracking(
+            ma1_data=tracking_metadata_xml,
+            ma25_data=tracking_data,
+            tracking_system="sportvu",
+            coordinates="sportvu",
+            pitch_length=105,
+            pitch_width=68,
+            limit=25,
+            sample_rate=(1 / 2),
+        )
+        assert len(tracking_dataset.records) == 25
 
     def test_coordinate_system_without_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path

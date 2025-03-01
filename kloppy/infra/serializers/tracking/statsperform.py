@@ -178,7 +178,8 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     n += 1
 
             frames = []
-            for n, frame_data in enumerate(_iter(), start=1):
+            n_frames = 0
+            for frame_data in _iter():
                 period = frame_data[0]
                 frame = self._frame_from_framedata(
                     teams_list, period, frame_data
@@ -190,7 +191,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     continue
                 frames.append(frame)
 
-                if self.limit and n + 1 >= (self.limit / self.sample_rate):
+                n_frames += 1
+
+                if self.limit and n_frames >= self.limit:
                     break
 
         try:

@@ -216,7 +216,6 @@ class TestSportecTrackingData:
             coordinates="sportec",
             only_alive=True,
             limit=100,
-            sample_rate=(1 / 2),
         )
         assert len(dataset.records) == 100
 
@@ -226,6 +225,7 @@ class TestSportecTrackingData:
             coordinates="sportec",
             only_alive=True,
             limit=100,
+            sample_rate=(1 / 2),
         )
         assert len(dataset.records) == 100
 

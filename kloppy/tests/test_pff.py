@@ -9,16 +9,24 @@ from kloppy.domain import DatasetType, Orientation, Point, Point3D, Provider
 
 class TestPFFTracking:
     @pytest.fixture
-    def meta_data(self, base_dir) -> str:
-        return base_dir / "files" / "pff_metadata.csv"
+    def meta_data_home_starts_left(self, base_dir) -> str:
+        return base_dir / "files" / "pff_metadata_10517.json"
 
     @pytest.fixture
-    def rosters_meta_data(self, base_dir) -> str:
-        return base_dir / "files" / "pff_rosters.csv"
+    def rosters_meta_data_home_starts_left(self, base_dir) -> str:
+        return base_dir / "files" / "pff_rosters_10517.json"
 
     @pytest.fixture
     def raw_data_home_starts_left(self, base_dir) -> str:
         return base_dir / "files" / "pff_10517.jsonl"
+
+    @pytest.fixture
+    def meta_data_home_starts_right(self, base_dir) -> str:
+        return base_dir / "files" / "pff_metadata_3812.json"
+
+    @pytest.fixture
+    def rosters_meta_data_home_starts_right(self, base_dir) -> str:
+        return base_dir / "files" / "pff_rosters_3812.json"
 
     @pytest.fixture
     def raw_data_home_starts_right(self, base_dir) -> str:
@@ -27,13 +35,13 @@ class TestPFFTracking:
     def test_correct_deserialization_alive_only(
         self,
         raw_data_home_starts_left: Path,
-        meta_data: Path,
-        rosters_meta_data: Path,
+        meta_data_home_starts_left: Path,
+        rosters_meta_data_home_starts_left: Path,
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
-            meta_data=meta_data,
-            roster_meta_data=rosters_meta_data,
+            meta_data=meta_data_home_starts_left,
+            roster_meta_data=rosters_meta_data_home_starts_left,
             raw_data=raw_data_home_starts_left,
             coordinates="pff",
             only_alive=True,
@@ -57,13 +65,13 @@ class TestPFFTracking:
     def test_correct_deserialization(
         self,
         raw_data_home_starts_left: Path,
-        meta_data: Path,
-        rosters_meta_data: Path,
+        meta_data_home_starts_left: Path,
+        rosters_meta_data_home_starts_left: Path,
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
-            meta_data=meta_data,
-            roster_meta_data=rosters_meta_data,
+            meta_data=meta_data_home_starts_left,
+            roster_meta_data=rosters_meta_data_home_starts_left,
             raw_data=raw_data_home_starts_left,
             coordinates="pff",
             only_alive=False,
@@ -88,7 +96,6 @@ class TestPFFTracking:
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[2].id == 3
         assert dataset.metadata.periods[3].id == 4
-
         # Check Pitch Dimensions
         pitch_dimensions = dataset.metadata.pitch_dimensions
         assert pitch_dimensions.x_dim.min == -52.5
@@ -161,13 +168,13 @@ class TestPFFTracking:
     def test_orientation(
         self,
         raw_data_home_starts_right: Path,
-        meta_data: Path,
-        rosters_meta_data: Path,
+        meta_data_home_starts_right: Path,
+        rosters_meta_data_home_starts_right: Path,
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
-            meta_data=meta_data,
-            roster_meta_data=rosters_meta_data,
+            meta_data=meta_data_home_starts_right,
+            roster_meta_data=rosters_meta_data_home_starts_right,
             raw_data=raw_data_home_starts_right,
             coordinates="pff",
         )
@@ -181,13 +188,13 @@ class TestPFFTracking:
     def test_correct_normalized_deserialization(
         self,
         raw_data_home_starts_left: Path,
-        meta_data: Path,
-        rosters_meta_data: Path,
+        meta_data_home_starts_left: Path,
+        rosters_meta_data_home_starts_left: Path,
     ):
         # Raw data is obtained by grabbing first and last 25 frames of each period
         dataset = pff.load_tracking(
-            meta_data=meta_data,
-            roster_meta_data=rosters_meta_data,
+            meta_data=meta_data_home_starts_left,
+            roster_meta_data=rosters_meta_data_home_starts_left,
             raw_data=raw_data_home_starts_left,
         )
 

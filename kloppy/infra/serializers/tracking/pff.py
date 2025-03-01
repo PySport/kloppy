@@ -1,8 +1,5 @@
-import csv
-import io
 import json
 import logging
-from ast import literal_eval
 from collections import defaultdict
 from datetime import timedelta, timezone
 from typing import IO, Dict, NamedTuple, Optional, Union
@@ -10,7 +7,6 @@ from typing import IO, Dict, NamedTuple, Optional, Union
 from dateutil.parser import parse
 
 from kloppy.domain import (
-    AttackingDirection,
     BallState,
     DatasetFlag,
     Ground,
@@ -25,8 +21,8 @@ from kloppy.domain import (
     Provider,
     Team,
     TrackingDataset,
-    attacking_direction_from_frame,
 )
+
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -218,41 +214,14 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         return periods
 
-    def __read_csv(self, binary_stream: IO[bytes]):
-        """Load CSV file"""
-        # Read the binary stream and decode it to a string
-        decoded_stream = io.TextIOWrapper(binary_stream, encoding="utf-8")
-        # Use csv.DictReader to parse the CSV
-        return list(csv.DictReader(decoded_stream))
-
-    def __check_att_direction(self, et_frames, n_samples: int = 25):
-        """Check attacking team direction"""
-
-        possible_attacking_directions = defaultdict(int)
-
-        # Iterate over the required frames
-        for i in range(n_samples):
-            attacking_direction = attacking_direction_from_frame(et_frames[i])
-            possible_attacking_directions[attacking_direction] += 1
-
-        # Return attacking_direction
-        return max(
-            possible_attacking_directions,
-            key=possible_attacking_directions.get,
-        )
-
     def deserialize(self, inputs: PFF_TrackingInputs) -> TrackingDataset:
         # Load datasets
-        metadata = self.__read_csv(inputs.meta_data)
-        roster_meta_data = self.__read_csv(inputs.roster_meta_data)
+        metadata = json.load(inputs.meta_data)[0]
+        roster_meta_data = json.load(inputs.roster_meta_data)
         raw_data = inputs.raw_data.readlines()
 
-        # Obtain game_id from raw data
-        first_line = json.loads(raw_data[0])
-        game_id = int(first_line["gameRefId"])
-
-        # Filter metadata for the specific game_id
-        metadata = [row for row in metadata if int(row["id"]) == game_id][0]
+        # Obtain game_id from metadata
+        game_id = int(metadata["id"])
 
         if not metadata:
             raise DeserializationError(
@@ -260,18 +229,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             )
 
         # Get metadata variables
-        home_team = literal_eval(metadata["homeTeam"])
-        away_team = literal_eval(metadata["awayTeam"])
-        stadium = literal_eval(metadata["stadium"])
-        video_data = literal_eval(metadata["videos"])
+        home_team = metadata["homeTeam"]
+        away_team = metadata["awayTeam"]
+        stadium = metadata["stadium"]
         game_week = metadata["week"]
 
         # Obtain frame rate
-        frame_rate = video_data["fps"]
-
-        roster_meta_data = [
-            row for row in roster_meta_data if int(row["game_id"]) == game_id
-        ]
+        frame_rate = metadata["fps"]
 
         home_team_id = home_team["id"]
         away_team_id = away_team["id"]
@@ -279,8 +243,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data, frame_rate)
 
-            pitch_size_width = stadium["pitchWidth"]
-            pitch_size_length = stadium["pitchLength"]
+            pitch_size_width = stadium["pitches"][0]["width"]
+            pitch_size_length = stadium["pitches"][0]["length"]
 
             transformer = self.get_transformer(
                 pitch_length=pitch_size_length, pitch_width=pitch_size_width
@@ -307,8 +271,9 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-                team_id = literal_eval(player["team"])["id"]
-                player_col = literal_eval(player["player"])
+
+                team_id = player["team"]["id"]
+                player_col = player["player"]
 
                 player_id = player_col["id"]
                 player_name = player_col["nickname"]
@@ -341,7 +306,10 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         # Check if home team plays left or right and assign orientation accordingly.
         try:
-            is_home_team_left = metadata["homeTeamStartLeft"].lower() == "true"
+            is_home_team_left = metadata["homeTeamStartLeft"]
+            is_home_team_extra_time_left = metadata[
+                "homeTeamStartLeftExtraTime"
+            ]
         except AttributeError:
             raise DeserializationError(
                 "The metadata file does not contain the 'homeTeamStartLeft' field"
@@ -350,11 +318,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             Orientation.HOME_AWAY
             if is_home_team_left
             else Orientation.AWAY_HOME
-        )
-        first_period_attacking_direction = (
-            AttackingDirection.LTR
-            if is_home_team_left
-            else AttackingDirection.RTL
         )
 
         with performance_logging("Loading data", logger=logger):
@@ -435,12 +398,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                 break
 
         if et_frames:
-            et_attacking_direction = self.__check_att_direction(
-                et_frames, n_samples=25
-            )
-
             # If first period and third period attacking direction for home team is inconsistent, flip the direction of the extra time frames
-            if first_period_attacking_direction != et_attacking_direction:
+            if is_home_team_left != is_home_team_extra_time_left:
                 for et_frame in et_frames:
                     # Loop through each PlayerData in the players_data dictionary
                     for _, player_data in et_frame.players_data.items():

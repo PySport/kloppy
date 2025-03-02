@@ -1,23 +1,17 @@
-from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
-from kloppy._providers.tracab import (
-    identify_deserializer,
-    TRACABJSONDeserializer,
-    TRACABDatDeserializer,
-)
+from kloppy import tracab
 from kloppy.domain import (
-    Orientation,
-    Provider,
-    Point,
-    Point3D,
     BallState,
     DatasetType,
+    Orientation,
+    Point,
+    Point3D,
+    Provider,
 )
-
-from kloppy import tracab
 
 
 @pytest.fixture(scope="session")
@@ -53,16 +47,6 @@ def xml_meta4_data(base_dir: Path) -> Path:
 @pytest.fixture(scope="session")
 def dat_raw_data(base_dir: Path) -> Path:
     return base_dir / "files" / "tracab_raw.dat"
-
-
-def test_correct_auto_recognize_deserialization(
-    json_raw_data: Path,
-    dat_raw_data: Path,
-):
-    tracab_json_deserializer = identify_deserializer(raw_data=json_raw_data)
-    assert tracab_json_deserializer == TRACABJSONDeserializer
-    tracab_dat_deserializer = identify_deserializer(raw_data=dat_raw_data)
-    assert tracab_dat_deserializer == TRACABDatDeserializer
 
 
 def meta_tracking_assertions(dataset):

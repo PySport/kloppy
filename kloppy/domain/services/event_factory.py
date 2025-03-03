@@ -133,6 +133,6 @@ class EventFactory:
 
     def build_pressure_event(self, **kwargs) -> PressureEvent:
         return create_event(PressureEvent, **kwargs)
-    
+
     def build_deflection(self, **kwargs) -> DeflectionEvent:
         return create_event(DeflectionEvent, **kwargs)

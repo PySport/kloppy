@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,6 +14,7 @@ from kloppy.domain import (
 )
 
 from kloppy import secondspectrum
+from kloppy.domain.models.event import Event
 
 
 class TestSecondSpectrumTracking:
@@ -331,3 +334,124 @@ class TestSecondSpectrumTracking:
         assert away_player.name == "c6gupnmywca0"
         assert away_player.starting is True
         assert away_player.starting_position == "GK"
+
+
+class TestSecondSpectrumEvents:
+    @pytest.fixture
+    def meta_data(self, base_dir) -> Path:
+        return base_dir / "files/second_spectrum_fake_metadata.json"
+
+    @pytest.fixture
+    def event_data_file(self, tmp_path):
+        """Create a fixture with sample event data including reception events"""
+        events = [
+            {
+                "event_id": "1",
+                "type": "reception",
+                "period": 1,
+                "timestamp": 120.5,
+                "player_id": "8xwx2",
+                "coordinates": {"x": 23.5, "y": 45.2},
+                "attributes": {},
+            },
+            {
+                "event_id": "2",
+                "type": "pass",
+                "period": 1,
+                "team_id": "HOME",
+                "timestamp": 121.0,
+                "player_id": "8xwx2",
+                "coordinates": {"x": 25.0, "y": 40.0},
+                "attributes": {
+                    "complete": True,
+                    "crossed": False,
+                    "bodyPart": "foot",
+                },
+                "players": {"receiver": "2q0uv"},
+            },
+        ]
+
+        event_file = tmp_path / "events.jsonl"
+        with open(event_file, "w") as f:
+            for event in events:
+                f.write(json.dumps(event) + "\n")
+
+        return event_file
+
+    def test_deserialize_reception_event(
+        self, meta_data: Path, event_data_file: Path
+    ):
+        """Test that reception events are correctly deserialized as recovery events"""
+        with patch(
+            "kloppy.infra.serializers.event.secondspectrum.deserializer.SecondSpectrumEventDataDeserializer._parse_event"
+        ) as mock_parse_event:
+            # Set up the mock to return event objects properly
+            event_factory_mock = MagicMock()
+            recovery_event_mock = MagicMock(spec=Event)
+            event_factory_mock.build_recovery.return_value = (
+                recovery_event_mock
+            )
+
+            # Load the data
+            with open(meta_data, "rb") as meta_file, open(
+                event_data_file, "rb"
+            ) as event_file:
+                dataset = secondspectrum.load_event(
+                    meta_data=meta_file, event_data=event_file
+                )
+
+                # Verify the deserializer's event factory build_recovery was called
+                # with the expected parameters
+                calls = mock_parse_event.call_args_list
+
+                # Verify the raw_event was passed with the expected properties
+                for call in calls:
+                    raw_event = call[0][0]
+                    if raw_event["type"] == "reception":
+                        assert raw_event["event_id"] == "1"
+                        assert raw_event["player_id"] == "8xwx2"
+                        assert raw_event["coordinates"] == {
+                            "x": 23.5,
+                            "y": 45.2,
+                        }
+
+    def test_reception_event_mapping(self):
+        """Test that reception events are mapped to recovery events using the actual implementation"""
+        from kloppy.infra.serializers.event.secondspectrum.deserializer import (
+            SecondSpectrumEventDataDeserializer,
+        )
+
+        # Create a mock event factory
+        event_factory = MagicMock()
+        recovery_event = MagicMock()
+        event_factory.build_recovery.return_value = recovery_event
+
+        # Create the deserializer with the mock factory
+        deserializer = SecondSpectrumEventDataDeserializer(
+            event_factory=event_factory
+        )
+
+        # Create fake raw event for reception
+        raw_event = {
+            "event_id": "e123",
+            "type": "reception",
+            "period": 1,
+            "timestamp": 120.5,
+            "player_id": "p1",
+            "coordinates": {"x": 10, "y": 20},
+        }
+
+        # Create fake teams and periods
+        teams = [
+            MagicMock(team_id="team1", players=[MagicMock(player_id="p1")])
+        ]
+        periods = [MagicMock(id=1)]
+
+        # Call the method and verify
+        deserializer._parse_event(raw_event, teams, periods)
+
+        # Verify build_recovery was called with result=None
+        event_factory.build_recovery.assert_called_once()
+        kwargs = event_factory.build_recovery.call_args[1]
+        assert kwargs["result"] is None
+        assert kwargs["event_id"] == "e123"

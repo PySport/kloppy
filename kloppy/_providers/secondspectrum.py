@@ -40,6 +40,7 @@ def load(
             )
         )
 
+
 def load_event_data(
     meta_data: FileLike,
     event_data: FileLike,
@@ -60,8 +61,12 @@ def load_event_data(
     -------
     EventDataset
     """
-    deserializer = SecondSpectrumEventDataDeserializer(coordinate_system=coordinates)
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(event_data) as event_data_fp:
+    deserializer = SecondSpectrumEventDataDeserializer(
+        coordinate_system=coordinates
+    )
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(
+        event_data
+    ) as event_data_fp:
         return deserializer.deserialize(
             inputs=SecondSpectrumEventDataInputs(
                 meta_data=meta_data_fp,
@@ -69,4 +74,3 @@ def load_event_data(
                 additional_meta_data=None,
             )
         )
-    

@@ -198,6 +198,7 @@ class CardType(Enum):
     SECOND_YELLOW = "SECOND_YELLOW"
     RED = "RED"
 
+
 class DeflectionResult(ResultType):
     """
     DeflectionResult
@@ -206,6 +207,7 @@ class DeflectionResult(ResultType):
         SUCCESS (DeflectionResult): Deflection successfully cleared the ball
         FAILED (DeflectionResult): Deflection did not successfully clear the ball
     """
+
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
 
@@ -215,7 +217,6 @@ class DeflectionResult(ResultType):
         Returns if the deflection was successful
         """
         return self == self.SUCCESS
-
 
 
 class EventType(Enum):
@@ -1071,6 +1072,7 @@ class PressureEvent(Event):
     event_type: EventType = EventType.PRESSURE
     event_name: str = "pressure"
 
+
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class DeflectionEvent(Event):
@@ -1081,6 +1083,7 @@ class DeflectionEvent(Event):
         event_type (EventType): `EventType.DEFLECTION` (See [`EventType`][kloppy.domain.models.event.EventType])
         event_name (str): `"deflection"`
     """
+
     result: DeflectionResult
 
     event_type: EventType = EventType.DEFLECTION
@@ -1276,7 +1279,6 @@ __all__ = [
     "DuelQualifier",
     "DuelResult",
     "PressureEvent",
-
     "DeflectionEvent",
     "DeflectionResult",
 ]

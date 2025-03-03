@@ -130,8 +130,12 @@ class SecondSpectrumDeserializer(
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
                 frame_rate = float(metadata.get("fps", 25.0))
-                pitch_size_height = float(metadata["data"].get("pitchLength", 104.8512))
-                pitch_size_width = float(metadata["data"].get("pitchWidth", 67.9704))
+                pitch_size_height = float(
+                    metadata["data"].get("pitchLength", 104.8512)
+                )
+                pitch_size_width = float(
+                    metadata["data"].get("pitchWidth", 67.9704)
+                )
 
                 periods = []
                 metadata = metadata["data"]
@@ -192,8 +196,12 @@ class SecondSpectrumDeserializer(
                     else:
                         metadata = metadata
 
-                    home_team_id = metadata["homeTeam"]["externalIds"]["optaId"]
-                    away_team_id = metadata["awayTeam"]["externalIds"]["optaId"]
+                    home_team_id = metadata["homeTeam"]["externalIds"][
+                        "optaId"
+                    ]
+                    away_team_id = metadata["awayTeam"]["externalIds"][
+                        "optaId"
+                    ]
 
                     # Tries to parse (short) team names from the description string
                     try:

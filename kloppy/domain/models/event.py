@@ -57,6 +57,7 @@ class ShotResult(ResultType):
         POST (ShotResult): Shot hit the post
         BLOCKED (ShotResult): Shot was blocked by another player
         SAVED (ShotResult): Shot was saved by the keeper
+        OWN_GOAL (ShotResult): Shot resulted in an own goal
     """
 
     GOAL = "GOAL"

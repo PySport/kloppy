@@ -217,10 +217,11 @@ class SecondSpectrumEventDataDeserializer(EventDataDeserializer[SecondSpectrumEv
             if event_type == "pass":
                 pass_data = self._parse_pass(raw_event, team)
                 if pass_data["result"] == PassResult.INCOMPLETE:
-                    return self.event_factory.build_generic(
-                        result=None,
-                        **base_kwargs
-                    )
+                    event_kwargs = {
+                        "result": pass_data["result"]
+                    }
+                    base_kwargs["qualifiers"] = pass_data["qualifiers"]
+                    return self.event_factory.build_pass(**base_kwargs, **event_kwargs)
                 # Only include pass-specific fields
                 event_kwargs = {
                     "receive_timestamp": pass_data["receive_timestamp"],
@@ -242,7 +243,7 @@ class SecondSpectrumEventDataDeserializer(EventDataDeserializer[SecondSpectrumEv
                 return self.event_factory.build_shot(**base_kwargs, **event_kwargs)
 
             elif event_type == "reception":
-                return self.event_factory.build_generic(
+                return self.event_factory.build_recovery(
                     result=None,
                     **base_kwargs
                 )
@@ -277,7 +278,7 @@ class SecondSpectrumEventDataDeserializer(EventDataDeserializer[SecondSpectrumEv
                     **base_kwargs
                 )
             elif event_type =="deflection":
-                return self.event_factory.build_generic(
+                return self.event_factory.build_deflection(
                     result=None,
                     **base_kwargs
                 )

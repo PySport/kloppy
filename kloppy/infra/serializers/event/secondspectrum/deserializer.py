@@ -37,8 +37,7 @@ from kloppy.domain.models.event import (
     CardType,
     CardQualifier,
     ResultType,
-    DuelQualifier
-    
+    DuelQualifier,
 )
 from kloppy.domain.models.pitch import Unit
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -106,7 +105,7 @@ class SecondSpectrumEventDataDeserializer(
             body_part = raw_event["attributes"]["bodyPart"]
             if isinstance(body_part, dict):
                 body_part = body_part.get("name")
-                
+
             # Map body part names to enum values
             if body_part == "head":
                 qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -174,7 +173,7 @@ class SecondSpectrumEventDataDeserializer(
                 body_part_name = body_part.get("name")
             else:
                 body_part_name = body_part
-                
+
             body_part_map = {
                 "rightFoot": BodyPart.RIGHT_FOOT,
                 "leftFoot": BodyPart.LEFT_FOOT,
@@ -193,7 +192,7 @@ class SecondSpectrumEventDataDeserializer(
                 restart_name = restart_type.get("name")
             else:
                 restart_name = restart_type
-                
+
             restart_type_map = {
                 "throwIn": SetPieceType.THROW_IN,
                 "goalKick": SetPieceType.GOAL_KICK,
@@ -222,34 +221,68 @@ class SecondSpectrumEventDataDeserializer(
         if raw_event["type"] == "goalkeeperPossession":
             attribute_type = attributes.get("type")
             if attribute_type == "catch":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                )
             elif attribute_type == "pickUp":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.PICK_UP))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.PICK_UP)
+                )
             elif attribute_type == "claim":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM)
+                )
             elif attribute_type == "smother":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER)
+                )
             elif attribute_type == "gather":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM)
+                )
             elif attribute_type == "blockAndRetain":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                )
             else:
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT))
-                
+                qualifiers.append(
+                    GoalkeeperQualifier(
+                        value=GoalkeeperActionType.SAVE_ATTEMPT
+                    )
+                )
+
         if raw_event["type"] == "goalkeeperAction":
             if attributes.get("claimAttempt"):
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT))
+                qualifiers.append(
+                    GoalkeeperQualifier(
+                        value=GoalkeeperActionType.SAVE_ATTEMPT
+                    )
+                )
             if attributes.get("punch"):
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.PUNCH))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.PUNCH)
+                )
             if attributes.get("save"):
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                )
             if attributes.get("tip"):
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT))
+                qualifiers.append(
+                    GoalkeeperQualifier(
+                        value=GoalkeeperActionType.SAVE_ATTEMPT
+                    )
+                )
             if attributes.get("ballToFeet"):
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+                qualifiers.append(
+                    GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                )
             # Only add a default if no specific qualifier was added
             if not qualifiers and raw_event["type"] == "goalkeeperAction":
-                qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT))
+                qualifiers.append(
+                    GoalkeeperQualifier(
+                        value=GoalkeeperActionType.SAVE_ATTEMPT
+                    )
+                )
 
         return {"qualifiers": qualifiers}
 
@@ -257,14 +290,14 @@ class SecondSpectrumEventDataDeserializer(
         """Parse deflection events from SecondSpectrum data."""
         attributes = raw_event.get("attributes", {})
         qualifiers = []
-        
+
         # Handle bodyPart - might be a dict or string
         body_part = attributes.get("bodyPart")
         if isinstance(body_part, dict):
             body_part_name = body_part.get("name", "")
         else:
             body_part_name = body_part
-        
+
         bodyparts_map = {
             "rightFoot": BodyPart.RIGHT_FOOT,
             "leftFoot": BodyPart.LEFT_FOOT,
@@ -272,7 +305,7 @@ class SecondSpectrumEventDataDeserializer(
             "upperBody": BodyPart.CHEST,
             "lowerBody": BodyPart.OTHER,
         }
-        
+
         # Add the body part qualifier instead of just storing it
         if body_part_enum := bodyparts_map.get(body_part_name):
             qualifiers.append(BodyPartQualifier(value=body_part_enum))
@@ -296,7 +329,7 @@ class SecondSpectrumEventDataDeserializer(
         # Define foul reason mapping based on the documentation
         foul_reason_map = {
             "200": "contactFoul",
-            "201": "handball", 
+            "201": "handball",
             "202": "simulation",
             "203": "dissent",
             "208": "violentConduct",
@@ -305,7 +338,7 @@ class SecondSpectrumEventDataDeserializer(
             "221": "foulThrow",
             "222": "illegalRestart",
             "223": "backpass",
-            "224": "goalkeeper_delayed_release"
+            "224": "goalkeeper_delayed_release",
         }
 
         # Extract reason from attributes
@@ -329,20 +362,20 @@ class SecondSpectrumEventDataDeserializer(
                 result = attributes["card"]
         else:
             result = reason  # Use the reason as result if no card is shown
-            
+
         # Add additional qualifiers for special cases
         if penalty_awarded:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
         elif attributes.get("directFreekick"):
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
-        
+
         return {
             "result": result,
             "qualifiers": qualifiers,
             "reason": reason,
-            "penalty_awarded": penalty_awarded
+            "penalty_awarded": penalty_awarded,
         }
-    
+
     def _parse_card(self, raw_event: Dict) -> Dict:
         """Parse card events from SecondSpectrum data."""
         attributes = raw_event.get("attributes", {})
@@ -354,20 +387,24 @@ class SecondSpectrumEventDataDeserializer(
             "secondYellow": CardType.SECOND_YELLOW,
             "straightRed": CardType.RED,
         }
-        
+
         card_type = card_type_map.get(attributes.get("cardType"))
-        
+
         # We don't have a proper CardQualifier that takes a string value,
         # so we'll skip this part to avoid the error
-        # If there was a reason attribute that we wanted to include, 
+        # If there was a reason attribute that we wanted to include,
         # we would need a proper Enum type for it
-        return {"card_type": card_type, "qualifiers": qualifiers, "result": None}
-    
+        return {
+            "card_type": card_type,
+            "qualifiers": qualifiers,
+            "result": None,
+        }
+
     def _parse_duel(self, raw_event: Dict) -> Dict:
         """Parse duel events from SecondSpectrum data."""
         attributes = raw_event.get("attributes", {})
         qualifiers = []
-        
+
         # Determine duel type
         duel_type = None
         if attributes.get("tackle"):
@@ -376,7 +413,7 @@ class SecondSpectrumEventDataDeserializer(
             qualifiers.append(DuelQualifier(value=DuelType.AERIAL))
         elif attributes.get("ground"):
             qualifiers.append(DuelQualifier(value=DuelType.GROUND))
-        
+
         # Determine duel result
         if attributes.get("takeOn"):
             if attributes.get("takeOnSuccessful") == True:
@@ -391,17 +428,14 @@ class SecondSpectrumEventDataDeserializer(
                 result = DuelResult.LOST
             else:
                 result = DuelResult.NEUTRAL
-                
-        return {
-            "result": result,
-            "qualifiers": qualifiers
-        }
+
+        return {"result": result, "qualifiers": qualifiers}
 
     def _parse_ball_out(self, raw_event: Dict) -> Dict:
         """Parse ball out events from SecondSpectrum data."""
         attributes = raw_event.get("attributes", {})
         qualifiers = []
-        
+
         # Add set piece qualifier if there's restart information
         if restart_type := attributes.get("restartType"):
             # Handle restart_type as a dictionary with name/value pairs
@@ -409,7 +443,7 @@ class SecondSpectrumEventDataDeserializer(
                 restart_name = restart_type.get("name")
             else:
                 restart_name = restart_type
-                
+
             restart_type_map = {
                 "throwIn": SetPieceType.THROW_IN,
                 "goalKick": SetPieceType.GOAL_KICK,
@@ -420,7 +454,7 @@ class SecondSpectrumEventDataDeserializer(
             }
             if set_piece_type := restart_type_map.get(restart_name):
                 qualifiers.append(SetPieceQualifier(value=set_piece_type))
-        
+
         return {
             "qualifiers": qualifiers,
         }
@@ -429,14 +463,14 @@ class SecondSpectrumEventDataDeserializer(
         """Parse clearance events from SecondSpectrum data."""
         attributes = raw_event.get("attributes", {})
         qualifiers = []
-        
+
         # Handle bodyPart - might be a dict or string
         body_part = attributes.get("bodyPart")
         if isinstance(body_part, dict):
             body_part_name = body_part.get("name", "")
         else:
             body_part_name = body_part
-            
+
         # Add body part qualifier if available
         bodyparts_map = {
             "rightFoot": BodyPart.RIGHT_FOOT,
@@ -445,22 +479,26 @@ class SecondSpectrumEventDataDeserializer(
             "upperBody": BodyPart.CHEST,
             "lowerBody": BodyPart.OTHER,
         }
-        
+
         if body_part_enum := bodyparts_map.get(body_part_name):
             qualifiers.append(BodyPartQualifier(value=body_part_enum))
-            
+
         # Determine if the clearance was successful (no formal enum exists for this)
         result = None
         # We could potentially infer success if the ball went to a teammate
         # or failure if it went to an opponent, but this requires context
-        
+
         return {
             "result": result,
             "qualifiers": qualifiers,
         }
 
     def _parse_event(
-        self, raw_event: Dict, teams: List[Team], periods: List[Period], next_event: Optional[Dict] = None
+        self,
+        raw_event: Dict,
+        teams: List[Team],
+        periods: List[Period],
+        next_event: Optional[Dict] = None,
     ) -> Optional[Dict]:
         """Parse an event based on its type."""
         event_type = raw_event["type"]
@@ -629,17 +667,20 @@ class SecondSpectrumEventDataDeserializer(
                 }
                 # Add qualifiers to base kwargs
                 base_kwargs["qualifiers"] = deflection_data["qualifiers"]
-                
+
                 return self.event_factory.build_deflection(
                     **base_kwargs, **event_kwargs
                 )
             elif event_type == "card":
                 card_data = self._parse_card(raw_event)
-                event_kwargs = {"card_type": card_data["card_type"],
-                                
-                                "result": card_data["result"]}
+                event_kwargs = {
+                    "card_type": card_data["card_type"],
+                    "result": card_data["result"],
+                }
                 base_kwargs["qualifiers"] = card_data["qualifiers"]
-                return self.event_factory.build_card(**base_kwargs, **event_kwargs)
+                return self.event_factory.build_card(
+                    **base_kwargs, **event_kwargs
+                )
             elif event_type == "foul":
                 foul_data = self._parse_foul(raw_event)
                 event_kwargs = {"result": foul_data["result"]}
@@ -650,29 +691,32 @@ class SecondSpectrumEventDataDeserializer(
             elif event_type == "aerialDuel":
                 # Parse aerial duel using our helper method
                 duel_data = self._parse_duel(raw_event)
-                
+
                 # Add qualifiers for aerial duels if not already added
-                if not any(isinstance(q, DuelQualifier) for q in duel_data["qualifiers"]):
-                    duel_data["qualifiers"].append(DuelQualifier(value=DuelType.AERIAL))
-                
+                if not any(
+                    isinstance(q, DuelQualifier)
+                    for q in duel_data["qualifiers"]
+                ):
+                    duel_data["qualifiers"].append(
+                        DuelQualifier(value=DuelType.AERIAL)
+                    )
+
                 # Add qualifiers to base kwargs
                 base_kwargs["qualifiers"] = duel_data["qualifiers"]
-                
+
                 return self.event_factory.build_duel(
-                    result=duel_data["result"],
-                    **base_kwargs
+                    result=duel_data["result"], **base_kwargs
                 )
-                
+
             elif event_type == "duel":
                 # Parse duel using our helper method
                 duel_data = self._parse_duel(raw_event)
-                
+
                 # Add qualifiers to base kwargs
                 base_kwargs["qualifiers"] = duel_data["qualifiers"]
-                
+
                 return self.event_factory.build_duel(
-                    result=duel_data["result"],
-                    **base_kwargs
+                    result=duel_data["result"], **base_kwargs
                 )
 
             logger.debug(f"Skipping unsupported event type: {event_type}")

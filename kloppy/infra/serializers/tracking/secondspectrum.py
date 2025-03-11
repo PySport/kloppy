@@ -346,7 +346,7 @@ class SecondSpectrumDeserializer(
                 metadata["day"],
             )
             date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
-            game_id = metadata["id"]
+            game_id = metadata.get("id")
         else:
             score = None
             date = None

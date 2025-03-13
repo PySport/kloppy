@@ -87,9 +87,11 @@ class FSSpecAdapter(Adapter, ABC):
         else:
             files = fs.listdir(url, detail=False)
         return [
-            f"{protocol}://{fp}"
-            if protocol != "file" and not fp.startswith(protocol)
-            else fp
+            (
+                f"{protocol}://{fp}"
+                if protocol != "file" and not fp.startswith(protocol)
+                else fp
+            )
             for fp in files
         ]
 

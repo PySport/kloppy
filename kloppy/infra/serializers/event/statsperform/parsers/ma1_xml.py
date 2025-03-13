@@ -44,9 +44,11 @@ class MA1XMLParser(OptaXMLParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=Ground.HOME
-                if parsed_team["ground"] == "home"
-                else Ground.AWAY,
+                ground=(
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
+                ),
             )
 
         for parsed_player in self._parse_players():
@@ -135,12 +137,16 @@ class MA1XMLParser(OptaXMLParser):
                         "team_id": team_id,
                         "jersey_no": int(player_attributes["shirtNumber"]),
                         "name": player_attributes["matchName"],
-                        "first_name": player_attributes["shortFirstName"]
-                        if "shortFirstName" in player_attributes
-                        else player_attributes["firstName"],
-                        "last_name": player_attributes["shortLastName"]
-                        if "shortLastName" in player_attributes
-                        else player_attributes["lastName"],
+                        "first_name": (
+                            player_attributes["shortFirstName"]
+                            if "shortFirstName" in player_attributes
+                            else player_attributes["firstName"]
+                        ),
+                        "last_name": (
+                            player_attributes["shortLastName"]
+                            if "shortLastName" in player_attributes
+                            else player_attributes["lastName"]
+                        ),
                         "starting": starting,
                         "position": player_position,
                     }

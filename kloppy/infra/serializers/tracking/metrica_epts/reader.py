@@ -29,11 +29,14 @@ def build_regex(
 
     return data_format_specification.to_regex(
         player_channel_map=player_channel_map,
-        ball_channel_map={
-            channel.channel_id: channel for channel in position_sensor.channels
-        }
-        if position_sensor
-        else {},
+        ball_channel_map=(
+            {
+                channel.channel_id: channel
+                for channel in position_sensor.channels
+            }
+            if position_sensor
+            else {}
+        ),
     )
 
 

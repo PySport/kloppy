@@ -182,12 +182,16 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     )
                                     / sportec_metadata.fps
                                 ),
-                                ball_owning_team=home_team
-                                if ball_data["BallPossession"] == "1"
-                                else away_team,
-                                ball_state=BallState.ALIVE
-                                if ball_data["BallStatus"] == "1"
-                                else BallState.DEAD,
+                                ball_owning_team=(
+                                    home_team
+                                    if ball_data["BallPossession"] == "1"
+                                    else away_team
+                                ),
+                                ball_state=(
+                                    BallState.ALIVE
+                                    if ball_data["BallStatus"] == "1"
+                                    else BallState.DEAD
+                                ),
                                 period=period,
                                 players_data={
                                     player_map[player_id]: PlayerData(

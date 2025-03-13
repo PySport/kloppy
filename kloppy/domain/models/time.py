@@ -108,12 +108,10 @@ class Time:
         )
 
     @overload
-    def __sub__(self, other: timedelta) -> "Time":
-        ...
+    def __sub__(self, other: timedelta) -> "Time": ...
 
     @overload
-    def __sub__(self, other: "Time") -> timedelta:
-        ...
+    def __sub__(self, other: "Time") -> timedelta: ...
 
     def __sub__(
         self, other: Union["Time", timedelta]

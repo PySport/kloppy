@@ -33,8 +33,6 @@ class TestSecondSpectrumTracking:
     def additional_meta_data(self, base_dir) -> Path:
         return base_dir / "files/second_spectrum_fake_metadata.json"
 
-
-
     @pytest.fixture
     def patched_deserializer(self):
         """Create a fixture to patch the deserializer to handle missing 'id' field"""
@@ -60,8 +58,6 @@ class TestSecondSpectrumTracking:
 
             mock_deserialize.side_effect = patched_deserialize
             yield
-
-    
 
     def test_correct_deserialization_limit_sample(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
@@ -89,7 +85,6 @@ class TestSecondSpectrumTracking:
         assert len(dataset.records) == 100
 
     def test_correct_deserialization(
-
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
 
@@ -113,7 +108,6 @@ class TestSecondSpectrumTracking:
             limit=100,
         )
         assert len(dataset.records) == 100
-
 
     def test_correct_deserialization(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path

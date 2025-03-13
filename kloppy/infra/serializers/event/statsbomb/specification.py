@@ -332,9 +332,9 @@ class EVENT:
                 type_name in self.raw_event
                 and "aerial_won" in self.raw_event[type_name]
             ):
-                generic_event_kwargs[
-                    "event_id"
-                ] = f"duel-{generic_event_kwargs['event_id']}"
+                generic_event_kwargs["event_id"] = (
+                    f"duel-{generic_event_kwargs['event_id']}"
+                )
                 duel_qualifiers = [
                     DuelQualifier(value=DuelType.LOOSE_BALL),
                     DuelQualifier(value=DuelType.AERIAL),
@@ -351,9 +351,9 @@ class EVENT:
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
         if self.raw_event.get("out", False):
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -475,9 +475,9 @@ class PASS(EVENT):
 
         # if pass is an interception, insert interception prior to pass event
         if "type" in pass_dict:
-            generic_event_kwargs[
-                "event_id"
-            ] = f"interception-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"interception-{generic_event_kwargs['event_id']}"
+            )
             type_id = PASS.TYPE(pass_dict["type"]["id"])
             if type_id == PASS.TYPE.ONE_TOUCH_INTERCEPTION:
                 interception_event = event_factory.build_interception(
@@ -505,9 +505,9 @@ class PASS(EVENT):
                 for related_event in self.related_events
             ):
                 return []
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             generic_event_kwargs["coordinates"] = parse_coordinates(
                 pass_dict["end_location"],
@@ -537,9 +537,9 @@ class BALL_RECEIPT(EVENT):
                     or "outcome" in pass_dict
                     and PASS.OUTCOME(pass_dict["outcome"]) == PASS.OUTCOME.OUT
                 ):
-                    generic_event_kwargs[
-                        "event_id"
-                    ] = f"out-{generic_event_kwargs['event_id']}"
+                    generic_event_kwargs["event_id"] = (
+                        f"out-{generic_event_kwargs['event_id']}"
+                    )
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     generic_event_kwargs["coordinates"] = parse_coordinates(
                         pass_dict["end_location"],
@@ -646,9 +646,9 @@ class SHOT(EVENT):
                 for related_event in self.related_events
             ):
                 return []
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             generic_event_kwargs["coordinates"] = parse_coordinates(
                 shot_dict["end_location"],
@@ -725,9 +725,9 @@ class INTERCEPTION(EVENT):
                 INTERCEPTION.OUTCOME.SUCCESS_OUT,
             ]
         ):
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -919,9 +919,9 @@ class DUEL(EVENT):
             and DUEL.OUTCOME(duel_dict["outcome"])
             in [DUEL.OUTCOME.LOST_OUT, DUEL.OUTCOME.SUCCESS_OUT]
         ):
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -1116,9 +1116,9 @@ class GOALKEEPER(EVENT):
             or "outcome" in goalkeeper_dict
             and "Out" in goalkeeper_dict["outcome"]["name"]
         ):
-            generic_event_kwargs[
-                "event_id"
-            ] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -1135,9 +1135,9 @@ class GOALKEEPER(EVENT):
                     and SHOT.OUTCOME(shot_dict["outcome"])
                     == SHOT.OUTCOME.OFF_TARGET
                 ):
-                    generic_event_kwargs[
-                        "event_id"
-                    ] = f"out-{generic_event_kwargs['event_id']}"
+                    generic_event_kwargs["event_id"] = (
+                        f"out-{generic_event_kwargs['event_id']}"
+                    )
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     generic_event_kwargs["coordinates"] = parse_coordinates(
                         shot_dict["end_location"],
@@ -1341,9 +1341,9 @@ class TACTICAL_SHIFT(EVENT):
         player_positions = {}
         team = generic_event_kwargs["team"]
         for player in self.raw_event["tactics"]["lineup"]:
-            player_positions[
-                team.get_player_by_id(player["player"]["id"])
-            ] = position_types_mapping[player["position"]["id"]]
+            player_positions[team.get_player_by_id(player["player"]["id"])] = (
+                position_types_mapping[player["position"]["id"]]
+            )
 
         formation_change_event = event_factory.build_formation_change(
             result=None,

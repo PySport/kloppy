@@ -380,3 +380,10 @@ class TestWyscoutV3:
         assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(
             PassQualifier
         )
+
+    def test_high_pass_qualifier(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(1927028860)
+        assert pass_event.event_type == EventType.PASS
+        assert PassType.HIGH_PASS in pass_event.get_qualifier_values(
+            PassQualifier
+        )

@@ -242,8 +242,10 @@ class TestWyscoutV3:
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(1927028854)
         assert kickoff_p1.timestamp == timedelta(minutes=0, seconds=3)
+        assert kickoff_p1.time.period.id == 1
         kickoff_p2 = dataset.get_event_by_id(1927029460)
         assert kickoff_p2.timestamp == timedelta(minutes=0, seconds=0)
+        assert kickoff_p2.time.period.id == 2
 
     def test_coordinates(self, dataset: EventDataset):
         assert dataset.records[2].coordinates == Point(32.0, 56.0)

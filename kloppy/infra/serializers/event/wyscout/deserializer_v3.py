@@ -861,7 +861,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "player": player,
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
-                    "period": periods[-1],
+                    "period": periods[period_id - 1],
                     "timestamp": _create_timestamp_timedelta(
                         raw_event, start_ts, period_id
                     ),

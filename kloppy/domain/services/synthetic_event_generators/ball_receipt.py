@@ -76,7 +76,7 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
                 if result is not None:
                     receive_timestamp = event.receive_timestamp or (
                         min(
-                            timedelta(
+                            event.timestamp + timedelta(
                                 seconds=dataset.metadata.pitch_dimensions.distance_between(
                                     event.coordinates,
                                     event.receiver_coordinates,

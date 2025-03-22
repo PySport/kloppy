@@ -206,6 +206,17 @@ class TestWyscoutV3:
             == FormationType.FOUR_THREE_ONE_TWO
         )
 
+        second_period_end_time = Time(
+            period=dataset.metadata.periods[1],
+            timestamp=timedelta(seconds=2813),
+        )
+        assert (
+            dataset.metadata.teams[1]
+            .formations.items.keys()[0]
+            .period.end_time
+            == second_period_end_time
+        )
+
         cr7 = dataset.metadata.teams[0].get_player_by_id("3322")
 
         assert cr7.full_name == "Cristiano Ronaldo dos Santos Aveiro"

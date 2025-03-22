@@ -708,6 +708,41 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
+def create_periods(raw_events):
+    periods = []
+    for idx, raw_event in enumerate(raw_events["events"]):
+        next_period_id = None
+        if (idx + 1) < len(raw_events["events"]):
+            next_event = raw_events["events"][idx + 1]
+            next_period_id = _parse_period_id(next_event["matchPeriod"])
+
+        period_id = _parse_period_id(raw_event["matchPeriod"])
+
+        if len(periods) == 0 or periods[-1].id != period_id:
+            periods.append(
+                Period(
+                    id=period_id,
+                    start_timestamp=(
+                        timedelta(seconds=0)
+                        if len(periods) == 0
+                        else periods[-1].end_timestamp
+                    ),
+                    end_timestamp=None,
+                )
+            )
+
+        if next_period_id != period_id:
+            periods[-1] = replace(
+                periods[-1],
+                end_timestamp=timedelta(
+                    seconds=float(
+                        raw_event["second"] + raw_event["minute"] * 60
+                    )
+                ),
+            )
+    return periods
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -722,7 +757,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if "id" not in event:
                     event["id"] = event["type"]["primary"]
 
-        periods = []
         # start timestamps are fixed
         start_ts = {
             1: timedelta(minutes=0),
@@ -771,18 +805,21 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         "shortName"
                     )
 
+            periods = create_periods(raw_events)
+
             events = []
 
             next_pass_is_kickoff = False
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
-                next_period_id = None
+                ball_owning_team = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = _parse_period_id(
-                        next_event["matchPeriod"]
-                    )
 
+                if raw_event["possession"]:
+                    ball_owning_team = teams[
+                        str(raw_event["possession"]["team"]["id"])
+                    ]
                 if (
                     idx == 0
                     or raw_event["matchPeriod"]
@@ -795,35 +832,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
                 period_id = _parse_period_id(raw_event["matchPeriod"])
-
-                if len(periods) == 0 or periods[-1].id != period_id:
-                    periods.append(
-                        Period(
-                            id=period_id,
-                            start_timestamp=(
-                                timedelta(seconds=0)
-                                if len(periods) == 0
-                                else periods[-1].end_timestamp
-                            ),
-                            end_timestamp=None,
-                        )
-                    )
-
-                if next_period_id != period_id:
-                    periods[-1] = replace(
-                        periods[-1],
-                        end_timestamp=timedelta(
-                            seconds=float(
-                                raw_event["second"] + raw_event["minute"] * 60
-                            )
-                        ),
-                    )
-
-                ball_owning_team = None
-                if raw_event["possession"]:
-                    ball_owning_team = teams[
-                        str(raw_event["possession"]["team"]["id"])
-                    ]
 
                 if player_id == INVALID_PLAYER:
                     player = None

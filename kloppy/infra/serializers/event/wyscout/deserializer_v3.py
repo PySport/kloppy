@@ -113,28 +113,32 @@ def _flip_point(point: Point) -> Point:
 
 class ShotZoneResults(Enum):
     """
-    Wyscout does not provide end-coordinates of shots. Instead shots on goal
-    are tagged with a zone. The zones and corresponding y and z-coordinates are depicted below.
+     Wyscout does not provide end-coordinates of shots. Instead shots on goal
+     are tagged with a zone. The zones and corresponding y and z-coordinates are depicted below.
 
-                                       (z-coordinate of zone or post)
+                                        (z-coordinate of zone or post)
 
-        olt      | ot |      ort          3.5
-     --------------------------------
-          ||=================||           2.77
-     -------------------------------
-          || glt | gt | grt ||            2
-     --------------------------------
-      ol || gl | gc  | gr || or           1
-     --------------------------------
-      olb || glb  | gb | grb || orb       0
+         olt      | ot |      otr          3.5
+      --------------------------------
+           ||=================||           2.77
+      -------------------------------
+           || glt | gt | grt ||            2
+      --------------------------------
+       ol || gl | gc  | gr || or           1
+      --------------------------------
+       olb || glb  | gb | gbr || orb       0
 
-      40     45    50    55     60    (y-coordinate of zone)
-        44.62               55.38     (y-coordinate of post)
+       40     45    50    55     60    (y-coordinate of zone)
+         44.62               55.38     (y-coordinate of post)
+
+    Attributes:
+       code (str): The string identifier of the shot result.
+       point (Point3D): The predefined Point3D associated with the shot result.
     """
 
     GOAL_BOTTOM_LEFT = ("glb", Point3D(100, 45, 0))
     GOAL_BOTTOM_CENTER = ("gb", Point3D(100, 50, 0))
-    GOAL_BOTTOM_RIGHT = ("grb", Point3D(100, 55, 0))
+    GOAL_BOTTOM_RIGHT = ("gbr", Point3D(100, 55, 0))
     GOAL_CENTER_LEFT = ("gl", Point3D(100, 45, 1))
     GOAL_CENTER = ("gc", Point3D(100, 50, 1))
     GOAL_CENTER_RIGHT = ("gr", Point3D(100, 55, 1))
@@ -152,27 +156,17 @@ class ShotZoneResults(Enum):
     POST_TOP_LEFT = ("ptl", Point3D(100, 44.62, 2))
     POST_TOP_RIGHT = ("ptr", Point3D(100, 55.38, 2))
     OUT_TOP_LEFT = ("otl", Point3D(100, 40, 3.5))
-    OUT_TOP_RIGHT = ("ort", Point3D(100, 60, 3.5))
+    OUT_TOP_RIGHT = ("otr", Point3D(100, 60, 3.5))
     POST_TOP = ("pt", Point3D(100, 50, 2.77))
     OUT_TOP = ("ot", Point3D(100, 50, 3.5))
     BLOCKED = ("bc", None)
 
     def __init__(self, code: str, point: Point3D):
-        self._code = code
-        self._point = point
-
-    @property
-    def code(self) -> str:
-        """Returns the string identifier of the shot result."""
-        return self._code
-
-    @property
-    def point(self) -> Point3D:
-        """Returns the predefined Point3D associated with the shot result."""
-        return self._point
+        self.code = code
+        self.point = point
 
     @classmethod
-    def point_from_code(cls, code: str) -> Union[Point3D, None]:
+    def point_from_code(cls, code: str) -> Optional[Point3D]:
         """Retrieves the enum member from a string code."""
         for zone in cls:
             if zone.code == code:

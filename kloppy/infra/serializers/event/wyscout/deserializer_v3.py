@@ -136,7 +136,7 @@ class ShotZoneResults(Enum):
 
     GOAL_BOTTOM_LEFT = ("glb", Point3D(100, 45, 0))
     GOAL_BOTTOM_CENTER = ("gb", Point3D(100, 50, 0))
-    GOAL_BOTTOM_RIGHT = ("grb", Point3D(100, 55, 0))
+    GOAL_BOTTOM_RIGHT = ("gbr", Point3D(100, 55, 0))
     GOAL_CENTER_LEFT = ("gl", Point3D(100, 45, 1))
     GOAL_CENTER = ("gc", Point3D(100, 50, 1))
     GOAL_CENTER_RIGHT = ("gr", Point3D(100, 55, 1))
@@ -154,7 +154,7 @@ class ShotZoneResults(Enum):
     POST_TOP_LEFT = ("ptl", Point3D(100, 44.62, 2))
     POST_TOP_RIGHT = ("ptr", Point3D(100, 55.38, 2))
     OUT_TOP_LEFT = ("otl", Point3D(100, 40, 3.5))
-    OUT_TOP_RIGHT = ("ort", Point3D(100, 60, 3.5))
+    OUT_TOP_RIGHT = ("otr", Point3D(100, 60, 3.5))
     POST_TOP = ("pt", Point3D(100, 50, 2.77))
     OUT_TOP = ("ot", Point3D(100, 50, 3.5))
     BLOCKED = ("bc", None)

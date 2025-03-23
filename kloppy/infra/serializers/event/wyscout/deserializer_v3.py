@@ -695,14 +695,23 @@ def _parse_substitutions(
         for raw_period, sub_info in periods_subs.items():
             for raw_seconds, players_info in sub_info.items():
                 subs_out = players_info["out"]
-                subs_in = players_info["in"]
+                # there might be no replacement player for a sub out
+                subs_in = players_info.get("in", [])
+                subs_in.extend([None] * (len(subs_out) - len(subs_in)))
                 for sub_out, sub_in in zip(subs_out, subs_in):
                     sub_out_player = players[team_id][str(sub_out["playerId"])]
-                    sub_in_player = players[team_id][str(sub_in["playerId"])]
+                    if sub_in:
+                        sub_in_player = players[team_id][
+                            str(sub_in["playerId"])
+                        ]
+                        event_id = f"substitution-{sub_out['playerId']}-{sub_in['playerId']}"
+                    else:
+                        sub_in_player = None
+                        event_id = f"substitution-{sub_out['playerId']}"
 
                     # Build the substitution event
                     sub_event = deserializer.event_factory.build_substitution(
-                        event_id=f"substitution-{sub_out['playerId']}-{sub_in['playerId']}",
+                        event_id=event_id,
                         ball_owning_team=None,
                         ball_state=BallState.DEAD,
                         coordinates=None,

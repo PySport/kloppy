@@ -1068,11 +1068,12 @@ class EventDataset(Dataset[Event]):
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
-                event.replacement_player.set_position(
-                    event.time,
-                    event.replacement_player.starting_position
-                    or event.player.positions.last(default=None),
-                )
+                if event.replacement_player:
+                    event.replacement_player.set_position(
+                        event.time,
+                        event.replacement_player.starting_position
+                        or event.player.positions.last(default=None),
+                    )
                 event.player.set_position(event.time, None)
 
             elif isinstance(event, FormationChangeEvent):

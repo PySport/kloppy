@@ -428,3 +428,10 @@ class TestWyscoutV3:
         assert last_sub_event.team.team_id == "3159"
         assert last_sub_event.player.player_id == "472363"
         assert last_sub_event.replacement_player.player_id == "105334"
+
+    def test_high_pass_qualifier(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(1927028860)
+        assert pass_event.event_type == EventType.PASS
+        assert PassType.HIGH_PASS in pass_event.get_qualifier_values(
+            PassQualifier
+        )

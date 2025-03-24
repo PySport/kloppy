@@ -321,6 +321,9 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         ):
             qualifiers.append(PassQualifier(pass_type))
 
+    if raw_event["pass"].get("height") == "high":
+        qualifiers.append(PassQualifier(PassType.HIGH_PASS))
+
     return qualifiers
 
 

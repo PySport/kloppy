@@ -11,11 +11,13 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
+    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     EventDataset,
+    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     Ground,
@@ -41,6 +43,7 @@ from kloppy.domain import (
     CarryResult,
     ExpectedGoals,
     PostShotExpectedGoals,
+    SubstitutionEvent,
     Point3D,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
@@ -722,50 +725,122 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
+def build_substitution_event(
+    deserializer,
+    sub_out_player: Player,
+    sub_in_player: Union[Player, None],
+    sub_team: Team,
+    sub_period: Period,
+    sub_timestamp: timedelta,
+) -> SubstitutionEvent:
+    if sub_in_player:
+        event_id = f"substitution-{sub_out_player.player_id}-{sub_in_player.player_id}"
+    else:
+        event_id = f"substitution-{sub_out_player.player_id}"
+    # Build the substitution event
+    sub_event = deserializer.event_factory.build_substitution(
+        event_id=event_id,
+        ball_owning_team=None,
+        ball_state=BallState.DEAD,
+        coordinates=None,
+        player=sub_out_player,
+        replacement_player=sub_in_player,
+        team=sub_team,
+        period=sub_period,
+        timestamp=sub_timestamp,
+        result=None,
+        raw_event=None,
+        qualifiers=None,
+    )
+
+    return sub_event
+
+
+def add_sub_event(deserializer, transformer, substitution_events, sub_event):
+    if sub_event and deserializer.should_include_event(sub_event):
+        substitution_events.append(transformer.transform_event(sub_event))
+
+
 def _parse_substitutions(
     deserializer, raw_events, players, teams, periods, transformer
 ):
+    periods_minute_offsets = {1: 0, 2: 45, 3: 90, 4: 105}
     substitution_events = []
     for team_id, periods_subs in raw_events["substitutions"].items():
+        sub_team = teams[team_id]
+        subs_info_minute_level = raw_events["match"]["teamsData"][team_id][
+            "formation"
+        ]["substitutions"]
         for raw_period, sub_info in periods_subs.items():
-            for raw_seconds, players_info in sub_info.items():
-                subs_out = players_info["out"]
-                # there might be no replacement player for a sub out
-                subs_in = players_info.get("in", [])
-                subs_in.extend([None] * (len(subs_out) - len(subs_in)))
-                for sub_out, sub_in in zip(subs_out, subs_in):
-                    sub_out_player = players[team_id][str(sub_out["playerId"])]
-                    if sub_in:
-                        sub_in_player = players[team_id][
-                            str(sub_in["playerId"])
+            period_id = _parse_period_id(raw_period)
+            sub_period = periods[period_id - 1]
+            if isinstance(sub_info, dict):
+                for raw_seconds, players_info in sub_info.items():
+                    subs_out = players_info["out"]
+                    # there might be no replacement player for a sub out
+                    subs_in = players_info.get("in", [])
+                    subs_in.extend([None] * (len(subs_out) - len(subs_in)))
+                    for sub_out, sub_in in zip(subs_out, subs_in):
+                        sub_out_player = players[team_id][
+                            str(sub_out["playerId"])
                         ]
-                        event_id = f"substitution-{sub_out['playerId']}-{sub_in['playerId']}"
-                    else:
-                        sub_in_player = None
-                        event_id = f"substitution-{sub_out['playerId']}"
-
-                    # Build the substitution event
-                    sub_event = deserializer.event_factory.build_substitution(
-                        event_id=event_id,
-                        ball_owning_team=None,
-                        ball_state=BallState.DEAD,
-                        coordinates=None,
-                        player=sub_out_player,
-                        replacement_player=sub_in_player,
-                        team=teams[team_id],
-                        period=periods[int(raw_period[0]) - 1],
-                        timestamp=timedelta(seconds=int(raw_seconds)),
-                        result=None,
-                        raw_event=None,
-                        qualifiers=None,
-                    )
-
-                    if sub_event and deserializer.should_include_event(
-                        sub_event
-                    ):
-                        substitution_events.append(
-                            transformer.transform_event(sub_event)
+                        sub_in_player = (
+                            players[team_id][str(sub_in["playerId"])]
+                            if sub_in
+                            else None
                         )
+                        sub_timestamp = timedelta(seconds=int(raw_seconds))
+                        sub_event = build_substitution_event(
+                            deserializer,
+                            sub_out_player,
+                            sub_in_player,
+                            sub_team,
+                            sub_period,
+                            sub_timestamp,
+                        )
+                        add_sub_event(
+                            deserializer,
+                            transformer,
+                            substitution_events,
+                            sub_event,
+                        )
+
+            # for some games the sub time (in seconds) information is missing, fallback to minutes info
+            elif isinstance(sub_info, list):
+                assert len(sub_info) == 1
+                players_info = sub_info[0]
+                subs_out = players_info["out"]
+                for sub_out in subs_out:
+                    sub_info = next(
+                        s
+                        for s in subs_info_minute_level
+                        if s["playerOut"] == sub_out["playerId"]
+                    )
+                    sub_in = sub_info.get("playerIn")
+                    sub_out_player = players[team_id][str(sub_out["playerId"])]
+                    sub_in_player = (
+                        players[team_id][str(sub_in)] if sub_in else None
+                    )
+                    sub_timestamp = timedelta(
+                        minutes=(
+                            sub_info["minute"]
+                            - periods_minute_offsets[period_id]
+                        )
+                    )
+                    sub_event = build_substitution_event(
+                        deserializer,
+                        sub_out_player,
+                        sub_in_player,
+                        sub_team,
+                        sub_period,
+                        sub_timestamp,
+                    )
+                    add_sub_event(
+                        deserializer,
+                        transformer,
+                        substitution_events,
+                        sub_event,
+                    )
 
     return substitution_events
 

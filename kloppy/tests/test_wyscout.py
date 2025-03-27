@@ -223,6 +223,7 @@ class TestWyscoutV3:
         assert cr7.full_name == "Cristiano Ronaldo dos Santos Aveiro"
         assert cr7.starting is True
         assert cr7.positions.last() == PositionType.Striker
+        assert cr7.jersey_no == 7
 
     def test_enriched_metadata(self, dataset: EventDataset):
         date = dataset.metadata.date

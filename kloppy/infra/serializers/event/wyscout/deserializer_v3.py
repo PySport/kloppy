@@ -206,16 +206,29 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         starting_formation=starting_formation,
     )
 
+    players_info = {}
     for player in raw_events["players"][wyId]:
         player_id = str(player["player"]["wyId"])
+        player_first_name = player["player"]["firstName"]
+        player_last_name = player["player"]["lastName"]
+        players_info[player_id] = {
+            "first_name": player_first_name,
+            "last_name": player_last_name,
+        }
+
+    team_formation = raw_events["match"]["teamsData"][wyId]["formation"]
+    team_players = team_formation["lineup"] + team_formation["bench"]
+    for player in team_players:
+        player_id = str(player["playerId"])
         starting_position = starting_players_positions.get(player_id)
+        player_info = players_info[player_id]
         team.players.append(
             Player(
                 player_id=player_id,
                 team=team,
-                jersey_no=None,
-                first_name=player["player"]["firstName"],
-                last_name=player["player"]["lastName"],
+                jersey_no=player["shirtNumber"],
+                first_name=player_info["first_name"],
+                last_name=player_info["last_name"],
                 starting=starting_position is not None,
                 starting_position=starting_position,
             )

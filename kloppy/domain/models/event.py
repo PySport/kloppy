@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -13,6 +15,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from kloppy.domain.models.common import (
@@ -38,7 +41,7 @@ from .pitch import Point
 if TYPE_CHECKING:
     from .tracking import Frame
 
-QualifierType = TypeVar("QualifierType")
+QualifierValueType = TypeVar("QualifierValueType")
 EnumQualifierType = TypeVar("EnumQualifierType", bound=Enum)
 
 
@@ -189,6 +192,61 @@ class InterceptionResult(ResultType):
         return self == self.SUCCESS
 
 
+ResultT = TypeVar("ResultT", bound=ResultType)
+
+
+@dataclass
+class ResultMixin(Generic[ResultT]):
+    """
+    Mixin for event types that can have a result attribute.
+    """
+
+    result: ResultT
+
+    def matches(self, filter_: Optional[Union[str, Callable[[Event], bool]]]) -> bool:
+        if filter_ is None:
+            return True
+        elif callable(filter_):
+            return filter_(self)
+        elif isinstance(filter_, str):
+            """
+            Allowed formats:
+            1. <event_type>
+            2. <event_type>.<result>
+
+            This format always us to go to css selectors without breaking existing code.
+            """
+            parts = filter_.upper().split(".")
+            if len(parts) == 2:
+                event_type, result = parts
+            elif len(parts) == 1:
+                event_type = parts[0]
+                result = None
+            else:
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
+
+            # Call the parent `matches` for event type filtering
+            if not super().matches(event_type):
+                return False
+
+            if result:
+                if not self.result:
+                    return False
+
+                try:
+                    if self.result != self.result.__class__[result]:
+                        return False
+                except KeyError:
+                    # result isn't applicable for this event
+                    # example: result='GOAL' event=<Pass>
+                    return False
+
+            return True
+
+    def __str__(self):
+        return super().__str__() + f" result='{self.result}'"
+
+
 class CardType(Enum):
     """
     CardType
@@ -254,7 +312,7 @@ class EventType(Enum):
 
 
 @dataclass
-class Qualifier(Generic[QualifierType], ABC):
+class Qualifier(Generic[QualifierValueType], ABC):
     """
     An event qualifier.
 
@@ -267,10 +325,10 @@ class Qualifier(Generic[QualifierType], ABC):
         value (object, optional): Contains any related information.
     """
 
-    value: QualifierType
+    value: QualifierValueType
 
     @abstractmethod
-    def to_dict(self) -> Dict[str, QualifierType]:
+    def to_dict(self) -> Dict[str, QualifierValueType]:
         """
         Return the qualifier as a dict.
         """
@@ -535,6 +593,55 @@ class CounterAttackQualifier(BoolQualifier):
     """
 
 
+QualifierT = TypeVar("QualifierT", bound=Qualifier)
+
+
+@dataclass
+class QualifierMixin(Generic[QualifierT]):
+    """
+    Mixin for event types that can have additional qualifiers.
+    """
+
+    qualifiers: List[QualifierT]
+
+    def get_qualifier_value(self, qualifier_type: Type[QualifierT]):
+        """
+        Returns the Qualifier of a certain type, or None if qualifier is not present.
+
+        Arguments:
+            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
+                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
+
+        Examples:
+            >>> from kloppy.domain import SetPieceQualifier
+            >>> pass_event.get_qualifier_value(SetPieceQualifier)
+            <SetPieceType.GOAL_KICK: 'GOAL_KICK'>
+        """
+        for qualifier in self.qualifiers:
+            if isinstance(qualifier, qualifier_type):
+                return qualifier.value
+        return None
+
+    def get_qualifier_values(self, qualifier_type: Type[QualifierT]):
+        """
+        Returns all Qualifiers of a certain type, or None if qualifier is not present.
+
+        Arguments:
+            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
+                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
+
+        Examples:
+            >>> from kloppy.domain import SetPieceQualifier
+            >>> pass_event.get_qualifier_values(SetPieceQualifier)
+            [<SetPieceType.GOAL_KICK: 'GOAL_KICK'>]
+        """
+        return [
+            qualifier.value
+            for qualifier in self.qualifiers
+            if isinstance(qualifier, qualifier_type)
+        ]
+
+
 @dataclass
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
@@ -547,12 +654,10 @@ class Event(DataRecord, ABC):
         event_name: Name of the event type.
         time: Time in the match the event takes place.
         coordinates: Coordinates where event happened.
-        result: The outcome of the event.
         team: Team related to the event.
         player: Player related to the event.
         ball_owning_team: Team in control of the ball during the event.
         ball_state: Whether the ball is in play.
-        qualifiers: A list of qualifiers providing additional information about the event.
         raw_event: The data provider's raw representation of the event.
         dataset: A reference to the dataset the event is part of.
         prev_record: A reference to the previous event.
@@ -568,13 +673,9 @@ class Event(DataRecord, ABC):
     player: Player
     coordinates: Point
 
-    result: Optional[ResultType]
-
     raw_event: object
     state: Dict[str, Any]
     related_event_ids: List[str]
-
-    qualifiers: List[Qualifier]
 
     freeze_frame: Optional["Frame"]
 
@@ -610,56 +711,17 @@ class Event(DataRecord, ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def get_qualifier_value(self, qualifier_type: Type[Qualifier]):
-        """
-        Returns the Qualifier of a certain type, or None if qualifier is not present.
-
-        Arguments:
-            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
-                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
-
-        Examples:
-            >>> from kloppy.domain import SetPieceQualifier
-            >>> pass_event.get_qualifier_value(SetPieceQualifier)
-            <SetPieceType.GOAL_KICK: 'GOAL_KICK'>
-        """
-        if self.qualifiers:
-            for qualifier in self.qualifiers:
-                if isinstance(qualifier, qualifier_type):
-                    return qualifier.value
-        return None
-
-    def get_qualifier_values(self, qualifier_type: Type[Qualifier]):
-        """
-        Returns all Qualifiers of a certain type, or None if qualifier is not present.
-
-        Arguments:
-            qualifier_type: one of the following QualifierTypes: [`SetPieceQualifier`][kloppy.domain.models.event.SetPieceQualifier]
-                [`BodyPartQualifier`][kloppy.domain.models.event.BodyPartQualifier] [`PassQualifier`][kloppy.domain.models.event.PassQualifier]
-
-        Examples:
-            >>> from kloppy.domain import SetPieceQualifier
-            >>> pass_event.get_qualifier_values(SetPieceQualifier)
-            [<SetPieceType.GOAL_KICK: 'GOAL_KICK'>]
-        """
-        qualifiers = []
-        if self.qualifiers:
-            for qualifier in self.qualifiers:
-                if isinstance(qualifier, qualifier_type):
-                    qualifiers.append(qualifier.value)
-
-        return qualifiers
-
-    def get_related_events(self) -> List["Event"]:
+    def get_related_events(self) -> List[Event]:
         if not self.dataset:
             raise OrphanedRecordError()
 
         return [
-            self.dataset.get_record_by_id(event_id)
+            event
             for event_id in self.related_event_ids
+            if (event := self.dataset.get_record_by_id(event_id)) is not None
         ]
 
-    def get_related_event(self, type_: Union[str, EventType]) -> Optional["Event"]:
+    def get_related_event(self, type_: Union[str, EventType]) -> Optional[Event]:
         event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
@@ -668,43 +730,55 @@ class Event(DataRecord, ABC):
 
     """Define all related events for easy access"""
 
-    def related_pass(self) -> Optional["PassEvent"]:
-        return self.get_related_event(EventType.PASS)
+    def related_pass(self) -> Optional[PassEvent]:
+        return cast(Optional[PassEvent], self.get_related_event(EventType.PASS))
 
-    def related_shot(self) -> Optional["ShotEvent"]:
-        return self.get_related_event(EventType.SHOT)
+    def related_shot(self) -> Optional[ShotEvent]:
+        return cast(Optional[ShotEvent], self.get_related_event(EventType.SHOT))
 
-    def related_take_on(self) -> Optional["TakeOnEvent"]:
-        return self.get_related_event(EventType.TAKE_ON)
+    def related_take_on(self) -> Optional[TakeOnEvent]:
+        return cast(Optional[TakeOnEvent], self.get_related_event(EventType.TAKE_ON))
 
-    def related_carry(self) -> Optional["CarryEvent"]:
-        return self.get_related_event(EventType.CARRY)
+    def related_carry(self) -> Optional[CarryEvent]:
+        return cast(Optional[CarryEvent], self.get_related_event(EventType.CARRY))
 
-    def related_substitution(self) -> Optional["SubstitutionEvent"]:
-        return self.get_related_event(EventType.SUBSTITUTION)
+    def related_substitution(self) -> Optional[SubstitutionEvent]:
+        return cast(
+            Optional[SubstitutionEvent], self.get_related_event(EventType.SUBSTITUTION)
+        )
 
-    def related_card(self) -> Optional["CardEvent"]:
-        return self.get_related_event(EventType.CARD)
+    def related_card(self) -> Optional[CardEvent]:
+        return cast(Optional[CardEvent], self.get_related_event(EventType.CARD))
 
-    def related_player_on(self) -> Optional["PlayerOnEvent"]:
-        return self.get_related_event(EventType.PLAYER_ON)
+    def related_player_on(self) -> Optional[PlayerOnEvent]:
+        return cast(
+            Optional[PlayerOnEvent], self.get_related_event(EventType.PLAYER_ON)
+        )
 
-    def related_player_off(self) -> Optional["PlayerOffEvent"]:
-        return self.get_related_event(EventType.PLAYER_OFF)
+    def related_player_off(self) -> Optional[PlayerOffEvent]:
+        return cast(
+            Optional[PlayerOffEvent], self.get_related_event(EventType.PLAYER_OFF)
+        )
 
-    def related_recovery(self) -> Optional["RecoveryEvent"]:
-        return self.get_related_event(EventType.RECOVERY)
+    def related_recovery(self) -> Optional[RecoveryEvent]:
+        return cast(Optional[RecoveryEvent], self.get_related_event(EventType.RECOVERY))
 
-    def related_ball_out(self) -> Optional["BallOutEvent"]:
-        return self.get_related_event(EventType.BALL_OUT)
+    def related_ball_out(self) -> Optional[BallOutEvent]:
+        return cast(Optional[BallOutEvent], self.get_related_event(EventType.BALL_OUT))
 
-    def related_foul_committed(self) -> Optional["FoulCommittedEvent"]:
-        return self.get_related_event(EventType.FOUL_COMMITTED)
+    def related_foul_committed(self) -> Optional[FoulCommittedEvent]:
+        return cast(
+            Optional[FoulCommittedEvent],
+            self.get_related_event(EventType.FOUL_COMMITTED),
+        )
 
-    def related_formation_change(self) -> Optional["FormationChangeEvent"]:
-        return self.get_related_event(EventType.FORMATION_CHANGE)
+    def related_formation_change(self) -> Optional[FormationChangeEvent]:
+        return cast(
+            Optional[FormationChangeEvent],
+            self.get_related_event(EventType.FORMATION_CHANGE),
+        )
 
-    def matches(self, filter_) -> bool:
+    def matches(self, filter_: Optional[Union[str, Callable[[Event], bool]]]) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -736,16 +810,7 @@ class Event(DataRecord, ABC):
                     )
 
             if result:
-                if not self.result:
-                    return False
-
-                try:
-                    if self.result != self.result.__class__[result]:
-                        return False
-                except KeyError:
-                    # result isn't applicable for this event
-                    # example: result='GOAL' event=<Pass>
-                    return False
+                return False
 
             return True
 
@@ -760,8 +825,7 @@ class Event(DataRecord, ABC):
             f"<{event_type} "
             f"event_id='{self.event_id}' "
             f"time='{self.time}' "
-            f"player='{self.player}' "
-            f"result='{self.result}'>"
+            f"player='{self.player}'"
         )
 
     def __repr__(self):
@@ -770,7 +834,7 @@ class Event(DataRecord, ABC):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class GenericEvent(Event):
+class GenericEvent(QualifierMixin[CounterAttackQualifier], Event):
     """
     Unrecognised event type.
 
@@ -781,6 +845,7 @@ class GenericEvent(Event):
     Attributes:
         event_type (EventType): `EventType.GENERIC`
         event_name (str): `"generic"`
+        qualifiers: A list of qualifiers providing additional information about the event.
     """
 
     event_type: EventType = EventType.GENERIC
@@ -789,7 +854,11 @@ class GenericEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class ShotEvent(Event):
+class ShotEvent(
+    QualifierMixin[Union[BodyPartQualifier, SetPieceQualifier, CounterAttackQualifier]],
+    ResultMixin[ShotResult],
+    Event,
+):
     """
     An intentional attempt to score a goal by striking or directing the ball
     towards the opponent's goal. Own goals are always categorized as a shot too.
@@ -799,9 +868,9 @@ class ShotEvent(Event):
         event_name (str): `"shot"`
         result (ShotResult): The outcome of the shot.
         result_coordinates (Point): End location of the shot. If a shot is blocked, this is the coordinate of the block. If the shot is saved, it is the coordinate where the keeper touched the ball.
+        qualifiers: A list of qualifiers providing additional information about the shot.
     """
 
-    result: ShotResult
     result_coordinates: Optional[Point] = None
 
     event_type: EventType = EventType.SHOT
@@ -810,24 +879,31 @@ class ShotEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class PassEvent(Event):
+class PassEvent(
+    QualifierMixin[
+        Union[
+            PassQualifier, BodyPartQualifier, SetPieceQualifier, CounterAttackQualifier
+        ]
+    ],
+    ResultMixin[PassResult],
+    Event,
+):
     """
     The attempted delivery of the ball from one player to another player on the same team.
 
     Attributes:
         event_type (EventType): `EventType.PASS`
         event_name (str): `"pass"`
+        result (PassResult): The pass's outcome.
         receive_timestamp (Time): The time the pass was received.
         receiver_coordinates (Point): The coordinates where the pass was received.
         receiver_player (Player): The intended receiver of the pass.
-        result (PassResult): The pass's outcome.
+        qualifiers: A list of qualifiers providing additional information about the pass.
     """
 
-    receive_timestamp: Time
-    receiver_player: Player
-    receiver_coordinates: Point
-
-    result: PassResult
+    receive_timestamp: Optional[Time] = None
+    receiver_player: Optional[Player] = None
+    receiver_coordinates: Optional[Point] = None
 
     event_type: EventType = EventType.PASS
     event_name: str = "pass"
@@ -835,7 +911,11 @@ class PassEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class TakeOnEvent(Event):
+class TakeOnEvent(
+    QualifierMixin[CounterAttackQualifier],
+    ResultMixin[TakeOnResult],
+    Event,
+):
     """
     An attempt by one player to dribble past an opponent.
 
@@ -843,9 +923,8 @@ class TakeOnEvent(Event):
         event_type (EventType): `EventType.TAKE_ON`
         event_name (str): `"take_on"`
         result (TakeOnResult): The take-on's outcome.
+        qualifiers: A list of qualifiers providing additional information about the take-on.
     """
-
-    result: TakeOnResult
 
     event_type: EventType = EventType.TAKE_ON
     event_name: str = "take_on"
@@ -853,7 +932,11 @@ class TakeOnEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class CarryEvent(Event):
+class CarryEvent(
+    QualifierMixin[CounterAttackQualifier],
+    ResultMixin[CarryResult],
+    Event,
+):
     """
     A player controls the ball at their feet while moving or standing still.
 
@@ -862,13 +945,12 @@ class CarryEvent(Event):
         event_name (str): `"carry"`
         end_timestamp (Time): Duration of the carry.
         end_coordinates (Point): Coordinate on the pitch where the carry ended.
-        result (CarryResult): The carry's outcome.
+        result (CarryResult): The outcome of the carry.
+        qualifiers: A list of qualifiers providing additional information about the carry.
     """
 
     end_timestamp: Time
     end_coordinates: Point
-
-    result: CarryResult
 
     event_type: EventType = EventType.CARRY
     event_name: str = "carry"
@@ -876,7 +958,11 @@ class CarryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class InterceptionEvent(Event):
+class InterceptionEvent(
+    QualifierMixin[CounterAttackQualifier],
+    ResultMixin[InterceptionResult],
+    Event,
+):
     """
     When a player intercepts any pass event between opposition players and
     prevents the ball reaching its target.
@@ -884,6 +970,8 @@ class InterceptionEvent(Event):
     Attributes:
         event_type (EventType): `EventType.INTERCEPTION`
         event_name (str): `"interception"`
+        result (InterceptionResult): The outcome of the interception.
+        qualifiers: A list of qualifiers providing additional information about the interception.
     """
 
     event_type: EventType = EventType.INTERCEPTION
@@ -892,7 +980,10 @@ class InterceptionEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class ClearanceEvent(Event):
+class ClearanceEvent(
+    QualifierMixin[CounterAttackQualifier],
+    Event,
+):
     """
     A defensive action when a player attempts to get the ball away from
     a dangerous zone on the pitch with no immediate target regarding
@@ -901,6 +992,7 @@ class ClearanceEvent(Event):
     Attributes:
         event_type (EventType): `EventType.CLEARANCE`
         event_name (str): `"clearance"`
+        qualifiers: A list of qualifiers providing additional information about the clearance.
     """
 
     event_type: EventType = EventType.CLEARANCE
@@ -909,7 +1001,11 @@ class ClearanceEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class DuelEvent(Event):
+class DuelEvent(
+    QualifierMixin[Union[DuelQualifier, CounterAttackQualifier]],
+    ResultMixin[DuelResult],
+    Event,
+):
     """
     A contest between two players of opposing sides in the match. Duel events
     come in pairs: one for the attacking team, one for the defending team.
@@ -918,6 +1014,8 @@ class DuelEvent(Event):
     Attributes:
         event_type (EventType): `EventType.DUEL`
         event_name (str): `"duel"`
+        result (DuelResult): The outcome of the duel.
+        qualifiers: A list of qualifiers providing additional information about the duel.
     """
 
     event_type: EventType = EventType.DUEL
@@ -1013,13 +1111,17 @@ class FormationChangeEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class RecoveryEvent(Event):
+class RecoveryEvent(
+    QualifierMixin[CounterAttackQualifier],
+    Event,
+):
     """
     A player gathers a loose ball and gains control of possession for their team.
 
     Attributes:
         event_type (EventType): `EventType.RECOVERY`
         event_name (str): "recovery"
+        qualifiers: A list of qualifiers providing additional information about the recovery.
     """
 
     event_type: EventType = EventType.RECOVERY
@@ -1028,13 +1130,17 @@ class RecoveryEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class BallOutEvent(Event):
+class BallOutEvent(
+    QualifierMixin[CounterAttackQualifier],
+    Event,
+):
     """
     When the ball goes out of bounds.
 
     Attributes:
         event_type (EventType): `EventType.BALL_OUT`
         event_name (str): "ball_out"
+        qualifiers: A list of qualifiers providing additional information about the ball out event.
     """
 
     event_type: EventType = EventType.BALL_OUT
@@ -1043,13 +1149,17 @@ class BallOutEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class MiscontrolEvent(Event):
+class MiscontrolEvent(
+    QualifierMixin[CounterAttackQualifier],
+    Event,
+):
     """
     A player unsuccessfully controls the ball and loses possession.
 
     Attributes:
         event_type (EventType): `EventType.MISCONTROL`
         event_name (str): "miscontrol"
+        qualifiers: A list of qualifiers providing additional information about the miscontrol.
     """
 
     event_type: EventType = EventType.MISCONTROL
@@ -1058,7 +1168,10 @@ class MiscontrolEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class FoulCommittedEvent(Event):
+class FoulCommittedEvent(
+    QualifierMixin[Union[CounterAttackQualifier, CardQualifier]],
+    Event,
+):
     """
     Indicates a foul has been committed. The event is defined for the team that
     commits the foul.
@@ -1066,6 +1179,7 @@ class FoulCommittedEvent(Event):
     Attributes:
         event_type (EventType): `EventType.FOUL_COMMITTED`
         event_name (str): "foul_committed"
+        qualifiers: A list of qualifiers providing additional information about the foul.
     """
 
     event_type: EventType = EventType.FOUL_COMMITTED
@@ -1074,13 +1188,17 @@ class FoulCommittedEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class GoalkeeperEvent(Event):
+class GoalkeeperEvent(
+    QualifierMixin[Union[CounterAttackQualifier, GoalkeeperQualifier]],
+    Event,
+):
     """
     Indicates an action executed by a goalkeeper.
 
     Attributes:
         event_type (EventType): `EventType.GOALKEEPER`
         event_name (str): "goalkeeper"
+        qualifiers: A list of qualifiers providing additional information about the goalkeeper action.
     """
 
     event_type: EventType = EventType.GOALKEEPER
@@ -1089,7 +1207,10 @@ class GoalkeeperEvent(Event):
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
-class PressureEvent(Event):
+class PressureEvent(
+    QualifierMixin[CounterAttackQualifier],
+    Event,
+):
     """
     A player pressures an opponent to force a mistake.
 
@@ -1097,6 +1218,7 @@ class PressureEvent(Event):
         event_type (EventType): `EventType.Pressure`
         event_name (str): `"pressure"`
         end_timestamp (Time): When the pressing ended.
+        qualifiers: A list of qualifiers providing additional information about the pressure event.
     """
 
     end_timestamp: Time

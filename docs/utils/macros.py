@@ -11,8 +11,14 @@ import griffe
 import pandas as pd
 import yaml
 from griffe import Docstring
+from griffe_generics import GenericsExtension
 
-kloppy = griffe.load("kloppy", resolve_aliases=True)
+extensions = griffe.load_extensions(GenericsExtension)
+kloppy = griffe.load(
+    "kloppy",
+    resolve_aliases=True,
+    extensions=extensions,
+)
 
 _EVENT_SPEC_FILE = Path("docs/reference/event-data/spec.yaml")
 _EVENT_DATA_PROVIDERS = {
@@ -23,14 +29,6 @@ _EVENT_DATA_PROVIDERS = {
     "datafactory": "DataFactory",
     "sportec": "Sportec Solutions",
     "metrica_json": "Metrica (JSON)",
-}
-_DEFAULT_EVENT_TYPE_SPEC = {
-    "providers": {
-        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
-    },
-    "attributes": {
-        attr_name: {"providers": {}} for attr_name in ["event_id", "event_type"]
-    },
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
     "providers": {
@@ -43,7 +41,16 @@ _DEFAULT_EVENT_TYPE_SPEC = {
     },
     "attributes": {
         attr_name: _DEFAULT_EVENT_ATTRIBUTE_SPEC
-        for attr_name in ["event_id", "event_type"]
+        for attr_name in [
+            "event_id",
+            "event_type",
+            "event_name",
+            "qualifiers",
+            "dataset",
+            "prev_record",
+            "next_record",
+            "attacking_direction",
+        ]
     },
 }
 
@@ -97,15 +104,42 @@ def render_provider_spec(spec, provider_key):
     if provider_key in spec["providers"]:
         provider_spec = spec["providers"][provider_key]
         status = provider_spec.get("status", "unknown")
-        implementation = provider_spec.get("implementation", "unknown")
+        implementation = provider_spec.get(
+            "implementation", "No implementation details"
+        )
         if status == "parsed":
             return f':material-check:{{ title="{implementation}" }}'
         elif status == "not implemented":
-            return ':material-progress-helper:{ title="not implemented" }'
+            return ':material-progress-helper:{ title="Not implemented" }'
         elif status == "not supported":
-            return ':material-close:{ title="not supported" }'
+            return ':material-close:{ title="Not supported" }'
     else:
         return ':material-progress-question:{ title="Status unkown" }'
+
+
+def annotation_to_md(annotation):
+    if isinstance(annotation, griffe.ExprName):
+        attr_anchor = annotation.canonical_path if annotation else None
+        if attr_anchor is not None and attr_anchor.startswith("kloppy."):
+            return f"[`{annotation.name}`][{attr_anchor}]"
+        elif attr_anchor is not None:
+            return f"`{annotation}`"
+        else:
+            return "?"
+    elif isinstance(annotation, griffe.ExprSubscript):
+        return (
+            annotation_to_md(annotation.left)
+            + "\["
+            + annotation_to_md(annotation.slice)
+            + "\]"
+        )
+    elif isinstance(annotation, griffe.ExprTuple):
+        return ", ".join([annotation_to_md(a) for a in annotation.elements])
+    elif isinstance(annotation, str):
+        return annotation
+    raise ValueError(
+        f"Unsupported annotation type: {type(annotation)} for {annotation}"
+    )
 
 
 def _deepupdate(target: dict[Any, Any], src: dict[Any, Any]) -> None:
@@ -201,7 +235,42 @@ def define_env(env):
 """
 
     @env.macro
-    def render_event_type(event_type, show_providers=True):
+    def render_provider_selectbox():
+        """"Render a multi-select input to show/hide providers."""
+        html_template = """<div class="table-control-panel md-grid">
+            <details class="multi-select multi-select-provider">
+              <summary>Show/hide data providers</summary>
+              <form>
+                <fieldset>
+                  <legend>Data providers</legend>
+                  <ul>
+                    {checkboxes}
+                  </ul>
+                </fieldset>
+              </form>
+            </details>
+        </div>"""
+
+        checkbox_template = """<li>
+          <label for="{key}">{label}
+            <input type="checkbox" id="{key}" name="{key}" value="{label}" checked>
+          </label>
+        </li>"""
+
+        # Generate checkboxes dynamically
+        checkboxes_html = "\n".join(
+            checkbox_template.format(key=key, label=label) for key, label in _EVENT_DATA_PROVIDERS.items()
+        )
+
+        # Insert checkboxes into the template
+        html_output = html_template.format(checkboxes=checkboxes_html)
+        return html_output
+
+
+    @env.macro
+    def render_event_type(
+        event_type, show_providers=True, only_generic=False, only_specific=False
+    ):
         """Create a detailed table with the attributes of the given event type."""
         spec = event_spec["event_types"].get(event_type, {})
         _deepupdate(
@@ -210,21 +279,19 @@ def define_env(env):
         _deepupdate(spec, _DEFAULT_EVENT_TYPE_SPEC)
 
         # Create table
-        columns, data = ["Name", "Type", "Description"], []
+        columns, data = ["group", "Name", "Description"], []
+        value_data_tables = []
         for provider_name in _EVENT_DATA_PROVIDERS.values():
             columns += [provider_name]
 
         def _create_attribute_row(attr):
             row = [attr.name]
             attr_annotation = class_obj.all_members[attr.name].annotation
-            attr_anchor = attr_annotation.canonical_path if attr_annotation else None
-            if attr_anchor is not None and attr_anchor.startswith("kloppy."):
-                row += [f"[`{attr_annotation.name}`][{attr_anchor}]"]
-            elif attr_anchor is not None:
-                row += [f"`{attr_annotation}`"]
-            else:
-                row += ["?"]
-            row += [attr.description]
+            row += [
+                attr.description
+                + "<br/><br/>**TYPE:** "
+                + annotation_to_md(attr_annotation)
+            ]
 
             # Check if there is a record in the spec file for the attribute
             if attr.name in spec["attributes"]:
@@ -240,14 +307,13 @@ def define_env(env):
             return row
 
         def _create_attribute_value_row(attr_value):
+            # row = [""]
             row = [""]
-            row += [attr_value.name]
-            row += [attr_value.description]
+            row += [attr_value.name, attr_value.description]
             # Check if there is a record in the spec file for the attribute value
-            if (
-                attr.name in spec["attributes"]
-                and attr_value.name in spec["attributes"][attr.name]["values"]
-            ):
+            if attr.name in spec["attributes"] and attr_value.name in spec[
+                "attributes"
+            ][attr.name].get("values", {}):
                 attr_value_spec = spec["attributes"][attr.name]["values"][
                     attr_value.name
                 ]
@@ -270,7 +336,7 @@ def define_env(env):
             )
             # Create a row for each attribute
             for attr in attr_docstrings:
-                data += [_create_attribute_row(attr)]
+                data += [[obj_id] + _create_attribute_row(attr)]
 
                 attr_annotation = class_obj.all_members[attr.name].annotation
                 attr_anchor = (
@@ -286,6 +352,7 @@ def define_env(env):
                         ]
                     )
                     if attr_class_spec.docstring and anchor_is_enum:
+                        value_data = []
                         attr_class_docstring = _get_docstring(attr_anchor)
                         attr_class_attr_docstrings = next(
                             (
@@ -296,29 +363,76 @@ def define_env(env):
                             list(),
                         )
                         for attr_value in attr_class_attr_docstrings:
-                            data += [_create_attribute_value_row(attr_value)]
+                            value_data += [_create_attribute_value_row(attr_value)]
+                        value_data_tables += [
+                            (
+                                attr_anchor,
+                                convert_to_md_table(
+                                    pd.DataFrame(data=value_data, columns=columns).drop(
+                                        columns=["group"]
+                                    ),
+                                    {"index": False},
+                                ),
+                            )
+                        ]
 
-        anchor = f'<a id="{event_type}"></a>'  # FIXME: this does not work
+        # anchor = f'<a id="{event_type}"></a>'  # FIXME: this does not work
+        # anchor = "[](){" + event_type + "}"
 
         description = class_docstring[0].value
 
         table = pd.DataFrame(data=data, columns=columns).drop_duplicates(
-            subset="Name", keep="last"
+            subset=["Name"], keep="last"
         )
 
         if not show_providers:
             table.drop(columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True)
 
-        table = convert_to_md_table(table, {"index": False})
+        specific_table = convert_to_md_table(
+            table.loc[table["group"] != "kloppy.domain.Event"].drop(columns=["group"]),
+            {"index": False},
+        )
+        generic_table = convert_to_md_table(
+            table.loc[table["group"] == "kloppy.domain.Event"].drop(columns=["group"]),
+            {"index": False},
+        )
 
+        if only_generic:
+            return f"{render_provider_selectbox()} {generic_table}"
+        if only_specific:
+            return f"{render_provider_selectbox()} {specific_table}"
         return f"""
-{anchor}
+{render_provider_selectbox()}
+
+<h2 id="{event_type}" class="doc doc-heading">
+    <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>
+    <span class="doc doc-object-name doc-class-name">{event_type}</span>
+    <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+    </span>
+</h2>
 
 {description}
 
-<p><span class="doc-section-title">Attributes</span></p>
+<p><span class="doc-section-title">Event Specific Attributes</span></p>
+{specific_table}
+
+<p><span class="doc-section-title">Event Data General Attributes</span></p>
+{generic_table}
+
+""" + "\n".join(
+            [
+                f"""
+<h2 id="{name}" class="doc doc-heading">
+    <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>
+    <span class="doc doc-object-name doc-class-name">{name}</span>
+</h2>
+
 {table}
 """
+                for name, table in value_data_tables
+            ]
+        )
 
     @env.macro
     def render_qualifier(qualifier_type, qualifier_value_type):
@@ -401,6 +515,8 @@ def define_env(env):
         )
 
         return f"""
+{render_provider_selectbox()}
+
 <h2 id="{qualifier_type}" class="doc doc-heading">
     <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>
     <span class="doc doc-object-name doc-class-name">{qualifier_type}</span>

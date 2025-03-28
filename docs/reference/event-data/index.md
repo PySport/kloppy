@@ -1,7 +1,6 @@
 # Event Data Model
 
-This section outlines the current state of kloppy's event data model. Each [`Event`][kloppy.domain.Event] consists of general attributes as well as event-specific attributes. The general attributes listed below are recorded for all event types, based on their applicability. Additional attributes are recorded depending on the specific [`EventType`][kloppy.domain.EventType] and each event can have a list of [`Qualifier`][kloppy.domain.Qualifier] entities providing additional information about the event.
-
+This section outlines the current state of kloppy's event data model. Each [`Event`][kloppy.domain.Event] is associated with an [`EventType`][kloppy.domain.EventType] which classifies the general event type that has occurred. Furthermore, each [`Event`][kloppy.domain.Event] consists of general attributes as well as event type-specific attributes. The general attributes are recorded for all event types, based on their applicability. Additional attributes are recorded depending on the specific [`EventType`][kloppy.domain.EventType]. Each event can also have a list of [`Qualifier`][kloppy.domain.Qualifier] entities providing additional information about the event.
 
 !!! warning
 
@@ -17,6 +16,5 @@ This section outlines the current state of kloppy's event data model. Each [`Eve
       - :material-progress-helper: not yet implemented
       - :material-progress-question: the status is unclear
 
-## Event
+    Please [open a ticket](https://github.com/PySport/kloppy/issues) when you like to implement additional features.
 
-{{ render_event_type("kloppy.domain.Event", show_providers=False) }}

@@ -88,13 +88,12 @@ An [`EventDataset`][kloppy.domain.EventDataset] is a sequence of [`Event`][klopp
 - an [`EventType`][kloppy.domain.EventType],
 - a [`Time`][kloppy.domain.Time] when the event happend,
 - a [`Team`][kloppy.domain.Team] involved in the event,
+- the [`AttackingDirection`][kloppy.domain.AttackingDirection] of the team executing the event,
+- the ball owning [`Team`][kloppy.domain.Team],
 - a [`Player`][kloppy.domain.Player] involved in the event,
 - a [`Point`][kloppy.domain.Point] on the pitch where the event happened,
-- a [`ResultType`][kloppy.domain.ResultType] describing the outcome of the event,
-- a list of [`Qualifier`][kloppy.domain.Qualifier] entities,
-- the ball owning [`Team`][kloppy.domain.Team],
-- the [`AttackingDirection`][kloppy.domain.AttackingDirection] of the team executing the event,
-- the [`BallState`][kloppy.domain.BallState] during the event, and
+- the [`BallState`][kloppy.domain.BallState] during the event,
+- a list of [`Qualifier`][kloppy.domain.Qualifier] entities providing additional details, and
 - optionally a tracking data [`Frame`][kloppy.domain.Frame].
 
 Depending on the [`EventType`][kloppy.domain.EventType] an event can have additional attributes.

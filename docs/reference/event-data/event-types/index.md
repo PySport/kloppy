@@ -1,5 +1,7 @@
 [](){#kloppy.domain.EventType}
 
+{{ render_provider_selectbox() }}
+
 # Event Types
 
 Each event in kloppy's data model is categorized by a specific type that defines

@@ -220,6 +220,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - footnotes
+extra_javascript:
+  - javascripts/extra.js
 watch:
   - mkdocs.yml
   - kloppy

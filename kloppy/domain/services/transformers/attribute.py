@@ -1,27 +1,21 @@
+import math
 import sys
 from abc import ABC, abstractmethod
-import math
-from typing import Dict, Any, Set, Type, Union, List, Optional
+from typing import Any, Dict, List, Optional, Set, Type, Union
 
-from kloppy.domain import (
-    Event,
-    BodyPartQualifier,
-    Orientation,
-    Frame,
-    Code,
-)
+from kloppy.domain import BodyPartQualifier, Code, Event, Frame, Orientation
 from kloppy.domain.models.event import (
-    EnumQualifier,
-    CarryEvent,
-    PassEvent,
-    EventType,
-    ShotEvent,
     CardEvent,
+    CarryEvent,
+    EnumQualifier,
+    EventType,
+    PassEvent,
+    ShotEvent,
 )
 from kloppy.exceptions import (
-    UnknownEncoderError,
-    OrientationError,
     KloppyParameterError,
+    OrientationError,
+    UnknownEncoderError,
 )
 from kloppy.utils import camelcase_to_snakecase
 
@@ -182,8 +176,6 @@ class DefaultEventTransformer(EventAttributeTransformer):
                 if event.event_type != EventType.GENERIC
                 else f"GENERIC:{event.event_name}"
             ),
-            result=event.result.value if event.result else None,
-            success=event.result.is_success if event.result else None,
             period_id=event.period.id,
             timestamp=event.timestamp,
             end_timestamp=None,
@@ -259,9 +251,19 @@ class DefaultEventTransformer(EventAttributeTransformer):
                 }
             )
 
-        if event.qualifiers:
+        if hasattr(event, "qualifiers") and event.qualifiers:
             for qualifier in event.qualifiers:
                 row.update(qualifier.to_dict())
+
+        if hasattr(event, "result"):
+            row.update(
+                {
+                    "result": event.result.value if event.result else None,
+                    "success": event.result.is_success
+                    if event.result
+                    else None,
+                }
+            )
 
         if self.include:
             return {k: row[k] for k in self.include}

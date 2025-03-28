@@ -20,43 +20,33 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'timestamp' field
       coordinates:
         providers:
           statsbomb:
             status: parsed
-      result:
-        providers:
-          statsbomb:
-            status: parsed
+            implementation: value of 'location' field
       team:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'team' field
       player:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'player' field
       ball_owning_team:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'possession_team' field
       ball_state:
         providers:
           statsbomb:
             status: parsed
+            implementation: BallState.DEAD for synthetic ball out events; otherwise BallState.ALIVE
       raw_event:
-        providers:
-          statsbomb:
-            status: parsed
-      dataset:
-        providers:
-          statsbomb:
-            status: parsed
-      prev_record:
-        providers:
-          statsbomb:
-            status: parsed
-      next_record:
         providers:
           statsbomb:
             status: parsed
@@ -64,18 +54,12 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of the 'related_events' field
       freeze_frame:
         providers:
           statsbomb:
             status: parsed
-      attacking_direction:
-        providers:
-          statsbomb:
-            status: parsed
-      state:
-        providers:
-          statsbomb:
-            status: parsed
+            implementation: tracking data frame created from the 'freeze_frame' field for shots or from a 360 data file for other events
   kloppy.domain.PassEvent:
     providers:
       statsbomb:
@@ -92,14 +76,17 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            implementation: sum of 'timestamp' and 'duration' fields
       receiver_coordinates:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'pass.end_location' field
       receiver_player:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'pass.recipient' field
       result:
         providers:
           statsbomb:
@@ -141,6 +128,7 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'shot.end_location' field
       result:
         providers:
           statsbomb:
@@ -221,10 +209,12 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            implementation: sum of 'timestamp' and 'duration' fields
       end_coordinates:
         providers:
           statsbomb:
             status: parsed
+            implementation: value of 'carry.end_location' field
       result:
         providers:
           statsbomb:
@@ -261,17 +251,58 @@ event_types:
       wyscout_v2:
         status: parsed
         implementation: null
+    attributes:
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+        values:
+          SUCCESS:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+          LOST:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 1/'Lost' or 13/'Lost in play'
+          OUT:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 14/'Lost out' or 17/'Success out'
   kloppy.domain.DuelEvent:
     providers:
       statsbomb:
         status: parsed
-        implementation: event type 4/'Duel' or 33/'Fifty-Fifty' or events with attribute "aerial_won"
+        implementation: event type 4/'Duel' or 33/'Fifty-Fifty' or 2/'Ball recovery' with field 'ball_recovery.recovery_failure' or events with attribute "aerial_won"
       statsperform:
         status: parsed
         implementation: event type 7/'Tackle' or 44/'Aerial' or 67/'Fifty-fifty'
       wyscout_v2:
         status: parsed
         implementation: event type 1/'Duel'
+    attributes:
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+        values:
+          WON:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 4/'Duel' with outcome 4/'Won', 15/'Success', 16/'Success in play' or 17/'Success out', or synthetic event from event with field 'aerial_won', or event type 33/'Fifty-fifty' with outcome 4/'Won' or 3/'Success to team'
+          LOST:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 4/'Duel' with outcome 13/'Lost in play' or 14/'Lost out', or type 11/'Aerial lost', or event type 33/'Fifty-fifty' with outcome 1/'Lost' or 2/'Success to opponent', or event type 2/'Ball recovery' with field 'ball_recovery.recovery_failure'
+          NEUTRAL:
+            providers:
+              statsbomb:
+                status: not supported
   kloppy.domain.SubstitutionEvent:
     providers:
       statsbomb:
@@ -288,6 +319,7 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+            value: value of 'substitution.replacement' field
   kloppy.domain.CardEvent:
     providers:
       statsbomb:
@@ -327,7 +359,6 @@ event_types:
         implementation: event type 21/'Player returns'
       wyscout_v2:
         status: not implemented
-        implementation:
   kloppy.domain.PlayerOffEvent:
     providers:
       statsbomb:
@@ -337,7 +368,6 @@ event_types:
         status: not supported
       wyscout_v2:
         status: not implemented
-        implementation:
   kloppy.domain.RecoveryEvent:
     providers:
       statsbomb:
@@ -414,23 +444,12 @@ event_types:
         providers:
           statsbomb:
             status: parsed
-            implementation: "'tactics.formation' field"
+            implementation: value of 'tactics.formation' field
       player_positions:
         providers:
           statsbomb:
             status: parsed
-            implementation: "'tactics.lineup' field"
-            # kloppy.domain.PressureEvent:
-            #   providers:
-            #     statsbomb:
-            #       status: parsed
-            #       implementation: event type 17/'Pressure'
-            #   attributes:
-            #     formation_type:
-            #       providers:
-            #         statsbomb:
-            #           status: parsed
-            #           implementation: "derived from 'duration' field"
+            implementation: value of 'tactics.lineup' field
 qualifiers:
   kloppy.domain.PassQualifier:
     providers:

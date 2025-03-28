@@ -4,9 +4,7 @@ from pathlib import Path
 import pytest
 
 from kloppy.domain import (
-    Period,
     Provider,
-    AttackingDirection,
     Orientation,
     Point,
     SetPieceType,
@@ -210,6 +208,26 @@ class TestSportecTrackingData:
             only_alive=True,
         )
         assert len(dataset) == 199
+
+    def test_limit_sample(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+            limit=100,
+        )
+        assert len(dataset.records) == 100
+
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+            limit=100,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 100
 
     def test_enriched_metadata(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(

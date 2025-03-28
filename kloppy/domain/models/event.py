@@ -65,6 +65,7 @@ class ShotResult(ResultType):
         POST (ShotResult): Shot hit the post
         BLOCKED (ShotResult): Shot was blocked by another player
         SAVED (ShotResult): Shot was saved by the keeper
+        OWN_GOAL (ShotResult): Shot resulted in an own goal
     """
 
     GOAL = "GOAL"
@@ -640,6 +641,11 @@ class QualifierMixin(Generic[QualifierT]):
             for qualifier in self.qualifiers
             if isinstance(qualifier, qualifier_type)
         ]
+
+
+@dataclass
+class UnderPressureQualifier(BoolQualifier):
+    pass
 
 
 @dataclass
@@ -1245,12 +1251,22 @@ class EventDataset(Dataset[Event]):
         """Update team formations and player positions based on Substitution and TacticalShift events."""
         max_leeway = timedelta(seconds=60)
 
+        for team in self.metadata.teams:
+            team.formations.reset()
+
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
+                if event.replacement_player.starting_position:
+                    replacement_player_position = (
+                        event.replacement_player.starting_position
+                    )
+                else:
+                    replacement_player_position = event.player.positions.last(
+                        default=PositionType.Unknown
+                    )
                 event.replacement_player.set_position(
                     event.time,
-                    event.replacement_player.starting_position
-                    or event.player.positions.last(default=None),
+                    replacement_player_position,
                 )
                 event.player.set_position(event.time, None)
 
@@ -1388,6 +1404,7 @@ __all__ = [
     "GoalkeeperAction",
     "GoalkeeperActionType",
     "CounterAttackQualifier",
+    "UnderPressureQualifier",
     "DuelEvent",
     "DuelType",
     "DuelQualifier",

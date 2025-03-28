@@ -1,30 +1,21 @@
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
-from pandas import DataFrame
 from lxml import objectify
+from pandas import DataFrame
 
-from kloppy.domain import (
-    Orientation,
-    Point,
-    Point3D,
-    Provider,
-)
-from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
-    load_metadata,
-)
+from kloppy import metrica
+from kloppy.domain import Orientation, Point, Provider, Score
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
+    load_metadata,
 )
 from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
 from kloppy.utils import performance_logging
-
-
-from kloppy import metrica
 
 
 class TestMetricaEPTSTracking:
@@ -107,6 +98,25 @@ class TestMetricaEPTSTracking:
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/epts_metrica_tracking.txt"
 
+    def test_correct_deserialization_limit_sample(
+        self, meta_data: str, raw_data: str
+    ):
+
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            limit=100,
+        )
+        assert len(dataset.records) == 100
+
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            limit=50,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 50
+
     def test_correct_deserialization(self, meta_data: str, raw_data: str):
         dataset = metrica.load_tracking_epts(
             meta_data=meta_data, raw_data=raw_data
@@ -164,7 +174,8 @@ class TestMetricaEPTSTracking:
         self, base_dir
     ):
         with open(
-            base_dir / "files/epts_metrica_metadata_unused_sensor.xml", "rb"
+            base_dir / "files/epts_metrica_metadata_unused_sensor.xml",
+            "rb",
         ) as metadata_fp, open(
             base_dir / "files/epts_metrica_tracking.txt", "rb"
         ) as raw_data:
@@ -211,3 +222,4 @@ class TestMetricaEPTSTracking:
             base_dir / "files/epts_metrica_metadata_without_score.xml", "rb"
         ) as metadata_fp:
             metadata = load_metadata(metadata_fp)
+            assert metadata.score == Score(home=0, away=0)

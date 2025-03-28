@@ -10,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     BallState,
@@ -163,7 +162,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                     for i, (frame_id, frame_data) in enumerate(
                         sorted(raw_frames.items())
                     ):
-
                         if "ball" not in frame_data:
                             # Frames without ball data are corrupt.
                             continue
@@ -221,7 +219,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= self.limit:
                     break
 
         try:

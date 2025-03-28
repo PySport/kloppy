@@ -10,7 +10,6 @@ from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
     Dimension,
-    Frame,
     Ground,
     Metadata,
     MetricaCoordinateSystem,
@@ -294,6 +293,54 @@ class TestHelpers:
             == transformerd_coordinate_system.pitch_dimensions
         )
 
+    def test_transform_to_pitch_dimensions_with_coordinate_system(
+        self, base_dir
+    ):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
+            1
+        )
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
+
+        transformed_dataset = dataset.transform(
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            ),
+        )
+        assert transformed_dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.5039705882352942)
+
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
+        )
+        assert (
+            transformed_dataset.metadata.coordinate_system.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
+        )
+
     def test_transform_event_data(self, base_dir):
         """Make sure event data that's in ACTION_EXECUTING orientation is
         transformed correctly"""
@@ -374,7 +421,7 @@ class TestHelpers:
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = tracking_data.to_pandas()
+        data_frame = tracking_data.to_df(engine="pandas")
 
         expected_data_frame = DataFrame.from_dict(
             {
@@ -403,7 +450,7 @@ class TestHelpers:
             f24_data=base_dir / "files/opta_f24.xml",
         )
 
-        dataframe = dataset.to_pandas()
+        dataframe = dataset.to_df(engine="pandas")
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
@@ -412,7 +459,7 @@ class TestHelpers:
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
         )
-        df = dataset.to_pandas()
+        df = dataset.to_df(engine="pandas")
         incomplete_passes = df[
             (df.event_type == "PASS") & (df.result == "INCOMPLETE")
         ].reset_index()
@@ -426,11 +473,11 @@ class TestHelpers:
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
 
-        data_frame = tracking_data.to_pandas(
-            additional_columns={
-                "match": "test",
-                "bonus_column": lambda frame: frame.frame_id + 10,
-            },
+        data_frame = tracking_data.to_df(
+            "*",  # Get all default columns
+            match="test",
+            bonus_column=lambda frame: frame.frame_id + 10,
+            engine="pandas",
         )
 
         expected_data_frame = DataFrame.from_dict(

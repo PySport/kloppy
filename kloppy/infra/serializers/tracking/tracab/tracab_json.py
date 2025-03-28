@@ -9,7 +9,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     Team,
@@ -222,7 +221,7 @@ class TRACABJSONDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
                 frames.append(frame)
 
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         try:

@@ -38,11 +38,12 @@ def setup_package():
             "console_scripts": ["kloppy-query = kloppy.cmdline:run_query"]
         },
         install_requires=[
-            "lxml>=4.4.0,<5",
+            "lxml>=4.4.0",
             "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",
+            "fsspec>=2024.12.0",
         ],
         extras_require={
             "test": [
@@ -54,6 +55,8 @@ def setup_package():
                 "pytest-lazy-fixture",
                 "s3fs",
                 "moto[s3]",
+                "flask",
+                "flask-cors",
                 "pytest-httpserver",
             ],
             "development": ["pre-commit==2.6.0"],

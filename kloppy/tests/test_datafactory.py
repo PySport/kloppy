@@ -1,20 +1,16 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from kloppy import datafactory
 from kloppy.domain import (
-    AttackingDirection,
+    DatasetType,
     Ground,
     Orientation,
-    Period,
     Point,
     Provider,
     SetPieceType,
-    DatasetType,
-    PositionType,
 )
-
-from kloppy import datafactory
 
 
 class TestDatafactory:
@@ -43,7 +39,7 @@ class TestDatafactory:
         assert player.player_id == "38804"
         assert player.jersey_no == 1
         assert str(player) == "Daniel Bold"
-        assert player.starting_position == None
+        assert player.starting_position is None
         assert player.starting
 
         assert dataset.metadata.periods[0].id == 1

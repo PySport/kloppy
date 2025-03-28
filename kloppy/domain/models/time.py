@@ -1,14 +1,14 @@
 from dataclasses import dataclass, field
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import (
-    overload,
-    Union,
-    Optional,
-    TypeVar,
     Generic,
     List,
-    Tuple,
     Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
 )
 
 from sortedcontainers import SortedDict
@@ -59,9 +59,7 @@ class Period:
 
     @property
     def end_time(self) -> "Time":
-        return Time(
-            period=self, timestamp=self.end_timestamp - self.start_timestamp
-        )
+        return Time(period=self, timestamp=self.end_timestamp - self.start_timestamp)
 
     @property
     def duration(self) -> timedelta:
@@ -123,16 +121,12 @@ class Time:
         )
 
     @overload
-    def __sub__(self, other: timedelta) -> "Time":
-        ...
+    def __sub__(self, other: timedelta) -> "Time": ...
 
     @overload
-    def __sub__(self, other: "Time") -> timedelta:
-        ...
+    def __sub__(self, other: "Time") -> timedelta: ...
 
-    def __sub__(
-        self, other: Union["Time", timedelta]
-    ) -> Union["Time", timedelta]:
+    def __sub__(self, other: Union["Time", timedelta]) -> Union["Time", timedelta]:
         """
         Subtract a timedelta or AbsTime from the current AbsTime.
 
@@ -153,9 +147,7 @@ class Time:
                 current_period = current_period.prev_period
                 current_timestamp = current_period.duration
 
-            return Time(
-                period=current_period, timestamp=current_timestamp - other
-            )
+            return Time(period=current_period, timestamp=current_timestamp - other)
 
         elif isinstance(other, Time):
             if self.period >= other.period:
@@ -181,9 +173,7 @@ class Time:
             other -= current_period.duration - current_timestamp
             if not current_period.next_period:
                 # We reached start of the match, lets just return start itself
-                return Time(
-                    period=current_period, timestamp=current_period.duration
-                )
+                return Time(period=current_period, timestamp=current_period.duration)
 
             current_period = current_period.next_period
             current_timestamp = timedelta(0)
@@ -287,3 +277,7 @@ class TimeContainer(Generic[T]):
         item_type = type(self.items.values()[0]).__name__
         str_items = {str(key): value for key, value in self.items.items()}
         return f"TimeContainer[{item_type}]({str_items})"
+
+    def reset(self):
+        """Clears all items from the container."""
+        self.items.clear()

@@ -19,7 +19,7 @@ def load(
 
     Args:
         f7_data: F7 xml feed containing the lineup information.
-        f24_data: F24 xml feed containing the events.
+        f24_data: F24 or F73 xml feed containing the events.
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.

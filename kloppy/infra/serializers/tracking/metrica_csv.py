@@ -2,13 +2,12 @@ import logging
 import warnings
 from collections import namedtuple
 from datetime import timedelta
-from typing import Tuple, Dict, Iterator, IO, NamedTuple
+from typing import Iterator, IO, NamedTuple
 
 from kloppy.domain import (
     attacking_direction_from_frame,
     TrackingDataset,
     AttackingDirection,
-    Frame,
     Point,
     Period,
     Orientation,
@@ -19,12 +18,13 @@ from kloppy.domain import (
     Ground,
     Player,
     PlayerData,
+    PositionType,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import performance_logging
 
 
 logger = logging.getLogger(__name__)
@@ -78,6 +78,7 @@ class MetricaCSVTrackingDataDeserializer(
                         player_id=f"{team.ground}_{jersey_number}",
                         jersey_no=int(jersey_number),
                         team=team,
+                        starting_position=PositionType.Unknown,
                     )
                     for jersey_number in player_jersey_numbers
                 ]
@@ -214,7 +215,7 @@ class MetricaCSVTrackingDataDeserializer(
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         try:

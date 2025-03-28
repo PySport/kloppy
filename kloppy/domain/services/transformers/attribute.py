@@ -3,7 +3,14 @@ import sys
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Type, Union
 
-from kloppy.domain import BodyPartQualifier, Code, Event, Frame, Orientation
+from kloppy.domain import (
+    BodyPartQualifier,
+    Code,
+    Event,
+    Frame,
+    Orientation,
+    Point,
+)
 from kloppy.domain.models.event import (
     CardEvent,
     CarryEvent,
@@ -63,27 +70,23 @@ class AngleToGoalTransformer(EventAttributeTransformer):
 
         if not event.coordinates:
             return {"angle_to_goal": None}
+        delta_x = metadata.pitch_dimensions.distance_between(
+            Point(event.coordinates.x, 0),
+            Point(metadata.pitch_dimensions.x_dim.max, 0),
+        )
+        delta_y = metadata.pitch_dimensions.distance_between(
+            Point(0, event.coordinates.y),
+            Point(
+                0,
+                (
+                    metadata.pitch_dimensions.y_dim.max
+                    + metadata.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            ),
+        )
 
-        if metadata.pitch_dimensions.width:
-            # Calculate in metric system
-            event_x = event.coordinates.x * metadata.pitch_dimensions.length
-            event_y = event.coordinates.y * metadata.pitch_dimensions.width
-            goal_x = metadata.pitch_dimensions.length
-            goal_y = metadata.pitch_dimensions.width / 2
-        else:
-            event_x = event.coordinates.x
-            event_y = event.coordinates.y
-            goal_x = metadata.pitch_dimensions.x_dim.max
-            goal_y = (
-                metadata.pitch_dimensions.y_dim.max
-                + metadata.pitch_dimensions.y_dim.min
-            ) / 2
-
-        return {
-            "angle_to_goal": math.atan2(goal_x - event_x, goal_y - event_y)
-            / math.pi
-            * 180
-        }
+        return {"angle_to_goal": math.atan2(delta_x, delta_y) / math.pi * 180}
 
 
 class DistanceToGoalTransformer(EventAttributeTransformer):
@@ -96,8 +99,7 @@ class DistanceToGoalTransformer(EventAttributeTransformer):
         event_y = event.coordinates.y
         goal_x = metadata.pitch_dimensions.x_dim.max
         goal_y = (
-            metadata.pitch_dimensions.y_dim.max
-            + metadata.pitch_dimensions.y_dim.min
+            metadata.pitch_dimensions.y_dim.max + metadata.pitch_dimensions.y_dim.min
         ) / 2
 
         return {
@@ -118,8 +120,7 @@ class DistanceToOwnGoalTransformer(EventAttributeTransformer):
         event_y = event.coordinates.y
         goal_x = metadata.pitch_dimensions.x_dim.min
         goal_y = (
-            metadata.pitch_dimensions.y_dim.max
-            + metadata.pitch_dimensions.y_dim.min
+            metadata.pitch_dimensions.y_dim.max + metadata.pitch_dimensions.y_dim.min
         ) / 2
 
         return {
@@ -161,9 +162,7 @@ class DefaultEventTransformer(EventAttributeTransformer):
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
@@ -181,9 +180,7 @@ class DefaultEventTransformer(EventAttributeTransformer):
             end_timestamp=None,
             ball_state=event.ball_state.value if event.ball_state else None,
             ball_owning_team=(
-                event.ball_owning_team.team_id
-                if event.ball_owning_team
-                else None
+                event.ball_owning_team.team_id if event.ball_owning_team else None
             ),
             team_id=event.team.team_id if event.team else None,
             player_id=event.player.player_id if event.player else None,
@@ -216,14 +213,10 @@ class DefaultEventTransformer(EventAttributeTransformer):
                 {
                     "end_timestamp": event.end_timestamp,
                     "end_coordinates_x": (
-                        event.end_coordinates.x
-                        if event.end_coordinates
-                        else None
+                        event.end_coordinates.x if event.end_coordinates else None
                     ),
                     "end_coordinates_y": (
-                        event.end_coordinates.y
-                        if event.end_coordinates
-                        else None
+                        event.end_coordinates.y if event.end_coordinates else None
                     ),
                 }
             )
@@ -231,24 +224,16 @@ class DefaultEventTransformer(EventAttributeTransformer):
             row.update(
                 {
                     "end_coordinates_x": (
-                        event.result_coordinates.x
-                        if event.result_coordinates
-                        else None
+                        event.result_coordinates.x if event.result_coordinates else None
                     ),
                     "end_coordinates_y": (
-                        event.result_coordinates.y
-                        if event.result_coordinates
-                        else None
+                        event.result_coordinates.y if event.result_coordinates else None
                     ),
                 }
             )
         elif isinstance(event, CardEvent):
             row.update(
-                {
-                    "card_type": (
-                        event.card_type.value if event.card_type else None
-                    )
-                }
+                {"card_type": (event.card_type.value if event.card_type else None)}
             )
 
         if hasattr(event, "qualifiers") and event.qualifiers:
@@ -259,9 +244,7 @@ class DefaultEventTransformer(EventAttributeTransformer):
             row.update(
                 {
                     "result": event.result.value if event.result else None,
-                    "success": event.result.is_success
-                    if event.result
-                    else None,
+                    "success": event.result.is_success if event.result else None,
                 }
             )
 
@@ -280,9 +263,7 @@ class DefaultFrameTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
@@ -294,16 +275,10 @@ class DefaultFrameTransformer:
             frame_id=frame.frame_id,
             ball_state=frame.ball_state.value if frame.ball_state else None,
             ball_owning_team_id=(
-                frame.ball_owning_team.team_id
-                if frame.ball_owning_team
-                else None
+                frame.ball_owning_team.team_id if frame.ball_owning_team else None
             ),
-            ball_x=(
-                frame.ball_coordinates.x if frame.ball_coordinates else None
-            ),
-            ball_y=(
-                frame.ball_coordinates.y if frame.ball_coordinates else None
-            ),
+            ball_x=(frame.ball_coordinates.x if frame.ball_coordinates else None),
+            ball_y=(frame.ball_coordinates.y if frame.ball_coordinates else None),
             ball_z=(
                 getattr(frame.ball_coordinates, "z", None)
                 if frame.ball_coordinates
@@ -315,14 +290,10 @@ class DefaultFrameTransformer:
             row.update(
                 {
                     f"{player.player_id}_x": (
-                        player_data.coordinates.x
-                        if player_data.coordinates
-                        else None
+                        player_data.coordinates.x if player_data.coordinates else None
                     ),
                     f"{player.player_id}_y": (
-                        player_data.coordinates.y
-                        if player_data.coordinates
-                        else None
+                        player_data.coordinates.y if player_data.coordinates else None
                     ),
                     f"{player.player_id}_d": player_data.distance,
                     f"{player.player_id}_s": player_data.speed,
@@ -360,9 +331,7 @@ class DefaultCodeTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                f"Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []

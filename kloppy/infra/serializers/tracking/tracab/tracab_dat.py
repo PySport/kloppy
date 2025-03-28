@@ -10,7 +10,6 @@ from kloppy.domain import (
     TrackingDataset,
     DatasetFlag,
     AttackingDirection,
-    Frame,
     Point,
     Point3D,
     Team,
@@ -304,7 +303,7 @@ class TRACABDatDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         if not orientation:

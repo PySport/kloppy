@@ -1,6 +1,5 @@
 from typing import BinaryIO, List
 
-import aiohttp
 import fsspec
 
 from kloppy.config import get_config
@@ -37,6 +36,14 @@ class HTTPAdapter(FSSpecAdapter):
     def _get_filesystem(
         self, url: str, no_cache: bool = False
     ) -> fsspec.AbstractFileSystem:
+        try:
+            import aiohttp
+        except ImportError:
+            raise AdapterError(
+                "Seems like you don't have `aiohttp` installed, which is required to authenticate. "
+                "Please install it using: pip install aiohttp"
+            )
+
         check_requests_patch()
 
         basic_authentication = get_config("adapters.http.basic_authentication")

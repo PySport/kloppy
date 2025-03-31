@@ -155,14 +155,19 @@ class SecondSpectrumDeserializer(
             if first_byte == b"{":
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
-                frame_rate = int(metadata["fps"])
-                pitch_size_height = float(metadata["pitchLength"])
-                pitch_size_width = float(metadata["pitchWidth"])
+                frame_rate = float(metadata.get("fps", 25.0))
+                pitch_size_height = float(
+                    metadata["data"].get("pitchLength", 104.8512)
+                )
+                pitch_size_width = float(
+                    metadata["data"].get("pitchWidth", 67.9704)
+                )
 
                 periods = []
+                metadata = metadata["data"]
                 for period in metadata["periods"]:
-                    start_frame_id = int(period["startFrameIdx"])
-                    end_frame_id = int(period["endFrameIdx"])
+                    start_frame_id = int(period["startFrameClock"])
+                    end_frame_id = int(period["endFrameClock"])
                     if start_frame_id != 0 or end_frame_id != 0:
                         # Frame IDs are unix timestamps (in milliseconds)
                         periods.append(
@@ -214,9 +219,15 @@ class SecondSpectrumDeserializer(
                         metadata = json.loads(
                             inputs.additional_meta_data.read()
                         )
+                    else:
+                        metadata = metadata
 
-                    home_team_id = metadata["homeOptaId"]
-                    away_team_id = metadata["awayOptaId"]
+                    home_team_id = metadata["homeTeam"]["externalIds"][
+                        "optaId"
+                    ]
+                    away_team_id = metadata["awayTeam"]["externalIds"][
+                        "optaId"
+                    ]
 
                     # Tries to parse (short) team names from the description string
                     try:
@@ -247,7 +258,7 @@ class SecondSpectrumDeserializer(
                             player_attributes = {
                                 k: v
                                 for k, v in player_data.items()
-                                if k in ["ssiId", "optaUuid"]
+                                if k in ["id", "optaId"]
                             }
 
                             player = Player(
@@ -335,7 +346,7 @@ class SecondSpectrumDeserializer(
                 metadata["day"],
             )
             date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
-            game_id = metadata["ssiId"]
+            game_id = metadata.get("id")
         else:
             score = None
             date = None

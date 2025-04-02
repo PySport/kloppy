@@ -127,7 +127,7 @@ class ShotZoneResults(Enum):
      --------------------------------
           ||=================||           2.77
      -------------------------------
-          || glt | gt | grt ||            2
+          || gtl | gt | gtr ||            2
      --------------------------------
       ol || gl | gc  | gr || or           1
      --------------------------------
@@ -143,9 +143,9 @@ class ShotZoneResults(Enum):
     GOAL_CENTER_LEFT = ("gl", Point3D(100, 45, 1))
     GOAL_CENTER = ("gc", Point3D(100, 50, 1))
     GOAL_CENTER_RIGHT = ("gr", Point3D(100, 55, 1))
-    GOAL_TOP_LEFT = ("glt", Point3D(100, 45, 2))
+    GOAL_TOP_LEFT = ("gtl", Point3D(100, 45, 2))
     GOAL_TOP_CENTER = ("gt", Point3D(100, 50, 2))
-    GOAL_TOP_RIGHT = ("grt", Point3D(100, 55, 2))
+    GOAL_TOP_RIGHT = ("gtr", Point3D(100, 55, 2))
     POST_BOTTOM_LEFT = ("plb", Point3D(100, 44.62, 0))
     POST_BOTTOM_RIGHT = ("pbr", Point3D(100, 55.38, 0))
     OUT_BOTTOM_LEFT = ("olb", Point3D(100, 40, 0))

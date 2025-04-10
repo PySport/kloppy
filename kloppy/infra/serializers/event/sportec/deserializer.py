@@ -493,12 +493,6 @@ class SportecEventDataDeserializer(
                 event_chain = _event_chain_from_xml_elm(event_elm)
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
 
-                # Skip any events that happened before the first kick off
-                # if period_id == 0 and not (SPORTEC_EVENT_NAME_KICKOFF in event_chain
-                #     and "GameSection"
-                #     in event_chain[SPORTEC_EVENT_NAME_KICKOFF]):
-                #     continue
-
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
                     and "GameSection"

@@ -122,9 +122,11 @@ class OfficialType(Enum):
     """Enumeration for types of officials (referees)."""
 
     VideoAssistantReferee = "Video Assistant Referee"
+    AssistantVideoAssistantReferee = "Assistant Video Assistant Referee"
     MainReferee = "Main Referee"
     AssistantReferee = "Assistant Referee"
     FourthOfficial = "Fourth Official"
+    Unknown = "Unknown"
 
     def __str__(self):
         return self.value

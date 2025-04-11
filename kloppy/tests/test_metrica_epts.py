@@ -98,6 +98,25 @@ class TestMetricaEPTSTracking:
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/epts_metrica_tracking.txt"
 
+    def test_correct_deserialization_limit_sample(
+        self, meta_data: str, raw_data: str
+    ):
+
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            limit=100,
+        )
+        assert len(dataset.records) == 100
+
+        dataset = metrica.load_tracking_epts(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            limit=50,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 50
+
     def test_correct_deserialization(self, meta_data: str, raw_data: str):
         dataset = metrica.load_tracking_epts(
             meta_data=meta_data, raw_data=raw_data

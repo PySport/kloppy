@@ -867,7 +867,6 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
-@dataclass
 class SignalityCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -883,16 +882,16 @@ class SignalityCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
                 x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
                 ),
                 y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:

@@ -1,9 +1,12 @@
-from typing import BinaryIO
+from typing import BinaryIO, List
+
+import fsspec
 
 from kloppy.config import get_config
 from kloppy.exceptions import AdapterError, InputNotFoundError
 
 from .adapter import Adapter
+from .fsspec import FSSpecAdapter
 
 try:
     from js import XMLHttpRequest  # noqa: F401
@@ -26,31 +29,42 @@ def check_requests_patch():
         pyodide_http.patch_all()
 
 
-class HTTPAdapter(Adapter):
+class HTTPAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("http://") or url.startswith("https://")
 
-    def read_to_stream(self, url: str, output: BinaryIO):
+    def _get_filesystem(
+        self, url: str, no_cache: bool = False
+    ) -> fsspec.AbstractFileSystem:
+        try:
+            import aiohttp
+        except ImportError:
+            raise AdapterError(
+                "Seems like you don't have `aiohttp` installed, which is required to authenticate. "
+                "Please install it using: pip install aiohttp"
+            )
+
         check_requests_patch()
 
         basic_authentication = get_config("adapters.http.basic_authentication")
 
-        try:
-            import requests
-        except ImportError:
-            raise AdapterError(
-                "Seems like you don't have `requests` installed. Please"
-                " install it using: pip install requests"
+        client_kwargs = {}
+        if basic_authentication:
+            client_kwargs["auth"] = aiohttp.BasicAuth(*basic_authentication)
+
+        if no_cache:
+            return fsspec.filesystem("http", client_kwargs=client_kwargs)
+        else:
+            return fsspec.filesystem(
+                "simplecache",
+                target_protocol="http",
+                target_options={"client_kwargs": client_kwargs},
+                cache_storage=get_config("cache"),
             )
 
-        auth = None
-        if basic_authentication:
-            auth = requests.auth.HTTPBasicAuth(*basic_authentication)
-
-        with requests.get(url, stream=True, auth=auth) as r:
-            if r.status_code == 404:
-                raise InputNotFoundError(f"Could not find {url}")
-
-            r.raise_for_status()
-            for chunk in r.iter_content(chunk_size=8192):
-                output.write(chunk)
+    def is_directory(self, url: str) -> bool:
+        """
+        Check if the given URL points to a directory.
+        """
+        fs = self._get_filesystem(url, no_cache=True)
+        return fs.isdir(url)

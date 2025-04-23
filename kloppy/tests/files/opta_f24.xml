@@ -332,6 +332,14 @@
       <Q id="4637490459" qualifier_id="375" value="120:24.380" />
       <Q id="4637490965" qualifier_id="76" />
     </Event>
+    <Event id="2653541651" event_id="623" type_id="40" period_id="2" min="65" sec="34" team_id="2592" outcome="1" x="0.0" y="0.0" timestamp="2024-03-02T16:26:14.103" timestamp_utc="2024-03-02T16:26:14.103" last_modified="2024-03-02T23:57:47" version="1709423869103">
+      <Q id="4846944787" qualifier_id="59" value="23, 5, 33, 19, 15, 4, 20, 11, 10, 28, 14, 1, 2, 3, 9, 18, 21, 27, 45" />
+      <Q id="4846944799" qualifier_id="194" value="103192" />
+      <Q id="4846944791" qualifier_id="130" value="8" />
+      <Q id="4846944783" qualifier_id="30" value="84490, 208695, 213398, 248479, 232018, 223842, 449897, 445731, 430368, 116187, 440088, 45097, 184269, 433463, 216557, 232016, 249864, 460842, 1" />
+      <Q id="4846944785" qualifier_id="44" value="1, 2, 2, 3, 2, 2, 3, 3, 4, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5" />
+      <Q id="4846944795" qualifier_id="131" value="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 0, 0, 0, 0, 0, 0, 0" />
+    </Event>
     <Event id="2614238693" event_id="763" type_id="32" period_id="3" min="90" sec="0" team_id="2592" outcome="1" x="0.0" y="0.0" timestamp="2018-09-23T17:50:01.810" last_modified="2018-09-23T17:08:02" version="1699229026732">
       <Q id="4637438117" qualifier_id="127" value="Left to Right" />
     </Event>

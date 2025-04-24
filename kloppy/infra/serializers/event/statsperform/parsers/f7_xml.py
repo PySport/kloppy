@@ -12,6 +12,7 @@ from kloppy.domain import (
     Player,
     Score,
     Team,
+    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -19,6 +20,7 @@ from .base import OptaXMLParser
 from ..formation_mapping import (
     formation_position_mapping,
     formation_name_mapping,
+    FormationType,
 )
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
@@ -144,26 +146,37 @@ class F7XMLParser(OptaXMLParser):
                 "-".join(list(team_elm.attrib["Formation"]))
             ),
         )
-        team.players = [
-            Player(
-                player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
-                team=team,
-                jersey_no=int(player_elm.attrib["ShirtNumber"]),
-                first_name=team_players[player_elm.attrib["PlayerRef"]][
-                    "first_name"
-                ],
-                last_name=team_players[player_elm.attrib["PlayerRef"]][
-                    "last_name"
-                ],
-                starting=(player_elm.attrib["Status"] == "Start"),
-                starting_position=formation_position_mapping[
-                    formation_name_mapping[team_elm.attrib["Formation"]]
-                ][int(player_elm.attrib["Formation_Place"])],
+        players = []
+        formation = formation_name_mapping.get(
+            team_elm.attrib["Formation"], FormationType.UNKNOWN
+        )
+        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
+            "MatchPlayer"
+        ):
+            starting_position = (
+                formation_position_mapping[formation][
+                    int(player_elm.attrib["Formation_Place"])
+                ]
+                if formation != FormationType.UNKNOWN
+                else PositionType.Unknown
             )
-            for player_elm in team_elm.find("PlayerLineUp").iterchildren(
-                "MatchPlayer"
+            players.append(
+                Player(
+                    player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
+                    team=team,
+                    jersey_no=int(player_elm.attrib["ShirtNumber"]),
+                    first_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "first_name"
+                    ],
+                    last_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "last_name"
+                    ],
+                    starting=(player_elm.attrib["Status"] == "Start"),
+                    starting_position=starting_position,
+                )
             )
-        ]
+
+        team.players = players
         return team
 
     def _parse_team_players(

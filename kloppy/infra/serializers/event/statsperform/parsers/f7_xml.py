@@ -148,11 +148,13 @@ class F7XMLParser(OptaXMLParser):
         )
         players = []
 
-        if hasattr(team_elm, "Formation"):
-            formation_string = team_elm.attrib["Formation"]
-            formation_name_mapping.get(formation_string, FormationType.UNKNOWN)
-        else:
-            formation = FormationType.UNKNOWN
+        formation = (
+            formation_name_mapping.get(
+                team_elm.attrib["Formation"], FormationType.UNKNOWN
+            )
+            if "Formation" in team_elm.attrib
+            else FormationType.UNKNOWN
+        )
 
         for player_elm in team_elm.find("PlayerLineUp").iterchildren(
             "MatchPlayer"

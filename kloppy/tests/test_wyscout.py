@@ -191,7 +191,7 @@ class TestWyscoutV3:
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             minutes=45, seconds=5
-        ) + timedelta(minutes=46, seconds=53)
+        ) + timedelta(minutes=46, seconds=58)
 
         assert (
             dataset.metadata.teams[0].starting_formation
@@ -208,7 +208,7 @@ class TestWyscoutV3:
 
         second_period_end_time = Time(
             period=dataset.metadata.periods[1],
-            timestamp=timedelta(seconds=2813),
+            timestamp=timedelta(seconds=2818),
         )
         assert (
             dataset.metadata.teams[1]

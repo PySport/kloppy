@@ -708,8 +708,9 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
-def create_periods(raw_events):
+def create_periods(raw_events, period_minutes_offset_mapping):
     periods = []
+
     for idx, raw_event in enumerate(raw_events["events"]):
         next_period_id = None
         if (idx + 1) < len(raw_events["events"]):
@@ -732,9 +733,15 @@ def create_periods(raw_events):
             )
 
         if next_period_id != period_id:
+            period_start_timestamp = periods[period_id - 1].start_timestamp
+            period_offset = (
+                period_start_timestamp
+                - period_minutes_offset_mapping[period_id]
+            )
             periods[-1] = replace(
                 periods[-1],
-                end_timestamp=timedelta(
+                end_timestamp=period_offset
+                + timedelta(
                     seconds=float(
                         raw_event["second"] + raw_event["minute"] * 60
                     )
@@ -805,7 +812,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         "shortName"
                     )
 
-            periods = create_periods(raw_events)
+            periods = create_periods(raw_events, start_ts)
 
             events = []
 

@@ -59,6 +59,7 @@ def setup_package():
                 "flask",
                 "flask-cors",
                 "pytest-httpserver",
+                "aiohttp",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

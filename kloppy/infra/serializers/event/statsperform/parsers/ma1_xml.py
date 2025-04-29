@@ -3,12 +3,13 @@
 from datetime import datetime, timezone
 from typing import Any, Optional, List, Dict, Tuple
 
-from kloppy.domain import Period, Score, Team, Ground, Player
+from kloppy.domain import Period, Score, Team, Ground, Player, PositionType
 from kloppy.exceptions import DeserializationError
 from .base import OptaXMLParser
 from ..formation_mapping import (
     formation_name_mapping,
     formation_position_mapping,
+    FormationType,
 )
 
 
@@ -92,7 +93,9 @@ class MA1XMLParser(OptaXMLParser):
         for line_up in line_ups:
             team_id = line_up.get("contestantId")
             raw_formation = line_up.get("formationUsed")
-            formation = formation_name_mapping[raw_formation]
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
             team_formations[team_id] = formation
 
         for team in teams:
@@ -115,16 +118,23 @@ class MA1XMLParser(OptaXMLParser):
         for line_up in line_ups:
             team_id = line_up.get("contestantId")
             raw_formation = line_up.get("formationUsed")
-            formation = formation_name_mapping[raw_formation]
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
 
             players = line_up.iterchildren(tag="player")
             for player in players:
                 player_attributes = player.attrib
                 player_id = player_attributes["playerId"]
+
                 if "formationPlace" in player_attributes:
-                    player_position = formation_position_mapping[formation][
-                        int(player_attributes["formationPlace"])
-                    ]
+                    player_position = (
+                        formation_position_mapping[formation][
+                            int(player_attributes["formationPlace"])
+                        ]
+                        if formation != FormationType.UNKNOWN
+                        else PositionType.Unknown
+                    )
                     starting = True
                 else:
                     player_position = None

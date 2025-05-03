@@ -70,9 +70,9 @@ def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
-        ground=Ground.HOME
-        if team_elm.attrib["Role"] == "home"
-        else Ground.AWAY,
+        ground=(
+            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
+        ),
     )
     team.players = [
         Player(
@@ -148,7 +148,10 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+    (
+        home_score,
+        away_score,
+    ) = match_root.MatchInformation.General.attrib[
         "Result"
     ].split(":")
     score = Score(home=int(home_score), away=int(away_score))

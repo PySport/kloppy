@@ -119,11 +119,13 @@ class MetricaCSVTrackingDataDeserializer(
                             for i, player in enumerate(players)
                             if columns[3 + i * 2] != "NaN"
                         },
-                        ball_coordinates=Point(
-                            x=float(columns[-2]), y=1 - float(columns[-1])
-                        )
-                        if columns[-2] != "NaN"
-                        else None,
+                        ball_coordinates=(
+                            Point(
+                                x=float(columns[-2]), y=1 - float(columns[-1])
+                            )
+                            if columns[-2] != "NaN"
+                            else None
+                        ),
                     )
                 frame_idx += 1
 

@@ -518,9 +518,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=0)
-                            if len(periods) == 0
-                            else periods[-1].end_timestamp,
+                            start_timestamp=(
+                                timedelta(seconds=0)
+                                if len(periods) == 0
+                                else periods[-1].end_timestamp
+                            ),
                             end_timestamp=None,
                         )
                     )
@@ -539,9 +541,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         y=float(raw_event["positions"][0]["y"]),
                     ),
                     "team": teams[team_id],
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    else None,
+                    "player": (
+                        players[team_id][player_id]
+                        if player_id != INVALID_PLAYER
+                        else None
+                    ),
                     "ball_owning_team": None,
                     "ball_state": None,
                     "period": periods[-1],
@@ -682,31 +686,31 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             # when DuelEvent is interception, we need to
                             # overwrite this and the previous DuelEvent
                             events = events[:-1]
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
-                                **interception_event_args,
-                                **generic_event_args,
+                            new_events[i] = (
+                                self.event_factory.build_interception(
+                                    **interception_event_args,
+                                    **generic_event_args,
+                                )
                             )
                         elif new_event.event_type in [
                             EventType.RECOVERY,
                             EventType.MISCONTROL,
                         ]:
                             # replace touch events
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
-                                **interception_event_args,
-                                **generic_event_args,
+                            new_events[i] = (
+                                self.event_factory.build_interception(
+                                    **interception_event_args,
+                                    **generic_event_args,
+                                )
                             )
                         elif new_event.event_type in [
                             EventType.PASS,
                             EventType.CLEARANCE,
                         ]:
                             # insert an interception event before interception passes
-                            generic_event_args[
-                                "event_id"
-                            ] = f"interception-{generic_event_args['event_id']}"
+                            generic_event_args["event_id"] = (
+                                f"interception-{generic_event_args['event_id']}"
+                            )
                             interception_event = (
                                 self.event_factory.build_interception(
                                     **interception_event_args,

@@ -1,0 +1,149 @@
+{
+    "ok": true,
+    "requestId": "sample-request-id-123456",
+    "fps": 25,
+    "data": {
+      "startTime": 1000000000000,
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "description": "Team A - Team B : 2023-1-1",
+      "id": "sample-match-id-123456",
+      "externalIds": {},
+      "homeTeam": {
+        "id": "home-team-123",
+        "externalIds": { "optaId": "111", "fspId": "10001" },
+        "players": [
+          {
+            "name": "Player H1",
+            "number": "16",
+            "position": "SUB",
+            "id": "player-h1-id",
+            "externalIds": {
+              "optaId": "111001",
+              "performId": "h1-perform-id",
+              "fspId": "11111"
+            }
+          },
+          {
+            "name": "Player H2",
+            "number": "7",
+            "position": "MF",
+            "id": "player-h2-id",
+            "externalIds": {
+              "optaId": "111002",
+              "performId": "h2-perform-id",
+              "fspId": "11112"
+            }
+          },
+          {
+            "name": "Player H3",
+            "number": "17",
+            "position": "MF",
+            "id": "player-h3-id",
+            "externalIds": { "fspId": "11113" }
+          },
+          {
+            "name": "Player H4",
+            "number": "23",
+            "position": "MF",
+            "id": "player-h4-id",
+            "externalIds": {
+              "optaId": "111004",
+              "performId": "h4-perform-id",
+              "fspId": "11114"
+            }
+          },
+          {
+            "name": "Player H5",
+            "number": "27",
+            "position": "SUB",
+            "id": "player-h5-id",
+            "externalIds": {
+              "optaId": "111005",
+              "performId": "h5-perform-id",
+              "fspId": "11115"
+            }
+          }
+        ]
+      },
+      "awayTeam": {
+        "id": "away-team-123",
+        "externalIds": { "optaId": "222", "fspId": "20001" },
+        "players": [
+          {
+            "name": "Player A1",
+            "number": "22",
+            "position": "GK",
+            "id": "player-a1-id",
+            "externalIds": {
+              "optaId": "222001",
+              "performId": "a1-perform-id",
+              "fspId": "22221"
+            }
+          },
+          {
+            "name": "Player A2",
+            "number": "4",
+            "position": "DF",
+            "id": "player-a2-id",
+            "externalIds": {}
+          },
+          {
+            "name": "Player A3",
+            "number": "9",
+            "position": "FW",
+            "id": "player-a3-id",
+            "externalIds": {
+              "optaId": "222003",
+              "performId": "a3-perform-id",
+              "fspId": "22223"
+            }
+          },
+          {
+            "name": "Player A4",
+            "number": "14",
+            "position": "SUB",
+            "id": "player-a4-id",
+            "externalIds": {
+              "optaId": "222004",
+              "performId": "a4-perform-id"
+            }
+          },
+          {
+            "name": "Player A5",
+            "number": "27",
+            "position": "SUB",
+            "id": "player-a5-id",
+            "externalIds": {
+              "optaId": "222005",
+              "performId": "a5-perform-id",
+              "fspId": "22225"
+            }
+          }
+        ]
+      },
+      "venue": {
+        "id": "venue-123",
+        "externalIds": { "fspId": "30001" }
+      },
+      "pitchLength": 105.0,
+      "pitchWidth": 68.0,
+      "homeScore": 0,
+      "awayScore": 2,
+      "periods": [
+        {
+          "number": 1,
+          "startFrameClock": 1000000100000,
+          "endFrameClock": 1000002700000,
+          "homeAttPositive": true
+        },
+        {
+          "number": 2,
+          "startFrameClock": 1000003800000,
+          "endFrameClock": 1000006400000,
+          "homeAttPositive": false
+        }
+      ]
+    }
+  }

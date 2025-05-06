@@ -135,7 +135,7 @@ class TestSportecEventData:
 
         # raw_event must be flattened dict
         assert isinstance(dataset.events[0].raw_event, dict)
-    
+
         # Test the kloppy event types that are being parsed
         event_types_set = set(event.event_type for event in dataset.events)
 

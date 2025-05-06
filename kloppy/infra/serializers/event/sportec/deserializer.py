@@ -571,11 +571,18 @@ class SportecEventDataDeserializer(
                         receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
-                    event = self.event_factory.build_recovery(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
+                    if event_attributes.get("Type") == "BallClaimed":
+                        event = self.event_factory.build_recovery(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get("Type") == "InterceptedBall":
+                        event = self.event_factory.build_interception(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
                 elif event_name == SPORTEC_EVENT_NAME_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
                         event_attributes=event_attributes, team=team

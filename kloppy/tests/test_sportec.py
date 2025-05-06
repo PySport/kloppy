@@ -150,6 +150,7 @@ class TestSportecEventData:
 
         # Kloppy types added in PR #XXXX
         assert EventType.CLEARANCE in event_types_set
+        assert EventType.INTERCEPTION in event_types_set
 
 
 class TestSportecTrackingData:

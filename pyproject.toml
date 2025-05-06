@@ -1,16 +1,107 @@
-[tool.black]
-line-length = 79
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+[tool.poe.tasks]
+# run with eg `uv run poe fmt`
+fmt = "ruff format"
+lint = "ruff check --fix"
+check = "pyright"
+test = "pytest kloppy/tests"
+# run all the above
+all = [ {ref="fmt"}, {ref="lint"}, {ref="check"}, {ref="test"} ]
+
+"ci:fmt" = "ruff format --check"  # fail if not formatted
+"ci:lint" = "ruff check"
+
+[project]
+name = "kloppy"
+version = "3.16.0"
+description = "Standardizing soccer tracking- and event data"
+readme = "README.md"
+license = { text = "BSD" }
+authors = [
+    { name = "Koen Vossen", email = "info@koenvossen.nl" }
+]
+keywords = ["soccer", "tracking data", "event data", "sports analytics"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved",
+    "Topic :: Scientific/Engineering"
+]
+
+requires-python = ">=3.8"
+dependencies = [
+    "lxml>=4.4.0",
+    "typing_extensions; python_version < '3.11'",
+    "sortedcontainers>=2",
+    "fsspec[http]>=2024.12.0",
+    "fsspec[http]<=2025.3.0; python_version <= '3.8'",
+    "pytz>=2025.2",
+    "python-dateutil>=2.9.0.post0",
+]
+
+[dependency-groups]
+dev = [
+    "poethepoet>=0.30.0",
+    "pyright>=1.1.400",
+    "pytest>=6.2.5,<8",
+    "pytest-lazy-fixture>=0.6.3",
+    "pytest-httpserver",
+    "ruff>=0.11.8",
+    "moto[s3,server]",
+    "fsspec[s3,http]",
+    "pandas",
+    "polars",
+    "pyarrow",
+]
+
+[project.optional-dependencies]
+query = ["networkx>=2.4,<3"]
+s3 = [ "fsspec[s3]" ]
+pandas = [ "pandas>=2.0.3" ]
+polars = [ "polars>=0.16.6" ]
+pyarrow = [ "pyarrow>=17.0.0" ]
+
+[tool.uv]
+package = true
+
+[project.scripts]
+kloppy-query = "kloppy.cmdline:run_query"
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120  # use whatever number makes you happy
+
+[tool.ruff.lint]
+# you can see the looong list of rules here:
+# https://docs.astral.sh/ruff/rules/
+# here's a couple to start with
+select = [
+  "A",    # warn about shadowing built-ins
+  "E",    # style stuff, whitespaces
+  "F",    # important pyflakes lints
+  "I",    # import sorting
+  "N",    # naming
+  "T100", # breakpoints (probably don't want these in prod!)
+]
+# if you're feeling confident you can do:
+# select = ["ALL"]
+# and then manually ignore annoying ones:
+# ignore = [...]
+
+[tool.ruff.lint.isort]
+# so it knows to group first-party stuff last
+known-first-party = ["kloppy"]
+
+[tool.pyright]
+venvPath = "."          # uv installs the venv in the current dir
+venv = ".venv"          #       in a folder called `.venv`
+strict = ["**/*.py"]    # use 'strict' checking on all files
+pythonVersion = "3.8"   # specify the _lowest_ you support
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"

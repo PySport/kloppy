@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-from requests.exceptions import HTTPError
-
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.infra.serializers.event.sportec import (
@@ -39,14 +37,8 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
-        return serializer.deserialize(
-            SportecEventDataInputs(
-                event_data=event_data_fp, meta_data=meta_data_fp
-            )
-        )
+    with open_as_file(event_data) as event_data_fp, open_as_file(meta_data) as meta_data_fp:
+        return serializer.deserialize(SportecEventDataInputs(event_data=event_data_fp, meta_data=meta_data_fp))
 
 
 def load_tracking(
@@ -63,14 +55,8 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
-        return deserializer.deserialize(
-            inputs=SportecTrackingDataInputs(
-                meta_data=meta_data_fp, raw_data=raw_data_fp
-            )
-        )
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
+        return deserializer.deserialize(inputs=SportecTrackingDataInputs(meta_data=meta_data_fp, raw_data=raw_data_fp))
 
 
 @deprecated("sportec.load_event should be used")
@@ -81,9 +67,7 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
-    return load_event(
-        event_data, meta_data, event_types, coordinates, event_factory
-    )
+    return load_event(event_data, meta_data, event_types, coordinates, event_factory)
 
 
 def get_IDSSE_url(match_id: str, data_type: str) -> str:
@@ -102,13 +86,9 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
     DATA_URL = "https://figshare.com/ndownloader/files/{file_id}?private_link=1f806cb3e755c6b54e05"
 
     if data_type not in ["meta", "event", "tracking"]:
-        raise ValueError(
-            f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}"
-        )
+        raise ValueError(f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}")
     if match_id not in DATA_MAP:
-        raise ValueError(
-            f"This match_id is not available, please select from {list(DATA_MAP.keys())}"
-        )
+        raise ValueError(f"This match_id is not available, please select from {list(DATA_MAP.keys())}")
     return DATA_URL.format(file_id=str(DATA_MAP[match_id][data_type]))
 
 
@@ -158,19 +138,13 @@ def load_open_event_data(
                dataset of synchronized spatiotemporal and event data in elite soccer."
                In Submission.
     """
-    try:
-        return load_event(
-            event_data=get_IDSSE_url(match_id, "event"),
-            meta_data=get_IDSSE_url(match_id, "meta"),
-            event_types=event_types,
-            coordinates=coordinates,
-            event_factory=event_factory,
-        )
-    except HTTPError as e:
-        raise HTTPError(
-            "Unable to retrieve data. The dataset archive location may have changed. "
-            "See https://github.com/PySport/kloppy/issues/369 for details."
-        ) from e
+    return load_event(
+        event_data=get_IDSSE_url(match_id, "event"),
+        meta_data=get_IDSSE_url(match_id, "meta"),
+        event_types=event_types,
+        coordinates=coordinates,
+        event_factory=event_factory,
+    )
 
 
 def load_open_tracking_data(
@@ -221,17 +195,11 @@ def load_open_tracking_data(
                dataset of synchronized spatiotemporal and event data in elite soccer."
                In Submission.
     """
-    try:
-        return load_tracking(
-            raw_data=get_IDSSE_url(match_id, "tracking"),
-            meta_data=get_IDSSE_url(match_id, "meta"),
-            sample_rate=sample_rate,
-            limit=limit,
-            coordinates=coordinates,
-            only_alive=only_alive,
-        )
-    except HTTPError as e:
-        raise HTTPError(
-            "Unable to retrieve data. The dataset archive location may have changed. "
-            "See https://github.com/PySport/kloppy/issues/369 for details."
-        ) from e
+    return load_tracking(
+        raw_data=get_IDSSE_url(match_id, "tracking"),
+        meta_data=get_IDSSE_url(match_id, "meta"),
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinates=coordinates,
+        only_alive=only_alive,
+    )

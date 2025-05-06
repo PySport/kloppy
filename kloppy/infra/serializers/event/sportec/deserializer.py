@@ -304,6 +304,7 @@ SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
 SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
 SPORTEC_EVENT_NAME_CAUTION = "Caution"
 SPORTEC_EVENT_NAME_FOUL = "Foul"
+SPORTEC_EVENT_NAME_OTHER = "OtherBallAction"
 
 SPORTEC_EVENT_TYPE_OF_SHOT = "TypeOfShot"
 SPORTEC_EVENT_BODY_PART_HEAD = "head"
@@ -601,6 +602,15 @@ class SportecEventDataDeserializer(
                     foul_kwargs = _parse_foul(event_attributes, teams=teams)
                     generic_event_kwargs.update(foul_kwargs)
                     event = self.event_factory.build_foul_committed(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                elif (
+                    event_name == SPORTEC_EVENT_NAME_OTHER
+                    and event_attributes.get("DefensiveClearance") == "true"
+                ):
+                    event = self.event_factory.build_clearance(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,

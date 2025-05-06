@@ -19,6 +19,7 @@ from kloppy.domain import (
 )
 
 from kloppy import sportec
+from kloppy.domain.models.event import EventType
 
 
 class TestSportecEventData:
@@ -31,6 +32,14 @@ class TestSportecEventData:
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
         return base_dir / "files/sportec_meta.xml"
+
+    @pytest.fixture
+    def event_data_new(self, base_dir) -> str:
+        return base_dir / "files/sportec_events_J03WPY.xml"
+
+    @pytest.fixture
+    def meta_data_new(self, base_dir) -> str:
+        return base_dir / "files/sportec_meta_J03WPY.xml"
 
     def test_correct_event_data_deserialization(
         self, event_data: Path, meta_data: Path
@@ -108,6 +117,39 @@ class TestSportecEventData:
         assert first_pass.receiver_coordinates == Point(
             x=0.7775, y=0.43073529411764705
         )
+
+    def test_correct_event_data_deserialization_new(
+        self, event_data_new: Path, meta_data_new: Path
+    ):
+        """A basic version of the event data deserialization test, for a newer event data file."""
+
+        dataset = sportec.load_event(
+            event_data=event_data_new,
+            meta_data=meta_data_new,
+            coordinates="sportec",
+        )
+
+        assert dataset.metadata.provider == Provider.SPORTEC
+        assert dataset.dataset_type == DatasetType.EVENT
+        assert len(dataset.metadata.periods) == 2
+
+        # raw_event must be flattened dict
+        assert isinstance(dataset.events[0].raw_event, dict)
+    
+        # Test the kloppy event types that are being parsed
+        event_types_set = set(event.event_type for event in dataset.events)
+
+        # Kloppy types that were already being deserialized
+        assert EventType.SHOT in event_types_set
+        assert EventType.PASS in event_types_set
+        assert EventType.RECOVERY in event_types_set
+        assert EventType.SUBSTITUTION in event_types_set
+        assert EventType.CARD in event_types_set
+        assert EventType.FOUL_COMMITTED in event_types_set
+        assert EventType.GENERIC in event_types_set
+
+        # Kloppy types added in PR #XXXX
+        assert EventType.CLEARANCE in event_types_set
 
 
 class TestSportecTrackingData:

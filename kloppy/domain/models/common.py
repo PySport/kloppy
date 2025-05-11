@@ -21,8 +21,6 @@ from typing import (
     overload,
 )
 
-from typing_extensions import Unpack
-
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
@@ -39,9 +37,9 @@ else:
     from typing_extensions import Literal
 
 if sys.version_info >= (3, 11):
-    from typing import Self
+    from typing import Self, Unpack
 else:
-    from typing_extensions import Self
+    from typing_extensions import Self, Unpack
 
 from kloppy.exceptions import (
     InvalidFilterError,

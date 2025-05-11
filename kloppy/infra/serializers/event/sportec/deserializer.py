@@ -70,7 +70,9 @@ def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
-        ground=(Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY),
+        ground=(
+            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
+        ),
     )
     team.players = [
         Player(
@@ -137,17 +139,18 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             away_team = _team_from_xml_elm(team_elm)
             away_coach = head_coach[0] if len(head_coach) else None
         else:
-            raise DeserializationError(f"Unknown side: {team_elm.attrib['Role']}")
+            raise DeserializationError(
+                f"Unknown side: {team_elm.attrib['Role']}"
+            )
 
     if not home_team:
         raise DeserializationError("Home team is missing from metadata")
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (
-        home_score,
-        away_score,
-    ) = match_root.MatchInformation.General.attrib["Result"].split(":")
+    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
+        "Result"
+    ].split(":")
     score = Score(home=int(home_score), away=int(away_score))
     teams = [home_team, away_team]
 
@@ -156,7 +159,9 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
 
     # The periods can be rebuild from event data. Therefore, the periods attribute
     # from the metadata can be ignored. It is required for tracking data.
-    other_game_information = match_root.MatchInformation.OtherGameInformation.attrib
+    other_game_information = (
+        match_root.MatchInformation.OtherGameInformation.attrib
+    )
     periods = [
         Period(
             id=1,
@@ -187,11 +192,15 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
                 Period(
                     id=3,
                     start_timestamp=timedelta(
-                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID / SPORTEC_FPS
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
                     ),
                     end_timestamp=timedelta(
-                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-                        + float(other_game_information["TotalTimeFirstHalfExtra"])
+                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
+                        / SPORTEC_FPS
+                        + float(
+                            other_game_information["TotalTimeFirstHalfExtra"]
+                        )
                         / 1000
                     ),
                 ),
@@ -204,7 +213,9 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
                     end_timestamp=timedelta(
                         seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
                         / SPORTEC_FPS
-                        + float(other_game_information["TotalTimeSecondHalfExtra"])
+                        + float(
+                            other_game_information["TotalTimeSecondHalfExtra"]
+                        )
                         / 1000
                     ),
                 ),
@@ -215,8 +226,12 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         match_root.MatchInformation, "Referees"
     ):
         officials = []
-        referee_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Referees")
-        referee_elms = referee_path.find(match_root).iterchildren(tag="Referee")
+        referee_path = objectify.ObjectPath(
+            "PutDataRequest.MatchInformation.Referees"
+        )
+        referee_elms = referee_path.find(match_root).iterchildren(
+            tag="Referee"
+        )
 
         for referee in referee_elms:
             ref_attrib = referee.attrib
@@ -375,7 +390,9 @@ def _parse_pass(event_chain: OrderedDict, team: Team) -> Dict:
     ):
         result = PassResult.COMPLETE
         if "Recipient" in event_chain["Play"]:
-            receiver_player = team.get_player_by_id(event_chain["Play"]["Recipient"])
+            receiver_player = team.get_player_by_id(
+                event_chain["Play"]["Recipient"]
+            )
         else:
             # this attribute can be missing according to docs
             receiver_player = None
@@ -405,13 +422,19 @@ def _parse_caution(event_attributes: Dict) -> Dict:
     elif event_attributes["CardColor"] == "red":
         card_type = CardType.RED
     else:
-        raise ValueError(f"Unknown card color: {event_attributes['CardColor']}")
+        raise ValueError(
+            f"Unknown card color: {event_attributes['CardColor']}"
+        )
 
     return dict(card_type=card_type)
 
 
 def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
-    team = teams[0] if event_attributes["TeamFouler"] == teams[0].team_id else teams[1]
+    team = (
+        teams[0]
+        if event_attributes["TeamFouler"] == teams[0].team_id
+        else teams[1]
+    )
     player = team.get_player_by_id(event_attributes["Fouler"])
 
     return dict(team=team, player=player)
@@ -431,7 +454,9 @@ class SportecEventDataInputs(NamedTuple):
     event_data: IO[bytes]
 
 
-class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]):
+class SportecEventDataDeserializer(
+    EventDataDeserializer[SportecEventDataInputs]
+):
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -467,7 +492,8 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
 
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
-                    and "GameSection" in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
+                    and "GameSection"
+                    in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
                 ):
                     period_id += 1
                     period = Period(
@@ -476,7 +502,9 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                         end_timestamp=None,
                     )
                     if period_id == 1:
-                        team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF]["TeamLeft"]
+                        team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
+                            "TeamLeft"
+                        ]
                         orientation = (
                             Orientation.HOME_AWAY
                             if team_left == home_team.team_id
@@ -504,7 +532,9 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                 if "Player" in flatten_attributes:
                     if not team:
                         raise ValueError("Player set while team is not set")
-                    player = team.get_player_by_id(flatten_attributes["Player"])
+                    player = team.get_player_by_id(
+                        flatten_attributes["Player"]
+                    )
 
                 generic_event_kwargs = dict(
                     # from DataRecord
@@ -530,7 +560,9 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                         **generic_event_kwargs,
                     )
                 elif event_name in SPORTEC_PASS_EVENT_NAMES:
-                    pass_event_kwargs = _parse_pass(event_chain=event_chain, team=team)
+                    pass_event_kwargs = _parse_pass(
+                        event_chain=event_chain, team=team
+                    )
                     event = self.event_factory.build_pass(
                         **pass_event_kwargs,
                         **generic_event_kwargs,
@@ -547,7 +579,9 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                     substitution_event_kwargs = _parse_substitution(
                         event_attributes=event_attributes, team=team
                     )
-                    generic_event_kwargs["player"] = substitution_event_kwargs["player"]
+                    generic_event_kwargs["player"] = substitution_event_kwargs[
+                        "player"
+                    ]
                     del substitution_event_kwargs["player"]
                     event = self.event_factory.build_substitution(
                         result=None,
@@ -579,12 +613,14 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                         **generic_event_kwargs,
                     )
 
-                if event.event_type == EventType.PASS and event.get_qualifier_value(
-                    SetPieceQualifier
-                ) in (
-                    SetPieceType.THROW_IN,
-                    SetPieceType.GOAL_KICK,
-                    SetPieceType.CORNER_KICK,
+                if (
+                    event.event_type == EventType.PASS
+                    and event.get_qualifier_value(SetPieceQualifier)
+                    in (
+                        SetPieceType.THROW_IN,
+                        SetPieceType.GOAL_KICK,
+                        SetPieceType.CORNER_KICK,
+                    )
                 ):
                     # 1. update previous pass
                     if events[-1].event_type == EventType.PASS:
@@ -592,7 +628,9 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
 
                     # 2. add synthetic out event
                     decision_timestamp = _parse_datetime(
-                        event_chain[list(event_chain.keys())[1]]["DecisionTimestamp"]
+                        event_chain[list(event_chain.keys())[1]][
+                            "DecisionTimestamp"
+                        ]
                     )
                     out_event = self.event_factory.build_ball_out(
                         period=period,
@@ -631,8 +669,16 @@ class SportecEventDataDeserializer(EventDataDeserializer[SportecEventDataInputs]
                     updated_event = transformer.transform_event(
                         events[i + 1].replace(
                             coordinates=Point(
-                                x=float(events[i + 1].raw_event["X-Source-Position"]),
-                                y=float(events[i + 1].raw_event["Y-Source-Position"]),
+                                x=float(
+                                    events[i + 1].raw_event[
+                                        "X-Source-Position"
+                                    ]
+                                ),
+                                y=float(
+                                    events[i + 1].raw_event[
+                                        "Y-Source-Position"
+                                    ]
+                                ),
                             )
                         )
                     )

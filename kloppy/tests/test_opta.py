@@ -1,13 +1,14 @@
 import math
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from kloppy import opta
 from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
-    CardQualifier,
+    CardEvent,
     CardType,
     CounterAttackQualifier,
     DatasetFlag,
@@ -19,10 +20,11 @@ from kloppy.domain import (
     FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
+    OptaPitchDimensions,
     Orientation,
     PassQualifier,
+    PassResult,
     PassType,
-    OptaPitchDimensions,
     Point,
     Point3D,
     PositionType,
@@ -32,9 +34,7 @@ from kloppy.domain import (
     SetPieceType,
     ShotResult,
     build_coordinate_system,
-    PassResult,
 )
-from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
     _get_end_coordinates,
 )
@@ -236,10 +236,11 @@ class TestOptaEvent:
         header = dataset.get_event_by_id("1101592119")
         assert BodyPart.HEAD in header.get_qualifier_values(BodyPartQualifier)
 
-    def test_card_qualifiers(self, dataset: EventDataset):
+    def test_card_event(self, dataset: EventDataset):
         """Test if the card qualifiers are correctly deserialized"""
         red_card = dataset.get_event_by_id("2318454729")
-        assert red_card.get_qualifier_value(CardQualifier) == CardType.RED
+        assert isinstance(red_card, CardEvent)
+        assert red_card.card_type == CardType.RED
 
     def test_counter_attack_qualifiers(self, dataset: EventDataset):
         """Test if the counter attack qualifiers are correctly deserialized"""

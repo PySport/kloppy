@@ -1,16 +1,17 @@
 site_name: kloppy 3.16.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
-repo_name: 'GitHub'
+repo_name: 'PySport/kloppy'
 edit_uri: blob/master/docs/
-extra_css: [style.css]
 google_analytics: null # TODO: set-up Google Analytics project to track
 theme:
   name: material
+  language: en
+  palette:
+    scheme: default
   custom_dir: docs/overrides
   features:
     - navigation.tabs
-    - navigation.tabs.sticky
     - navigation.indexes
     - navigation.tracking
     - navigation.top
@@ -18,56 +19,64 @@ theme:
     - navigation.instant.progress
     - navigation.path
     - content.tooltips
+extra_css: [assets/stylesheets/style.css]
+extra_javascript: [assets/javascripts/extra.js]
 nav:
+  - Home: index.md
   - User guide:
-      - index.md
-      - Getting started: user-guide/getting-started.md
-      - Installation: user-guide/installation.md
+      - Getting started: 
+          - user-guide/getting-started/index.md
+      - Installation: 
+          - user-guide/installation/index.md
+      - Configuration: 
+          - user-guide/configuration/index.md
       - Concepts:
           - user-guide/concepts/index.md
-          - Event data: user-guide/concepts/event-data.md
-          - Tracking data: user-guide/concepts/tracking-data.md
-          - Code data: user-guide/concepts/code-data.md
-          - Metadata: user-guide/concepts/metadata.md
-          - Coordinates: user-guide/concepts/coordinates.md
-          - Time: user-guide/concepts/time.md
-          - Positions: user-guide/concepts/positions.md
-          - Formations: user-guide/concepts/formations.md
+          - Event data: user-guide/concepts/event-data/index.md
+          - Tracking data: user-guide/concepts/tracking-data/index.md
+          - Code data: user-guide/concepts/code-data/index.md
+          - Metadata: user-guide/concepts/metadata/index.md
+          - Coordinates: user-guide/concepts/coordinates/index.md
+          - Time: user-guide/concepts/time/index.md
+          - Positions: user-guide/concepts/positions/index.md
       - Loading data:
-          - user-guide/providers/index.md
-          - Datafactory: user-guide/providers/datafactory.ipynb
-          - Metrica: user-guide/providers/metrica.ipynb
-          - SecondSpectrum: user-guide/providers/secondspectrum.ipynb
-          - SkillCorner: user-guide/providers/skillcorner.ipynb
-          - Sportec: user-guide/providers/sportec.ipynb
-          - Sportscode: user-guide/providers/sportscode.ipynb
-          - Statsbomb: user-guide/providers/statsbomb.ipynb
-          - StatsPerform: user-guide/providers/statsperform.ipynb
-          - TRACAB: user-guide/providers/tracab.ipynb
-          - Wyscout: user-guide/providers/wyscout.ipynb
+          - user-guide/loading-data/index.md
+          - Datafactory: user-guide/loading-data/datafactory.ipynb
+          - HawkEye: user-guide/loading-data/hawkeye.ipynb
+          - Hudl SportsCode: user-guide/loading-data/sportscode.ipynb
+          - Hudl Statsbomb: user-guide/loading-data/statsbomb.ipynb
+          - Metrica: user-guide/loading-data/metrica.ipynb
+          - SecondSpectrum: user-guide/loading-data/secondspectrum.ipynb
+          # - Signality: user-guide/loading-data/signality.ipynb
+          - SkillCorner: user-guide/loading-data/skillcorner.ipynb
+          - Sportec: user-guide/loading-data/sportec.ipynb
+          - Stats Perform / Opta: user-guide/loading-data/statsperform.ipynb
+          - TRACAB: user-guide/loading-data/tracab.ipynb
+          - Wyscout: user-guide/loading-data/wyscout.ipynb
+      - Querying data:
+          - user-guide/querying-data/index.md
       - Transforming data:
-          - user-guide/transformations/index.md
-          - Pitch dimensions: user-guide/transformations/dimensions.md
-          - Orientation: user-guide/transformations/orientation.md
-      - Processing data:
-          - Event data: user-guide/event-data.md
-          - Tracking data: user-guide/tracking-data.md
-          - Code data: user-guide/code-data.md
-      - Dataframe ouput: user-guide/dataframe/index.md
-      - Configuration: user-guide/configuration.md
+          - user-guide/transformations/coordinates/index.md
+      - Aggregating data:
+          - user-guide/aggregating-data/index.md
+      - Enriching data:
+          - user-guide/enriching-data/index.md
+      - Exporting data:
+          - user-guide/exporting-data/index.md
+          - Dataframes: user-guide/exporting-data/dataframes.md
+          - Sportscode XML: user-guide/exporting-data/sportscode.md
   - How-to guides:
       - examples/index.md
-      - Loading data from external sources: examples/adapter.ipynb
+      # - Loading data from external sources: examples/adapter.ipynb
         # - Analyzing SportsCode XML files with DuckDB: 'presentations/pysport-meetup-april-2023/Kloppy x DuckDB.ipynb'
   - Reference:
       - reference/index.md
-      - Data loaders:
+      - Data Loaders:
           - DataFactory: reference/providers/datafactory.md
           - Hudl Sportscode: reference/providers/sportscode.md
-          - Opta: reference/providers/opta.md
           - Hudl Statsbomb: reference/providers/statsbomb.md
           - Metrica Sports: reference/providers/metrica.md
-          - Second Spectrum: reference/providers/secondspectrum.md
+          - Opta: reference/providers/opta.md
           - SkillCorner: reference/providers/skillcorner.md
           - Sportec Solutions: reference/providers/sportec.md
           - Stats Perform: reference/providers/statsperform.md
@@ -153,26 +162,28 @@ nav:
               - GoalKeeperQualifier: reference/event-data/qualifiers/goalkeeper.md
               - PassQualifier: reference/event-data/qualifiers/pass.md
               - SetPieceQualifier: reference/event-data/qualifiers/set-piece.md
+      - Tracking Data Model:
+          - reference/tracking-data/index.md
       - Other Modules:
           - kloppy.config: reference/config.md
           - kloppy.helpers: reference/helpers.md
           - kloppy.io: reference/io.md
           - kloppy.exceptions: reference/exceptions.md
   - Development:
-      - Contributing: 'contributing.md'
-      - Issues: 'issues.md'
-      - Sponsors: 'sponsors.md'
-      - About: 'about.md'
+      - Contributing: 'contributor-guide/contributing.md'
+      - Issues: 'contributor-guide/issues.md'
       - License: 'license.md'
   - Releases: https://github.com/PySport/kloppy/releases
 plugins:
-  - mkdocs-jupyter:
-      include: ["*.ipynb"]
-      include_source: True
+  # - mkdocs-jupyter:
+  #     include: ["*.ipynb"]
+  #     include_source: true
+  #     execute: false
+  - markdown-exec
   - search
   - autorefs
   - macros:
-      module_name: docs/utils/macros
+      module_name: docs/macros
       j2_comment_start_string: '$#'
       j2_comment_end_string: '#$'
   - mkdocstrings:
@@ -211,17 +222,11 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences:
-      custom_fences:
-        - name: python
-          class: python
-          validator: !!python/name:markdown_exec.validator
-          format: !!python/name:markdown_exec.formatter
+  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - footnotes
-extra_javascript:
-  - javascripts/extra.js
+  - md_in_html
 watch:
   - mkdocs.yml
   - kloppy

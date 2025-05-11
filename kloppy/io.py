@@ -82,7 +82,9 @@ def _file_or_path_to_binary_stream(
     """
     assert binary_mode in ("rb", "wb", "ab")
 
-    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(
+        file_or_path, "__fspath__"
+    ):
         # If file_or_path is a path-like object, open it and return the binary stream
         return open(os.fspath(file_or_path), binary_mode), True  # type: ignore
 
@@ -297,7 +299,9 @@ def get_file_extension(file_or_path: FileLike) -> str:
         >>> get_file_extension(Source(data="example.csv"))
         '.csv'
     """
-    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(
+        file_or_path, "__fspath__"
+    ):
         path = os.fspath(file_or_path)  # type: ignore
         for ext in [".gz", ".xz", ".bz2"]:
             if path.endswith(ext):

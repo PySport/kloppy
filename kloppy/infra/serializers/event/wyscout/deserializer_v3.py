@@ -10,6 +10,7 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
+    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
@@ -317,7 +318,9 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     }
 
     for pass_type, secondary_event_types_values in qualifier_mapping.items():
-        if _check_secondary_event_types(raw_event, secondary_event_types_values):
+        if _check_secondary_event_types(
+            raw_event, secondary_event_types_values
+        ):
             qualifiers.append(PassQualifier(pass_type))
 
     return qualifiers
@@ -336,7 +339,9 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
 
     if raw_event["pass"]["accurate"] is True:
         pass_result = PassResult.COMPLETE
-        receiver_player = team.get_player_by_id(raw_event["pass"]["recipient"]["id"])
+        receiver_player = team.get_player_by_id(
+            raw_event["pass"]["recipient"]["id"]
+        )
     elif raw_event["pass"]["accurate"] is False:
         pass_result = PassResult.INCOMPLETE
 
@@ -409,7 +414,9 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
     result = InterceptionResult.SUCCESS
 
     if next_event is not None:
-        is_game_interruption = next_event["type"]["primary"] == "game_interruption"
+        is_game_interruption = (
+            next_event["type"]["primary"] == "game_interruption"
+        )
         is_ball_out = "ball_out" in next_event["type"]["secondary"]
         is_loss = "loss" in raw_event["type"]["secondary"]
         is_pass_loss = (
@@ -418,7 +425,8 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
         )
         is_possession_loss = (
             next_event["possession"] is not None
-            and raw_event["team"]["id"] != next_event["possession"]["team"]["id"]
+            and raw_event["team"]["id"]
+            != next_event["possession"]["team"]["id"]
         )
 
         if is_game_interruption and is_ball_out:
@@ -442,10 +450,14 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
 
     if next_event is not None:
         period_id = _parse_period_id(next_event["matchPeriod"])
-        end_timestamp = _create_timestamp_timedelta(next_event, start_ts, period_id)
+        end_timestamp = _create_timestamp_timedelta(
+            next_event, start_ts, period_id
+        )
     else:
         period_id = _parse_period_id(raw_event["matchPeriod"])
-        end_timestamp = _create_timestamp_timedelta(raw_event, start_ts, period_id)
+        end_timestamp = _create_timestamp_timedelta(
+            raw_event, start_ts, period_id
+        )
 
     return {
         "result": CarryResult.COMPLETE,
@@ -495,9 +507,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_pass(raw_event, next_event, team)
-    elif (raw_event["type"]["primary"] == "corner") and "shot" not in raw_event["type"][
-        "secondary"
-    ]:
+    elif (
+        raw_event["type"]["primary"] == "corner"
+    ) and "shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
@@ -506,9 +518,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_shot(raw_event)
-    elif (raw_event["type"]["primary"] == "corner") and "shot" in raw_event["type"][
-        "secondary"
-    ]:
+    elif (raw_event["type"]["primary"] == "corner") and "shot" in raw_event[
+        "type"
+    ]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_shot(raw_event)
     elif raw_event["type"]["primary"] == "penalty":
@@ -556,7 +568,10 @@ def _parse_duel(raw_event: Dict) -> Dict:
             ]
         )
     else:
-        if "loose_ball_duel" in secondary_types and "sliding_tackle" in secondary_types:
+        if (
+            "loose_ball_duel" in secondary_types
+            and "sliding_tackle" in secondary_types
+        ):
             duel_qualifiers.extend(
                 [
                     DuelQualifier(value=DuelType.GROUND),
@@ -591,7 +606,10 @@ def _parse_duel(raw_event: Dict) -> Dict:
         and raw_event["groundDuel"]["recoveredPossession"]
     ):
         result = DuelResult.WON
-    elif "aerial_duel" in secondary_types and raw_event["aerialDuel"]["firstTouch"]:
+    elif (
+        "aerial_duel" in secondary_types
+        and raw_event["aerialDuel"]["firstTouch"]
+    ):
         result = DuelResult.WON
     else:
         result = DuelResult.LOST
@@ -603,7 +621,9 @@ def _create_timestamp_timedelta(
     raw_event: Dict, start_ts: Dict, period_id: int
 ) -> timedelta:
     time_delta = (
-        timedelta(seconds=float(raw_event["second"] + raw_event["minute"] * 60))
+        timedelta(
+            seconds=float(raw_event["second"] + raw_event["minute"] * 60)
+        )
         - start_ts[period_id]
     )
 
@@ -718,7 +738,8 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
             teams = {home_team_id: home_team, away_team_id: away_team}
             players = {
-                wyId: _players_to_dict(team.players) for wyId, team in teams.items()
+                wyId: _players_to_dict(team.players)
+                for wyId, team in teams.items()
             }
             date = raw_events["match"].get("dateutc")
             if date:
@@ -735,10 +756,20 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_coach = None
             coaches = raw_events.get("coaches")
             if coaches:
-                if home_team_id in coaches and "coach" in coaches[home_team_id]:
-                    home_coach = coaches[home_team_id]["coach"].get("shortName")
-                if away_team_id in coaches and "coach" in coaches[away_team_id]:
-                    away_coach = coaches[away_team_id]["coach"].get("shortName")
+                if (
+                    home_team_id in coaches
+                    and "coach" in coaches[home_team_id]
+                ):
+                    home_coach = coaches[home_team_id]["coach"].get(
+                        "shortName"
+                    )
+                if (
+                    away_team_id in coaches
+                    and "coach" in coaches[away_team_id]
+                ):
+                    away_coach = coaches[away_team_id]["coach"].get(
+                        "shortName"
+                    )
 
             events = []
 
@@ -748,7 +779,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = _parse_period_id(next_event["matchPeriod"])
+                    next_period_id = _parse_period_id(
+                        next_event["matchPeriod"]
+                    )
 
                 if (
                     idx == 0
@@ -788,7 +821,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 ball_owning_team = None
                 if raw_event["possession"]:
-                    ball_owning_team = teams[str(raw_event["possession"]["team"]["id"])]
+                    ball_owning_team = teams[
+                        str(raw_event["possession"]["team"]["id"])
+                    ]
 
                 if player_id == INVALID_PLAYER:
                     player = None
@@ -826,7 +861,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
                 primary_event_type = raw_event["type"]["primary"]
                 secondary_event_types = raw_event["type"]["secondary"]
-                if primary_event_type == "shot" or primary_event_type == "own_goal":
+                if (
+                    primary_event_type == "shot"
+                    or primary_event_type == "own_goal"
+                ):
                     shot_event_args = _parse_shot(raw_event)
                     event = self.event_factory.build_shot(
                         **shot_event_args, **generic_event_args
@@ -859,7 +897,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **clearance_event_args, **generic_event_args
                     )
                 elif primary_event_type == "interception":
-                    interception_event_args = _parse_interception(raw_event, next_event)
+                    interception_event_args = _parse_interception(
+                        raw_event, next_event
+                    )
                     event = self.event_factory.build_interception(
                         **interception_event_args, **generic_event_args
                     )
@@ -881,7 +921,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         and "shot" not in secondary_event_types
                     )
                 ):
-                    set_piece_event_args = _parse_set_piece(raw_event, next_event, team)
+                    set_piece_event_args = _parse_set_piece(
+                        raw_event, next_event, team
+                    )
                     event = self.event_factory.build_pass(
                         **set_piece_event_args, **generic_event_args
                     )
@@ -896,7 +938,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         and "shot" in secondary_event_types
                     )
                 ):
-                    set_piece_event_args = _parse_set_piece(raw_event, next_event, team)
+                    set_piece_event_args = _parse_set_piece(
+                        raw_event, next_event, team
+                    )
                     event = self.event_factory.build_shot(
                         **set_piece_event_args, **generic_event_args
                     )
@@ -923,7 +967,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                             events.append(transformer.transform_event(event))
                         continue
                 elif "carry" in secondary_event_types:
-                    carry_event_args = _parse_carry(raw_event, next_event, start_ts)
+                    carry_event_args = _parse_carry(
+                        raw_event, next_event, start_ts
+                    )
                     event = self.event_factory.build_carry(
                         **carry_event_args, **generic_event_args
                     )

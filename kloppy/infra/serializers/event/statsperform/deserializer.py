@@ -348,16 +348,13 @@ def _parse_clearance(raw_event: OptaEvent) -> Dict:
 def _parse_card(raw_event: OptaEvent) -> Dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
-    if EVENT_QUALIFIER_RED_CARD in qualifiers:
-        card_type = CardType.RED
-    elif EVENT_QUALIFIER_FIRST_YELLOW_CARD in qualifiers:
-        card_type = CardType.FIRST_YELLOW
-    elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in qualifiers:
-        card_type = CardType.SECOND_YELLOW
-    else:
-        card_type = None
+    card_type = None
+    for q in qualifiers:
+        if isinstance(q, CardQualifier):
+            card_type = q.value
+            break
 
-    return dict(result=None, qualifiers=qualifiers, card_type=card_type)
+    return dict(result=None, qualifiers=None, card_type=card_type)
 
 
 def _parse_lineup_qualifiers(raw_event: OptaEvent):

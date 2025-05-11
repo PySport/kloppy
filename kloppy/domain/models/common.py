@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -5,6 +7,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -21,6 +24,12 @@ from typing import (
 from typing_extensions import Unpack
 
 from kloppy.utils import deprecated, snake_case
+
+if TYPE_CHECKING:
+    from ..services.transformers.data_record import (
+        Column,
+        NamedColumns,
+    )
 
 from .position import PositionType
 
@@ -480,7 +489,9 @@ class AttackingDirection(Enum):
                     return AttackingDirection.LTR
                 if ball_owning_team.ground == Ground.AWAY:
                     return AttackingDirection.RTL
-                raise OrientationError("Invalid ball_owning_team: %s", ball_owning_team)
+                raise OrientationError(
+                    "Invalid ball_owning_team: %s", ball_owning_team
+                )
             return AttackingDirection.NOT_SET
         if orientation == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team is None:
@@ -540,8 +551,6 @@ class CoordinateSystem(ABC):
     A coordinate system defines how coordinates are represented in a dataset.
 
     Attributes:
-        provider (Provider): Each provider has its own coordinate system. This
-            attribute defines to which provider the coordinate system belongs.
         origin (Origin): The location of the origin.
         vertical_orientation (VerticalOrientation): The orientation of the y-axis.
         pitch_dimensions (PitchDimensions): The dimensions of the pitch.
@@ -552,11 +561,6 @@ class CoordinateSystem(ABC):
         pitch_length (float, optional): The real length of the pitch.
         pitch_width (float, optional): The real width of the pitch.
     """
-
-    @property
-    @abstractmethod
-    def provider(self) -> Provider:
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -722,8 +726,12 @@ class TracabCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -762,8 +770,12 @@ class SecondSpectrumCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -860,8 +872,12 @@ class SportecTrackingDataCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -932,8 +948,12 @@ class PFFCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -999,8 +1019,12 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1110,8 +1134,12 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
-                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1237,40 +1265,32 @@ class ActionValue(Statistic):
 
     @property
     def offensive_value(self) -> Optional[float]:
+        if (
+            self.action_value_scoring_before is None
+            or self.action_value_scoring_after is None
+        ):
+            return None
         return (
-            None
-            if None
-            in (
-                self.action_value_scoring_before,
-                self.action_value_scoring_after,
-            )
-            else self.action_value_scoring_after - self.action_value_scoring_before
+            self.action_value_scoring_after - self.action_value_scoring_before
         )
 
     @property
     def defensive_value(self) -> Optional[float]:
+        if (
+            self.action_value_conceding_before is None
+            or self.action_value_conceding_after is None
+        ):
+            return None
         return (
-            None
-            if None
-            in (
-                self.action_value_conceding_before,
-                self.action_value_conceding_after,
-            )
-            else self.action_value_conceding_after - self.action_value_conceding_before
+            self.action_value_conceding_after
+            - self.action_value_conceding_before
         )
 
     @property
     def value(self) -> Optional[float]:
-        if None in (
-            self.action_value_scoring_before,
-            self.action_value_scoring_after,
-            self.action_value_conceding_before,
-            self.action_value_conceding_after,
-        ):
+        if self.offensive_value is None or self.defensive_value is None:
             return None
-        return (self.action_value_scoring_after - self.action_value_scoring_before) - (
-            self.action_value_conceding_after - self.action_value_conceding_before
-        )
+        return self.offensive_value - self.defensive_value
 
 
 @dataclass
@@ -1291,9 +1311,9 @@ class DataRecord(ABC):
         ball_state: The state of the ball at the time of the observation.
     """
 
-    dataset: "Dataset" = field(init=False)
-    prev_record: Optional["DataRecord"] = field(init=False)
-    next_record: Optional["DataRecord"] = field(init=False)
+    dataset: Dataset = field(init=False)
+    prev_record: Optional[Self] = field(init=False)
+    next_record: Optional[Self] = field(init=False)
     period: Period
     timestamp: timedelta
     statistics: List[Statistic]
@@ -1311,9 +1331,9 @@ class DataRecord(ABC):
 
     def set_refs(
         self,
-        dataset: "Dataset",
-        prev: Optional["DataRecord"],
-        next_: Optional["DataRecord"],
+        dataset: Dataset,
+        prev: Optional[Self],
+        next_: Optional[Self],
     ):
         if hasattr(self, "dataset"):
             # TODO: determine if next/prev record should be affected
@@ -1341,7 +1361,9 @@ class DataRecord(ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def matches(self, filter_) -> bool:
+    def matches(
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]]
+    ) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -1349,7 +1371,9 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(self, filter_=None) -> Optional[Self]:
+    def prev(
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
+    ) -> Optional[Self]:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -1357,7 +1381,9 @@ class DataRecord(ABC):
                     return prev_record
                 prev_record = prev_record.prev_record
 
-    def next(self, filter_=None) -> Optional[Self]:
+    def next(
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
+    ) -> Optional[Self]:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -1426,13 +1452,13 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=(self.periods[i + 1] if i + 1 < len(self.periods) else None),
+                next_=(
+                    self.periods[i + 1] if i + 1 < len(self.periods) else None
+                ),
             )
 
 
 T = TypeVar("T", bound="DataRecord")
-Column = Union[str, Callable[[T], Any]]
-NamedColumns = Dict[str, Column]
 
 
 @dataclass
@@ -1466,7 +1492,9 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=(self.records[i + 1] if i + 1 < len(self.records) else None),
+                next_=(
+                    self.records[i + 1] if i + 1 < len(self.records) else None
+                ),
             )
 
         self._init_player_positions()
@@ -1529,7 +1557,9 @@ class Dataset(ABC, Generic[T]):
         )
 
     def map(self, mapper):
-        return replace(self, records=[mapper(record) for record in self.records])
+        return replace(
+            self, records=[mapper(record) for record in self.records]
+        )
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
@@ -1540,9 +1570,7 @@ class Dataset(ABC, Generic[T]):
                 return record
 
     @classmethod
-    def from_dataset(
-        cls, dataset: "Dataset", mapper_fn: Callable[[DataRecord], DataRecord]
-    ):
+    def from_dataset(cls, dataset: Dataset, mapper_fn: Callable[[Self], Self]):
         """
         Create a new Dataset from other dataset
 
@@ -1586,7 +1614,8 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]: ...
+    ) -> List[Dict[str, Any]]:
+        ...
 
     @overload
     def to_records(
@@ -1594,7 +1623,8 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]: ...
+    ) -> Iterable[Dict[str, Any]]:
+        ...
 
     def to_records(
         self,
@@ -1604,7 +1634,9 @@ class Dataset(ABC, Generic[T]):
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
+        transformer = get_transformer_cls(self.dataset_type)(
+            *columns, **named_columns
+        )
         iterator = map(transformer, self.records)
         if as_list:
             return list(iterator)
@@ -1704,7 +1736,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install polars"
                 )
 
-            return from_dict(self.to_dict(*columns, orient="list", **named_columns))
+            return from_dict(
+                self.to_dict(*columns, orient="list", **named_columns)
+            )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
 

@@ -1,7 +1,9 @@
 from typing import Optional, Type, Union
 
 from kloppy.domain import TrackingDataset
-from kloppy.infra.serializers.tracking.tracab.tracab_dat import TRACABDatDeserializer
+from kloppy.infra.serializers.tracking.tracab.tracab_dat import (
+    TRACABDatDeserializer,
+)
 from kloppy.infra.serializers.tracking.tracab.tracab_json import (
     TRACABInputs,
     TRACABJSONDeserializer,
@@ -47,7 +49,9 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(
+        raw_data
+    ) as raw_data_fp:
         return deserializer.deserialize(
             inputs=TRACABInputs(meta_data=meta_data_fp, raw_data=raw_data_fp)
         )
@@ -65,6 +69,8 @@ def identify_deserializer(
     elif meta_data_extension == ".json" and raw_data_extension == ".json":
         deserializer = TRACABJSONDeserializer
     else:
-        raise ValueError("Tracab file format could not be recognized, please specify")
+        raise ValueError(
+            "Tracab file format could not be recognized, please specify"
+        )
 
     return deserializer

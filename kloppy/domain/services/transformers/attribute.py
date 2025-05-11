@@ -10,6 +10,8 @@ from kloppy.domain import (
     Frame,
     Orientation,
     Point,
+    QualifierMixin,
+    ResultMixin,
 )
 from kloppy.domain.models.event import (
     CardEvent,
@@ -99,7 +101,8 @@ class DistanceToGoalTransformer(EventAttributeTransformer):
         event_y = event.coordinates.y
         goal_x = metadata.pitch_dimensions.x_dim.max
         goal_y = (
-            metadata.pitch_dimensions.y_dim.max + metadata.pitch_dimensions.y_dim.min
+            metadata.pitch_dimensions.y_dim.max
+            + metadata.pitch_dimensions.y_dim.min
         ) / 2
 
         return {
@@ -120,7 +123,8 @@ class DistanceToOwnGoalTransformer(EventAttributeTransformer):
         event_y = event.coordinates.y
         goal_x = metadata.pitch_dimensions.x_dim.min
         goal_y = (
-            metadata.pitch_dimensions.y_dim.max + metadata.pitch_dimensions.y_dim.min
+            metadata.pitch_dimensions.y_dim.max
+            + metadata.pitch_dimensions.y_dim.min
         ) / 2
 
         return {
@@ -162,7 +166,9 @@ class DefaultEventTransformer(EventAttributeTransformer):
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
+            raise KloppyParameterError(
+                "Cannot specify both include as exclude"
+            )
 
         self.exclude = exclude or []
         self.include = include or []
@@ -180,7 +186,9 @@ class DefaultEventTransformer(EventAttributeTransformer):
             end_timestamp=None,
             ball_state=event.ball_state.value if event.ball_state else None,
             ball_owning_team=(
-                event.ball_owning_team.team_id if event.ball_owning_team else None
+                event.ball_owning_team.team_id
+                if event.ball_owning_team
+                else None
             ),
             team_id=event.team.team_id if event.team else None,
             player_id=event.player.player_id if event.player else None,
@@ -213,10 +221,14 @@ class DefaultEventTransformer(EventAttributeTransformer):
                 {
                     "end_timestamp": event.end_timestamp,
                     "end_coordinates_x": (
-                        event.end_coordinates.x if event.end_coordinates else None
+                        event.end_coordinates.x
+                        if event.end_coordinates
+                        else None
                     ),
                     "end_coordinates_y": (
-                        event.end_coordinates.y if event.end_coordinates else None
+                        event.end_coordinates.y
+                        if event.end_coordinates
+                        else None
                     ),
                 }
             )
@@ -224,27 +236,42 @@ class DefaultEventTransformer(EventAttributeTransformer):
             row.update(
                 {
                     "end_coordinates_x": (
-                        event.result_coordinates.x if event.result_coordinates else None
+                        event.result_coordinates.x
+                        if event.result_coordinates
+                        else None
                     ),
                     "end_coordinates_y": (
-                        event.result_coordinates.y if event.result_coordinates else None
+                        event.result_coordinates.y
+                        if event.result_coordinates
+                        else None
                     ),
                 }
             )
         elif isinstance(event, CardEvent):
             row.update(
-                {"card_type": (event.card_type.value if event.card_type else None)}
+                {
+                    "card_type": (
+                        event.card_type.value if event.card_type else None
+                    )
+                }
             )
 
-        if hasattr(event, "qualifiers") and event.qualifiers:
+        if isinstance(event, QualifierMixin) and event.qualifiers:
             for qualifier in event.qualifiers:
                 row.update(qualifier.to_dict())
 
-        if hasattr(event, "result"):
+        if isinstance(event, ResultMixin) and event.result is not None:
             row.update(
                 {
-                    "result": event.result.value if event.result else None,
-                    "success": event.result.is_success if event.result else None,
+                    "result": event.result.value,
+                    "success": event.result.is_success,
+                }
+            )
+        else:
+            row.update(
+                {
+                    "result": None,
+                    "success": None,
                 }
             )
 
@@ -263,7 +290,9 @@ class DefaultFrameTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
+            raise KloppyParameterError(
+                "Cannot specify both include as exclude"
+            )
 
         self.exclude = exclude or []
         self.include = include or []
@@ -275,10 +304,16 @@ class DefaultFrameTransformer:
             frame_id=frame.frame_id,
             ball_state=frame.ball_state.value if frame.ball_state else None,
             ball_owning_team_id=(
-                frame.ball_owning_team.team_id if frame.ball_owning_team else None
+                frame.ball_owning_team.team_id
+                if frame.ball_owning_team
+                else None
             ),
-            ball_x=(frame.ball_coordinates.x if frame.ball_coordinates else None),
-            ball_y=(frame.ball_coordinates.y if frame.ball_coordinates else None),
+            ball_x=(
+                frame.ball_coordinates.x if frame.ball_coordinates else None
+            ),
+            ball_y=(
+                frame.ball_coordinates.y if frame.ball_coordinates else None
+            ),
             ball_z=(
                 getattr(frame.ball_coordinates, "z", None)
                 if frame.ball_coordinates
@@ -290,10 +325,14 @@ class DefaultFrameTransformer:
             row.update(
                 {
                     f"{player.player_id}_x": (
-                        player_data.coordinates.x if player_data.coordinates else None
+                        player_data.coordinates.x
+                        if player_data.coordinates
+                        else None
                     ),
                     f"{player.player_id}_y": (
-                        player_data.coordinates.y if player_data.coordinates else None
+                        player_data.coordinates.y
+                        if player_data.coordinates
+                        else None
                     ),
                     f"{player.player_id}_d": player_data.distance,
                     f"{player.player_id}_s": player_data.speed,
@@ -331,7 +370,9 @@ class DefaultCodeTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
+            raise KloppyParameterError(
+                "Cannot specify both include as exclude"
+            )
 
         self.exclude = exclude or []
         self.include = include or []

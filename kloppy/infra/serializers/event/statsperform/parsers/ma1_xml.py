@@ -46,7 +46,9 @@ class MA1XMLParser(OptaXMLParser):
                 team_id=team_id,
                 name=parsed_team["name"],
                 ground=(
-                    Ground.HOME if parsed_team["ground"] == "home" else Ground.AWAY
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
                 ),
             )
 

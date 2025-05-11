@@ -75,7 +75,9 @@ def load_tracking_epts(
     deserializer = MetricaEPTSTrackingDataDeserializer(
         sample_rate=sample_rate, limit=limit, coordinate_system=coordinates
     )
-    with open_as_file(raw_data) as raw_data_fp, open_as_file(meta_data) as meta_data_fp:
+    with open_as_file(raw_data) as raw_data_fp, open_as_file(
+        meta_data
+    ) as meta_data_fp:
         return deserializer.deserialize(
             inputs=MetricaEPTSTrackingDataInputs(
                 raw_data=raw_data_fp, meta_data=meta_data_fp
@@ -170,4 +172,6 @@ def load_open_data(
             coordinates=coordinates,
         )
     else:
-        raise KloppyError(f"Don't know where to fetch Metrica open data for {match_id}")
+        raise KloppyError(
+            f"Don't know where to fetch Metrica open data for {match_id}"
+        )

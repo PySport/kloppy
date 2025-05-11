@@ -39,10 +39,21 @@ class Period:
 
     id: int
     start_timestamp: Union[datetime, timedelta]
-    end_timestamp: Union[datetime, timedelta]
+    end_timestamp: Optional[Union[datetime, timedelta]]
 
     prev_period: Optional["Period"] = field(init=False)
     next_period: Optional["Period"] = field(init=False)
+
+    def __post_init__(self):
+        if (
+            self.end_timestamp is not None
+            and self.start_timestamp.__class__ != self.end_timestamp.__class__
+        ):
+            raise ValueError(
+                "'start_timestamp' and 'end_timestamp' must both be of type datetime or timedelta,"
+                + f" but got start_timestamp={self.start_timestamp.__class__}"
+                + f" and end_timestamp={self.end_timestamp.__class__}"
+            )
 
     def contains(self, timestamp: datetime):
         if isinstance(self.start_timestamp, datetime) and isinstance(
@@ -59,11 +70,11 @@ class Period:
 
     @property
     def end_time(self) -> "Time":
-        return Time(period=self, timestamp=self.end_timestamp - self.start_timestamp)
+        return Time(period=self, timestamp=self.end_timestamp - self.start_timestamp)  # type: ignore
 
     @property
     def duration(self) -> timedelta:
-        return self.end_timestamp - self.start_timestamp
+        return self.end_timestamp - self.start_timestamp  # type: ignore
 
     def __eq__(self, other):
         return isinstance(other, Period) and other.id == self.id
@@ -121,12 +132,16 @@ class Time:
         )
 
     @overload
-    def __sub__(self, other: timedelta) -> "Time": ...
+    def __sub__(self, other: timedelta) -> "Time":
+        ...
 
     @overload
-    def __sub__(self, other: "Time") -> timedelta: ...
+    def __sub__(self, other: "Time") -> timedelta:
+        ...
 
-    def __sub__(self, other: Union["Time", timedelta]) -> Union["Time", timedelta]:
+    def __sub__(
+        self, other: Union["Time", timedelta]
+    ) -> Union["Time", timedelta]:
         """
         Subtract a timedelta or AbsTime from the current AbsTime.
 
@@ -141,13 +156,15 @@ class Time:
             while other > current_timestamp:
                 other -= current_timestamp
                 if not current_period.prev_period:
-                    # We reached start of the match, lets just return start itself
+                    # We reached start of the match, let's just return start itself
                     return Time(period=current_period, timestamp=timedelta(0))
 
                 current_period = current_period.prev_period
                 current_timestamp = current_period.duration
 
-            return Time(period=current_period, timestamp=current_timestamp - other)
+            return Time(
+                period=current_period, timestamp=current_timestamp - other
+            )
 
         elif isinstance(other, Time):
             if self.period >= other.period:
@@ -172,8 +189,10 @@ class Time:
 
             other -= current_period.duration - current_timestamp
             if not current_period.next_period:
-                # We reached start of the match, lets just return start itself
-                return Time(period=current_period, timestamp=current_period.duration)
+                # We reached start of the match, let's just return start itself
+                return Time(
+                    period=current_period, timestamp=current_period.duration
+                )
 
             current_period = current_period.next_period
             current_timestamp = timedelta(0)

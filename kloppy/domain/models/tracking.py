@@ -1,14 +1,14 @@
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Callable, Union, Any
+from typing import Any, Callable, Dict, Optional, Union
 
 from kloppy.domain.models.common import DatasetType
-
-from .common import Dataset, DataRecord, Player
-from .pitch import Point, Point3D
 from kloppy.utils import (
     deprecated,
     docstring_inherit_attributes,
 )
+
+from .common import DataRecord, Dataset, Player
+from .pitch import Point, Point3D
 
 
 @dataclass
@@ -19,8 +19,8 @@ class PlayerData:
     other_data: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(repr=False)
 @docstring_inherit_attributes(DataRecord)
+@dataclass(repr=False)
 class Frame(DataRecord):
     """
     Tracking data frame.
@@ -80,9 +80,7 @@ class TrackingDataset(Dataset[Frame]):
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Frame], Dict]] = None,
-        additional_columns: Optional[
-            Dict[str, Union[Callable[[Frame], Any], Any]]
-        ] = None,
+        additional_columns=None,
     ) -> "DataFrame":
         try:
             import pandas as pd

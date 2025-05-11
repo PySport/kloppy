@@ -1,10 +1,11 @@
-# Domain Concepts { #kloppy.domain }
+[](){ #kloppy.domain }
+# Domain Concepts
 
-The [`kloppy.domain`][kloppy.domain] module defines entities that reflect real-world concepts within the domain of soccer match data. These entities serve as the framework upon which kloppy's logic is structured.
+The `kloppy.domain` module defines entities that reflect real-world concepts within the domain of soccer match data. These entities serve as the framework upon which kloppy's logic is structured. The domain concepts are arranged hierarchically. At the highest level, kloppy defines the concept of a [Dataset](#dataset). Each dataset is linked with a [Metadata](#metadata) entity, which holds all external information that describes the dataset.
 
 ## Dataset
 
-The domain concepts are arranged hierarchically. At the highest level, kloppy defines the concept of a [`Dataset`][kloppy.domain.Dataset]. A dataset describes specific aspects of what happened during a single match as a sequence of [`DataRecord`][kloppy.domain.DataRecord] entities. Kloppy defines three main types of match datasets: [`EventDataset`][kloppy.domain.EventDataset], [`TrackingDataset`][kloppy.domain.TrackingDataset], and [`CodeDataset`][kloppy.domain.CodeDataset]. Additionally, a dataset is linked with a [`Metadata`][kloppy.domain.Metadata] entity, which holds all external information that describes the match.
+A [`Dataset`][kloppy.domain.Dataset] describes specific aspects of what happened during a single match as a sequence of [`DataRecord`][kloppy.domain.DataRecord] entities. Kloppy defines three main types of match datasets: [EventDataset](#eventdataset), [TrackingDataset](#trackingdataset), and [CodeDataset](#codedataset).
 
 ```python exec="true" html="true"
 import subprocess
@@ -79,14 +80,14 @@ svg = subprocess.check_output(["d2", "--sketch", "-", "-"], input=diagram, stder
 print(svg)
 ```
 
-First, we descibe the concepts related to each of these three dataset types. Next, we discuss the structure of the metadata.
+First, we describe the entities related to each of these three dataset types. Next, we discuss the structure of the metadata.
 
 ### EventDataset
 
-An [`EventDataset`][kloppy.domain.EventDataset] is a sequence of [`Event`][kloppy.domain.Event] entities. Each [`Event`][kloppy.domain.Event] is annotated with a set of attributes that describe the event:
+An [`EventDataset`][kloppy.domain.EventDataset] is a chronologically ordered sequence of [`Event`][kloppy.domain.Event] entities. Each [`Event`][kloppy.domain.Event] represents an on-the-ball action (e.g., pass, shot, tackle) or tactical change (e.g., substitution) and is annotated with a set of attributes that describe the event:
 
 - an [`EventType`][kloppy.domain.EventType],
-- a [`Time`][kloppy.domain.Time] when the event happend,
+- a [`Time`][kloppy.domain.Time] when the event happened,
 - a [`Team`][kloppy.domain.Team] involved in the event,
 - the [`AttackingDirection`][kloppy.domain.AttackingDirection] of the team executing the event,
 - the ball owning [`Team`][kloppy.domain.Team],
@@ -96,7 +97,7 @@ An [`EventDataset`][kloppy.domain.EventDataset] is a sequence of [`Event`][klopp
 - a list of [`Qualifier`][kloppy.domain.Qualifier] entities providing additional details, and
 - optionally a tracking data [`Frame`][kloppy.domain.Frame].
 
-Depending on the [`EventType`][kloppy.domain.EventType] an event can have additional attributes.
+Depending on the [`EventType`][kloppy.domain.EventType], an event can have additional attributes.
 
 ```python exec="true" html="true"
 import subprocess
@@ -179,8 +180,7 @@ print(svg)
 ### CodeDataset
 
 
-A [`CodeDataset`][kloppy.domain.CodeDataset] is a sequence of [`Code`][kloppy.domain.Code] entities.
-
+A [`CodeDataset`][kloppy.domain.CodeDataset] is a sequence of [`Code`][kloppy.domain.Code] entities, each representing a tagged event within a match.
 
 ```python exec="true" html="true"
 import subprocess
@@ -216,7 +216,7 @@ print(svg)
 
 ## Metadata
 
-Each [`Dataset`][kloppy.domain.Dataset] is linked with a [`Metadata`][kloppy.domain.Metadata] object, containing all external information describing the match. The metadata contains two [`Team`][kloppy.domain.Team] entities that describe the line-ups of both teams, the [`Period`][kloppy.domain.Period] entities that describe the start and end times of each period of the match, the final [`Score`][kloppy.domain.Score], the [`Provider`][kloppy.domain.Provider] that collected the data, the [`Orientation`][kloppy.domain.Orientation] (i.e., playing direction) of both teams, and the [`CoordinateSystem`][kloppy.domain.CoordinateSystem] in which locations are defined.
+A [`Metadata`][kloppy.domain.Metadata] object contains all external information describing the match: two [`Team`][kloppy.domain.Team] entities that describe the line-ups of both teams, the [`Period`][kloppy.domain.Period] entities that describe the start and end times of each period of the match, the final [`Score`][kloppy.domain.Score], the [`Provider`][kloppy.domain.Provider] that collected the data, the [`Orientation`][kloppy.domain.Orientation] (i.e., playing direction) of both teams, and the [`CoordinateSystem`][kloppy.domain.CoordinateSystem] in which locations are defined.
 
 ```python exec="true" html="true"
 import subprocess

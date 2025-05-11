@@ -621,6 +621,15 @@ class NormalizedPitchDimensions(MetricPitchDimensions):
     def __post_init__(self):
         if self.pitch_length is None or self.pitch_width is None:
             raise ValueError("The pitch length and width need to be specified")
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise ValueError(
+                "The pitch dimensions need to be fully specified."
+            )
         dim_width = self.y_dim.max - self.y_dim.min
         dim_length = self.x_dim.max - self.x_dim.min
         self.goal_width = self.goal_width / self.pitch_width * dim_width

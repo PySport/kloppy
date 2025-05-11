@@ -1,7 +1,7 @@
 import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
-from typing import Any, Callable, Dict, Generic, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -28,7 +28,7 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
 
     def __init__(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[Tuple[Column]],
         **named_columns: NamedColumns,
     ):
         if not columns and not named_columns:

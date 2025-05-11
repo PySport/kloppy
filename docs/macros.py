@@ -32,12 +32,14 @@ _EVENT_DATA_PROVIDERS = {
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
     },
 }
 _DEFAULT_EVENT_TYPE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
     },
     "attributes": {
         attr_name: _DEFAULT_EVENT_ATTRIBUTE_SPEC
@@ -77,13 +79,16 @@ def convert_to_md_table(df: pd.DataFrame, markdown_kwargs: dict) -> str:
     # Escape any pipe characters, | to \|
     # See https://github.com/astanin/python-tabulate/issues/241
     df.columns = [
-        replace_unescaped_pipes(c) if isinstance(c, str) else c for c in df.columns
+        replace_unescaped_pipes(c) if isinstance(c, str) else c
+        for c in df.columns
     ]
 
     # Avoid deprecated applymap warning on pandas>=2.0
     # See https://github.com/timvink/mkdocs-table-reader-plugin/issues/55
     if pd.__version__ >= "2.1.0":
-        df = df.map(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
+        df = df.map(
+            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
+        )
     else:
         df = df.applymap(
             lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
@@ -272,12 +277,16 @@ def define_env(env):
 
     @env.macro
     def render_event_type(
-        event_type, show_providers=True, only_generic=False, only_specific=False
+        event_type,
+        show_providers=True,
+        only_generic=False,
+        only_specific=False,
     ):
         """Create a detailed table with the attributes of the given event type."""
         spec = event_spec["event_types"].get(event_type, {})
         _deepupdate(
-            spec, event_spec["event_types"].get("kloppy.domain.GenericEvent", {})
+            spec,
+            event_spec["event_types"].get("kloppy.domain.GenericEvent", {}),
         )
         _deepupdate(spec, _DEFAULT_EVENT_TYPE_SPEC)
 
@@ -299,7 +308,10 @@ def define_env(env):
             # Check if there is a record in the spec file for the attribute
             if attr.name in spec["attributes"]:
                 attr_spec = spec["attributes"][attr.name]
-                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
                     row += [render_provider_spec(attr_spec, provider_key)]
             else:
                 for (
@@ -321,7 +333,9 @@ def define_env(env):
                     attr_value.name
                 ]
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
-                    row += [render_provider_spec(attr_value_spec, provider_key)]
+                    row += [
+                        render_provider_spec(attr_value_spec, provider_key)
+                    ]
             else:
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
                     row += ["-"]
@@ -334,7 +348,11 @@ def define_env(env):
 
             # Get event type attribute docstrings
             attr_docstrings = next(
-                (d.value for d in class_docstring if d.kind.name == "attributes"),
+                (
+                    d.value
+                    for d in class_docstring
+                    if d.kind.name == "attributes"
+                ),
                 list(),
             )
             # Create a row for each attribute
@@ -348,7 +366,9 @@ def define_env(env):
                     and not isinstance(attr_annotation, str)
                     else None
                 )
-                if attr_anchor is not None and attr_anchor.startswith("kloppy."):
+                if attr_anchor is not None and attr_anchor.startswith(
+                    "kloppy."
+                ):
                     attr_class_spec = _get_object(attr_anchor)
                     anchor_is_enum = any(
                         [
@@ -369,14 +389,16 @@ def define_env(env):
                             list(),
                         )
                         for attr_value in attr_class_attr_docstrings:
-                            value_data += [_create_attribute_value_row(attr_value)]
+                            value_data += [
+                                _create_attribute_value_row(attr_value)
+                            ]
                         value_data_tables += [
                             (
                                 attr_anchor,
                                 convert_to_md_table(
-                                    pd.DataFrame(data=value_data, columns=columns).drop(
-                                        columns=["group"]
-                                    ),
+                                    pd.DataFrame(
+                                        data=value_data, columns=columns
+                                    ).drop(columns=["group"]),
                                     {"index": False},
                                 ),
                             )
@@ -392,14 +414,20 @@ def define_env(env):
         )
 
         if not show_providers:
-            table.drop(columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True)
+            table.drop(
+                columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True
+            )
 
         specific_table = convert_to_md_table(
-            table.loc[table["group"] != "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] != "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
         generic_table = convert_to_md_table(
-            table.loc[table["group"] == "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] == "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
 
@@ -452,7 +480,11 @@ def define_env(env):
 
         # Get qualifier value type
         attr_docstrings = next(
-            (d.value for d in qualifier_docstring if d.kind.name == "attributes"),
+            (
+                d.value
+                for d in qualifier_docstring
+                if d.kind.name == "attributes"
+            ),
             list(),
         )
 
@@ -474,7 +506,10 @@ def define_env(env):
             # Check if there is a record in the spec file for the attribute
             if attr.name in spec["attributes"]:
                 attr_spec = spec["attributes"][attr.name]
-                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
                     row += [render_provider_spec(attr_spec, provider_key)]
             else:
                 for (
@@ -487,7 +522,8 @@ def define_env(env):
 
         # Get qualifier value type
         attr_docstrings = next(
-            (d.value for d in value_docstring if d.kind.name == "attributes"), list()
+            (d.value for d in value_docstring if d.kind.name == "attributes"),
+            list(),
         )
 
         # Create a row for each attribute
@@ -503,7 +539,10 @@ def define_env(env):
             # Check if there is a record in the spec file for the attribute
             if attr.name in spec["values"]:
                 attr_spec = spec["values"][attr.name]
-                for provider_key, provider_name in _EVENT_DATA_PROVIDERS.items():
+                for (
+                    provider_key,
+                    provider_name,
+                ) in _EVENT_DATA_PROVIDERS.items():
                     row += [render_provider_spec(attr_spec, provider_key)]
             else:
                 for (

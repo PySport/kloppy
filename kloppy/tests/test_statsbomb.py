@@ -57,7 +57,10 @@ API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
 
 def test_with_visualization():
-    if "KLOPPY_TESTWITHVIZ" in os.environ and os.environ["KLOPPY_TESTWITHVIZ"] == "1":
+    if (
+        "KLOPPY_TESTWITHVIZ" in os.environ
+        and os.environ["KLOPPY_TESTWITHVIZ"] == "1"
+    ):
         return True
     return False
 
@@ -86,7 +89,9 @@ def test_get_enum_type():
     """Test retrieving enum types for StatsBomb IDs"""
     # retrieve by id
     assert SB.EVENT_TYPE(30) == SB.EVENT_TYPE.PASS
-    with pytest.raises(DeserializationError, match="Unknown StatsBomb Event Type: 0"):
+    with pytest.raises(
+        DeserializationError, match="Unknown StatsBomb Event Type: 0"
+    ):
         SB.EVENT_TYPE(0)
     # retrieve by id + name dict
     assert SB.EVENT_TYPE({"id": 30, "name": "pass"}) == SB.EVENT_TYPE.PASS
@@ -111,7 +116,9 @@ class TestStatsBombMetadata:
 
     def test_orientation(self, dataset):
         """It should set the action-executing-team orientation"""
-        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        assert (
+            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        )
 
     def test_framerate(self, dataset):
         """It should set the frame rate to None"""
@@ -121,9 +128,13 @@ class TestStatsBombMetadata:
         """It should create the teams and player objects"""
         # There should be two teams with the correct names and starting formations
         assert dataset.metadata.teams[0].name == "Belgium"
-        assert dataset.metadata.teams[0].starting_formation == FormationType("3-4-2-1")
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "3-4-2-1"
+        )
         assert dataset.metadata.teams[1].name == "Portugal"
-        assert dataset.metadata.teams[1].starting_formation == FormationType("4-3-3")
+        assert dataset.metadata.teams[1].starting_formation == FormationType(
+            "4-3-3"
+        )
         # The teams should have the correct players
         player = dataset.metadata.teams[0].get_player_by_id("3089")
         assert player.player_id == "3089"
@@ -180,7 +191,9 @@ class TestStatsBombMetadata:
         assert dataset.metadata.periods[0].start_timestamp == parse_str_ts(
             "00:00:00.000"
         )
-        assert dataset.metadata.periods[0].end_timestamp == parse_str_ts("00:47:38.122")
+        assert dataset.metadata.periods[0].end_timestamp == parse_str_ts(
+            "00:47:38.122"
+        )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == parse_str_ts(
             "00:47:38.122"
@@ -254,23 +267,35 @@ class TestStatsBombEvent:
         assert event.player.name == "Thorgan Hazard"
         assert event.coordinates == Point(96.75, 24.65)
         assert event.raw_event["id"] == "a5c60797-631e-418a-9f24-1e9779cb2b42"
-        assert event.related_event_ids == ["3eb5f3a7-3654-4c85-8880-3ecc741dbb57"]
+        assert event.related_event_ids == [
+            "3eb5f3a7-3654-4c85-8880-3ecc741dbb57"
+        ]
         assert event.period.id == 1
         assert event.timestamp == parse_str_ts("00:41:31.122")
         assert event.ball_state == BallState.ALIVE
 
     def test_timestamp(self, dataset):
         """It should set the correct timestamp, reset to zero after each period"""
-        kickoff_p1 = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        kickoff_p1 = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         assert kickoff_p1.timestamp == parse_str_ts("00:00:00.840")
-        kickoff_p2 = dataset.get_event_by_id("b3199171-507c-42a3-b4c4-9e609d7a98f6")
+        kickoff_p2 = dataset.get_event_by_id(
+            "b3199171-507c-42a3-b4c4-9e609d7a98f6"
+        )
         assert kickoff_p2.timestamp == parse_str_ts("00:00:00.848")
 
     def test_related_events(self, dataset: EventDataset):
         """Test whether related events are properly linked"""
-        carry_event = dataset.get_event_by_id("160ae2e4-812f-4161-9521-eafa6ca815bd")
-        pass_event = dataset.get_event_by_id("0750ecc5-41f2-4118-a927-1db4870d92ed")
-        receipt_event = dataset.get_event_by_id("217ea3ba-ed5d-46ae-96ef-5e3dd7884c7e")
+        carry_event = dataset.get_event_by_id(
+            "160ae2e4-812f-4161-9521-eafa6ca815bd"
+        )
+        pass_event = dataset.get_event_by_id(
+            "0750ecc5-41f2-4118-a927-1db4870d92ed"
+        )
+        receipt_event = dataset.get_event_by_id(
+            "217ea3ba-ed5d-46ae-96ef-5e3dd7884c7e"
+        )
 
         assert carry_event.get_related_events() == [pass_event, receipt_event]
         assert carry_event.related_pass() == pass_event
@@ -278,13 +303,17 @@ class TestStatsBombEvent:
     def test_synthetic_out_events(self, dataset: EventDataset):
         """It should add synthetic ball out events"""
         ball_out_events = dataset.find_all("ball_out")
-        assert len(ball_out_events) == 26 + 3 + 18  # throw-in + corner + goal kick
+        assert (
+            len(ball_out_events) == 26 + 3 + 18
+        )  # throw-in + corner + goal kick
 
         assert ball_out_events[0].ball_state == BallState.DEAD
 
     def test_freeze_frame_shot(self, dataset: EventDataset, base_dir: Path):
         """Test if shot freeze-frame is properly parsed and attached to shot events"""
-        shot_event = dataset.get_event_by_id("a5c60797-631e-418a-9f24-1e9779cb2b42")
+        shot_event = dataset.get_event_by_id(
+            "a5c60797-631e-418a-9f24-1e9779cb2b42"
+        )
 
         # The freeze-frame should be attached to the shot event
         freeze_frame = shot_event.freeze_frame
@@ -295,12 +324,16 @@ class TestStatsBombEvent:
 
         # The start location of the shot event should be the same as the
         # location of the player who took the shot in the freeze-frame
-        event_player_coordinates = freeze_frame.players_coordinates[shot_event.player]
+        event_player_coordinates = freeze_frame.players_coordinates[
+            shot_event.player
+        ]
         assert event_player_coordinates == shot_event.coordinates
 
         # The freeze-frame should contain the location of all players
         player_3089 = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert freeze_frame.players_coordinates[player_3089] == Point(91.45, 28.15)
+        assert freeze_frame.players_coordinates[player_3089] == Point(
+            91.45, 28.15
+        )
 
         if test_with_visualization():
             import matplotlib.pyplot as plt
@@ -380,11 +413,15 @@ class TestStatsBombEvent:
                     ax=ax,
                 )
 
-            plt.savefig(base_dir / "outputs" / "test_statsbomb_freeze_frame_shot.png")
+            plt.savefig(
+                base_dir / "outputs" / "test_statsbomb_freeze_frame_shot.png"
+            )
 
     def test_freeze_frame_360(self, dataset: EventDataset, base_dir: Path):
         """Test if 360 freeze-frame is properly parsed and attached to shot events"""
-        pass_event = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        pass_event = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
 
         # The freeze-frame should be attached to the pass event
         freeze_frame = pass_event.freeze_frame
@@ -395,7 +432,9 @@ class TestStatsBombEvent:
 
         # The start location of the pass event should be the same as the
         # location of the player who took the pass in the freeze-frame
-        event_player_coordinates = freeze_frame.players_coordinates[pass_event.player]
+        event_player_coordinates = freeze_frame.players_coordinates[
+            pass_event.player
+        ]
         assert event_player_coordinates == pass_event.coordinates
 
         # The freeze-frame should contain the location of all players
@@ -507,7 +546,9 @@ class TestStatsBombEvent:
             visible_area = list(zip(visible_area, visible_area))
             pitch.polygon([visible_area], color=(1, 0, 0, 0.1), ax=ax)
 
-            plt.savefig(base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png")
+            plt.savefig(
+                base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
+            )
 
     def test_freeze_frame_player_identities(self, dataset: EventDataset):
         """It should set the identities of the player that executed the event and the goalkeepers."""
@@ -537,23 +578,29 @@ class TestStatsBombEvent:
         )
 
         # The events should have standardized coordinates
-        kickoff = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        kickoff = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         assert kickoff.coordinates.x == pytest.approx(0.5, abs=1e-2)
         assert kickoff.coordinates.y == pytest.approx(0.5, abs=1e-2)
 
         # The shot freeze-frame should have standardized coordinates
-        shot_event = dataset.get_event_by_id("a5c60797-631e-418a-9f24-1e9779cb2b42")
+        shot_event = dataset.get_event_by_id(
+            "a5c60797-631e-418a-9f24-1e9779cb2b42"
+        )
         freeze_frame = shot_event.freeze_frame
         player_3089 = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert freeze_frame.players_coordinates[player_3089].x == pytest.approx(
-            0.756, abs=1e-2
-        )
-        assert freeze_frame.players_coordinates[player_3089].y == pytest.approx(
-            0.340, abs=1e-2
-        )
+        assert freeze_frame.players_coordinates[
+            player_3089
+        ].x == pytest.approx(0.756, abs=1e-2)
+        assert freeze_frame.players_coordinates[
+            player_3089
+        ].y == pytest.approx(0.340, abs=1e-2)
 
         # The 360 freeze-frame should have standardized coordinates
-        pass_event = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        pass_event = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         coordinates_per_team = defaultdict(list)
         for (
             player,
@@ -603,19 +650,27 @@ class TestStatsBombPassEvent:
 
     def test_open_play(self, dataset: EventDataset):
         """Verify specific attributes of simple open play pass"""
-        pass_event = dataset.get_event_by_id("b96d1a5e-8435-4cb6-8e05-3251278c59ca")
+        pass_event = dataset.get_event_by_id(
+            "b96d1a5e-8435-4cb6-8e05-3251278c59ca"
+        )
         # A pass should have a result
         assert pass_event.result == PassResult.COMPLETE
         # A pass should have end coordinates
         assert pass_event.receiver_coordinates == Point(86.15, 53.35)
         # A pass should have an end timestamp
-        assert pass_event.receive_timestamp == parse_str_ts("00:35:21.533") + timedelta(
-            seconds=0.634066
-        )
+        assert pass_event.receive_timestamp == parse_str_ts(
+            "00:35:21.533"
+        ) + timedelta(seconds=0.634066)
         # A pass should have a receiver
-        assert pass_event.receiver_player.name == "Cristiano Ronaldo dos Santos Aveiro"
+        assert (
+            pass_event.receiver_player.name
+            == "Cristiano Ronaldo dos Santos Aveiro"
+        )
         # A pass should have a body part
-        assert pass_event.get_qualifier_value(BodyPartQualifier) == BodyPart.RIGHT_FOOT
+        assert (
+            pass_event.get_qualifier_value(BodyPartQualifier)
+            == BodyPart.RIGHT_FOOT
+        )
         # A pass can have set piece qualifiers
         assert pass_event.get_qualifier_value(SetPieceQualifier) is None
         # A pass can have pass qualifiers
@@ -623,7 +678,9 @@ class TestStatsBombPassEvent:
 
     def test_pass_qualifiers(self, dataset: EventDataset):
         """It should add pass qualifiers"""
-        pass_event = dataset.get_event_by_id("7df4f0dc-f620-4256-90be-aaf5ffdadcae")
+        pass_event = dataset.get_event_by_id(
+            "7df4f0dc-f620-4256-90be-aaf5ffdadcae"
+        )
         assert pass_event.get_qualifier_values(PassQualifier) == [
             PassType.CROSS,
             PassType.HIGH_PASS,
@@ -633,9 +690,12 @@ class TestStatsBombPassEvent:
 
     def test_set_piece(self, dataset: EventDataset):
         """It should add set piece qualifiers to free kick passes"""
-        pass_event = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        pass_event = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         assert (
-            pass_event.get_qualifier_value(SetPieceQualifier) == SetPieceType.KICK_OFF
+            pass_event.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.KICK_OFF
         )
 
     def test_interception(self, dataset: EventDataset):
@@ -648,7 +708,9 @@ class TestStatsBombPassEvent:
 
     def test_aerial_duel(self, dataset: EventDataset):
         """It should split passes that follow an aerial duel into two events"""
-        duel = dataset.get_event_by_id("duel-9e74c5c4-bb0c-44b5-9722-24e823e376a3")
+        duel = dataset.get_event_by_id(
+            "duel-9e74c5c4-bb0c-44b5-9722-24e823e376a3"
+        )
         assert duel.event_type == EventType.DUEL
         assert duel.get_qualifier_values(DuelQualifier) == [
             DuelType.LOOSE_BALL,
@@ -658,7 +720,9 @@ class TestStatsBombPassEvent:
 
     def test_synthetic_out_events(self, dataset: EventDataset):
         """It should add synthetic ball out events after the (failed) receipt."""
-        pass_event = dataset.get_event_by_id("36c7ed4c-031e-4dd4-8557-3d9b8ee8762f")
+        pass_event = dataset.get_event_by_id(
+            "36c7ed4c-031e-4dd4-8557-3d9b8ee8762f"
+        )
         assert pass_event.next().event_name == "Ball Receipt*"
         assert pass_event.next().next().event_name == "ball_out"
         assert (
@@ -687,13 +751,17 @@ class TestStatsBombShotEvent:
         # A shot event should have end coordinates
         assert shot.result_coordinates == Point3D(119.95, 48.35, 0.45)
         # A shot event should have a body part
-        assert shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
+        assert (
+            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
+        )
         # An open play shot should not have a set piece qualifier
         assert shot.get_qualifier_value(SetPieceQualifier) is None
         # A shot event should have a xG value
         assert (
             next(
-                statistic for statistic in shot.statistics if statistic.name == "xG"
+                statistic
+                for statistic in shot.statistics
+                if statistic.name == "xG"
             ).value
             == 0.12441643
         )
@@ -701,11 +769,16 @@ class TestStatsBombShotEvent:
     def test_free_kick(self, dataset: EventDataset):
         """It should add set piece qualifiers to free kick shots"""
         shot = dataset.get_event_by_id("7c10ac89-738c-4e99-8c0c-f55bc5c0995e")
-        assert shot.get_qualifier_value(SetPieceQualifier) == SetPieceType.FREE_KICK
+        assert (
+            shot.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.FREE_KICK
+        )
 
     def test_aerial_duel(self, dataset: EventDataset):
         """It should split shots that follow an aerial duel into two events"""
-        duel = dataset.get_event_by_id("duel-cac8f0f3-015a-43d5-b201-0b9997aea3fb")
+        duel = dataset.get_event_by_id(
+            "duel-cac8f0f3-015a-43d5-b201-0b9997aea3fb"
+        )
         assert duel.event_type == EventType.DUEL
         assert duel.get_qualifier_values(DuelQualifier) == [
             DuelType.LOOSE_BALL,
@@ -715,7 +788,9 @@ class TestStatsBombShotEvent:
 
     def test_synthetic_out_events(self, dataset: EventDataset):
         """It should add synthetic ball out events after the goalkeeper event."""
-        shot_event = dataset.get_event_by_id("221ce1cb-d70e-47aa-8d7e-c427a1c952ba")
+        shot_event = dataset.get_event_by_id(
+            "221ce1cb-d70e-47aa-8d7e-c427a1c952ba"
+        )
         assert shot_event.next().event_name == "Goal Keeper"
         assert shot_event.next().next().event_name == "ball_out"
         assert (
@@ -736,7 +811,9 @@ class TestStatsBombInterceptionEvent:
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of interceptions"""
-        interception = dataset.get_event_by_id("ca963cd5-93cc-4659-887d-29064cf2156d")
+        interception = dataset.get_event_by_id(
+            "ca963cd5-93cc-4659-887d-29064cf2156d"
+        )
         assert interception.result == InterceptionResult.LOST
         assert interception.get_qualifier_value(BodyPartQualifier) is None
 
@@ -756,11 +833,15 @@ class TestStatsBombOwnGoalEvent:
         )
 
         # The Own Goal For event should be removed
-        own_goal_for_event = dataset.get_event_by_id("f942c5b5-df4b-4ee4-9e90-ed5f5")
+        own_goal_for_event = dataset.get_event_by_id(
+            "f942c5b5-df4b-4ee4-9e90-ed5f5"
+        )
         assert own_goal_for_event is None
 
         # The Own Goal Against event should be converted to a shot event
-        own_goal_against_event = dataset.get_event_by_id("89dd4f4b-0a70-48d8-a0e7-ac4c")
+        own_goal_against_event = dataset.get_event_by_id(
+            "89dd4f4b-0a70-48d8-a0e7-ac4c"
+        )
         assert own_goal_against_event is not None
         assert own_goal_against_event.event_type == EventType.SHOT
         assert own_goal_against_event.result == ShotResult.OWN_GOAL
@@ -776,15 +857,21 @@ class TestStatsBombClearanceEvent:
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of clearances"""
-        clearance = dataset.get_event_by_id("1c1d8523-d887-4ade-a698-3274b9b0943c")
+        clearance = dataset.get_event_by_id(
+            "1c1d8523-d887-4ade-a698-3274b9b0943c"
+        )
         # A clearance has no result
         assert clearance.result is None
         # A clearance should have a bodypart (if data version >= 1.1)
-        assert clearance.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
+        assert (
+            clearance.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
+        )
 
     def test_aerial_duel(self, dataset: EventDataset):
         """It should split clearances that follow an aerial duel into two events"""
-        duel = dataset.get_event_by_id("duel-9bbdb8ea-1119-4d82-bb0d-a63802558fc6")
+        duel = dataset.get_event_by_id(
+            "duel-9bbdb8ea-1119-4d82-bb0d-a63802558fc6"
+        )
         assert duel.event_type == EventType.DUEL
         assert duel.get_qualifier_values(DuelQualifier) == [
             DuelType.LOOSE_BALL,
@@ -803,7 +890,9 @@ class TestStatsBombMiscontrolEvent:
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of miscontrols"""
-        miscontrol = dataset.get_event_by_id("e297def3-9907-414a-9eb5-e1269343b84d")
+        miscontrol = dataset.get_event_by_id(
+            "e297def3-9907-414a-9eb5-e1269343b84d"
+        )
         # A miscontrol has no result
         assert miscontrol.result is None
         # A miscontrol has no qualifiers
@@ -824,13 +913,17 @@ class TestStatsBombDribbleEvent:
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of dribbles"""
-        dribble = dataset.get_event_by_id("82dae1ed-7944-4064-b409-6652dd4a2e72")
+        dribble = dataset.get_event_by_id(
+            "82dae1ed-7944-4064-b409-6652dd4a2e72"
+        )
         # A dribble should have a result
         assert dribble.result == TakeOnResult.INCOMPLETE
 
     def test_result_out(self, dataset: EventDataset):
         """The result of a dribble can be TakeOnResult.OUT"""
-        dribble = dataset.get_event_by_id("e5dfa799-1dc7-49c1-94b8-ee793ae6284b")
+        dribble = dataset.get_event_by_id(
+            "e5dfa799-1dc7-49c1-94b8-ee793ae6284b"
+        )
         assert dribble.result == TakeOnResult.OUT
 
 
@@ -900,7 +993,9 @@ class TestStatsBombDuelEvent:
         duel = dataset.get_event_by_id("9e5281ac-1fee-4a51-b6a5-78e99c22397e")
         assert duel.get_qualifier_value(CounterAttackQualifier) is True
 
-        kick_off = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         assert kick_off.get_qualifier_value(CounterAttackQualifier) is None
 
         counter_attack_events = [
@@ -929,9 +1024,13 @@ class TestStatsBombGoalkeeperEvent:
             GoalkeeperActionType.SAVE
         )
         # A save attempt should not be deserialized as a goalkeeper event
-        goal_conceded = dataset.get_event_by_id("3eb5f3a7-3654-4c85-8880-3ecc741dbb57")
+        goal_conceded = dataset.get_event_by_id(
+            "3eb5f3a7-3654-4c85-8880-3ecc741dbb57"
+        )
         assert goal_conceded.event_type == EventType.GENERIC
-        shot_faced = dataset.get_event_by_id("f60ea856-c679-4d1e-aa0c-5ce1a47a1353")
+        shot_faced = dataset.get_event_by_id(
+            "f60ea856-c679-4d1e-aa0c-5ce1a47a1353"
+        )
         assert shot_faced.event_type == EventType.GENERIC
 
     def test_punch(self, dataset: EventDataset):
@@ -944,7 +1043,9 @@ class TestStatsBombGoalkeeperEvent:
 
     def test_collected(self, dataset: EventDataset):
         """It should deserialize goalkeeper collections"""
-        collected = dataset.get_event_by_id("5156545b-7add-4b6a-a8e4-c68672267464")
+        collected = dataset.get_event_by_id(
+            "5156545b-7add-4b6a-a8e4-c68672267464"
+        )
         assert collected.get_qualifier_value(GoalkeeperQualifier) == (
             GoalkeeperActionType.CLAIM
         )
@@ -953,21 +1054,29 @@ class TestStatsBombGoalkeeperEvent:
         """It should deserialize keeper sweeper actions"""
         # keeper sweeper with outcome 'clear' should be deserialized as
         # as a clearance event if the keeper uses his feet or head
-        sweeper_clear = dataset.get_event_by_id("6c84a193-d45b-4d6e-97bc-3f07af9001db")
+        sweeper_clear = dataset.get_event_by_id(
+            "6c84a193-d45b-4d6e-97bc-3f07af9001db"
+        )
         assert sweeper_clear.event_type == EventType.CLEARANCE
         # keeper sweeper with outcome 'claim' should be deserialized as
         # a goalkeeper pick-up event if the keeper uses his hands
-        sweeper_claim = dataset.get_event_by_id("460f558e-c951-4262-b467-e078ea1faefc")
+        sweeper_claim = dataset.get_event_by_id(
+            "460f558e-c951-4262-b467-e078ea1faefc"
+        )
         assert sweeper_claim.get_qualifier_value(GoalkeeperQualifier) == (
             GoalkeeperActionType.PICK_UP
         )
 
     def test_under_pressure(self, dataset: EventDataset):
         """It should add the under pressure qualifier"""
-        under_pressure = dataset.get_event_by_id("c2a03c46-c936-4f7b-9b26-72d470a892ef")
+        under_pressure = dataset.get_event_by_id(
+            "c2a03c46-c936-4f7b-9b26-72d470a892ef"
+        )
         assert under_pressure.get_qualifier_value(UnderPressureQualifier)
 
-        kick_off = dataset.get_event_by_id("8022c113-e349-4b0b-b4a7-a3bb662535f8")
+        kick_off = dataset.get_event_by_id(
+            "8022c113-e349-4b0b-b4a7-a3bb662535f8"
+        )
         assert kick_off.get_qualifier_value(UnderPressureQualifier) is None
 
         under_pressure_events = [
@@ -1035,9 +1144,12 @@ class TestStatsBombFoulCommittedEvent:
 
     def test_card(self, dataset: EventDataset):
         """It should add a card qualifier if a card was given"""
-        foul_with_card = dataset.get_event_by_id("5c3421f8-17c1-4a84-8fd2-1dbd11724156")
+        foul_with_card = dataset.get_event_by_id(
+            "5c3421f8-17c1-4a84-8fd2-1dbd11724156"
+        )
         assert (
-            foul_with_card.get_qualifier_value(CardQualifier) == CardType.FIRST_YELLOW
+            foul_with_card.get_qualifier_value(CardQualifier)
+            == CardType.FIRST_YELLOW
         )
 
         foul_without_card = dataset.get_event_by_id(

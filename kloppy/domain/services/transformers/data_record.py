@@ -1,8 +1,12 @@
+import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
 from typing import Any, Callable, Dict, Generic, Type, TypeVar, Union
 
-from typing_extensions import Unpack
+if sys.version_info >= (3, 11):
+    from typing import Unpack
+else:
+    from typing_extensions import Unpack
 
 from kloppy.domain import Code, DataRecord, DatasetType, Event, Frame
 from kloppy.domain.services.transformers.attribute import (

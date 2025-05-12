@@ -347,3 +347,36 @@ class TestWyscoutV3:
             formation_change_event.formation_type
             == FormationType.FOUR_THREE_ONE_TWO
         )
+
+    def test_kick_off_qualifier(self, dataset: EventDataset):
+        pass_event_kick_off_first_half = dataset.get_event_by_id(1927028854)
+        pass_event_kick_off_second_half = dataset.get_event_by_id(1927029460)
+        pass_event_kick_off_after_goal = dataset.get_event_by_id(1927030641)
+        assert pass_event_kick_off_first_half.event_type == EventType.PASS
+        assert pass_event_kick_off_second_half.event_type == EventType.PASS
+        assert pass_event_kick_off_after_goal.event_type == EventType.PASS
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_first_half.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_second_half.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )
+        assert (
+            SetPieceType.KICK_OFF
+            in pass_event_kick_off_after_goal.get_qualifier_values(
+                SetPieceQualifier
+            )
+        )
+
+    def test_through_ball_qualifier(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(1927028612)
+        assert pass_event.event_type == EventType.PASS
+        assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(
+            PassQualifier
+        )

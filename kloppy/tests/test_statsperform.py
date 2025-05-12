@@ -9,13 +9,14 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
+    PassResult,
     Point,
     Point3D,
+    PositionType,
     Provider,
     SportVUCoordinateSystem,
-    TrackingDataset,
     Time,
-    PositionType,
+    TrackingDataset,
 )
 
 
@@ -95,6 +96,13 @@ class TestStatsPerformMetadata:
     def test_provider(self, tracking_dataset: TrackingDataset):
         assert tracking_dataset.metadata.provider == Provider.STATSPERFORM
 
+    def test_orientation(self, event_dataset: EventDataset):
+        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
+            # StatsPerform does not provide pitch dimensions
+            pitch_length=None,
+            pitch_width=None,
+        )
+
     def test_teams(self, tracking_dataset: TrackingDataset):
         home_team = tracking_dataset.metadata.teams[0]
         home_player = home_team.players[2]
@@ -123,6 +131,10 @@ class TestStatsPerformMetadata:
         assert away_substitute.starting_position is None
         assert not away_substitute.starting
         assert away_substitute.team == away_team
+
+        home_gk = home_team.get_player_by_id("6wfwy94p5bm0zv3aku0urfq39")
+        assert home_gk.first_name == "Benjamin Pascal"
+        assert home_gk.last_name == "Lecomte"
 
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
@@ -172,11 +184,7 @@ class TestStatsPerformEvent:
 
     def test_deserialize_all(self, event_dataset: EventDataset):
         assert event_dataset.metadata.provider == Provider.STATSPERFORM
-        assert event_dataset.metadata.coordinate_system == OptaCoordinateSystem(
-            # StatsPerform does not provide pitch dimensions
-            pitch_length=None,
-            pitch_width=None,
-        )
+
         assert len(event_dataset.records) == 1643
 
         substitution_events = event_dataset.find_all("substitution")
@@ -198,6 +206,64 @@ class TestStatsPerformEvent:
         assert first_sub.player == m_wintzheimer
         assert first_sub.replacement_player == b_jatta
 
+    def test_pass_receiver(self, event_dataset: EventDataset):
+        """It should impute the intended receiver of a pass."""
+        # Completed passes should get a receiver
+        complete_pass = event_dataset.get_event_by_id("2328589789")
+        assert (
+            complete_pass.receiver_player.player_id
+            == "apdrig6xt1hxub1986s3uh1x"
+        )
+        assert (
+            complete_pass.receive_timestamp
+            == complete_pass.next_record.timestamp
+        )
+
+        # When a pass is challenged the receipt is the next next event
+        challenged_pass = event_dataset.get_event_by_id("2328600271")
+        assert (
+            challenged_pass.receiver_player.player_id
+            == "ci4pwzieoc94uj3i1371bsatx"
+        )
+        assert (
+            challenged_pass.receive_timestamp
+            == challenged_pass.next_record.next_record.timestamp
+        )
+
+        # Passes should be received within 30 seconds
+        assert all(
+            [
+                p.receive_timestamp.total_seconds()
+                - p.timestamp.total_seconds()
+                < 30
+                for p in event_dataset.find_all("pass")
+                if p.receive_timestamp is not None
+            ]
+        )
+
+        # Passes that result in a loss of possession should not have a receiver
+        turnover_passes = [
+            p
+            for p in event_dataset.find_all("pass")
+            if p.next_record
+            and p.ball_owning_team != p.next_record.ball_owning_team
+        ]
+        assert all(p.receiver_player is None for p in turnover_passes)
+
+        # Failed passes should not have a receiver
+        failed_pass = event_dataset.get_event_by_id("2328591011")
+        assert failed_pass.receiver_player is None
+        out_pass = event_dataset.get_event_by_id("2328590733")
+        assert out_pass.receiver_player is None
+
+        # When a pass is interrupted by a foul the receiver is not set
+        fouled_pass = event_dataset.get_event_by_id("2328589929")
+        assert fouled_pass.receiver_player is None
+
+        # Deflected passes should not have a receiver
+        deflected_pass = event_dataset.get_event_by_id("2328596237")
+        assert deflected_pass.receiver_player is None
+
 
 class TestStatsPerformTracking:
     """Tests related to deserializing tracking data delivered by StatsPerform."""
@@ -210,6 +276,33 @@ class TestStatsPerformTracking:
 
     def test_flags(self, tracking_dataset):
         assert tracking_dataset.metadata.flags == DatasetFlag.BALL_STATE
+
+    def test_correct_deserialization_limit_sample(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
+
+        tracking_dataset = statsperform.load_tracking(
+            ma1_data=tracking_metadata_xml,
+            ma25_data=tracking_data,
+            tracking_system="sportvu",
+            coordinates="sportvu",
+            pitch_length=105,
+            pitch_width=68,
+            limit=50,
+        )
+        assert len(tracking_dataset.records) == 50
+
+        tracking_dataset = statsperform.load_tracking(
+            ma1_data=tracking_metadata_xml,
+            ma25_data=tracking_data,
+            tracking_system="sportvu",
+            coordinates="sportvu",
+            pitch_length=105,
+            pitch_width=68,
+            limit=25,
+            sample_rate=(1 / 2),
+        )
+        assert len(tracking_dataset.records) == 25
 
     def test_coordinate_system_without_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path

@@ -107,7 +107,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 team_id=str(team_info["id"]),
                 name="",
                 ground=ground,
-                starting_formation=FormationType.FOUR_FOUR_TWO,
+                starting_formation=FormationType(
+                    team_info["startingFormation"]
+                ),
                 # starting_formation=formation_mapping[team_info["startingFormation"]]
             )
             player_starting_positions = {

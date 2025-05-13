@@ -963,7 +963,7 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
-class ImpectCoordinateSystem(CoordinateSystem):
+class ImpectCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.IMPECT

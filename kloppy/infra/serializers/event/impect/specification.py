@@ -36,6 +36,7 @@ from kloppy.infra.serializers.event.impect.helpers import (
     get_period_by_id,
     get_team_by_id,
     parse_coordinates,
+    parse_shot_end_coordinates,
 )
 
 
@@ -66,11 +67,13 @@ class EVENT_TYPE(Enum):
     FINAL_WHISTLE = "FINAL_WHISTLE"
     REFEREE_INTERCEPTION = "REFEREE_INTERCEPTION"
     NO_VIDEO = "NO_VIDEO"
+    YELLOW_CARD = "YELLOW_CARD"
+    SECOND_YELLOW_CARD = "SECOND_YELLOW_CARD"
     RED_CARD = "RED_CARD"
 
 
 class BODYPART(Enum):
-    """The list of body parts used in StatsBomb data."""
+    """The list of body parts used in Impect data."""
 
     FOOT_RIGHT = "FOOT_RIGHT"
     FOOT_LEFT = "FOOT_LEFT"
@@ -179,38 +182,13 @@ class PASS(EVENT):
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> List[Event]:
-        team = generic_event_kwargs["team"]
-        timestamp = timedelta(seconds=generic_event_kwargs["timestamp"])
-        pass_dict = self.raw_event["pass"]
-
-        result = (
-            PassResult.COMPLETE
-            if self.raw_event["result"] == "SUCCESS"
-            else PassResult.INCOMPLETE
-        )
-        receiver_info = pass_dict["receiver"]
-        if receiver_info and receiver_info["type"] == "TEAMMATE":
-            receiver_player = team.get_player_by_id(receiver_info["playerId"])
-        else:
-            receiver_player = None
-        end_coordinates_info = self.raw_event["end"]
-        if end_coordinates_info:
-            receiver_coordinates = parse_coordinates(
-                end_coordinates_info["adjCoordinates"]
-            )
-        else:
-            receiver_coordinates = None
-        duration = (
-            self.raw_event["duration"] if self.raw_event["duration"] else 0
-        )
-        receive_timestamp = timestamp + timedelta(seconds=duration)
-
-        body_part = BODYPART(self.raw_event["bodyPartExtended"])
-        action = self.ACTION(self.raw_event["action"])
-
-        qualifiers = _get_pass_qualifiers(
-            action, body_part
-        ) + _get_body_part_qualifiers(body_part)
+        (
+            qualifiers,
+            receive_timestamp,
+            receiver_coordinates,
+            receiver_player,
+            result,
+        ) = create_pass_props(self, generic_event_kwargs)
 
         pass_event = event_factory.build_pass(
             result=result,
@@ -222,6 +200,510 @@ class PASS(EVENT):
         )
 
         return [pass_event]
+
+
+class DRIBBLE(EVENT):
+    """Impect Dribble event."""
+
+    class ACTION(Enum):
+        DRIBBLE = "DRIBBLE"
+
+    class RESULT(Enum):
+        FAIL = "FAIL"
+        SUCCESS = "SUCCESS"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        timestamp = timedelta(seconds=generic_event_kwargs["timestamp"])
+
+        result = (
+            CarryResult.COMPLETE
+            if self.raw_event["result"] == "SUCCESS"
+            else CarryResult.INCOMPLETE
+        )
+        end_coordinates_info = self.raw_event["end"]
+        if end_coordinates_info:
+            end_coordinates = parse_coordinates(
+                end_coordinates_info["adjCoordinates"]
+            )
+        else:
+            end_coordinates = None
+        duration = (
+            self.raw_event["duration"] if self.raw_event["duration"] else 0
+        )
+        end_timestamp = timestamp + timedelta(seconds=duration)
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        carry_event = event_factory.build_carry(
+            result=result,
+            end_coordinates=end_coordinates,
+            end_timestamp=end_timestamp,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [carry_event]
+
+
+class SHOT(EVENT):
+    """Impect Shot event."""
+
+    class ACTION(Enum):
+        LONG_RANGE_SHOT = "LONG_RANGE_SHOT"
+        MID_RANGE_SHOT = "MID_RANGE_SHOT"
+        CLOSE_RANGE_SHOT = "CLOSE_RANGE_SHOT"
+        ONE_VS_ONE_AGAINST_GK = "ONE_VS_ONE_AGAINST_GK"
+        OPEN_GOAL_SHOT = "OPEN_GOAL_SHOT"
+
+    class RESULT(Enum):
+        FAIL = "FAIL"
+        SUCCESS = "SUCCESS"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        shot_dict = self.raw_event["shot"]
+
+        shot_end_coordinates, shot_result = parse_shot_end_coordinates(
+            shot_dict
+        )
+
+        # action = self.ACTION(self.raw_event["action"])
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        shot_event = event_factory.build_shot(
+            result=shot_result,
+            result_coordinates=shot_end_coordinates,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [shot_event]
+
+
+class LOOSE_BALL_REGAIN(EVENT):
+    class ACTION(Enum):
+        LOOSE_BALL_REGAIN = "LOOSE_BALL_REGAIN"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        recovery_event = event_factory.build_recovery(
+            qualifiers=qualifiers,
+            result=None,
+            **generic_event_kwargs,
+        )
+
+        return [recovery_event]
+
+
+class INTERCEPTION(EVENT):
+    class ACTION(Enum):
+        INTERCEPTION = "INTERCEPTION"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        interception_event = event_factory.build_interception(
+            qualifiers=qualifiers,
+            result=InterceptionResult.SUCCESS,
+            **generic_event_kwargs,
+        )
+
+        return [interception_event]
+
+
+class CLEARANCE(EVENT):
+    class ACTION(Enum):
+        CLEARANCE = "CLEARANCE"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        clearance_event = event_factory.build_clearance(
+            qualifiers=qualifiers,
+            result=None,
+            **generic_event_kwargs,
+        )
+
+        return [clearance_event]
+
+
+class GROUND_DUEL(EVENT):
+    class ACTION(Enum):
+        DUEL = "DUEL"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+
+        qualifiers = _get_body_part_qualifiers(body_part)
+        qualifiers.append(DuelQualifier(value=DuelType.GROUND))
+
+        duel_event = event_factory.build_duel(
+            qualifiers=qualifiers,
+            result=None,
+            **generic_event_kwargs,
+        )
+
+        return [duel_event]
+
+
+class KICK_OFF(EVENT):
+    class ACTION(Enum):
+        KICKOFF_WHISTLE = "KICKOFF_WHISTLE"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        (
+            qualifiers,
+            receive_timestamp,
+            receiver_coordinates,
+            receiver_player,
+            result,
+        ) = create_pass_props(self, generic_event_kwargs)
+
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
+
+        pass_event = event_factory.build_pass(
+            result=result,
+            receive_timestamp=receive_timestamp,
+            receiver_coordinates=receiver_coordinates,
+            receiver_player=receiver_player,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [pass_event]
+
+
+class THROW_IN(EVENT):
+    class ACTION(Enum):
+        THROW_IN = "THROW_IN"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        (
+            qualifiers,
+            receive_timestamp,
+            receiver_coordinates,
+            receiver_player,
+            result,
+        ) = create_pass_props(self, generic_event_kwargs)
+
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
+
+        pass_event = event_factory.build_pass(
+            result=result,
+            receive_timestamp=receive_timestamp,
+            receiver_coordinates=receiver_coordinates,
+            receiver_player=receiver_player,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [pass_event]
+
+
+class FREE_KICK(EVENT):
+    class ACTION(Enum):
+        FREE_KICK = "FREE_KICK"
+        DIRECT_FREE_KICK = "DIRECT_FREE_KICK"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        action = self.ACTION(self.raw_event["action"])
+        if action == self.ACTION.FREE_KICK:
+            (
+                qualifiers,
+                receive_timestamp,
+                receiver_coordinates,
+                receiver_player,
+                result,
+            ) = create_pass_props(self, generic_event_kwargs)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
+            pass_event = event_factory.build_pass(
+                result=result,
+                receive_timestamp=receive_timestamp,
+                receiver_coordinates=receiver_coordinates,
+                receiver_player=receiver_player,
+                qualifiers=qualifiers,
+                **generic_event_kwargs,
+            )
+            return [pass_event]
+        elif action == self.ACTION.DIRECT_FREE_KICK:
+            shot_dict = self.raw_event["shot"]
+            shot_end_coordinates, shot_result = parse_shot_end_coordinates(
+                shot_dict
+            )
+            body_part = BODYPART(self.raw_event["bodyPartExtended"])
+            qualifiers = _get_body_part_qualifiers(body_part)
+
+            shot_event = event_factory.build_shot(
+                result=shot_result,
+                result_coordinates=shot_end_coordinates,
+                qualifiers=qualifiers,
+                **generic_event_kwargs,
+            )
+            return [shot_event]
+
+
+class GOAL_KICK(EVENT):
+    class ACTION(Enum):
+        GOAL_KICK = "GOAL_KICK"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        (
+            qualifiers,
+            receive_timestamp,
+            receiver_coordinates,
+            receiver_player,
+            result,
+        ) = create_pass_props(self, generic_event_kwargs)
+
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
+
+        pass_event = event_factory.build_pass(
+            result=result,
+            receive_timestamp=receive_timestamp,
+            receiver_coordinates=receiver_coordinates,
+            receiver_player=receiver_player,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [pass_event]
+
+
+class CORNER(EVENT):
+    class ACTION(Enum):
+        CORNER = "CORNER"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        (
+            qualifiers,
+            receive_timestamp,
+            receiver_coordinates,
+            receiver_player,
+            result,
+        ) = create_pass_props(self, generic_event_kwargs)
+
+        qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
+
+        pass_event = event_factory.build_pass(
+            result=result,
+            receive_timestamp=receive_timestamp,
+            receiver_coordinates=receiver_coordinates,
+            receiver_player=receiver_player,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [pass_event]
+
+
+class GK_CATCH(EVENT):
+    class ACTION(Enum):
+        CATCH = "CATCH"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+        qualifiers = _get_body_part_qualifiers(body_part)
+        qualifiers.append(
+            GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM)
+        )
+
+        gk_event = event_factory.build_goalkeeper_event(
+            qualifiers=qualifiers,
+            result=None,
+            **generic_event_kwargs,
+        )
+
+        return [gk_event]
+
+
+class GK_SAVE(EVENT):
+    class ACTION(Enum):
+        SAVE = "SAVE"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+        qualifiers = _get_body_part_qualifiers(body_part)
+        qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+
+        gk_event = event_factory.build_goalkeeper_event(
+            qualifiers=qualifiers,
+            result=None,
+            **generic_event_kwargs,
+        )
+
+        return [gk_event]
+
+
+class OUT(EVENT):
+    class ACTION(Enum):
+        BALL_OUT_OF_GOAL_LINE = "BALL_OUT_OF_GOAL_LINE"
+        BALL_OUT_OF_SIDE_LINE = "BALL_OUT_OF_SIDE_LINE"
+        BALL_OUT_OF_UNKNOWN = "BALL_OUT_OF_UNKNOWN"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        generic_event_kwargs["ball_state"] = BallState.DEAD
+
+        ball_out_event = event_factory.build_ball_out(
+            result=None,
+            qualifiers=None,
+            **generic_event_kwargs,
+        )
+        return [ball_out_event]
+
+
+class FOUL(EVENT):
+    class ACTION(Enum):
+        FOUL = "FOUL"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+
+        foul_event = event_factory.build_foul_committed(
+            result=None,
+            qualifiers=None,
+            **generic_event_kwargs,
+        )
+        return [foul_event]
+
+
+class YELLOW_CARD(EVENT):
+    class ACTION(Enum):
+        YELLOW_CARD = "YELLOW_CARD"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        qualifiers = [CardQualifier(value=CardType.FIRST_YELLOW)]
+
+        card_event = event_factory.build_card(
+            result=None,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+        return [card_event]
+
+
+class SECOND_YELLOW_CARD(EVENT):
+    class ACTION(Enum):
+        SECOND_YELLOW_CARD = "SECOND_YELLOW_CARD"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        qualifiers = [CardQualifier(value=CardType.SECOND_YELLOW)]
+
+        card_event = event_factory.build_card(
+            result=None,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+        return [card_event]
+
+
+class RED_CARD(EVENT):
+    class ACTION(Enum):
+        RED_CARD = "RED_CARD"
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        qualifiers = [CardQualifier(value=CardType.RED)]
+
+        card_event = event_factory.build_card(
+            result=None,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+        return [card_event]
+
+
+def create_pass_props(
+    event: Union[PASS, KICK_OFF, THROW_IN, FREE_KICK, GOAL_KICK, CORNER],
+    generic_event_kwargs,
+):
+    team = generic_event_kwargs["team"]
+    timestamp = timedelta(seconds=generic_event_kwargs["timestamp"])
+    pass_dict = event.raw_event["pass"]
+    result = (
+        PassResult.COMPLETE
+        if event.raw_event["result"] == "SUCCESS"
+        else PassResult.INCOMPLETE
+    )
+    receiver_info = pass_dict["receiver"]
+    if receiver_info and receiver_info["type"] == "TEAMMATE":
+        receiver_player = team.get_player_by_id(receiver_info["playerId"])
+    else:
+        receiver_player = None
+    end_coordinates_info = event.raw_event["end"]
+    if end_coordinates_info:
+        receiver_coordinates = parse_coordinates(
+            end_coordinates_info["adjCoordinates"]
+        )
+    else:
+        receiver_coordinates = None
+    duration = (
+        event.raw_event["duration"] if event.raw_event["duration"] else 0
+    )
+    receive_timestamp = timestamp + timedelta(seconds=duration)
+    body_part = BODYPART(event.raw_event["bodyPartExtended"])
+    action = event.ACTION(event.raw_event["action"])
+    qualifiers = _get_pass_qualifiers(
+        action, body_part
+    ) + _get_body_part_qualifiers(body_part)
+
+    return (
+        qualifiers,
+        receive_timestamp,
+        receiver_coordinates,
+        receiver_player,
+        result,
+    )
 
 
 def _get_body_part_qualifiers(
@@ -274,6 +756,24 @@ def create_impect_events(
 def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
     type_to_event = {
         EVENT_TYPE.PASS: PASS,
+        EVENT_TYPE.DRIBBLE: DRIBBLE,
+        EVENT_TYPE.SHOT: SHOT,
+        EVENT_TYPE.LOOSE_BALL_REGAIN: LOOSE_BALL_REGAIN,
+        EVENT_TYPE.INTERCEPTION: INTERCEPTION,
+        EVENT_TYPE.CLEARANCE: CLEARANCE,
+        EVENT_TYPE.GROUND_DUEL: GROUND_DUEL,
+        EVENT_TYPE.KICK_OFF: KICK_OFF,
+        EVENT_TYPE.THROW_IN: THROW_IN,
+        EVENT_TYPE.FREE_KICK: FREE_KICK,
+        EVENT_TYPE.GOAL_KICK: GOAL_KICK,
+        EVENT_TYPE.CORNER: CORNER,
+        EVENT_TYPE.GK_CATCH: GK_CATCH,
+        EVENT_TYPE.GK_SAVE: GK_SAVE,
+        EVENT_TYPE.OUT: OUT,
+        EVENT_TYPE.FOUL: FOUL,
+        EVENT_TYPE.YELLOW_CARD: YELLOW_CARD,
+        EVENT_TYPE.SECOND_YELLOW_CARD: SECOND_YELLOW_CARD,
+        EVENT_TYPE.RED_CARD: RED_CARD,
     }
     event_type = EVENT_TYPE(raw_event["actionType"])
     event_creator = type_to_event.get(event_type, EVENT)

@@ -1,6 +1,14 @@
-from typing import List, Dict, Union
+from typing import List, Dict
 
-from kloppy.domain import Team, Period, Point, FormationType, PositionType
+from kloppy.domain import (
+    Team,
+    Period,
+    Point,
+    FormationType,
+    PositionType,
+    Point3D,
+    ShotResult,
+)
 from kloppy.exceptions import DeserializationError
 
 formation_mapping: Dict[str, FormationType] = {}
@@ -49,3 +57,26 @@ def parse_coordinates(raw_coordinates: Dict[str, float]) -> Point:
         x=float(raw_coordinates["x"]),
         y=float(raw_coordinates["y"]),
     )
+
+
+def parse_shot_end_coordinates(
+    shot_info: Dict, is_goal: bool = False, is_own_goal: bool = False
+) -> (Point, ShotResult):
+    """Parse coordinates into a kloppy Point."""
+
+    y_coordinate = shot_info["targetPoint"]["y"]
+    z_coordinate = shot_info["targetPoint"]["z"]
+    shot_end_coordinates = Point3D(100, y_coordinate, z_coordinate)
+
+    if is_goal:
+        result = ShotResult.GOAL
+    elif is_own_goal:
+        result = ShotResult.OWN_GOAL
+    elif shot_info["woodwork"]:
+        result = ShotResult.POST
+    elif abs(y_coordinate) < 3.66 and z_coordinate < 2.44:
+        result = ShotResult.SAVED
+    else:
+        result = ShotResult.OFF_TARGET
+
+    return shot_end_coordinates, result

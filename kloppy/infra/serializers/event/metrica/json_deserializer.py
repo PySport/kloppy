@@ -380,9 +380,9 @@ class MetricaJsonEventDataDeserializer(
                 if event.result in OUT_EVENT_RESULTS:
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
-                        generic_event_kwargs[
-                            "coordinates"
-                        ] = _parse_coordinates(raw_event["end"])
+                        generic_event_kwargs["coordinates"] = (
+                            _parse_coordinates(raw_event["end"])
+                        )
                         generic_event_kwargs["timestamp"] = (
                             timedelta(seconds=raw_event["end"]["time"])
                             - period.start_timestamp

@@ -172,9 +172,11 @@ class DefaultEventTransformer(EventAttributeTransformer):
             timestamp=event.timestamp,
             end_timestamp=None,
             ball_state=event.ball_state.value if event.ball_state else None,
-            ball_owning_team=event.ball_owning_team.team_id
-            if event.ball_owning_team
-            else None,
+            ball_owning_team=(
+                event.ball_owning_team.team_id
+                if event.ball_owning_team
+                else None
+            ),
             team_id=event.team.team_id if event.team else None,
             player_id=event.player.player_id if event.player else None,
             coordinates_x=event.coordinates.x if event.coordinates else None,
@@ -184,46 +186,60 @@ class DefaultEventTransformer(EventAttributeTransformer):
             row.update(
                 {
                     "end_timestamp": event.receive_timestamp,
-                    "end_coordinates_x": event.receiver_coordinates.x
-                    if event.receiver_coordinates
-                    else None,
-                    "end_coordinates_y": event.receiver_coordinates.y
-                    if event.receiver_coordinates
-                    else None,
-                    "receiver_player_id": event.receiver_player.player_id
-                    if event.receiver_player
-                    else None,
+                    "end_coordinates_x": (
+                        event.receiver_coordinates.x
+                        if event.receiver_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.receiver_coordinates.y
+                        if event.receiver_coordinates
+                        else None
+                    ),
+                    "receiver_player_id": (
+                        event.receiver_player.player_id
+                        if event.receiver_player
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, CarryEvent):
             row.update(
                 {
                     "end_timestamp": event.end_timestamp,
-                    "end_coordinates_x": event.end_coordinates.x
-                    if event.end_coordinates
-                    else None,
-                    "end_coordinates_y": event.end_coordinates.y
-                    if event.end_coordinates
-                    else None,
+                    "end_coordinates_x": (
+                        event.end_coordinates.x
+                        if event.end_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.end_coordinates.y
+                        if event.end_coordinates
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, ShotEvent):
             row.update(
                 {
-                    "end_coordinates_x": event.result_coordinates.x
-                    if event.result_coordinates
-                    else None,
-                    "end_coordinates_y": event.result_coordinates.y
-                    if event.result_coordinates
-                    else None,
+                    "end_coordinates_x": (
+                        event.result_coordinates.x
+                        if event.result_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.result_coordinates.y
+                        if event.result_coordinates
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, CardEvent):
             row.update(
                 {
-                    "card_type": event.card_type.value
-                    if event.card_type
-                    else None
+                    "card_type": (
+                        event.card_type.value if event.card_type else None
+                    )
                 }
             )
 
@@ -259,29 +275,37 @@ class DefaultFrameTransformer:
             timestamp=frame.timestamp,
             frame_id=frame.frame_id,
             ball_state=frame.ball_state.value if frame.ball_state else None,
-            ball_owning_team_id=frame.ball_owning_team.team_id
-            if frame.ball_owning_team
-            else None,
-            ball_x=frame.ball_coordinates.x
-            if frame.ball_coordinates
-            else None,
-            ball_y=frame.ball_coordinates.y
-            if frame.ball_coordinates
-            else None,
-            ball_z=getattr(frame.ball_coordinates, "z", None)
-            if frame.ball_coordinates
-            else None,
+            ball_owning_team_id=(
+                frame.ball_owning_team.team_id
+                if frame.ball_owning_team
+                else None
+            ),
+            ball_x=(
+                frame.ball_coordinates.x if frame.ball_coordinates else None
+            ),
+            ball_y=(
+                frame.ball_coordinates.y if frame.ball_coordinates else None
+            ),
+            ball_z=(
+                getattr(frame.ball_coordinates, "z", None)
+                if frame.ball_coordinates
+                else None
+            ),
             ball_speed=frame.ball_speed,
         )
         for player, player_data in frame.players_data.items():
             row.update(
                 {
-                    f"{player.player_id}_x": player_data.coordinates.x
-                    if player_data.coordinates
-                    else None,
-                    f"{player.player_id}_y": player_data.coordinates.y
-                    if player_data.coordinates
-                    else None,
+                    f"{player.player_id}_x": (
+                        player_data.coordinates.x
+                        if player_data.coordinates
+                        else None
+                    ),
+                    f"{player.player_id}_y": (
+                        player_data.coordinates.y
+                        if player_data.coordinates
+                        else None
+                    ),
                     f"{player.player_id}_d": player_data.distance,
                     f"{player.player_id}_s": player_data.speed,
                 }

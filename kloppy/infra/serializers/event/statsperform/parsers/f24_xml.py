@@ -43,9 +43,11 @@ class F24XMLParser(OptaXMLParser):
                 ),
                 contestant_id=event.attrib.get("team_id"),
                 player_id=event.attrib.get("player_id"),
-                outcome=int(event.attrib["outcome"])
-                if "outcome" in event.attrib
-                else None,
+                outcome=(
+                    int(event.attrib["outcome"])
+                    if "outcome" in event.attrib
+                    else None
+                ),
                 qualifiers={
                     int(
                         qualifier.attrib["qualifier_id"]

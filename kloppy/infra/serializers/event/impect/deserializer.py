@@ -76,7 +76,12 @@ position_types_mapping: Dict[Tuple[str, str], PositionType] = {
         "CENTRAL_MIDFIELD",
         "RIGHT",
     ): PositionType.RightCentralMidfield,  # TBD whether this exists
+    ("ATTACKING_MIDFIELD", "CENTRE_LEFT"): PositionType.LeftAttackingMidfield,
     ("ATTACKING_MIDFIELD", "CENTRE"): PositionType.CenterAttackingMidfield,
+    (
+        "ATTACKING_MIDFIELD",
+        "CENTRE_RIGHT",
+    ): PositionType.RightAttackingMidfield,
     ("CENTER_FORWARD", "LEFT"): PositionType.LeftForward,
     ("CENTER_FORWARD", "CENTRE_LEFT"): PositionType.Striker,
     ("CENTER_FORWARD", "CENTRE"): PositionType.Striker,

@@ -357,12 +357,13 @@ class LOOSE_BALL_REGAIN(EVENT):
             opponent_player = opponent_team.get_player_by_id(
                 str(duel_info["playerId"])
             )
-            opponent_aerial_duel_generic_event_kwargs[
-                "player"
-            ] = opponent_player
-            opponent_aerial_duel_generic_event_kwargs[
-                "event_id"
-            ] = f"{opponent_player.player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            opponent_aerial_duel_generic_event_kwargs.update(
+                {
+                    "team": opponent_team,
+                    "player": opponent_player,
+                    "event_id": f"{opponent_player.player_id}-aerial-duel-{generic_event_kwargs['event_id']}",
+                }
+            )
             opponent_aerial_duel_event = event_factory.build_duel(
                 result=DuelResult.LOST,
                 qualifiers=aerial_duel_qualifiers,
@@ -456,10 +457,13 @@ class GROUND_DUEL(EVENT):
         opponent_player = opponent_team.get_player_by_id(
             str(self.raw_event["duel"]["playerId"])
         )
-        opponent_event_kwargs["player"] = opponent_player
-        opponent_event_kwargs[
-            "event_id"
-        ] = f"{opponent_player.player_id}-ground-duel-{generic_event_kwargs['event_id']}"
+        opponent_event_kwargs.update(
+            {
+                "team": opponent_team,
+                "player": opponent_player,
+                "event_id": f"{opponent_player.player_id}-ground-duel-{generic_event_kwargs['event_id']}",
+            }
+        )
         opponent_duel_event = event_factory.build_duel(
             qualifiers=[DuelQualifier(value=DuelType.GROUND)],
             result=DuelResult.LOST,

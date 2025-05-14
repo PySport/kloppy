@@ -318,6 +318,10 @@ class LOOSE_BALL_REGAIN(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
+        duel_type_mapping = {
+            DUELTYPE.AERIAL_DUEL: DuelType.AERIAL,
+            DUELTYPE.GROUND_DUEL: DuelType.GROUND,
+        }
         built_events = []
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
@@ -325,11 +329,11 @@ class LOOSE_BALL_REGAIN(EVENT):
 
         duel_info = self.raw_event["duel"]
         if duel_info:
-            duel_type = DUELTYPE(duel_info["duelType"])
-            assert duel_type == DUELTYPE.AERIAL_DUEL
+            impect_duel_type = DUELTYPE(duel_info["duelType"])
+            kloppy_duel_type = duel_type_mapping[impect_duel_type]
             aerial_duel_qualifiers = [
                 DuelQualifier(value=DuelType.LOOSE_BALL),
-                DuelQualifier(value=DuelType.AERIAL),
+                DuelQualifier(value=kloppy_duel_type),
             ]
 
             aerial_duel_generic_event_kwargs = generic_event_kwargs.copy()
@@ -353,12 +357,13 @@ class LOOSE_BALL_REGAIN(EVENT):
             opponent_player = opponent_team.get_player_by_id(
                 str(duel_info["playerId"])
             )
-            opponent_aerial_duel_generic_event_kwargs[
-                "player"
-            ] = opponent_player
-            opponent_aerial_duel_generic_event_kwargs[
-                "event_id"
-            ] = f"{opponent_player.player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            opponent_aerial_duel_generic_event_kwargs.update(
+                {
+                    "team": opponent_team,
+                    "player": opponent_player,
+                    "event_id": f"{opponent_player.player_id}-aerial-duel-{generic_event_kwargs['event_id']}",
+                }
+            )
             opponent_aerial_duel_event = event_factory.build_duel(
                 result=DuelResult.LOST,
                 qualifiers=aerial_duel_qualifiers,
@@ -452,10 +457,13 @@ class GROUND_DUEL(EVENT):
         opponent_player = opponent_team.get_player_by_id(
             str(self.raw_event["duel"]["playerId"])
         )
-        opponent_event_kwargs["player"] = opponent_player
-        opponent_event_kwargs[
-            "event_id"
-        ] = f"{opponent_player.player_id}-ground-duel-{generic_event_kwargs['event_id']}"
+        opponent_event_kwargs.update(
+            {
+                "team": opponent_team,
+                "player": opponent_player,
+                "event_id": f"{opponent_player.player_id}-ground-duel-{generic_event_kwargs['event_id']}",
+            }
+        )
         opponent_duel_event = event_factory.build_duel(
             qualifiers=[DuelQualifier(value=DuelType.GROUND)],
             result=DuelResult.LOST,
@@ -745,11 +753,11 @@ class YELLOW_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-        qualifiers = [CardQualifier(value=CardType.FIRST_YELLOW)]
 
         card_event = event_factory.build_card(
             result=None,
-            qualifiers=qualifiers,
+            qualifiers=None,
+            card_type=CardType.FIRST_YELLOW,
             **generic_event_kwargs,
         )
         return [card_event]
@@ -765,11 +773,11 @@ class SECOND_YELLOW_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-        qualifiers = [CardQualifier(value=CardType.SECOND_YELLOW)]
 
         card_event = event_factory.build_card(
             result=None,
-            qualifiers=qualifiers,
+            qualifiers=None,
+            card_type=CardType.SECOND_YELLOW,
             **generic_event_kwargs,
         )
         return [card_event]
@@ -785,11 +793,11 @@ class RED_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-        qualifiers = [CardQualifier(value=CardType.RED)]
 
         card_event = event_factory.build_card(
             result=None,
-            qualifiers=qualifiers,
+            qualifiers=None,
+            card_type=CardType.RED,
             **generic_event_kwargs,
         )
         return [card_event]

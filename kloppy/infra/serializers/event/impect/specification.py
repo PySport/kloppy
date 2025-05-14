@@ -752,6 +752,7 @@ class YELLOW_CARD(EVENT):
 
         card_event = event_factory.build_card(
             result=None,
+            qualifiers=None,
             card_type=CardType.FIRST_YELLOW,
             **generic_event_kwargs,
         )
@@ -771,6 +772,7 @@ class SECOND_YELLOW_CARD(EVENT):
 
         card_event = event_factory.build_card(
             result=None,
+            qualifiers=None,
             card_type=CardType.SECOND_YELLOW,
             **generic_event_kwargs,
         )
@@ -790,6 +792,7 @@ class RED_CARD(EVENT):
 
         card_event = event_factory.build_card(
             result=None,
+            qualifiers=None,
             card_type=CardType.RED,
             **generic_event_kwargs,
         )

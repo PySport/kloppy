@@ -33,6 +33,7 @@ from kloppy.domain.models.event import (
     GoalkeeperActionType,
     GoalkeeperQualifier,
     PassQualifier,
+    PassType,
 )
 
 from kloppy.infra.serializers.event.impect.helpers import parse_timestamp
@@ -254,6 +255,21 @@ class TestImpectPassEvent:
             pass_event.get_qualifier_value(SetPieceQualifier)
             == SetPieceType.FREE_KICK
         )
+
+    def test_assists(self, dataset: EventDataset):
+        shot_assists = [
+            e
+            for e in dataset.events
+            if PassType.SHOT_ASSIST in e.get_qualifier_values(PassQualifier)
+        ]
+        assert len(shot_assists) == 8
+
+        goal_assists = [
+            e
+            for e in dataset.events
+            if PassType.ASSIST in e.get_qualifier_values(PassQualifier)
+        ]
+        assert len(goal_assists) == 3
 
 
 class TestImpectInterceptionEvent:

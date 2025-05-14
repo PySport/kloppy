@@ -35,6 +35,9 @@ from kloppy.domain import (
     OfficialType,
     FormationType,
     SubstitutionEvent,
+    Event,
+    PassQualifier,
+    PassType,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -129,6 +132,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         event = self.transformer.transform_event(event)
                         events.append(event)
 
+        self.mark_events_as_assists(events)
         substitution_events = self.parse_substitutions(
             teams, periods, metadata
         )
@@ -320,3 +324,25 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         )
 
         return substitutions
+
+    @staticmethod
+    def mark_events_as_assists(events: List[Event]):
+        for ix, event in enumerate(events):
+            for i in range(1, 3):
+                if event.event_type == EventType.SHOT and ix > i - 1:
+                    potential_assist_event = events[ix - i]
+                    is_pass_event = (
+                        potential_assist_event.event_type == EventType.PASS
+                    )
+                    is_same_team_event = (
+                        event.team == potential_assist_event.team
+                    )
+                    if is_pass_event and is_same_team_event:
+                        potential_assist_event.qualifiers.append(
+                            PassQualifier(value=PassType.SHOT_ASSIST)
+                        )
+                        if event.result == ShotResult.GOAL:
+                            potential_assist_event.qualifiers.append(
+                                PassQualifier(value=PassType.ASSIST)
+                            )
+                        break

@@ -1,6 +1,6 @@
 from datetime import timedelta
-from enum import Enum, EnumMeta
-from typing import Dict, List, NamedTuple, Optional, Union
+from enum import Enum
+from typing import Dict, List, Union
 
 from kloppy.domain import (
     BallState,
@@ -9,27 +9,20 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     CarryResult,
-    CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     Event,
     EventFactory,
-    ExpectedGoals,
-    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     InterceptionResult,
     PassQualifier,
     PassResult,
     PassType,
-    PositionType,
-    PostShotExpectedGoals,
     SetPieceQualifier,
     SetPieceType,
-    ShotResult,
-    TakeOnResult,
-    Point,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.impect.helpers import (
@@ -37,6 +30,7 @@ from kloppy.infra.serializers.event.impect.helpers import (
     get_team_by_id,
     parse_coordinates,
     parse_shot_end_coordinates,
+    parse_timestamp,
 )
 
 
@@ -59,7 +53,7 @@ class EVENT_TYPE(Enum):
     CORNER = "CORNER"
     GK_CATCH = "GK_CATCH"
     GK_SAVE = "GK_SAVE"
-    GOAL = "GOAL"
+    GOAL = "GOAL"  # we do not handle this because they have a separate event for a goal and a shot
     OWN_GOAL = "OWN_GOAL"
     OUT = "OUT"
     OFFSIDE = "OFFSIDE"
@@ -77,9 +71,17 @@ class BODYPART(Enum):
 
     FOOT_RIGHT = "FOOT_RIGHT"
     FOOT_LEFT = "FOOT_LEFT"
+    FOOT = "FOOT"
     BODY = "BODY"
     HEAD = "HEAD"
     HAND = "HAND"
+
+
+class DUELTYPE(Enum):
+    """The list of duel types used in Impect data."""
+
+    AERIAL_DUEL = "AERIAL_DUEL"
+    GROUND_DUEL = "GROUND_DUEL"
 
 
 class EVENT:
@@ -116,7 +118,9 @@ class EVENT:
 
         return self
 
-    def deserialize(self, event_factory: EventFactory) -> List[Event]:
+    def deserialize(
+        self, event_factory: EventFactory, teams: List[Team]
+    ) -> List[Event]:
         """Deserialize the event.
 
         Args:
@@ -129,17 +133,20 @@ class EVENT:
             A list of kloppy events.
         """
         generic_event_kwargs = self._parse_generic_kwargs()
-        events = self._create_events(event_factory, **generic_event_kwargs)
+        events = self._create_events(
+            event_factory, teams, **generic_event_kwargs
+        )
 
         return events
 
     def _parse_generic_kwargs(self) -> Dict:
+        timestamp, _ = parse_timestamp(self.raw_event["gameTime"]["gameTime"])
         return {
             "period": self.period,
-            "timestamp": self.raw_event["gameTime"]["gameTimeInSec"],
+            "timestamp": timestamp,
             "ball_owning_team": self.possession_team,
             "ball_state": BallState.ALIVE,
-            "event_id": self.raw_event["id"],
+            "event_id": str(self.raw_event["id"]),
             "team": self.team,
             "player": self.player,
             "coordinates": parse_coordinates(
@@ -152,7 +159,10 @@ class EVENT:
         }
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         generic_event = event_factory.build_generic(
             result=None,
@@ -180,7 +190,10 @@ class PASS(EVENT):
         SUCCESS = "SUCCESS"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         (
             qualifiers,
@@ -213,10 +226,11 @@ class DRIBBLE(EVENT):
         SUCCESS = "SUCCESS"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
-        timestamp = timedelta(seconds=generic_event_kwargs["timestamp"])
-
         result = (
             CarryResult.COMPLETE
             if self.raw_event["result"] == "SUCCESS"
@@ -232,7 +246,9 @@ class DRIBBLE(EVENT):
         duration = (
             self.raw_event["duration"] if self.raw_event["duration"] else 0
         )
-        end_timestamp = timestamp + timedelta(seconds=duration)
+        end_timestamp = generic_event_kwargs["timestamp"] + timedelta(
+            seconds=duration
+        )
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
@@ -264,12 +280,16 @@ class SHOT(EVENT):
         SUCCESS = "SUCCESS"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         shot_dict = self.raw_event["shot"]
+        result = self.RESULT(self.raw_event["result"])
 
         shot_end_coordinates, shot_result = parse_shot_end_coordinates(
-            shot_dict
+            shot_dict, result
         )
 
         # action = self.ACTION(self.raw_event["action"])
@@ -293,20 +313,67 @@ class LOOSE_BALL_REGAIN(EVENT):
         LOOSE_BALL_REGAIN = "LOOSE_BALL_REGAIN"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
+        built_events = []
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
-
         qualifiers = _get_body_part_qualifiers(body_part)
+
+        duel_info = self.raw_event["duel"]
+        if duel_info:
+            duel_type = DUELTYPE(duel_info["duelType"])
+            assert duel_type == DUELTYPE.AERIAL_DUEL
+            aerial_duel_qualifiers = [
+                DuelQualifier(value=DuelType.LOOSE_BALL),
+                DuelQualifier(value=DuelType.AERIAL),
+            ]
+
+            aerial_duel_generic_event_kwargs = generic_event_kwargs.copy()
+            player_id = generic_event_kwargs["player"].player_id
+            aerial_duel_generic_event_kwargs[
+                "event_id"
+            ] = f"{player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            aerial_duel_event = event_factory.build_duel(
+                result=DuelResult.WON,
+                qualifiers=aerial_duel_qualifiers,
+                **aerial_duel_generic_event_kwargs,
+            )
+            built_events.append(aerial_duel_event)
+
+            opponent_aerial_duel_generic_event_kwargs = (
+                generic_event_kwargs.copy()
+            )
+            opponent_team = next(
+                team for team in teams if team.team_id != self.team.team_id
+            )
+            opponent_player = opponent_team.get_player_by_id(
+                str(duel_info["playerId"])
+            )
+            opponent_aerial_duel_generic_event_kwargs[
+                "player"
+            ] = opponent_player
+            opponent_aerial_duel_generic_event_kwargs[
+                "event_id"
+            ] = f"{opponent_player.player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            opponent_aerial_duel_event = event_factory.build_duel(
+                result=DuelResult.LOST,
+                qualifiers=aerial_duel_qualifiers,
+                **opponent_aerial_duel_generic_event_kwargs,
+            )
+            built_events.append(opponent_aerial_duel_event)
 
         recovery_event = event_factory.build_recovery(
             qualifiers=qualifiers,
             result=None,
             **generic_event_kwargs,
         )
+        built_events.append(recovery_event)
 
-        return [recovery_event]
+        return built_events
 
 
 class INTERCEPTION(EVENT):
@@ -314,7 +381,10 @@ class INTERCEPTION(EVENT):
         INTERCEPTION = "INTERCEPTION"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
@@ -335,7 +405,10 @@ class CLEARANCE(EVENT):
         CLEARANCE = "CLEARANCE"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
@@ -356,9 +429,11 @@ class GROUND_DUEL(EVENT):
         DUEL = "DUEL"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
         qualifiers = _get_body_part_qualifiers(body_part)
@@ -366,11 +441,28 @@ class GROUND_DUEL(EVENT):
 
         duel_event = event_factory.build_duel(
             qualifiers=qualifiers,
-            result=None,
+            result=DuelResult.WON,
             **generic_event_kwargs,
         )
 
-        return [duel_event]
+        opponent_event_kwargs = generic_event_kwargs.copy()
+        opponent_team = next(
+            team for team in teams if team.team_id != self.team.team_id
+        )
+        opponent_player = opponent_team.get_player_by_id(
+            str(self.raw_event["duel"]["playerId"])
+        )
+        opponent_event_kwargs["player"] = opponent_player
+        opponent_event_kwargs[
+            "event_id"
+        ] = f"{opponent_player.player_id}-ground-duel-{generic_event_kwargs['event_id']}"
+        opponent_duel_event = event_factory.build_duel(
+            qualifiers=[DuelQualifier(value=DuelType.GROUND)],
+            result=DuelResult.LOST,
+            **opponent_event_kwargs,
+        )
+
+        return [duel_event, opponent_duel_event]
 
 
 class KICK_OFF(EVENT):
@@ -378,7 +470,10 @@ class KICK_OFF(EVENT):
         KICKOFF_WHISTLE = "KICKOFF_WHISTLE"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         (
             qualifiers,
@@ -407,7 +502,10 @@ class THROW_IN(EVENT):
         THROW_IN = "THROW_IN"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         (
             qualifiers,
@@ -437,10 +535,13 @@ class FREE_KICK(EVENT):
         DIRECT_FREE_KICK = "DIRECT_FREE_KICK"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
-        action = self.ACTION(self.raw_event["action"])
-        if action == self.ACTION.FREE_KICK:
+        # action = self.ACTION(self.raw_event["action"])
+        if self.raw_event["pass"]:
             (
                 qualifiers,
                 receive_timestamp,
@@ -458,7 +559,7 @@ class FREE_KICK(EVENT):
                 **generic_event_kwargs,
             )
             return [pass_event]
-        elif action == self.ACTION.DIRECT_FREE_KICK:
+        elif self.raw_event["shot"]:
             shot_dict = self.raw_event["shot"]
             shot_end_coordinates, shot_result = parse_shot_end_coordinates(
                 shot_dict
@@ -473,6 +574,10 @@ class FREE_KICK(EVENT):
                 **generic_event_kwargs,
             )
             return [shot_event]
+        else:
+            raise DeserializationError(
+                "Free kick event must have either a pass or a shot."
+            )
 
 
 class GOAL_KICK(EVENT):
@@ -480,7 +585,10 @@ class GOAL_KICK(EVENT):
         GOAL_KICK = "GOAL_KICK"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         (
             qualifiers,
@@ -509,7 +617,10 @@ class CORNER(EVENT):
         CORNER = "CORNER"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         (
             qualifiers,
@@ -538,7 +649,10 @@ class GK_CATCH(EVENT):
         CATCH = "CATCH"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
@@ -561,7 +675,10 @@ class GK_SAVE(EVENT):
         SAVE = "SAVE"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
 
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
@@ -584,7 +701,10 @@ class OUT(EVENT):
         BALL_OUT_OF_UNKNOWN = "BALL_OUT_OF_UNKNOWN"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         generic_event_kwargs["ball_state"] = BallState.DEAD
 
@@ -601,7 +721,10 @@ class FOUL(EVENT):
         FOUL = "FOUL"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
 
         foul_event = event_factory.build_foul_committed(
@@ -617,7 +740,10 @@ class YELLOW_CARD(EVENT):
         YELLOW_CARD = "YELLOW_CARD"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         qualifiers = [CardQualifier(value=CardType.FIRST_YELLOW)]
 
@@ -634,7 +760,10 @@ class SECOND_YELLOW_CARD(EVENT):
         SECOND_YELLOW_CARD = "SECOND_YELLOW_CARD"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         qualifiers = [CardQualifier(value=CardType.SECOND_YELLOW)]
 
@@ -651,7 +780,10 @@ class RED_CARD(EVENT):
         RED_CARD = "RED_CARD"
 
     def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
     ) -> List[Event]:
         qualifiers = [CardQualifier(value=CardType.RED)]
 
@@ -668,7 +800,6 @@ def create_pass_props(
     generic_event_kwargs,
 ):
     team = generic_event_kwargs["team"]
-    timestamp = timedelta(seconds=generic_event_kwargs["timestamp"])
     pass_dict = event.raw_event["pass"]
     result = (
         PassResult.COMPLETE
@@ -690,9 +821,14 @@ def create_pass_props(
     duration = (
         event.raw_event["duration"] if event.raw_event["duration"] else 0
     )
-    receive_timestamp = timestamp + timedelta(seconds=duration)
+    receive_timestamp = generic_event_kwargs["timestamp"] + timedelta(
+        seconds=duration
+    )
     body_part = BODYPART(event.raw_event["bodyPartExtended"])
-    action = event.ACTION(event.raw_event["action"])
+    if event.raw_event["action"]:
+        action = event.ACTION(event.raw_event["action"])
+    else:
+        action = None
     qualifiers = _get_pass_qualifiers(
         action, body_part
     ) + _get_body_part_qualifiers(body_part)
@@ -712,6 +848,7 @@ def _get_body_part_qualifiers(
     impect_to_kloppy_body_part_mapping = {
         BODYPART.FOOT_LEFT: BodyPart.LEFT_FOOT,
         BODYPART.FOOT_RIGHT: BodyPart.RIGHT_FOOT,
+        BODYPART.FOOT: BodyPart.RIGHT_FOOT,
         BODYPART.HEAD: BodyPart.HEAD,
         BODYPART.BODY: BodyPart.OTHER,
         BODYPART.HAND: BodyPart.KEEPER_ARM,

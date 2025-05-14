@@ -664,3 +664,24 @@ class WyscoutPitchDimensions(PitchDimensions):
     corner_radius: float = 0.97  # inferred
     penalty_spot_distance: float = 10.0
     penalty_arc_radius: float = 7.74  # inferred
+
+
+@dataclass
+class ImpectPitchDimensions(PitchDimensions):
+    """The pitch dimensions used by Impect."""
+
+    x_dim: Dimension = Dimension(-52.5, 52.5)
+    y_dim: Dimension = Dimension(-34, 34)
+    standardized: bool = True
+    unit: Unit = Unit.NORMED
+
+    goal_width: float = 7.32
+    goal_height: Optional[float] = 2.44
+    six_yard_width: float = 18.32
+    six_yard_length: float = 5.5
+    penalty_area_width: float = 40.32
+    penalty_area_length: float = 16.5
+    circle_radius: float = 9.15  # guessed
+    corner_radius: float = 1  # guessed
+    penalty_spot_distance: float = 11
+    penalty_arc_radius: float = 9.15  # guessed

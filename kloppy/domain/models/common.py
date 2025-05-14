@@ -42,6 +42,7 @@ from .pitch import (
     PitchDimensions,
     Unit,
     WyscoutPitchDimensions,
+    ImpectPitchDimensions,
 )
 from .time import Period, Time, TimeContainer
 
@@ -96,6 +97,7 @@ class Provider(Enum):
         STATSPERFORM:
         HAWKEYE:
         SPORTVU:
+        IMPECT:
     """
 
     METRICA = "metrica"
@@ -112,6 +114,7 @@ class Provider(Enum):
     STATSPERFORM = "statsperform"
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
+    IMPECT = "impect"
     SIGNALITY = "signality"
     OTHER = "other"
 
@@ -998,6 +1001,24 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
+class ImpectCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.IMPECT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return ImpectPitchDimensions()
+
+
 class DatasetType(Enum):
     """
     DatasetType
@@ -1050,6 +1071,7 @@ def build_coordinate_system(
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
     }
 

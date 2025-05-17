@@ -1,4 +1,3 @@
-# kloppy: Soccer Data Processing, *Simplified* 
 <a href='https://kloppy.pysport.org'><img style="width: 120px; height: 139px" src="https://github.com/PySport/kloppy/raw/master/docs/logo.png" align="right" /></a>
 > klop·pen (klopte, heeft geklopt) - juist zijn; overeenkomen, uitkomen met: *dat klopt, dat kan kloppen* is juist; *dat klopt als een zwerende vinger* dat is helemaal juist
 
@@ -8,20 +7,20 @@
 ![](https://img.shields.io/pypi/pyversions/kloppy)
 [![Powered by PySport](https://img.shields.io/badge/powered%20by-PySport-orange.svg?style=flat&colorA=104467&colorB=007D8A)](https://pysport.org)
 
-## What is it?
+# Soccer Data Processing, *Simplified*
 
 Each data provider uses its own proprietary formats, event definitions, and coordinate system to capture soccer match data. This **lack of standardization** makes it difficult to build software or perform analysis across multiple providers. Kloppy solves this challenge by introducing a **vendor-independent data model** for both **event and tracking data**. It also streamlines data preprocessing, ensuring **seamless integration into your data analysis and video analysis workflows**. By standardizing and simplifying access to soccer match data, kloppy aims to be an essential building block for anyone working with soccer data.
 
 ## Table of Contents
 
-- [Supported Data Providers](#supported-data-providers)
-- [Main Features](#main-features)
+- [Supported data providers](#supported-data-providers)
+- [Main features](#main-features)
 - [Where to get it](#where-to-get-it)
 - [Documentation](#documentation)
 - [Contributing to kloppy](#contributing-to-kloppy)
 - [License](#license)
 
-## Supported Data Providers
+## Supported data providers
 Kloppy provides support for loading data from the following providers:
 
 | Provider            | Event Data | Tracking Data | Public Data  | Docs  | Notes |
@@ -76,11 +75,11 @@ Kloppy provides support for loading data from the following providers:
 
 ✓ Implemented &nbsp;&nbsp;  ⧗ In progress or partial support
 
-## Main Features
+## Main features
 
 Here are just a few of the things that kloppy does well.
 
-#### 1. Loading data
+#### 🗄️ Loading data
 Kloppy implements a **standardized data model** that can load event and tracking data from the **most common data providers**, supporting both public and proprietary data. Moreover, it does not matter where or how the data is stored: kloppy can handle **compressed files** and load data directly from **the cloud**.
 
 ```python
@@ -89,7 +88,7 @@ from kloppy import sportec
 dataset = sportec.load_open_event_data(match_id="J03WMX")
 ```
 
-#### 2. Querying data 
+#### 🔍 Querying data 
 
 Video analysts spend a lot of time searching for bespoke moments. Often, these moments follow recognizable patterns—like pass, pass, shot. Kloppy provides a **powerful search mechanism** based on regular expressions, enabling you to find these bespoke moments more quickly and easily.
 
@@ -97,7 +96,7 @@ Video analysts spend a lot of time searching for bespoke moments. Often, these m
 goals = dataset.filter("shot.goal")
 ```
 
-#### 3. Transforming data 
+#### 🔄 Transforming data 
 Different data providers use different coordinate systems, which can make combining datasets challenging. Additionally, it can be convenient to change the orientation of the data or normalize pitch dimensions for specific analyses. Kloppy handles these **data transformations** seamlessly.
 
 ```python
@@ -107,7 +106,7 @@ goals_ltr = goals.transform(
 )
 ```
 
-#### 4. Exporting data
+#### 💾 Exporting data
 Once your data is in the right shape, export it as **a Polars or Pandas dataframe** for efficient analysis, or as **SportsCode XML** to support your video analysis workflow. Kloppy's data model is also **compatible with other popular soccer analytics libraries**.
 
 ```python
@@ -121,6 +120,8 @@ df_goals = goals_ltr.to_df(
 
 ## Where to get it
 
+The source code is hosted on GitHub at: [https://github.com/PySport/kloppy](https://github.com/PySport/kloppy).
+
 The easiest way to install kloppy is via **pip**:
 
 ```bash
@@ -133,7 +134,7 @@ You can also install from GitHub for the latest updates:
 pip install git+https://github.com/PySport/kloppy.git
 ```
 
-For more details, refer to the [installation guide ↗](https://kloppy.pysport.org/getting-started/installation/).
+For more details, refer to the [installation guide](https://kloppy.pysport.org/getting-started/installation/).
 
 ## Documentation
 
@@ -142,11 +143,15 @@ The official documentation is hosted at [https://kloppy.pysport.org](https://klo
 ## Contributing to kloppy
 Kloppy can only exist because of a passionate and dedicated open-source community. All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. An overview on how to contribute can be found in the **[contributing guide](https://kloppy.pysport.org/contributing)**.
 
-If you are simply looking to start working with the kloppy codebase, navigate to the GitHub "issues" tab and start looking through interesting issues.
+<a href="https://github.com/PySport/kloppy/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PySport/kloppy" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## Sponsors
 
-☕ **Kloppy** is powered by [PySport](https://pysport.org/)  (non-profit, RSIN: 866294211). Consider [contributing](#contributing-to-kloppy) or [donating](https://pysport.org/) to ensure its longevity!
+Kloppy is powered by **[PySport](https://pysport.org/)** (non-profit, RSIN: 866294211). Consider [contributing](#contributing-to-kloppy) or [donating](https://pysport.org/) to ensure its longevity!
 
 ## License
 

@@ -59,6 +59,7 @@ referee_types_mapping: Dict[str, OfficialType] = {
     "referee": OfficialType.MainReferee,
     "firstAssistant": OfficialType.AssistantReferee,
     "videoReferee": OfficialType.VideoAssistantReferee,
+    "videoRefereeAssistant": OfficialType.AssistantVideoAssistantReferee,
     "secondAssistant": OfficialType.AssistantReferee,
     "fourthOfficial": OfficialType.FourthOfficial,
 }
@@ -241,7 +242,9 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
                     name=ref_attrib["Shortname"],
                     first_name=ref_attrib["FirstName"],
                     last_name=ref_attrib["LastName"],
-                    role=referee_types_mapping[ref_attrib["Role"]],
+                    role=referee_types_mapping.get(
+                        ref_attrib["Role"], OfficialType.Unknown
+                    ),
                 )
             )
     else:
@@ -514,6 +517,9 @@ class SportecEventDataDeserializer(
                     periods.append(period)
                 elif SPORTEC_EVENT_NAME_FINAL_WHISTLE in event_chain:
                     period.end_timestamp = timestamp
+                    continue
+                elif period_id == 0:
+                    # Skip any events that happened before the first kick off
                     continue
 
                 team = None

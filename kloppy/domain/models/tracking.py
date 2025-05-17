@@ -50,6 +50,12 @@ class Frame(DataRecord):
             for player, player_data in self.players_data.items()
         }
 
+    def __str__(self):
+        return f"<{self.__class__.__name__} frame_id='{self.frame_id}' time='{self.time}'>"
+
+    def __repr__(self):
+        return str(self)
+
 
 @dataclass
 @docstring_inherit_attributes(Dataset)

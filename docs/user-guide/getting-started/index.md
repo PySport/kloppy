@@ -37,21 +37,21 @@ The resulting [`EventDataset`][kloppy.domain.EventDataset] contains a list of [`
 
     Event data providers like Stats Perform, StatsBomb, and Wyscout have each developed their own event data catalogs, with unique definitions and categorizations for various event types. To address this lack of standardization, kloppy introduces its own [event data model](../../reference/event-data/index.md), which acts as a common denominator for event types and attributes used across data providers. This model facilitates the integration of data from diverse event data catalogs. If you need event types or data attributes that are not included in kloppy's datamodel, you can easily [extend the data model](../loading-data/index.md#event_factory).
 
-You can retrieve specific events by their index or by their unique ID (as given by the data provider) using the [`get_event_by_id`][kloppy.domain.EventDataset.get_event_by_id] method. Below, we illustrate this by retrieving the opening goal in the match.
+You can retrieve specific events by their index or by their unique ID (as given by the data provider) using the [`.get_event_by_id()`][kloppy.domain.EventDataset.get_event_by_id] method. Below, we illustrate this by retrieving the opening goal in the match.
 
 ```pycon exec="true" source="console" session="getting-started"
 >>> goal_event = event_dataset.get_event_by_id("18226900000272")
 >>> print(goal_event)
 ```
 
-Often, you will not know the exact index or ID of an event. In that case, you can use the [`find`][kloppy.domain.EventDataset.find] and [`find_all`][kloppy.domain.EventDataset.find_all] methods for finding the right events. You can pass a string or a function. In case of a string, it must be either '`<event_type>`', '`<event_type>`.`<result>`' or '.`<result>`'. Some examples: 'shot.goal', 'pass' or '.complete'. Let's look at how this works by finding all shots in the dataset.
+Often, you will not know the exact index or ID of an event. In that case, you can use the [`.find()`][kloppy.domain.EventDataset.find] and [`.find_all()`][kloppy.domain.EventDataset.find_all] methods for finding the right events. You can pass a string or a function. In case of a string, it must be either '`<event_type>`', '`<event_type>`.`<result>`' or '.`<result>`'. Some examples: 'shot.goal', 'pass' or '.complete'. Let's look at how this works by finding all shots in the dataset.
 
 ```python exec="true" source="above" session="getting-started"
 shot_events = event_dataset.find_all("shot")
 goal_events = event_dataset.find_all("shot.goal")
 ```
 
-On event-level there are also some useful methods for navigating: the [`prev`][kloppy.domain.Event.prev] and [`next`][kloppy.domain.Event.next] methods allow you to quickly find previous or next events. Those two methods also accept the same filter argument as the [`find`][kloppy.domain.EventDataset.find] and [`find_all`][kloppy.domain.EventDataset.find_all] methods, which can be useful to find a certain type of event instead of just the one before/after. For example, we can use it to find the assist for a goal.
+On event-level there are also some useful methods for navigating: the [`.prev()`][kloppy.domain.Event.prev] and [`.next()`][kloppy.domain.Event.next] methods allow you to quickly find previous or next events. Those two methods also accept the same filter argument as the [`.find()`][kloppy.domain.EventDataset.find] and [`.find_all()`][kloppy.domain.EventDataset.find_all] methods, which can be useful to find a certain type of event instead of just the one before/after. For example, we can use it to find the assist for a goal.
 
 ```pycon exec="true" source="console" session="getting-started"
 >>> assist_event = goal_event.prev("pass.complete")
@@ -145,12 +145,12 @@ This will create a [`TrackingDataset`][kloppy.domain.TrackingDataset], which con
 Each frame has a [`.ball_coordinates`][kloppy.domain.Frame.ball_coordinates] attribute that stores the coordinates of the ball and a [`.players_coordinates`][kloppy.domain.Frame.players_coordinates] attribute that stores the coordinates of each player.
 
 ```pycon exec="true" source="console" session="getting-started"
->>> print(f"Ball coordinates: {first_frame.ball_coordinates}")
+>>> print(f"Ball coordinates: (x={first_frame.ball_coordinates.x:.2f}, y={first_frame.ball_coordinates.y:.2f})")
 >>> for player, coordinates in first_frame.players_coordinates.items():
 ...     print(f"{player} ({player.team}): (x={coordinates.x:.2f}, y={coordinates.y:.2f})")
 ```
 
-A tracking data frame can provide useful context to an event as it shows the locations of all off-the-ball players. For example, it can show which alternative passing options a player had. Unfortunately, matching the right tracking frame to an event can be challenging as recorded timestamps in event data are not always very precise. Luckily, Sportec has already done this matching for all shot events. Let's revisit the opening goal that we looked at earlier and see what additional context the tracking data can provide.
+A tracking data frame can provide useful context to an event as it shows the locations of all off-the-ball players. For example for a pass event, it can show which alternative passing options a player had. Unfortunately, matching the right tracking frame to an event can be challenging as recorded timestamps in event data are not always very precise. Luckily, Sportec has already done this matching for all shot events. Let's revisit the opening goal that we looked at earlier and see what additional context the tracking data can provide.
 
 !!! note "Event-tracking synchronization"
 
@@ -266,14 +266,20 @@ This metadata includes teams (name, ground, tactical formation, and provider ID)
 From each [`Team`][kloppy.domain.Team] entity, you can then retrieve the line-up as a list of [`Player`][kloppy.domain.Player] entities.
 
 ```python exec="true" source="tabbed-left" result="text" session="getting-started"
-home_team_players = [
-  f"{player.starting_position.code if player.starting_position is not None else 'SUB'}:{player} (#{player.jersey_no})" 
-  for player in home_team.players
-]
+home_team_players = []
+for player in home_team.players:
+    position = (
+        player.starting_position.code
+        if player.starting_position is not None
+        else 'SUB'
+    )
+    description = f"{position}:{player} (#{player.jersey_no})"
+    home_team_players.append(description)
+
 print(home_team_players)
 ```
 
-To select individual players, you can use the [`get_player_by_id`][kloppy.domain.Team.get_player_by_id] or [`get_player_by_jersey_number`][kloppy.domain.Team.get_player_by_jersey_number] or [`get_player_by_position`][kloppy.domain.Team.get_player_by_position] methods. Below, we select Florian Wirtz by his Sportec ID ("DFL-OBJ-002GBK").
+To select individual players, you can use the [`.get_player_by_id()`][kloppy.domain.Team.get_player_by_id], [`.get_player_by_jersey_number()`][kloppy.domain.Team.get_player_by_jersey_number] or [`.get_player_by_position()`][kloppy.domain.Team.get_player_by_position] methods. Below, we select Florian Wirtz by his Sportec ID ("DFL-OBJ-002GBK").
 
 ```pycon exec="true" source="console" session="getting-started"
 >>> player = away_team.get_player_by_id("DFL-OBJ-002GBK")
@@ -289,8 +295,10 @@ passes_per_player = defaultdict(list)
 for event in event_dataset.find_all("pass"):
     passes_per_player[event.player].append(event)
 
-for player, passes in passes_per_player.items():
-    print(f"{player} has {len(passes)} passes")
+print("\n".join(
+    f"{player} has {len(passes)} passes"
+    for player, passes in passes_per_player.items()
+))
 ```
 
 The metadata contains much more than the players and teams. Later in this quick start guide, we will come across some more metadata attributes. The [Reference Guide][kloppy.domain.Metadata] gives a complete overview of everything that is available.
@@ -311,7 +319,10 @@ We can do slightly more complicated things by providing a (lambda) function. Thi
 
 ```python exec="true" source="above" session="getting-started"
 # Create a new dataset with all frames where the ball is in the final third
-final_third_dataset = tracking_dataset.filter(lambda frame: frame.ball_coordinates.x > 2 / 3 * tracking_dataset.metadata.pitch_dimensions.x_dim.max)
+pitch_max_x = tracking_dataset.metadata.pitch_dimensions.x_dim.max
+f3_dataset = tracking_dataset.filter(
+    lambda frame: frame.ball_coordinates.x > (2 / 3) * pitch_max_x
+)
 ```
 
 
@@ -359,13 +370,119 @@ Let's take a closer look at the players involved in those shot-ending movement c
 
 ## Transforming data
 
+Apart from the data format and event definitions, another aspect that differs between data providers is how they represent coordinates. These differences can include where the origin of the pitch is placed (e.g., top-left, center, bottom-left), which direction the axes increase (left to right, top to bottom, etc.), and the units used (normalized values, metric dimensions, or imperial dimensions). As a result, even if two datasets describe the same event, the x and y positions may not be directly comparable without converting them into a shared reference frame. 
 
-!!! todo
+Sportec even uses different coordinate systems for their event and tracking data. For event data, the origin is at the top left, while it is at the center of the pitch for tracking data. The direction of the y-axis is different too.
 
-    Illustrate pitch dimensions + orientation changes
+<pre>{{
+plot_coordinate_systems(
+    providers = [
+        {"provider": "sportec", "dataset_type": "EVENT"},
+        {"provider": "sportec", "dataset_type": "TRACKING"},
+    ],
+    cols=2
+)
+}}</pre>
 
-```python exec="true" source="above" result="text" session="getting-started"
-print(event_dataset.metadata.orientation)
+To avoid issues with differences between coordinate systems, kloppy converts all data to a common default coordinate system when loading a dataset: the [`KloppyCoordinateSystem`][kloppy.domain.KloppyCoordinateSystem].
+
+```pycon exec="true" source="console" session="getting-started"
+>>> print(event_dataset.metadata.coordinate_system)
+```
+
+In this coordinate system the pitch is scaled to a unit square where the x-axis ranges from 0 (left touchline) to 1 (right touchline), and the y-axis ranges from 0 (bottom goal line) to 1 (top goal line). All spatial data are expressed relative to this 1×1 pitch.
+
+<pre>{{ plot_coordinate_systems(providers=[{"provider": "kloppy"}], cols=2) }}</pre>
+
+You can convert from this normalized system to any supported provider format using the `.transform(to_coordinate_system=...)` method, allowing interoperability with other tools or datasets.
+
+```pycon exec="true" source="console"
+>>> from kloppy import sportec
+>>> from kloppy.domain import Provider
+>>> event_dataset = (
+...     sportec.load_open_event_data(match_id="J03WN1")
+...     .transform(to_coordinate_system=Provider.SPORTEC)
+... )
+>>> print(event_dataset.metadata.coordinate_system)
+```
+
+Alternatively (and more efficiently) you can directly load the data in your preferred coordinate system by setting the `coordinates` parameter. For example, to load the data with Sportec's coordinate system:
+
+```pycon exec="true" source="console"
+>>> from kloppy import sportec
+>>> from kloppy.domain import Provider
+>>> event_dataset = sportec.load_open_event_data(
+...     match_id="J03WN1", 
+...     coordinates=Provider.SPORTEC
+... )
+>>> print(event_dataset.metadata.coordinate_system)
+```
+
+Another aspect of how coordinates are represented is the orientation of the data. For this game, the default orientation setting is "away-home". This means, the away team plays from left to right in the first period. The home team plays from left to right in the second period.
+
+```pycon exec="true" source="console" session="getting-started"
+>>> print(metadata.orientation)
+```
+
+This orientation reflects the actual playing direction, which switches at half-time. It aligns with how the match appears on broadcast footage, making it convenient when synchronizing tracking or event data with video.
+
+However, for some types of analysis, it can be more convenient to normalize the orientation so that one team (usually the team of interest) always attacks in the same direction (e.g., left-to-right). One concrete example is creating a heatmap of a player's actions. Let’s look at an example where we visualize the locations of all Florian Wirtz' his passes, first without transforming the orientation.
+
+```python exec="true" source="tabbed-right" html="true" session="getting-started"
+from mplsoccer import Pitch
+from kloppy.domain import EventType
+
+player = away_team.get_player_by_id("DFL-OBJ-002GBK")
+
+player_events = event_dataset.filter(
+    lambda event: event.event_type == EventType.PASS and event.player == player
+)
+
+def heatmap(xs, ys):
+    pitch = Pitch(
+        pitch_type=build_dim(event_dataset.metadata.coordinate_system),
+        line_zorder=2,
+    )
+    fig, ax = pitch.draw()
+    ax.set_title(f"#{player.jersey_no} - {player.last_name} - {player.team.name}")
+    pitch.kdeplot(xs, ys, ax=ax, cmap="YlOrRd", fill=True, levels=100)
+
+xs = [event.coordinates.x for event in player_events if event.coordinates is not None]
+ys = [event.coordinates.y for event in player_events if event.coordinates is not None]
+
+heatmap(xs, ys)
+
+from io import StringIO  # markdown-exec: hide
+buffer = StringIO()  # markdown-exec: hide
+plt.savefig(buffer, format="svg")  # markdown-exec: hide
+print(buffer.getvalue())  # markdown-exec: hide
+```
+
+The heatmap shows activity spread over the entire pitch. This is because teams switch directions at halftime, and the data reflects that change.
+
+We can transform the data so that direction of all on-the-ball actions is aligned left-to-right. Therefore, we'll use the "action-executing-team" orientation.
+
+```pycon exec="true" source="console" session="getting-started"
+>>> transformed_events = player_events.transform(to_orientation="ACTION_EXECUTING_TEAM")
+>>> print(transformed_events.metadata.orientation)
+```
+
+Now, the heatmap makes a lot more sense.
+
+```python exec="true" source="tabbed-right" html="true" session="getting-started"
+xs = [
+    event.coordinates.x for event in transformed_events if event.coordinates is not None
+]
+ys = [
+    event.coordinates.y for event in transformed_events if event.coordinates is not None
+]
+
+heatmap(xs, ys)
+
+from io import StringIO  # markdown-exec: hide
+buffer = StringIO()  # markdown-exec: hide
+plt.savefig(buffer, format="svg")  # markdown-exec: hide
+print(buffer.getvalue())  # markdown-exec: hide
 ```
 
 

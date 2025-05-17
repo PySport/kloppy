@@ -53,22 +53,28 @@ nav:
           - Stats Perform / Opta: user-guide/loading-data/statsperform.ipynb
           - TRACAB: user-guide/loading-data/tracab.ipynb
           - Wyscout: user-guide/loading-data/wyscout.ipynb
-      - Querying data:
-          - user-guide/querying-data/index.md
+      # - Querying data:
+      #     - user-guide/querying-data/index.md
+      #     - Selections: user-guide/querying-data/selections/index.md
+      #     - Pattern matching: user-guide/querying-data/pattern-matching/index.md
       - Transforming data:
           - user-guide/transformations/coordinates/index.md
-      - Aggregating data:
-          - user-guide/aggregating-data/index.md
-      - Enriching data:
-          - user-guide/enriching-data/index.md
+      # - Aggregating data:
+      #     - user-guide/aggregating-data/index.md
+      # - Enriching data:
+      #     - user-guide/enriching-data/index.md
       - Exporting data:
           - user-guide/exporting-data/index.md
           - Dataframes: user-guide/exporting-data/dataframes.md
           - Sportscode XML: user-guide/exporting-data/sportscode.md
   - How-to guides:
       - examples/index.md
-      # - Loading data from external sources: examples/adapter.ipynb
-        # - Analyzing SportsCode XML files with DuckDB: 'presentations/pysport-meetup-april-2023/Kloppy x DuckDB.ipynb'
+      - Transforming coordinates and orientations: examples/transformations.ipynb
+      - Pattern matching in event data: examples/pattern_matching.ipynb
+      - Exporting event data to a dataframe: examples/to_dataframe.ipynb
+      - Computing 'per 90' metrics: examples/aggregations.ipynb
+      - Parsing custom events: examples/event_factory.ipynb
+      - Loading data from external sources: examples/adapter.ipynb
   - Reference:
       - reference/index.md
       - Data Loaders:
@@ -170,15 +176,16 @@ nav:
           - kloppy.io: reference/io.md
           - kloppy.exceptions: reference/exceptions.md
   - Development:
-      - Contributing: 'contributor-guide/contributing.md'
-      - Issues: 'contributor-guide/issues.md'
-      - License: 'license.md'
+      - Contributing: contributor-guide/contributing.md
+      - Issues: contributor-guide/issues.md
+      - Adding a data provider: contributor-guide/add-new-provider.md
+      - License: license.md
   - Releases: https://github.com/PySport/kloppy/releases
 plugins:
-  # - mkdocs-jupyter:
-  #     include: ["*.ipynb"]
-  #     include_source: true
-  #     execute: false
+  - mkdocs-jupyter:
+      include: ["*.ipynb"]
+      include_source: true
+      execute: false
   - markdown-exec
   - search
   - autorefs

@@ -32,14 +32,12 @@ _EVENT_DATA_PROVIDERS = {
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"}
-        for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
     },
 }
 _DEFAULT_EVENT_TYPE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"}
-        for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
     },
     "attributes": {
         attr_name: _DEFAULT_EVENT_ATTRIBUTE_SPEC
@@ -79,16 +77,13 @@ def convert_to_md_table(df: pd.DataFrame, markdown_kwargs: dict) -> str:
     # Escape any pipe characters, | to \|
     # See https://github.com/astanin/python-tabulate/issues/241
     df.columns = [
-        replace_unescaped_pipes(c) if isinstance(c, str) else c
-        for c in df.columns
+        replace_unescaped_pipes(c) if isinstance(c, str) else c for c in df.columns
     ]
 
     # Avoid deprecated applymap warning on pandas>=2.0
     # See https://github.com/timvink/mkdocs-table-reader-plugin/issues/55
     if pd.__version__ >= "2.1.0":
-        df = df.map(
-            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
-        )
+        df = df.map(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
     else:
         df = df.applymap(
             lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
@@ -157,19 +152,15 @@ def _deepupdate(target: dict[Any, Any], src: dict[Any, Any]) -> None:
     src[k]. If v is a set, target[k] is updated with v, If v is a dict,
     recursively deep-update it.
 
-    Parameters
-    ----------
-    target: dict
-        The original dictionary which is updated.
-    src: dict
-        The dictionary with which `target` is updated.
+    Args:
+        target: The original dictionary which is updated.
+        src: The dictionary with which `target` is updated.
 
-    Examples
-    --------
-    >>> t = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
-    >>> deepupdate(t, {'hobbies': ['gaming']})
-    >>> print(t)
-    {'name': 'ferry', 'hobbies': ['programming', 'sci-fi', 'gaming']}
+    Examples:
+        >>> t = {'name': 'ferry', 'hobbies': ['programming', 'sci-fi']}
+        >>> deepupdate(t, {'hobbies': ['gaming']})
+        >>> print(t)
+        {'name': 'ferry', 'hobbies': ['programming', 'sci-fi', 'gaming']}
     """
     for k, v in src.items():
         if isinstance(v, list):
@@ -333,9 +324,7 @@ def define_env(env):
                     attr_value.name
                 ]
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
-                    row += [
-                        render_provider_spec(attr_value_spec, provider_key)
-                    ]
+                    row += [render_provider_spec(attr_value_spec, provider_key)]
             else:
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
                     row += ["-"]
@@ -348,11 +337,7 @@ def define_env(env):
 
             # Get event type attribute docstrings
             attr_docstrings = next(
-                (
-                    d.value
-                    for d in class_docstring
-                    if d.kind.name == "attributes"
-                ),
+                (d.value for d in class_docstring if d.kind.name == "attributes"),
                 list(),
             )
             # Create a row for each attribute
@@ -366,9 +351,7 @@ def define_env(env):
                     and not isinstance(attr_annotation, str)
                     else None
                 )
-                if attr_anchor is not None and attr_anchor.startswith(
-                    "kloppy."
-                ):
+                if attr_anchor is not None and attr_anchor.startswith("kloppy."):
                     attr_class_spec = _get_object(attr_anchor)
                     anchor_is_enum = any(
                         [
@@ -389,16 +372,14 @@ def define_env(env):
                             list(),
                         )
                         for attr_value in attr_class_attr_docstrings:
-                            value_data += [
-                                _create_attribute_value_row(attr_value)
-                            ]
+                            value_data += [_create_attribute_value_row(attr_value)]
                         value_data_tables += [
                             (
                                 attr_anchor,
                                 convert_to_md_table(
-                                    pd.DataFrame(
-                                        data=value_data, columns=columns
-                                    ).drop(columns=["group"]),
+                                    pd.DataFrame(data=value_data, columns=columns).drop(
+                                        columns=["group"]
+                                    ),
                                     {"index": False},
                                 ),
                             )
@@ -414,20 +395,14 @@ def define_env(env):
         )
 
         if not show_providers:
-            table.drop(
-                columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True
-            )
+            table.drop(columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True)
 
         specific_table = convert_to_md_table(
-            table.loc[table["group"] != "kloppy.domain.Event"].drop(
-                columns=["group"]
-            ),
+            table.loc[table["group"] != "kloppy.domain.Event"].drop(columns=["group"]),
             {"index": False},
         )
         generic_table = convert_to_md_table(
-            table.loc[table["group"] == "kloppy.domain.Event"].drop(
-                columns=["group"]
-            ),
+            table.loc[table["group"] == "kloppy.domain.Event"].drop(columns=["group"]),
             {"index": False},
         )
 
@@ -480,11 +455,7 @@ def define_env(env):
 
         # Get qualifier value type
         attr_docstrings = next(
-            (
-                d.value
-                for d in qualifier_docstring
-                if d.kind.name == "attributes"
-            ),
+            (d.value for d in qualifier_docstring if d.kind.name == "attributes"),
             list(),
         )
 
@@ -575,3 +546,331 @@ def define_env(env):
 <p><span class="doc-section-title">Attributes</span></p>
 {table}
 """
+
+    @env.macro
+    def plot_coordinate_systems(providers=None, cols=3):
+        import math
+        from io import StringIO
+
+        import matplotlib.pyplot as plt
+        from mplsoccer import Pitch
+        from mplsoccer.dimensions import BaseDims
+
+        from kloppy.domain import (
+            DatasetType,
+            Origin,
+            Provider,
+            Unit,
+            VerticalOrientation,
+            build_coordinate_system,
+        )
+
+        def build_dim(coordinate_system):
+            invert_y = (
+                coordinate_system.vertical_orientation
+                == VerticalOrientation.TOP_TO_BOTTOM
+            )
+            origin_center = coordinate_system.origin == Origin.CENTER
+
+            neg_if_inverted = -1 if invert_y else 1
+            center = (0, 0)
+            if coordinate_system.origin == Origin.BOTTOM_LEFT:
+                center = (
+                    (
+                        coordinate_system.pitch_dimensions.x_dim.max
+                        - coordinate_system.pitch_dimensions.x_dim.min
+                    )
+                    / 2,
+                    (
+                        coordinate_system.pitch_dimensions.y_dim.max
+                        - coordinate_system.pitch_dimensions.y_dim.min
+                    )
+                    / 2,
+                )
+            elif coordinate_system.origin == Origin.TOP_LEFT:
+                neg_if_inverted = -1
+                center = (
+                    (
+                        coordinate_system.pitch_dimensions.x_dim.max
+                        - coordinate_system.pitch_dimensions.x_dim.min
+                    )
+                    / 2,
+                    (
+                        coordinate_system.pitch_dimensions.y_dim.max
+                        - coordinate_system.pitch_dimensions.y_dim.min
+                    )
+                    / 2,
+                )
+
+            dim = BaseDims(
+                left=coordinate_system.pitch_dimensions.x_dim.min,
+                right=coordinate_system.pitch_dimensions.x_dim.max,
+                bottom=coordinate_system.pitch_dimensions.y_dim.min
+                if not invert_y
+                else coordinate_system.pitch_dimensions.y_dim.max,
+                top=coordinate_system.pitch_dimensions.y_dim.max
+                if not invert_y
+                else coordinate_system.pitch_dimensions.y_dim.min,
+                width=coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.x_dim.min,
+                length=coordinate_system.pitch_dimensions.y_dim.max
+                - coordinate_system.pitch_dimensions.y_dim.min,
+                goal_bottom=center[1]
+                - (neg_if_inverted / 2 * coordinate_system.pitch_dimensions.goal_width),
+                goal_top=center[1]
+                + (neg_if_inverted / 2 * coordinate_system.pitch_dimensions.goal_width),
+                six_yard_left=coordinate_system.pitch_dimensions.x_dim.min
+                + coordinate_system.pitch_dimensions.six_yard_length,
+                six_yard_right=coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.six_yard_length,
+                six_yard_bottom=center[1]
+                - (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.six_yard_width
+                ),
+                six_yard_top=center[1]
+                + (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.six_yard_width
+                ),
+                penalty_spot_distance=coordinate_system.pitch_dimensions.penalty_spot_distance,
+                penalty_left=coordinate_system.pitch_dimensions.x_dim.min
+                + coordinate_system.pitch_dimensions.penalty_spot_distance,
+                penalty_right=coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.penalty_spot_distance,
+                penalty_area_left=coordinate_system.pitch_dimensions.x_dim.min
+                + coordinate_system.pitch_dimensions.penalty_area_length,
+                penalty_area_right=coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.penalty_area_length,
+                penalty_area_bottom=center[1]
+                - (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.penalty_area_width
+                ),
+                penalty_area_top=center[1]
+                + (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.penalty_area_width
+                ),
+                center_width=center[1],
+                center_length=center[0],
+                goal_width=coordinate_system.pitch_dimensions.goal_width,
+                goal_length=coordinate_system.pitch_dimensions.goal_height,
+                six_yard_width=coordinate_system.pitch_dimensions.six_yard_width,
+                six_yard_length=coordinate_system.pitch_dimensions.six_yard_length,
+                penalty_area_width=coordinate_system.pitch_dimensions.penalty_area_width,
+                penalty_area_length=coordinate_system.pitch_dimensions.penalty_area_length,
+                circle_diameter=coordinate_system.pitch_dimensions.circle_radius * 2,
+                corner_diameter=coordinate_system.pitch_dimensions.corner_radius * 2,
+                arc=0,
+                invert_y=invert_y,
+                origin_center=origin_center,
+                pad_default=0.02
+                * (
+                    coordinate_system.pitch_dimensions.x_dim.max
+                    - coordinate_system.pitch_dimensions.x_dim.min
+                ),
+                pad_multiplier=1,
+                aspect_equal=False
+                if coordinate_system.pitch_dimensions.unit == Unit.NORMED
+                else True,
+                pitch_width=coordinate_system.pitch_width,
+                pitch_length=coordinate_system.pitch_length,
+                aspect=coordinate_system.pitch_width / coordinate_system.pitch_length
+                if coordinate_system.pitch_dimensions.unit == Unit.NORMED
+                else 1.0,
+            )
+            return dim
+
+        pitch_kwargs = {
+            "line_color": "#94A7AE",
+            "axis": False,
+            "label": True,
+            "pad_left": 0,
+            "pad_right": 0,
+            "pad_top": 0,
+            "pad_bottom": 0,
+            "linewidth": 1,
+        }
+        FONTCOLOR = "gray"
+        font_kwargs = {
+            "fontsize": 12,
+            "ha": "center",
+            "va": "bottom",
+            "fontweight": "normal",
+            "fontstyle": "italic",
+            "c": FONTCOLOR,
+        }
+
+        if providers is None:
+            providers = [
+                {"provider": Provider.KLOPPY},
+                {"provider": Provider.METRICA},
+                {"provider": Provider.TRACAB},
+                {"provider": Provider.SECONDSPECTRUM},
+                {"provider": Provider.OPTA},
+                {"provider": Provider.PFF},
+                {"provider": Provider.SKILLCORNER},
+                {"provider": Provider.STATSBOMB},
+                {"provider": Provider.SPORTEC, "dataset_type": DatasetType.EVENT},
+                {"provider": Provider.SPORTEC, "dataset_type": DatasetType.TRACKING},
+                {"provider": Provider.WYSCOUT},
+                {"provider": Provider.DATAFACTORY},
+                # {"provider": Provider.STATSPERFORM},
+                {"provider": Provider.HAWKEYE},
+                {"provider": Provider.SPORTVU},
+            ]
+        else:
+            providers = [
+                {
+                    "provider": Provider(item["provider"]),
+                    "dataset_type": DatasetType(item["dataset_type"])
+                    if "dataset_type" in item
+                    else None,
+                }
+                for item in providers
+            ]
+
+        # Determine grid size
+        n = len(providers)
+        rows = math.ceil(n / cols)
+
+        # Create subplots
+        fig, axs = plt.subplots(rows, cols, figsize=(5 * cols, 4 * rows))
+        axs = axs.flat  # Flatten for easy iteration
+
+        for ax, provider in zip(axs, providers):
+            coordinate_system = build_coordinate_system(
+                provider=provider.get("provider"),
+                dataset_type=provider.get("dataset_type", None),
+                pitch_length=105,
+                pitch_width=68,
+            )
+
+            dim = build_dim(coordinate_system)
+
+            pitch = Pitch(pitch_type=dim, **pitch_kwargs)
+            pitch.draw(ax=ax)
+
+            if provider.get("dataset_type"):
+                ax.set_title(
+                    f"{coordinate_system.provider.name}:{provider['dataset_type'].name}",
+                    fontsize=18,
+                    c="#000",
+                    pad=15,
+                )
+            else:
+                ax.set_title(
+                    coordinate_system.provider.name, fontsize=18, c="#000", pad=15
+                )
+
+            xmin, xmax, ymin, ymax = pitch.extent
+            ax.xaxis.set_ticks([xmin, xmax])
+            ax.yaxis.set_ticks([ymin, ymax])
+            ax.tick_params(labelsize=10)
+
+            # Add red dot at origin
+            origin_x, origin_y = 0, 0
+            ax.plot(
+                origin_x,
+                origin_y,
+                "ro",
+                markersize=8,
+                label="Origin",
+                zorder=10,
+                clip_on=False,
+            )
+
+            # Draw axis arrows
+            x_axis_length = 0.1 * (
+                coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.x_dim.min
+            )
+            y_axis_length = 0.1 * (
+                coordinate_system.pitch_dimensions.y_dim.max
+                - coordinate_system.pitch_dimensions.y_dim.min
+            )
+            ax.annotate(
+                "",
+                xy=(x_axis_length, 0),
+                xytext=(0, 0),
+                arrowprops=dict(facecolor="blue", arrowstyle="->"),
+                annotation_clip=False,
+            )
+            ax.annotate(
+                "",
+                xy=(0, x_axis_length),
+                xytext=(0, 0),
+                arrowprops=dict(facecolor="green", arrowstyle="->"),
+                annotation_clip=False,
+            )
+
+            ax.text(
+                x_axis_length,
+                0,
+                "x",
+                color="blue",
+                fontsize=10,
+                va="center",
+                fontweight="bold",
+                zorder=10,
+            )
+            if (
+                coordinate_system.vertical_orientation
+                == VerticalOrientation.BOTTOM_TO_TOP
+            ):
+                ax.text(
+                    0,
+                    x_axis_length,
+                    "y",
+                    color="green",
+                    fontsize=10,
+                    ha="center",
+                    va="bottom",
+                    fontweight="bold",
+                    zorder=10,
+                )
+            else:
+                ax.text(
+                    0,
+                    x_axis_length,
+                    "y",
+                    color="green",
+                    fontsize=10,
+                    ha="center",
+                    va="top",
+                    fontweight="bold",
+                    zorder=10,
+                )
+
+            # Add unit and if standardized
+            unit = coordinate_system.pitch_dimensions.unit.name  # e.g., "meters"
+            standardized = (
+                "yes" if coordinate_system.pitch_dimensions.standardized else "no"
+            )
+
+            ax.text(
+                0.5,
+                1.05,
+                f"unit: {unit} • standardized: {standardized}",
+                verticalalignment="bottom",
+                horizontalalignment="center",
+                transform=ax.transAxes,
+                **font_kwargs,
+            )
+
+        for ax in axs[len(providers) :]:
+            ax.set_visible(False)
+
+        for o in fig.findobj():
+            o.set_clip_on(False)
+
+        plt.tight_layout()  # Adjust subplots to fit into the figure area.
+
+        buffer = StringIO()
+        plt.savefig(buffer, format="svg")
+        return buffer.getvalue()

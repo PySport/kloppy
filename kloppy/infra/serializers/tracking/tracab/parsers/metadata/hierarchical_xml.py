@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import IO, List, Optional, Tuple
 
-from dateutil.parser import parse
 from lxml import objectify
 
 from kloppy.domain import Ground, Period, Team

@@ -31,7 +31,7 @@ class TracabDatParser(TracabDataParser):
         self.frame_rate = frame_rate
 
     def extract_frames(
-        self, sample_rate: int, only_alive: bool
+        self, sample_rate: float, only_alive: bool
     ) -> Iterator[Frame]:
         n = 0
         sample = 1.0 / sample_rate

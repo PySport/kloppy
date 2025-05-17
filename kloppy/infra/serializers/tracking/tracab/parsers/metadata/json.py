@@ -50,7 +50,7 @@ class TracabJSONMetadataParser(TracabMetadataParser):
         return None
 
     def extract_lineups(self) -> Tuple[Team, Team]:
-        start_frame_id = self.root[f"Phase1StartFrame"]
+        start_frame_id = self.root["Phase1StartFrame"]
         home_team = create_team(
             self.root["HomeTeam"],
             Ground.HOME,

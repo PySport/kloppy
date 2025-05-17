@@ -31,7 +31,7 @@ class TracabJSONParser(TracabDataParser):
         self.frame_rate = frame_rate
 
     def extract_frames(
-        self, sample_rate: int, only_alive: bool
+        self, sample_rate: float, only_alive: bool
     ) -> Iterator[Frame]:
         raw_data = self.root["FrameData"]
 

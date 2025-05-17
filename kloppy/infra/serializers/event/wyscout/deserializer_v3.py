@@ -30,6 +30,7 @@ from kloppy.domain import (
     Period,
     Player,
     Point,
+    Point3D,
     PositionType,
     PostShotExpectedGoals,
     Provider,
@@ -110,24 +111,68 @@ def _flip_point(point: Point) -> Point:
     return Point(x=100 - point.x, y=100 - point.y)
 
 
-class ShotZoneResults(str, Enum):
-    GOAL_BOTTOM_LEFT = "glb"
-    GOAL_BOTTOM_RIGHT = "grb"
-    GOAL_BOTTOM_CENTER = "gb"
-    GOAL_CENTER_LEFT = "gl"
-    GOAL_CENTER = "gc"
-    GOAL_CENTER_RIGHT = "gr"
-    GOAL_TOP_LEFT = "glt"
-    GOAL_TOP_RIGHT = "grt"
-    GOAL_TOP_CENTER = "gt"
-    OUT_BOTTOM_RIGHT = "obr"
-    OUT_BOTTOM_LEFT = "olb"
-    OUT_RIGHT = "or"
-    OUT_LEFT = "ol"
-    OUT_LEFT_TOP = "olt"
-    OUT_TOP = "ot"
-    OUT_RIGHT_TOP = "ort"
-    BLOCKED = "bc"
+class ShotZoneResults(Enum):
+    """
+     Wyscout does not provide end-coordinates of shots. Instead shots on goal
+     are tagged with a zone. The zones and corresponding y and z-coordinates are depicted below.
+
+                                        (z-coordinate of zone or post)
+
+         olt      | ot |      otr          3.5
+      --------------------------------
+           ||=================||           2.77
+      -------------------------------
+           || gtl | gt | gtr ||            2
+      --------------------------------
+       ol || gl | gc  | gr || or           1
+      --------------------------------
+       olb || glb  | gb | gbr || orb       0
+
+       40     45    50    55     60    (y-coordinate of zone)
+         44.62               55.38     (y-coordinate of post)
+
+    Attributes:
+       code (str): The string identifier of the shot result.
+       point (Point3D): The predefined Point3D associated with the shot result.
+    """
+
+    GOAL_BOTTOM_LEFT = ("glb", Point3D(100, 45, 0))
+    GOAL_BOTTOM_CENTER = ("gb", Point3D(100, 50, 0))
+    GOAL_BOTTOM_RIGHT = ("gbr", Point3D(100, 55, 0))
+    GOAL_CENTER_LEFT = ("gl", Point3D(100, 45, 1))
+    GOAL_CENTER = ("gc", Point3D(100, 50, 1))
+    GOAL_CENTER_RIGHT = ("gr", Point3D(100, 55, 1))
+    GOAL_TOP_LEFT = ("gtl", Point3D(100, 45, 2))
+    GOAL_TOP_CENTER = ("gt", Point3D(100, 50, 2))
+    GOAL_TOP_RIGHT = ("gtr", Point3D(100, 55, 2))
+    POST_BOTTOM_LEFT = ("plb", Point3D(100, 44.62, 0))
+    POST_BOTTOM_RIGHT = ("pbr", Point3D(100, 55.38, 0))
+    OUT_BOTTOM_LEFT = ("olb", Point3D(100, 40, 0))
+    OUT_BOTTOM_RIGHT = ("obr", Point3D(100, 60, 0))
+    POST_LEFT = ("pl", Point3D(100, 44.62, 1))
+    POST_RIGHT = ("pr", Point3D(100, 55.38, 1))
+    OUT_LEFT = ("ol", Point3D(100, 40, 1))
+    OUT_RIGHT = ("or", Point3D(100, 60, 1))
+    POST_TOP_LEFT = ("ptl", Point3D(100, 44.62, 2))
+    POST_TOP_RIGHT = ("ptr", Point3D(100, 55.38, 2))
+    OUT_TOP_LEFT = ("otl", Point3D(100, 40, 3.5))
+    OUT_TOP_RIGHT = ("otr", Point3D(100, 60, 3.5))
+    POST_TOP = ("pt", Point3D(100, 50, 2.77))
+    OUT_TOP = ("ot", Point3D(100, 50, 3.5))
+    BLOCKED = ("bc", None)
+
+    def __init__(self, code: str, point: Point3D):
+        self.code = code
+        self.point = point
+
+    @classmethod
+    def point_from_code(cls, code: str) -> Optional[Point3D]:
+        """Retrieves the enum member from a string code."""
+        for zone in cls:
+            if zone.code == code:
+                return zone.point
+
+        warnings.warn(f"Invalid shot zone code: {code}")
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -153,16 +198,29 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         starting_formation=starting_formation,
     )
 
+    players_info = {}
     for player in raw_events["players"][wyId]:
         player_id = str(player["player"]["wyId"])
+        player_first_name = player["player"]["firstName"]
+        player_last_name = player["player"]["lastName"]
+        players_info[player_id] = {
+            "first_name": player_first_name,
+            "last_name": player_last_name,
+        }
+
+    team_formation = raw_events["match"]["teamsData"][wyId]["formation"]
+    team_players = team_formation["lineup"] + team_formation["bench"]
+    for player in team_players:
+        player_id = str(player["playerId"])
         starting_position = starting_players_positions.get(player_id)
+        player_info = players_info[player_id]
         team.players.append(
             Player(
                 player_id=player_id,
                 team=team,
-                jersey_no=None,
-                first_name=player["player"]["firstName"],
-                last_name=player["player"]["lastName"],
+                jersey_no=player["shirtNumber"],
+                first_name=player_info["first_name"],
+                last_name=player_info["last_name"],
                 starting=starting_position is not None,
                 starting_position=starting_position,
             )
@@ -172,73 +230,18 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
 
 
 def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
-    """Estimate the shot end location from the Wyscout tags.
-
-    Wyscout does not provide end-coordinates of shots. Instead shots on goal
-    are tagged with a zone. This function maps each of these zones to
-    a coordinate. The zones and corresponding y-coordinate are depicted below.
-
-
-        olt      | ot |      ort
-     --------------------------------
-          ||=================||
-     -------------------------------
-          || glt | gt | grt ||
-     --------------------------------
-      ol || gl | gc  | gr || or
-     --------------------------------
-      olb || glb  | gb | grb || orb
-
-      40     45    50    55     60    (y-coordinate of zone)
-        44.62               55.38     (y-coordiante of post)
-    """
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_CENTER
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_CENTER
-    ):
-        return Point(100.0, 50.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_RIGHT
-    ):
-        return Point(100.0, 55.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_LEFT
-    ):
-        return Point(100.0, 45.0)
-
-    if raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_TOP:
-        return Point(100.0, 50.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT_TOP
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_RIGHT
-    ):
-        return Point(100.0, 60.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT_TOP
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_LEFT
-    ):
-        return Point(100.0, 40.0)
-
-    # If the shot is blocked, the start location is the best possible estimate
-    # for the shot's end location
-    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
+    """Estimate the shot end location from the Wyscout tags."""
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED.code:
         return Point(
             x=float(raw_event["location"]["x"]),
             y=float(raw_event["location"]["y"]),
         )
 
-    return None
+    else:
+        result_coordinates = ShotZoneResults.point_from_code(
+            raw_event["shot"]["goalZone"]
+        )
+        return result_coordinates
 
 
 def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
@@ -322,6 +325,9 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
             raw_event, secondary_event_types_values
         ):
             qualifiers.append(PassQualifier(pass_type))
+
+    if raw_event["pass"].get("height") == "high":
+        qualifiers.append(PassQualifier(PassType.HIGH_PASS))
 
     return qualifiers
 

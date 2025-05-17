@@ -110,6 +110,7 @@ class TestStatsPerformMetadata:
     def test_teams(self, tracking_dataset: TrackingDataset):
         home_team = tracking_dataset.metadata.teams[0]
         home_player = home_team.players[2]
+
         assert home_player.player_id == "5g5wwp5luxo1rz1kp6chvz0x6"
         assert tracking_dataset.records[0].players_coordinates[
             home_player

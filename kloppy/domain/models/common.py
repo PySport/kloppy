@@ -833,7 +833,7 @@ class SportecEventDataCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.TOP_TO_BOTTOM
+        return VerticalOrientation.BOTTOM_TO_TOP
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:

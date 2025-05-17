@@ -398,7 +398,9 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
 
     raw_position_line = next_event.qualifiers.get(44)
     if raw_position_line:
-        position = position_line_mapping[raw_position_line]
+        position = position_line_mapping.get(
+            raw_position_line, PositionType.Unknown
+        )
 
     return dict(replacement_player=replacement_player, position=position)
 

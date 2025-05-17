@@ -3,13 +3,14 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from kloppy.domain import Ground, Period, Player, Score, Team
+from kloppy.domain import Ground, Period, Player, Score, Team, PositionType
 from kloppy.exceptions import DeserializationError
 
 from .base import OptaJSONParser
 from ..formation_mapping import (
     formation_name_mapping,
     formation_position_mapping,
+    FormationType,
 )
 
 
@@ -136,7 +137,9 @@ class MA1JSONParser(OptaJSONParser):
         for line_up in line_ups:
             team_id = line_up["contestantId"]
             raw_formation = line_up["formationUsed"]
-            formation = formation_name_mapping[raw_formation]
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
             team_formations[team_id] = formation
 
         for team in teams:
@@ -158,15 +161,21 @@ class MA1JSONParser(OptaJSONParser):
         for line_up in line_ups:
             team_id = line_up["contestantId"]
             raw_formation = line_up["formationUsed"]
-            formation = formation_name_mapping[raw_formation]
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
 
             players = line_up["player"]
             for player in players:
                 player_id = player["playerId"]
                 if "formationPlace" in player:
-                    player_position = formation_position_mapping[formation][
-                        int(player["formationPlace"])
-                    ]
+                    player_position = (
+                        formation_position_mapping[formation][
+                            int(player["formationPlace"])
+                        ]
+                        if formation != FormationType.UNKNOWN
+                        else PositionType.Unknown
+                    )
                     starting = True
                 else:
                     player_position = None

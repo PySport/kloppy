@@ -1,0 +1,1131 @@
+event_types:
+  kloppy.domain.GenericEvent:
+    providers:
+      statsbomb:
+        status: parsed
+      statsperform:
+        status: parsed
+      wyscout_v2:
+        status: parsed
+      wyscout_v3:
+        status: parsed
+      datafactory:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: parsed
+    attributes:
+      time:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'timestamp' field
+      coordinates:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'location' field
+      team:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'team' field
+      player:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'player' field
+      ball_owning_team:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'possession_team' field
+      ball_state:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: BallState.DEAD for synthetic ball out events; otherwise BallState.ALIVE
+      raw_event:
+        providers:
+          statsbomb:
+            status: parsed
+      related_event_ids:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of the 'related_events' field
+      freeze_frame:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: tracking data frame created from the 'freeze_frame' field for shots or from a 360 data file for other events
+  kloppy.domain.PassEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 30/'Pass'
+      statsperform:
+        status: parsed
+        implementation: event type 1/'Pass' or 2/'Offside pass'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 8/'Pass' or subtype 30/'Corner', 31/'Free kick',  32/'Free kick (cross)', 34/'Goal kick', 36/'Throw in'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type any of 'pass', 'goal_kick' or 'throw_in', or 'corner', 'free_kick' that is not 'shot' as secondary event type
+      sportec:
+        status: parsed
+        implementation: event type 'Pass' or 'Cross'
+      metrica_json:
+        status: parsed
+        implementation: event type 1/'PASS'
+    attributes:
+      receive_timestamp:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: sum of 'timestamp' and 'duration' fields
+          sportec:
+            status: not implemented
+            implementation: null
+          metrica_json:
+            status: parsed
+            implementation: time difference between event's end time and start of period
+      receiver_coordinates:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'pass.end_location' field
+          sportec: 
+            status: parsed
+            implementation: X/Y-Source-Position of subsequent event
+          metrica_json:
+            status: parsed
+            implementation: value of 'event.end' field
+      receiver_player:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'pass.recipient' field
+          sportec:
+            status: parsed
+            implementation: value of 'Recipient' field
+          metrica_json:
+            status: parsed
+            implementation: value of 'event.to' field
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+        values:
+          COMPLETE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome is not defined
+              sportec:
+                status: parsed
+                implementation: successfullyCompleted or successful from [Play / Evaluation]
+              metrica_json:
+                status: parsed
+                implementation: outcome 1/'COMPLETE'
+          INCOMPLETE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 9/'Incomplete'
+              sportec:
+                status: parsed
+                implementation: if not successfullyCompleted or successful (unsuccessful) [Play / Evaluation]
+              metrica_json:
+                status: parsed
+                implementation: outcome 7/'INCOMPLETE'
+          OUT:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 75/'Out' or 74/'Injury Clearance'
+              sportec:
+                status: inferred
+                implementation: When action is SET_PIECE, and previous action was pass, set pass outcome to unsuccessful 
+              metrica_json:
+                status: parsed
+                implementation: outcome 6/'OUT'
+          OFFSIDE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 76/'Pass Offside'
+              sportec:
+                status: not supported
+                implementation: null
+              metrica_json:
+                status: parsed
+                implementation: outcome 16/'OFFSIDE'
+  kloppy.domain.ShotEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 16/'Shot' or 20/'Own goal against'
+      statsperform:
+        status: parsed
+        implementation: event type 13/'Shot (miss)' or 14/'Shot (post)' or 15/'Shot (saved)' or 16/'Shot (goal)'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 10/'Shot' or subtype 33/'Free kick (shot)', 35/'Penalty'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type any of 'shot', 'own_goal' or 'penalty' or 'free_kick' or 'corner' with secondary event type 'shot'
+      sportec:
+        status: parsed
+        implementation: event type 'ShotWide' or 'SavedShot' or 'BlockedShot' or 'ShotWoodWork' or 'OtherShot' or 'SuccessfulShot' or 'OwnGoal'
+      metrica_json:
+        status: parsed
+        implementation: event type 2/'SHOT'
+    attributes:
+      result_coordinates:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'shot.end_location' field
+          sportec:
+            status: not implemented
+            implementation: null
+          metrica_json:
+            status: not implemented
+            implementation: null
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+        values:
+          GOAL:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 97/'Goal'
+              sportec:
+                status: parsed
+                implementation: outcome SuccessfulShot
+              metrica_json:
+                status: parsed
+                implementation: outcome 30/'GOAL'
+          OFF_TARGET:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 98/'off T' or 101/'Wayward'
+              sportec:
+                status: parsed
+                implementation: outcome ShotWide
+              metrica_json:
+                status: parsed
+                implementation: outcome 29/'OFF TARGET'
+          POST:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome  99/'Post'
+              sportec:
+                status: parsed
+                implementation: outcome ShotWoodWork
+              metrica_json:
+                status: parsed
+                implementation: outcome 27/'POST'
+          BLOCKED:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 96/'Blocked'
+              sportec:
+                status: parsed
+                implementation: outcome BlockedShot
+              metrica_json:
+                status: parsed
+                implementation: outcome 25/'BLOCKED'
+          SAVED:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 100/'Saved' or 115/'Saved Off T' or 116/'Saved To Post'
+              sportec:
+                status: parsed
+                implementation: outcome SavedShot
+              metrica_json:
+                status: parsed
+                implementation: outcome 26/'SAVED'
+          OWN_GOAL:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 20/'Own goal against'
+              sportec:
+                status: parsed
+                implementation: outcome OwnGoal
+              metrica_json:
+                status: not implemented
+                implementation: null
+  kloppy.domain.TakeOnEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 14/'Dribble'
+      statsperform:
+        status: parsed
+        implementation: event type 3/'Take on'
+      wyscout_v2:
+        status: not implemented
+      wyscout_v3:
+        status: primary event type 'duel' and secondary event type contains 'dribble'
+        implementation: null
+      sportec:
+        status: not supported
+        implementation: null
+      metrica_json:
+        status: parsed
+        implementation: event type 45/'DRIBBLE'
+    attributes:
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+          metrica_json:
+            status: parsed
+        values:
+          COMPLETE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 8/'Complete'
+              metrica_json:
+                status: parsed
+                implementation: outcome 48/'WON'
+          INCOMPLETE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 9/'Incomplete' and dribble has no related event of type 4/'Duel' with outcome 14/'Lost Out' or 17/'Success Out'
+              metrica_json:
+                status: parsed
+                implementation: outcome 49/'LOST'
+          OUT:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: outcome 9/'Incomplete' and dribble has related event of type 4/'Duel' with outcome 14/'Lost Out' or 17/'Success Out'
+              metrica_json:
+                status: not supported
+                implementation: null
+  kloppy.domain.CarryEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 43/'Carry'
+      statsperform:
+        status: not supported
+        implementation: null
+      sportec:
+        status: not implemented
+        implementation: null
+      metrica_json:
+        status: parsed
+        implementation: event type 10/'CARRY'
+    attributes:
+      end_timestamp:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: sum of 'timestamp' and 'duration' fields
+          metrica_json:
+            status: parsed
+            implementation: time difference between event's end time and start of period
+      end_coordinates:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'carry.end_location' field
+          metrica_json:
+            status: parsed
+            implementation: value of 'event.end' field
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+          metrica_json:
+            status: parsed
+        values:
+          COMPLETE:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: all events of type 43/'Carry'
+              metrica_json:
+                status: parsed
+                implementation: all events of type 10/'CARRY'
+          INCOMPLETE:
+            providers:
+              statsbomb:
+                status: not supported
+              metrica_json:
+                status: not supported
+  kloppy.domain.ClearanceEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 9/'Clearance' or a keeper sweeper clearance event (23/'Goalkeeper' event with type 27/'Keeper sweeper' and outcome 48/'Clear') in which the goalkeeper uses their head or feet
+      statsperform:
+        status: parsed
+        implementation: event type 12/'Clearance'
+      wyscout_v2:
+        status: parsed
+        implementation: subevent type 71/'Clearance'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'clearance'
+      sportec:
+        status: not implemented
+        implementation: null
+      metrica_json:
+        status: not implemented
+        implementation: null
+  kloppy.domain.InterceptionEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 10/' Interception' or event type 30/'Pass' with type 64/'One touch interception'
+      statsperform:
+        status: parsed
+        implementation: event type 8/'Interception' or 74/'Blocked pass'
+      wyscout_v2:
+        status: parsed
+        implementation: null
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'interception'
+      sportec:
+        status: not implemented
+        implementation: null
+      metrica_json:
+        status: not implemented
+        implementation: null
+    attributes:
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+        values:
+          SUCCESS:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+          LOST:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 1/'Lost' or 13/'Lost in play'
+          OUT:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 10/'Interception' with outcome 14/'Lost out' or 17/'Success out'
+  kloppy.domain.DuelEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 4/'Duel' or 33/'Fifty-Fifty' or 2/'Ball recovery' with field 'ball_recovery.recovery_failure' or events with attribute "aerial_won"
+      statsperform:
+        status: parsed
+        implementation: event type 7/'Tackle' or 44/'Aerial' or 67/'Fifty-fifty'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 1/'Duel'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'duel' and secondary event type not 'dribble'
+      sportec:
+        status: not supported
+        implementation: null
+      metrica_json:
+        status: not supported
+        implementation: null
+    attributes:
+      result:
+        providers:
+          statsbomb:
+            status: parsed
+        values:
+          WON:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 4/'Duel' with outcome 4/'Won', 15/'Success', 16/'Success in play' or 17/'Success out', or synthetic event from event with field 'aerial_won', or event type 33/'Fifty-fifty' with outcome 4/'Won' or 3/'Success to team'
+          LOST:
+            providers:
+              statsbomb:
+                status: parsed
+                implementation: event type 4/'Duel' with outcome 13/'Lost in play' or 14/'Lost out', or type 11/'Aerial lost', or event type 33/'Fifty-fifty' with outcome 1/'Lost' or 2/'Success to opponent', or event type 2/'Ball recovery' with field 'ball_recovery.recovery_failure'
+          NEUTRAL:
+            providers:
+              statsbomb:
+                status: not supported
+  kloppy.domain.SubstitutionEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 19/'Substition'
+      statsperform:
+        status: not implemented
+        implementation: event type 18/'Player off' and 19/'Player on'
+      wyscout_v2:
+        status: not implemented
+        implementation: null
+      wyscout_v3:
+        status: not implemented
+        implementation: null
+      sportec:
+        status: parsed
+        implementation: event type Substitution
+      metrica_json:
+        status: not supported
+        implementation: null
+    attributes:
+      replacement_player:
+        providers:
+          statsbomb:
+            status: parsed
+            value: value of 'substitution.replacement' field
+  kloppy.domain.CardEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 24/'Bad behaviour' or 22/'Foul committed'
+      statsperform:
+        status: parsed
+        implementation: event type 17/'Card'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 2/'Foul' with tag 1701, 1702 or 1703
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'infraction' and 'yellow_card' or 'red_card' in secondary event type
+      sportec:
+        status: parsed
+        implementation: event type 'Caution'
+      metrica_json:
+        status: not implemented
+        implementation: null
+    attributes:
+      card_type:
+        providers:
+          statsbomb:
+            status: parsed
+        values:
+          FIRST_YELLOW:
+            providers:
+              statsbomb:
+                status: parsed
+              sportec:
+                status: not implemented
+          SECOND_YELLOW:
+            providers:
+              statsbomb:
+                status: parsed
+              sportec:
+                status: not implemented
+          RED:
+            providers:
+              statsbomb:
+                status: parsed
+              sportec:
+                status: not implemented
+  kloppy.domain.PlayerOnEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 26/'Player On'
+      statsperform:
+        status: not implemented
+        implementation: event type 21/'Player returns'
+      wyscout_v2:
+        status: not implemented
+      wyscout_v3:
+        status: not implemented
+      sportec:
+        status: unknown
+      metrica_json:
+        status: unknown
+  kloppy.domain.PlayerOffEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 27/'Player Off'
+      statsperform:
+        status: not supported
+      wyscout_v2:
+        status: not implemented
+      wyscout_v3:
+        status: not implemented
+      sportec:
+        status: unknown
+      metrica_json:
+        status: unknown
+  kloppy.domain.RecoveryEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 2/'Ball Recovery' or a keeper sweeper claim event  (23/'Goalkeeper' event with with type 27/'Keeper sweeper' and outcome 47/'Claim') in which the goalkeeper does not use their hands
+      statsperform:
+        status: parsed
+        implementation: event type 49/'Recovery'
+      wyscout_v2:
+        status: parsed
+        implementation: subevent 70/'Acceleration' or 72/'Touch' without tag 1302
+      wyscout_v3:
+        status: not implemented
+      sportec:
+        status: unknown
+      metrica_json:
+        status: parsed
+        implementation: event type 3/'RECOVERY'
+  kloppy.domain.MiscontrolEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 38/'Miscontrol'
+      statsperform:
+        status: parsed
+        implementation: event type 61/'Ball touch' with outcome 0.
+      wyscout_v2:
+        status: parsed
+      wyscout_v3:
+        status: not implemented
+        implementation: subevent 72/'Touch' with tag 1302
+      sportec:
+        status: unknown
+      metrica_json:
+        status: not supported
+        implementation: null
+  kloppy.domain.BallOutEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: events with attribute 'out' or StatsBomb event type 30/'Pass', 16/'Shot', 10/'Interception', 4/'Duel' or 23/'Goalkeeper' with an outcome corresponding to ball going out
+      statsperform:
+        status: parsed
+        implementation: even type 5/'Ball out' or 6/'Corner awarded'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 5/'Interruption'
+      wyscout_v3:
+        status: not implemented
+      sportec:
+        status: unknown
+        implementation: null
+      metrica_json:
+        status: inferred
+        implementation: checks if the event ended out of the field and adds a synthetic out event
+  kloppy.domain.FoulCommittedEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 22/'Foul committed'
+      statsperform:
+        status: parsed
+        implementation: event type 4/'Foul committed' with outcome 0
+      wyscout_v2:
+        status: parsed
+        implementation: event type 2/'Foul'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'infraction' and 'infraction' in secondary event type
+      sportec:
+        status: parsed
+        implementation: event type 'Foul'
+      metrica_json:
+        status: parsed
+        implementation: event type 4/'FAULT RECEIVED'
+  kloppy.domain.GoalkeeperEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 23/'Goalkeeper'. Some goalkeeper events are parsed as a clearance and recovery.  See CLEARANCE and RECOVERY for details.
+      statsperform:
+        status: parsed
+        implementation: event type 10/'Save' or 11/'Claim' or 41/'Punch' or 52/'Keeper pick-up' or 54/'Smother'
+      wyscout_v2:
+        status: parsed
+        implementation: event type 9/'Save'
+      wyscout_v3:
+        status: parsed
+        implementation: primary event type 'shot_against' and 'save' in secondary event type
+      sportec:
+        status: unknown
+        implementation: null
+      metrica_json:
+        status: not supported
+        implementation: null
+  kloppy.domain.PressureEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 17/'Pressure'
+      sportec:
+        status: not supported
+        implementation: null
+      metrica_json:
+        status: not supported
+        implementation: null
+  kloppy.domain.FormationChangeEvent:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: event type 36/'Tactical Shift'
+      statsperform:
+        status: parsed
+        implementation: event type 40/'Formation change'
+      wyscout_v2:
+        status: not implemented
+        implementation: null
+      wyscout_v3:
+        status: parsed
+        implementation: parsed out of 'formations' information
+      sportec:
+        status: not supported
+        implementation: null
+      metrica_json:
+        status: not supported
+        implementation: null
+    attributes:
+      formation_type:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'tactics.formation' field
+      player_positions:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: value of 'tactics.lineup' field
+qualifiers:
+  kloppy.domain.PassQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: parsed
+    values:
+      CROSS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: not implemented
+      HAND_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: unknown
+      HEAD_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: parsed
+      HIGH_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      LAUNCH:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      SIMPLE_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      SMART_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      LONG_BALL:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      THROUGH_BALL:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not implemented
+          metrica_json:
+            status: not supported
+      CHIPPED_PASS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: not supported
+      FLICK_ON:
+        providers:
+          statsbomb:
+            status: parsed
+          metrica_json:
+            status: not supported
+      ASSIST:
+        providers:
+          statsbomb:
+            status: parsed
+      ASSIST_2ND:
+        providers:
+          statsbomb:
+            status: parsed
+      SWITCH_OF_PLAY:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not implemented
+      BACK_PASS:
+        providers:
+          sportec:
+            status: not implemented
+  kloppy.domain.BodyPartQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: parsed
+    values:
+      RIGHT_FOOT:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+            implementation: leftLeg
+          metrica_json:
+            status: unknown
+      LEFT_FOOT:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+            implementation: rightLeg
+          metrica_json:
+            status: unknown
+      HEAD:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      OTHER:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      HEAD_OTHER:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      BOTH_HANDS:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      CHEST:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      LEFT_HAND:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      RIGHT_HAND:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      DROP_KICK:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      KEEPER_ARM:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      NO_TOUCH:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+  kloppy.domain.CardQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: not supported
+      metrica_json:
+          status: not implemented
+    values:
+      FIRST_YELLOW:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: inferred
+            implementation: subtype 40/'YELLOW'
+      SECOND_YELLOW:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: unknown
+      RED:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not supported
+          metrica_json:
+            status: parsed
+  kloppy.domain.CounterAttackQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: not implemented
+      metrica_json:
+        status: not supported
+    values: []
+  kloppy.domain.DuelQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: unknown
+      metrica_json:
+        status: unknown
+    values:
+      AERIAL:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: not implemented
+      GROUND:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: not implemented
+      LOOSE_BALL:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+      SLIDING_TACKLE:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+          metrica_json:
+            status: unknown
+  kloppy.domain.GoalkeeperQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: unknown
+    values:
+      SAVE:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: not implemented
+      CLAIM:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+      PUNCH:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+      PICK_UP:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+      SMOTHER:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+      REFLEX:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+      SAVE_ATTEMPT:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: unknown
+  kloppy.domain.SetPieceQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+      sportec:
+        status: parsed
+      metrica_json:
+        status: parsed
+    values:
+      GOAL_KICK:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      FREE_KICK:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      THROW_IN:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      CORNER_KICK:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      PENALTY:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed
+      KICK_OFF:
+        providers:
+          statsbomb:
+            status: parsed
+          sportec:
+            status: parsed
+          metrica_json:
+            status: parsed

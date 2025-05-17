@@ -1,0 +1,3 @@
+# DatasetType
+
+::: kloppy.domain.DatasetType

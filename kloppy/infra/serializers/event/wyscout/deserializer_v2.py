@@ -518,9 +518,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=timedelta(seconds=0)
-                            if len(periods) == 0
-                            else periods[-1].end_timestamp,
+                            start_timestamp=(
+                                timedelta(seconds=0)
+                                if len(periods) == 0
+                                else periods[-1].end_timestamp
+                            ),
                             end_timestamp=None,
                         )
                     )
@@ -539,9 +541,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         y=float(raw_event["positions"][0]["y"]),
                     ),
                     "team": teams[team_id],
-                    "player": players[team_id][player_id]
-                    if player_id != INVALID_PLAYER
-                    else None,
+                    "player": (
+                        players[team_id][player_id]
+                        if player_id != INVALID_PLAYER
+                        else None
+                    ),
                     "ball_owning_team": None,
                     "ball_state": None,
                     "period": periods[-1],

@@ -1,0 +1,3 @@
+# Period
+
+::: kloppy.domain.Period

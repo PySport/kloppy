@@ -1,15 +1,14 @@
-from typing import Optional, Union, Type
-
+from typing import Optional, Type, Union
 
 from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.tracab.tracab_dat import (
     TRACABDatDeserializer,
 )
 from kloppy.infra.serializers.tracking.tracab.tracab_json import (
-    TRACABJSONDeserializer,
     TRACABInputs,
+    TRACABJSONDeserializer,
 )
-from kloppy.io import FileLike, open_as_file, get_file_extension
+from kloppy.io import FileLike, get_file_extension, open_as_file
 
 
 def load(
@@ -21,6 +20,22 @@ def load(
     only_alive: Optional[bool] = True,
     file_format: Optional[str] = None,
 ) -> TrackingDataset:
+    """
+    Load TRACAB tracking data.
+
+    Args:
+        meta_data: A json or dat feed containing the meta data.
+        raw_data: A json or dat feed containing the raw tracking data.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        only_alive: Only include frames in which the game is not paused.
+        file_format: The format of the tracking data. Supported formats are "dat" and "json".
+            If not provided, the format will be inferred based on the file extensions.
+
+    Returns:
+        The parsed tracking data.
+    """
     if file_format == "dat":
         deserializer_class = TRACABDatDeserializer
     elif file_format == "json":

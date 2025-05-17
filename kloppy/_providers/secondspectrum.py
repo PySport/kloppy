@@ -5,7 +5,7 @@ from kloppy.infra.serializers.tracking.secondspectrum import (
     SecondSpectrumDeserializer,
     SecondSpectrumInputs,
 )
-from kloppy.io import FileLike, open_as_file, Source
+from kloppy.io import FileLike, Source, open_as_file
 
 
 def load(
@@ -17,6 +17,23 @@ def load(
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
+    """
+    Load SecondSpectrum tracking data.
+
+    Args:
+        meta_data: A json or xml feed containing the meta data.
+        raw_data: A json feed containing the raw tracking data.
+        additional_meta_data: A dict with additional data that will be added to
+            the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
+            for a list of possible keys.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        only_alive: Only include frames in which the game is not paused.
+
+    Returns:
+        The parsed tracking data.
+    """
     deserializer = SecondSpectrumDeserializer(
         sample_rate=sample_rate,
         limit=limit,

@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from .base import OptaXMLParser, OptaEvent
+from .base import OptaEvent, OptaXMLParser
 
 
 def _parse_ma3_datetime(dt_str: str) -> datetime:
@@ -38,9 +38,11 @@ class MA3XMLParser(OptaXMLParser):
                 ),
                 contestant_id=event.attrib.get("contestantId"),
                 player_id=event.attrib.get("playerId"),
-                outcome=int(event.attrib["outcome"])
-                if "outcome" in event.attrib
-                else None,
+                outcome=(
+                    int(event.attrib["outcome"])
+                    if "outcome" in event.attrib
+                    else None
+                ),
                 qualifiers={
                     int(qualifier.attrib["qualifierId"]): qualifier.attrib.get(
                         "value"

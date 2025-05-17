@@ -63,9 +63,11 @@ def tracking_dataset(
     tracking_data: Path,
 ) -> TrackingDataset:
     return statsperform.load_tracking(
-        ma1_data=tracking_metadata_xml
-        if request.param == "xml"
-        else tracking_metadata_json,
+        ma1_data=(
+            tracking_metadata_xml
+            if request.param == "xml"
+            else tracking_metadata_json
+        ),
         ma25_data=tracking_data,
         tracking_system="sportvu",
         only_alive=False,
@@ -82,9 +84,11 @@ def event_dataset(
     event_data_json: Path,
 ) -> EventDataset:
     return statsperform.load_event(
-        ma1_data=event_metadata_xml
-        if request.param == "xml"
-        else event_metadata_json,
+        ma1_data=(
+            event_metadata_xml
+            if request.param == "xml"
+            else event_metadata_json
+        ),
         ma3_data=event_data_xml if request.param == "xml" else event_data_json,
         coordinates="opta",
     )

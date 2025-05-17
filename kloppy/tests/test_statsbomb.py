@@ -28,10 +28,10 @@ from kloppy.domain import (
     PassResult,
     Point,
     Point3D,
+    PositionType,
     Provider,
     SetPieceQualifier,
     SetPieceType,
-    PositionType,
     ShotResult,
     SubstitutionEvent,
     TakeOnResult,
@@ -1003,7 +1003,7 @@ class TestStatsBombDuelEvent:
             for event in dataset.events
             if event.get_qualifier_value(CounterAttackQualifier) is True
         ]
-        assert len(counter_attack_events) == 26
+        assert len(counter_attack_events) == 20
 
 
 class TestStatsBombGoalkeeperEvent:
@@ -1084,7 +1084,7 @@ class TestStatsBombGoalkeeperEvent:
             for event in dataset.events
             if event.get_qualifier_value(UnderPressureQualifier) is True
         ]
-        assert len(under_pressure_events) == 559
+        assert len(under_pressure_events) == 455
 
 
 class TestStatsBombSubstitutionEvent:

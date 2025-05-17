@@ -22,15 +22,17 @@ def load_event(
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
-    Load Sportec event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    Load Sportec Solutions event data.
 
-    Parameters:
-        event_data: filename of the XML file containing the events
-        meta_data: filename of the XML file containing the match information
-        event_types:
-        coordinates:
-        event_factory:
+    Args:
+        event_data: XML feed with the raw event data of a game.
+        meta_data: XML feed containing the metadata of the game.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
 
+    Returns:
+        The parsed event data.
     """
     serializer = SportecEventDataDeserializer(
         event_types=event_types,
@@ -55,6 +57,20 @@ def load_tracking(
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
+    """
+    Load Sportec Solutions tracking data.
+
+    Args:
+        meta_data: A json feed containing the metadata of the game.
+        raw_data: A json feed containing the raw tracking data.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        only_alive: Only include frames in which the game is not paused.
+
+    Returns:
+        The parsed tracking data.
+    """
     deserializer = SportecTrackingDataDeserializer(
         sample_rate=sample_rate,
         limit=limit,
@@ -186,7 +202,7 @@ def load_open_tracking_data(
         match_id (str, optional):
             Match-ID of one of the matches. Defaults to `'J03WPY'`. See below
             for available matches.
-        sampe_rate:
+        sample_rate:
         limit:
         coordinates:
         only_alive:

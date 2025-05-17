@@ -11,7 +11,16 @@ DEFAULT_PITCH_WIDTH = 68.0
 
 
 class Unit(Enum):
-    """Unit to measure distances on a pitch."""
+    """
+    Unit to measure distances on a pitch.
+
+    Attributes:
+        METERS (str): Meters
+        YARDS (str): Yards
+        CENTIMETERS (str): Centimeters
+        FEET (str): Feet
+        NORMED (str): Normalized to a unit square
+    """
 
     METERS = "m"
     YARDS = "y"
@@ -87,7 +96,8 @@ class Point3D(Point):
 
 @dataclass(frozen=True)
 class Dimension:
-    """Limits of pitch boundaries along a single axis.
+    """
+    Limits of pitch boundaries along a single axis.
 
     Attributes:
         min: Minimal possible value within this dimension
@@ -112,13 +122,12 @@ class Dimension:
 
 @dataclass
 class PitchDimensions:
-    """Specifies the dimensions of a pitch.
+    """
+    Specifies the dimensions of a pitch.
 
     Attributes:
         x_dim: Limits of pitch boundaries in longitudinal direction.
-            See [`Dimension`][kloppy.domain.models.pitch.Dimension]
         y_dim: Limits of pitch boundaries in lateral direction.
-            See [`Dimension`][kloppy.domain.models.pitch.Dimension]
         standardized: Used to denote standardized pitch dimensions where data
             is scaled along the axes independent of the actual dimensions of
             the pitch. To get non-distored calculations, the `length` and
@@ -168,27 +177,37 @@ class PitchDimensions:
         """
         return PitchDimensions(
             x_dim=Dimension(
-                min=self.unit.convert(to_unit, self.x_dim.min)
-                if self.x_dim.min is not None
-                else None,
-                max=self.unit.convert(to_unit, self.x_dim.max)
-                if self.x_dim.max is not None
-                else None,
+                min=(
+                    self.unit.convert(to_unit, self.x_dim.min)
+                    if self.x_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.x_dim.max)
+                    if self.x_dim.max is not None
+                    else None
+                ),
             ),
             y_dim=Dimension(
-                min=self.unit.convert(to_unit, self.y_dim.min)
-                if self.y_dim.min is not None
-                else None,
-                max=self.unit.convert(to_unit, self.y_dim.max)
-                if self.y_dim.max is not None
-                else None,
+                min=(
+                    self.unit.convert(to_unit, self.y_dim.min)
+                    if self.y_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.y_dim.max)
+                    if self.y_dim.max is not None
+                    else None
+                ),
             ),
             standardized=self.standardized,
             unit=to_unit,
             goal_width=self.unit.convert(to_unit, self.goal_width),
-            goal_height=self.unit.convert(to_unit, self.goal_height)
-            if self.goal_height is not None
-            else None,
+            goal_height=(
+                self.unit.convert(to_unit, self.goal_height)
+                if self.goal_height is not None
+                else None
+            ),
             six_yard_width=self.unit.convert(to_unit, self.six_yard_width),
             six_yard_length=self.unit.convert(to_unit, self.six_yard_length),
             penalty_area_width=self.unit.convert(
@@ -356,12 +375,14 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    point.z * 2.44 / self.goal_height
-                    if self.goal_height is not None
-                    else point.z
-                )
-                if point.z is not None
-                else None,
+                    (
+                        point.z * 2.44 / self.goal_height
+                        if self.goal_height is not None
+                        else point.z
+                    )
+                    if point.z is not None
+                    else None
+                ),
             )
         else:
             return Point(
@@ -470,12 +491,14 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    point.z * self.goal_height / 2.44
-                    if self.goal_height is not None
-                    else point.z
-                )
-                if point.z is not None
-                else None,
+                    (
+                        point.z * self.goal_height / 2.44
+                        if self.goal_height is not None
+                        else point.z
+                    )
+                    if point.z is not None
+                    else None
+                ),
             )
         else:
             return Point(
@@ -529,7 +552,8 @@ class PitchDimensions:
 
 @dataclass
 class MetricPitchDimensions(PitchDimensions):
-    """The standard pitch dimensions in meters by IFAB regulations.
+    """
+    The standard pitch dimensions in meters by IFAB regulations.
 
     For national matches, the length of the pitch can be between 90 and 120
     meters, and the width can be between 45 and 90 meters. For international
@@ -555,7 +579,8 @@ class MetricPitchDimensions(PitchDimensions):
 
 @dataclass
 class ImperialPitchDimensions(PitchDimensions):
-    """The standard pitch dimensions in yards by IFAB regulations.
+    """
+    The standard pitch dimensions in yards by IFAB regulations.
 
     For national matches, the length of the pitch can be between 100 and 130
     yards, and the width can be between 50 and 100 yards. For international
@@ -581,7 +606,8 @@ class ImperialPitchDimensions(PitchDimensions):
 
 @dataclass
 class NormalizedPitchDimensions(MetricPitchDimensions):
-    """The standard pitch dimensions in normalized units.
+    """
+    The standard pitch dimensions in normalized units.
 
     The pitch dimensions are normalized to a unit square, where the length
     and width of the pitch are 1. All other dimensions are scaled accordingly.
@@ -595,6 +621,15 @@ class NormalizedPitchDimensions(MetricPitchDimensions):
     def __post_init__(self):
         if self.pitch_length is None or self.pitch_width is None:
             raise ValueError("The pitch length and width need to be specified")
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise ValueError(
+                "The pitch dimensions need to be fully specified."
+            )
         dim_width = self.y_dim.max - self.y_dim.min
         dim_length = self.x_dim.max - self.x_dim.min
         self.goal_width = self.goal_width / self.pitch_width * dim_width

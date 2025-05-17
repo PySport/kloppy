@@ -47,6 +47,7 @@ position_types_mapping: Dict[str, PositionType] = {
     "D": PositionType.Defender,
     "CF": PositionType.Striker,
     "M": PositionType.Midfielder,
+    "AM": PositionType.AttackingMidfield,
     "GK": PositionType.Goalkeeper,
     "F": PositionType.Attacker,
 }
@@ -296,7 +297,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     jersey_no=shirt_number,
                     name=player_name,
                     starting_position=position_types_mapping.get(
-                        player_position
+                        player_position, PositionType.Unknown
                     ),
                     starting=None,
                 )

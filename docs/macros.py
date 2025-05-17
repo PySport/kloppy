@@ -32,12 +32,14 @@ _EVENT_DATA_PROVIDERS = {
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
     },
 }
 _DEFAULT_EVENT_TYPE_SPEC = {
     "providers": {
-        provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
     },
     "attributes": {
         attr_name: _DEFAULT_EVENT_ATTRIBUTE_SPEC
@@ -77,13 +79,16 @@ def convert_to_md_table(df: pd.DataFrame, markdown_kwargs: dict) -> str:
     # Escape any pipe characters, | to \|
     # See https://github.com/astanin/python-tabulate/issues/241
     df.columns = [
-        replace_unescaped_pipes(c) if isinstance(c, str) else c for c in df.columns
+        replace_unescaped_pipes(c) if isinstance(c, str) else c
+        for c in df.columns
     ]
 
     # Avoid deprecated applymap warning on pandas>=2.0
     # See https://github.com/timvink/mkdocs-table-reader-plugin/issues/55
     if pd.__version__ >= "2.1.0":
-        df = df.map(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
+        df = df.map(
+            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
+        )
     else:
         df = df.applymap(
             lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
@@ -324,7 +329,9 @@ def define_env(env):
                     attr_value.name
                 ]
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
-                    row += [render_provider_spec(attr_value_spec, provider_key)]
+                    row += [
+                        render_provider_spec(attr_value_spec, provider_key)
+                    ]
             else:
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
                     row += ["-"]
@@ -337,7 +344,11 @@ def define_env(env):
 
             # Get event type attribute docstrings
             attr_docstrings = next(
-                (d.value for d in class_docstring if d.kind.name == "attributes"),
+                (
+                    d.value
+                    for d in class_docstring
+                    if d.kind.name == "attributes"
+                ),
                 list(),
             )
             # Create a row for each attribute
@@ -351,7 +362,9 @@ def define_env(env):
                     and not isinstance(attr_annotation, str)
                     else None
                 )
-                if attr_anchor is not None and attr_anchor.startswith("kloppy."):
+                if attr_anchor is not None and attr_anchor.startswith(
+                    "kloppy."
+                ):
                     attr_class_spec = _get_object(attr_anchor)
                     anchor_is_enum = any(
                         [
@@ -372,14 +385,16 @@ def define_env(env):
                             list(),
                         )
                         for attr_value in attr_class_attr_docstrings:
-                            value_data += [_create_attribute_value_row(attr_value)]
+                            value_data += [
+                                _create_attribute_value_row(attr_value)
+                            ]
                         value_data_tables += [
                             (
                                 attr_anchor,
                                 convert_to_md_table(
-                                    pd.DataFrame(data=value_data, columns=columns).drop(
-                                        columns=["group"]
-                                    ),
+                                    pd.DataFrame(
+                                        data=value_data, columns=columns
+                                    ).drop(columns=["group"]),
                                     {"index": False},
                                 ),
                             )
@@ -395,14 +410,20 @@ def define_env(env):
         )
 
         if not show_providers:
-            table.drop(columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True)
+            table.drop(
+                columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True
+            )
 
         specific_table = convert_to_md_table(
-            table.loc[table["group"] != "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] != "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
         generic_table = convert_to_md_table(
-            table.loc[table["group"] == "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] == "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
 
@@ -455,7 +476,11 @@ def define_env(env):
 
         # Get qualifier value type
         attr_docstrings = next(
-            (d.value for d in qualifier_docstring if d.kind.name == "attributes"),
+            (
+                d.value
+                for d in qualifier_docstring
+                if d.kind.name == "attributes"
+            ),
             list(),
         )
 
@@ -616,9 +641,17 @@ def define_env(env):
                 length=coordinate_system.pitch_dimensions.y_dim.max
                 - coordinate_system.pitch_dimensions.y_dim.min,
                 goal_bottom=center[1]
-                - (neg_if_inverted / 2 * coordinate_system.pitch_dimensions.goal_width),
+                - (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.goal_width
+                ),
                 goal_top=center[1]
-                + (neg_if_inverted / 2 * coordinate_system.pitch_dimensions.goal_width),
+                + (
+                    neg_if_inverted
+                    / 2
+                    * coordinate_system.pitch_dimensions.goal_width
+                ),
                 six_yard_left=coordinate_system.pitch_dimensions.x_dim.min
                 + coordinate_system.pitch_dimensions.six_yard_length,
                 six_yard_right=coordinate_system.pitch_dimensions.x_dim.max
@@ -664,8 +697,10 @@ def define_env(env):
                 six_yard_length=coordinate_system.pitch_dimensions.six_yard_length,
                 penalty_area_width=coordinate_system.pitch_dimensions.penalty_area_width,
                 penalty_area_length=coordinate_system.pitch_dimensions.penalty_area_length,
-                circle_diameter=coordinate_system.pitch_dimensions.circle_radius * 2,
-                corner_diameter=coordinate_system.pitch_dimensions.corner_radius * 2,
+                circle_diameter=coordinate_system.pitch_dimensions.circle_radius
+                * 2,
+                corner_diameter=coordinate_system.pitch_dimensions.corner_radius
+                * 2,
                 arc=0,
                 invert_y=invert_y,
                 origin_center=origin_center,
@@ -680,7 +715,8 @@ def define_env(env):
                 else True,
                 pitch_width=coordinate_system.pitch_width,
                 pitch_length=coordinate_system.pitch_length,
-                aspect=coordinate_system.pitch_width / coordinate_system.pitch_length
+                aspect=coordinate_system.pitch_width
+                / coordinate_system.pitch_length
                 if coordinate_system.pitch_dimensions.unit == Unit.NORMED
                 else 1.0,
             )
@@ -716,8 +752,14 @@ def define_env(env):
                 {"provider": Provider.PFF},
                 {"provider": Provider.SKILLCORNER},
                 {"provider": Provider.STATSBOMB},
-                {"provider": Provider.SPORTEC, "dataset_type": DatasetType.EVENT},
-                {"provider": Provider.SPORTEC, "dataset_type": DatasetType.TRACKING},
+                {
+                    "provider": Provider.SPORTEC,
+                    "dataset_type": DatasetType.EVENT,
+                },
+                {
+                    "provider": Provider.SPORTEC,
+                    "dataset_type": DatasetType.TRACKING,
+                },
                 {"provider": Provider.WYSCOUT},
                 {"provider": Provider.DATAFACTORY},
                 # {"provider": Provider.STATSPERFORM},
@@ -765,7 +807,10 @@ def define_env(env):
                 )
             else:
                 ax.set_title(
-                    coordinate_system.provider.name, fontsize=18, c="#000", pad=15
+                    coordinate_system.provider.name,
+                    fontsize=18,
+                    c="#000",
+                    pad=15,
                 )
 
             xmin, xmax, ymin, ymax = pitch.extent
@@ -848,9 +893,13 @@ def define_env(env):
                 )
 
             # Add unit and if standardized
-            unit = coordinate_system.pitch_dimensions.unit.name  # e.g., "meters"
+            unit = (
+                coordinate_system.pitch_dimensions.unit.name
+            )  # e.g., "meters"
             standardized = (
-                "yes" if coordinate_system.pitch_dimensions.standardized else "no"
+                "yes"
+                if coordinate_system.pitch_dimensions.standardized
+                else "no"
             )
 
             ax.text(

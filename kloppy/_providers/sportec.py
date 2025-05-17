@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-from requests.exceptions import HTTPError
-
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.infra.serializers.event.sportec import (
@@ -160,21 +158,13 @@ def load_open_event_data(
                spatiotemporal and event data in elite soccer." Sci Data 12, 195 (2025).
                https://doi.org/10.1038/s41597-025-04505-y
     """
-    try:
-        return load_event(
-            event_data=get_IDSSE_url(match_id, "event"),
-            meta_data=get_IDSSE_url(match_id, "meta"),
-            event_types=event_types,
-            coordinates=coordinates,
-            event_factory=event_factory,
-        )
-    except HTTPError as e:
-        raise HTTPError(
-            "Unable to retrieve data. The server hosting the data might be offline. "
-            "Please check the following URLs: ",
-            get_IDSSE_url(match_id, "event"),
-            get_IDSSE_url(match_id, "meta"),
-        ) from e
+    return load_event(
+        event_data=get_IDSSE_url(match_id, "event"),
+        meta_data=get_IDSSE_url(match_id, "meta"),
+        event_types=event_types,
+        coordinates=coordinates,
+        event_factory=event_factory,
+    )
 
 
 def load_open_tracking_data(
@@ -225,19 +215,11 @@ def load_open_tracking_data(
                dataset of synchronized spatiotemporal and event data in elite soccer."
                In Submission.
     """
-    try:
-        return load_tracking(
-            raw_data=get_IDSSE_url(match_id, "tracking"),
-            meta_data=get_IDSSE_url(match_id, "meta"),
-            sample_rate=sample_rate,
-            limit=limit,
-            coordinates=coordinates,
-            only_alive=only_alive,
-        )
-    except HTTPError as e:
-        raise HTTPError(
-            "Unable to retrieve data. The server hosting the data might be offline. "
-            "Please check the following URLs: ",
-            get_IDSSE_url(match_id, "tracking"),
-            get_IDSSE_url(match_id, "meta"),
-        ) from e
+    return load_tracking(
+        raw_data=get_IDSSE_url(match_id, "tracking"),
+        meta_data=get_IDSSE_url(match_id, "meta"),
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinates=coordinates,
+        only_alive=only_alive,
+    )

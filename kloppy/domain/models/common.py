@@ -1252,9 +1252,9 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=self.periods[i + 1]
-                if i + 1 < len(self.periods)
-                else None,
+                next_=(
+                    self.periods[i + 1] if i + 1 < len(self.periods) else None
+                ),
             )
 
 
@@ -1291,9 +1291,9 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=self.records[i + 1]
-                if i + 1 < len(self.records)
-                else None,
+                next_=(
+                    self.records[i + 1] if i + 1 < len(self.records) else None
+                ),
             )
 
         self._init_player_positions()
@@ -1412,8 +1412,7 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[True] = True,
         **named_columns: "Column",
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1421,8 +1420,7 @@ class Dataset(ABC, Generic[T]):
         *columns: "Column",
         as_list: Literal[False] = False,
         **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,

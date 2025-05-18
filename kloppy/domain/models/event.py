@@ -200,6 +200,26 @@ class CardType(Enum):
     RED = "RED"
 
 
+class DeflectionResult(ResultType):
+    """
+    DeflectionResult
+
+    Attributes:
+        SUCCESS (DeflectionResult): Deflection successfully cleared the ball
+        FAILED (DeflectionResult): Deflection did not successfully clear the ball
+    """
+
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+    @property
+    def is_success(self):
+        """
+        Returns if the deflection was successful
+        """
+        return self == self.SUCCESS
+
+
 class EventType(Enum):
     """
     Attributes:
@@ -222,6 +242,7 @@ class EventType(Enum):
         GOALKEEPER (EventType):
         PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
+        DEFLLECTION (EventType):
     """
 
     GENERIC = "generic"
@@ -244,6 +265,7 @@ class EventType(Enum):
     GOALKEEPER = "GOALKEEPER"
     PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    DEFLECTION = "DEFLLECTION"
 
     def __repr__(self):
         return self.value
@@ -1053,6 +1075,23 @@ class PressureEvent(Event):
 
 
 @dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class DeflectionEvent(Event):
+    """
+    DeflectionEvent
+
+    Attributes:
+        event_type (EventType): `EventType.DEFLECTION` (See [`EventType`][kloppy.domain.models.event.EventType])
+        event_name (str): `"deflection"`
+    """
+
+    result: DeflectionResult
+
+    event_type: EventType = EventType.DEFLECTION
+    event_name: str = "deflection"
+
+
+@dataclass(repr=False)
 class EventDataset(Dataset[Event]):
     """
     EventDataset
@@ -1240,4 +1279,7 @@ __all__ = [
     "DuelType",
     "DuelQualifier",
     "DuelResult",
+    "PressureEvent",
+    "DeflectionEvent",
+    "DeflectionResult",
 ]

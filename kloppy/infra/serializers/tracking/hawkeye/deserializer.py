@@ -310,13 +310,19 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             period_minute = (
                 minute
                 if period_id == 1
-                else (minute - 45)
-                if period_id == 2
-                else (minute - 90)
-                if period_id == 3
-                else (minute - 105)
-                if period_id == 4
-                else (minute - 120)
+                else (
+                    (minute - 45)
+                    if period_id == 2
+                    else (
+                        (minute - 90)
+                        if period_id == 3
+                        else (
+                            (minute - 105)
+                            if period_id == 4
+                            else (minute - 120)
+                        )
+                    )
+                )
             )
 
             with performance_logging(

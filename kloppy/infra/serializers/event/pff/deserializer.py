@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 class PFFEventInputs(NamedTuple):
     metadata: IO[bytes]
-    roster_metadata: IO[bytes]
-    raw_event_data: Optional[IO[bytes]]
+    players: IO[bytes]
+    raw_event_data: IO[bytes]
 
 
 class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):

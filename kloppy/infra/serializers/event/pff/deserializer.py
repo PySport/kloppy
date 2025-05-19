@@ -2,7 +2,7 @@ from datetime import timedelta
 import json
 import logging
 from itertools import zip_longest
-from typing import IO, NamedTuple, Optional
+from typing import IO, List, NamedTuple, Optional
 
 from kloppy.domain import (
     DatasetFlag,
@@ -21,8 +21,6 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
 from . import specification as PFF
-from .helpers import parse_freeze_frame, parse_str_ts
-from .specification import position_types_mapping
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,7 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
         return Provider.PFF
 
     def deserialize(
-        self, inputs: PFFEventInputs, additional_metadata
+        self, inputs: PFFEventInputs, additional_metadata: dict
     ) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
@@ -130,7 +128,7 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
         away = create_team(away_team['id'], away_team['name'], Ground.AWAY)
         return [home, away]
 
-    def create_periods(self, raw_event_data):
+    def create_periods(self, raw_event_data: list[dict]) -> List[Period]:
         half_start_events = {}
         half_end_events = {}
 

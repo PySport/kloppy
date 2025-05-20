@@ -8,7 +8,7 @@ import kloppy
 
 
 def setup_package():
-    with open("README.md", "r") as f:
+    with open("README.md", "r", encoding="utf-8") as f:
         readme = f.read()
 
     setup(

@@ -39,7 +39,6 @@ def setup_package():
         },
         install_requires=[
             "lxml>=4.4.0",
-            "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",

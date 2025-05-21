@@ -39,15 +39,15 @@ def setup_package():
         },
         install_requires=[
             "lxml>=4.4.0",
-            "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",
             "fsspec>=2024.12.0",
+            "fsspec<=2025.3.0; python_version <= '3.8'",  # see https://github.com/fsspec/filesystem_spec/issues/1816
         ],
         extras_require={
             "test": [
-                "pytest>=6.2.5,<7",
+                "pytest>=6.2.5,<8",
                 "pandas>=2",
                 "black==22.3.0",
                 "polars>=0.16.6",
@@ -58,6 +58,7 @@ def setup_package():
                 "flask",
                 "flask-cors",
                 "pytest-httpserver",
+                "aiohttp",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

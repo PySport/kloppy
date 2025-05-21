@@ -454,7 +454,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 frames.append(frame)
                 n_frames += 1
 
-                if self.limit and n_frames >= self.limit:
+                if self.limit and n_frames + 1 >= (
+                    self.limit / self.sample_rate
+                ):
                     break
 
         attacking_directions = attacking_directions_from_multi_frames(

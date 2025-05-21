@@ -18,6 +18,7 @@ from kloppy.domain import (
     Ground,
     Player,
     PlayerData,
+    PositionType,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -77,6 +78,7 @@ class MetricaCSVTrackingDataDeserializer(
                         player_id=f"{team.ground}_{jersey_number}",
                         jersey_no=int(jersey_number),
                         team=team,
+                        starting_position=PositionType.Unknown,
                     )
                     for jersey_number in player_jersey_numbers
                 ]
@@ -211,7 +213,7 @@ class MetricaCSVTrackingDataDeserializer(
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         try:

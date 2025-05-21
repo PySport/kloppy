@@ -401,7 +401,9 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
 
     raw_position_line = next_event.qualifiers.get(44)
     if raw_position_line:
-        position = position_line_mapping[raw_position_line]
+        position = position_line_mapping.get(
+            raw_position_line, PositionType.Unknown
+        )
 
     return dict(replacement_player=replacement_player, position=position)
 
@@ -731,9 +733,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             periods = metadata_parser.extract_periods()
             score = metadata_parser.extract_score()
             teams = metadata_parser.extract_lineups()
-            date = events_parser.extract_date()
-            game_week = events_parser.extract_game_week()
-            game_id = events_parser.extract_game_id()
+            date = metadata_parser.extract_date()
+            game_week = metadata_parser.extract_game_week()
+            game_id = metadata_parser.extract_game_id()
             raw_events = [
                 event
                 for event in events_parser.extract_events()

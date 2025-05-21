@@ -93,7 +93,7 @@ class TestSportecEventData:
             event_data=event_data, meta_data=meta_data
         )
 
-        assert dataset.events[0].coordinates == Point(0.5641, 1)
+        assert dataset.events[0].coordinates == Point(0.5641, 0.0)
 
     def test_pass_receiver_coordinates(
         self, event_data: Path, meta_data: Path
@@ -106,7 +106,7 @@ class TestSportecEventData:
         first_pass = dataset.find("pass")
         assert first_pass.receiver_coordinates != first_pass.next().coordinates
         assert first_pass.receiver_coordinates == Point(
-            x=0.7775, y=0.569264705882353
+            x=0.7775, y=0.43073529411764705
         )
 
 
@@ -208,6 +208,26 @@ class TestSportecTrackingData:
             only_alive=True,
         )
         assert len(dataset) == 199
+
+    def test_limit_sample(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+            limit=100,
+        )
+        assert len(dataset.records) == 100
+
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+            limit=100,
+            sample_rate=(1 / 2),
+        )
+        assert len(dataset.records) == 100
 
     def test_enriched_metadata(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(

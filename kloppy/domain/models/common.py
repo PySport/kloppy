@@ -867,7 +867,7 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
-class SignalityCoordinateSystem(CoordinateSystem):
+class SignalityCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
         return Provider.SIGNALITY

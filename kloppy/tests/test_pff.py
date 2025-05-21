@@ -142,6 +142,7 @@ class TestPFFTracking:
 
         # Check first and last frame of period 1
         assert dataset.records[0].frame_id == 4630
+        print(dataset.records[0].timestamp)
         assert dataset.records[0].timestamp.total_seconds() == 0.000821
         assert dataset.records[49].frame_id == 99119
         assert dataset.records[49].timestamp.total_seconds() == 3152.786941

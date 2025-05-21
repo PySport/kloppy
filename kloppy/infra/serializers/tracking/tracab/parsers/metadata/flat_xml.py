@@ -83,9 +83,12 @@ class TracabFlatXMLMetadataParser(TracabMetadataParser):
         return frame_rate
 
     def extract_orientation(self) -> Orientation:
-        orientation = (
-            Orientation.HOME_AWAY
-            if bool(self.root["Phase1HomeGKLeft"])
-            else Orientation.AWAY_HOME
-        )
-        return orientation
+        if self.root.get("Phase1HomeGKLeft", None) is not None:
+            orientation = (
+                Orientation.HOME_AWAY
+                if bool(self.root["Phase1HomeGKLeft"])
+                else Orientation.AWAY_HOME
+            )
+            return orientation
+        else:
+            return None

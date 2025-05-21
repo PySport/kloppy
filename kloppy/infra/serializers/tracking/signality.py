@@ -1,15 +1,11 @@
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 import warnings
 from typing import List, Dict, NamedTuple, IO, Optional, Union, Iterable
-from collections import Counter
-import numpy as np
 import json
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
     AttackingDirection,
-    Frame,
     Ground,
     Metadata,
     Orientation,
@@ -22,6 +18,8 @@ from kloppy.domain import (
     TrackingDataset,
     PlayerData,
     attacking_directions_from_multi_frames,
+    DatasetTransformer,
+    BallState,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -97,14 +95,24 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                         f"Player with jersey no: {raw_player_positional_info['jersey_number']} not found in {side} team"
                     )
 
+        ball_state = (
+            BallState.ALIVE if frame["state"] == "running" else BallState.DEAD
+        )
+        if frame["ball"]["team"] == "home_team":
+            ball_owning_team = teams[0]
+        elif frame["ball"]["team"] == "away_team":
+            ball_owning_team = teams[1]
+        else:
+            ball_owning_team = None
+
         return create_frame(
             frame_id=frame_id,
             timestamp=frame_timestamp,
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=period,
-            ball_state=None,
-            ball_owning_team=None,
+            ball_state=ball_state,
+            ball_owning_team=ball_owning_team,
             other_data={},
         )
 
@@ -147,15 +155,21 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         periods = []
         for period_id, p_tracking in enumerate(raw_data_feeds, 1):
             first_frame = p_tracking[0]
-            start_time = datetime.utcfromtimestamp(
-                (first_frame["utc_time"] - first_frame["match_time"]) / 1000
-            )
+            # compute the seconds since epoch
+            start_ts = (
+                first_frame["utc_time"] - first_frame["match_time"]
+            ) / 1000
+            # create an aware UTC datetime
+            start_time = datetime.fromtimestamp(start_ts, tz=timezone.utc)
 
             last_frame = p_tracking[-1]
             assert (
                 last_frame["state"] == "end"
             ), "Last frame must have state 'end'"
-            end_time = datetime.utcfromtimestamp(last_frame["utc_time"] / 1000)
+            # compute the seconds since epoch
+            end_ts = (last_frame["utc_time"]) / 1000
+            # create an aware UTC datetime
+            end_time = datetime.fromtimestamp(end_ts, tz=timezone.utc)
 
             periods.append(
                 Period(
@@ -166,6 +180,42 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             )
 
         return periods
+
+    def _load_frames(
+        self,
+        periods: List[Period],
+        raw_data_feeds: List[List[Dict]],
+        teams: List[Team],
+        transformer: DatasetTransformer,
+    ):
+        p1_raw_data = raw_data_feeds[0]
+
+        frames = []
+        for period, p_raw_data in zip(periods, raw_data_feeds):
+            n = 0
+            sample = 1.0 / self.sample_rate
+            if period.id == 1:
+                frame_id_offset = 0
+            elif period.id == 2:
+                frame_id_offset = p1_raw_data[-1]["idx"] + 1
+            else:
+                raise ValueError(f"Period ID {period.id} not supported")
+
+            for raw_frame in p_raw_data:
+                if n % sample == 0:
+                    frame = self._get_frame_data(
+                        teams, period, raw_frame, frame_id_offset
+                    )
+                    if frame.players_data and frame.timestamp > timedelta(
+                        seconds=0
+                    ):
+                        frame = transformer.transform_frame(frame)
+                        frames.append(frame)
+                n += 1
+                if self.limit and n >= self.limit:
+                    return frames
+
+        return frames
 
     def deserialize(self, inputs: SignalityInputs) -> TrackingDataset:
         metadata = json.load(inputs.meta_data)
@@ -189,27 +239,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         )
 
         with performance_logging("Loading data", logger=logger):
-            frames = []
-            for period, p_raw_data in zip(periods, raw_data_feeds):
-                n = 0
-                sample = 1.0 / self.sample_rate
-                if period.id == 1:
-                    frame_id_offset = 0
-                elif period.id == 2:
-                    frame_id_offset = p1_raw_data[-1]["idx"] + 1
-                else:
-                    raise ValueError(f"Period ID {period.id} not supported")
-                for raw_frame in p_raw_data:
-                    if n % sample == 0:
-                        frame = self._get_frame_data(
-                            teams, period, raw_frame, frame_id_offset
-                        )
-                        if frame.players_data and frame.timestamp > timedelta(
-                            seconds=0
-                        ):
-                            frame = transformer.transform_frame(frame)
-                            frames.append(frame)
-                    n += 1
+            frames = self._load_frames(
+                periods, raw_data_feeds, teams, transformer
+            )
 
         attacking_directions = attacking_directions_from_multi_frames(
             frames, periods

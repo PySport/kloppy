@@ -1,7 +1,6 @@
-from contextlib import ExitStack
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable
 
-from kloppy.domain import TrackingDataset
+from kloppy.domain import TrackingDataset, CoordinateSystem
 from kloppy.infra.serializers.tracking.signality import (
     SignalityDeserializer,
     SignalityInputs,
@@ -21,19 +20,15 @@ def load(
     Load and deserialize tracking data from multiple input files.
 
     Args:
-        meta_data (FileLike): File-like object containing metadata information of the game.
-        raw_data_feeds (Iterable[FileLike]): An iterable of file-like objects containing raw tracking data feeds.
-        venue_information (FileLike): File-like object containing venue information where the game was played.
+        meta_data (FileLike): json feed containing metadata information of the game.
+        raw_data_feeds (Iterable[FileLike]): json feeds containing raw tracking data feeds.
+        venue_information (FileLike): json feed containing venue information where the game was played.
         sample_rate (Optional[float]): Sampling rate to be applied during deserialization (default: None).
-        limit (Optional[int]): Limit on the number of data points to process (default: None).
+        limit (Optional[int]): Limit on the number of frames to process (default: None).
         coordinates (Optional[str]): Coordinate system to use for deserialization (default: None).
 
     Returns:
         TrackingDataset: A deserialized tracking dataset object.
-
-    This function opens the provided metadata, raw data feeds, and venue information files, and
-    uses the SignalityDeserializer to process them into a TrackingDataset object. All file
-    resources are properly managed to ensure they are closed after use.
     """
 
     raw_data_feeds = expand_inputs(raw_data_feeds)

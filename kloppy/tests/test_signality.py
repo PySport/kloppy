@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -11,6 +11,7 @@ from kloppy.domain import (
     Point3D,
     DatasetType,
     Ground,
+    BallState,
 )
 
 from kloppy import signality
@@ -52,17 +53,17 @@ class TestSignalityTracking:
         assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0].id == 1
         assert dataset.metadata.periods[0].start_timestamp == datetime(
-            2024, 10, 6, 12, 0, 1, 408000
+            2024, 10, 6, 12, 0, 1, 408000, timezone.utc
         )
         assert dataset.metadata.periods[0].end_timestamp == datetime(
-            2024, 10, 6, 12, 48, 43, 858000
+            2024, 10, 6, 12, 48, 43, 858000, timezone.utc
         )
         assert dataset.metadata.periods[1].id == 2
         assert dataset.metadata.periods[1].start_timestamp == datetime(
-            2024, 10, 6, 13, 4, 45, 775000
+            2024, 10, 6, 13, 4, 45, 775000, timezone.utc
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime(
-            2024, 10, 6, 13, 54, 11, 730000
+            2024, 10, 6, 13, 54, 11, 730000, timezone.utc
         )
 
         start_frame = dataset.records[0]
@@ -114,3 +115,7 @@ class TestSignalityTracking:
         assert pitch_dimensions.x_dim.max == 104.82 / 2
         assert pitch_dimensions.y_dim.min == -68.407 / 2
         assert pitch_dimensions.y_dim.max == 68.407 / 2
+
+        assert start_frame.ball_state == BallState.ALIVE
+
+        assert end_frame.ball_state == BallState.DEAD

@@ -2,6 +2,7 @@ import json
 from typing import Optional, Union
 
 from kloppy.domain import TrackingDataset
+from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.skillcorner import (
     SkillCornerDeserializer,
     SkillCornerInputs,
@@ -64,24 +65,24 @@ def identify_data_version(raw_data: FileLike) -> str:
     Supports both JSONL and JSON formats.
     """
     with open_as_file(raw_data) as raw_data_fp:
-        first_line = raw_data_fp.readline().strip()
-        try:
-            # Try parsing the first line as JSON
-            parsed_data = json.loads(first_line)
-        except json.JSONDecodeError:
-            raise ValueError("Invalid JSON or JSONL format")
+        # Extract the first few bytes
+        start_byte = raw_data_fp.read(1)
+        raw_data_fp.seek(0)
 
-        if isinstance(parsed_data, dict):
-            # JSONL case: first line is a JSON object
-            if "data" in parsed_data:
-                return "V2"
-            elif "player_data" in parsed_data:
-                return "V3"
-        elif isinstance(parsed_data, list):
-            # JSON case: first element of the list
-            if "data" in parsed_data[0]:
-                return "V2"
-            elif "player_data" in parsed_data[0]:
-                return "V3"
+        # Check if it starts with '{' or '['
+        if start_byte == b"[":
+            # It's a JSON array
+            first_line = json.load(raw_data_fp)[0]
+        elif start_byte == b"{":
+            # It's a JSONL file
+            first_line = json.loads(raw_data_fp.readline().strip())
+        else:
+            raise DeserializationError("Could not determine raw data format")
+
+        # JSONL case: first line is a JSON object
+        if "data" in first_line:
+            return "V2"
+        elif "player_data" in first_line:
+            return "V3"
 
         raise ValueError("Unexpected SkillCorner raw data format")

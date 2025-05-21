@@ -39,7 +39,6 @@ def setup_package():
         },
         install_requires=[
             "lxml>=4.4.0",
-            "requests>=2.0.0,<3",
             "pytz>=2020.1",
             'typing_extensions;python_version<"3.11"',
             "sortedcontainers>=2",
@@ -59,6 +58,7 @@ def setup_package():
                 "flask",
                 "flask-cors",
                 "pytest-httpserver",
+                "aiohttp",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

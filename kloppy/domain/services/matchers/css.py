@@ -17,17 +17,11 @@ class CSSPatternMatcher:
             if event.event_type != EventType.GENERIC:
                 elm = etree.SubElement(
                     elm,
-                    event.event_name.lower()
-                    .replace(" ", "_")
-                    .replace("*", ""),
+                    event.event_name.lower().replace(" ", "_").replace("*", ""),
                     index=i,
                     result=str(event.result).lower(),
                     team=str(event.team.ground).lower(),
-                    attrib={
-                        "class": str(event.result).lower()
-                        + " "
-                        + str(event.team.ground).lower()
-                    },
+                    attrib={"class": str(event.result).lower() + " " + str(event.team.ground).lower()},
                 )
 
         matching_events = []

@@ -148,9 +148,7 @@ DF_EVENT_TYPE_PENALTY_SHOOTOUT_POST = 183
 
 
 def parse_str_ts(raw_event: Dict) -> timedelta:
-    return timedelta(
-        seconds=raw_event["t"]["m"] * 60 + (raw_event["t"]["s"] or 0)
-    )
+    return timedelta(seconds=raw_event["t"]["m"] * 60 + (raw_event["t"]["s"] or 0))
 
 
 def _parse_coordinates(coordinates: Dict[str, float]) -> Point:
@@ -163,9 +161,7 @@ def _parse_coordinates(coordinates: Dict[str, float]) -> Point:
     return Point(x=coordinates["x"], y=coordinates["y"])
 
 
-def _get_team_and_player(
-    raw_event: Dict, home_team: Team, away_team: Team
-) -> Tuple[Team, Player]:
+def _get_team_and_player(raw_event: Dict, home_team: Team, away_team: Team) -> Tuple[Team, Player]:
     team = None
     player = None
 
@@ -187,9 +183,7 @@ def _get_team_and_player(
     return team, player
 
 
-def _get_event_qualifiers(
-    raw_event: Dict, previous_event: Dict = None
-) -> List[Qualifier]:
+def _get_event_qualifiers(raw_event: Dict, previous_event: Dict = None) -> List[Qualifier]:
     qualifiers = []
 
     if raw_event["type"] == DF_EVENT_TYPE_THROW_IN:
@@ -212,8 +206,7 @@ def _get_event_qualifiers(
         qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
 
     if raw_event["type"] == DF_EVENT_TYPE_SHOT_FREE_KICK_GOAL or (
-        previous_event is not None
-        and previous_event["type"] in FOUL_FREE_KICK_EVENTS
+        previous_event is not None and previous_event["type"] in FOUL_FREE_KICK_EVENTS
     ):
         qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
 
@@ -263,10 +256,7 @@ def _parse_pass(
                 # foul from the opposite team
                 receiver_player = team.get_player_by_id(next_event["recvId"])
                 result = PassResult.COMPLETE
-            elif (
-                next_event["team"] == raw_event["team"]
-                and "plyrId" in next_event
-            ):
+            elif next_event["team"] == raw_event["team"] and "plyrId" in next_event:
                 # or same team event with plyrId
                 receiver_player = team.get_player_by_id(next_event["plyrId"])
                 result = PassResult.COMPLETE
@@ -376,8 +366,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         team=team,
                         first_name=player["name"]["first"],
                         last_name=player["name"]["last"],
-                        name=player["name"]["shortName"]
-                        or player["name"]["nick"],
+                        name=player["name"]["shortName"] or player["name"]["nick"],
                         jersey_no=player["squadNo"],
                         starting=not player["substitute"],
                     )
@@ -415,14 +404,10 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
             }
             periods = {}
             for status_update in status.values():
-                if status_update["type"] not in (
-                    start_event_types | end_event_types
-                ):
+                if status_update["type"] not in (start_event_types | end_event_types):
                     continue
                 timestamp = datetime.strptime(
-                    match["date"]
-                    + status_update["time"]
-                    + match["stadiumGMT"],
+                    match["date"] + status_update["time"] + match["stadiumGMT"],
                     "%Y%m%d%H:%M:%S%z",
                 )
                 half = status_update["t"]["half"]
@@ -436,20 +421,14 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     )
                 elif status_update["type"] in end_event_types:
                     if half not in periods:
-                        raise DeserializationError(
-                            f"Missing start event for period {half}"
-                        )
-                    periods[half] = replace(
-                        periods[half], end_timestamp=timestamp
-                    )
+                        raise DeserializationError(f"Missing start event for period {half}")
+                    periods[half] = replace(periods[half], end_timestamp=timestamp)
 
             try:
                 date = match["date"]
                 if date:
                     # TODO: scheduledStart and stadiumGMT should probably be used here too
-                    date = datetime.strptime(date, "%Y%m%d").replace(
-                        tzinfo=timezone.utc
-                    )
+                    date = datetime.strptime(date, "%Y%m%d").replace(tzinfo=timezone.utc)
             except ValueError:
                 date = None
             game_week = match.get("week", None)
@@ -461,11 +440,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
 
             # exclude goals, already listed as shots too
             incidences.pop(DF_EVENT_CLASS_GOALS)
-            raw_events = [
-                (k, e_id, e)
-                for k in incidences
-                for e_id, e in incidences[k].items()
-            ]
+            raw_events = [(k, e_id, e) for k in incidences for e_id, e in incidences[k].items()]
             # sort events by timestamp, event_id
             raw_events.sort(
                 key=lambda e: (
@@ -486,18 +461,11 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     continue
 
                 timestamp = parse_str_ts(raw_event) - start_ts[period.id]
-                if (
-                    previous_event is not None
-                    and previous_event["t"]["half"] != raw_event["t"]["half"]
-                ):
+                if previous_event is not None and previous_event["t"]["half"] != raw_event["t"]["half"]:
                     previous_event = None
-                next_event = (
-                    raw_events[i + 1][2] if i + 1 < len(raw_events) else None
-                )
+                next_event = raw_events[i + 1][2] if i + 1 < len(raw_events) else None
 
-                team, player = _get_team_and_player(
-                    raw_event, home_team, away_team
-                )
+                team, player = _get_team_and_player(raw_event, home_team, away_team)
 
                 event_base_kwargs = dict(
                     # from DataRecord
@@ -509,11 +477,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     event_id=e_id,
                     team=team,
                     player=player,
-                    coordinates=(
-                        _parse_coordinates(raw_event["coord"]["1"])
-                        if "coord" in raw_event
-                        else None
-                    ),
+                    coordinates=(_parse_coordinates(raw_event["coord"]["1"]) if "coord" in raw_event else None),
                     raw_event=raw_event,
                     result=None,
                     qualifiers=None,
@@ -538,19 +502,13 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     event = self.event_factory.build_shot(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_STEALINGS:
-                    event = self.event_factory.build_recovery(
-                        **event_base_kwargs
-                    )
+                    event = self.event_factory.build_recovery(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_FOULS:
                     # NOTE: could use qualifiers? (hand, foul, penalty?)
                     # switch possession team
-                    event_base_kwargs["ball_owning_team"] = (
-                        home_team if team == away_team else away_team
-                    )
-                    event = self.event_factory.build_foul_committed(
-                        **event_base_kwargs
-                    )
+                    event_base_kwargs["ball_owning_team"] = home_team if team == away_team else away_team
+                    event = self.event_factory.build_foul_committed(**event_base_kwargs)
 
                 elif e_class in DF_EVENT_CLASS_CARDS:
                     card_kwargs = _parse_card(
@@ -560,13 +518,9 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                     event = self.event_factory.build_card(**event_base_kwargs)
 
                 elif e_class == DF_EVENT_CLASS_SUBSTITUTIONS:
-                    substitution_event_kwargs = _parse_substitution(
-                        raw_event=raw_event, team=team
-                    )
+                    substitution_event_kwargs = _parse_substitution(raw_event=raw_event, team=team)
                     event_base_kwargs.update(substitution_event_kwargs)
-                    event = self.event_factory.build_substitution(
-                        **event_base_kwargs
-                    )
+                    event = self.event_factory.build_substitution(**event_base_kwargs)
 
                 else:
                     # otherwise, a generic event
@@ -593,9 +547,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         qualifiers=None,
                     )
                     if self.should_include_event(event):
-                        events.append(
-                            transformer.transform_event(ball_out_event)
-                        )
+                        events.append(transformer.transform_event(ball_out_event))
 
                 if self.should_include_event(event):
                     events.append(transformer.transform_event(event))

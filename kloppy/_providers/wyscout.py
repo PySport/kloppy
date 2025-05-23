@@ -101,8 +101,6 @@ def identify_deserializer(
         deserializer = WyscoutDeserializerV3
 
     if deserializer is None:
-        raise ValueError(
-            "Wyscout data version could not be recognized, please specify"
-        )
+        raise ValueError("Wyscout data version could not be recognized, please specify")
 
     return deserializer

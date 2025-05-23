@@ -79,9 +79,7 @@ def main():
 
     matcher = Matcher(encoder)
 
-    dataset = datasets.load(
-        "statsbomb", options={"event_types": ["shot", "pass"]}
-    )
+    dataset = datasets.load("statsbomb", options={"event_types": ["shot", "pass"]})
 
     with performance_logging("search"):
         matches = matcher.search(dataset, r"PPS")
@@ -93,11 +91,7 @@ def main():
             "team_name": lambda event: str(event.team),
         },
     )
-    print(
-        df[["timestamp", "team_name", "player_name", "event_type", "result"]][
-            :100
-        ]
-    )
+    print(df[["timestamp", "team_name", "player_name", "event_type", "result"]][:100])
     return
 
     for i, match in enumerate(matches):

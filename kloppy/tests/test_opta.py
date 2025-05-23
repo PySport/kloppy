@@ -74,9 +74,7 @@ def test_parse_f24_datetime():
         2018, 9, 23, 14, 2, 13, 608000, tzinfo=timezone.utc
     )
     # milliseconds are not left-padded
-    assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(
-        2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc
-    )
+    assert _parse_f24_datetime("2018-09-23T15:02:14.39") == datetime(2018, 9, 23, 14, 2, 14, 39000, tzinfo=timezone.utc)
 
 
 class TestOptaMetadata:
@@ -88,9 +86,7 @@ class TestOptaMetadata:
 
     def test_orientation(self, dataset):
         """It should set the action-executing-team orientation"""
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
 
     def test_framerate(self, dataset):
         """It should set the frame rate to None"""
@@ -100,13 +96,9 @@ class TestOptaMetadata:
         """It should create the teams and player objects"""
         # There should be two teams with the correct names and starting formations
         assert dataset.metadata.teams[0].name == "FC København"
-        assert dataset.metadata.teams[0].starting_formation == FormationType(
-            "4-4-2"
-        )
+        assert dataset.metadata.teams[0].starting_formation == FormationType("4-4-2")
         assert dataset.metadata.teams[1].name == "FC Nordsjælland"
-        assert dataset.metadata.teams[1].starting_formation == FormationType(
-            "4-3-3"
-        )
+        assert dataset.metadata.teams[1].starting_formation == FormationType("4-3-3")
         # The teams should have the correct players
         player = dataset.metadata.teams[0].get_player_by_id("111319")
         assert player.player_id == "111319"
@@ -159,9 +151,7 @@ class TestOptaMetadata:
 
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
-        assert dataset.metadata.coordinate_system == build_coordinate_system(
-            Provider.OPTA
-        )
+        assert dataset.metadata.coordinate_system == build_coordinate_system(Provider.OPTA)
 
     def test_score(self, dataset):
         """It should set the correct score"""
@@ -169,10 +159,7 @@ class TestOptaMetadata:
 
     def test_flags(self, dataset):
         """It should set the correct flags"""
-        assert (
-            dataset.metadata.flags
-            == DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE
-        )
+        assert dataset.metadata.flags == DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE
 
 
 class TestOptaEvent:
@@ -214,22 +201,13 @@ class TestOptaEvent:
 
     def test_ball_owning_team(self, dataset: EventDataset):
         """Test if the ball owning team is correctly set"""
-        assert (
-            dataset.get_event_by_id("1594254267").ball_owning_team
-            == dataset.metadata.teams[1]
-        )
-        assert (
-            dataset.get_event_by_id("2087733359").ball_owning_team
-            == dataset.metadata.teams[0]
-        )
+        assert dataset.get_event_by_id("1594254267").ball_owning_team == dataset.metadata.teams[1]
+        assert dataset.get_event_by_id("2087733359").ball_owning_team == dataset.metadata.teams[0]
 
     def test_setpiece_qualifiers(self, dataset: EventDataset):
         """Test if the qualifiers are correctly deserialized"""
         kick_off = dataset.get_event_by_id("1510681159")
-        assert (
-            kick_off.get_qualifier_value(SetPieceQualifier)
-            == SetPieceType.KICK_OFF
-        )
+        assert kick_off.get_qualifier_value(SetPieceQualifier) == SetPieceType.KICK_OFF
 
     def test_body_part_qualifiers(self, dataset: EventDataset):
         """Test if the body part qualifiers are correctly deserialized"""
@@ -245,9 +223,7 @@ class TestOptaEvent:
     def test_counter_attack_qualifiers(self, dataset: EventDataset):
         """Test if the counter attack qualifiers are correctly deserialized"""
         counter_attack = dataset.get_event_by_id("2318695229")
-        assert (
-            counter_attack.get_qualifier_value(CounterAttackQualifier) is True
-        )
+        assert counter_attack.get_qualifier_value(CounterAttackQualifier) is True
 
 
 class TestOptaPassEvent:
@@ -273,18 +249,12 @@ class TestOptaPassEvent:
     def test_pass_qualifiers(self, dataset: EventDataset):
         """Test if the pass type qualfiers are correctly deserialized"""
         through_ball = dataset.get_event_by_id("1101592119")
-        assert PassType.THROUGH_BALL in through_ball.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.THROUGH_BALL in through_ball.get_qualifier_values(PassQualifier)
         chipped_pass = dataset.get_event_by_id("1444075194")
-        assert PassType.CHIPPED_PASS in chipped_pass.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.CHIPPED_PASS in chipped_pass.get_qualifier_values(PassQualifier)
         assist = dataset.get_event_by_id("1666666666")
         assert PassType.ASSIST in assist.get_qualifier_values(PassQualifier)
-        assert PassType.SHOT_ASSIST in assist.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.SHOT_ASSIST in assist.get_qualifier_values(PassQualifier)
 
     def test_pass_qualifiers_for_deflected_pass(self, dataset: EventDataset):
         """Test if the pass type qualfiers are correctly deserialized for deflected passes"""
@@ -296,9 +266,7 @@ class TestOptaPassEvent:
     def test_ball_state(self, dataset: EventDataset):
         """Test if the ball state is correctly set"""
         events = dataset.find_all("pass")
-        assert all(
-            event.ball_state == BallState.ALIVE for event in events
-        ), "Not all pass ball states are ALIVE"
+        assert all(event.ball_state == BallState.ALIVE for event in events), "Not all pass ball states are ALIVE"
 
 
 class TestOptaClearanceEvent:
@@ -331,9 +299,7 @@ class TestOptaShotEvent:
         # A shot event should have end coordinates
         assert shot.result_coordinates == Point3D(100.0, 47.8, 2.5)
         # A shot event should have a body part
-        assert (
-            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
-        )
+        assert shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
 
     def test_timestamp_goal(self, dataset: EventDataset):
         """Check timestamp from qualifier 374 in case of goal"""
@@ -355,17 +321,13 @@ class TestOptaShotEvent:
             102: "52.1",  # goal mouth y-coordinate
             103: "18.4",  # goal mouth z-coordinate
         }
-        assert _get_end_coordinates(shot_on_target_qualifiers) == Point3D(
-            x=100.0, y=52.1, z=18.4
-        )
+        assert _get_end_coordinates(shot_on_target_qualifiers) == Point3D(x=100.0, y=52.1, z=18.4)
 
         # When the z-coordinate is missing, we return 2D coordinates
         incomplete_shot_qualifiers = {
             102: "52.1",  # goal mouth y-coordinate
         }
-        assert _get_end_coordinates(incomplete_shot_qualifiers) == Point(
-            x=100, y=52.1
-        )
+        assert _get_end_coordinates(incomplete_shot_qualifiers) == Point(x=100, y=52.1)
 
         # When the y-coordinate is missing, we return None
         incomplete_shot_qualifiers = {
@@ -379,9 +341,7 @@ class TestOptaShotEvent:
             146: "99.1",  # blocked x-coordiante
             147: "52.5",  # blocked y-coordinate
         }
-        assert _get_end_coordinates(blocked_shot_qualifiers) == Point(
-            x=99.1, y=52.5
-        )
+        assert _get_end_coordinates(blocked_shot_qualifiers) == Point(x=99.1, y=52.5)
 
         # When a shot was blocked and goal mouth locations are provided too,
         # the z-coordinate of the goal mouth coordinates should be inversely
@@ -400,22 +360,16 @@ class TestOptaShotEvent:
         # We need to compute the length of the opposite side of the small
         # triangle. Therefore, we compute:
         #   - the length of the adjacent side of the large triangle
-        adj_large = math.sqrt(
-            (100 - start_coordinates.x) ** 2
-            + (52.1 - start_coordinates.y) ** 2
-        )
+        adj_large = math.sqrt((100 - start_coordinates.x) ** 2 + (52.1 - start_coordinates.y) ** 2)
         #   - the length of the adjacent side of the small triangle
-        adj_small = math.sqrt(
-            (99.1 - start_coordinates.x) ** 2
-            + (52.5 - start_coordinates.y) ** 2
-        )
+        adj_small = math.sqrt((99.1 - start_coordinates.x) ** 2 + (52.5 - start_coordinates.y) ** 2)
         #   - the angle of the large triangle (== the angle of the small triangle)
         alpha_large = math.atan2(18.4, adj_large)
         #  - the opposite side of the small triangle
         opp_small = math.tan(alpha_large) * adj_small
-        assert _get_end_coordinates(
-            blocked_shot_on_target_qualifiers, start_coordinates
-        ) == Point3D(x=99.1, y=52.5, z=opp_small)
+        assert _get_end_coordinates(blocked_shot_on_target_qualifiers, start_coordinates) == Point3D(
+            x=99.1, y=52.5, z=opp_small
+        )
 
     def test_own_goal(self, dataset: EventDataset):
         """Test if own goals are correctly deserialized"""
@@ -429,34 +383,13 @@ class TestOptaShotEvent:
         """Test if goals are correctly deserialized"""
         goal = dataset.get_event_by_id("2614247749")
         assert goal.result == ShotResult.GOAL
-        assert (
-            next(
-                statistic
-                for statistic in goal.statistics
-                if statistic.name == "xG"
-            ).value
-            == 0.9780699610710144
-        )
-        assert (
-            next(
-                statistic
-                for statistic in goal.statistics
-                if statistic.name == "PSxG"
-            ).value
-            == 0.98
-        )
+        assert next(statistic for statistic in goal.statistics if statistic.name == "xG").value == 0.9780699610710144
+        assert next(statistic for statistic in goal.statistics if statistic.name == "PSxG").value == 0.98
 
     def test_shot_xg(self, dataset_f73: EventDataset):
         """Test if expected goals are correctly deserialized"""
         shot = dataset_f73.get_event_by_id("2318695229")
-        assert (
-            next(
-                statistic
-                for statistic in shot.statistics
-                if statistic.name == "xG"
-            ).value
-            == 0.75
-        )
+        assert next(statistic for statistic in shot.statistics if statistic.name == "xG").value == 0.75
 
 
 class TestOptaDuelEvent:
@@ -470,13 +403,9 @@ class TestOptaDuelEvent:
     def test_qualifiers(self, dataset: EventDataset):
         """Test if the qualifiers are correctly deserialized"""
         aerial_duel = dataset.get_event_by_id("1274474573")
-        assert DuelType.AERIAL in aerial_duel.get_qualifier_values(
-            DuelQualifier
-        )
+        assert DuelType.AERIAL in aerial_duel.get_qualifier_values(DuelQualifier)
         ground_duel = dataset.get_event_by_id("2140914735")
-        assert DuelType.GROUND in ground_duel.get_qualifier_values(
-            DuelQualifier
-        )
+        assert DuelType.GROUND in ground_duel.get_qualifier_values(DuelQualifier)
 
 
 class TestOptaGoalkeeperEvent:
@@ -490,30 +419,15 @@ class TestOptaGoalkeeperEvent:
     def test_qualifiers(self, dataset: EventDataset):
         """Test if the qualifiers are correctly deserialized"""
         save = dataset.get_event_by_id("2451170467")
-        assert (
-            save.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.SAVE
-        )
+        assert save.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.SAVE
         claim = dataset.get_event_by_id("2453149143")
-        assert (
-            claim.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.CLAIM
-        )
+        assert claim.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.CLAIM
         punch = dataset.get_event_by_id("2451094707")
-        assert (
-            punch.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.PUNCH
-        )
+        assert punch.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.PUNCH
         keeper_pick_up = dataset.get_event_by_id("2451098837")
-        assert (
-            keeper_pick_up.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.PICK_UP
-        )
+        assert keeper_pick_up.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.PICK_UP
         smother = dataset.get_event_by_id("2438594253")
-        assert (
-            smother.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.SMOTHER
-        )
+        assert smother.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.SMOTHER
 
 
 class TestOptaInterceptionEvent:
@@ -551,6 +465,4 @@ class TestOptaCardEvent:
         """It should deserialize all card events"""
         events = dataset.find_all("card")
         assert len(events) == 1
-        assert all(
-            event.ball_state == BallState.DEAD for event in events
-        ), "Not all card ball states are ALIVE"
+        assert all(event.ball_state == BallState.DEAD for event in events), "Not all card ball states are ALIVE"

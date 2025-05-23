@@ -26,12 +26,7 @@ class EventDataDeserializer(ABC, Generic[T]):
             event_types = []
 
         self.event_types = [
-            (
-                EventType[event_type.upper()]
-                if isinstance(event_type, str)
-                else event_type
-            )
-            for event_type in event_types
+            (EventType[event_type.upper()] if isinstance(event_type, str) else event_type) for event_type in event_types
         ]
 
         self.transformer_builder = DatasetTransformerBuilder(coordinate_system)

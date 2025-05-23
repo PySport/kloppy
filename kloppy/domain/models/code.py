@@ -55,9 +55,7 @@ class CodeDataset(Dataset[Code]):
     def codes(self):
         return self.records
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Code], Dict]] = None,
@@ -66,10 +64,7 @@ class CodeDataset(Dataset[Code]):
         try:
             import pandas as pd
         except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
+            raise ImportError("Seems like you don't have pandas installed. Please install it using: pip install pandas")
 
         if not record_converter:
             from ..services.transformers.attribute import (
@@ -90,9 +85,7 @@ class CodeDataset(Dataset[Code]):
 
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
 
 __all__ = ["Code", "CodeDataset"]

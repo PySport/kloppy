@@ -26,9 +26,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
     def __init__(self, include_position: bool = False):
         self.include_position = include_position
 
-    def aggregate(
-        self, dataset: EventDataset
-    ) -> List[Union[MinutesPlayedPerPosition, MinutesPlayed]]:
+    def aggregate(self, dataset: EventDataset) -> List[Union[MinutesPlayedPerPosition, MinutesPlayed]]:
         items = []
 
         for team in dataset.metadata.teams:

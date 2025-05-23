@@ -39,9 +39,7 @@ def load(
         coordinate_system=coordinates,
     )
 
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        venue_information
-    ) as venue_information_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(venue_information) as venue_information_fp:
         return deserializer.deserialize(
             inputs=SignalityInputs(
                 meta_data=meta_data_fp,

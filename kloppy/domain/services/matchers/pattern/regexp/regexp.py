@@ -214,14 +214,10 @@ def _cross_connect(g, node):
         merged.update(**data2)
 
         if "start_captures" in data1 and "start_captures" in data2:
-            merged["start_captures"] = (
-                data1["start_captures"] + data2["start_captures"]
-            )
+            merged["start_captures"] = data1["start_captures"] + data2["start_captures"]
 
         if "stop_captures" in data1 and "stop_captures" in data2:
-            merged["stop_captures"] = (
-                data1["stop_captures"] + data2["stop_captures"]
-            )
+            merged["stop_captures"] = data1["stop_captures"] + data2["stop_captures"]
 
         cancel = 0
         start_captures = merged.get("start_captures", [])
@@ -452,10 +448,7 @@ class _Match(Generic[Out]):
             start_pos=self.start_pos,
             trail="".join(self.trail) if join_trails else tuple(self.trail),
             children=MappingProxyType(
-                {
-                    k: MatchList(i.as_match(join_trails) for i in v)
-                    for k, v in self.children.items()
-                }
+                {k: MatchList(i.as_match(join_trails) for i in v) for k, v in self.children.items()}
             ),
         )
 
@@ -602,11 +595,7 @@ class RegExp(Generic[Tok, Out]):
 
         stacks = []
         for token in seq:
-            stack = list(
-                self._de_duplicate(
-                    ne for oe in stack for ne in oe.advance(token)
-                )
-            )
+            stack = list(self._de_duplicate(ne for oe in stack for ne in oe.advance(token)))
 
             # if not consume_all:
             #     if any(s.can_terminate() for s in stack):
@@ -624,16 +613,9 @@ class RegExp(Generic[Tok, Out]):
                 if stack:
                     break
 
-        terminal = list(
-            self._de_duplicate(
-                (s for s in stack if s.can_terminate()), key="trail"
-            )
-        )
+        terminal = list(self._de_duplicate((s for s in stack if s.can_terminate()), key="trail"))
 
-        return MatchList(
-            _make_match(s.trail).as_match(join_trails=join_trails)
-            for s in terminal
-        )
+        return MatchList(_make_match(s.trail).as_match(join_trails=join_trails) for s in terminal)
 
     def _de_duplicate(
         self, stack: Iterator[Explorer[Tok, Out]], key: str = "signature"

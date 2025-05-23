@@ -18,14 +18,10 @@ class FSSpecAdapter(Adapter, ABC):
         protocol_pattern = re.compile(r"^[a-zA-Z\d]+://")
         match = protocol_pattern.match(url)
         if match:
-            return match.group(0)[
-                :-3
-            ]  # Remove '://' from the matched protocol
+            return match.group(0)[:-3]  # Remove '://' from the matched protocol
         return "file"  # Default to 'file' for local paths
 
-    def _get_filesystem(
-        self, url: str, no_cache: bool = False
-    ) -> fsspec.AbstractFileSystem:
+    def _get_filesystem(self, url: str, no_cache: bool = False) -> fsspec.AbstractFileSystem:
         """
         Get the appropriate fsspec filesystem for the given URL, with caching enabled.
         """
@@ -86,12 +82,7 @@ class FSSpecAdapter(Adapter, ABC):
             files = fs.find(url, detail=False)
         else:
             files = fs.listdir(url, detail=False)
-        return [
-            f"{protocol}://{fp}"
-            if protocol != "file" and not fp.startswith(protocol)
-            else fp
-            for fp in files
-        ]
+        return [f"{protocol}://{fp}" if protocol != "file" and not fp.startswith(protocol) else fp for fp in files]
 
     def is_directory(self, url: str) -> bool:
         """

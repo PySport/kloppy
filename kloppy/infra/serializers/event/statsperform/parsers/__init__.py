@@ -39,9 +39,7 @@ def get_parser(
     elif feed_code == "MA3" and feed_format == "XML":
         return MA3XMLParser(feed)
     else:
-        raise NotImplementedError(
-            f"A parser for {feed_code} ({feed_format}) feeds is not yet implemented."
-        )
+        raise NotImplementedError(f"A parser for {feed_code} ({feed_format}) feeds is not yet implemented.")
 
 
 __all__ = ["get_parser", "OptaParser", "OptaEvent"]

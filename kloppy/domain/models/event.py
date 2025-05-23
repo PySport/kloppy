@@ -205,9 +205,7 @@ class NoResultMixin:
 
     result: None
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: Optional[Union[str, Callable[[Event], bool]]]) -> bool:
         return super().matches(filter_)  # type: ignore
 
 
@@ -219,9 +217,7 @@ class ResultMixin(Generic[ResultT]):
 
     result: ResultT
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: Optional[Union[str, Callable[[Event], bool]]]) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -241,9 +237,7 @@ class ResultMixin(Generic[ResultT]):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(
-                    f"Don't know how to apply filter {filter_}"
-                )
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
 
             # Call the parent `matches` for event type filtering
             if not super().matches(event_type):  # type: ignore
@@ -355,9 +349,7 @@ class Qualifier(Generic[QualifierValueType], ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(
-            removes_suffix(type(self).__name__, "Qualifier")
-        )
+        return camelcase_to_snakecase(removes_suffix(type(self).__name__, "Qualifier"))
 
 
 @dataclass
@@ -675,11 +667,7 @@ class QualifierMixin(Generic[QualifierT]):
             >>> pass_event.get_qualifier_values(SetPieceQualifier)
             [<SetPieceType.GOAL_KICK: 'GOAL_KICK'>]
         """
-        return [
-            qualifier.value
-            for qualifier in self.qualifiers
-            if isinstance(qualifier, qualifier_type)
-        ]
+        return [qualifier.value for qualifier in self.qualifiers if isinstance(qualifier, qualifier_type)]
 
 
 @dataclass
@@ -740,11 +728,7 @@ class Event(DataRecord, ABC):
 
     @property
     def attacking_direction(self) -> AttackingDirection:
-        if (
-            self.dataset
-            and self.dataset.metadata
-            and self.dataset.metadata.orientation is not None
-        ):
+        if self.dataset and self.dataset.metadata and self.dataset.metadata.orientation is not None:
             try:
                 return AttackingDirection.from_orientation(
                     self.dataset.metadata.orientation,
@@ -766,12 +750,8 @@ class Event(DataRecord, ABC):
             if (event := self.dataset.get_record_by_id(event_id)) is not None
         ]
 
-    def get_related_event(
-        self, type_: Union[str, EventType]
-    ) -> Optional[Event]:
-        event_type = (
-            EventType[type_.upper()] if isinstance(type_, str) else type_
-        )
+    def get_related_event(self, type_: Union[str, EventType]) -> Optional[Event]:
+        event_type = EventType[type_.upper()] if isinstance(type_, str) else type_
         for related_event in self.get_related_events():
             if related_event.event_type == event_type:
                 return related_event
@@ -780,24 +760,16 @@ class Event(DataRecord, ABC):
     """Define all related events for easy access"""
 
     def related_pass(self) -> Optional[PassEvent]:
-        return cast(
-            Optional[PassEvent], self.get_related_event(EventType.PASS)
-        )
+        return cast(Optional[PassEvent], self.get_related_event(EventType.PASS))
 
     def related_shot(self) -> Optional[ShotEvent]:
-        return cast(
-            Optional[ShotEvent], self.get_related_event(EventType.SHOT)
-        )
+        return cast(Optional[ShotEvent], self.get_related_event(EventType.SHOT))
 
     def related_take_on(self) -> Optional[TakeOnEvent]:
-        return cast(
-            Optional[TakeOnEvent], self.get_related_event(EventType.TAKE_ON)
-        )
+        return cast(Optional[TakeOnEvent], self.get_related_event(EventType.TAKE_ON))
 
     def related_carry(self) -> Optional[CarryEvent]:
-        return cast(
-            Optional[CarryEvent], self.get_related_event(EventType.CARRY)
-        )
+        return cast(Optional[CarryEvent], self.get_related_event(EventType.CARRY))
 
     def related_substitution(self) -> Optional[SubstitutionEvent]:
         return cast(
@@ -806,9 +778,7 @@ class Event(DataRecord, ABC):
         )
 
     def related_card(self) -> Optional[CardEvent]:
-        return cast(
-            Optional[CardEvent], self.get_related_event(EventType.CARD)
-        )
+        return cast(Optional[CardEvent], self.get_related_event(EventType.CARD))
 
     def related_player_on(self) -> Optional[PlayerOnEvent]:
         return cast(
@@ -823,14 +793,10 @@ class Event(DataRecord, ABC):
         )
 
     def related_recovery(self) -> Optional[RecoveryEvent]:
-        return cast(
-            Optional[RecoveryEvent], self.get_related_event(EventType.RECOVERY)
-        )
+        return cast(Optional[RecoveryEvent], self.get_related_event(EventType.RECOVERY))
 
     def related_ball_out(self) -> Optional[BallOutEvent]:
-        return cast(
-            Optional[BallOutEvent], self.get_related_event(EventType.BALL_OUT)
-        )
+        return cast(Optional[BallOutEvent], self.get_related_event(EventType.BALL_OUT))
 
     def related_foul_committed(self) -> Optional[FoulCommittedEvent]:
         return cast(
@@ -844,9 +810,7 @@ class Event(DataRecord, ABC):
             self.get_related_event(EventType.FORMATION_CHANGE),
         )
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: Optional[Union[str, Callable[[Event], bool]]]) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -866,9 +830,7 @@ class Event(DataRecord, ABC):
                 event_type = parts[0]
                 result = None
             else:
-                raise InvalidFilterError(
-                    f"Don't know how to apply filter {filter_}"
-                )
+                raise InvalidFilterError(f"Don't know how to apply filter {filter_}")
 
             if event_type:
                 try:
@@ -886,18 +848,10 @@ class Event(DataRecord, ABC):
 
     def __str__(self):
         event_type = (
-            self.__class__.__name__
-            if not isinstance(self, GenericEvent)
-            else f"GenericEvent:{self.event_name}"
+            self.__class__.__name__ if not isinstance(self, GenericEvent) else f"GenericEvent:{self.event_name}"
         )
 
-        return (
-            f"<{event_type} "
-            f"event_id='{self.event_id}' "
-            f"time='{self.time}' "
-            f"team='{self.team}' "
-            f"player='{self.player}'>"
-        )
+        return f"<{event_type} event_id='{self.event_id}' time='{self.time}' team='{self.team}' player='{self.player}'>"
 
     def __repr__(self):
         return str(self)
@@ -928,9 +882,7 @@ class GenericEvent(NoQualifierMixin, NoResultMixin, Event):
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class ShotEvent(
-    QualifierMixin[
-        Union[BodyPartQualifier, SetPieceQualifier, CounterAttackQualifier]
-    ],
+    QualifierMixin[Union[BodyPartQualifier, SetPieceQualifier, CounterAttackQualifier]],
     ResultMixin[ShotResult],
     Event,
 ):
@@ -1428,13 +1380,9 @@ class EventDataset(Dataset[Event]):
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 if event.replacement_player.starting_position:
-                    replacement_player_position = (
-                        event.replacement_player.starting_position
-                    )
+                    replacement_player_position = event.replacement_player.starting_position
                 else:
-                    replacement_player_position = event.player.positions.last(
-                        default=PositionType.Unknown
-                    )
+                    replacement_player_position = event.player.positions.last(default=PositionType.Unknown)
                 event.replacement_player.set_position(
                     event.time,
                     replacement_player_position,
@@ -1445,9 +1393,7 @@ class EventDataset(Dataset[Event]):
                 if event.player_positions:
                     for player, position in event.player_positions.items():
                         if len(player.positions.items):
-                            last_time, last_position = player.positions.last(
-                                include_time=True
-                            )
+                            last_time, last_position = player.positions.last(include_time=True)
                             if last_position != position:
                                 # Only update when the position changed
                                 if event.time - last_time < max_leeway:
@@ -1458,19 +1404,13 @@ class EventDataset(Dataset[Event]):
                                     player.positions.set(event.time, position)
 
                 if event.team.formations.items:
-                    last_time, last_formation = event.team.formations.last(
-                        include_time=True
-                    )
+                    last_time, last_formation = event.team.formations.last(include_time=True)
                     if last_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 elif event.team.starting_formation:
                     if event.team.starting_formation != event.formation_type:
-                        event.team.formations.set(
-                            event.time, event.formation_type
-                        )
+                        event.team.formations.set(event.time, event.formation_type)
 
                 else:
                     event.team.formations.set(event.time, event.formation_type)
@@ -1490,9 +1430,7 @@ class EventDataset(Dataset[Event]):
 
         return add_state(self, *builder_keys)
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Event], Dict]] = None,
@@ -1501,10 +1439,7 @@ class EventDataset(Dataset[Event]):
         try:
             import pandas as pd
         except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
+            raise ImportError("Seems like you don't have pandas installed. Please install it using: pip install pandas")
 
         if not record_converter:
             from ..services.transformers.attribute import (
@@ -1524,9 +1459,7 @@ class EventDataset(Dataset[Event]):
                     row.update({k: value})
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
         if type_ == "minutes_played":

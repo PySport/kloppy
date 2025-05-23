@@ -80,9 +80,5 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
-        return deserializer.deserialize(
-            inputs=TRACABInputs(meta_data=meta_data_fp, raw_data=raw_data_fp)
-        )
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
+        return deserializer.deserialize(inputs=TRACABInputs(meta_data=meta_data_fp, raw_data=raw_data_fp))

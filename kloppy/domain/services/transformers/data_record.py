@@ -23,8 +23,7 @@ NamedColumns = Dict[str, Column]
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]:
-        ...
+    def default_transformer(self) -> Callable[[T], Dict]: ...
 
     def __init__(
         self,
@@ -35,9 +34,7 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
             converter = self.default_transformer()
         else:
             default = self.default_transformer()
-            has_string_columns = any(
-                not callable(column) for column in columns
-            )
+            has_string_columns = any(not callable(column) for column in columns)
 
             def converter(data_record: T) -> Dict[str, Any]:
                 if has_string_columns:
@@ -50,30 +47,20 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
                     if callable(column):
                         res = column(data_record)
                         if not isinstance(res, dict):
-                            raise KloppyError(
-                                "A function column should return a dictionary"
-                            )
+                            raise KloppyError("A function column should return a dictionary")
                         row.update(res)
                     else:
                         if column == "*":
                             row.update(default_row)
                         elif "*" in column:
-                            row.update(
-                                {
-                                    k: v
-                                    for k, v in default_row.items()
-                                    if fnmatch(k, column)
-                                }
-                            )
+                            row.update({k: v for k, v in default_row.items() if fnmatch(k, column)})
                         elif column in default_row:
                             row[column] = default_row[column]
                         else:
                             row[column] = getattr(data_record, column, None)
 
                 for name, column in named_columns.items():
-                    row[name] = (
-                        column(data_record) if callable(column) else column
-                    )
+                    row[name] = column(data_record) if callable(column) else column
 
                 return row
 

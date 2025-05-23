@@ -158,11 +158,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             for player_info in players_smoothed:
                 jersey_num = int(player_info.get("jerseyNum"))
                 player = next(
-                    (
-                        p
-                        for p in players[team].values()
-                        if p.jersey_no == jersey_num
-                    ),
+                    (p for p in players[team].values() if p.jersey_no == jersey_num),
                     None,
                 )
 
@@ -171,9 +167,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     player_y = player_info.get("y")
 
                     if player_x is not None and player_y is not None:
-                        player_data = PlayerData(
-                            coordinates=Point(player_x, player_y)
-                        )
+                        player_data = PlayerData(coordinates=Point(player_x, player_y))
                         players_data[player] = player_data
 
         # Process home and away players
@@ -205,12 +199,8 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         for period, frames in frames_by_period.items():
             periods[period] = Period(
                 id=period,
-                start_timestamp=timedelta(
-                    seconds=frames[0]["frameNum"] / frame_rate
-                ),
-                end_timestamp=timedelta(
-                    seconds=frames[-1]["frameNum"] / frame_rate
-                ),
+                start_timestamp=timedelta(seconds=frames[0]["frameNum"] / frame_rate),
+                end_timestamp=timedelta(seconds=frames[-1]["frameNum"] / frame_rate),
             )
 
         return periods
@@ -225,9 +215,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         game_id = int(metadata["id"])
 
         if not metadata:
-            raise DeserializationError(
-                "The game_id of this game is not contained within the provided meta data file"
-            )
+            raise DeserializationError("The game_id of this game is not contained within the provided meta data file")
 
         # Get metadata variables
         home_team = metadata["homeTeam"]
@@ -247,9 +235,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             pitch_size_width = stadium["pitches"][0]["width"]
             pitch_size_length = stadium["pitches"][0]["length"]
 
-            transformer = self.get_transformer(
-                pitch_length=pitch_size_length, pitch_width=pitch_size_width
-            )
+            transformer = self.get_transformer(pitch_length=pitch_size_length, pitch_width=pitch_size_width)
 
             date = metadata.get("date")
 
@@ -272,7 +258,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-
                 team_id = player["team"]["id"]
                 player_col = player["player"]
 
@@ -296,9 +281,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     team=team,
                     jersey_no=shirt_number,
                     name=player_name,
-                    starting_position=position_types_mapping.get(
-                        player_position, PositionType.Unknown
-                    ),
+                    starting_position=position_types_mapping.get(player_position, PositionType.Unknown),
                     starting=None,
                 )
 
@@ -308,18 +291,10 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         # Check if home team plays left or right and assign orientation accordingly.
         try:
             is_home_team_left = metadata["homeTeamStartLeft"]
-            is_home_team_extra_time_left = metadata[
-                "homeTeamStartLeftExtraTime"
-            ]
+            is_home_team_extra_time_left = metadata["homeTeamStartLeftExtraTime"]
         except AttributeError:
-            raise DeserializationError(
-                "The metadata file does not contain the 'homeTeamStartLeft' field"
-            )
-        orientation = (
-            Orientation.HOME_AWAY
-            if is_home_team_left
-            else Orientation.AWAY_HOME
-        )
+            raise DeserializationError("The metadata file does not contain the 'homeTeamStartLeft' field")
+        orientation = Orientation.HOME_AWAY if is_home_team_left else Orientation.AWAY_HOME
 
         with performance_logging("Loading data", logger=logger):
 
@@ -357,11 +332,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                             pass
 
                         if game_event.get("home_ball") is not None:
-                            self._ball_owning_team = (
-                                home_team
-                                if game_event["home_ball"]
-                                else away_team
-                            )
+                            self._ball_owning_team = home_team if game_event["home_ball"] else away_team
 
                     if self.only_alive and self._ball_state == BallState.DEAD:
                         continue

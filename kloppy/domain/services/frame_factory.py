@@ -19,17 +19,12 @@ def create_frame(**kwargs) -> Frame:
     relevant_kwargs = {
         field.name: kwargs.get(field.name, field.default)
         for field in fields(Frame)
-        if field.init
-        and not (
-            field.default == dataclasses.MISSING and field.name not in kwargs
-        )
+        if field.init and not (field.default == dataclasses.MISSING and field.name not in kwargs)
     }
 
     if len(relevant_kwargs) < len(kwargs):
         skipped_kwargs = set(kwargs.keys()) - set(relevant_kwargs.keys())
-        warnings.warn(
-            f"The following arguments were skipped: {skipped_kwargs}"
-        )
+        warnings.warn(f"The following arguments were skipped: {skipped_kwargs}")
 
     frame = Frame(**relevant_kwargs)
 

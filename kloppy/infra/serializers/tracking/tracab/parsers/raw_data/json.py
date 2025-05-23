@@ -30,9 +30,7 @@ class TracabJSONParser(TracabDataParser):
         self.teams = teams
         self.frame_rate = frame_rate
 
-    def extract_frames(
-        self, sample_rate: float, only_alive: bool
-    ) -> Iterator[Frame]:
+    def extract_frames(self, sample_rate: float, only_alive: bool) -> Iterator[Frame]:
         raw_data = self.root["FrameData"]
 
         n = 0
@@ -44,18 +42,14 @@ class TracabJSONParser(TracabDataParser):
 
             frame_id = frame["FrameCount"]
             for period in self.periods:
-                assert isinstance(
-                    period.start_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
-                assert isinstance(
-                    period.end_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                assert isinstance(period.start_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
+                assert isinstance(period.end_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
 
-                if (
-                    period.start_timestamp
-                    <= timedelta(seconds=frame_id / self.frame_rate)
-                    <= period.end_timestamp
-                ):
+                if period.start_timestamp <= timedelta(seconds=frame_id / self.frame_rate) <= period.end_timestamp:
                     if n % sample == 0:
                         frame = self._parse_frame(period, frame)
                         yield frame
@@ -75,9 +69,7 @@ class TracabJSONParser(TracabDataParser):
             elif player_data["Team"] in (-1, 3, 4):
                 continue
             else:
-                raise DeserializationError(
-                    f"Unknown Player Team ID: {player_data['Team']}"
-                )
+                raise DeserializationError(f"Unknown Player Team ID: {player_data['Team']}")
 
             jersey_no = player_data["JerseyNumber"]
             x = player_data["X"]
@@ -86,14 +78,10 @@ class TracabJSONParser(TracabDataParser):
 
             player = team.get_player_by_jersey_number(jersey_no)
             if player:
-                players_data[player] = PlayerData(
-                    coordinates=Point(x, y), speed=speed
-                )
+                players_data[player] = PlayerData(coordinates=Point(x, y), speed=speed)
             else:
                 # continue
-                raise DeserializationError(
-                    f"Player not found for player jersey no {jersey_no} of team: {team.name}"
-                )
+                raise DeserializationError(f"Player not found for player jersey no {jersey_no} of team: {team.name}")
 
         ball_x = raw_ball_position["X"]
         ball_y = raw_ball_position["Y"]
@@ -104,22 +92,17 @@ class TracabJSONParser(TracabDataParser):
         elif raw_ball_position["BallOwningTeam"] == "A":
             ball_owning_team = self.teams[1]
         else:
-            raise DeserializationError(
-                f"Unknown ball owning team: {raw_ball_position['BallOwningTeam']}"
-            )
+            raise DeserializationError(f"Unknown ball owning team: {raw_ball_position['BallOwningTeam']}")
         if raw_ball_position["BallStatus"] == "Alive":
             ball_state = BallState.ALIVE
         elif raw_ball_position["BallStatus"] == "Dead":
             ball_state = BallState.DEAD
         else:
-            raise DeserializationError(
-                f"Unknown ball state: {raw_ball_position['BallStatus']}"
-            )
+            raise DeserializationError(f"Unknown ball state: {raw_ball_position['BallStatus']}")
 
         frame = create_frame(
             frame_id=frame_id,
-            timestamp=timedelta(seconds=frame_id / self.frame_rate)
-            - period.start_timestamp,
+            timestamp=timedelta(seconds=frame_id / self.frame_rate) - period.start_timestamp,
             ball_coordinates=Point3D(ball_x, ball_y, ball_z),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,

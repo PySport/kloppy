@@ -55,9 +55,7 @@ class TestToRecords:
         2. attributes of the event
         """
 
-        records = dataset.filter("pass").to_records(
-            "timestamp", "coordinates_x", "coordinates"
-        )
+        records = dataset.filter("pass").to_records("timestamp", "coordinates_x", "coordinates")
         assert records[0] == {
             "timestamp": timedelta(seconds=0.098),
             "coordinates_x": 60.5,
@@ -87,12 +85,8 @@ class TestToRecords:
             "angle_to_goal": 89.49633196102769,
         }
 
-    @pytest.mark.parametrize(
-        "coordinate_system", ["statsbomb", "tracab", "opta"]
-    )
-    def test_angle_to_goal_transformer(
-        self, event_data: Path, lineup_data: Path, coordinate_system
-    ):
+    @pytest.mark.parametrize("coordinate_system", ["statsbomb", "tracab", "opta"])
+    def test_angle_to_goal_transformer(self, event_data: Path, lineup_data: Path, coordinate_system):
         """
         Make sure calculation of the angle is consistent in different coordinate systems.
         """

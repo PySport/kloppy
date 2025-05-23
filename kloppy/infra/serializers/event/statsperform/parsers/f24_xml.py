@@ -38,20 +38,12 @@ class F24XMLParser(OptaXMLParser):
                 x=float(event.attrib["x"]),
                 y=float(event.attrib["y"]),
                 timestamp=_parse_f24_datetime(event.attrib["timestamp"]),
-                last_modified=_parse_f24_datetime(
-                    event.attrib["last_modified"]
-                ),
+                last_modified=_parse_f24_datetime(event.attrib["last_modified"]),
                 contestant_id=event.attrib.get("team_id"),
                 player_id=event.attrib.get("player_id"),
-                outcome=(
-                    int(event.attrib["outcome"])
-                    if "outcome" in event.attrib
-                    else None
-                ),
+                outcome=(int(event.attrib["outcome"]) if "outcome" in event.attrib else None),
                 qualifiers={
-                    int(
-                        qualifier.attrib["qualifier_id"]
-                    ): qualifier.attrib.get("value")
+                    int(qualifier.attrib["qualifier_id"]): qualifier.attrib.get("value")
                     for qualifier in event.iterchildren("Q")
                 },
             )
@@ -62,9 +54,7 @@ class F24XMLParser(OptaXMLParser):
         """Return the date of the game."""
         game_elm = self.root.find("Game")
         if game_elm is not None and "game_date" in game_elm.attrib:
-            naive_datetime = datetime.strptime(
-                game_elm.attrib["game_date"], "%Y-%m-%dT%H:%M:%S"
-            )
+            naive_datetime = datetime.strptime(game_elm.attrib["game_date"], "%Y-%m-%dT%H:%M:%S")
             timezone = pytz.timezone("Europe/London")
             aware_datetime = timezone.localize(naive_datetime)
             return aware_datetime.astimezone(pytz.utc)

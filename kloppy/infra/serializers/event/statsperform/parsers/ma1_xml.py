@@ -26,12 +26,12 @@ class MA1XMLParser(OptaXMLParser):
             parsed_periods.append(
                 Period(
                     id=int(period.get("id")),
-                    start_timestamp=datetime.strptime(
-                        period.get("start"), "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=timezone.utc),
-                    end_timestamp=datetime.strptime(
-                        period.get("end"), "%Y-%m-%dT%H:%M:%SZ"
-                    ).replace(tzinfo=timezone.utc),
+                    start_timestamp=datetime.strptime(period.get("start"), "%Y-%m-%dT%H:%M:%SZ").replace(
+                        tzinfo=timezone.utc
+                    ),
+                    end_timestamp=datetime.strptime(period.get("end"), "%Y-%m-%dT%H:%M:%SZ").replace(
+                        tzinfo=timezone.utc
+                    ),
                 )
             )
         return parsed_periods
@@ -46,11 +46,7 @@ class MA1XMLParser(OptaXMLParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=(
-                    Ground.HOME
-                    if parsed_team["ground"] == "home"
-                    else Ground.AWAY
-                ),
+                ground=(Ground.HOME if parsed_team["ground"] == "home" else Ground.AWAY),
             )
 
         for parsed_player in self._parse_players():
@@ -96,9 +92,7 @@ class MA1XMLParser(OptaXMLParser):
         for line_up in line_ups:
             team_id = line_up.get("contestantId")
             raw_formation = line_up.get("formationUsed")
-            formation = formation_name_mapping.get(
-                raw_formation, FormationType.UNKNOWN
-            )
+            formation = formation_name_mapping.get(raw_formation, FormationType.UNKNOWN)
             team_formations[team_id] = formation
 
         for team in teams:
@@ -121,9 +115,7 @@ class MA1XMLParser(OptaXMLParser):
         for line_up in line_ups:
             team_id = line_up.get("contestantId")
             raw_formation = line_up.get("formationUsed")
-            formation = formation_name_mapping.get(
-                raw_formation, FormationType.UNKNOWN
-            )
+            formation = formation_name_mapping.get(raw_formation, FormationType.UNKNOWN)
 
             players = line_up.iterchildren(tag="player")
             for player in players:
@@ -132,9 +124,7 @@ class MA1XMLParser(OptaXMLParser):
 
                 if "formationPlace" in player_attributes:
                     player_position = (
-                        formation_position_mapping[formation][
-                            int(player_attributes["formationPlace"])
-                        ]
+                        formation_position_mapping[formation][int(player_attributes["formationPlace"])]
                         if formation != FormationType.UNKNOWN
                         else PositionType.Unknown
                     )

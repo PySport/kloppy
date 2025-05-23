@@ -46,9 +46,7 @@ def meta_data_json(base_dir: Path) -> Path:
 class TestsHawkEyeInputs:
     """Tests related to the various input options."""
 
-    def test_deserialize_single_file(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
-    ):
+    def test_deserialize_single_file(self, ball_feeds: List[Path], player_centroid_feeds: List[Path]):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds[0],
             player_centroid_feeds=player_centroid_feeds[0],
@@ -76,9 +74,7 @@ class TestsHawkEyeInputs:
         )
         assert len(dataset) == 6000
 
-    def test_limit(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
-    ):
+    def test_limit(self, ball_feeds: List[Path], player_centroid_feeds: List[Path]):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
             player_centroid_feeds=player_centroid_feeds,
@@ -87,9 +83,7 @@ class TestsHawkEyeInputs:
         )
         assert len(dataset) == 10
 
-    def test_sample_rate(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
-    ):
+    def test_sample_rate(self, ball_feeds: List[Path], player_centroid_feeds: List[Path]):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
             player_centroid_feeds=player_centroid_feeds,
@@ -134,9 +128,7 @@ class TestHawkEyeDeserializer:
     """Tests related to checking the correctness of the deserialization."""
 
     @pytest.fixture(scope="class")
-    def dataset(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
-    ) -> TrackingDataset:
+    def dataset(self, ball_feeds: List[Path], player_centroid_feeds: List[Path]) -> TrackingDataset:
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
             player_centroid_feeds=player_centroid_feeds,
@@ -178,18 +170,14 @@ class TestHawkEyeDeserializer:
         assert dataset.metadata.periods[0].id == 1
         assert len(dataset.metadata.periods) == 2
 
-        assert dataset.metadata.periods[
-            0
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[0].start_timestamp == datetime.strptime(
             "2024-09-22T21:00:49.383Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[0].end_timestamp == datetime.strptime(
             "2024-09-22T21:47:30.592Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
-        assert dataset.metadata.periods[
-            1
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[1].start_timestamp == datetime.strptime(
             "2024-09-22T22:03:13.540Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime.strptime(
@@ -198,9 +186,7 @@ class TestHawkEyeDeserializer:
 
     def test_coordinate_system(self, dataset):
         """It should set the correct coordinate system"""
-        assert isinstance(
-            dataset.metadata.coordinate_system, HawkEyeCoordinateSystem
-        )
+        assert isinstance(dataset.metadata.coordinate_system, HawkEyeCoordinateSystem)
 
     def test_pitch_dimensions(self, dataset):
         """It should set the correct pitch dimensions"""
@@ -239,9 +225,7 @@ class TestHawkEyeDeserializer:
         """It should set the correct player coordinates"""
         home_player = dataset.metadata.teams[0].players[3]
         assert home_player.player_id == "487487"
-        assert dataset.records[0].players_coordinates[home_player] == Point(
-            x=21.757139205932617, y=-4.809798240661621
-        )
+        assert dataset.records[0].players_coordinates[home_player] == Point(x=21.757139205932617, y=-4.809798240661621)
 
         away_player = dataset.metadata.teams[1].players[3]
         assert away_player.player_id == "487721"
@@ -272,9 +256,7 @@ def test_xml_metadata(
     date = dataset.metadata.date
     if date:
         assert isinstance(date, datetime)
-        assert date == datetime(
-            2024, 1, 1, 10, 8, 38, 979000, tzinfo=timezone.utc
-        )
+        assert date == datetime(2024, 1, 1, 10, 8, 38, 979000, tzinfo=timezone.utc)
 
     game_week = dataset.metadata.game_week
     if game_week:
@@ -309,9 +291,7 @@ def test_json_metadata(
     date = dataset.metadata.date
     if date:
         assert isinstance(date, datetime)
-        assert date == datetime(
-            2024, 1, 1, 10, 8, 38, 979000, tzinfo=timezone.utc
-        )
+        assert date == datetime(2024, 1, 1, 10, 8, 38, 979000, tzinfo=timezone.utc)
 
     game_week = dataset.metadata.game_week
     if game_week:
@@ -334,13 +314,8 @@ def test_correct_normalized_deserialization(
     )
 
     home_player = dataset.metadata.teams[0].players[3]
-    assert dataset.records[0].players_coordinates[home_player] == Point(
-        x=0.7072108495803107, y=0.5707323270685533
-    )
-    assert (
-        dataset.records[100].players_data[home_player].speed
-        == 3.963825734080879
-    )
+    assert dataset.records[0].players_coordinates[home_player] == Point(x=0.7072108495803107, y=0.5707323270685533)
+    assert dataset.records[100].players_data[home_player].speed == 3.963825734080879
 
     # Check normalised pitch dimensions
     pitch_dimensions = dataset.metadata.pitch_dimensions

@@ -26,17 +26,13 @@ class MetricaEPTSTrackingDataInputs(NamedTuple):
     raw_data: IO[bytes]
 
 
-class MetricaEPTSTrackingDataDeserializer(
-    TrackingDataDeserializer[MetricaEPTSTrackingDataInputs]
-):
+class MetricaEPTSTrackingDataDeserializer(TrackingDataDeserializer[MetricaEPTSTrackingDataInputs]):
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
 
     @staticmethod
-    def _frame_from_row(
-        row: dict, metadata: EPTSMetadata, transformer: DatasetTransformer
-    ) -> Frame:
+    def _frame_from_row(row: dict, metadata: EPTSMetadata, transformer: DatasetTransformer) -> Frame:
         timestamp = row["timestamp"]
         if metadata.periods and row["period_id"]:
             # might want to search for it instead
@@ -67,16 +63,8 @@ class MetricaEPTSTrackingDataDeserializer(
                         if f"player_{player.player_id}_x" in row
                         else None
                     ),
-                    speed=(
-                        row[f"player_{player.player_id}_s"]
-                        if f"player_{player.player_id}_s" in row
-                        else None
-                    ),
-                    distance=(
-                        row[f"player_{player.player_id}_d"]
-                        if f"player_{player.player_id}_d" in row
-                        else None
-                    ),
+                    speed=(row[f"player_{player.player_id}_s"] if f"player_{player.player_id}_s" in row else None),
+                    distance=(row[f"player_{player.player_id}_d"] if f"player_{player.player_id}_d" in row else None),
                     other_data=other_data,
                 )
 
@@ -88,9 +76,7 @@ class MetricaEPTSTrackingDataDeserializer(
             period=period,
             players_data=players_data,
             other_data={},
-            ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
-            ),
+            ball_coordinates=Point3D(x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")),
         )
 
         if transformer:
@@ -98,9 +84,7 @@ class MetricaEPTSTrackingDataDeserializer(
 
         return frame
 
-    def deserialize(
-        self, inputs: MetricaEPTSTrackingDataInputs
-    ) -> TrackingDataset:
+    def deserialize(self, inputs: MetricaEPTSTrackingDataInputs) -> TrackingDataset:
         with performance_logging("Loading metadata", logger=logger):
             metadata = load_metadata(inputs.meta_data)
 
@@ -119,9 +103,7 @@ class MetricaEPTSTrackingDataDeserializer(
                 for row in read_raw_data(
                     raw_data=inputs.raw_data,
                     metadata=metadata,
-                    sensor_ids=[
-                        sensor.sensor_id for sensor in metadata.sensors
-                    ],
+                    sensor_ids=[sensor.sensor_id for sensor in metadata.sensors],
                     sample_rate=self.sample_rate,
                     limit=self.limit,
                 )

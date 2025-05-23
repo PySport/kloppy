@@ -4,7 +4,7 @@ Before you can use kloppy, you'll need to get it installed. This guide will guid
 
 ## Install Python
 
-Being a Python library, kloppy requires Python. Currently, kloppy supports Python version 3.9 — 3.12. Get the latest version of Python at [python.org](https://www.python.org/downloads/) or with your operating system's package manager.
+Being a Python library, kloppy requires Python. Currently, kloppy supports Python version 3.9 — 3.13. Get the latest version of Python at [python.org](https://www.python.org/downloads/) or with your operating system's package manager.
 
 You can verify that Python is installed by typing `python` from your shell; you should see something like:
 

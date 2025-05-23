@@ -33,9 +33,7 @@ class HTTPAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("http://") or url.startswith("https://")
 
-    def _get_filesystem(
-        self, url: str, no_cache: bool = False
-    ) -> fsspec.AbstractFileSystem:
+    def _get_filesystem(self, url: str, no_cache: bool = False) -> fsspec.AbstractFileSystem:
         try:
             import aiohttp
         except ImportError:

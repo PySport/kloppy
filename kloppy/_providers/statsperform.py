@@ -37,9 +37,7 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=meta_data_fp,
@@ -78,9 +76,7 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),  # type: ignore
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma3_data
-    ) as ma3_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma3_data) as ma3_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformEventInputs(
                 meta_data=ma1_data_fp,
@@ -128,9 +124,7 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(
-        ma25_data
-    ) as ma25_data_fp:
+    with open_as_file(ma1_data) as ma1_data_fp, open_as_file(ma25_data) as ma25_data_fp:
         return deserializer.deserialize(
             inputs=StatsPerformTrackingInputs(
                 meta_data=ma1_data_fp,

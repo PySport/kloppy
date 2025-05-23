@@ -23,16 +23,8 @@ class LineupStateBuilder(StateBuilder):
     def initial_state(self, dataset: EventDataset) -> Lineup:
         return Lineup(
             players=(
-                {
-                    player
-                    for player in dataset.metadata.teams[0].players
-                    if player.starting
-                }
-                | {
-                    player
-                    for player in dataset.metadata.teams[1].players
-                    if player.starting
-                }
+                {player for player in dataset.metadata.teams[0].players if player.starting}
+                | {player for player in dataset.metadata.teams[1].players if player.starting}
             )
         )
 
@@ -41,10 +33,7 @@ class LineupStateBuilder(StateBuilder):
 
     def reduce_after(self, state: Lineup, event: Event) -> Lineup:
         if isinstance(event, SubstitutionEvent):
-            state = Lineup(
-                players=state.players - {event.player}
-                | {event.replacement_player}
-            )
+            state = Lineup(players=state.players - {event.player} | {event.replacement_player})
         elif isinstance(event, PlayerOffEvent):
             state = Lineup(players=state.players - {event.player})
         elif isinstance(event, PlayerOnEvent):

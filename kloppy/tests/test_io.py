@@ -151,9 +151,7 @@ class TestExpandInputs:
         assert files == expected_files
 
     def test_regex_filter(self, mock_filesystem):
-        files = list(
-            expand_inputs(mock_filesystem["root"], regex_filter=r".*.txt$")
-        )
+        files = list(expand_inputs(mock_filesystem["root"], regex_filter=r".*.txt$"))
         expected_files = [
             mock_filesystem["file1"],
             mock_filesystem["file3"],
@@ -161,9 +159,7 @@ class TestExpandInputs:
         assert sorted(files) == sorted(expected_files)
 
     def test_sort_key(self, mock_filesystem):
-        files = list(
-            expand_inputs(mock_filesystem["root"], sort_key=lambda x: x[::-1])
-        )
+        files = list(expand_inputs(mock_filesystem["root"], sort_key=lambda x: x[::-1]))
         expected_files = sorted(
             [
                 mock_filesystem["file1"],
@@ -203,9 +199,7 @@ class TestHTTPAdapter:
         httpserver.expect_request("/testfile.txt").respond_with_data(content)
 
         # Serve the compressed text file with Content-Encoding header
-        httpserver.expect_request(
-            "/compressed_testfile.txt"
-        ).respond_with_data(
+        httpserver.expect_request("/compressed_testfile.txt").respond_with_data(
             compressed_content,
             headers={"Content-Encoding": "gzip", "Content-Type": "text/plain"},
         )
@@ -232,9 +226,7 @@ class TestHTTPAdapter:
         """
 
         # Serve the index.html page
-        httpserver.expect_request("/").respond_with_data(
-            index_html, headers={"Content-Type": "text/html"}
-        )
+        httpserver.expect_request("/").respond_with_data(index_html, headers={"Content-Type": "text/html"})
 
         return httpserver
 
@@ -271,9 +263,7 @@ class TestHTTPAdapter:
             assert fp.read() == b"Hello, world!"
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
-)
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher")
 class TestS3Adapter:
     endpoint_uri = "http://127.0.0.1:5555"
     test_bucket_name = "test-bucket"
@@ -293,9 +283,7 @@ class TestS3Adapter:
             os.environ["AWS_ACCESS_KEY_ID"] = "foo"
 
         session = Session()
-        client = session.create_client(
-            "s3", endpoint_url=self.endpoint_uri, region_name="us-east-1"
-        )
+        client = session.create_client("s3", endpoint_url=self.endpoint_uri, region_name="us-east-1")
         client.create_bucket(Bucket=self.test_bucket_name, ACL="public-read")
 
         for f, data in self.files.items():
@@ -310,9 +298,7 @@ class TestS3Adapter:
         """Set up the S3FileSystem."""
         from s3fs import S3FileSystem
 
-        s3 = S3FileSystem(
-            anon=False, client_kwargs={"endpoint_url": self.endpoint_uri}
-        )
+        s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": self.endpoint_uri})
         set_config("adapters.s3.s3fs", s3)
 
     def test_list_directory(self):

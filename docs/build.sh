@@ -22,7 +22,7 @@ fi
 source .venv/bin/activate
 
 # Install package with docs dependencies
-uv pip install ".[docs]"
+uv pip install --group docs
 
 # Build MkDocs site
 mkdocs build -d site

@@ -47,7 +47,7 @@ nav:
           - Hudl Statsbomb: user-guide/loading-data/statsbomb.ipynb
           - Metrica: user-guide/loading-data/metrica.ipynb
           - SecondSpectrum: user-guide/loading-data/secondspectrum.ipynb
-          # - Signality: user-guide/loading-data/signality.ipynb
+          - Signality: user-guide/loading-data/signality.ipynb
           - SkillCorner: user-guide/loading-data/skillcorner.ipynb
           - Sportec: user-guide/loading-data/sportec.ipynb
           - Stats Perform / Opta: user-guide/loading-data/statsperform.ipynb

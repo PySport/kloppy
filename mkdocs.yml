@@ -45,7 +45,8 @@ nav:
           - HawkEye: user-guide/loading-data/hawkeye.ipynb
           - Hudl SportsCode: user-guide/loading-data/sportscode.ipynb
           - Hudl Statsbomb: user-guide/loading-data/statsbomb.ipynb
-          - Metrica: user-guide/loading-data/metrica.ipynb
+          - Metrica Sports: user-guide/loading-data/metrica.ipynb
+          - PFF: user-guide/loading-data/pff.ipynb
           - SecondSpectrum: user-guide/loading-data/secondspectrum.ipynb
           - Signality: user-guide/loading-data/signality.ipynb
           - SkillCorner: user-guide/loading-data/skillcorner.ipynb
@@ -79,10 +80,14 @@ nav:
       - reference/index.md
       - Data Loaders:
           - DataFactory: reference/providers/datafactory.md
+          - HawkEye: reference/providers/hawkeye.md
           - Hudl Sportscode: reference/providers/sportscode.md
           - Hudl Statsbomb: reference/providers/statsbomb.md
           - Metrica Sports: reference/providers/metrica.md
           - Opta: reference/providers/opta.md
+          - PFF: reference/providers/pff.md
+          - SecondSpectrum: reference/providers/secondspectrum.md
+          - Signality: reference/providers/signality.md
           - SkillCorner: reference/providers/skillcorner.md
           - Sportec Solutions: reference/providers/sportec.md
           - Stats Perform: reference/providers/statsperform.md

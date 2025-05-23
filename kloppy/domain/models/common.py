@@ -131,6 +131,7 @@ class Provider(Enum):
     STATSPERFORM = "statsperform"
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
+    SIGNALITY = "signality"
     OTHER = "other"
 
     def __str__(self):
@@ -141,9 +142,11 @@ class OfficialType(Enum):
     """Enumeration for types of officials (referees)."""
 
     VideoAssistantReferee = "Video Assistant Referee"
+    AssistantVideoAssistantReferee = "Assistant Video Assistant Referee"
     MainReferee = "Main Referee"
     AssistantReferee = "Assistant Referee"
     FourthOfficial = "Fourth Official"
+    Unknown = "Unknown"
 
     def __str__(self):
         return self.value
@@ -1037,6 +1040,43 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
+class SignalityCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SIGNALITY
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
 class DatafactoryCoordinateSystem(ProviderCoordinateSystem):
     """
     Datafactory coordinate system.
@@ -1204,6 +1244,7 @@ def build_coordinate_system(
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
+        Provider.SIGNALITY: SignalityCoordinateSystem,
     }
 
     if provider in coordinate_systems:

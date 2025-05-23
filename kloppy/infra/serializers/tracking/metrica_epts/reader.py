@@ -1,12 +1,11 @@
 import re
-from typing import List, Iterator, IO
 from datetime import timedelta
-
+from typing import IO, Iterator, List
 
 from .models import (
-    PlayerChannel,
     DataFormatSpecification,
     EPTSMetadata,
+    PlayerChannel,
     Sensor,
 )
 

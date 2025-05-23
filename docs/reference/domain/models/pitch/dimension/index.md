@@ -1,0 +1,3 @@
+# Dimension
+
+::: kloppy.domain.Dimension

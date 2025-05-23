@@ -4,17 +4,20 @@ import warnings
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
+    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     EventDataset,
+    ExpectedGoals,
+    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     Ground,
@@ -27,7 +30,9 @@ from kloppy.domain import (
     Period,
     Player,
     Point,
+    Point3D,
     PositionType,
+    PostShotExpectedGoals,
     Provider,
     Qualifier,
     SetPieceQualifier,
@@ -35,11 +40,6 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     Team,
-    FormationType,
-    CarryResult,
-    ExpectedGoals,
-    PostShotExpectedGoals,
-    Point3D,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.utils import performance_logging

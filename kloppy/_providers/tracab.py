@@ -28,8 +28,7 @@ def load(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         only_alive: Only include frames in which the game is not paused.
-        file_format:
-            Deprecated. The format will be inferred based on the file extensions.
+        file_format: Deprecated. The format will be inferred based on the file extensions.
 
     Returns:
         The parsed tracking data.

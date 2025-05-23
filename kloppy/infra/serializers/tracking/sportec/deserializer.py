@@ -101,9 +101,7 @@ def _unstack_framesets(
     current_period = None
     current_obj = None
 
-    context = etree.iterparse(
-        raw_data, events=("start", "end"), huge_tree=True
-    )
+    context = etree.iterparse(raw_data, events=("start", "end"), huge_tree=True)
 
     for event, elem in context:
         try:
@@ -115,27 +113,17 @@ def _unstack_framesets(
                         # it is not a frameset of the first period
                         current_period is not None
                         # we've finished parsing the current period
-                        and current_period
-                        != GAME_SECTION_TO_PERIOD_ID[game_section]
+                        and current_period != GAME_SECTION_TO_PERIOD_ID[game_section]
                         # all objects have reached the limit
-                        and (
-                            limit
-                            and all(n > limit for n in frames_per_obj.values())
-                        )
+                        and (limit and all(n > limit for n in frames_per_obj.values()))
                     ):
                         break
 
                     current_period = GAME_SECTION_TO_PERIOD_ID[game_section]
-                    current_obj = (
-                        "ball"
-                        if elem.get("TeamId") == "BALL"
-                        else elem.get("PersonId")
-                    )
+                    current_obj = "ball" if elem.get("TeamId") == "BALL" else elem.get("PersonId")
 
                     if current_obj in objects_to_skip:
-                        current_obj = (
-                            None  # Mark as invalid to skip Frame processing
-                        )
+                        current_obj = None  # Mark as invalid to skip Frame processing
 
             elif event == "start" and elem.tag == "Frame":
                 # we can skip this frame if ...
@@ -145,14 +133,10 @@ def _unstack_framesets(
                     # we are not tracking frames in which the ball is not in play
                     and (not only_alive or int(elem.get(BALL_STATUS, 0)) == 1)
                     # we have reached the limit for this object
-                    and (
-                        not limit or frames_per_obj.get(current_obj, 0) < limit
-                    )
+                    and (not limit or frames_per_obj.get(current_obj, 0) < limit)
                 ):
                     frame_id = int(elem.get("N"))
-                    frames[current_period][frame_id][current_obj] = {
-                        k: v for k, v in elem.items()
-                    }
+                    frames[current_period][frame_id][current_obj] = {k: v for k, v in elem.items()}
                     frames_per_obj[current_obj] += 1
 
             elif event == "end" and elem.tag == "FrameSet":
@@ -185,28 +169,17 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
 
-    def deserialize(
-        self, inputs: SportecTrackingDataInputs
-    ) -> TrackingDataset:
+    def deserialize(self, inputs: SportecTrackingDataInputs) -> TrackingDataset:
         with performance_logging("parse metadata", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
-            date = datetime.fromisoformat(
-                match_root.MatchInformation.General.attrib["KickoffTime"]
-            )
+            date = datetime.fromisoformat(match_root.MatchInformation.General.attrib["KickoffTime"])
             game_week = match_root.MatchInformation.General.attrib["MatchDay"]
             game_id = match_root.MatchInformation.General.attrib["MatchId"]
             periods = sportec_metadata.periods
             teams = home_team, away_team = sportec_metadata.teams
-            player_map = {
-                player.player_id: player
-                for team in teams
-                for player in team.players
-            }
-            official_ids = {
-                official.official_id
-                for official in (sportec_metadata.officials or [])
-            }
+            player_map = {player.player_id: player for team in teams for player in team.players}
+            official_ids = {official.official_id for official in (sportec_metadata.officials or [])}
 
             transformer = self.get_transformer(
                 pitch_length=sportec_metadata.x_max,
@@ -217,9 +190,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         with performance_logging("parse tracking data", logger=logger):
             period_frames = _unstack_framesets(
                 inputs.raw_data,
-                limit=int(self.limit / self.sample_rate)
-                if self.sample_rate and self.limit
-                else self.limit,
+                limit=int(self.limit / self.sample_rate) if self.sample_rate and self.limit else self.limit,
                 only_alive=self.only_alive,
                 objects_to_skip=official_ids,
             )
@@ -244,10 +215,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         continue
 
                     ball_data = frame_data.get("ball", {})
-                    if (
-                        self.only_alive
-                        and int(ball_data.get(BALL_STATUS, 0)) != 1
-                    ):
+                    if self.only_alive and int(ball_data.get(BALL_STATUS, 0)) != 1:
                         continue
 
                     if i % sample != 0:
@@ -257,19 +225,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         frame = create_frame(
                             frame_id=frame_id,
                             timestamp=timedelta(
-                                seconds=(
-                                    frame_id
-                                    - period.start_timestamp.seconds
-                                    * sportec_metadata.fps
-                                )
+                                seconds=(frame_id - period.start_timestamp.seconds * sportec_metadata.fps)
                                 / sportec_metadata.fps
                             ),
-                            ball_owning_team=home_team
-                            if int(ball_data.get(BALL_POSSESSION, 0)) == 1
-                            else away_team,
-                            ball_state=BallState.ALIVE
-                            if int(ball_data.get(BALL_STATUS, 0)) == 1
-                            else BallState.DEAD,
+                            ball_owning_team=home_team if int(ball_data.get(BALL_POSSESSION, 0)) == 1 else away_team,
+                            ball_state=BallState.ALIVE if int(ball_data.get(BALL_STATUS, 0)) == 1 else BallState.DEAD,
                             period=period,
                             players_data={
                                 player_map[object_id]: PlayerData(
@@ -280,9 +240,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                     speed=float(data.get("S", 0)),
                                 )
                                 for object_id, data in frame_data.items()
-                                if object_id != "ball"
-                                and object_id not in official_ids
-                                and object_id in player_map
+                                if object_id != "ball" and object_id not in official_ids and object_id in player_map
                             },
                             ball_coordinates=Point3D(
                                 x=float(ball_data.get("X", 0)),
@@ -295,19 +253,14 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                         frames.append(transformer.transform_frame(frame))
                         frame_count += 1
                     except KeyError as e:
-                        logger.warning(
-                            f"Skipping frame {frame_id} due to missing data: {e}"
-                        )
+                        logger.warning(f"Skipping frame {frame_id} due to missing data: {e}")
 
         # Determine orientation
         try:
-            first_frame = next(
-                frame for frame in frames if frame.period.id == 1
-            )
+            first_frame = next(frame for frame in frames if frame.period.id == 1)
             orientation = (
                 Orientation.HOME_AWAY
-                if attacking_direction_from_frame(first_frame)
-                == AttackingDirection.LTR
+                if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
                 else Orientation.AWAY_HOME
             )
         except StopIteration:

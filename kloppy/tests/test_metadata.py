@@ -34,9 +34,7 @@ class TestPitchdimensions:
         ifab_point = pitch.to_metric_base(Point3D(0, 50, 38))
         assert ifab_point == Point3D(0, 34, 2.44)
 
-        ifab_point = pitch.to_metric_base(
-            Point(60, 61), pitch_length=105, pitch_width=68
-        )
+        ifab_point = pitch.to_metric_base(Point(60, 61), pitch_length=105, pitch_width=68)
         assert round(ifab_point.x, 2) == 62.78
         assert round(ifab_point.y, 2) == 41.72
 
@@ -63,9 +61,7 @@ class TestPitchdimensions:
         opta_point = pitch.from_metric_base(Point3D(0, 34, 2.44))
         assert opta_point == Point3D(0, 50, 38)
 
-        ifab_point = pitch.from_metric_base(
-            Point(62.78, 41.72), pitch_length=105, pitch_width=68
-        )
+        ifab_point = pitch.from_metric_base(Point(62.78, 41.72), pitch_length=105, pitch_width=68)
         assert round(ifab_point.x, 2) == 60
         assert round(ifab_point.y, 2) == 61
 
@@ -95,14 +91,10 @@ class TestPitchdimensions:
         distance = pitch.distance_between(Point(0, 50), Point(11.5, 50))
         assert distance == 11
 
-        distance = pitch.distance_between(
-            Point(100, 50), Point(100 - 11.5, 50)
-        )
+        distance = pitch.distance_between(Point(100, 50), Point(100 - 11.5, 50))
         assert distance == 11
 
-        distance = pitch.distance_between(
-            Point(0, 50), Point(11.5, 50), unit=Unit.CENTIMETERS
-        )
+        distance = pitch.distance_between(Point(0, 50), Point(11.5, 50), unit=Unit.CENTIMETERS)
         assert distance == 1100
 
         pitch = NormalizedPitchDimensions(
@@ -130,8 +122,6 @@ class TestPitchdimensions:
         )
         # the corner of the penalty area should remain the corner of
         # the penalty area in the new coordinate system
-        transformed_point = transformer.change_point_dimensions(
-            Point(17, 78.9)
-        )
+        transformed_point = transformer.change_point_dimensions(Point(17, 78.9))
         assert transformed_point.x == pytest.approx(16.5)
         assert transformed_point.y == pytest.approx(54.16)

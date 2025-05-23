@@ -43,12 +43,8 @@ def run_query(argv=sys.argv[1:]):
         "--input-statsbomb",
         help="StatsBomb event input files (events.json,lineup.json)",
     )
-    parser.add_argument(
-        "--input-opta", help="Opta event input files (f24.xml,f7.xml)"
-    )
-    parser.add_argument(
-        "--input-datafactory", help="Datafactory event input file (.json)"
-    )
+    parser.add_argument("--input-opta", help="Opta event input files (f24.xml,f7.xml)")
+    parser.add_argument("--input-datafactory", help="Datafactory event input file (.json)")
     parser.add_argument("--input-wyscout", help="Wyscout event input file")
     parser.add_argument("--output-xml", help="Output file")
     parser.add_argument(
@@ -56,15 +52,9 @@ def run_query(argv=sys.argv[1:]):
         default=True,
         help="Input existence of success capture in output",
     )
-    parser.add_argument(
-        "--prepend-time", default=7, help="Seconds to prepend to match"
-    )
-    parser.add_argument(
-        "--append-time", default=5, help="Seconds to append to match"
-    )
-    parser.add_argument(
-        "--query-file", help="File containing the query", required=True
-    )
+    parser.add_argument("--prepend-time", default=7, help="Seconds to prepend to match")
+    parser.add_argument("--append-time", default=5, help="Seconds to append to match")
+    parser.add_argument("--query-file", help="File containing the query", required=True)
     parser.add_argument(
         "--stats",
         default="none",
@@ -190,26 +180,14 @@ def run_query(argv=sys.argv[1:]):
         """.format(
             home_total=counter["home_total"],
             home_success=counter["home_success"],
-            home_success_rate=(
-                counter["home_success"] / counter["home_total"] * 100
-            ),
+            home_success_rate=(counter["home_success"] / counter["home_total"] * 100),
             home_failure=counter["home_total"] - counter["home_success"],
-            home_failure_rate=(
-                (counter["home_total"] - counter["home_success"])
-                / counter["home_total"]
-                * 100
-            ),
+            home_failure_rate=((counter["home_total"] - counter["home_success"]) / counter["home_total"] * 100),
             away_total=counter["away_total"],
             away_success=counter["away_success"],
-            away_success_rate=(
-                counter["away_success"] / counter["away_total"] * 100
-            ),
+            away_success_rate=(counter["away_success"] / counter["away_total"] * 100),
             away_failure=counter["away_total"] - counter["away_success"],
-            away_failure_rate=(
-                (counter["away_total"] - counter["away_success"])
-                / counter["away_total"]
-                * 100
-            ),
+            away_failure_rate=((counter["away_total"] - counter["away_success"]) / counter["away_total"] * 100),
         )
         print(textwrap.dedent(text_stats))
     elif opts.stats == "json":

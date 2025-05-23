@@ -214,9 +214,7 @@ class Player:
     # match specific
     starting: bool = False
     starting_position: Optional[PositionType] = None
-    positions: TimeContainer[PositionType] = field(
-        default_factory=TimeContainer, compare=False
-    )
+    positions: TimeContainer[PositionType] = field(default_factory=TimeContainer, compare=False)
 
     attributes: Dict = field(default_factory=dict, compare=False)
 
@@ -268,9 +266,7 @@ class Team:
     name: str
     ground: Ground
     starting_formation: Optional[FormationType] = None
-    formations: TimeContainer[FormationType] = field(
-        default_factory=TimeContainer, compare=False
-    )
+    formations: TimeContainer[FormationType] = field(default_factory=TimeContainer, compare=False)
     players: List[Player] = field(default_factory=list)
 
     def __str__(self):
@@ -301,9 +297,7 @@ class Team:
 
         return None
 
-    def get_player_by_position(
-        self, position: PositionType, time: Time
-    ) -> Optional[Player]:
+    def get_player_by_position(self, position: PositionType, time: Time) -> Optional[Player]:
         """Get a player by their position at a given time.
 
         Args:
@@ -452,9 +446,7 @@ class AttackingDirection(Enum):
             return AttackingDirection.RTL
         if orientation == Orientation.HOME_AWAY:
             if period is None:
-                raise OrientationError(
-                    "You must provide a period to determine the attacking direction"
-                )
+                raise OrientationError("You must provide a period to determine the attacking direction")
             dirmap = {
                 1: AttackingDirection.LTR,
                 2: AttackingDirection.RTL,
@@ -463,14 +455,10 @@ class AttackingDirection(Enum):
             }
             if period.id in dirmap:
                 return dirmap[period.id]
-            raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
-            )
+            raise OrientationError("This orientation is not defined for period %s" % period.id)
         if orientation == Orientation.AWAY_HOME:
             if period is None:
-                raise OrientationError(
-                    "You must provide a period to determine the attacking direction"
-                )
+                raise OrientationError("You must provide a period to determine the attacking direction")
             dirmap = {
                 1: AttackingDirection.RTL,
                 2: AttackingDirection.LTR,
@@ -479,35 +467,25 @@ class AttackingDirection(Enum):
             }
             if period.id in dirmap:
                 return dirmap[period.id]
-            raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
-            )
+            raise OrientationError("This orientation is not defined for period %s" % period.id)
         if orientation == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team is None:
-                raise OrientationError(
-                    "You must provide the ball owning team to determine the attacking direction"
-                )
+                raise OrientationError("You must provide the ball owning team to determine the attacking direction")
             if ball_owning_team is not None:
                 if ball_owning_team.ground == Ground.HOME:
                     return AttackingDirection.LTR
                 if ball_owning_team.ground == Ground.AWAY:
                     return AttackingDirection.RTL
-                raise OrientationError(
-                    "Invalid ball_owning_team: %s", ball_owning_team
-                )
+                raise OrientationError("Invalid ball_owning_team: %s", ball_owning_team)
             return AttackingDirection.NOT_SET
         if orientation == Orientation.ACTION_EXECUTING_TEAM:
             if action_executing_team is None:
-                raise ValueError(
-                    "You must provide the action executing team to determine the attacking direction"
-                )
+                raise ValueError("You must provide the action executing team to determine the attacking direction")
             if action_executing_team.ground == Ground.HOME:
                 return AttackingDirection.LTR
             if action_executing_team.ground == Ground.AWAY:
                 return AttackingDirection.RTL
-            raise OrientationError(
-                "Invalid action_executing_team: %s", action_executing_team
-            )
+            raise OrientationError("Invalid action_executing_team: %s", action_executing_team)
         raise OrientationError("Unknown orientation: %s", orientation)
 
     def __repr__(self):
@@ -618,103 +596,54 @@ class CoordinateSystem(ABC):
             from mplsoccer.dimensions import BaseDims
         except ImportError:
             raise ImportError(
-                "Seems like you don't have `mplsoccer` installed. "
-                "Please install it using: pip install mplsoccer"
+                "Seems like you don't have `mplsoccer` installed. Please install it using: pip install mplsoccer"
             )
 
-        if (
-            self.pitch_dimensions.x_dim.min is None
-            or self.pitch_dimensions.x_dim.max is None
-        ):
-            raise ValueError(
-                "The x-dimensions of the pitch must be fully defined."
-            )
-        if (
-            self.pitch_dimensions.y_dim.min is None
-            or self.pitch_dimensions.y_dim.max is None
-        ):
-            raise ValueError(
-                "The y-dimensions of the pitch must be fully defined."
-            )
+        if self.pitch_dimensions.x_dim.min is None or self.pitch_dimensions.x_dim.max is None:
+            raise ValueError("The x-dimensions of the pitch must be fully defined.")
+        if self.pitch_dimensions.y_dim.min is None or self.pitch_dimensions.y_dim.max is None:
+            raise ValueError("The y-dimensions of the pitch must be fully defined.")
 
-        pitch_length = (
-            self.pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
-        )
+        pitch_length = self.pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
         pitch_width = self.pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
 
-        invert_y = (
-            self.vertical_orientation == VerticalOrientation.TOP_TO_BOTTOM
-        )
+        invert_y = self.vertical_orientation == VerticalOrientation.TOP_TO_BOTTOM
         origin_center = self.origin == Origin.CENTER
 
         neg_if_inverted = -1 if invert_y else 1
         center = (0, 0)
         if self.origin == Origin.BOTTOM_LEFT:
             center = (
-                (
-                    self.pitch_dimensions.x_dim.max
-                    - self.pitch_dimensions.x_dim.min
-                )
-                / 2,
-                (
-                    self.pitch_dimensions.y_dim.max
-                    - self.pitch_dimensions.y_dim.min
-                )
-                / 2,
+                (self.pitch_dimensions.x_dim.max - self.pitch_dimensions.x_dim.min) / 2,
+                (self.pitch_dimensions.y_dim.max - self.pitch_dimensions.y_dim.min) / 2,
             )
         elif self.origin == Origin.TOP_LEFT:
             neg_if_inverted = -1
             center = (
-                (
-                    self.pitch_dimensions.x_dim.max
-                    - self.pitch_dimensions.x_dim.min
-                )
-                / 2,
-                (
-                    self.pitch_dimensions.y_dim.max
-                    - self.pitch_dimensions.y_dim.min
-                )
-                / 2,
+                (self.pitch_dimensions.x_dim.max - self.pitch_dimensions.x_dim.min) / 2,
+                (self.pitch_dimensions.y_dim.max - self.pitch_dimensions.y_dim.min) / 2,
             )
 
         dim = BaseDims(
             left=self.pitch_dimensions.x_dim.min,
             right=self.pitch_dimensions.x_dim.max,
-            bottom=self.pitch_dimensions.y_dim.min
-            if not invert_y
-            else self.pitch_dimensions.y_dim.max,
-            top=self.pitch_dimensions.y_dim.max
-            if not invert_y
-            else self.pitch_dimensions.y_dim.min,
-            width=self.pitch_dimensions.x_dim.max
-            - self.pitch_dimensions.x_dim.min,
-            length=self.pitch_dimensions.y_dim.max
-            - self.pitch_dimensions.y_dim.min,
-            goal_bottom=center[1]
-            - (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
-            goal_top=center[1]
-            + (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
-            six_yard_left=self.pitch_dimensions.x_dim.min
-            + self.pitch_dimensions.six_yard_length,
-            six_yard_right=self.pitch_dimensions.x_dim.max
-            - self.pitch_dimensions.six_yard_length,
-            six_yard_bottom=center[1]
-            - (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
-            six_yard_top=center[1]
-            + (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            bottom=self.pitch_dimensions.y_dim.min if not invert_y else self.pitch_dimensions.y_dim.max,
+            top=self.pitch_dimensions.y_dim.max if not invert_y else self.pitch_dimensions.y_dim.min,
+            width=self.pitch_dimensions.x_dim.max - self.pitch_dimensions.x_dim.min,
+            length=self.pitch_dimensions.y_dim.max - self.pitch_dimensions.y_dim.min,
+            goal_bottom=center[1] - (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            goal_top=center[1] + (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            six_yard_left=self.pitch_dimensions.x_dim.min + self.pitch_dimensions.six_yard_length,
+            six_yard_right=self.pitch_dimensions.x_dim.max - self.pitch_dimensions.six_yard_length,
+            six_yard_bottom=center[1] - (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            six_yard_top=center[1] + (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
             penalty_spot_distance=self.pitch_dimensions.penalty_spot_distance,
-            penalty_left=self.pitch_dimensions.x_dim.min
-            + self.pitch_dimensions.penalty_spot_distance,
-            penalty_right=self.pitch_dimensions.x_dim.max
-            - self.pitch_dimensions.penalty_spot_distance,
-            penalty_area_left=self.pitch_dimensions.x_dim.min
-            + self.pitch_dimensions.penalty_area_length,
-            penalty_area_right=self.pitch_dimensions.x_dim.max
-            - self.pitch_dimensions.penalty_area_length,
-            penalty_area_bottom=center[1]
-            - (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
-            penalty_area_top=center[1]
-            + (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            penalty_left=self.pitch_dimensions.x_dim.min + self.pitch_dimensions.penalty_spot_distance,
+            penalty_right=self.pitch_dimensions.x_dim.max - self.pitch_dimensions.penalty_spot_distance,
+            penalty_area_left=self.pitch_dimensions.x_dim.min + self.pitch_dimensions.penalty_area_length,
+            penalty_area_right=self.pitch_dimensions.x_dim.max - self.pitch_dimensions.penalty_area_length,
+            penalty_area_bottom=center[1] - (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            penalty_area_top=center[1] + (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
             center_width=center[1],
             center_length=center[0],
             goal_width=self.pitch_dimensions.goal_width,
@@ -728,20 +657,12 @@ class CoordinateSystem(ABC):
             arc=0,
             invert_y=invert_y,
             origin_center=origin_center,
-            pad_default=0.02
-            * (
-                self.pitch_dimensions.x_dim.max
-                - self.pitch_dimensions.x_dim.min
-            ),
+            pad_default=0.02 * (self.pitch_dimensions.x_dim.max - self.pitch_dimensions.x_dim.min),
             pad_multiplier=1,
-            aspect_equal=False
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else True,
+            aspect_equal=False if self.pitch_dimensions.unit == Unit.NORMED else True,
             pitch_width=pitch_width,
             pitch_length=pitch_length,
-            aspect=pitch_width / pitch_length
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else 1.0,
+            aspect=pitch_width / pitch_length if self.pitch_dimensions.unit == Unit.NORMED else 1.0,
         )
         return dim
 
@@ -872,12 +793,8 @@ class TracabCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -916,12 +833,8 @@ class SecondSpectrumCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -958,9 +871,7 @@ class OptaCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return OptaPitchDimensions(
-            pitch_length=self._pitch_length, pitch_width=self._pitch_width
-        )
+        return OptaPitchDimensions(pitch_length=self._pitch_length, pitch_width=self._pitch_width)
 
 
 class SportecEventDataCoordinateSystem(ProviderCoordinateSystem):
@@ -1018,12 +929,8 @@ class SportecTrackingDataCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1094,12 +1001,8 @@ class PFFCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1136,9 +1039,7 @@ class WyscoutCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return WyscoutPitchDimensions(
-            pitch_length=self._pitch_length, pitch_width=self._pitch_width
-        )
+        return WyscoutPitchDimensions(pitch_length=self._pitch_length, pitch_width=self._pitch_width)
 
 
 class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
@@ -1165,12 +1066,8 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1202,12 +1099,8 @@ class SignalityCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1317,12 +1210,8 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
     def pitch_dimensions(self) -> PitchDimensions:
         if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
+                x_dim=Dimension(-1 * self._pitch_length / 2, self._pitch_length / 2),
+                y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
                 pitch_length=self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
@@ -1395,13 +1284,9 @@ def build_coordinate_system(
     if provider in coordinate_systems:
         if isinstance(coordinate_systems[provider], dict):
             assert dataset_type in coordinate_systems[provider]
-            return coordinate_systems[provider][dataset_type](
-                pitch_length=pitch_length, pitch_width=pitch_width
-            )
+            return coordinate_systems[provider][dataset_type](pitch_length=pitch_length, pitch_width=pitch_width)
         else:
-            return coordinate_systems[provider](
-                pitch_length=pitch_length, pitch_width=pitch_width
-            )
+            return coordinate_systems[provider](pitch_length=pitch_length, pitch_width=pitch_width)
     else:
         raise ValueError(f"Invalid provider: {provider}")
 
@@ -1449,26 +1334,15 @@ class ActionValue(Statistic):
 
     @property
     def offensive_value(self) -> Optional[float]:
-        if (
-            self.action_value_scoring_before is None
-            or self.action_value_scoring_after is None
-        ):
+        if self.action_value_scoring_before is None or self.action_value_scoring_after is None:
             return None
-        return (
-            self.action_value_scoring_after - self.action_value_scoring_before
-        )
+        return self.action_value_scoring_after - self.action_value_scoring_before
 
     @property
     def defensive_value(self) -> Optional[float]:
-        if (
-            self.action_value_conceding_before is None
-            or self.action_value_conceding_after is None
-        ):
+        if self.action_value_conceding_before is None or self.action_value_conceding_after is None:
             return None
-        return (
-            self.action_value_conceding_after
-            - self.action_value_conceding_before
-        )
+        return self.action_value_conceding_after - self.action_value_conceding_before
 
     @property
     def value(self) -> Optional[float]:
@@ -1530,11 +1404,7 @@ class DataRecord(ABC):
 
     @property
     def attacking_direction(self):
-        if (
-            self.dataset
-            and self.dataset.metadata
-            and self.dataset.metadata.orientation is not None
-        ):
+        if self.dataset and self.dataset.metadata and self.dataset.metadata.orientation is not None:
             try:
                 return AttackingDirection.from_orientation(
                     self.dataset.metadata.orientation,
@@ -1545,9 +1415,7 @@ class DataRecord(ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]]
-    ) -> bool:
+    def matches(self, filter_: Optional[Union[str, Callable[[Self], bool]]]) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -1555,9 +1423,7 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
-    ) -> Optional[Self]:
+    def prev(self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None) -> Optional[Self]:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -1565,9 +1431,7 @@ class DataRecord(ABC):
                     return prev_record
                 prev_record = prev_record.prev_record
 
-    def next(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
-    ) -> Optional[Self]:
+    def next(self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None) -> Optional[Self]:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -1636,9 +1500,7 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=(
-                    self.periods[i + 1] if i + 1 < len(self.periods) else None
-                ),
+                next_=(self.periods[i + 1] if i + 1 < len(self.periods) else None),
             )
 
 
@@ -1676,9 +1538,7 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=(
-                    self.records[i + 1] if i + 1 < len(self.records) else None
-                ),
+                next_=(self.records[i + 1] if i + 1 < len(self.records) else None),
             )
 
         self._init_player_positions()
@@ -1741,9 +1601,7 @@ class Dataset(ABC, Generic[T]):
         )
 
     def map(self, mapper):
-        return replace(
-            self, records=[mapper(record) for record in self.records]
-        )
+        return replace(self, records=[mapper(record) for record in self.records])
 
     def find_all(self, filter_) -> List[T]:
         return [record for record in self.records if record.matches(filter_)]
@@ -1798,8 +1656,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1807,8 +1664,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1818,9 +1674,7 @@ class Dataset(ABC, Generic[T]):
     ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(
-            *columns, **named_columns
-        )
+        transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
         iterator = map(transformer, self.records)
         if as_list:
             return list(iterator)
@@ -1836,9 +1690,7 @@ class Dataset(ABC, Generic[T]):
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 
-            transformer = get_transformer_cls(self.dataset_type)(
-                *columns, **named_columns
-            )
+            transformer = get_transformer_cls(self.dataset_type)(*columns, **named_columns)
 
             c = len(self.records)
             items = defaultdict(lambda: [None] * c)
@@ -1849,9 +1701,7 @@ class Dataset(ABC, Generic[T]):
 
             return items
         else:
-            raise KloppyParameterError(
-                f"Orient {orient} is not supported. Only orient='list' is supported"
-            )
+            raise KloppyParameterError(f"Orient {orient} is not supported. Only orient='list' is supported")
 
     def to_df(
         self,
@@ -1877,8 +1727,7 @@ class Dataset(ABC, Generic[T]):
                 types_mapper = pd.ArrowDtype
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
+                    "Seems like you don't have pandas installed. Please install it using: pip install pandas"
                 )
             except AttributeError:
                 raise AttributeError(
@@ -1890,13 +1739,10 @@ class Dataset(ABC, Generic[T]):
                 import pyarrow as pa
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pyarrow installed. Please"
-                    " install it using: pip install pyarrow"
+                    "Seems like you don't have pyarrow installed. Please install it using: pip install pyarrow"
                 )
 
-            table = pa.Table.from_pydict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
+            table = pa.Table.from_pydict(self.to_dict(*columns, orient="list", **named_columns))
             return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":
@@ -1904,25 +1750,19 @@ class Dataset(ABC, Generic[T]):
                 from pandas import DataFrame
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
+                    "Seems like you don't have pandas installed. Please install it using: pip install pandas"
                 )
 
-            return DataFrame.from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
+            return DataFrame.from_dict(self.to_dict(*columns, orient="list", **named_columns))
         elif engine == "polars":
             try:
                 from polars import from_dict
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have polars installed. Please"
-                    " install it using: pip install polars"
+                    "Seems like you don't have polars installed. Please install it using: pip install polars"
                 )
 
-            return from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
+            return from_dict(self.to_dict(*columns, orient="list", **named_columns))
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
 

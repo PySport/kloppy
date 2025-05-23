@@ -106,16 +106,10 @@ class SportsCodeSerializer(CodeDataSerializer):
             id_.text = code.code_id or str(i + 1)
 
             start = etree.SubElement(instance, "start")
-            start.text = str(
-                relative_period_start.total_seconds()
-                + code.start_timestamp.total_seconds()
-            )
+            start.text = str(relative_period_start.total_seconds() + code.start_timestamp.total_seconds())
 
             end = etree.SubElement(instance, "end")
-            end.text = str(
-                relative_period_start.total_seconds()
-                + code.end_timestamp.total_seconds()
-            )
+            end.text = str(relative_period_start.total_seconds() + code.end_timestamp.total_seconds())
 
             code_ = etree.SubElement(instance, "code")
             code_.text = code.code
@@ -126,9 +120,7 @@ class SportsCodeSerializer(CodeDataSerializer):
                 label = etree.SubElement(instance, "label")
                 if isinstance(text, bool):
                     if not text:
-                        raise SerializationError(
-                            f"You are not allowed to pass a False value for {group}"
-                        )
+                        raise SerializationError(f"You are not allowed to pass a False value for {group}")
 
                     text_ = etree.SubElement(label, "text")
                     text_.text = group

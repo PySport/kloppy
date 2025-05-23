@@ -97,9 +97,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         return Provider.HAWKEYE
 
     @staticmethod
-    def __parse_periods(
-        raw_periods: List[Dict[str, Any]]
-    ) -> Dict[str, Period]:
+    def __parse_periods(raw_periods: List[Dict[str, Any]]) -> Dict[str, Period]:
         parsed_periods = {}
         for period in raw_periods:
             if period["segment"] == 0:
@@ -108,18 +106,12 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
 
             parsed_periods[period_id] = Period(
                 id=period_id,
-                start_timestamp=datetime.strptime(
-                    period["startTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                ),
-                end_timestamp=datetime.strptime(
-                    period["endTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                ),
+                start_timestamp=datetime.strptime(period["startTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                end_timestamp=datetime.strptime(period["endTimeUTC"], "%Y-%m-%dT%H:%M:%S.%fZ"),
             )
         return parsed_periods
 
-    def __parse_teams(
-        self, raw_teams: List[Dict[str, Any]]
-    ) -> Dict[str, Team]:
+    def __parse_teams(self, raw_teams: List[Dict[str, Any]]) -> Dict[str, Team]:
         parsed_teams = {}
         for team in raw_teams:
             team_id = team["id"][self.object_id]
@@ -130,9 +122,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             )
         return parsed_teams
 
-    def __parse_players(
-        self, raw_players: List[Dict[str, Any]], teams: Dict[str, Team]
-    ) -> Dict[str, Player]:
+    def __parse_players(self, raw_players: List[Dict[str, Any]], teams: Dict[str, Team]) -> Dict[str, Player]:
         parsed_players = {}
         for player in raw_players:
             player_id = player["id"][self.object_id]
@@ -169,23 +159,11 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         game_week = match_day.group() if match_day else None
 
         stadium = meta_data.get("Stadium")
-        self.pitch_length = (
-            stadium.get("PitchLength", self.pitch_length)
-            if stadium
-            else self.pitch_length
-        )
-        self.pitch_width = (
-            stadium.get("PitchWidth", self.pitch_width)
-            if stadium
-            else self.pitch_width
-        )
+        self.pitch_length = stadium.get("PitchLength", self.pitch_length) if stadium else self.pitch_length
+        self.pitch_width = stadium.get("PitchWidth", self.pitch_width) if stadium else self.pitch_width
 
         self._game_id = meta_data.get("MatchId")
-        self._game_date = (
-            parse(kick_off_time.get("DateTime")).replace(tzinfo=timezone.utc)
-            if kick_off_time
-            else None
-        )
+        self._game_date = parse(kick_off_time.get("DateTime")).replace(tzinfo=timezone.utc) if kick_off_time else None
         self._game_week = game_week
 
     def __parse_meta_data_xml(self, meta_data):
@@ -193,16 +171,8 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             root = objectify.fromstring(meta_data_fp.read())
 
         game_id = getattr(root, "id", None)
-        date = (
-            getattr(root.kickOffTime, "dateTime", None)
-            if hasattr(root, "kickOffTime")
-            else None
-        )
-        game_week_attr = (
-            getattr(root.matchday, "name", None)
-            if hasattr(root, "matchday")
-            else None
-        )
+        date = getattr(root.kickOffTime, "dateTime", None) if hasattr(root, "kickOffTime") else None
+        game_week_attr = getattr(root.matchday, "name", None) if hasattr(root, "matchday") else None
         self.pitch_length = (
             getattr(root.stadium.pitch, "length", self.pitch_length)
             if hasattr(root.stadium, "pitch")
@@ -234,12 +204,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         elif meta_data_extension == ".json":
             return self.__parse_meta_data_json(meta_data)
         else:
-            raise ValueError(
-                "Metadata only supports .json and .xml file formats..."
-            )
+            raise ValueError("Metadata only supports .json and .xml file formats...")
 
     def deserialize(self, inputs: HawkEyeInputs) -> TrackingDataset:
-
         self.__parse_meta_data(inputs.meta_data)
 
         transformer = self.get_transformer(
@@ -257,9 +224,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         it = list(zip_longest(inputs.ball_feeds, inputs.player_centroid_feeds))
         if inputs.show_progress:
             if tqdm is None:
-                warnings.warn(
-                    "tqdm not installed, progress bar will not be shown"
-                )
+                warnings.warn("tqdm not installed, progress bar will not be shown")
             else:
                 it = tqdm.tqdm(it)
 
@@ -270,25 +235,19 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
 
-            self.object_id = HawkEyeObjectIdentifier.get_identifier_variable(
-                player_tracking_data
-            )
+            self.object_id = HawkEyeObjectIdentifier.get_identifier_variable(player_tracking_data)
 
             if frame_rate is None:
                 frame_rate = self.__infer_frame_rate(ball_tracking_data)
 
             if not self._game_id:
-                self._game_id = ball_tracking_data["details"]["match"]["id"][
-                    self.object_id
-                ]
+                self._game_id = ball_tracking_data["details"]["match"]["id"][self.object_id]
 
             # Parse the teams, players and periods. A value can be added by
             # later feeds, but we will not overwrite existing values.
             with performance_logging("Parsing meta data", logger=logger):
                 parsed_teams = {
-                    **self.__parse_teams(
-                        ball_tracking_data["details"]["teams"]
-                    ),
+                    **self.__parse_teams(ball_tracking_data["details"]["teams"]),
                     **parsed_teams,
                 }
                 parsed_players = {
@@ -319,18 +278,12 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                 else (minute - 120)
             )
 
-            with performance_logging(
-                "Parsing ball tracking data", logger=logger
-            ):
+            with performance_logging("Parsing ball tracking data", logger=logger):
                 for detection in ball_tracking_data["samples"]["ball"]:
-                    frame_id = int(
-                        (minute * 60 + float(detection["time"])) * frame_rate
-                    )
+                    frame_id = int((minute * 60 + float(detection["time"])) * frame_rate)
                     parsed_frames[frame_id] = Frame(
                         frame_id=frame_id,
-                        timestamp=timedelta(
-                            minutes=period_minute, seconds=detection["time"]
-                        ),
+                        timestamp=timedelta(minutes=period_minute, seconds=detection["time"]),
                         ball_coordinates=Point3D(
                             x=detection["pos"][0],
                             y=detection["pos"][1],
@@ -350,25 +303,17 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             _minute = player_tracking_data["sequences"]["match-minute"] - 1
 
             if _period_id != period_id or _minute != minute:
-                raise DeserializationError(
-                    "The feed for ball tracking and player tracking are not in sync"
-                )
-            with performance_logging(
-                "Parsing player tracking data", logger=logger
-            ):
+                raise DeserializationError("The feed for ball tracking and player tracking are not in sync")
+            with performance_logging("Parsing player tracking data", logger=logger):
                 for detection in player_tracking_data["samples"]["people"]:
                     if detection["role"]["name"] not in [
                         "Outfielder",
                         "Goalkeeper",
                     ]:
                         continue
-                    player = parsed_players[
-                        detection["personId"][self.object_id]
-                    ]
+                    player = parsed_players[detection["personId"][self.object_id]]
                     for centroid in detection["centroid"]:
-                        frame_id = int(
-                            (minute * 60 + centroid["time"]) * frame_rate
-                        )
+                        frame_id = int((minute * 60 + centroid["time"]) * frame_rate)
                         player_data = PlayerData(
                             coordinates=Point(
                                 x=centroid["pos"][0],
@@ -378,9 +323,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                             speed=centroid["speed"]["mps"],
                         )
                         if frame_id in parsed_frames:
-                            parsed_frames[frame_id].players_data[
-                                player
-                            ] = player_data
+                            parsed_frames[frame_id].players_data[player] = player_data
                         else:
                             parsed_frames[frame_id] = Frame(
                                 frame_id=frame_id,
@@ -388,9 +331,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                                     minutes=period_minute,
                                     seconds=centroid["time"],
                                 ),
-                                ball_coordinates=Point3D(
-                                    float("nan"), float("nan"), float("nan")
-                                ),
+                                ball_coordinates=Point3D(float("nan"), float("nan"), float("nan")),
                                 ball_state=None,
                                 ball_owning_team=None,
                                 players_data={player: player_data},
@@ -421,19 +362,14 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                     team.players.append(player)
 
         try:
-            first_frame = next(
-                frame for frame in frames if frame.period.id == 1
-            )
+            first_frame = next(frame for frame in frames if frame.period.id == 1)
             orientation = (
                 Orientation.HOME_AWAY
-                if attacking_direction_from_frame(first_frame)
-                == AttackingDirection.LTR
+                if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
                 else Orientation.AWAY_HOME
             )
         except StopIteration:
-            warnings.warn(
-                "Could not determine orientation of dataset, defaulting to NOT_SET"
-            )
+            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
             orientation = Orientation.NOT_SET
 
         meta_data = Metadata(

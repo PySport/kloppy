@@ -56,18 +56,12 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     relevant_kwargs = {
         field.name: all_kwargs.get(field.name, field.default)
         for field in fields(event_cls)
-        if field.init
-        and not (
-            field.default == dataclasses.MISSING
-            and field.name not in all_kwargs
-        )
+        if field.init and not (field.default == dataclasses.MISSING and field.name not in all_kwargs)
     }
 
     if len(relevant_kwargs) < len(all_kwargs):
         skipped_kwargs = set(all_kwargs.keys()) - set(relevant_kwargs.keys())
-        warnings.warn(
-            f"The following arguments were skipped: {skipped_kwargs}"
-        )
+        warnings.warn(f"The following arguments were skipped: {skipped_kwargs}")
 
     event = event_cls(**relevant_kwargs)
 

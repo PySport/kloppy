@@ -13,9 +13,7 @@ from .raw_data.dat import TracabDatParser
 from .raw_data.json import TracabJSONParser
 
 
-def get_metadata_parser(
-    feed: IO[bytes], feed_format: Optional[str] = None
-) -> TracabMetadataParser:
+def get_metadata_parser(feed: IO[bytes], feed_format: Optional[str] = None) -> TracabMetadataParser:
     # infer the data format if not provided
     if feed_format is None:
         if feed.read(1).decode("utf-8")[0] == "<":

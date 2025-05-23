@@ -66,9 +66,7 @@ class Source:
 FileLike = Union[FileOrPath, Source]
 
 
-def _file_or_path_to_binary_stream(
-    file_or_path: FileOrPath, binary_mode: str
-) -> Tuple[BinaryIO, bool]:
+def _file_or_path_to_binary_stream(file_or_path: FileOrPath, binary_mode: str) -> Tuple[BinaryIO, bool]:
     """
     Converts a file path or a file-like object to a binary stream.
 
@@ -82,9 +80,7 @@ def _file_or_path_to_binary_stream(
     """
     assert binary_mode in ("rb", "wb", "ab")
 
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         # If file_or_path is a path-like object, open it and return the binary stream
         return open(os.fspath(file_or_path), binary_mode), True  # type: ignore
 
@@ -96,9 +92,7 @@ def _file_or_path_to_binary_stream(
         # If file_or_path is a file-like object, return it as is
         return file_or_path, False  # type: ignore
 
-    raise TypeError(
-        f"Unsupported type for {file_or_path}, {file_or_path.__class__.__name__}."
-    )
+    raise TypeError(f"Unsupported type for {file_or_path}, {file_or_path.__class__.__name__}.")
 
 
 def _detect_format_from_content(file_or_path: FileOrPath) -> Optional[str]:
@@ -210,9 +204,7 @@ def _open(
     filepath = _filepath_from_path_or_filelike(filename)
 
     if format not in (None, "gz", "xz", "bz2", "raw"):
-        raise ValueError(
-            f"Format not supported: {format}. Choose one of: 'gz', 'xz', 'bz2'"
-        )
+        raise ValueError(f"Format not supported: {format}. Choose one of: 'gz', 'xz', 'bz2'")
 
     if format == "raw":
         detected_format = None
@@ -299,9 +291,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
         >>> get_file_extension(Source(data="example.csv"))
         '.csv'
     """
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         path = os.fspath(file_or_path)  # type: ignore
         for ext in [".gz", ".xz", ".bz2"]:
             if path.endswith(ext):
@@ -311,9 +301,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
     if isinstance(file_or_path, Source):
         return get_file_extension(file_or_path.data)
 
-    raise TypeError(
-        f"Could not determine extension for input type: {type(file_or_path)}"
-    )
+    raise TypeError(f"Could not determine extension for input type: {type(file_or_path)}")
 
 
 @contextlib.contextmanager
@@ -410,10 +398,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
 
 def _natural_sort_key(path: str) -> List[Union[int, str]]:
     # Split string into list of chunks for natural sorting
-    return [
-        int(text) if text.isdigit() else text.lower()
-        for text in re.split(r"(\d+)", path)
-    ]
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r"(\d+)", path)]
 
 
 def expand_inputs(
@@ -482,9 +467,7 @@ def expand_inputs(
         if is_directory(uri):
             adapter = get_adapter(uri)
             if adapter:
-                yield from process_expansion(
-                    adapter.list_directory(uri, recursive=True)
-                )
+                yield from process_expansion(adapter.list_directory(uri, recursive=True))
             else:
                 raise AdapterError(f"No adapter found for {uri}")
         elif is_file(uri):
@@ -501,9 +484,7 @@ def expand_inputs(
                 elif is_directory(uri):
                     adapter = get_adapter(uri)
                     if adapter:
-                        yield from process_expansion(
-                            adapter.list_directory(uri, recursive=True)
-                        )
+                        yield from process_expansion(adapter.list_directory(uri, recursive=True))
                     else:
                         raise AdapterError(f"No adapter found for {uri}")
                 else:

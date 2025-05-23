@@ -138,17 +138,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
-            elif (
-                trackable_object in referee_dict.keys()
-                or group_name == "referee"
-            ):
+            elif trackable_object in referee_dict.keys() or group_name == "referee":
                 group_name = "referee"
                 continue  # Skip Referee Coords
 
             if group_name is None:
-                group_name = teamdict.get(
-                    player_id_to_team_dict.get(trackable_object)
-                )
+                group_name = teamdict.get(player_id_to_team_dict.get(trackable_object))
 
                 if group_name == "home_team":
                     player = players["HOME"][trackable_object]
@@ -195,9 +190,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             return timedelta(seconds=60 * float(m) + float(s))
         elif len(parts) == 3:
             h, m, s = parts
-            return timedelta(
-                seconds=3600 * float(h) + 60 * float(m) + float(s)
-            )
+            return timedelta(seconds=3600 * float(h) + 60 * float(m) + float(s))
         else:
             raise ValueError("Invalid timestring format")
 
@@ -242,30 +235,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         periods = {}
 
         # Extract unique periods while filtering out None values
-        unique_periods = {
-            frame["period"]
-            for frame in tracking
-            if frame["period"] is not None
-        }
+        unique_periods = {frame["period"] for frame in tracking if frame["period"] is not None}
 
         for period in unique_periods:
             # Filter frames that belong to the current period and have valid "time"
-            _frames = [
-                frame
-                for frame in tracking
-                if frame["period"] == period and frame["time"] is not None
-            ]
+            _frames = [frame for frame in tracking if frame["period"] == period and frame["time"] is not None]
 
             # Ensure _frames is not empty before accessing the first and last elements
             if _frames:
                 periods[period] = Period(
                     id=period,
-                    start_timestamp=timedelta(
-                        seconds=_frames[0]["frame"] / frame_rate
-                    ),
-                    end_timestamp=timedelta(
-                        seconds=_frames[-1]["frame"] / frame_rate
-                    ),
+                    start_timestamp=timedelta(seconds=_frames[0]["frame"] / frame_rate),
+                    end_timestamp=timedelta(seconds=_frames[-1]["frame"] / frame_rate),
                 )
 
         return periods
@@ -290,9 +271,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         elif group_name == "away team":
             team = teams[1]
         else:
-            raise ValueError(
-                f"anonymous player with track_id `{track_id}` does not have a specified group_name."
-            )
+            raise ValueError(f"anonymous player with track_id `{track_id}` does not have a specified group_name.")
 
         return Player(
             player_id=f"{team.ground}_anon_{track_id}",
@@ -318,29 +297,18 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 metadata["away_team"].get("id"): "away_team",
             }
 
-            player_to_team_dict = {
-                player["trackable_object"]: player["team_id"]
-                for player in metadata["players"]
-            }
+            player_to_team_dict = {player["trackable_object"]: player["team_id"] for player in metadata["players"]}
 
-            player_dict = {
-                player["trackable_object"]: player
-                for player in metadata["players"]
-            }
+            player_dict = {player["trackable_object"]: player for player in metadata["players"]}
 
-            referee_dict = {
-                ref["trackable_object"]: "referee"
-                for ref in metadata["referees"]
-            }
+            referee_dict = {ref["trackable_object"]: "referee" for ref in metadata["referees"]}
             ball_id = metadata["ball"]["trackable_object"]
 
             # there are different pitch_sizes in SkillCorner
             pitch_size_width = metadata["pitch_width"]
             pitch_size_length = metadata["pitch_length"]
 
-            transformer = self.get_transformer(
-                pitch_length=pitch_size_length, pitch_width=pitch_size_width
-            )
+            transformer = self.get_transformer(pitch_length=pitch_size_length, pitch_width=pitch_size_width)
 
             home_team_id = metadata["home_team"]["id"]
             away_team_id = metadata["away_team"]["id"]
@@ -361,9 +329,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
             date = metadata.get("date_time")
             if date:
-                date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").replace(
-                    tzinfo=timezone.utc
-                )
+                date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
             game_id = metadata.get("id")
             if game_id:
@@ -404,9 +370,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                     first_name=player["first_name"],
                     last_name=player["last_name"],
                     starting=player["start_time"] == "00:00:00",
-                    starting_position=position_types_mapping.get(
-                        player["player_role"]["id"], PositionType.Unknown
-                    ),
+                    starting_position=position_types_mapping.get(player["player_role"]["id"], PositionType.Unknown),
                     attributes={},
                 )
 
@@ -454,22 +418,16 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 frames.append(frame)
                 n_frames += 1
 
-                if self.limit and n_frames + 1 >= (
-                    self.limit / self.sample_rate
-                ):
+                if self.limit and n_frames + 1 >= (self.limit / self.sample_rate):
                     break
 
-        attacking_directions = attacking_directions_from_multi_frames(
-            frames, list(periods.values())
-        )
+        attacking_directions = attacking_directions_from_multi_frames(frames, list(periods.values()))
         if attacking_directions[1] == AttackingDirection.LTR:
             orientation = Orientation.HOME_AWAY
         elif attacking_directions[1] == AttackingDirection.RTL:
             orientation = Orientation.AWAY_HOME
         else:
-            warnings.warn(
-                "Could not determine orientation of dataset, defaulting to NOT_SET"
-            )
+            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
             orientation = Orientation.NOT_SET
 
         metadata = Metadata(

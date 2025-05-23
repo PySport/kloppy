@@ -18,9 +18,7 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    dataset = statsbomb.load_open_data(
-        event_types=["pass", "take_on", "carry", "shot"]
-    )
+    dataset = statsbomb.load_open_data(event_types=["pass", "take_on", "carry", "shot"])
 
     with performance_logging("transform", logger=logger):
         # convert to TRACAB coordinates

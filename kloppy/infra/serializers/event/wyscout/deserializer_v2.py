@@ -132,9 +132,7 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
         or _has_tag(raw_event, wyscout_tags.GOAL_HIGH_LEFT)
     ):
         return Point(100.0, 45.0)
-    if _has_tag(raw_event, wyscout_tags.OUT_HIGH_CENTER) or _has_tag(
-        raw_event, wyscout_tags.POST_HIGH_CENTER
-    ):
+    if _has_tag(raw_event, wyscout_tags.OUT_HIGH_CENTER) or _has_tag(raw_event, wyscout_tags.POST_HIGH_CENTER):
         return Point(100.0, 50.0)
     if (
         _has_tag(raw_event, wyscout_tags.OUT_LOW_RIGHT)
@@ -188,9 +186,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
         if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
             qualifiers.append(GoalkeeperQualifier(GoalkeeperActionType.REFLEX))
         if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
-            qualifiers.append(
-                GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
-            )
+            qualifiers.append(GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT))
 
     return {
         "result": result,
@@ -258,10 +254,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         if next_event["eventId"] == wyscout_events.OFFSIDE.EVENT:
             pass_result = PassResult.OFFSIDE
         if next_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
-            if (
-                next_event["subEventId"]
-                == wyscout_events.INTERRUPTION.BALL_OUT
-            ):
+            if next_event["subEventId"] == wyscout_events.INTERRUPTION.BALL_OUT:
                 pass_result = PassResult.OUT
 
     return {
@@ -282,17 +275,11 @@ def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
     goalkeeper_qualifiers = []
     if not _has_tag(raw_event, wyscout_tags.GOAL):
-        goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
-        )
+        goalkeeper_qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
     else:
-        goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT)
-        )
+        goalkeeper_qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE_ATTEMPT))
     if raw_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
-        goalkeeper_qualifiers.append(
-            GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX)
-        )
+        goalkeeper_qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.REFLEX))
     qualifiers.extend(goalkeeper_qualifiers)
     return {
         "result": None,
@@ -352,35 +339,23 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
     if raw_event["subEventId"] in wyscout_events.FREE_KICK.PASS_TYPES:
         result = _parse_pass(raw_event, next_event)
         if raw_event["subEventId"] == wyscout_events.FREE_KICK.GOAL_KICK:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.GOAL_KICK)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.GOAL_KICK))
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.THROW_IN:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.THROW_IN)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.THROW_IN))
             result["qualifiers"].append(PassQualifier(PassType.HAND_PASS))
         elif raw_event["subEventId"] in [
             wyscout_events.FREE_KICK.FREE_KICK,
             wyscout_events.FREE_KICK.FREE_KICK_CROSS,
         ]:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.FREE_KICK)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.FREE_KICK))
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.CORNER:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.CORNER_KICK)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.CORNER_KICK))
     elif raw_event["subEventId"] in wyscout_events.FREE_KICK.SHOT_TYPES:
         result = _parse_shot(raw_event, next_event)
         if raw_event["subEventId"] == wyscout_events.FREE_KICK.FREE_KICK_SHOT:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.FREE_KICK)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.FREE_KICK))
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.PENALTY:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.PENALTY)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.PENALTY))
     else:
         result["qualifiers"] = _generic_qualifiers(raw_event)
     return result
@@ -396,10 +371,7 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
 
     if next_event is not None:
         if next_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
-            if (
-                next_event["subEventId"]
-                == wyscout_events.INTERRUPTION.BALL_OUT
-            ):
+            if next_event["subEventId"] == wyscout_events.INTERRUPTION.BALL_OUT:
                 result = InterceptionResult.OUT
         elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
             result = (
@@ -491,10 +463,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
             home_team = _parse_team(raw_events, home_team_id, Ground.HOME)
             away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
             teams = {home_team_id: home_team, away_team_id: away_team}
-            players = {
-                wyId: _players_to_dict(team.players)
-                for wyId, team in teams.items()
-            }
+            players = {wyId: _players_to_dict(team.players) for wyId, team in teams.items()}
             game_id = raw_events["events"][0].get("matchId", None)
             if game_id:
                 game_id = str(game_id)
@@ -506,9 +475,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = int(
-                        next_event["matchPeriod"].replace("H", "")
-                    )
+                    next_period_id = int(next_event["matchPeriod"].replace("H", ""))
 
                 team_id = str(raw_event["teamId"])
                 player_id = str(raw_event["playerId"])
@@ -518,19 +485,14 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     periods.append(
                         Period(
                             id=period_id,
-                            start_timestamp=(
-                                timedelta(seconds=0)
-                                if len(periods) == 0
-                                else periods[-1].end_timestamp
-                            ),
+                            start_timestamp=(timedelta(seconds=0) if len(periods) == 0 else periods[-1].end_timestamp),
                             end_timestamp=None,
                         )
                     )
                 if next_period_id != period_id:
                     periods[-1] = replace(
                         periods[-1],
-                        end_timestamp=periods[-1].start_timestamp
-                        + timedelta(seconds=raw_event["eventSec"]),
+                        end_timestamp=periods[-1].start_timestamp + timedelta(seconds=raw_event["eventSec"]),
                     )
 
                 generic_event_args = {
@@ -541,11 +503,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         y=float(raw_event["positions"][0]["y"]),
                     ),
                     "team": teams[team_id],
-                    "player": (
-                        players[team_id][player_id]
-                        if player_id != INVALID_PLAYER
-                        else None
-                    ),
+                    "player": (players[team_id][player_id] if player_id != INVALID_PLAYER else None),
                     "ball_owning_team": None,
                     "ball_state": None,
                     "period": periods[-1],
@@ -555,29 +513,19 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 new_events = []
                 if raw_event["eventId"] == wyscout_events.SHOT.EVENT:
                     shot_event_args = _parse_shot(raw_event, next_event)
-                    shot_event = self.event_factory.build_shot(
-                        **shot_event_args, **generic_event_args
-                    )
+                    shot_event = self.event_factory.build_shot(**shot_event_args, **generic_event_args)
                     new_events.append(shot_event)
                 elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
                     pass_event_args = _parse_pass(raw_event, next_event)
-                    pass_event = self.event_factory.build_pass(
-                        **pass_event_args, **generic_event_args
-                    )
+                    pass_event = self.event_factory.build_pass(**pass_event_args, **generic_event_args)
                     new_events.append(pass_event)
                 elif raw_event["eventId"] == wyscout_events.FOUL.EVENT:
                     foul_event_args = _parse_foul(raw_event)
-                    foul_event = self.event_factory.build_foul_committed(
-                        **foul_event_args, **generic_event_args
-                    )
+                    foul_event = self.event_factory.build_foul_committed(**foul_event_args, **generic_event_args)
                     new_events.append(foul_event)
-                    if any(
-                        _has_tag(raw_event, tag) for tag in wyscout_tags.CARD
-                    ):
+                    if any(_has_tag(raw_event, tag) for tag in wyscout_tags.CARD):
                         card_event_args = _parse_card(raw_event)
-                        card_event_id = (
-                            f"card-{generic_event_args['event_id']}"
-                        )
+                        card_event_id = f"card-{generic_event_args['event_id']}"
                         card_event = self.event_factory.build_card(
                             **card_event_args,
                             **{
@@ -588,56 +536,34 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         new_events.append(card_event)
                 elif raw_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
                     ball_out_event_args = _parse_ball_out(raw_event)
-                    ball_out_event = self.event_factory.build_ball_out(
-                        **ball_out_event_args, **generic_event_args
-                    )
+                    ball_out_event = self.event_factory.build_ball_out(**ball_out_event_args, **generic_event_args)
                     new_events.append(ball_out_event)
                 elif raw_event["eventId"] == wyscout_events.SAVE.EVENT:
                     goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
-                    goalkeeper_save_event = (
-                        self.event_factory.build_goalkeeper_event(
-                            **{**goalkeeper_save_args, **generic_event_args}
-                        )
+                    goalkeeper_save_event = self.event_factory.build_goalkeeper_event(
+                        **{**goalkeeper_save_args, **generic_event_args}
                     )
                     new_events.append(goalkeeper_save_event)
                 elif raw_event["eventId"] == wyscout_events.FREE_KICK.EVENT:
-                    set_piece_event_args = _parse_set_piece(
-                        raw_event, next_event
-                    )
-                    if (
-                        raw_event["subEventId"]
-                        in wyscout_events.FREE_KICK.PASS_TYPES
-                    ):
-                        fk_pass_event = self.event_factory.build_pass(
-                            **set_piece_event_args, **generic_event_args
-                        )
+                    set_piece_event_args = _parse_set_piece(raw_event, next_event)
+                    if raw_event["subEventId"] in wyscout_events.FREE_KICK.PASS_TYPES:
+                        fk_pass_event = self.event_factory.build_pass(**set_piece_event_args, **generic_event_args)
                         new_events.append(fk_pass_event)
-                    elif (
-                        raw_event["subEventId"]
-                        in wyscout_events.FREE_KICK.SHOT_TYPES
-                    ):
-                        fk_shot_event = self.event_factory.build_shot(
-                            **set_piece_event_args, **generic_event_args
-                        )
+                    elif raw_event["subEventId"] in wyscout_events.FREE_KICK.SHOT_TYPES:
+                        fk_shot_event = self.event_factory.build_shot(**set_piece_event_args, **generic_event_args)
                         new_events.append(fk_shot_event)
 
-                elif (
-                    raw_event["eventId"] == wyscout_events.OTHERS_ON_BALL.EVENT
-                ):
-                    if (
-                        raw_event["subEventId"]
-                        == wyscout_events.OTHERS_ON_BALL.CLEARANCE
-                    ):
+                elif raw_event["eventId"] == wyscout_events.OTHERS_ON_BALL.EVENT:
+                    if raw_event["subEventId"] == wyscout_events.OTHERS_ON_BALL.CLEARANCE:
                         clearance_event_args = _parse_clearance(raw_event)
                         clearance_event = self.event_factory.build_clearance(
                             **clearance_event_args,
                             **generic_event_args,
                         )
                         new_events.append(clearance_event)
-                    elif (
-                        raw_event["subEventId"]
-                        == wyscout_events.OTHERS_ON_BALL.TOUCH
-                    ) & (_has_tag(raw_event, wyscout_tags.MISSED_BALL)):
+                    elif (raw_event["subEventId"] == wyscout_events.OTHERS_ON_BALL.TOUCH) & (
+                        _has_tag(raw_event, wyscout_tags.MISSED_BALL)
+                    ):
                         miscontrol_event_args = {
                             "result": None,
                             "qualifiers": _generic_qualifiers(raw_event),
@@ -649,15 +575,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         new_events.append(miscontrol_event)
                     else:
                         recovery_event_args = _parse_recovery(raw_event)
-                        recovery_event = self.event_factory.build_recovery(
-                            **recovery_event_args, **generic_event_args
-                        )
+                        recovery_event = self.event_factory.build_recovery(**recovery_event_args, **generic_event_args)
                         new_events.append(recovery_event)
                 elif raw_event["eventId"] == wyscout_events.DUEL.EVENT:
                     duel_event_args = _parse_duel(raw_event)
-                    duel_event = self.event_factory.build_duel(
-                        **duel_event_args, **generic_event_args
-                    )
+                    duel_event = self.event_factory.build_duel(**duel_event_args, **generic_event_args)
                     new_events.append(duel_event)
                 elif raw_event["eventId"] not in [
                     wyscout_events.SAVE.EVENT,
@@ -677,18 +599,14 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 # the next pass, touch or duel. Therefore, we convert events
                 # with this tag to an interception.
                 if _has_tag(raw_event, wyscout_tags.INTERCEPTION):
-                    interception_event_args = _parse_interception(
-                        raw_event, next_event
-                    )
+                    interception_event_args = _parse_interception(raw_event, next_event)
 
                     for i, new_event in enumerate(list(new_events)):
                         if new_event.event_type == EventType.DUEL:
                             # when DuelEvent is interception, we need to
                             # overwrite this and the previous DuelEvent
                             events = events[:-1]
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
+                            new_events[i] = self.event_factory.build_interception(
                                 **interception_event_args,
                                 **generic_event_args,
                             )
@@ -697,9 +615,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             EventType.MISCONTROL,
                         ]:
                             # replace touch events
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
+                            new_events[i] = self.event_factory.build_interception(
                                 **interception_event_args,
                                 **generic_event_args,
                             )
@@ -708,14 +624,10 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             EventType.CLEARANCE,
                         ]:
                             # insert an interception event before interception passes
-                            generic_event_args[
-                                "event_id"
-                            ] = f"interception-{generic_event_args['event_id']}"
-                            interception_event = (
-                                self.event_factory.build_interception(
-                                    **interception_event_args,
-                                    **generic_event_args,
-                                )
+                            generic_event_args["event_id"] = f"interception-{generic_event_args['event_id']}"
+                            interception_event = self.event_factory.build_interception(
+                                **interception_event_args,
+                                **generic_event_args,
                             )
                             new_events.insert(i, interception_event)
 

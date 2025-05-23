@@ -20,9 +20,7 @@ def main():
     logger = logging.getLogger(__name__)
 
     # let's grab Barcelona - Deportivo Alavés from statsbomb, and load only shots and passes
-    dataset = statsbomb.load_open_data(
-        event_types=["shot", "pass"], match_id="15946"
-    )
+    dataset = statsbomb.load_open_data(event_types=["shot", "pass"], match_id="15946")
 
     # ok, this is where the magic starts
     # we'll go through this step by step
@@ -33,8 +31,7 @@ def main():
         # 2. We want to find ball losses. This means the team changes. In this case we
         #    want to match 1 or more passes from team B ("not same as team A"). The
         #    'slice(1, None)' means "1 or more"
-        pm.match_pass(team=pm.not_same_as("last_pass_of_team_a.team"))
-        * slice(1, None)
+        pm.match_pass(team=pm.not_same_as("last_pass_of_team_a.team")) * slice(1, None)
         +
         # 3. We create a group of events. The groups makes it possible to: i) match all
         #    of its children, or none and ii) capture it.
@@ -51,9 +48,7 @@ def main():
                 success=True,
                 team=pm.same_as("last_pass_of_team_a.team"),
                 timestamp=pm.function(
-                    lambda timestamp, last_pass_of_team_a_timestamp: timestamp
-                    - last_pass_of_team_a_timestamp
-                    < 15
+                    lambda timestamp, last_pass_of_team_a_timestamp: timestamp - last_pass_of_team_a_timestamp < 15
                 ),
                 capture="recover",
             )
@@ -64,9 +59,7 @@ def main():
                         success=True,
                         team=pm.same_as("recover.team"),
                         timestamp=pm.function(
-                            lambda timestamp, recover_timestamp, **kwargs: timestamp
-                            - recover_timestamp
-                            < 5
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp - recover_timestamp < 5
                         ),
                     )
                     * slice(None, None)
@@ -74,17 +67,12 @@ def main():
                         success=True,
                         team=pm.same_as("recover.team"),
                         timestamp=pm.function(
-                            lambda timestamp, recover_timestamp, **kwargs: timestamp
-                            - recover_timestamp
-                            > 5
+                            lambda timestamp, recover_timestamp, **kwargs: timestamp - recover_timestamp > 5
                         ),
                     )
                 )
                 | pm.group(
-                    pm.match_pass(
-                        success=True, team=pm.same_as("recover.team")
-                    )
-                    * slice(None, None)
+                    pm.match_pass(success=True, team=pm.same_as("recover.team")) * slice(None, None)
                     + pm.match_shot(team=pm.same_as("recover.team"))
                 )
             ),

@@ -65,9 +65,7 @@ class SecondSpectrumInputs(NamedTuple):
     additional_meta_data: Optional[IO[bytes]] = None
 
 
-class SecondSpectrumDeserializer(
-    TrackingDataDeserializer[SecondSpectrumInputs]
-):
+class SecondSpectrumDeserializer(TrackingDataDeserializer[SecondSpectrumInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -89,18 +87,14 @@ class SecondSpectrumDeserializer(
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
-            ball_coordinates = Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            )
+            ball_coordinates = Point3D(float(ball_x), float(ball_y), float(ball_z))
             ball_speed = frame_data["ball"]["speed"]
         else:
             ball_coordinates = None
             ball_speed = None
 
         ball_state = BallState.ALIVE if frame_data["live"] else BallState.DEAD
-        ball_owning_team = (
-            teams[0] if frame_data["lastTouch"] == "home" else teams[1]
-        )
+        ball_owning_team = teams[0] if frame_data["lastTouch"] == "home" else teams[1]
 
         players_data = {}
         for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
@@ -118,9 +112,7 @@ class SecondSpectrumDeserializer(
                     )
                     team.players.append(player)
 
-                players_data[player] = PlayerData(
-                    coordinates=Point(float(x), float(y)), speed=speed
-                )
+                players_data[player] = PlayerData(coordinates=Point(float(x), float(y)), speed=speed)
 
         frame = create_frame(
             frame_id=frame_id,
@@ -168,18 +160,12 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period["number"]),
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
+                                start_timestamp=timedelta(seconds=start_frame_id / frame_rate),
+                                end_timestamp=timedelta(seconds=end_frame_id / frame_rate),
                             )
                         )
             else:
-                match = objectify.fromstring(
-                    first_byte + inputs.meta_data.read()
-                ).match
+                match = objectify.fromstring(first_byte + inputs.meta_data.read()).match
                 frame_rate = int(match.attrib["iFrameRateFps"])
                 pitch_size_height = float(match.attrib["fPitchXSizeMeters"])
                 pitch_size_width = float(match.attrib["fPitchYSizeMeters"])
@@ -193,12 +179,8 @@ class SecondSpectrumDeserializer(
                         periods.append(
                             Period(
                                 id=int(period.attrib["iId"]),
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
+                                start_timestamp=timedelta(seconds=start_frame_id / frame_rate),
+                                end_timestamp=timedelta(seconds=end_frame_id / frame_rate),
                             )
                         )
 
@@ -211,24 +193,15 @@ class SecondSpectrumDeserializer(
             with performance_logging("Loading JSON metadata", logger=logger):
                 try:
                     if inputs.additional_meta_data:
-                        metadata = json.loads(
-                            inputs.additional_meta_data.read()
-                        )
+                        metadata = json.loads(inputs.additional_meta_data.read())
 
                     home_team_id = metadata["homeOptaId"]
                     away_team_id = metadata["awayOptaId"]
 
                     # Tries to parse (short) team names from the description string
                     try:
-                        home_name = (
-                            metadata["description"].split("-")[0].strip()
-                        )
-                        away_name = (
-                            metadata["description"]
-                            .split("-")[1]
-                            .split(":")[0]
-                            .strip()
-                        )
+                        home_name = metadata["description"].split("-")[0].strip()
+                        away_name = metadata["description"].split("-")[1].split(":")[0].strip()
                     except:
                         home_name, away_name = "home", "away"
 
@@ -237,18 +210,12 @@ class SecondSpectrumDeserializer(
                     teams[1].team_id = away_team_id
                     teams[1].name = away_name
 
-                    for team, team_str in zip(
-                        teams, ["homePlayers", "awayPlayers"]
-                    ):
+                    for team, team_str in zip(teams, ["homePlayers", "awayPlayers"]):
                         for player_data in metadata[team_str]:
                             # We use the attributes field of Player to store the extra IDs provided by the
                             # metadata. We designate the player_id to be the 'optaId' field as this is what's
                             # used as 'player_id' in the raw frame data file
-                            player_attributes = {
-                                k: v
-                                for k, v in player_data.items()
-                                if k in ["ssiId", "optaUuid"]
-                            }
+                            player_attributes = {k: v for k, v in player_data.items() if k in ["ssiId", "optaUuid"]}
 
                             player = Player(
                                 player_id=player_data["optaId"],
@@ -265,15 +232,11 @@ class SecondSpectrumDeserializer(
                             team.players.append(player)
 
                 except:  # TODO: More specific exception
-                    logging.warning(
-                        "Optional JSON Metadata is malformed. Continuing without"
-                    )
+                    logging.warning("Optional JSON Metadata is malformed. Continuing without")
 
         # Handles the tracking frame data
         with performance_logging("Loading data", logger=logger):
-            transformer = self.get_transformer(
-                pitch_length=pitch_size_height, pitch_width=pitch_size_width
-            )
+            transformer = self.get_transformer(pitch_length=pitch_size_height, pitch_width=pitch_size_width)
 
             def _iter():
                 n = 0
@@ -310,25 +273,18 @@ class SecondSpectrumDeserializer(
                     break
 
         try:
-            first_frame = next(
-                frame for frame in frames if frame.period.id == 1
-            )
+            first_frame = next(frame for frame in frames if frame.period.id == 1)
             orientation = (
                 Orientation.HOME_AWAY
-                if attacking_direction_from_frame(first_frame)
-                == AttackingDirection.LTR
+                if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
                 else Orientation.AWAY_HOME
             )
         except StopIteration:
-            warnings.warn(
-                "Could not determine orientation of dataset, defaulting to NOT_SET"
-            )
+            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
             orientation = Orientation.NOT_SET
 
         if metadata:
-            score = Score(
-                home=metadata["homeScore"], away=metadata["awayScore"]
-            )
+            score = Score(home=metadata["homeScore"], away=metadata["awayScore"])
             year, month, day = (
                 metadata["year"],
                 metadata["month"],

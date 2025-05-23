@@ -60,9 +60,7 @@ def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
     raise DeserializationError(f"Unknown period_id {period_id}")
 
 
-def parse_coordinates(
-    coordinates: List[float], fidelity_version: int
-) -> Point:
+def parse_coordinates(coordinates: List[float], fidelity_version: int) -> Point:
     """Parse coordinates into a kloppy Point.
 
     Coordinates are cell-based, so 1,1 (low-granularity) or 0.1,0.1
@@ -93,9 +91,7 @@ def parse_coordinates(
             z=coordinates[2] - 0.05,
         )
     else:
-        raise DeserializationError(
-            f"Unknown coordinates format: {coordinates}"
-        )
+        raise DeserializationError(f"Unknown coordinates format: {coordinates}")
 
 
 def parse_freeze_frame(
@@ -115,9 +111,7 @@ def parse_freeze_frame(
         elif player_data.get("actor"):
             return event.player
         elif player_data.get("keeper"):
-            return team.get_player_by_position(
-                position=PositionType.Goalkeeper, time=event.time
-            )
+            return team.get_player_by_position(position=PositionType.Goalkeeper, time=event.time)
         else:
             return Player(
                 player_id=f"T{team.team_id}-E{event.event_id}-{i}",
@@ -126,35 +120,24 @@ def parse_freeze_frame(
             )
 
     for i, freeze_frame_player in enumerate(freeze_frame):
-        is_teammate = (event.team == home_team) == freeze_frame_player[
-            "teammate"
-        ]
+        is_teammate = (event.team == home_team) == freeze_frame_player["teammate"]
         freeze_frame_team = home_team if is_teammate else away_team
 
-        player = get_player_from_freeze_frame(
-            freeze_frame_player, freeze_frame_team, i
-        )
+        player = get_player_from_freeze_frame(freeze_frame_player, freeze_frame_team, i)
 
         players_data[player] = PlayerData(
-            coordinates=parse_coordinates(
-                freeze_frame_player["location"], fidelity_version
-            )
+            coordinates=parse_coordinates(freeze_frame_player["location"], fidelity_version)
         )
 
     if event.player not in players_data:
         players_data[event.player] = PlayerData(coordinates=event.coordinates)
 
     FREEZE_FRAME_FPS = 25
-    frame_id = int(
-        event.period.start_timestamp.total_seconds()
-        + event.timestamp.total_seconds() * FREEZE_FRAME_FPS
-    )
+    frame_id = int(event.period.start_timestamp.total_seconds() + event.timestamp.total_seconds() * FREEZE_FRAME_FPS)
 
     frame = create_frame(
         frame_id=frame_id,
-        ball_coordinates=Point3D(
-            x=event.coordinates.x, y=event.coordinates.y, z=0
-        ),
+        ball_coordinates=Point3D(x=event.coordinates.x, y=event.coordinates.y, z=0),
         players_data=players_data,
         period=event.period,
         timestamp=event.timestamp,

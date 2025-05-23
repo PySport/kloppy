@@ -99,9 +99,7 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
         "J03WR9": {"meta": 51643490, "event": 51643511, "tracking": 51643532},
     }
     # URL constant
-    DATA_URL = (
-        "https://springernature.figshare.com/ndownloader/files/{file_id}"
-    )
+    DATA_URL = "https://springernature.figshare.com/ndownloader/files/{file_id}"
 
     if data_type not in ["meta", "event", "tracking"]:
         raise ValueError(f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}")

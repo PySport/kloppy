@@ -34,9 +34,7 @@ class WithCaptureMatcher(Matcher):
             captures[name] = capture[0].trail
             self._add_captures(captures, capture[0])
 
-    def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
-    ) -> Iterator[Out]:
+    def match(self, token: Tok, trail: Tuple[_TrailItem[Out], ...]) -> Iterator[Out]:
         match = _make_match(trail)
         captures = {}
         self._add_captures(captures, match)
@@ -149,9 +147,7 @@ def _search(events: List[Event], re: RegExp[Tok, Out]):
                     #       all of them
                     captures={
                         capture_name: capture_value[0].trail[0]
-                        for capture_name, capture_value in matches[
-                            0
-                        ].children.items()
+                        for capture_name, capture_value in matches[0].children.items()
                     },
                 )
             )

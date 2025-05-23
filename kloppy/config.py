@@ -23,9 +23,7 @@ Config = TypedDict(
         "adapters.http.basic_authentication": Optional[str],
         "adapters.s3.s3fs": Optional[Any],
         "adapters.zip.fo": Optional[str],
-        "dataframe.engine": Optional[
-            Union[Literal["pandas"], Literal["polars"]]
-        ],
+        "dataframe.engine": Optional[Union[Literal["pandas"], Literal["polars"]]],
     },
 )
 
@@ -84,9 +82,7 @@ def config_context(*args):
     """Set some config items for within a certain context. Code borrowed partly from
     pandas."""
     if len(args) % 2 != 0 or len(args) < 2:
-        raise ValueError(
-            "Need to invoke as config_context(key, value, [(key, value), ...])."
-        )
+        raise ValueError("Need to invoke as config_context(key, value, [(key, value), ...]).")
 
     configs = list(zip(args[::2], args[1::2]))
 

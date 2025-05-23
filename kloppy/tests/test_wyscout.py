@@ -42,9 +42,7 @@ def event_v3_data(base_dir: Path) -> Path:
     return base_dir / "files" / "wyscout_events_v3.json"
 
 
-def test_correct_auto_recognize_deserialization(
-    event_v2_data: Path, event_v3_data: Path
-):
+def test_correct_auto_recognize_deserialization(event_v2_data: Path, event_v3_data: Path):
     dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
     assert dataset.records[2].coordinates == Point(29.0, 6.0)
     dataset = wyscout.load(event_data=event_v3_data, coordinates="wyscout")
@@ -63,26 +61,18 @@ class TestWyscoutV2:
             data_version="V2",
         )
         assert dataset.dataset_type == DatasetType.EVENT
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         return dataset
 
     def test_metadata(self, dataset: EventDataset):
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == timedelta(
-            seconds=0
-        )
-        assert dataset.metadata.periods[0].end_timestamp == timedelta(
-            seconds=2863.708369
-        )
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(seconds=0)
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(seconds=2863.708369)
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == timedelta(
-            seconds=2863.708369
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(seconds=2863.708369)
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(seconds=2863.708369) + timedelta(
+            seconds=2999.70982
         )
-        assert dataset.metadata.periods[1].end_timestamp == timedelta(
-            seconds=2863.708369
-        ) + timedelta(seconds=2999.70982)
 
         game_id = dataset.metadata.game_id
         if game_id:
@@ -97,10 +87,7 @@ class TestWyscoutV2:
 
     def test_shot_event(self, dataset: EventDataset):
         shot_event = dataset.get_event_by_id("190079151")
-        assert (
-            shot_event.get_qualifier_value(BodyPartQualifier)
-            == BodyPart.RIGHT_FOOT
-        )
+        assert shot_event.get_qualifier_value(BodyPartQualifier) == BodyPart.RIGHT_FOOT
 
     def test_miscontrol_event(self, dataset: EventDataset):
         miscontrol_event = dataset.get_event_by_id("190078351")
@@ -119,46 +106,29 @@ class TestWyscoutV2:
     def test_duel_event(self, dataset: EventDataset):
         ground_duel_event = dataset.get_event_by_id("190078379")
         assert ground_duel_event.event_type == EventType.DUEL
-        assert (
-            ground_duel_event.get_qualifier_value(DuelQualifier)
-            == DuelType.GROUND
-        )
+        assert ground_duel_event.get_qualifier_value(DuelQualifier) == DuelType.GROUND
         aerial_duel_event = dataset.get_event_by_id("190078381")
         assert aerial_duel_event.event_type == EventType.DUEL
-        assert (
-            aerial_duel_event.get_qualifier_values(DuelQualifier)[1]
-            == DuelType.AERIAL
-        )
+        assert aerial_duel_event.get_qualifier_values(DuelQualifier)[1] == DuelType.AERIAL
         sliding_tackle_duel_event = dataset.get_event_by_id("190079260")
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
-        assert (
-            sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2]
-            == DuelType.SLIDING_TACKLE
-        )
+        assert sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)[2] == DuelType.SLIDING_TACKLE
 
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id("190079010")
         assert goalkeeper_event.event_type == EventType.GOALKEEPER
-        assert (
-            goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.SAVE
-        )
+        assert goalkeeper_event.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.SAVE
 
     def test_foul_committed_event(self, dataset: EventDataset):
         foul_committed_event = dataset.get_event_by_id("190079289")
         assert foul_committed_event.event_type == EventType.FOUL_COMMITTED
-        assert (
-            foul_committed_event.get_qualifier_value(CardQualifier)
-            == CardType.FIRST_YELLOW
-        )
+        assert foul_committed_event.get_qualifier_value(CardQualifier) == CardType.FIRST_YELLOW
         card_event = dataset.get_event_by_id("card-190079289")
         assert card_event.event_type == EventType.CARD
 
     def test_correct_normalized_deserialization(self, event_v2_data: Path):
         dataset = wyscout.load(event_data=event_v2_data, data_version="V2")
-        assert dataset.records[2].coordinates == Point(
-            0.2981354967264447, 0.06427244582043344
-        )
+        assert dataset.records[2].coordinates == Point(0.2981354967264447, 0.06427244582043344)
 
 
 class TestWyscoutV3:
@@ -173,39 +143,23 @@ class TestWyscoutV3:
             data_version="V3",
         )
         assert dataset.dataset_type == DatasetType.EVENT
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         return dataset
 
     def test_metadata(self, dataset: EventDataset):
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == timedelta(
-            seconds=0
-        )
-        assert dataset.metadata.periods[0].end_timestamp == timedelta(
-            minutes=45, seconds=5
-        )
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(seconds=0)
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(minutes=45, seconds=5)
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == timedelta(
-            minutes=45, seconds=5
-        )
-        assert dataset.metadata.periods[1].end_timestamp == timedelta(
-            minutes=45, seconds=5
-        ) + timedelta(minutes=46, seconds=53)
-
-        assert (
-            dataset.metadata.teams[0].starting_formation
-            == FormationType.THREE_FOUR_TWO_ONE
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(minutes=45, seconds=5)
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(minutes=45, seconds=5) + timedelta(
+            minutes=46, seconds=53
         )
 
-        formation_time_change = Time(
-            dataset.metadata.periods[1], timedelta(seconds=3)
-        )
-        assert (
-            dataset.metadata.teams[1].formations.items[formation_time_change]
-            == FormationType.FOUR_THREE_ONE_TWO
-        )
+        assert dataset.metadata.teams[0].starting_formation == FormationType.THREE_FOUR_TWO_ONE
+
+        formation_time_change = Time(dataset.metadata.periods[1], timedelta(seconds=3))
+        assert dataset.metadata.teams[1].formations.items[formation_time_change] == FormationType.FOUR_THREE_ONE_TWO
 
         cr7 = dataset.metadata.teams[0].get_player_by_id("3322")
 
@@ -241,9 +195,7 @@ class TestWyscoutV3:
 
     def test_normalized_deserialization(self, event_v3_data: Path):
         dataset = wyscout.load(event_data=event_v3_data, data_version="V3")
-        assert dataset.records[2].coordinates == Point(
-            x=0.32643853442316295, y=0.5538235294117646
-        )
+        assert dataset.records[2].coordinates == Point(x=0.32643853442316295, y=0.5538235294117646)
 
     def test_pass_event(self, dataset: EventDataset):
         pass_event = dataset.get_event_by_id(1927028486)
@@ -259,17 +211,12 @@ class TestWyscoutV3:
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id(1927029095)
         assert goalkeeper_event.event_type == EventType.GOALKEEPER
-        assert (
-            goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
-            == GoalkeeperActionType.SAVE
-        )
+        assert goalkeeper_event.get_qualifier_value(GoalkeeperQualifier) == GoalkeeperActionType.SAVE
 
     def test_shot_assist_event(self, dataset: EventDataset):
         shot_assist_event = dataset.get_event_by_id(1927028561)
         assert shot_assist_event.event_type == EventType.PASS
-        assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.SHOT_ASSIST in shot_assist_event.get_qualifier_values(PassQualifier)
 
     def test_shot_event(self, dataset: EventDataset):
         # a blocked free kick shot
@@ -277,17 +224,12 @@ class TestWyscoutV3:
         assert blocked_shot_event.event_type == EventType.SHOT
         assert blocked_shot_event.result == ShotResult.BLOCKED
         assert blocked_shot_event.result_coordinates == Point(x=77.0, y=21.0)
-        assert (
-            blocked_shot_event.get_qualifier_value(SetPieceQualifier)
-            == SetPieceType.FREE_KICK
-        )
+        assert blocked_shot_event.get_qualifier_value(SetPieceQualifier) == SetPieceType.FREE_KICK
         # off target shot
         off_target_shot = dataset.get_event_by_id(1927028562)
         assert off_target_shot.event_type == EventType.SHOT
         assert off_target_shot.result == ShotResult.OFF_TARGET
-        assert off_target_shot.result_coordinates == Point3D(
-            x=100, y=40, z=3.5
-        )
+        assert off_target_shot.result_coordinates == Point3D(x=100, y=40, z=3.5)
         # on target shot
         on_target_shot = dataset.get_event_by_id(1927028637)
         assert on_target_shot.event_type == EventType.SHOT
@@ -301,26 +243,14 @@ class TestWyscoutV3:
     def test_duel_event(self, dataset: EventDataset):
         ground_duel_event = dataset.get_event_by_id(1927028474)
         assert ground_duel_event.event_type == EventType.DUEL
-        assert (
-            ground_duel_event.get_qualifier_value(DuelQualifier)
-            == DuelType.GROUND
-        )
+        assert ground_duel_event.get_qualifier_value(DuelQualifier) == DuelType.GROUND
         aerial_loose_ball_duel_event = dataset.get_event_by_id(1927028472)
         assert aerial_loose_ball_duel_event.event_type == EventType.DUEL
-        assert (
-            DuelType.LOOSE_BALL
-            in aerial_loose_ball_duel_event.get_qualifier_values(DuelQualifier)
-        )
-        assert (
-            DuelType.AERIAL
-            in aerial_loose_ball_duel_event.get_qualifier_values(DuelQualifier)
-        )
+        assert DuelType.LOOSE_BALL in aerial_loose_ball_duel_event.get_qualifier_values(DuelQualifier)
+        assert DuelType.AERIAL in aerial_loose_ball_duel_event.get_qualifier_values(DuelQualifier)
         sliding_tackle_duel_event = dataset.get_event_by_id(1927028828)
         assert sliding_tackle_duel_event.event_type == EventType.DUEL
-        assert (
-            DuelType.SLIDING_TACKLE
-            in sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)
-        )
+        assert DuelType.SLIDING_TACKLE in sliding_tackle_duel_event.get_qualifier_values(DuelQualifier)
 
     def test_clearance_event(self, dataset: EventDataset):
         clearance_event = dataset.get_event_by_id(1927028482)
@@ -343,14 +273,9 @@ class TestWyscoutV3:
         assert (
             len(dataset.find_all("formation_change")) == 2
         )  # We shouldn't recognize the change to 4-4-1 as a formation change
-        formation_change_event = dataset.get_event_by_id(
-            "synthetic-3164-1927029462"
-        )
+        formation_change_event = dataset.get_event_by_id("synthetic-3164-1927029462")
         assert formation_change_event.event_type == EventType.FORMATION_CHANGE
-        assert (
-            formation_change_event.formation_type
-            == FormationType.FOUR_THREE_ONE_TWO
-        )
+        assert formation_change_event.formation_type == FormationType.FOUR_THREE_ONE_TWO
 
     def test_kick_off_qualifier(self, dataset: EventDataset):
         pass_event_kick_off_first_half = dataset.get_event_by_id(1927028854)
@@ -359,35 +284,16 @@ class TestWyscoutV3:
         assert pass_event_kick_off_first_half.event_type == EventType.PASS
         assert pass_event_kick_off_second_half.event_type == EventType.PASS
         assert pass_event_kick_off_after_goal.event_type == EventType.PASS
-        assert (
-            SetPieceType.KICK_OFF
-            in pass_event_kick_off_first_half.get_qualifier_values(
-                SetPieceQualifier
-            )
-        )
-        assert (
-            SetPieceType.KICK_OFF
-            in pass_event_kick_off_second_half.get_qualifier_values(
-                SetPieceQualifier
-            )
-        )
-        assert (
-            SetPieceType.KICK_OFF
-            in pass_event_kick_off_after_goal.get_qualifier_values(
-                SetPieceQualifier
-            )
-        )
+        assert SetPieceType.KICK_OFF in pass_event_kick_off_first_half.get_qualifier_values(SetPieceQualifier)
+        assert SetPieceType.KICK_OFF in pass_event_kick_off_second_half.get_qualifier_values(SetPieceQualifier)
+        assert SetPieceType.KICK_OFF in pass_event_kick_off_after_goal.get_qualifier_values(SetPieceQualifier)
 
     def test_through_ball_qualifier(self, dataset: EventDataset):
         pass_event = dataset.get_event_by_id(1927028612)
         assert pass_event.event_type == EventType.PASS
-        assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(PassQualifier)
 
     def test_high_pass_qualifier(self, dataset: EventDataset):
         pass_event = dataset.get_event_by_id(1927028860)
         assert pass_event.event_type == EventType.PASS
-        assert PassType.HIGH_PASS in pass_event.get_qualifier_values(
-            PassQualifier
-        )
+        assert PassType.HIGH_PASS in pass_event.get_qualifier_values(PassQualifier)

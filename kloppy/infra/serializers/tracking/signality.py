@@ -63,9 +63,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
 
         ball_position = frame["ball"]["position"]
         if ball_position:
-            ball_coordinates = Point3D(
-                x=ball_position[0], y=ball_position[1], z=ball_position[2]
-            )
+            ball_coordinates = Point3D(x=ball_position[0], y=ball_position[1], z=ball_position[2])
         else:
             ball_coordinates = None
 
@@ -76,28 +74,21 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
                     (
                         player
                         for player in teams[ix].players
-                        if player.jersey_no
-                        == raw_player_positional_info["jersey_number"]
+                        if player.jersey_no == raw_player_positional_info["jersey_number"]
                     ),
                     None,
                 )
                 if player:
                     player_position = raw_player_positional_info["position"]
-                    player_coordinates = Point(
-                        x=player_position[0], y=player_position[1]
-                    )
+                    player_coordinates = Point(x=player_position[0], y=player_position[1])
                     player_speed = raw_player_positional_info["speed"]
-                    players_data[player] = PlayerData(
-                        coordinates=player_coordinates, speed=player_speed
-                    )
+                    players_data[player] = PlayerData(coordinates=player_coordinates, speed=player_speed)
                 else:
                     logger.debug(
                         f"Player with jersey no: {raw_player_positional_info['jersey_number']} not found in {side} team"
                     )
 
-        ball_state = (
-            BallState.ALIVE if frame["state"] == "running" else BallState.DEAD
-        )
+        ball_state = BallState.ALIVE if frame["state"] == "running" else BallState.DEAD
         if frame["ball"]["team"] == "home_team":
             ball_owning_team = teams[0]
         elif frame["ball"]["team"] == "away_team":
@@ -142,10 +133,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         """gets the frame rate from the tracking data"""
         first_frame = p1_tracking[0]
         second_frame = p1_tracking[1]
-        frame_rate = int(
-            1
-            / ((second_frame["match_time"] - first_frame["match_time"]) / 1000)
-        )
+        frame_rate = int(1 / ((second_frame["match_time"] - first_frame["match_time"]) / 1000))
 
         return frame_rate
 
@@ -156,16 +144,12 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         for period_id, p_tracking in enumerate(raw_data_feeds, 1):
             first_frame = p_tracking[0]
             # compute the seconds since epoch
-            start_ts = (
-                first_frame["utc_time"] - first_frame["match_time"]
-            ) / 1000
+            start_ts = (first_frame["utc_time"] - first_frame["match_time"]) / 1000
             # create an aware UTC datetime
             start_time = datetime.fromtimestamp(start_ts, tz=timezone.utc)
 
             last_frame = p_tracking[-1]
-            assert (
-                last_frame["state"] == "end"
-            ), "Last frame must have state 'end'"
+            assert last_frame["state"] == "end", "Last frame must have state 'end'"
             # compute the seconds since epoch
             end_ts = (last_frame["utc_time"]) / 1000
             # create an aware UTC datetime
@@ -203,12 +187,8 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
 
             for raw_frame in p_raw_data:
                 if n % sample == 0:
-                    frame = self._get_frame_data(
-                        teams, period, raw_frame, frame_id_offset
-                    )
-                    if frame.players_data and frame.timestamp > timedelta(
-                        seconds=0
-                    ):
+                    frame = self._get_frame_data(teams, period, raw_frame, frame_id_offset)
+                    if frame.players_data and frame.timestamp > timedelta(seconds=0):
                         frame = transformer.transform_frame(frame)
                         frames.append(frame)
                 n += 1
@@ -234,26 +214,18 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             pitch_size_length = venue_information["pitch_size"][0]
             pitch_size_width = venue_information["pitch_size"][1]
 
-        transformer = self.get_transformer(
-            pitch_length=pitch_size_length, pitch_width=pitch_size_width
-        )
+        transformer = self.get_transformer(pitch_length=pitch_size_length, pitch_width=pitch_size_width)
 
         with performance_logging("Loading data", logger=logger):
-            frames = self._load_frames(
-                periods, raw_data_feeds, teams, transformer
-            )
+            frames = self._load_frames(periods, raw_data_feeds, teams, transformer)
 
-        attacking_directions = attacking_directions_from_multi_frames(
-            frames, periods
-        )
+        attacking_directions = attacking_directions_from_multi_frames(frames, periods)
         if attacking_directions[1] == AttackingDirection.LTR:
             orientation = Orientation.HOME_AWAY
         elif attacking_directions[1] == AttackingDirection.RTL:
             orientation = Orientation.AWAY_HOME
         else:
-            warnings.warn(
-                "Could not determine orientation of dataset, defaulting to NOT_SET"
-            )
+            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
             orientation = Orientation.NOT_SET
 
         metadata = Metadata(

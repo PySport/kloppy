@@ -29,9 +29,7 @@ def main():
     with performance_logging("to_df(engine='pandas')", logger=logging):
         data_frame = dataset.to_df(engine="pandas")
 
-    with performance_logging(
-        "to_df(engine='pandas[pyarrow]')", logger=logging
-    ):
+    with performance_logging("to_df(engine='pandas[pyarrow]')", logger=logging):
         data_frame = dataset.to_df(engine="pandas[pyarrow]")
 
     # Also load dataset in new metrica format

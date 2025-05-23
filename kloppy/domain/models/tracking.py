@@ -45,10 +45,7 @@ class Frame(DataRecord):
 
     @property
     def players_coordinates(self):
-        return {
-            player: player_data.coordinates
-            for player, player_data in self.players_data.items()
-        }
+        return {player: player_data.coordinates for player, player_data in self.players_data.items()}
 
     def __str__(self):
         return f"<{self.__class__.__name__} frame_id='{self.frame_id}' time='{self.time}'>"
@@ -80,9 +77,7 @@ class TrackingDataset(Dataset[Frame]):
     def frame_rate(self):
         return self.metadata.frame_rate
 
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
+    @deprecated("to_pandas will be removed in the future. Please use to_df instead.")
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Frame], Dict]] = None,
@@ -91,10 +86,7 @@ class TrackingDataset(Dataset[Frame]):
         try:
             import pandas as pd
         except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
+            raise ImportError("Seems like you don't have pandas installed. Please install it using: pip install pandas")
 
         if not record_converter:
             from ..services.transformers.attribute import (
@@ -115,9 +107,7 @@ class TrackingDataset(Dataset[Frame]):
 
             return row
 
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
+        return pd.DataFrame.from_records(map(generic_record_converter, self.records))
 
 
 __all__ = ["Frame", "TrackingDataset", "PlayerData"]

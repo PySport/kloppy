@@ -14,13 +14,8 @@ class TestXMLCodeTracking:
 
         assert len(dataset.metadata.periods) == 1
 
-        assert dataset.metadata.periods[0].start_timestamp == timedelta(
-            seconds=0
-        )
-        assert (
-            dataset.metadata.periods[0].end_timestamp
-            == dataset.codes[-1].end_timestamp
-        )
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(seconds=0)
+        assert dataset.metadata.periods[0].end_timestamp == dataset.codes[-1].end_timestamp
 
         assert len(dataset.codes) == 3
         assert dataset.codes[0].code_id == "P1"

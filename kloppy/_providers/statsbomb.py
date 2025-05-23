@@ -40,13 +40,9 @@ def load(
     deserializer = StatsBombDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory
-        or get_config("event_factory")
-        or StatsBombEventFactory(),
+        event_factory=event_factory or get_config("event_factory") or StatsBombEventFactory(),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
+    with open_as_file(event_data) as event_data_fp, open_as_file(lineup_data) as lineup_data_fp, open_as_file(
         Source.create(three_sixty_data, optional=True)
     ) as three_sixty_data_fp:
         return deserializer.deserialize(

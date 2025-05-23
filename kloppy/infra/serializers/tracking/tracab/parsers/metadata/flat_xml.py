@@ -42,9 +42,7 @@ class TracabFlatXMLMetadataParser(TracabMetadataParser):
         return periods
 
     def extract_date(self) -> Optional[datetime]:
-        date = datetime.strptime(
-            str(self.root["Kickoff"]), "%Y-%m-%d %H:%M:%S"
-        ).replace(tzinfo=timezone.utc)
+        date = datetime.strptime(str(self.root["Kickoff"]), "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         return date
 
     def extract_game_id(self) -> Optional[str]:
@@ -84,11 +82,7 @@ class TracabFlatXMLMetadataParser(TracabMetadataParser):
 
     def extract_orientation(self) -> Orientation:
         if self.root.get("Phase1HomeGKLeft", None) is not None:
-            orientation = (
-                Orientation.HOME_AWAY
-                if bool(self.root["Phase1HomeGKLeft"])
-                else Orientation.AWAY_HOME
-            )
+            orientation = Orientation.HOME_AWAY if bool(self.root["Phase1HomeGKLeft"]) else Orientation.AWAY_HOME
             return orientation
         else:
             return None

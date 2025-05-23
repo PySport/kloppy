@@ -11,29 +11,27 @@ dataset = statsbomb.load(
 )
 ```
 
-The remainder of this guide explains how to adapt this code depending on [the data provider](#supported-providers) and [the data storage](#input-data). Furthermore, we give an overview of [options available](#data-loading-options) while loading the data.
-
+The remainder of this guide explains how to adapt this code depending on [the data provider](#supported-providers) and [the data storage](#supported-data-storage). Furthermore, we give an overview of [options available](#data-loading-options) while loading the data.
 
 ## Supported data providers
 
 Below is an overview of all currently supported providers, along with links to detailed guides on how to load data for each one. Some providers have also made a sample of their data publicly available.
 
-| Provider                      | Event Data         | Tracking Data       | Code Data         | Public Data                                                                 |
-|:------------------------------|:------------------:|:-------------------:|:-----------------:|:---------------------------------------------------------------------------:|
-| [DataFactory](datafactory.ipynb) | :material-check:   | :material-minus:    | :material-minus:  |                                                                             |
-| [HawkEye (2D)](hawkeye.ipynb) | :material-minus:   | :material-check: | :material-minus:  |                                                                             |
-| [Metrica](metrica.ipynb)      | :material-minus:   | :material-check:    | :material-minus:  | [:material-eye:](https://github.com/metrica-sports/sample-data)             |
-| [PFF FC](pff.ipynb)           | :material-minus:   | :material-check:    | :material-minus:  | [:material-eye:](https://drive.google.com/drive/u/0/folders/1_a_q1e9CXeEPJ3GdCv_3-rNO3gPqacfa) |
-| [SecondSpectrum](secondspectrum.ipynb) | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus:  |
-| [Signality](signality.ipynb)  | :material-minus:   | :material-check: | :material-minus:  |                                                                             |
-| [SkillCorner](skillcorner.ipynb) | :material-minus:   | :material-check:    | :material-minus:  | [:material-eye:](https://github.com/SkillCorner/opendata)                   |
-| [Sportec](sportec.ipynb)      | :material-check:   | :material-check:    | :material-minus:  | [:material-eye:](https://www.nature.com/articles/s41597-025-04505-y)        |
-| [Hudl SportsCode](sportscode.ipynb)| :material-minus:   | :material-minus:    | :material-check:  |                                                                             |
-| [Hudl StatsBomb](statsbomb.ipynb)  | :material-check:   | :material-minus:    | :material-minus:  | [:material-eye:](https://github.com/statsbomb/open-data)                    |
-| [Stats Perform / Opta](statsperform.ipynb) | :material-check: | :material-check:    | :material-minus:  |                                                                             |
-| [TRACAB (CyronHego)](tracab.ipynb) | :material-minus: | :material-check:    | :material-minus:  |                                                                             |
-| [WyScout](wyscout.ipynb)      | :material-check:   | :material-minus:    | :material-minus:  | [:material-eye:](https://www.nature.com/articles/s41597-019-0247-7)         |
-
+| Provider                                   |                                Event Data                                |  Tracking Data   |    Code Data     |                                          Public Data                                           |
+| :----------------------------------------- | :----------------------------------------------------------------------: | :--------------: | :--------------: | :--------------------------------------------------------------------------------------------: |
+| [DataFactory](datafactory.ipynb)           |                             :material-check:                             | :material-minus: | :material-minus: |                                                                                                |
+| [HawkEye (2D)](hawkeye.ipynb)              |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
+| [Metrica](metrica.ipynb)                   |                             :material-minus:                             | :material-check: | :material-minus: |                [:material-eye:](https://github.com/metrica-sports/sample-data)                 |
+| [PFF FC](pff.ipynb)                        |                             :material-minus:                             | :material-check: | :material-minus: | [:material-eye:](https://drive.google.com/drive/u/0/folders/1_a_q1e9CXeEPJ3GdCv_3-rNO3gPqacfa) |
+| [SecondSpectrum](secondspectrum.ipynb)     | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus: |
+| [Signality](signality.ipynb)               |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
+| [SkillCorner](skillcorner.ipynb)           |                             :material-minus:                             | :material-check: | :material-minus: |                   [:material-eye:](https://github.com/SkillCorner/opendata)                    |
+| [Sportec](sportec.ipynb)                   |                             :material-check:                             | :material-check: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-025-04505-y)              |
+| [Hudl SportsCode](sportscode.ipynb)        |                             :material-minus:                             | :material-minus: | :material-check: |                                                                                                |
+| [Hudl StatsBomb](statsbomb.ipynb)          |                             :material-check:                             | :material-minus: | :material-minus: |                    [:material-eye:](https://github.com/statsbomb/open-data)                    |
+| [Stats Perform / Opta](statsperform.ipynb) |                             :material-check:                             | :material-check: | :material-minus: |                                                                                                |
+| [TRACAB (CyronHego)](tracab.ipynb)         |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
+| [WyScout](wyscout.ipynb)                   |                             :material-check:                             | :material-minus: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-019-0247-7)               |
 
 ## Supported data storage
 
@@ -59,7 +57,6 @@ This assumes that you have the data stored locally in your current working direc
 
     Some data loaders accept a list of input files.
 
-
 Alternatively, you can also provide a binary stream.
 
 ```python
@@ -84,8 +81,8 @@ dataset = statsbomb.load(
 )
 ```
 
-
 ### External input data
+
 Kloppy uses adapters to load data from external sources. Currently, kloppy is shipped with support for `http` and `s3`, but you can [add your own adapters](/examples/adapter.ipynb) to support other external sources.
 
 #### HTTP
@@ -118,8 +115,8 @@ dataset = statsbomb.load(
 )
 ```
 
-
 #### S3
+
 To load data from Amazon S3, you must provide a string representing a path to a file in an Amazon S3 cloud storage bucket. It should start with 's3://'.
 
 ```python
@@ -153,7 +150,6 @@ dataset = statsbomb.load(
 )
 ```
 
-
 ### Compressed input data
 
 Compressing the raw data can reduce their file sizes enormously, effectively reducing the data's storage cost. To support this, kloppy can transparently parse compressed files. If the given file path or URL ends with '.gz', '.xz', or '.bz2', the file will be decompressed before being read. This works for all data sources, but below we illustrate it for locally stored data.
@@ -167,7 +163,6 @@ dataset = statsbomb.load(
 )
 ```
 
-
 ## Data loading options
 
 All data loaders support a number of common options to configure how the data should be parsed. This section gives an overview of these common options. Furthermore, specific data loaders might accept additional options. For these, we refer to [the provider-specific guides](#supported-data-providers).
@@ -175,6 +170,7 @@ All data loaders support a number of common options to configure how the data sh
 ### General
 
 The following options are supported by both event data and tracking data loaders.
+
 #### `coordinates`
 
 By default, kloppy will parse all data to the [`KloppyCoordinateSystem`][kloppy.domain.KloppyCoordinateSystem], which uses normalized pitch dimensions in the range \[0, 1\]. By providing the `coordinates` option, you can parse the data to the coordinate system of any other data provider. This parameter accepts a [`Provider`][kloppy.domain.Provider] value or a provider's name.
@@ -231,6 +227,7 @@ dataset = statsbomb.load(
 ```
 
 #### `event_factory`
+
 In some cases, you might want to use certain data is not included in kloppy's data model. This is supported through the `event_factory` parameter. You can define your own customized subclasses of [`Event`][kloppy.domain.Event] that can store the additional data and then implement a [`EventFactory`][kloppy.domain.EventFactory] to parse the data. Below, we illustrate this by parsing StatsBomb's xG values.
 
 ```python
@@ -257,12 +254,11 @@ dataset = statsbomb.load(
 )
 ```
 
-
 ### Tracking data
 
 The following options are only supported by tracking data loaders.
 
-#### `pitch_length` and  `pitch_width`
+#### `pitch_length` and `pitch_width`
 
 Some tracking data providers do not record the length and width of the pitch. Yet, this information is important to be able to determine when the ball is out of bounds and to be able to rescale the pitch dimensions. If the pitch length and width are not provided, kloppy will assume default pitch dimensions of 105x68 meter.
 
@@ -291,8 +287,8 @@ dataset = statsperform.load_tracking(
 )
 ```
 
-
 #### `limit`
+
 With the `limit` parameter, you can limit the number of frames to load to the first `n` frames. This is mainly useful to testing a parser as loading a full game of tracking data can take some time.
 
 ```python
@@ -305,8 +301,8 @@ dataset = statsperform.load_tracking(
 )
 ```
 
-
 #### `only_alive`
+
 By setting the `only_alive` parameter to `True`, only frames in which the game is not paused will be included.
 
 ```python

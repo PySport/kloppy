@@ -22,15 +22,17 @@ def load_event(
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
-    Load Sportec event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    Load Sportec Solutions event data.
 
-    Parameters:
-        event_data: filename of the XML file containing the events
-        meta_data: filename of the XML file containing the match information
-        event_types:
-        coordinates:
-        event_factory:
+    Args:
+        event_data: XML feed with the raw event data of a game.
+        meta_data: XML feed containing the metadata of the game.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
 
+    Returns:
+        The parsed event data.
     """
     serializer = SportecEventDataDeserializer(
         event_types=event_types,
@@ -49,6 +51,20 @@ def load_tracking(
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
+    """
+    Load Sportec Solutions tracking data.
+
+    Args:
+        meta_data: A json feed containing the metadata of the game.
+        raw_data: A json feed containing the raw tracking data.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        only_alive: Only include frames in which the game is not paused.
+
+    Returns:
+        The parsed tracking data.
+    """
     deserializer = SportecTrackingDataDeserializer(
         sample_rate=sample_rate,
         limit=limit,
@@ -74,16 +90,18 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
     """Returns the URL for the meta, event or tracking data for a match in the IDDSE dataset."""
     # match_id -> file_id
     DATA_MAP = {
-        "J03WPY": {"meta": 48392497, "event": 48392542, "tracking": 48392572},
-        "J03WN1": {"meta": 48392491, "event": 48392527, "tracking": 48392512},
-        "J03WMX": {"meta": 48392485, "event": 48392524, "tracking": 48392539},
-        "J03WOH": {"meta": 48392515, "event": 48392500, "tracking": 48392578},
-        "J03WQQ": {"meta": 48392488, "event": 48392521, "tracking": 48392545},
-        "J03WOY": {"meta": 48392503, "event": 48392518, "tracking": 48392551},
-        "J03WR9": {"meta": 48392494, "event": 48392530, "tracking": 48392563},
+        "J03WPY": {"meta": 51643487, "event": 51643505, "tracking": 51643526},
+        "J03WN1": {"meta": 51643472, "event": 51643496, "tracking": 51643517},
+        "J03WMX": {"meta": 51643475, "event": 51643493, "tracking": 51643514},
+        "J03WOH": {"meta": 51643478, "event": 51643499, "tracking": 51643520},
+        "J03WQQ": {"meta": 51643484, "event": 51643508, "tracking": 51643529},
+        "J03WOY": {"meta": 51643481, "event": 51643502, "tracking": 51643523},
+        "J03WR9": {"meta": 51643490, "event": 51643511, "tracking": 51643532},
     }
     # URL constant
-    DATA_URL = "https://figshare.com/ndownloader/files/{file_id}?private_link=1f806cb3e755c6b54e05"
+    DATA_URL = (
+        "https://springernature.figshare.com/ndownloader/files/{file_id}"
+    )
 
     if data_type not in ["meta", "event", "tracking"]:
         raise ValueError(f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}")
@@ -134,9 +152,9 @@ def load_open_event_data(
         }
 
     References:
-        .. [1] Bassek, M., Weber, H., Rein, R., & Memmert, D. (2024). "An integrated
-               dataset of synchronized spatiotemporal and event data in elite soccer."
-               In Submission.
+        .. [1] Bassek, M., Rein, R., Weber, H. et al. "An integrated dataset of
+               spatiotemporal and event data in elite soccer." Sci Data 12, 195 (2025).
+               https://doi.org/10.1038/s41597-025-04505-y
     """
     return load_event(
         event_data=get_IDSSE_url(match_id, "event"),
@@ -166,7 +184,7 @@ def load_open_tracking_data(
         match_id (str, optional):
             Match-ID of one of the matches. Defaults to `'J03WPY'`. See below
             for available matches.
-        sampe_rate:
+        sample_rate:
         limit:
         coordinates:
         only_alive:

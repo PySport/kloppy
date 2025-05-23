@@ -28,6 +28,7 @@ from kloppy.domain import (
     SetPieceType,
     ShotResult,
     Time,
+    Point3D,
 )
 
 
@@ -284,12 +285,14 @@ class TestWyscoutV3:
         off_target_shot = dataset.get_event_by_id(1927028562)
         assert off_target_shot.event_type == EventType.SHOT
         assert off_target_shot.result == ShotResult.OFF_TARGET
-        assert off_target_shot.result_coordinates is None
+        assert off_target_shot.result_coordinates == Point3D(
+            x=100, y=40, z=3.5
+        )
         # on target shot
         on_target_shot = dataset.get_event_by_id(1927028637)
         assert on_target_shot.event_type == EventType.SHOT
         assert on_target_shot.result == ShotResult.SAVED
-        assert on_target_shot.result_coordinates == Point(100.0, 45.0)
+        assert on_target_shot.result_coordinates == Point3D(x=100, y=45, z=1)
 
     def test_foul_committed_event(self, dataset: EventDataset):
         foul_committed_event = dataset.get_event_by_id(1927028873)
@@ -379,5 +382,12 @@ class TestWyscoutV3:
         pass_event = dataset.get_event_by_id(1927028612)
         assert pass_event.event_type == EventType.PASS
         assert PassType.THROUGH_BALL in pass_event.get_qualifier_values(
+            PassQualifier
+        )
+
+    def test_high_pass_qualifier(self, dataset: EventDataset):
+        pass_event = dataset.get_event_by_id(1927028860)
+        assert pass_event.event_type == EventType.PASS
+        assert PassType.HIGH_PASS in pass_event.get_qualifier_values(
             PassQualifier
         )

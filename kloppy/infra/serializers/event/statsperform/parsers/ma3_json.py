@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from .base import OptaJSONParser, OptaEvent
+from .base import OptaEvent, OptaJSONParser
 
 
 def _parse_ma3_datetime(dt_str: str) -> datetime:

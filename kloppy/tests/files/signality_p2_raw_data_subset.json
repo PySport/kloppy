@@ -1,0 +1,1400 @@
+[
+  {
+    "utc_time": 1728219885787,
+    "phase": 2,
+    "idx": 0,
+    "state": "running",
+    "match_time": 12,
+    "referees": [
+      {
+        "jersey_number": -1,
+        "role": 3,
+        "position": [
+          -8.75,
+          -4.25
+        ],
+        "track_id": "24",
+        "distance": 1.285,
+        "speed": 2.198
+      },
+      {
+        "jersey_number": -1,
+        "role": 5,
+        "position": [
+          -19.79,
+          35
+        ],
+        "track_id": "26",
+        "distance": 2.477,
+        "speed": 2.404
+      }
+    ],
+    "away_team": [
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -9.79,
+          -6.3
+        ],
+        "track_id": "3",
+        "distance": 2.796,
+        "speed": 2.925
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -11.44,
+          4.63
+        ],
+        "track_id": "5",
+        "distance": 3.393,
+        "speed": 2.739
+      },
+      {
+        "jersey_number": 9,
+        "role": 2,
+        "position": [
+          2.49,
+          1.75
+        ],
+        "track_id": "6",
+        "distance": 8.352,
+        "speed": 5.296
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -19.55,
+          7.37
+        ],
+        "track_id": "8",
+        "distance": 3.48,
+        "speed": 2.79
+      },
+      {
+        "jersey_number": 39,
+        "role": 2,
+        "position": [
+          -17.11,
+          -1.93
+        ],
+        "track_id": "9",
+        "distance": 1.834,
+        "speed": 2.003
+      },
+      {
+        "jersey_number": 5,
+        "role": 2,
+        "position": [
+          -17.3,
+          -10.76
+        ],
+        "track_id": "10",
+        "distance": 2.235,
+        "speed": 1.901
+      },
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -4,
+          -11.53
+        ],
+        "track_id": "12",
+        "distance": 2.381,
+        "speed": 2.536
+      },
+      {
+        "jersey_number": 10,
+        "role": 2,
+        "position": [
+          -10.56,
+          15.63
+        ],
+        "track_id": "15",
+        "distance": 3.608,
+        "speed": 2.213
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -19.23,
+          18.01
+        ],
+        "track_id": "18",
+        "distance": 3.659,
+        "speed": 3.311
+      },
+      {
+        "jersey_number": 13,
+        "role": 2,
+        "position": [
+          -16.98,
+          -23.51
+        ],
+        "track_id": "19",
+        "distance": 5.011,
+        "speed": 3.177
+      }
+    ],
+    "home_team": [
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -7.25,
+          1.9
+        ],
+        "track_id": "1",
+        "distance": 6.774,
+        "speed": 4.659
+      },
+      {
+        "jersey_number": 6,
+        "role": 2,
+        "position": [
+          5.23,
+          -2.77
+        ],
+        "track_id": "2",
+        "distance": 5.034,
+        "speed": 3.818
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          16.16,
+          -8.47
+        ],
+        "track_id": "7",
+        "distance": 1.268,
+        "speed": 1.294
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          17.21,
+          10.77
+        ],
+        "track_id": "13",
+        "distance": 1.256,
+        "speed": 1.028
+      },
+      {
+        "jersey_number": 14,
+        "role": 2,
+        "position": [
+          -4.22,
+          9.24
+        ],
+        "track_id": "14",
+        "distance": 5.458,
+        "speed": 3.237
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -10.27,
+          18.6
+        ],
+        "track_id": "16",
+        "distance": 9.752,
+        "speed": 5.823
+      },
+      {
+        "jersey_number": 27,
+        "role": 2,
+        "position": [
+          7.17,
+          -22.57
+        ],
+        "track_id": "17",
+        "distance": 4.913,
+        "speed": 3.863
+      },
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -3.53,
+          -28.2
+        ],
+        "track_id": "20",
+        "distance": 5.194,
+        "speed": 3.759
+      },
+      {
+        "jersey_number": 18,
+        "role": 2,
+        "position": [
+          3.79,
+          27.01
+        ],
+        "track_id": "21",
+        "distance": 1.808,
+        "speed": 0.91
+      },
+      {
+        "jersey_number": 45,
+        "role": 1,
+        "position": [
+          45.37,
+          0.22
+        ],
+        "track_id": "22",
+        "distance": 1.762,
+        "speed": 1.49
+      },
+      {
+        "jersey_number": 20,
+        "role": 2,
+        "position": [
+          -45.95,
+          0.01
+        ],
+        "track_id": "23",
+        "distance": 2.439,
+        "speed": 1.072
+      }
+    ],
+    "ball": {
+      "position": [
+        4.42,
+        -3.08,
+        0
+      ],
+      "team": "home_team",
+      "jersey_number": 6,
+      "track_id": "2"
+    }
+  },
+  {
+    "utc_time": 1728219885827,
+    "phase": 2,
+    "idx": 1,
+    "state": "running",
+    "match_time": 52,
+    "referees": [
+      {
+        "jersey_number": -1,
+        "role": 3,
+        "position": [
+          -8.84,
+          -4.24
+        ],
+        "track_id": "24",
+        "distance": 1.375,
+        "speed": 2.225
+      },
+      {
+        "jersey_number": -1,
+        "role": 5,
+        "position": [
+          -19.88,
+          35
+        ],
+        "track_id": "26",
+        "distance": 2.573,
+        "speed": 2.398
+      }
+    ],
+    "away_team": [
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -9.86,
+          -6.39
+        ],
+        "track_id": "3",
+        "distance": 2.913,
+        "speed": 2.913
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -11.52,
+          4.55
+        ],
+        "track_id": "5",
+        "distance": 3.51,
+        "speed": 2.799
+      },
+      {
+        "jersey_number": 9,
+        "role": 2,
+        "position": [
+          2.46,
+          1.54
+        ],
+        "track_id": "6",
+        "distance": 8.569,
+        "speed": 5.311
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -19.66,
+          7.34
+        ],
+        "track_id": "8",
+        "distance": 3.594,
+        "speed": 2.814
+      },
+      {
+        "jersey_number": 39,
+        "role": 2,
+        "position": [
+          -17.16,
+          -1.99
+        ],
+        "track_id": "9",
+        "distance": 1.916,
+        "speed": 2.015
+      },
+      {
+        "jersey_number": 5,
+        "role": 2,
+        "position": [
+          -17.36,
+          -10.81
+        ],
+        "track_id": "10",
+        "distance": 2.312,
+        "speed": 1.904
+      },
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -4.09,
+          -11.58
+        ],
+        "track_id": "12",
+        "distance": 2.485,
+        "speed": 2.572
+      },
+      {
+        "jersey_number": 10,
+        "role": 2,
+        "position": [
+          -10.63,
+          15.57
+        ],
+        "track_id": "15",
+        "distance": 3.697,
+        "speed": 2.198
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -19.34,
+          17.93
+        ],
+        "track_id": "18",
+        "distance": 3.793,
+        "speed": 3.333
+      },
+      {
+        "jersey_number": 13,
+        "role": 2,
+        "position": [
+          -17.01,
+          -23.64
+        ],
+        "track_id": "19",
+        "distance": 5.139,
+        "speed": 3.201
+      }
+    ],
+    "home_team": [
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -7.44,
+          1.92
+        ],
+        "track_id": "1",
+        "distance": 6.962,
+        "speed": 4.693
+      },
+      {
+        "jersey_number": 6,
+        "role": 2,
+        "position": [
+          5.13,
+          -2.89
+        ],
+        "track_id": "2",
+        "distance": 5.191,
+        "speed": 3.781
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          16.12,
+          -8.49
+        ],
+        "track_id": "7",
+        "distance": 1.322,
+        "speed": 1.339
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          17.17,
+          10.78
+        ],
+        "track_id": "13",
+        "distance": 1.3,
+        "speed": 1.067
+      },
+      {
+        "jersey_number": 14,
+        "role": 2,
+        "position": [
+          -4.3,
+          9.14
+        ],
+        "track_id": "14",
+        "distance": 5.589,
+        "speed": 3.246
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -10.5,
+          18.56
+        ],
+        "track_id": "16",
+        "distance": 9.986,
+        "speed": 5.813
+      },
+      {
+        "jersey_number": 27,
+        "role": 2,
+        "position": [
+          7.03,
+          -22.64
+        ],
+        "track_id": "17",
+        "distance": 5.07,
+        "speed": 3.916
+      },
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -3.64,
+          -28.3
+        ],
+        "track_id": "20",
+        "distance": 5.346,
+        "speed": 3.769
+      },
+      {
+        "jersey_number": 18,
+        "role": 2,
+        "position": [
+          3.76,
+          26.98
+        ],
+        "track_id": "21",
+        "distance": 1.847,
+        "speed": 0.951
+      },
+      {
+        "jersey_number": 45,
+        "role": 1,
+        "position": [
+          45.31,
+          0.23
+        ],
+        "track_id": "22",
+        "distance": 1.824,
+        "speed": 1.47
+      },
+      {
+        "jersey_number": 20,
+        "role": 2,
+        "position": [
+          -45.91,
+          0
+        ],
+        "track_id": "23",
+        "distance": 2.483,
+        "speed": 1.074
+      }
+    ],
+    "ball": {
+      "position": [
+        4.34,
+        -3.18,
+        0
+      ],
+      "team": "home_team",
+      "jersey_number": 6,
+      "track_id": "2"
+    }
+  },
+  {
+    "utc_time": 1728219885867,
+    "phase": 2,
+    "idx": 2,
+    "state": "running",
+    "match_time": 92,
+    "referees": [
+      {
+        "jersey_number": -1,
+        "role": 3,
+        "position": [
+          -8.93,
+          -4.23
+        ],
+        "track_id": "24",
+        "distance": 1.467,
+        "speed": 2.248
+      },
+      {
+        "jersey_number": -1,
+        "role": 5,
+        "position": [
+          -19.98,
+          35
+        ],
+        "track_id": "26",
+        "distance": 2.669,
+        "speed": 2.392
+      },
+      {
+        "jersey_number": -1,
+        "role": 4,
+        "position": [
+          17.3,
+          -34.28
+        ],
+        "track_id": "33",
+        "distance": 0,
+        "speed": 0
+      }
+    ],
+    "away_team": [
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -9.93,
+          -6.48
+        ],
+        "track_id": "3",
+        "distance": 3.03,
+        "speed": 2.899
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -11.61,
+          4.47
+        ],
+        "track_id": "5",
+        "distance": 3.63,
+        "speed": 2.851
+      },
+      {
+        "jersey_number": 9,
+        "role": 2,
+        "position": [
+          2.43,
+          1.32
+        ],
+        "track_id": "6",
+        "distance": 8.787,
+        "speed": 5.321
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -19.77,
+          7.32
+        ],
+        "track_id": "8",
+        "distance": 3.708,
+        "speed": 2.837
+      },
+      {
+        "jersey_number": 39,
+        "role": 2,
+        "position": [
+          -17.22,
+          -2.05
+        ],
+        "track_id": "9",
+        "distance": 1.998,
+        "speed": 2.025
+      },
+      {
+        "jersey_number": 5,
+        "role": 2,
+        "position": [
+          -17.43,
+          -10.85
+        ],
+        "track_id": "10",
+        "distance": 2.389,
+        "speed": 1.906
+      },
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -4.17,
+          -11.64
+        ],
+        "track_id": "12",
+        "distance": 2.59,
+        "speed": 2.607
+      },
+      {
+        "jersey_number": 10,
+        "role": 2,
+        "position": [
+          -10.7,
+          15.52
+        ],
+        "track_id": "15",
+        "distance": 3.785,
+        "speed": 2.182
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -19.45,
+          17.86
+        ],
+        "track_id": "18",
+        "distance": 3.929,
+        "speed": 3.355
+      },
+      {
+        "jersey_number": 13,
+        "role": 2,
+        "position": [
+          -17.02,
+          -23.77
+        ],
+        "track_id": "19",
+        "distance": 5.268,
+        "speed": 3.227
+      }
+    ],
+    "home_team": [
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -7.62,
+          1.93
+        ],
+        "track_id": "1",
+        "distance": 7.152,
+        "speed": 4.725
+      },
+      {
+        "jersey_number": 6,
+        "role": 2,
+        "position": [
+          5.02,
+          -3.01
+        ],
+        "track_id": "2",
+        "distance": 5.346,
+        "speed": 3.738
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          16.07,
+          -8.52
+        ],
+        "track_id": "7",
+        "distance": 1.378,
+        "speed": 1.383
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          17.13,
+          10.78
+        ],
+        "track_id": "13",
+        "distance": 1.345,
+        "speed": 1.105
+      },
+      {
+        "jersey_number": 14,
+        "role": 2,
+        "position": [
+          -4.38,
+          9.04
+        ],
+        "track_id": "14",
+        "distance": 5.72,
+        "speed": 3.252
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -10.73,
+          18.51
+        ],
+        "track_id": "16",
+        "distance": 10.219,
+        "speed": 5.801
+      },
+      {
+        "jersey_number": 27,
+        "role": 2,
+        "position": [
+          6.89,
+          -22.71
+        ],
+        "track_id": "17",
+        "distance": 5.23,
+        "speed": 3.967
+      },
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -3.76,
+          -28.4
+        ],
+        "track_id": "20",
+        "distance": 5.499,
+        "speed": 3.775
+      },
+      {
+        "jersey_number": 18,
+        "role": 2,
+        "position": [
+          3.72,
+          26.96
+        ],
+        "track_id": "21",
+        "distance": 1.887,
+        "speed": 0.992
+      },
+      {
+        "jersey_number": 45,
+        "role": 1,
+        "position": [
+          45.25,
+          0.23
+        ],
+        "track_id": "22",
+        "distance": 1.883,
+        "speed": 1.445
+      },
+      {
+        "jersey_number": 20,
+        "role": 2,
+        "position": [
+          -45.87,
+          -0.02
+        ],
+        "track_id": "23",
+        "distance": 2.526,
+        "speed": 1.076
+      }
+    ],
+    "ball": {
+      "position": [
+        4.27,
+        -3.27,
+        0
+      ],
+      "team": "home_team",
+      "jersey_number": 6,
+      "track_id": "2"
+    }
+  },
+  {
+    "utc_time": 1728219885907,
+    "phase": 2,
+    "idx": 3,
+    "state": "running",
+    "match_time": 132,
+    "referees": [
+      {
+        "jersey_number": -1,
+        "role": 3,
+        "position": [
+          -9.03,
+          -4.22
+        ],
+        "track_id": "24",
+        "distance": 1.559,
+        "speed": 2.269
+      },
+      {
+        "jersey_number": -1,
+        "role": 5,
+        "position": [
+          -20.08,
+          35
+        ],
+        "track_id": "26",
+        "distance": 2.765,
+        "speed": 2.385
+      },
+      {
+        "jersey_number": -1,
+        "role": 4,
+        "position": [
+          17.28,
+          -34.28
+        ],
+        "track_id": "33",
+        "distance": 0.02,
+        "speed": 0.608
+      }
+    ],
+    "away_team": [
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -10,
+          -6.57
+        ],
+        "track_id": "3",
+        "distance": 3.145,
+        "speed": 2.884
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -11.69,
+          4.38
+        ],
+        "track_id": "5",
+        "distance": 3.752,
+        "speed": 2.894
+      },
+      {
+        "jersey_number": 9,
+        "role": 2,
+        "position": [
+          2.4,
+          1.11
+        ],
+        "track_id": "6",
+        "distance": 9.006,
+        "speed": 5.324
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -19.88,
+          7.29
+        ],
+        "track_id": "8",
+        "distance": 3.822,
+        "speed": 2.859
+      },
+      {
+        "jersey_number": 39,
+        "role": 2,
+        "position": [
+          -17.28,
+          -2.1
+        ],
+        "track_id": "9",
+        "distance": 2.08,
+        "speed": 2.034
+      },
+      {
+        "jersey_number": 5,
+        "role": 2,
+        "position": [
+          -17.49,
+          -10.89
+        ],
+        "track_id": "10",
+        "distance": 2.465,
+        "speed": 1.906
+      },
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -4.26,
+          -11.7
+        ],
+        "track_id": "12",
+        "distance": 2.697,
+        "speed": 2.641
+      },
+      {
+        "jersey_number": 10,
+        "role": 2,
+        "position": [
+          -10.77,
+          15.46
+        ],
+        "track_id": "15",
+        "distance": 3.872,
+        "speed": 2.164
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -19.56,
+          17.78
+        ],
+        "track_id": "18",
+        "distance": 4.065,
+        "speed": 3.374
+      },
+      {
+        "jersey_number": 13,
+        "role": 2,
+        "position": [
+          -17.03,
+          -23.9
+        ],
+        "track_id": "19",
+        "distance": 5.4,
+        "speed": 3.251
+      }
+    ],
+    "home_team": [
+      {
+        "jersey_number": 11,
+        "role": 2,
+        "position": [
+          -7.82,
+          1.95
+        ],
+        "track_id": "1",
+        "distance": 7.344,
+        "speed": 4.755
+      },
+      {
+        "jersey_number": 6,
+        "role": 2,
+        "position": [
+          4.92,
+          -3.12
+        ],
+        "track_id": "2",
+        "distance": 5.498,
+        "speed": 3.685
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          16.02,
+          -8.55
+        ],
+        "track_id": "7",
+        "distance": 1.435,
+        "speed": 1.427
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          17.08,
+          10.79
+        ],
+        "track_id": "13",
+        "distance": 1.392,
+        "speed": 1.141
+      },
+      {
+        "jersey_number": 14,
+        "role": 2,
+        "position": [
+          -4.46,
+          8.93
+        ],
+        "track_id": "14",
+        "distance": 5.852,
+        "speed": 3.257
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -10.96,
+          18.46
+        ],
+        "track_id": "16",
+        "distance": 10.453,
+        "speed": 5.786
+      },
+      {
+        "jersey_number": 27,
+        "role": 2,
+        "position": [
+          6.74,
+          -22.77
+        ],
+        "track_id": "17",
+        "distance": 5.393,
+        "speed": 4.017
+      },
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -3.88,
+          -28.49
+        ],
+        "track_id": "20",
+        "distance": 5.652,
+        "speed": 3.779
+      },
+      {
+        "jersey_number": 18,
+        "role": 2,
+        "position": [
+          3.69,
+          26.94
+        ],
+        "track_id": "21",
+        "distance": 1.929,
+        "speed": 1.031
+      },
+      {
+        "jersey_number": 45,
+        "role": 1,
+        "position": [
+          45.19,
+          0.24
+        ],
+        "track_id": "22",
+        "distance": 1.941,
+        "speed": 1.416
+      },
+      {
+        "jersey_number": 20,
+        "role": 2,
+        "position": [
+          -45.83,
+          -0.03
+        ],
+        "track_id": "23",
+        "distance": 2.569,
+        "speed": 1.076
+      }
+    ],
+    "ball": {
+      "position": [
+        4.2,
+        -3.36,
+        0
+      ],
+      "team": "home_team",
+      "jersey_number": 6,
+      "track_id": "2"
+    }
+  },
+  {
+    "utc_time": 1728222851730,
+    "phase": 2,
+    "idx": 74148,
+    "state": "end",
+    "match_time": 2965955,
+    "referees": [
+      {
+        "jersey_number": -1,
+        "role": 3,
+        "position": [
+          -25.03,
+          -8.02
+        ],
+        "track_id": "24",
+        "distance": 5753.314,
+        "speed": 0
+      },
+      {
+        "jersey_number": -1,
+        "role": 4,
+        "position": [
+          3.17,
+          -35.26
+        ],
+        "track_id": "33",
+        "distance": 1864.495,
+        "speed": 0
+      }
+    ],
+    "away_team": [
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -34.91,
+          -3.26
+        ],
+        "track_id": "3",
+        "distance": 6111.219,
+        "speed": 0
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -33.15,
+          -6.31
+        ],
+        "track_id": "5",
+        "distance": 6270.191,
+        "speed": 0
+      },
+      {
+        "jersey_number": 9,
+        "role": 2,
+        "position": [
+          -37.74,
+          -6.6
+        ],
+        "track_id": "6",
+        "distance": 5592.037,
+        "speed": 0
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -38.61,
+          -1.36
+        ],
+        "track_id": "8",
+        "distance": 5514.306,
+        "speed": 0
+      },
+      {
+        "jersey_number": 39,
+        "role": 2,
+        "position": [
+          -34.65,
+          -4.53
+        ],
+        "track_id": "9",
+        "distance": 4868.64,
+        "speed": 0
+      },
+      {
+        "jersey_number": 5,
+        "role": 2,
+        "position": [
+          -39.97,
+          0.83
+        ],
+        "track_id": "10",
+        "distance": 5398.871,
+        "speed": 0
+      },
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -40.56,
+          -7.71
+        ],
+        "track_id": "18",
+        "distance": 6048.556,
+        "speed": 0
+      },
+      {
+        "jersey_number": 13,
+        "role": 2,
+        "position": [
+          -32.37,
+          -2.42
+        ],
+        "track_id": "19",
+        "distance": 5954.555,
+        "speed": 0
+      },
+      {
+        "jersey_number": 28,
+        "role": 2,
+        "position": [
+          -27.88,
+          7.27
+        ],
+        "track_id": "3889",
+        "distance": 3134.253,
+        "speed": 0
+      },
+      {
+        "jersey_number": 21,
+        "role": 2,
+        "position": [
+          -20.44,
+          -12.97
+        ],
+        "track_id": "5941",
+        "distance": 1949.697,
+        "speed": 0
+      }
+    ],
+    "home_team": [
+      {
+        "jersey_number": 3,
+        "role": 2,
+        "position": [
+          -34.22,
+          0.47
+        ],
+        "track_id": "7",
+        "distance": 5101.851,
+        "speed": 0
+      },
+      {
+        "jersey_number": 4,
+        "role": 2,
+        "position": [
+          -35.06,
+          4.79
+        ],
+        "track_id": "13",
+        "distance": 5193.715,
+        "speed": 0
+      },
+      {
+        "jersey_number": 14,
+        "role": 2,
+        "position": [
+          -19.21,
+          -6.19
+        ],
+        "track_id": "14",
+        "distance": 6231.263,
+        "speed": 0
+      },
+      {
+        "jersey_number": 29,
+        "role": 2,
+        "position": [
+          -40.82,
+          1.14
+        ],
+        "track_id": "16",
+        "distance": 6068.033,
+        "speed": 0
+      },
+      {
+        "jersey_number": 27,
+        "role": 2,
+        "position": [
+          -14.69,
+          4.91
+        ],
+        "track_id": "17",
+        "distance": 5820.986,
+        "speed": 0
+      },
+      {
+        "jersey_number": 23,
+        "role": 2,
+        "position": [
+          -30.25,
+          -10.46
+        ],
+        "track_id": "20",
+        "distance": 5443.246,
+        "speed": 0
+      },
+      {
+        "jersey_number": 18,
+        "role": 2,
+        "position": [
+          -40.59,
+          -0.13
+        ],
+        "track_id": "21",
+        "distance": 5976.045,
+        "speed": 0
+      },
+      {
+        "jersey_number": 45,
+        "role": 1,
+        "position": [
+          8.05,
+          -12.66
+        ],
+        "track_id": "22",
+        "distance": 3009.793,
+        "speed": 0
+      },
+      {
+        "jersey_number": 7,
+        "role": 2,
+        "position": [
+          -20.51,
+          11.08
+        ],
+        "track_id": "3808",
+        "distance": 2909.265,
+        "speed": 0
+      },
+      {
+        "jersey_number": 16,
+        "role": 2,
+        "position": [
+          -33,
+          -14.23
+        ],
+        "track_id": "3809",
+        "distance": 3248.496,
+        "speed": 0
+      },
+      {
+        "jersey_number": 26,
+        "role": 2,
+        "position": [
+          -33.25,
+          -7.24
+        ],
+        "track_id": "5965",
+        "distance": 1487.224,
+        "speed": 0
+      }
+    ],
+    "ball": {
+      "position": null,
+      "team": null,
+      "jersey_number": -1,
+      "track_id": null
+    }
+  }
+]

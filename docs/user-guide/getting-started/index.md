@@ -23,6 +23,7 @@ Yet, within these main formats, there are notable differences between data provi
 We'll illustrate how to load a dataset in this standardized format using a sample of [publicly available data provided by Sportec](https://www.nature.com/articles/s41597-025-04505-y). For examples on loading data from other data providers, see the [Loading Data](../loading-data/index.md) section of the user guide.
 
 ### Event data
+
 The public Sportec dataset contains both event data and tracking data. We'll first load the event data.
 
 ```python exec="true" source="above" session="getting-started"
@@ -92,14 +93,14 @@ pitch.goal_angle(
 )
 # Plot the assist
 pitch.lines(
-    1-assist_event.coordinates.x, 1-assist_event.coordinates.y, 
+    1-assist_event.coordinates.x, 1-assist_event.coordinates.y,
     1-assist_event.receiver_coordinates.x, 1-assist_event.receiver_coordinates.y,
     lw=5, transparent=True, comet=True, cmap='Blues', zorder=1.2,
     label='Pass leading to shot', ax=axs['pitch']
 )
 # Plot the shot
 pitch.scatter(
-    1-assist_event.receiver_coordinates.x, 1-assist_event.receiver_coordinates.y, 
+    1-assist_event.receiver_coordinates.x, 1-assist_event.receiver_coordinates.y,
     s=600, marker="football", zorder=1.3, label='Shot', ax=axs['pitch']
 )
 
@@ -135,7 +136,7 @@ tracking_dataset = sportec.load_open_tracking_data(
 )
 ```
 
-This will create a [`TrackingDataset`][kloppy.domain.TrackingDataset], which contains a sequence of [`Frame`][kloppy.domain.Frame] entities. 
+This will create a [`TrackingDataset`][kloppy.domain.TrackingDataset], which contains a sequence of [`Frame`][kloppy.domain.Frame] entities.
 
 ```pycon exec="true" source="console" session="getting-started"
 >>> first_frame = tracking_dataset[0]
@@ -155,7 +156,6 @@ A tracking data frame can provide useful context to an event as it shows the loc
 !!! note "Event-tracking synchronization"
 
     Implementing automated event to tracking data synchronization is on kloppy's roadmap. See [#61](https://github.com/PySport/kloppy/issues/61).
-
 
 ```python exec="true" source="above" session="getting-started"
 # Match the goal event with its corresponding tracking frame
@@ -247,7 +247,6 @@ plt.savefig(buffer, format="svg")  # markdown-exec: hide
 print(buffer.getvalue())  # markdown-exec: hide
 ```
 
-
 ### Metadata
 
 One of the main benefits of working with kloppy is that it loads metadata with each (event and tracking) dataset and makes it available in the dataset's [`.metadata`][kloppy.domain.Dataset.metadata] property.
@@ -308,6 +307,7 @@ The metadata contains much more than the players and teams. Later in this quick 
 Oftentimes, not all data in a match is relevant. The goal of the analysis might be to investigate a certain time window, set of events, game phase, or tactical pattern.
 
 ### Selecting events or frames
+
 To select a subset of events or frames, kloppy provides the [`filter`][kloppy.domain.Dataset.filter], [`find`][kloppy.domain.Dataset.find] and [`find_all`][kloppy.domain.Dataset.find_all] methods. We've already introduced the [`find`][kloppy.domain.Dataset.find] and [`find_all`][kloppy.domain.Dataset.find_all] methods above for finding events. The [`filter`][kloppy.domain.Dataset.filter] method works similarly, the only difference being that it returns a new dataset while the other two methods return a list of events or frames. With these methods we can easily create a dataset that only contains a specific type of event.
 
 ```python exec="true" source="above" session="getting-started"
@@ -325,9 +325,9 @@ f3_dataset = tracking_dataset.filter(
 )
 ```
 
-
 ### Pattern matching
-For finding patterns in a game (that is, groups of events), you can use kloppy's `event_pattern_matching` module. This module implements a versatile domain-specific language for finding patterns in event data, inspired by regular expressions. We won't get into detail here but rather show how it can be used to create [*movement chains*](https://www.statsperform.com/resource/introducing-movement-chains/) to illustrate its versatility. 
+
+For finding patterns in a game (that is, groups of events), you can use kloppy's `event_pattern_matching` module. This module implements a versatile domain-specific language for finding patterns in event data, inspired by regular expressions. We won't get into detail here but rather show how it can be used to create [_movement chains_](https://www.statsperform.com/resource/introducing-movement-chains/) to illustrate its versatility.
 
 Movement chains describe the pattern of four consecutive player involvements in an uninterrupted passage of play by displaying the locations of the first touches of the players involved, where a player can be involved more than once within the chain. In kloppy, you can define this pattern as follows:
 
@@ -367,10 +367,9 @@ Let's take a closer look at the players involved in those shot-ending movement c
 ...     print(" -> ".join([e.player.name for e in match.events]))
 ```
 
-
 ## Transforming data
 
-Apart from the data format and event definitions, another aspect that differs between data providers is how they represent coordinates. These differences can include where the origin of the pitch is placed (e.g., top-left, center, bottom-left), which direction the axes increase (left to right, top to bottom, etc.), and the units used (normalized values, metric dimensions, or imperial dimensions). As a result, even if two datasets describe the same event, the x and y positions may not be directly comparable without converting them into a shared reference frame. 
+Apart from the data format and event definitions, another aspect that differs between data providers is how they represent coordinates. These differences can include where the origin of the pitch is placed (e.g., top-left, center, bottom-left), which direction the axes increase (left to right, top to bottom, etc.), and the units used (normalized values, metric dimensions, or imperial dimensions). As a result, even if two datasets describe the same event, the x and y positions may not be directly comparable without converting them into a shared reference frame.
 
 Sportec even uses different coordinate systems for their event and tracking data. For event data, the origin is at the top left, while it is at the center of the pitch for tracking data. The direction of the y-axis is different too.
 
@@ -412,7 +411,7 @@ Alternatively (and more efficiently) you can directly load the data in your pref
 >>> from kloppy import sportec
 >>> from kloppy.domain import Provider
 >>> event_dataset = sportec.load_open_event_data(
-...     match_id="J03WN1", 
+...     match_id="J03WN1",
 ...     coordinates=Provider.SPORTEC
 ... )
 >>> print(event_dataset.metadata.coordinate_system)
@@ -440,7 +439,7 @@ player_events = event_dataset.filter(
 
 def heatmap(xs, ys):
     pitch = Pitch(
-        pitch_type=build_dim(event_dataset.metadata.coordinate_system),
+        pitch_type=event_dataset.metadata.coordinate_system.to_mplsoccer(),
         line_zorder=2,
     )
     fig, ax = pitch.draw()
@@ -485,12 +484,12 @@ plt.savefig(buffer, format="svg")  # markdown-exec: hide
 print(buffer.getvalue())  # markdown-exec: hide
 ```
 
-
 ## Exporting data
 
 Until now, we've worked with kloppy's object oriented data model. This format is well-suited to preprocess the data. However, to do some actual analysis of the data, it can often be more convenient and efficient to use dataframes or SportsCode XML.
 
 ### To a Polars/Pandas dataframe
+
 kloppy allows you to export a dataset to a dataframe. Both Polars and Pandas are supported. You can use the following engines: `polars`, `pandas`, `pandas[pyarrow]`.
 
 !!! note
@@ -534,7 +533,6 @@ print(f"""
 Sportscode XML is a format associated with [Hudl Sportscode](https://www.hudl.com/en_gb/products/sportscode), a popular platform for video analysis in sports. It integrates video clips with detailed tagging of game events, making it ideal for coaches and analysts who need synchronized video and event data to dissect team and player performances.
 
 To support this popular data format, kloppy provides a [`CodeDataset`][kloppy.domain.CodeDataset]. You can use kloppy to load Sportscode XML files, but perhaps more interestingly, you can also generate these files from another dataset allowing you to automatically create playlists from event and/or tracking data that can be used by a video analyst. We will illustrate this by creating a playlist with all shots.
-
 
 ```python exec="true" source="above" session="getting-started"
 from datetime import timedelta

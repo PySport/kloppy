@@ -11,7 +11,7 @@ dataset = statsbomb.load(
 )
 ```
 
-The remainder of this guide explains how to adapt this code depending on [the data provider](#supported-providers) and [the data storage](#supported-data-storage). Furthermore, we give an overview of [options available](#data-loading-options) while loading the data.
+The remainder of this guide explains how to adapt this code depending on [the data provider](#supported-data-providers) and [the data storage](#supported-data-storage). Furthermore, we give an overview of [options available](#data-loading-options) while loading the data.
 
 ## Supported data providers
 
@@ -35,7 +35,7 @@ Below is an overview of all currently supported providers, along with links to d
 
 ## Supported data storage
 
-With kloppy, it doesn't really matter where and how the data is stored. Kloppy can transparently load data from local files, the web, and Amazon S3. Additionally, you can extend its functionality by creating [custom adapters](/examples/adapter.ipynb) to load data from other data sources as needed.
+With kloppy, it doesn't really matter where and how the data is stored. Kloppy can transparently load data from local files, the web, and Amazon S3. Additionally, you can extend its functionality by creating [custom adapters](../../examples/adapter.ipynb) to load data from other data sources as needed.
 
 ### Local input data
 
@@ -83,7 +83,7 @@ dataset = statsbomb.load(
 
 ### External input data
 
-Kloppy uses adapters to load data from external sources. Currently, kloppy is shipped with support for `http` and `s3`, but you can [add your own adapters](/examples/adapter.ipynb) to support other external sources.
+Kloppy uses adapters to load data from external sources. Currently, kloppy is shipped with support for `http` and `s3`, but you can [add your own adapters](../../examples/adapter.ipynb) to support other external sources.
 
 #### HTTP
 

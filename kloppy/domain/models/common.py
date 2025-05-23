@@ -49,6 +49,8 @@ from kloppy.exceptions import (
 
 from .formation import FormationType
 from .pitch import (
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
     Dimension,
     ImperialPitchDimensions,
     MetricPitchDimensions,
@@ -599,6 +601,149 @@ class CoordinateSystem(ABC):
             )
 
         return False
+
+    def to_mplsoccer(self):
+        """ "Convert the coordinate system to a mplsoccer BaseDims object.
+
+        Example:
+        >>> from kloppy.domain import KloppyCoordinateSystem
+        >>> from mplsoccer import Pitch
+        >>> coordinate_system = KloppyCoordinateSystem()
+        >>> pitch = Pitch(dimensions=coordinate_system.to_mplsoccer())
+
+        Note:
+            This method is experimental and may change in the future.
+        """
+        try:
+            from mplsoccer.dimensions import BaseDims
+        except ImportError:
+            raise ImportError(
+                "Seems like you don't have `mplsoccer` installed. "
+                "Please install it using: pip install mplsoccer"
+            )
+
+        if (
+            self.pitch_dimensions.x_dim.min is None
+            or self.pitch_dimensions.x_dim.max is None
+        ):
+            raise ValueError(
+                "The x-dimensions of the pitch must be fully defined."
+            )
+        if (
+            self.pitch_dimensions.y_dim.min is None
+            or self.pitch_dimensions.y_dim.max is None
+        ):
+            raise ValueError(
+                "The y-dimensions of the pitch must be fully defined."
+            )
+
+        pitch_length = (
+            self.pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        pitch_width = self.pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+
+        invert_y = (
+            self.vertical_orientation == VerticalOrientation.TOP_TO_BOTTOM
+        )
+        origin_center = self.origin == Origin.CENTER
+
+        neg_if_inverted = -1 if invert_y else 1
+        center = (0, 0)
+        if self.origin == Origin.BOTTOM_LEFT:
+            center = (
+                (
+                    self.pitch_dimensions.x_dim.max
+                    - self.pitch_dimensions.x_dim.min
+                )
+                / 2,
+                (
+                    self.pitch_dimensions.y_dim.max
+                    - self.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            )
+        elif self.origin == Origin.TOP_LEFT:
+            neg_if_inverted = -1
+            center = (
+                (
+                    self.pitch_dimensions.x_dim.max
+                    - self.pitch_dimensions.x_dim.min
+                )
+                / 2,
+                (
+                    self.pitch_dimensions.y_dim.max
+                    - self.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            )
+
+        dim = BaseDims(
+            left=self.pitch_dimensions.x_dim.min,
+            right=self.pitch_dimensions.x_dim.max,
+            bottom=self.pitch_dimensions.y_dim.min
+            if not invert_y
+            else self.pitch_dimensions.y_dim.max,
+            top=self.pitch_dimensions.y_dim.max
+            if not invert_y
+            else self.pitch_dimensions.y_dim.min,
+            width=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.x_dim.min,
+            length=self.pitch_dimensions.y_dim.max
+            - self.pitch_dimensions.y_dim.min,
+            goal_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            goal_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            six_yard_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.six_yard_length,
+            six_yard_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.six_yard_length,
+            six_yard_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            six_yard_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            penalty_spot_distance=self.pitch_dimensions.penalty_spot_distance,
+            penalty_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.penalty_spot_distance,
+            penalty_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.penalty_spot_distance,
+            penalty_area_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.penalty_area_length,
+            penalty_area_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.penalty_area_length,
+            penalty_area_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            penalty_area_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            center_width=center[1],
+            center_length=center[0],
+            goal_width=self.pitch_dimensions.goal_width,
+            goal_length=self.pitch_dimensions.goal_height,
+            six_yard_width=self.pitch_dimensions.six_yard_width,
+            six_yard_length=self.pitch_dimensions.six_yard_length,
+            penalty_area_width=self.pitch_dimensions.penalty_area_width,
+            penalty_area_length=self.pitch_dimensions.penalty_area_length,
+            circle_diameter=self.pitch_dimensions.circle_radius * 2,
+            corner_diameter=self.pitch_dimensions.corner_radius * 2,
+            arc=0,
+            invert_y=invert_y,
+            origin_center=origin_center,
+            pad_default=0.02
+            * (
+                self.pitch_dimensions.x_dim.max
+                - self.pitch_dimensions.x_dim.min
+            ),
+            pad_multiplier=1,
+            aspect_equal=False
+            if self.pitch_dimensions.unit == Unit.NORMED
+            else True,
+            pitch_width=pitch_width,
+            pitch_length=pitch_length,
+            aspect=pitch_width / pitch_length
+            if self.pitch_dimensions.unit == Unit.NORMED
+            else 1.0,
+        )
+        return dim
 
 
 class ProviderCoordinateSystem(CoordinateSystem):

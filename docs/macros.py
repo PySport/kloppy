@@ -579,148 +579,13 @@ def define_env(env):
 
         import matplotlib.pyplot as plt
         from mplsoccer import Pitch
-        from mplsoccer.dimensions import BaseDims
 
         from kloppy.domain import (
             DatasetType,
-            Origin,
             Provider,
-            Unit,
             VerticalOrientation,
             build_coordinate_system,
         )
-
-        def build_dim(coordinate_system):
-            invert_y = (
-                coordinate_system.vertical_orientation
-                == VerticalOrientation.TOP_TO_BOTTOM
-            )
-            origin_center = coordinate_system.origin == Origin.CENTER
-
-            neg_if_inverted = -1 if invert_y else 1
-            center = (0, 0)
-            if coordinate_system.origin == Origin.BOTTOM_LEFT:
-                center = (
-                    (
-                        coordinate_system.pitch_dimensions.x_dim.max
-                        - coordinate_system.pitch_dimensions.x_dim.min
-                    )
-                    / 2,
-                    (
-                        coordinate_system.pitch_dimensions.y_dim.max
-                        - coordinate_system.pitch_dimensions.y_dim.min
-                    )
-                    / 2,
-                )
-            elif coordinate_system.origin == Origin.TOP_LEFT:
-                neg_if_inverted = -1
-                center = (
-                    (
-                        coordinate_system.pitch_dimensions.x_dim.max
-                        - coordinate_system.pitch_dimensions.x_dim.min
-                    )
-                    / 2,
-                    (
-                        coordinate_system.pitch_dimensions.y_dim.max
-                        - coordinate_system.pitch_dimensions.y_dim.min
-                    )
-                    / 2,
-                )
-
-            dim = BaseDims(
-                left=coordinate_system.pitch_dimensions.x_dim.min,
-                right=coordinate_system.pitch_dimensions.x_dim.max,
-                bottom=coordinate_system.pitch_dimensions.y_dim.min
-                if not invert_y
-                else coordinate_system.pitch_dimensions.y_dim.max,
-                top=coordinate_system.pitch_dimensions.y_dim.max
-                if not invert_y
-                else coordinate_system.pitch_dimensions.y_dim.min,
-                width=coordinate_system.pitch_dimensions.x_dim.max
-                - coordinate_system.pitch_dimensions.x_dim.min,
-                length=coordinate_system.pitch_dimensions.y_dim.max
-                - coordinate_system.pitch_dimensions.y_dim.min,
-                goal_bottom=center[1]
-                - (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.goal_width
-                ),
-                goal_top=center[1]
-                + (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.goal_width
-                ),
-                six_yard_left=coordinate_system.pitch_dimensions.x_dim.min
-                + coordinate_system.pitch_dimensions.six_yard_length,
-                six_yard_right=coordinate_system.pitch_dimensions.x_dim.max
-                - coordinate_system.pitch_dimensions.six_yard_length,
-                six_yard_bottom=center[1]
-                - (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.six_yard_width
-                ),
-                six_yard_top=center[1]
-                + (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.six_yard_width
-                ),
-                penalty_spot_distance=coordinate_system.pitch_dimensions.penalty_spot_distance,
-                penalty_left=coordinate_system.pitch_dimensions.x_dim.min
-                + coordinate_system.pitch_dimensions.penalty_spot_distance,
-                penalty_right=coordinate_system.pitch_dimensions.x_dim.max
-                - coordinate_system.pitch_dimensions.penalty_spot_distance,
-                penalty_area_left=coordinate_system.pitch_dimensions.x_dim.min
-                + coordinate_system.pitch_dimensions.penalty_area_length,
-                penalty_area_right=coordinate_system.pitch_dimensions.x_dim.max
-                - coordinate_system.pitch_dimensions.penalty_area_length,
-                penalty_area_bottom=center[1]
-                - (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.penalty_area_width
-                ),
-                penalty_area_top=center[1]
-                + (
-                    neg_if_inverted
-                    / 2
-                    * coordinate_system.pitch_dimensions.penalty_area_width
-                ),
-                center_width=center[1],
-                center_length=center[0],
-                goal_width=coordinate_system.pitch_dimensions.goal_width,
-                goal_length=coordinate_system.pitch_dimensions.goal_height,
-                six_yard_width=coordinate_system.pitch_dimensions.six_yard_width,
-                six_yard_length=coordinate_system.pitch_dimensions.six_yard_length,
-                penalty_area_width=coordinate_system.pitch_dimensions.penalty_area_width,
-                penalty_area_length=coordinate_system.pitch_dimensions.penalty_area_length,
-                circle_diameter=coordinate_system.pitch_dimensions.circle_radius
-                * 2,
-                corner_diameter=coordinate_system.pitch_dimensions.corner_radius
-                * 2,
-                arc=0,
-                invert_y=invert_y,
-                origin_center=origin_center,
-                pad_default=0.02
-                * (
-                    coordinate_system.pitch_dimensions.x_dim.max
-                    - coordinate_system.pitch_dimensions.x_dim.min
-                ),
-                pad_multiplier=1,
-                aspect_equal=False
-                if coordinate_system.pitch_dimensions.unit == Unit.NORMED
-                else True,
-                pitch_width=coordinate_system.pitch_width,
-                pitch_length=coordinate_system.pitch_length,
-                aspect=coordinate_system.pitch_width
-                / coordinate_system.pitch_length
-                if coordinate_system.pitch_dimensions.unit == Unit.NORMED
-                else 1.0,
-            )
-            return dim
 
         pitch_kwargs = {
             "line_color": "#94A7AE",
@@ -793,9 +658,9 @@ def define_env(env):
                 pitch_width=68,
             )
 
-            dim = build_dim(coordinate_system)
-
-            pitch = Pitch(pitch_type=dim, **pitch_kwargs)
+            pitch = Pitch(
+                pitch_type=coordinate_system.to_mplsoccer(), **pitch_kwargs
+            )
             pitch.draw(ax=ax)
 
             if provider.get("dataset_type"):

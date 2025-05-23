@@ -69,12 +69,12 @@ nav:
           - Sportscode XML: user-guide/exporting-data/sportscode.md
   - How-to guides:
       - examples/index.md
-      - Transforming coordinates and orientations: examples/transformations.ipynb
-      - Pattern matching in event data: examples/pattern_matching.ipynb
-      - Exporting event data to a dataframe: examples/to_dataframe.ipynb
-      - Computing 'per 90' metrics: examples/aggregations.ipynb
-      - Parsing custom events: examples/event_factory.ipynb
-      - Loading data from external sources: examples/adapter.ipynb
+      - examples/transformations.ipynb
+      - examples/pattern_matching.ipynb
+      - examples/to_dataframe.ipynb
+      - examples/aggregations.ipynb
+      - examples/event_factory.ipynb
+      - examples/adapter.ipynb
   - Reference:
       - reference/index.md
       - Data Loaders:

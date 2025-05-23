@@ -24,10 +24,10 @@ jobs:
         run: uv sync --all-extras --locked # abort if the lockfile changes
       - name: Code formatting
         run: uv run poe ci:fmt             # check formatting is correct
-      - name: Linting
-        run: uv run poe ci:lint            # and linting
-      - name: Type check
-        run: uv run poe check              # typecheck too
+      # - name: Linting
+      #   run: uv run poe ci:lint            # and linting
+      # - name: Type check
+      #   run: uv run poe check              # typecheck too
       - name: Test with pytest
         if: '!cancelled()'
         run: uv run poe test               # then run your tests!

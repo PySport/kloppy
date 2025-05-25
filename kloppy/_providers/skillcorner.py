@@ -36,8 +36,15 @@ def load(
         coordinate_system=coordinates,
         include_empty_frames=include_empty_frames,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
-        return deserializer.deserialize(inputs=SkillCornerInputs(meta_data=meta_data_fp, raw_data=raw_data_fp))
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
+        return deserializer.deserialize(
+            inputs=SkillCornerInputs(
+                meta_data=meta_data_fp, raw_data=raw_data_fp
+            )
+        )
 
 
 def load_open_data(

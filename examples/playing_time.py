@@ -1,10 +1,10 @@
+from collections import Counter
 import logging
 import sys
-from collections import Counter
 
-from kloppy import metrica
 import matplotlib.pyplot as plt
 
+from kloppy import metrica
 from kloppy.domain import Ground
 
 

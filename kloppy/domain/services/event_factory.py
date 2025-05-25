@@ -1,27 +1,27 @@
 import dataclasses
-import warnings
 from dataclasses import fields
-from typing import TypeVar, Type
+from typing import Type, TypeVar
+import warnings
 
 from kloppy.domain import (
-    PassEvent,
-    ShotEvent,
-    GenericEvent,
-    TakeOnEvent,
-    RecoveryEvent,
-    MiscontrolEvent,
-    CarryEvent,
-    DuelEvent,
-    InterceptionEvent,
-    ClearanceEvent,
-    FormationChangeEvent,
     BallOutEvent,
-    PlayerOnEvent,
-    PlayerOffEvent,
-    FoulCommittedEvent,
     CardEvent,
-    SubstitutionEvent,
+    CarryEvent,
+    ClearanceEvent,
+    DuelEvent,
+    FormationChangeEvent,
+    FoulCommittedEvent,
+    GenericEvent,
     GoalkeeperEvent,
+    InterceptionEvent,
+    MiscontrolEvent,
+    PassEvent,
+    PlayerOffEvent,
+    PlayerOnEvent,
+    RecoveryEvent,
+    ShotEvent,
+    SubstitutionEvent,
+    TakeOnEvent,
 )
 from kloppy.domain.models.event import PressureEvent
 
@@ -56,7 +56,11 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
     relevant_kwargs = {
         field.name: all_kwargs.get(field.name, field.default)
         for field in fields(event_cls)
-        if field.init and not (field.default == dataclasses.MISSING and field.name not in all_kwargs)
+        if field.init
+        and not (
+            field.default == dataclasses.MISSING
+            and field.name not in all_kwargs
+        )
     }
 
     if len(relevant_kwargs) < len(all_kwargs):

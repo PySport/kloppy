@@ -1,6 +1,7 @@
 import pytest
+
 from kloppy import opta
-from kloppy.config import set_config, get_config, config_context, reset_config
+from kloppy.config import config_context, get_config, reset_config, set_config
 from kloppy.domain import KloppyCoordinateSystem, OptaCoordinateSystem
 
 
@@ -27,12 +28,16 @@ class TestConfig:
         when loading data.
         """
         dataset = opta.load(f24_data=f24_data, f7_data=f7_data)
-        assert isinstance(dataset.metadata.coordinate_system, KloppyCoordinateSystem)
+        assert isinstance(
+            dataset.metadata.coordinate_system, KloppyCoordinateSystem
+        )
 
         set_config("coordinate_system", "opta")
 
         dataset = opta.load(f24_data=f24_data, f7_data=f7_data)
-        assert isinstance(dataset.metadata.coordinate_system, OptaCoordinateSystem)
+        assert isinstance(
+            dataset.metadata.coordinate_system, OptaCoordinateSystem
+        )
 
     def test_config_context(self, f24_data: str, f7_data: str):
         assert get_config("coordinate_system") == "kloppy"
@@ -44,4 +49,6 @@ class TestConfig:
 
         assert get_config("coordinate_system") == "kloppy"
 
-        assert isinstance(dataset.metadata.coordinate_system, OptaCoordinateSystem)
+        assert isinstance(
+            dataset.metadata.coordinate_system, OptaCoordinateSystem
+        )

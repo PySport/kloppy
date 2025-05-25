@@ -9,7 +9,6 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
-    PassResult,
     Point,
     Point3D,
     PositionType,
@@ -63,7 +62,11 @@ def tracking_dataset(
     tracking_data: Path,
 ) -> TrackingDataset:
     return statsperform.load_tracking(
-        ma1_data=(tracking_metadata_xml if request.param == "xml" else tracking_metadata_json),
+        ma1_data=(
+            tracking_metadata_xml
+            if request.param == "xml"
+            else tracking_metadata_json
+        ),
         ma25_data=tracking_data,
         tracking_system="sportvu",
         only_alive=False,
@@ -80,7 +83,11 @@ def event_dataset(
     event_data_json: Path,
 ) -> EventDataset:
     return statsperform.load_event(
-        ma1_data=(event_metadata_xml if request.param == "xml" else event_metadata_json),
+        ma1_data=(
+            event_metadata_xml
+            if request.param == "xml"
+            else event_metadata_json
+        ),
         ma3_data=event_data_xml if request.param == "xml" else event_data_json,
         coordinates="opta",
     )
@@ -104,7 +111,9 @@ class TestStatsPerformMetadata:
         home_player = home_team.players[2]
 
         assert home_player.player_id == "5g5wwp5luxo1rz1kp6chvz0x6"
-        assert tracking_dataset.records[0].players_coordinates[home_player] == Point(x=68.689, y=39.75)
+        assert tracking_dataset.records[0].players_coordinates[
+            home_player
+        ] == Point(x=68.689, y=39.75)
         assert home_player.starting_position == PositionType.LeftCenterBack
         assert home_player.jersey_no == 32
         assert home_player.starting
@@ -113,7 +122,9 @@ class TestStatsPerformMetadata:
         away_team = tracking_dataset.metadata.teams[1]
         away_player = away_team.players[3]
         assert away_player.player_id == "72d5uxwcmvhd6mzthxuvev1sl"
-        assert tracking_dataset.records[0].players_coordinates[away_player] == Point(x=30.595, y=44.022)
+        assert tracking_dataset.records[0].players_coordinates[
+            away_player
+        ] == Point(x=30.595, y=44.022)
         assert away_player.starting_position == PositionType.RightCenterBack
         assert away_player.jersey_no == 2
         assert away_player.starting
@@ -179,8 +190,12 @@ class TestStatsPerformEvent:
         substitution_events = event_dataset.find_all("substitution")
         assert len(substitution_events) == 9
 
-        m_wintzheimer = event_dataset.metadata.teams[0].get_player_by_id("aksjicf4keobpav3tuujngell")
-        b_jatta = event_dataset.metadata.teams[0].get_player_by_id("3mp7p8tytgkbwi8itxl5mfkrt")
+        m_wintzheimer = event_dataset.metadata.teams[0].get_player_by_id(
+            "aksjicf4keobpav3tuujngell"
+        )
+        b_jatta = event_dataset.metadata.teams[0].get_player_by_id(
+            "3mp7p8tytgkbwi8itxl5mfkrt"
+        )
 
         first_sub = substitution_events[0]
 
@@ -195,18 +210,32 @@ class TestStatsPerformEvent:
         """It should impute the intended receiver of a pass."""
         # Completed passes should get a receiver
         complete_pass = event_dataset.get_event_by_id("2328589789")
-        assert complete_pass.receiver_player.player_id == "apdrig6xt1hxub1986s3uh1x"
-        assert complete_pass.receive_timestamp == complete_pass.next_record.timestamp
+        assert (
+            complete_pass.receiver_player.player_id
+            == "apdrig6xt1hxub1986s3uh1x"
+        )
+        assert (
+            complete_pass.receive_timestamp
+            == complete_pass.next_record.timestamp
+        )
 
         # When a pass is challenged the receipt is the next next event
         challenged_pass = event_dataset.get_event_by_id("2328600271")
-        assert challenged_pass.receiver_player.player_id == "ci4pwzieoc94uj3i1371bsatx"
-        assert challenged_pass.receive_timestamp == challenged_pass.next_record.next_record.timestamp
+        assert (
+            challenged_pass.receiver_player.player_id
+            == "ci4pwzieoc94uj3i1371bsatx"
+        )
+        assert (
+            challenged_pass.receive_timestamp
+            == challenged_pass.next_record.next_record.timestamp
+        )
 
         # Passes should be received within 30 seconds
         assert all(
             [
-                p.receive_timestamp.total_seconds() - p.timestamp.total_seconds() < 30
+                p.receive_timestamp.total_seconds()
+                - p.timestamp.total_seconds()
+                < 30
                 for p in event_dataset.find_all("pass")
                 if p.receive_timestamp is not None
             ]
@@ -216,7 +245,8 @@ class TestStatsPerformEvent:
         turnover_passes = [
             p
             for p in event_dataset.find_all("pass")
-            if p.next_record and p.ball_owning_team != p.next_record.ball_owning_team
+            if p.next_record
+            and p.ball_owning_team != p.next_record.ball_owning_team
         ]
         assert all(p.receiver_player is None for p in turnover_passes)
 
@@ -247,7 +277,9 @@ class TestStatsPerformTracking:
     def test_flags(self, tracking_dataset):
         assert tracking_dataset.metadata.flags == DatasetFlag.BALL_STATE
 
-    def test_correct_deserialization_limit_sample(self, tracking_data: Path, tracking_metadata_xml: Path):
+    def test_correct_deserialization_limit_sample(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -271,7 +303,9 @@ class TestStatsPerformTracking:
         )
         assert len(tracking_dataset.records) == 25
 
-    def test_coordinate_system_without_pitch_dimensions(self, tracking_data: Path, tracking_metadata_xml: Path):
+    def test_coordinate_system_without_pitch_dimensions(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -290,7 +324,9 @@ class TestStatsPerformTracking:
         assert pitch_dimensions.y_dim.min == 0
         assert pitch_dimensions.y_dim.max is None
 
-    def test_coordinate_system_with_pitch_dimensions(self, tracking_data: Path, tracking_metadata_xml: Path):
+    def test_coordinate_system_with_pitch_dimensions(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -314,7 +350,9 @@ class TestStatsPerformTracking:
     def test_deserialize_all(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.records) == 92
 
-    def test_deserialize_only_alive(self, tracking_data: Path, tracking_metadata_xml: Path):
+    def test_deserialize_only_alive(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -325,18 +363,30 @@ class TestStatsPerformTracking:
         assert len(tracking_dataset.records) == 91
 
     def test_timestamps(self, tracking_dataset: TrackingDataset):
-        assert tracking_dataset.records[0].timestamp == timedelta(seconds=0)  # First frame
-        assert tracking_dataset.records[20].timestamp == timedelta(seconds=2.0)  # Later frame
-        assert tracking_dataset.records[26].timestamp == timedelta(seconds=0)  # Second period
+        assert tracking_dataset.records[0].timestamp == timedelta(
+            seconds=0
+        )  # First frame
+        assert tracking_dataset.records[20].timestamp == timedelta(
+            seconds=2.0
+        )  # Later frame
+        assert tracking_dataset.records[26].timestamp == timedelta(
+            seconds=0
+        )  # Second period
 
     def test_ball_coordinates(self, tracking_dataset: TrackingDataset):
-        assert tracking_dataset.records[1].ball_coordinates == Point3D(x=50.615, y=35.325, z=0.0)
+        assert tracking_dataset.records[1].ball_coordinates == Point3D(
+            x=50.615, y=35.325, z=0.0
+        )
 
     def test_player_coordinates(self, tracking_dataset: TrackingDataset):
         home_player = tracking_dataset.metadata.teams[0].players[2]
-        assert tracking_dataset.records[0].players_coordinates[home_player] == Point(x=68.689, y=39.750)
+        assert tracking_dataset.records[0].players_coordinates[
+            home_player
+        ] == Point(x=68.689, y=39.750)
 
-    def test_correct_normalized_deserialization(self, tracking_data: Path, tracking_metadata_xml: Path):
+    def test_correct_normalized_deserialization(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -347,7 +397,9 @@ class TestStatsPerformTracking:
             coordinates="kloppy",
         )
 
-        assert tracking_dataset.records[1].ball_coordinates == Point3D(x=50.615 / 105, y=35.325 / 68, z=0.0)
+        assert tracking_dataset.records[1].ball_coordinates == Point3D(
+            x=50.615 / 105, y=35.325 / 68, z=0.0
+        )
 
         # Check normalised pitch dimensions
         pitch_dimensions = tracking_dataset.metadata.pitch_dimensions

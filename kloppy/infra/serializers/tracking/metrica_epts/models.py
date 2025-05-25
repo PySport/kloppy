@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
-from kloppy.domain import Player, Metadata
-
+from kloppy.domain import Metadata, Player
 
 # TODO: fill this with from SplitRegisters
 from kloppy.exceptions import DeserializationError
@@ -47,7 +46,9 @@ class Sensor:
             name=str(elm.find("Name")),
             channels=[
                 Channel.from_xml_element(channel_elm)
-                for channel_elm in elm.find("Channels").iterchildren(tag="Channel")
+                for channel_elm in elm.find("Channels").iterchildren(
+                    tag="Channel"
+                )
             ],
         )
         for channel in obj.channels:
@@ -72,7 +73,9 @@ class StringRegister:
 class PlayerChannelRef:
     player_channel_id: str
 
-    def to_regex(self, player_channel_map: Dict[str, PlayerChannel], **kwargs) -> str:
+    def to_regex(
+        self, player_channel_map: Dict[str, PlayerChannel], **kwargs
+    ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
             return f"(?P<player_{player_channel.player.player_id}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
@@ -102,10 +105,17 @@ class BallChannelRef:
 @dataclass
 class SplitRegister:
     separator: str
-    children: List[Union[BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"]]
+    children: List[
+        Union[BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"]
+    ]
 
     def to_regex(self, **kwargs) -> str:
-        return self.separator.join([child.to_regex(**kwargs) for child in self.children]) + f"{self.separator}?"
+        return (
+            self.separator.join(
+                [child.to_regex(**kwargs) for child in self.children]
+            )
+            + f"{self.separator}?"
+        )
 
     @classmethod
     def from_xml_element(cls, elm) -> "SplitRegister":
@@ -148,5 +158,7 @@ class DataFormatSpecification:
 @dataclass
 class EPTSMetadata(Metadata):
     player_channels: List[PlayerChannel] = field(default_factory=list)
-    data_format_specifications: List[DataFormatSpecification] = field(default_factory=list)
+    data_format_specifications: List[DataFormatSpecification] = field(
+        default_factory=list
+    )
     sensors: List[Sensor] = field(default_factory=list)

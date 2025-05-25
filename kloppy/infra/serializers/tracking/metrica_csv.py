@@ -1,31 +1,30 @@
-import logging
-import warnings
 from collections import namedtuple
 from datetime import timedelta
-from typing import Iterator, IO, NamedTuple
+import logging
+from typing import IO, Iterator, NamedTuple
+import warnings
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
-    TrackingDataset,
     AttackingDirection,
-    Point,
-    Period,
-    Orientation,
-    Provider,
     DatasetFlag,
-    Metadata,
-    Team,
     Ground,
+    Metadata,
+    Orientation,
+    Period,
     Player,
     PlayerData,
+    Point,
     PositionType,
+    Provider,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
 from kloppy.utils import performance_logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,9 @@ class MetricaCSVTrackingDataInputs(NamedTuple):
     away_data: IO[bytes]
 
 
-class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrackingDataInputs]):
+class MetricaCSVTrackingDataDeserializer(
+    TrackingDataDeserializer[MetricaCSVTrackingDataInputs]
+):
     __PartialFrame = namedtuple(
         "PartialFrame",
         "team period frame_id players_data ball_coordinates",
@@ -91,12 +92,16 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
                 if period is None or period.id != period_id:
                     period = Period(
                         id=period_id,
-                        start_timestamp=timedelta(seconds=(frame_id - 1) / frame_rate),
+                        start_timestamp=timedelta(
+                            seconds=(frame_id - 1) / frame_rate
+                        ),
                         end_timestamp=timedelta(seconds=frame_id / frame_rate),
                     )
                 else:
                     # consider not update this every frame for performance reasons
-                    period.end_timestamp = timedelta(seconds=frame_id / frame_rate)
+                    period.end_timestamp = timedelta(
+                        seconds=frame_id / frame_rate
+                    )
 
                 if frame_idx % frame_sample == 0:
                     yield self.__PartialFrame(
@@ -114,18 +119,27 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
                             if columns[3 + i * 2] != "NaN"
                         },
                         ball_coordinates=(
-                            Point(x=float(columns[-2]), y=1 - float(columns[-1])) if columns[-2] != "NaN" else None
+                            Point(
+                                x=float(columns[-2]), y=1 - float(columns[-1])
+                            )
+                            if columns[-2] != "NaN"
+                            else None
                         ),
                     )
                 frame_idx += 1
 
     @staticmethod
-    def __validate_partials(home_partial_frame: __PartialFrame, away_partial_frame: __PartialFrame):
+    def __validate_partials(
+        home_partial_frame: __PartialFrame, away_partial_frame: __PartialFrame
+    ):
         if home_partial_frame.frame_id != away_partial_frame.frame_id:
             raise ValueError(
                 f"frame_id mismatch: home {home_partial_frame.frame_id}, away: {away_partial_frame.frame_id}"
             )
-        if home_partial_frame.ball_coordinates != away_partial_frame.ball_coordinates:
+        if (
+            home_partial_frame.ball_coordinates
+            != away_partial_frame.ball_coordinates
+        ):
             raise ValueError(
                 f"ball position mismatch: home {home_partial_frame.ball_coordinates}, "
                 f"away: {away_partial_frame.ball_coordinates}. Do the files belong to the"
@@ -136,15 +150,21 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
         if away_partial_frame.team.ground != Ground.AWAY:
             raise ValueError("raw_data_away contains home team data")
 
-    def deserialize(self, inputs: MetricaCSVTrackingDataInputs) -> TrackingDataset:
+    def deserialize(
+        self, inputs: MetricaCSVTrackingDataInputs
+    ) -> TrackingDataset:
         # consider reading this from data
         frame_rate = 25
 
         transformer = self.get_transformer()
 
         with performance_logging("prepare", logger=logger):
-            home_iterator = self.__create_iterator(inputs.home_data, self.sample_rate, frame_rate, Ground.HOME)
-            away_iterator = self.__create_iterator(inputs.away_data, self.sample_rate, frame_rate, Ground.AWAY)
+            home_iterator = self.__create_iterator(
+                inputs.home_data, self.sample_rate, frame_rate, Ground.HOME
+            )
+            away_iterator = self.__create_iterator(
+                inputs.away_data, self.sample_rate, frame_rate, Ground.AWAY
+            )
 
             partial_frames = zip(home_iterator, away_iterator)
 
@@ -155,7 +175,9 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
             partial_frame_type = self.__PartialFrame
             home_partial_frame: partial_frame_type
             away_partial_frame: partial_frame_type
-            for n, (home_partial_frame, away_partial_frame) in enumerate(partial_frames):
+            for n, (home_partial_frame, away_partial_frame) in enumerate(
+                partial_frames
+            ):
                 self.__validate_partials(home_partial_frame, away_partial_frame)
 
                 period: Period = home_partial_frame.period
@@ -168,7 +190,8 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
 
                 frame = create_frame(
                     frame_id=frame_id,
-                    timestamp=timedelta(seconds=frame_id / frame_rate) - period.start_timestamp,
+                    timestamp=timedelta(seconds=frame_id / frame_rate)
+                    - period.start_timestamp,
                     ball_coordinates=home_partial_frame.ball_coordinates,
                     players_data=players_data,
                     period=period,
@@ -192,14 +215,19 @@ class MetricaCSVTrackingDataDeserializer(TrackingDataDeserializer[MetricaCSVTrac
                     break
 
         try:
-            first_frame = next(frame for frame in frames if frame.period.id == 1)
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
             orientation = (
                 Orientation.HOME_AWAY
-                if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
                 else Orientation.AWAY_HOME
             )
         except StopIteration:
-            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
             orientation = Orientation.NOT_SET
 
         metadata = Metadata(

@@ -88,45 +88,50 @@ ATT -> RF
 """
 
 # We simply run `d2` in a subprocess, passing it our diagram as input and capturing its output to print it.
-svg = subprocess.check_output(["d2", "--sketch", "--layout=elk", "-", "-"], input=diagram, stderr=subprocess.DEVNULL, text=True)
+svg = subprocess.check_output(
+    ["d2", "--sketch", "--layout=elk", "-", "-"],
+    input=diagram,
+    stderr=subprocess.DEVNULL,
+    text=True,
+)
 print(svg)
 ```
 
-Each [`PositionType`][kloppy.domain.PositionType] has a unique name and code.
+Each \[`PositionType`\][kloppy.domain.PositionType] has a unique name and code.
 
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> from kloppy.domain import PositionType
->>> print(PositionType.LeftCenterBack) 
+>>> print(PositionType.LeftCenterBack)
 Left Center Back
 ```
 
 ```pycon exec="true" source="console" session="concepts-positions"
->>> print(PositionType.LeftCenterBack.code) 
+>>> print(PositionType.LeftCenterBack.code)
 LCB
 ```
 
 As you might have noticed, positions are ordered hierarchically. This allows you to work on different levels of granularity, from broader categories like "Defender" or "Midfielder" to more specific positions like "Left Back" or "Center Midfield."
 
-Each [`PositionType`][kloppy.domain.PositionType] has a `.parent` attribute to get the position's broader category.
+Each \[`PositionType`\][kloppy.domain.PositionType] has a `.parent` attribute to get the position's broader category.
 
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> pos_lb = PositionType.LeftBack
->>> print(f"{pos_lb} >> {pos_lb.parent} >> {pos_lb.parent.parent}") 
+>>> print(f"{pos_lb} >> {pos_lb.parent} >> {pos_lb.parent.parent}")
 ```
 
-You can check if a position belongs to a broader category using the [`is_subtype_of`][kloppy.domain.PositionType.is_subtype_of] method.
+You can check if a position belongs to a broader category using the \[`is_subtype_of`\][kloppy.domain.PositionType.is_subtype_of] method.
 
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> print(PositionType.LeftCenterBack.is_subtype_of(PositionType.Defender))
 True
 ```
 
-A player's position can change throughout a game. A player's positions throughout the game are stored in the `.positions` attributes as a [`TimeContainer`][kloppy.domain.TimeContainer]. This container maps [`Time`][kloppy.domain.Time] instances to positions, allowing lookups and time range queries:
+A player's position can change throughout a game. A player's positions throughout the game are stored in the `.positions` attributes as a \[`TimeContainer`\][kloppy.domain.TimeContainer]. This container maps \[`Time`\][kloppy.domain.Time] instances to positions, allowing lookups and time range queries:
 
 - `.ranges()`: list positions throughout the game.
 - `.value_at(time)`: get position at a specific time.
-- `.at_start()`: retrieve the starting position. 
-- `.last()`: retrieve the last position. 
+- `.at_start()`: retrieve the starting position.
+- `.last()`: retrieve the last position.
 
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> from kloppy import statsbomb
@@ -145,7 +150,6 @@ You can conveniently retrieve a player's starting position or a player's positio
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> print(player.positions.value_at(event_dataset.find("shot.goal").time))
 ```
-
 
 ```pycon exec="true" source="console" session="concepts-positions"
 >>> print(player.positions.last())

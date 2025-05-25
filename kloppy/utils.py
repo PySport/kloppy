@@ -1,12 +1,12 @@
+from contextlib import contextmanager
 import functools
 import inspect
-import re
-import time
-import warnings
-from contextlib import contextmanager
 from io import BytesIO
 from logging import Logger
+import re
+import time
 from typing import BinaryIO, Optional, Union
+import warnings
 
 Readable = Union[bytes, BinaryIO]
 
@@ -65,10 +65,16 @@ def docstring_inherit_attributes(parent):
     def inherit(obj):
         other_docs, attribute_docs = obj.__doc__.split("Attributes:\n")
 
-        own_attributes = [attribute.strip() for attribute in attribute_docs.strip().split("\n")]
+        own_attributes = [
+            attribute.strip()
+            for attribute in attribute_docs.strip().split("\n")
+        ]
 
         parent_attributes = [
-            attribute.strip() for attribute in parent.__doc__.split("Attributes:\n")[-1].strip().split("\n")
+            attribute.strip()
+            for attribute in parent.__doc__.split("Attributes:\n")[-1]
+            .strip()
+            .split("\n")
         ]
         obj.__doc__ = (
             other_docs

@@ -18,7 +18,9 @@ class ZipAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("zip://")
 
-    def _get_filesystem(self, url: str, no_cache: bool = False) -> fsspec.AbstractFileSystem:
+    def _get_filesystem(
+        self, url: str, no_cache: bool = False
+    ) -> fsspec.AbstractFileSystem:
         fo = get_config("adapters.zip.fo")
         if fo is None:
             raise AdapterError(
@@ -40,4 +42,9 @@ class ZipAdapter(FSSpecAdapter):
             files = fs.find(url, detail=False)
         else:
             files = fs.listdir(url, detail=False)
-        return [f"{protocol}://{fp}" if protocol != "file" and not fp.startswith(protocol) else fp for fp in files]
+        return [
+            f"{protocol}://{fp}"
+            if protocol != "file" and not fp.startswith(protocol)
+            else fp
+            for fp in files
+        ]

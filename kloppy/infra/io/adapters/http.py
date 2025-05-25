@@ -1,11 +1,8 @@
-from typing import BinaryIO, List
-
 import fsspec
 
 from kloppy.config import get_config
-from kloppy.exceptions import AdapterError, InputNotFoundError
+from kloppy.exceptions import AdapterError
 
-from .adapter import Adapter
 from .fsspec import FSSpecAdapter
 
 try:
@@ -33,7 +30,9 @@ class HTTPAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("http://") or url.startswith("https://")
 
-    def _get_filesystem(self, url: str, no_cache: bool = False) -> fsspec.AbstractFileSystem:
+    def _get_filesystem(
+        self, url: str, no_cache: bool = False
+    ) -> fsspec.AbstractFileSystem:
         try:
             import aiohttp
         except ImportError:

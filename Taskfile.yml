@@ -4,7 +4,6 @@ vars:
   DOCS_PORT: "8000"
 
 tasks:
-
   default:
     desc: List all available tasks
     cmds:

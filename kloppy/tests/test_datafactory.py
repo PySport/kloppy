@@ -19,7 +19,9 @@ class TestDatafactory:
         return base_dir / "files/datafactory_events.json"
 
     def test_correct_deserialization(self, event_data: str):
-        dataset = datafactory.load(event_data=event_data, coordinates="datafactory")
+        dataset = datafactory.load(
+            event_data=event_data, coordinates="datafactory"
+        )
 
         assert dataset.metadata.provider == Provider.DATAFACTORY
         assert dataset.dataset_type == DatasetType.EVENT
@@ -41,11 +43,19 @@ class TestDatafactory:
         assert player.starting
 
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == datetime(2011, 11, 11, 9, 0, 13, 0, timezone.utc)
-        assert dataset.metadata.periods[0].end_timestamp == datetime(2011, 11, 11, 9, 48, 45, 0, timezone.utc)
+        assert dataset.metadata.periods[0].start_timestamp == datetime(
+            2011, 11, 11, 9, 0, 13, 0, timezone.utc
+        )
+        assert dataset.metadata.periods[0].end_timestamp == datetime(
+            2011, 11, 11, 9, 48, 45, 0, timezone.utc
+        )
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == datetime(2011, 11, 11, 10, 3, 45, 0, timezone.utc)
-        assert dataset.metadata.periods[1].end_timestamp == datetime(2011, 11, 11, 10, 53, 55, 0, timezone.utc)
+        assert dataset.metadata.periods[1].start_timestamp == datetime(
+            2011, 11, 11, 10, 3, 45, 0, timezone.utc
+        )
+        assert dataset.metadata.periods[1].end_timestamp == datetime(
+            2011, 11, 11, 10, 53, 55, 0, timezone.utc
+        )
 
         # Check enriched metadata
         date = dataset.metadata.date
@@ -63,8 +73,12 @@ class TestDatafactory:
             assert isinstance(game_id, str)
             assert game_id == "1111111"
 
-        assert dataset.events[0].timestamp == timedelta(seconds=3)  # kickoff first half
-        assert dataset.events[473].timestamp == timedelta(seconds=4)  # kickoff second half
+        assert dataset.events[0].timestamp == timedelta(
+            seconds=3
+        )  # kickoff first half
+        assert dataset.events[473].timestamp == timedelta(
+            seconds=4
+        )  # kickoff second half
 
         assert dataset.events[0].coordinates == Point(0.01, 0.01)
 

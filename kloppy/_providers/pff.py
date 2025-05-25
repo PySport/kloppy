@@ -36,9 +36,11 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(roster_meta_data) as roster_meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(roster_meta_data) as roster_meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=PFF_TrackingInputs(
                 meta_data=meta_data_fp,

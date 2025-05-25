@@ -1,6 +1,6 @@
-import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
+import sys
 from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
 
 if sys.version_info >= (3, 11):
@@ -47,20 +47,30 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
                     if callable(column):
                         res = column(data_record)
                         if not isinstance(res, dict):
-                            raise KloppyError("A function column should return a dictionary")
+                            raise KloppyError(
+                                "A function column should return a dictionary"
+                            )
                         row.update(res)
                     else:
                         if column == "*":
                             row.update(default_row)
                         elif "*" in column:
-                            row.update({k: v for k, v in default_row.items() if fnmatch(k, column)})
+                            row.update(
+                                {
+                                    k: v
+                                    for k, v in default_row.items()
+                                    if fnmatch(k, column)
+                                }
+                            )
                         elif column in default_row:
                             row[column] = default_row[column]
                         else:
                             row[column] = getattr(data_record, column, None)
 
                 for name, column in named_columns.items():
-                    row[name] = column(data_record) if callable(column) else column
+                    row[name] = (
+                        column(data_record) if callable(column) else column
+                    )
 
                 return row
 

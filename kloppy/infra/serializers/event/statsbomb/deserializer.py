@@ -1,6 +1,6 @@
+from itertools import zip_longest
 import json
 import logging
-from itertools import zip_longest
 from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (
@@ -37,7 +37,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(self, inputs: StatsBombInputs, additional_metadata) -> EventDataset:
+    def deserialize(
+        self, inputs: StatsBombInputs, additional_metadata
+    ) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 
@@ -146,7 +148,12 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         lineups = json.load(inputs.lineup_data)
 
         three_sixty_data = (
-            {item["event_uuid"]: item for item in json.load(inputs.three_sixty_data)} if inputs.three_sixty_data else {}
+            {
+                item["event_uuid"]: item
+                for item in json.load(inputs.three_sixty_data)
+            }
+            if inputs.three_sixty_data
+            else {}
         )
 
         return raw_events, lineups, three_sixty_data, version
@@ -160,17 +167,23 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
 
         # Determine home and away lineups
         home_lineup, away_lineup = (
-            lineups if starting_xi_events[0]["team"]["id"] == lineups[0]["team_id"] else reversed(lineups)
+            lineups
+            if starting_xi_events[0]["team"]["id"] == lineups[0]["team_id"]
+            else reversed(lineups)
         )
 
         # Create players and teams
         player_positions = {
-            str(player["player"]["id"]): position_types_mapping[player["position"]["id"]]
+            str(player["player"]["id"]): position_types_mapping[
+                player["position"]["id"]
+            ]
             for raw_event in starting_xi_events
             for player in raw_event["tactics"]["lineup"]
         }
         starting_formations = {
-            raw_event["team"]["id"]: FormationType("-".join(list(str(raw_event["tactics"]["formation"]))))
+            raw_event["team"]["id"]: FormationType(
+                "-".join(list(str(raw_event["tactics"]["formation"])))
+            )
             for raw_event in starting_xi_events
         }
 
@@ -188,7 +201,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     name=player["player_name"],
                     jersey_no=int(player["jersey_number"]),
                     starting=str(player["player_id"]) in player_positions,
-                    starting_position=player_positions.get(str(player["player_id"])),
+                    starting_position=player_positions.get(
+                        str(player["player_id"])
+                    ),
                 )
                 for player in lineup["lineup"]
             ]
@@ -211,15 +226,24 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                 half_end_events[period] = event.raw_event
 
         periods = []
-        for start_event, end_event in zip_longest(half_start_events.values(), half_end_events.values()):
+        for start_event, end_event in zip_longest(
+            half_start_events.values(), half_end_events.values()
+        ):
             if start_event is None or end_event is None:
-                raise DeserializationError("Failed to determine start and end time of periods.")
+                raise DeserializationError(
+                    "Failed to determine start and end time of periods."
+                )
             start_timestamp = (
-                periods[-1].end_timestamp + parse_str_ts(start_event["timestamp"])
+                periods[-1].end_timestamp
+                + parse_str_ts(start_event["timestamp"])
                 if len(periods) > 0
                 else parse_str_ts(start_event["timestamp"])
             )
-            end_timestamp = start_timestamp + parse_str_ts(end_event["timestamp"]) if end_event else None
+            end_timestamp = (
+                start_timestamp + parse_str_ts(end_event["timestamp"])
+                if end_event
+                else None
+            )
             period = Period(
                 id=int(start_event["period"]),
                 start_timestamp=start_timestamp,

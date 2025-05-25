@@ -4,7 +4,7 @@ from typing import Tuple
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import Time, Period, TimeContainer
+from kloppy.domain import Period, Time, TimeContainer
 
 
 @pytest.fixture
@@ -37,7 +37,9 @@ class TestAbsTime:
 
         time = Time(period=period1, timestamp=timedelta(seconds=1800))
 
-        assert time - timedelta(seconds=1000) == Time(period=period1, timestamp=timedelta(seconds=800))
+        assert time - timedelta(seconds=1000) == Time(
+            period=period1, timestamp=timedelta(seconds=800)
+        )
 
     def test_subtract_timedelta_spans_periods(self, periods):
         """Test subtract that goes over spans multiple period.
@@ -56,7 +58,9 @@ class TestAbsTime:
 
         time = Time(period=period3, timestamp=timedelta(seconds=800))
 
-        assert time - timedelta(seconds=4000) == Time(period=period1, timestamp=timedelta(seconds=2500))
+        assert time - timedelta(seconds=4000) == Time(
+            period=period1, timestamp=timedelta(seconds=2500)
+        )
 
     def test_subtract_timedelta_over_start(self, periods):
         """Test subtract that goes over start of first period. This should return start of match."""
@@ -64,7 +68,9 @@ class TestAbsTime:
 
         time = Time(period=period1, timestamp=timedelta(seconds=1800))
 
-        assert time - timedelta(seconds=2000) == Time(period=period1, timestamp=timedelta(0))
+        assert time - timedelta(seconds=2000) == Time(
+            period=period1, timestamp=timedelta(0)
+        )
 
     def test_subtract_two_abstime(self, periods):
         """Subtract two AbsTime in same period"""
@@ -87,7 +93,9 @@ class TestAbsTime:
         period1, *_ = periods
 
         time = Time(period=period1, timestamp=timedelta(seconds=800))
-        assert time + timedelta(seconds=100) == Time(period=period1, timestamp=timedelta(seconds=900))
+        assert time + timedelta(seconds=100) == Time(
+            period=period1, timestamp=timedelta(seconds=900)
+        )
 
     def test_add_timedelta_spans_periods(self, periods):
         """
@@ -103,9 +111,13 @@ class TestAbsTime:
         period1, period2, period3 = periods
 
         time = Time(period=period1, timestamp=timedelta(seconds=800))
-        assert time + timedelta(seconds=5000) == Time(period=period3, timestamp=timedelta(seconds=100))
+        assert time + timedelta(seconds=5000) == Time(
+            period=period3, timestamp=timedelta(seconds=100)
+        )
 
-        assert time + timedelta(seconds=2600) == Time(period=period2, timestamp=timedelta(seconds=700))
+        assert time + timedelta(seconds=2600) == Time(
+            period=period2, timestamp=timedelta(seconds=700)
+        )
 
     def test_statsbomb_formation_changes(self, base_dir):
         dataset = statsbomb.load(
@@ -115,11 +127,15 @@ class TestAbsTime:
         formation_changes = dataset.filter("formation_change")
 
         # Determine time until first formation change
-        diff = formation_changes[0].time - dataset.metadata.periods[0].start_time
+        diff = (
+            formation_changes[0].time - dataset.metadata.periods[0].start_time
+        )
         assert diff == timedelta(seconds=2705.267)
 
         # Time until last formation change
-        diff = formation_changes[-1].time - dataset.metadata.periods[0].start_time
+        diff = (
+            formation_changes[-1].time - dataset.metadata.periods[0].start_time
+        )
         assert diff == timedelta(seconds=5067.367)
 
     def test_statsbomb_minuted_played(self, base_dir):
@@ -139,7 +155,9 @@ class TestAbsTime:
 
         home_team, away_team = dataset.metadata.teams
 
-        minutes_played_map = {item.player: item.duration for item in minutes_played}
+        minutes_played_map = {
+            item.player: item.duration for item in minutes_played
+        }
 
         """
         3109 - 0:00:00.000000 - Malcom
@@ -154,16 +172,21 @@ class TestAbsTime:
 
         # Started second half
         player_coutinho = home_team.get_player_by_id(3501)
-        assert minutes_played_map[player_coutinho] == timedelta(seconds=2852.053)
+        assert minutes_played_map[player_coutinho] == timedelta(
+            seconds=2852.053
+        )
 
         # Replaced in second half
         player_busquets = home_team.get_player_by_id(5203)
-        assert minutes_played_map[player_busquets] == timedelta(seconds=5052.343)
+        assert minutes_played_map[player_busquets] == timedelta(
+            seconds=5052.343
+        )
 
         # Played entire match
         player_ramos = home_team.get_player_by_id(5211)
         assert minutes_played_map[player_ramos] == (
-            dataset.metadata.periods[0].duration + dataset.metadata.periods[1].duration
+            dataset.metadata.periods[0].duration
+            + dataset.metadata.periods[1].duration
         )
 
         # Check if total difference between start and end time equal minutes played
@@ -172,7 +195,9 @@ class TestAbsTime:
                 (
                     (
                         item.end_time.timestamp.total_seconds()
-                        + __period_offset(period_id=item.end_time.period.id, dataset=dataset)
+                        + __period_offset(
+                            period_id=item.end_time.period.id, dataset=dataset
+                        )
                     )
                     - (
                         item.start_time.timestamp.total_seconds()
@@ -211,14 +236,18 @@ class TestAbsTimeContainer:
         container = TimeContainer()
 
         # Player gets on the pitch
-        substitution_time = Time(period=period1, timestamp=timedelta(seconds=15 * 60))
+        substitution_time = Time(
+            period=period1, timestamp=timedelta(seconds=15 * 60)
+        )
         container.set(substitution_time, "LB")
 
         # Switches from LB to RB
         container.set(substitution_time + timedelta(seconds=40 * 60), "RB")
 
         # Player gets of the pitch
-        container.set(Time(period=period2, timestamp=timedelta(seconds=20 * 60)), None)
+        container.set(
+            Time(period=period2, timestamp=timedelta(seconds=20 * 60)), None
+        )
 
         for start, end, position in container.ranges():
             print(f"{start} - {end} = {end - start} -> {position}")

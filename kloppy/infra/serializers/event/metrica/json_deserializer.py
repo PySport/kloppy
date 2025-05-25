@@ -1,7 +1,7 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import timedelta
+import json
+import logging
 from typing import IO, Dict, List, NamedTuple, Optional
 
 from kloppy.domain import (
@@ -120,7 +120,9 @@ def _parse_pass(
         result = PassResult.COMPLETE
         receiver_player = team.get_player_by_id(event["to"]["id"])
         receiver_coordinates = _parse_coordinates(event["end"])
-        receive_timestamp = timedelta(seconds=event["end"]["time"]) - period.start_timestamp
+        receive_timestamp = (
+            timedelta(seconds=event["end"]["time"]) - period.start_timestamp
+        )
     else:
         if event_type_id == MS_PASS_OUTCOME_OUT:
             result = PassResult.OUT
@@ -147,7 +149,9 @@ def _parse_pass(
     )
 
 
-def _get_event_qualifiers(event: Dict, previous_event: Dict, subtypes: List) -> List[Qualifier]:
+def _get_event_qualifiers(
+    event: Dict, previous_event: Dict, subtypes: List
+) -> List[Qualifier]:
     qualifiers = []
 
     qualifiers.extend(_get_event_setpiece_qualifiers(previous_event, subtypes))
@@ -156,7 +160,9 @@ def _get_event_qualifiers(event: Dict, previous_event: Dict, subtypes: List) -> 
     return qualifiers
 
 
-def _get_event_setpiece_qualifiers(previous_event: Dict, subtypes: List) -> List[Qualifier]:
+def _get_event_setpiece_qualifiers(
+    previous_event: Dict, subtypes: List
+) -> List[Qualifier]:
     qualifiers = []
     previous_event_type_id = previous_event["type"]["id"]
     if previous_event_type_id == MS_SET_PIECE:
@@ -197,7 +203,9 @@ def _parse_shot(event: Dict, previous_event: Dict, subtypes: List) -> Dict:
     elif MS_SHOT_OUTCOME_GOAL in subtypes:
         result = ShotResult.GOAL
     else:
-        raise DeserializationError(f"Unknown shot outcome: {', '.join(subtypes)}")
+        raise DeserializationError(
+            f"Unknown shot outcome: {', '.join(subtypes)}"
+        )
 
     qualifiers = _get_event_qualifiers(event, previous_event, subtypes)
 
@@ -208,7 +216,8 @@ def _parse_carry(period: Period, event: Dict) -> Dict:
     return dict(
         result=CarryResult.COMPLETE,
         end_coordinates=_parse_coordinates(event["end"]),
-        end_timestamp=timedelta(seconds=event["end"]["time"]) - period.start_timestamp,
+        end_timestamp=timedelta(seconds=event["end"]["time"])
+        - period.start_timestamp,
     )
 
 
@@ -236,7 +245,9 @@ class MetricaJsonEventDataInputs(NamedTuple):
     event_data: IO[bytes]
 
 
-class MetricaJsonEventDataDeserializer(EventDataDeserializer[MetricaJsonEventDataInputs]):
+class MetricaJsonEventDataDeserializer(
+    EventDataDeserializer[MetricaJsonEventDataInputs]
+):
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
@@ -244,7 +255,9 @@ class MetricaJsonEventDataDeserializer(EventDataDeserializer[MetricaJsonEventDat
     def deserialize(self, inputs: MetricaJsonEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
-            metadata = load_metadata(inputs.meta_data, provider=Provider.METRICA)
+            metadata = load_metadata(
+                inputs.meta_data, provider=Provider.METRICA
+            )
 
             transformer = self.get_transformer(
                 pitch_length=metadata.pitch_dimensions.pitch_length,
@@ -253,23 +266,32 @@ class MetricaJsonEventDataDeserializer(EventDataDeserializer[MetricaJsonEventDat
 
         with performance_logging("parse data", logger=logger):
             events = []
-            for previous_event, raw_event in zip([None] + raw_events["data"], raw_events["data"]):
+            for previous_event, raw_event in zip(
+                [None] + raw_events["data"], raw_events["data"]
+            ):
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
                 elif raw_event["team"]["id"] == metadata.teams[1].team_id:
                     team = metadata.teams[1]
                 else:
-                    raise DeserializationError(f"Unknown team_id {raw_event['team']['id']}")
+                    raise DeserializationError(
+                        f"Unknown team_id {raw_event['team']['id']}"
+                    )
 
                 player = team.get_player_by_id(raw_event["from"]["id"])
                 event_type = raw_event["type"]["id"]
                 subtypes = _parse_subtypes(raw_event)
-                period = [period for period in metadata.periods if period.id == raw_event["period"]][0]
+                period = [
+                    period
+                    for period in metadata.periods
+                    if period.id == raw_event["period"]
+                ][0]
 
                 generic_event_kwargs = dict(
                     # from DataRecord
                     period=period,
-                    timestamp=timedelta(seconds=raw_event["start"]["time"]) - period.start_timestamp,
+                    timestamp=timedelta(seconds=raw_event["start"]["time"])
+                    - period.start_timestamp,
                     ball_owning_team=_parse_ball_owning_team(event_type, team),
                     ball_state=BallState.ALIVE,
                     # from Event
@@ -317,7 +339,9 @@ class MetricaJsonEventDataDeserializer(EventDataDeserializer[MetricaJsonEventDat
                     )
 
                 elif event_type == MS_EVENT_TYPE_CARRY:
-                    carry_event_kwargs = _parse_carry(period=period, event=raw_event)
+                    carry_event_kwargs = _parse_carry(
+                        period=period, event=raw_event
+                    )
                     event = self.event_factory.build_carry(
                         qualifiers=None,
                         **carry_event_kwargs,
@@ -350,12 +374,18 @@ class MetricaJsonEventDataDeserializer(EventDataDeserializer[MetricaJsonEventDat
                     events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
-                if isinstance(event, ResultMixin) and event.result in OUT_EVENT_RESULTS:
+                if (
+                    isinstance(event, ResultMixin)
+                    and event.result in OUT_EVENT_RESULTS
+                ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
-                        generic_event_kwargs["coordinates"] = _parse_coordinates(raw_event["end"])
+                        generic_event_kwargs["coordinates"] = (
+                            _parse_coordinates(raw_event["end"])
+                        )
                         generic_event_kwargs["timestamp"] = (
-                            timedelta(seconds=raw_event["end"]["time"]) - period.start_timestamp
+                            timedelta(seconds=raw_event["end"]["time"])
+                            - period.start_timestamp
                         )
 
                         event = self.event_factory.build_ball_out(

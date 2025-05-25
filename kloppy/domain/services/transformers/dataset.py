@@ -1,6 +1,6 @@
-import warnings
 from dataclasses import fields, replace
 from typing import Optional, Union
+import warnings
 
 from kloppy.domain import (
     DEFAULT_PITCH_LENGTH,
@@ -39,7 +39,12 @@ class DatasetTransformer:
         to_pitch_dimensions: Optional[PitchDimensions] = None,
         to_orientation: Optional[Orientation] = None,
     ):
-        if from_pitch_dimensions and from_coordinate_system or to_pitch_dimensions and to_coordinate_system:
+        if (
+            from_pitch_dimensions
+            and from_coordinate_system
+            or to_pitch_dimensions
+            and to_coordinate_system
+        ):
             raise ValueError(
                 "You can't specify both a PitchDimension and CoordinateSystem transformation on the same Transformer instance"
             )
@@ -48,14 +53,20 @@ class DatasetTransformer:
         if from_pitch_dimensions:
             self._from_pitch_dimensions = from_pitch_dimensions
         elif from_coordinate_system:
-            self._from_pitch_dimensions = from_coordinate_system.pitch_dimensions
+            self._from_pitch_dimensions = (
+                from_coordinate_system.pitch_dimensions
+            )
         else:
-            raise ValueError("You must either specify the source PitchDimension or CoordinateSystem")
+            raise ValueError(
+                "You must either specify the source PitchDimension or CoordinateSystem"
+            )
 
         self._to_coordinate_system = to_coordinate_system
         if to_pitch_dimensions:
             if from_pitch_dimensions is None:
-                raise ValueError("You must specify the source PitchDimension when specifying the target PitchDimension")
+                raise ValueError(
+                    "You must specify the source PitchDimension when specifying the target PitchDimension"
+                )
             self._to_pitch_dimensions = to_pitch_dimensions
         elif to_coordinate_system:
             if from_coordinate_system is None:
@@ -66,8 +77,15 @@ class DatasetTransformer:
 
         self._from_orientation = from_orientation
         self._to_orientation = to_orientation
-        if from_orientation and not to_orientation or not from_orientation and to_orientation:
-            raise ValueError("You must specify both the source and target Orientation")
+        if (
+            from_orientation
+            and not to_orientation
+            or not from_orientation
+            and to_orientation
+        ):
+            raise ValueError(
+                "You must specify both the source and target Orientation"
+            )
 
     @property
     def _needs_coordinate_system_change(self):
@@ -81,12 +99,18 @@ class DatasetTransformer:
     def _needs_orientation_change(self):
         return self._from_orientation != self._to_orientation
 
-    def change_point_dimensions(self, point: Union[Point, Point3D, None]) -> Union[Point, Point3D, None]:
+    def change_point_dimensions(
+        self, point: Union[Point, Point3D, None]
+    ) -> Union[Point, Point3D, None]:
         if point is None:
             return None
 
-        base_pitch_length = self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
-        base_pitch_width = self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        base_pitch_length = (
+            self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        base_pitch_width = (
+            self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        )
 
         point_base = self._from_pitch_dimensions.to_metric_base(
             point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
@@ -101,7 +125,9 @@ class DatasetTransformer:
 
         return point_to
 
-    def flip_point(self, point: Union[Point, Point3D, None]) -> Union[Point, Point3D, None]:
+    def flip_point(
+        self, point: Union[Point, Point3D, None]
+    ) -> Union[Point, Point3D, None]:
         if not point:
             return None
 
@@ -181,11 +207,15 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.__change_point_coordinate_system(frame.ball_coordinates),
+            ball_coordinates=self.__change_point_coordinate_system(
+                frame.ball_coordinates
+            ),
             ball_speed=frame.ball_speed,
             players_data={
                 key: PlayerData(
-                    coordinates=self.__change_point_coordinate_system(player_data.coordinates),
+                    coordinates=self.__change_point_coordinate_system(
+                        player_data.coordinates
+                    ),
                     distance=player_data.distance,
                     speed=player_data.speed,
                     other_data=player_data.other_data,
@@ -205,10 +235,14 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.change_point_dimensions(frame.ball_coordinates),
+            ball_coordinates=self.change_point_dimensions(
+                frame.ball_coordinates
+            ),
             players_data={
                 key: PlayerData(
-                    coordinates=self.change_point_dimensions(player_data.coordinates),
+                    coordinates=self.change_point_dimensions(
+                        player_data.coordinates
+                    ),
                     distance=player_data.distance,
                     speed=player_data.speed,
                     other_data=player_data.other_data,
@@ -219,18 +253,27 @@ class DatasetTransformer:
             statistics=frame.statistics,
         )
 
-    def __change_point_coordinate_system(self, point: Union[Point, Point3D, None]) -> Union[Point, Point3D, None]:
+    def __change_point_coordinate_system(
+        self, point: Union[Point, Point3D, None]
+    ) -> Union[Point, Point3D, None]:
         if not point:
             return None
 
-        base_pitch_length = self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
-        base_pitch_width = self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        base_pitch_length = (
+            self._from_pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        base_pitch_width = (
+            self._from_pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+        )
 
         point_base = self._from_pitch_dimensions.to_metric_base(
             point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
         )
 
-        if self._from_coordinate_system.vertical_orientation != self._to_coordinate_system.vertical_orientation:
+        if (
+            self._from_coordinate_system.vertical_orientation
+            != self._to_coordinate_system.vertical_orientation
+        ):
             point_base = replace(
                 point_base,
                 y=base_pitch_width - point_base.y,
@@ -293,7 +336,9 @@ class DatasetTransformer:
 
     def __change_event_coordinate_system(self, event: Event):
         position_changes = {
-            field.name: self.__change_point_coordinate_system(getattr(event, field.name))
+            field.name: self.__change_point_coordinate_system(
+                getattr(event, field.name)
+            )
             for field in fields(event)
             if field.name.endswith("coordinates") and getattr(event, field.name)
         }
@@ -329,7 +374,11 @@ class DatasetTransformer:
         to_orientation: Optional[Orientation] = None,
         to_coordinate_system: Optional[CoordinateSystem] = None,
     ) -> Dataset:
-        if to_pitch_dimensions is None and to_orientation is None and to_coordinate_system is None:
+        if (
+            to_pitch_dimensions is None
+            and to_orientation is None
+            and to_coordinate_system is None
+        ):
             return dataset
 
         if to_orientation is None:
@@ -414,14 +463,19 @@ class DatasetTransformer:
             )
 
         if isinstance(dataset, TrackingDataset):
-            frames = [transformer.transform_frame(record) for record in dataset.records]
+            frames = [
+                transformer.transform_frame(record)
+                for record in dataset.records
+            ]
 
             return TrackingDataset(
                 metadata=metadata,
                 records=frames,
             )
         elif isinstance(dataset, EventDataset):
-            events = [transformer.transform_event(event) for event in dataset.records]
+            events = [
+                transformer.transform_event(event) for event in dataset.records
+            ]
 
             return EventDataset(
                 metadata=metadata,
@@ -432,7 +486,9 @@ class DatasetTransformer:
 
 
 class DatasetTransformerBuilder:
-    def __init__(self, to_coordinate_system: Optional[Union[str, Provider]] = None):
+    def __init__(
+        self, to_coordinate_system: Optional[Union[str, Provider]] = None
+    ):
         from kloppy.config import get_config
 
         if not to_coordinate_system:
@@ -444,7 +500,9 @@ class DatasetTransformerBuilder:
         to_dataset_type = None
         if isinstance(to_coordinate_system, str):
             if ":" in to_coordinate_system:
-                provider_name, dataset_type_name = to_coordinate_system.split(":")
+                provider_name, dataset_type_name = to_coordinate_system.split(
+                    ":"
+                )
                 to_coordinate_system = Provider[provider_name.upper()]
                 to_dataset_type = DatasetType[dataset_type_name.upper()]
             else:
@@ -475,13 +533,20 @@ class DatasetTransformerBuilder:
             pitch_width=pitch_width,
         )
 
-        needs_pitch_dimensions_change = from_coordinate_system.pitch_dimensions != to_coordinate_system.pitch_dimensions
+        needs_pitch_dimensions_change = (
+            from_coordinate_system.pitch_dimensions
+            != to_coordinate_system.pitch_dimensions
+        )
         not_standardized = (
             not from_coordinate_system.pitch_dimensions.standardized
             or not to_coordinate_system.pitch_dimensions.standardized
         )
         missing_dimensions = pitch_length is None or pitch_width is None
-        if needs_pitch_dimensions_change and not_standardized and missing_dimensions:
+        if (
+            needs_pitch_dimensions_change
+            and not_standardized
+            and missing_dimensions
+        ):
             from_coordinate_system_name = (
                 from_coordinate_system.provider
                 if isinstance(from_coordinate_system, ProviderCoordinateSystem)

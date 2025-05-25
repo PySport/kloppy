@@ -1,5 +1,5 @@
-import re
 from dataclasses import dataclass
+import re
 from typing import Callable, List
 
 from kloppy import datasets, to_pandas

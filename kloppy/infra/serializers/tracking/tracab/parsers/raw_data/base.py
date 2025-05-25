@@ -33,5 +33,7 @@ class TracabDataParser(ABC):
         self.frame_rate = frame_rate
 
     @abstractmethod
-    def extract_frames(self, sample_rate: float, only_alive: bool) -> Iterator[Frame]:
+    def extract_frames(
+        self, sample_rate: float, only_alive: bool
+    ) -> Iterator[Frame]:
         """Extract all frames."""

@@ -1,6 +1,6 @@
 import dataclasses
-import warnings
 from dataclasses import fields
+import warnings
 
 from kloppy.domain import Frame
 
@@ -19,7 +19,10 @@ def create_frame(**kwargs) -> Frame:
     relevant_kwargs = {
         field.name: kwargs.get(field.name, field.default)
         for field in fields(Frame)
-        if field.init and not (field.default == dataclasses.MISSING and field.name not in kwargs)
+        if field.init
+        and not (
+            field.default == dataclasses.MISSING and field.name not in kwargs
+        )
     }
 
     if len(relevant_kwargs) < len(kwargs):

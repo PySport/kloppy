@@ -30,7 +30,9 @@ class TestEvent:
         passes = dataset.find_all("pass")
         assert passes[0].next("pass") == passes[1]
         assert passes[1].prev("pass") == passes[0]
-        assert passes[0].next() == dataset.get_event_by_id("61da36dc-d862-416c-8ee3-1a0cd24dc086")
+        assert passes[0].next() == dataset.get_event_by_id(
+            "61da36dc-d862-416c-8ee3-1a0cd24dc086"
+        )
 
         goals = dataset.find_all("shot.goal")
         assert len(goals) == 3
@@ -65,7 +67,9 @@ class TestEvent:
         goals_dataset = dataset.filter("shot.goal")
 
         assert goals_dataset.records[0].player is not None
-        goals_dataset = goals_dataset.map(lambda event: event.replace(player=None))
+        goals_dataset = goals_dataset.map(
+            lambda event: event.replace(player=None)
+        )
 
         assert [record.player for record in goals_dataset] == [
             None,

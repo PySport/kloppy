@@ -177,14 +177,20 @@ class TestPFFTracking:
 
         # Check Home Player coordinates
         home_player = dataset.metadata.teams[0].players[4]  # Julian Alvarez
-        assert dataset.records[0].players_data[home_player].coordinates == Point(x=4.987, y=-1.993)
+        assert dataset.records[0].players_data[
+            home_player
+        ].coordinates == Point(x=4.987, y=-1.993)
 
         # Check Away Player coordinates
         away_player = dataset.metadata.teams[1].players[17]  # Olivier Giroud
-        assert dataset.records[0].players_data[away_player].coordinates == Point(x=0.763, y=-18.099)
+        assert dataset.records[0].players_data[
+            away_player
+        ].coordinates == Point(x=0.763, y=-18.099)
 
         # Check Ball coordinates
-        assert dataset.records[0].ball_coordinates == Point3D(x=0.42, y=1.59, z=0.39)
+        assert dataset.records[0].ball_coordinates == Point3D(
+            x=0.42, y=1.59, z=0.39
+        )
 
     def test_orientation(
         self,
@@ -227,15 +233,17 @@ class TestPFFTracking:
         assert pitch_dimensions.y_dim.max == 1
 
         home_player = dataset.metadata.teams[0].players[4]
-        assert dataset.records[0].players_data[home_player].coordinates == Point(
-            x=0.547495238095238, y=0.5293088235294118
-        )
+        assert dataset.records[0].players_data[
+            home_player
+        ].coordinates == Point(x=0.547495238095238, y=0.5293088235294118)
 
         # Check Away Player coordinates
         away_player = dataset.metadata.teams[1].players[17]  # Olivier Giroud
-        assert dataset.records[0].players_data[away_player].coordinates == Point(
-            x=0.5072666666666666, y=0.7661617647058824
-        )
+        assert dataset.records[0].players_data[
+            away_player
+        ].coordinates == Point(x=0.5072666666666666, y=0.7661617647058824)
 
         # Check Ball coordinates
-        assert dataset.records[0].ball_coordinates == Point3D(x=0.504, y=0.4766176470588235, z=0.39)
+        assert dataset.records[0].ball_coordinates == Point3D(
+            x=0.504, y=0.4766176470588235, z=0.39
+        )

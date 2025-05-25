@@ -22,7 +22,9 @@ class TestStateBuilder:
             dataset_with_state = dataset.add_state("score")
 
         events_per_score = {}
-        for score, events in groupby(dataset_with_state.events, lambda event: event.state["score"]):
+        for score, events in groupby(
+            dataset_with_state.events, lambda event: event.state["score"]
+        ):
             events = list(events)
             events_per_score[str(score)] = len(events)
 
@@ -58,7 +60,9 @@ class TestStateBuilder:
             dataset_with_state = dataset.add_state("lineup")
 
         last_events = []
-        for lineup, events in groupby(dataset_with_state.events, lambda event: event.state["lineup"]):
+        for lineup, events in groupby(
+            dataset_with_state.events, lambda event: event.state["lineup"]
+        ):
             events = list(events)
             # inspect last event which changed the lineup
             last_events.append((events[-1].event_type, len(lineup.players)))
@@ -92,8 +96,12 @@ class TestStateBuilder:
         assert events_per_formation_change["4-1-4-1"] == 3104
         assert events_per_formation_change["4-4-2"] == 957
 
-        assert dataset.metadata.teams[0].starting_formation == FormationType("4-4-2")
-        assert dataset_with_state.events[1].state["formation"].home == FormationType("4-4-2")
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-4-2"
+        )
+        assert dataset_with_state.events[1].state[
+            "formation"
+        ].home == FormationType("4-4-2")
 
     def test_register_custom_builder(self, base_dir):
         class CustomStateBuilder(StateBuilder):

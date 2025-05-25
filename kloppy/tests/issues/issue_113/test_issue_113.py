@@ -20,7 +20,9 @@ def kloppy_load_data(f7, f24):
     """
     dataset = opta.load(f7_data=f7, f24_data=f24)
 
-    events = dataset.transform(to_orientation=Orientation.STATIC_HOME_AWAY).to_df(
+    events = dataset.transform(
+        to_orientation=Orientation.STATIC_HOME_AWAY
+    ).to_df(
         "*",
         event_name=lambda event: str(getattr(event, "event_name", "")),
         player_name=lambda event: str(getattr(event, "player", "")),

@@ -1,8 +1,7 @@
-import logging
 from datetime import timedelta
-import warnings
+import logging
 from typing import IO, NamedTuple, Optional, Union
-
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
@@ -14,15 +13,15 @@ from kloppy.domain import (
     PlayerData,
     Point,
     Point3D,
+    PositionType,
     Provider,
     TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-from kloppy.domain import PositionType
 from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
+from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
@@ -57,9 +56,14 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
     def __get_frame_rate(cls, tracking):
         """Infer the frame rate of the tracking data."""
 
-        frame_numbers = [int(line.split(";")[1].split(",")[0]) for line in tracking[1:]]
+        frame_numbers = [
+            int(line.split(";")[1].split(",")[0]) for line in tracking[1:]
+        ]
 
-        deltas = [frame_numbers[i + 1] - frame_numbers[i] for i in range(len(frame_numbers) - 1)]
+        deltas = [
+            frame_numbers[i + 1] - frame_numbers[i]
+            for i in range(len(frame_numbers) - 1)
+        ]
 
         most_common_delta = max(set(deltas), key=deltas.count)
         frame_rate = 1000 / most_common_delta
@@ -72,7 +76,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         frame_info = components[0].split(";")
 
         frame_id = int(frame_info[0])
-        frame_timestamp = timedelta(seconds=int(frame_info[1].split(",")[0]) / 1000)
+        frame_timestamp = timedelta(
+            seconds=int(frame_info[1].split(",")[0]) / 1000
+        )
         match_status = int(frame_info[1].split(",")[2])
 
         ball_state = BallState.ALIVE if match_status == 0 else BallState.DEAD
@@ -107,7 +113,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                 elif raw_team_side_id == 2:
                     continue
                 else:
-                    raise DeserializationError(f"Unexpected team side id {raw_team_side_id}")
+                    raise DeserializationError(
+                        f"Unexpected team side id {raw_team_side_id}"
+                    )
                 team = teams_list[team_side_id]
                 player = team.get_player_by_id(player_id)
 
@@ -139,7 +147,10 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         with performance_logging("Loading meta data", logger=logger):
             meta_data_parser = get_parser(inputs.meta_data, "MA1")
 
-            periods = {period.id: period for period in meta_data_parser.extract_periods()}
+            periods = {
+                period.id: period
+                for period in meta_data_parser.extract_periods()
+            }
             teams_list = list(meta_data_parser.extract_lineups())
             score = meta_data_parser.extract_score()
             date = meta_data_parser.extract_date()
@@ -171,9 +182,13 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
             n_frames = 0
             for frame_data in _iter():
                 period = frame_data[0]
-                frame = self._frame_from_framedata(teams_list, period, frame_data)
+                frame = self._frame_from_framedata(
+                    teams_list, period, frame_data
+                )
                 frame = transformer.transform_frame(frame)
-                if not frame.players_data or (self.only_alive and frame.ball_state == BallState.DEAD):
+                if not frame.players_data or (
+                    self.only_alive and frame.ball_state == BallState.DEAD
+                ):
                     continue
                 frames.append(frame)
 
@@ -183,14 +198,19 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     break
 
         try:
-            first_frame = next(frame for frame in frames if frame.period.id == 1)
+            first_frame = next(
+                frame for frame in frames if frame.period.id == 1
+            )
             orientation = (
                 Orientation.HOME_AWAY
-                if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
                 else Orientation.AWAY_HOME
             )
         except StopIteration:
-            warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
             orientation = Orientation.NOT_SET
 
         meta_data = Metadata(

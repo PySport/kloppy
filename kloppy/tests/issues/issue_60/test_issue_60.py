@@ -1,5 +1,6 @@
-from kloppy import opta
 import os
+
+from kloppy import opta
 
 
 class TestIssue60:
@@ -17,4 +18,6 @@ class TestIssue60:
 
         # OPTA F24 file: Pass -> Deleted Event -> Tackle
         assert event_dataset.events[15].event_name == "pass"
-        assert event_dataset.events[16].event_name == "duel"  # Deleted Event is filter out
+        assert (
+            event_dataset.events[16].event_name == "duel"
+        )  # Deleted Event is filter out

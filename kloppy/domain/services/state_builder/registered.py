@@ -1,8 +1,13 @@
 import abc
 import inspect
-from typing import Dict, Type
+from typing import TYPE_CHECKING, Dict, Type
 
 from kloppy.utils import camelcase_to_snakecase
+
+if TYPE_CHECKING:
+    from kloppy.domain.services.state_builder import (
+        StateBuilder,
+    )  # pragma: no cover
 
 _STATE_BUILDER_REGISTRY: Dict[str, Type["StateBuilder"]] = {}
 
@@ -13,7 +18,9 @@ class RegisteredStateBuilder(abc.ABCMeta):
         class_dict["name"] = name
         builder_cls = super().__new__(mcs, cls_name, bases, class_dict)
         if not inspect.isabstract(builder_cls):
-            _STATE_BUILDER_REGISTRY[name.replace("_state_builder", "")] = builder_cls
+            _STATE_BUILDER_REGISTRY[name.replace("_state_builder", "")] = (
+                builder_cls
+            )
         return builder_cls
 
 

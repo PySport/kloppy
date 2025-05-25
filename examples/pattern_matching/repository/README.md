@@ -6,7 +6,7 @@ We might be able to do so. The kloppy library now provides a search mechanism ba
 
 To make the use event simpler, kloppy comes with `kloppy-query`. This command line tool does all the heavy lifting for you and gives you a nice xml, ready for use in your favorite video analyse software.
 
-## Usage 
+## Usage
 
 ```shell script
 # grab some data from statsbomb open data project
@@ -19,7 +19,6 @@ kloppy-query --input-statsbomb=events.json,lineup.json --query-file=ball_recover
 # check output
 cat ball_recovery.xml
 ```
-
 
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
@@ -54,6 +53,7 @@ cat ball_recovery.xml
 ```
 
 ## Without output file
+
 It's possible to only show stats and don't write a XML file.
 
 ```shell script

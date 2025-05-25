@@ -1,7 +1,7 @@
 from typing import List
-from lxml import etree
 
 from cssselect import GenericTranslator
+from lxml import etree
 
 from kloppy.domain import Event, EventType
 
@@ -21,7 +21,11 @@ class CSSPatternMatcher:
                     index=i,
                     result=str(event.result).lower(),
                     team=str(event.team.ground).lower(),
-                    attrib={"class": str(event.result).lower() + " " + str(event.team.ground).lower()},
+                    attrib={
+                        "class": str(event.result).lower()
+                        + " "
+                        + str(event.team.ground).lower()
+                    },
                 )
 
         matching_events = []

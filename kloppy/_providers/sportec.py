@@ -39,8 +39,15 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(meta_data) as meta_data_fp:
-        return serializer.deserialize(SportecEventDataInputs(event_data=event_data_fp, meta_data=meta_data_fp))
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
+        return serializer.deserialize(
+            SportecEventDataInputs(
+                event_data=event_data_fp, meta_data=meta_data_fp
+            )
+        )
 
 
 def load_tracking(
@@ -71,8 +78,15 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp:
-        return deserializer.deserialize(inputs=SportecTrackingDataInputs(meta_data=meta_data_fp, raw_data=raw_data_fp))
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
+        return deserializer.deserialize(
+            inputs=SportecTrackingDataInputs(
+                meta_data=meta_data_fp, raw_data=raw_data_fp
+            )
+        )
 
 
 @deprecated("sportec.load_event should be used")
@@ -83,7 +97,9 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
-    return load_event(event_data, meta_data, event_types, coordinates, event_factory)
+    return load_event(
+        event_data, meta_data, event_types, coordinates, event_factory
+    )
 
 
 def get_IDSSE_url(match_id: str, data_type: str) -> str:
@@ -102,9 +118,13 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
     DATA_URL = "https://springernature.figshare.com/ndownloader/files/{file_id}"
 
     if data_type not in ["meta", "event", "tracking"]:
-        raise ValueError(f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}")
+        raise ValueError(
+            f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}"
+        )
     if match_id not in DATA_MAP:
-        raise ValueError(f"This match_id is not available, please select from {list(DATA_MAP.keys())}")
+        raise ValueError(
+            f"This match_id is not available, please select from {list(DATA_MAP.keys())}"
+        )
     return DATA_URL.format(file_id=str(DATA_MAP[match_id][data_type]))
 
 

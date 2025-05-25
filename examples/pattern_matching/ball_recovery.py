@@ -1,8 +1,9 @@
+from collections import Counter
 import logging
 import sys
-from collections import Counter
 
-from kloppy import statsbomb, event_pattern_matching as pm
+from kloppy import event_pattern_matching as pm
+from kloppy import statsbomb
 from kloppy.utils import performance_logging
 
 

@@ -87,55 +87,57 @@ document$.subscribe(function () {
   mapColumns();
   loadSelections();
 
-    const COLUMN_TO_STRETCH = "Description"; // Change this to the column name you want to stretch
+  const COLUMN_TO_STRETCH = "Description"; // Change this to the column name you want to stretch
 
-    function stretchColumn() {
-        tables.forEach(table => {
-            const parentDiv = table.closest(".md-typeset__table");
-            if (parentDiv) {
-                parentDiv.style.width = "100%"; // Ensure parent div takes full width
-            }
+  function stretchColumn() {
+    tables.forEach((table) => {
+      const parentDiv = table.closest(".md-typeset__table");
+      if (parentDiv) {
+        parentDiv.style.width = "100%"; // Ensure parent div takes full width
+      }
 
-            const headerCells = table.querySelectorAll("thead tr th");
-            const columnIndex = Array.from(headerCells).findIndex(th => th.textContent.trim() === COLUMN_TO_STRETCH);
+      const headerCells = table.querySelectorAll("thead tr th");
+      const columnIndex = Array.from(headerCells).findIndex(
+        (th) => th.textContent.trim() === COLUMN_TO_STRETCH,
+      );
 
-            if (columnIndex === -1) return; // Exit if column is not found
+      if (columnIndex === -1) return; // Exit if column is not found
 
-            // Reset all column widths to auto first
-            table.style.width = "100%"; // Ensure table stretches within the div
-            table.querySelectorAll("tr").forEach(row => {
-                row.querySelectorAll("th, td").forEach(cell => {
-                    cell.style.width = "auto";
-                });
-            });
-
-            // Get total table width
-            const tableWidth = table.parentElement.clientWidth;
-            let otherColumnsWidth = 0;
-
-            // Calculate width taken by other columns
-            headerCells.forEach((th, index) => {
-                if (index !== columnIndex) {
-                    otherColumnsWidth += th.offsetWidth;
-                }
-            });
-
-            // Calculate new width for the stretched column
-            const stretchedWidth = Math.max(tableWidth - otherColumnsWidth, 100); // Ensure reasonable min width
-
-            // Apply new width to the stretched column
-            table.querySelectorAll("tr").forEach(row => {
-                const cells = row.querySelectorAll("th, td");
-                if (cells[columnIndex]) {
-                    cells[columnIndex].style.width = `${stretchedWidth}px`;
-                }
-            });
+      // Reset all column widths to auto first
+      table.style.width = "100%"; // Ensure table stretches within the div
+      table.querySelectorAll("tr").forEach((row) => {
+        row.querySelectorAll("th, td").forEach((cell) => {
+          cell.style.width = "auto";
         });
-    }
+      });
 
-    // Run when the page loads
-    stretchColumn();
+      // Get total table width
+      const tableWidth = table.parentElement.clientWidth;
+      let otherColumnsWidth = 0;
 
-    // Update on window resize for responsiveness
-    window.addEventListener("resize", stretchColumn);
+      // Calculate width taken by other columns
+      headerCells.forEach((th, index) => {
+        if (index !== columnIndex) {
+          otherColumnsWidth += th.offsetWidth;
+        }
+      });
+
+      // Calculate new width for the stretched column
+      const stretchedWidth = Math.max(tableWidth - otherColumnsWidth, 100); // Ensure reasonable min width
+
+      // Apply new width to the stretched column
+      table.querySelectorAll("tr").forEach((row) => {
+        const cells = row.querySelectorAll("th, td");
+        if (cells[columnIndex]) {
+          cells[columnIndex].style.width = `${stretchedWidth}px`;
+        }
+      });
+    });
+  }
+
+  // Run when the page loads
+  stretchColumn();
+
+  // Update on window resize for responsiveness
+  window.addEventListener("resize", stretchColumn);
 });

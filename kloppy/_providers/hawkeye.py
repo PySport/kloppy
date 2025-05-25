@@ -52,7 +52,9 @@ def load(
         Pose tracking data is not yet supported.
     """
     ball_feeds = expand_inputs(ball_feeds, regex_filter="samples.ball")
-    player_centroid_feeds = expand_inputs(player_centroid_feeds, regex_filter="samples.centroids")
+    player_centroid_feeds = expand_inputs(
+        player_centroid_feeds, regex_filter="samples.centroids"
+    )
 
     deserializer = HawkEyeDeserializer(
         pitch_width=pitch_width,

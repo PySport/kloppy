@@ -1,7 +1,9 @@
 # Querying data
+
 Oftentimes, not all data in a match is relevant. The goal of the analysis might be to investigate a certain time window, set of events, game phase, or tactical pattern. Therefore, kloppy provides a number of tools to query and filter match data efficiently.
 
 ## Selecting events or frames
+
 Kloppy provides a number of utility functions to select specific events or frames based on a variety of criteria, such as:
 
 - **Event type** – select only passes, shots, duels, etc.
@@ -10,6 +12,7 @@ Kloppy provides a number of utility functions to select specific events or frame
 - **Spatial constraints** – filter events that occur in specific pitch areas.
 
 See [Selections](./selections/index.md) for practical examples and common use cases.
+
 ## Pattern matching
 
 Sometimes it’s not individual events that matter, but patterns: sequences of events that together signify a tactic or strategy (e.g., a high press, counterattack, or build-up sequence).

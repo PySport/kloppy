@@ -30,7 +30,9 @@ class TracabDatParser(TracabDataParser):
         self.teams = teams
         self.frame_rate = frame_rate
 
-    def extract_frames(self, sample_rate: float, only_alive: bool) -> Iterator[Frame]:
+    def extract_frames(
+        self, sample_rate: float, only_alive: bool
+    ) -> Iterator[Frame]:
         n = 0
         sample = 1.0 / sample_rate
 
@@ -51,7 +53,11 @@ class TracabDatParser(TracabDataParser):
                     "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
                 )
 
-                if period.start_timestamp <= timedelta(seconds=frame_id / self.frame_rate) <= period.end_timestamp:
+                if (
+                    period.start_timestamp
+                    <= timedelta(seconds=frame_id / self.frame_rate)
+                    <= period.end_timestamp
+                ):
                     if n % sample == 0:
                         frame = self._parse_frame(period, line)
                         yield frame
@@ -86,7 +92,9 @@ class TracabDatParser(TracabDataParser):
                 )
                 team.players.append(player)
 
-            players_data[player] = PlayerData(coordinates=Point(float(x), float(y)), speed=float(speed))
+            players_data[player] = PlayerData(
+                coordinates=Point(float(x), float(y)), speed=float(speed)
+            )
 
         (
             ball_x,
@@ -104,7 +112,9 @@ class TracabDatParser(TracabDataParser):
         elif ball_owning_team == "A":
             ball_owning_team = self.teams[1]
         else:
-            raise DeserializationError(f"Unknown ball owning team: {ball_owning_team}")
+            raise DeserializationError(
+                f"Unknown ball owning team: {ball_owning_team}"
+            )
 
         if ball_state == "Alive":
             ball_state = BallState.ALIVE
@@ -115,8 +125,11 @@ class TracabDatParser(TracabDataParser):
 
         frame = create_frame(
             frame_id=frame_id,
-            timestamp=timedelta(seconds=frame_id / self.frame_rate) - period.start_timestamp,
-            ball_coordinates=Point3D(float(ball_x), float(ball_y), float(ball_z)),
+            timestamp=timedelta(seconds=frame_id / self.frame_rate)
+            - period.start_timestamp,
+            ball_coordinates=Point3D(
+                float(ball_x), float(ball_y), float(ball_z)
+            ),
             ball_state=ball_state,
             ball_owning_team=ball_owning_team,
             players_data=players_data,

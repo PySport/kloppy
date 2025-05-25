@@ -1,5 +1,5 @@
-import json
 from datetime import datetime, timezone
+import json
 from typing import IO, List, Optional, Tuple
 
 from kloppy.domain import Ground, Orientation, Period, Team
@@ -27,7 +27,9 @@ class TracabJSONMetadataParser(TracabMetadataParser):
         for period_id in (1, 2, 3, 4):
             period_start_frame = self.root[f"Phase{period_id}StartFrame"]
             period_end_frame = self.root[f"Phase{period_id}EndFrame"]
-            period = create_period(period_id, period_start_frame, period_end_frame, frame_rate)
+            period = create_period(
+                period_id, period_start_frame, period_end_frame, frame_rate
+            )
             if period is not None:
                 periods.append(period)
         return periods
@@ -35,7 +37,9 @@ class TracabJSONMetadataParser(TracabMetadataParser):
     def extract_date(self) -> Optional[datetime]:
         date = self.root.get("Kickoff", None)
         if date is not None:
-            return datetime.strptime(date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            return datetime.strptime(date, "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=timezone.utc
+            )
 
         return None
 
@@ -74,7 +78,11 @@ class TracabJSONMetadataParser(TracabMetadataParser):
 
     def extract_orientation(self) -> Orientation:
         if self.root.get("Phase1HomeGKLeft", None) is not None:
-            orientation = Orientation.HOME_AWAY if bool(self.root["Phase1HomeGKLeft"]) else Orientation.AWAY_HOME
+            orientation = (
+                Orientation.HOME_AWAY
+                if bool(self.root["Phase1HomeGKLeft"])
+                else Orientation.AWAY_HOME
+            )
             return orientation
         else:
             return None

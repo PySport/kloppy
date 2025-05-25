@@ -45,7 +45,10 @@ class Period:
     next_period: Optional["Period"] = field(init=False)
 
     def __post_init__(self):
-        if self.end_timestamp is not None and self.start_timestamp.__class__ != self.end_timestamp.__class__:
+        if (
+            self.end_timestamp is not None
+            and self.start_timestamp.__class__ != self.end_timestamp.__class__
+        ):
             raise ValueError(
                 "'start_timestamp' and 'end_timestamp' must both be of type datetime or timedelta,"
                 + f" but got start_timestamp={self.start_timestamp.__class__}"
@@ -53,9 +56,13 @@ class Period:
             )
 
     def contains(self, timestamp: datetime):
-        if isinstance(self.start_timestamp, datetime) and isinstance(self.end_timestamp, datetime):
+        if isinstance(self.start_timestamp, datetime) and isinstance(
+            self.end_timestamp, datetime
+        ):
             return self.start_timestamp <= timestamp <= self.end_timestamp
-        raise KloppyError("This method can only be used when start_timestamp and end_timestamp are a datetime")
+        raise KloppyError(
+            "This method can only be used when start_timestamp and end_timestamp are a datetime"
+        )
 
     @property
     def start_time(self) -> "Time":
@@ -63,7 +70,9 @@ class Period:
 
     @property
     def end_time(self) -> "Time":
-        return Time(period=self, timestamp=self.end_timestamp - self.start_timestamp)  # type: ignore
+        return Time(
+            period=self, timestamp=self.end_timestamp - self.start_timestamp
+        )  # type: ignore
 
     @property
     def duration(self) -> timedelta:
@@ -130,7 +139,9 @@ class Time:
     @overload
     def __sub__(self, other: "Time") -> timedelta: ...
 
-    def __sub__(self, other: Union["Time", timedelta]) -> Union["Time", timedelta]:
+    def __sub__(
+        self, other: Union["Time", timedelta]
+    ) -> Union["Time", timedelta]:
         """
         Subtract a timedelta or AbsTime from the current AbsTime.
 
@@ -151,7 +162,9 @@ class Time:
                 current_period = current_period.prev_period
                 current_timestamp = current_period.duration
 
-            return Time(period=current_period, timestamp=current_timestamp - other)
+            return Time(
+                period=current_period, timestamp=current_timestamp - other
+            )
 
         elif isinstance(other, Time):
             if self.period >= other.period:
@@ -177,7 +190,9 @@ class Time:
             other -= current_period.duration - current_timestamp
             if not current_period.next_period:
                 # We reached start of the match, let's just return start itself
-                return Time(period=current_period, timestamp=current_period.duration)
+                return Time(
+                    period=current_period, timestamp=current_period.duration
+                )
 
             current_period = current_period.next_period
             current_timestamp = timedelta(0)
@@ -192,7 +207,9 @@ class Time:
         raise RuntimeError("Doesn't make sense.")
 
     def __lt__(self, other):
-        return self.period < other.period or (self.period == other.period and self.timestamp < other.timestamp)
+        return self.period < other.period or (
+            self.period == other.period and self.timestamp < other.timestamp
+        )
 
     def __str__(self):
         m, s = divmod(self.timestamp.total_seconds(), 60)

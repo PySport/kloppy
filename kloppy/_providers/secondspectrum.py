@@ -40,9 +40,13 @@ def load(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(raw_data) as raw_data_fp, open_as_file(
-        Source.create(additional_meta_data, optional=True)
-    ) as additional_meta_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+        open_as_file(
+            Source.create(additional_meta_data, optional=True)
+        ) as additional_meta_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=SecondSpectrumInputs(
                 meta_data=meta_data_fp,

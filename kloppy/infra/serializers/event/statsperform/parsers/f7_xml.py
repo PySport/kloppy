@@ -10,18 +10,17 @@ from kloppy.domain import (
     Ground,
     Period,
     Player,
+    PositionType,
     Score,
     Team,
-    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser
 from ..formation_mapping import (
-    formation_position_mapping,
     formation_name_mapping,
-    FormationType,
+    formation_position_mapping,
 )
+from .base import OptaXMLParser
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
@@ -41,7 +40,10 @@ class F7XMLParser(OptaXMLParser):
     """
 
     def extract_periods(self) -> List[Period]:
-        periods = {i: Period(id=i, start_timestamp=None, end_timestamp=None) for i in range(1, 5)}
+        periods = {
+            i: Period(id=i, start_timestamp=None, end_timestamp=None)
+            for i in range(1, 5)
+        }
         match_stats = matchdata_path.find(self.root).iterchildren("Stat")
         for stat in match_stats:
             if stat.attrib["Type"] == "first_half_start":
@@ -60,15 +62,23 @@ class F7XMLParser(OptaXMLParser):
                 periods[4].start_timestamp = _parse_f7_datetime(stat.text)
             elif stat.attrib["Type"] == "second_half_extra_end":
                 periods[4].end_timestamp = _parse_f7_datetime(stat.text)
-        periods = [period for period in periods.values() if period.start_timestamp is not None]
+        periods = [
+            period
+            for period in periods.values()
+            if period.start_timestamp is not None
+        ]
 
-        result_elements = self.root.xpath("/SoccerFeed/SoccerDocument/MatchData/MatchInfo/Result")
+        result_elements = self.root.xpath(
+            "/SoccerFeed/SoccerDocument/MatchData/MatchInfo/Result"
+        )
         if result_elements and "Type" in result_elements[0].attrib:
             match_result_type = result_elements[0].attrib["Type"]
         else:
             match_result_type = None
         if match_result_type == "PenaltyShootout":
-            periods.append(Period(id=5, start_timestamp=None, end_timestamp=None))
+            periods.append(
+                Period(id=5, start_timestamp=None, end_timestamp=None)
+            )
 
         return periods
 
@@ -82,7 +92,9 @@ class F7XMLParser(OptaXMLParser):
             elif team_elm.attrib["Side"] == "Away":
                 away_score = int(team_elm.attrib["Score"])
             else:
-                raise DeserializationError(f"Unknown side: {team_elm.attrib['Side']}")
+                raise DeserializationError(
+                    f"Unknown side: {team_elm.attrib['Side']}"
+                )
         if home_score is None or away_score is None:
             return None
         return Score(home=home_score, away=away_score)
@@ -105,7 +117,9 @@ class F7XMLParser(OptaXMLParser):
             elif team_elm.attrib["Side"] == "Away":
                 away_team = self._team_from_xml_elm(team_elm)
             else:
-                raise DeserializationError(f"Unknown side: {team_elm.attrib['Side']}")
+                raise DeserializationError(
+                    f"Unknown side: {team_elm.attrib['Side']}"
+                )
         if home_team is None:
             raise DeserializationError("Could not find home team")
         if away_team is None:
@@ -116,24 +130,38 @@ class F7XMLParser(OptaXMLParser):
 
     def _team_from_xml_elm(self, team_elm: Any) -> Team:
         # This should not happen here
-        team_name, team_players = self._parse_team_players(team_elm.attrib["TeamRef"])
+        team_name, team_players = self._parse_team_players(
+            team_elm.attrib["TeamRef"]
+        )
         team = Team(
             team_id=str(team_elm.attrib["TeamRef"].lstrip("t")),
             name=team_name,
-            ground=(Ground.HOME if team_elm.attrib["Side"] == "Home" else Ground.AWAY),
-            starting_formation=FormationType("-".join(list(team_elm.attrib["Formation"]))),
+            ground=(
+                Ground.HOME
+                if team_elm.attrib["Side"] == "Home"
+                else Ground.AWAY
+            ),
+            starting_formation=FormationType(
+                "-".join(list(team_elm.attrib["Formation"]))
+            ),
         )
         players = []
 
         formation = (
-            formation_name_mapping.get(team_elm.attrib["Formation"], FormationType.UNKNOWN)
+            formation_name_mapping.get(
+                team_elm.attrib["Formation"], FormationType.UNKNOWN
+            )
             if "Formation" in team_elm.attrib
             else FormationType.UNKNOWN
         )
 
-        for player_elm in team_elm.find("PlayerLineUp").iterchildren("MatchPlayer"):
+        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
+            "MatchPlayer"
+        ):
             starting_position = (
-                formation_position_mapping[formation][int(player_elm.attrib["Formation_Place"])]
+                formation_position_mapping[formation][
+                    int(player_elm.attrib["Formation_Place"])
+                ]
                 if formation != FormationType.UNKNOWN
                 else PositionType.Unknown
             )
@@ -142,8 +170,12 @@ class F7XMLParser(OptaXMLParser):
                     player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
                     team=team,
                     jersey_no=int(player_elm.attrib["ShirtNumber"]),
-                    first_name=team_players[player_elm.attrib["PlayerRef"]]["first_name"],
-                    last_name=team_players[player_elm.attrib["PlayerRef"]]["last_name"],
+                    first_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "first_name"
+                    ],
+                    last_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "last_name"
+                    ],
                     starting=(player_elm.attrib["Status"] == "Start"),
                     starting_position=starting_position,
                 )
@@ -152,20 +184,28 @@ class F7XMLParser(OptaXMLParser):
         team.players = players
         return team
 
-    def _parse_team_players(self, team_ref: str) -> Tuple[str, Dict[str, Dict[str, str]]]:
+    def _parse_team_players(
+        self, team_ref: str
+    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
         team_elms = list(document_path.find(self.root).iterchildren("Team"))
         for team_elm in team_elms:
             if team_elm.attrib["uID"] == team_ref:
                 team_name = str(team_elm.find("Name"))
                 players = {
                     player_elm.attrib["uID"]: dict(
-                        first_name=str(player_elm.find("PersonName").find("First")),
-                        last_name=str(player_elm.find("PersonName").find("Last")),
+                        first_name=str(
+                            player_elm.find("PersonName").find("First")
+                        ),
+                        last_name=str(
+                            player_elm.find("PersonName").find("Last")
+                        ),
                     )
                     for player_elm in team_elm.iterchildren("Player")
                 }
                 break
         else:
-            raise DeserializationError(f"Could not parse players for {team_ref}")
+            raise DeserializationError(
+                f"Could not parse players for {team_ref}"
+            )
 
         return team_name, players

@@ -46,7 +46,9 @@ class TracabHierarchicalXMLMetadataParser(TracabMetadataParser):
         return periods
 
     def extract_date(self) -> Optional[datetime]:
-        date = datetime.strptime(self.root.match.attrib["dtDate"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        date = datetime.strptime(
+            self.root.match.attrib["dtDate"], "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
         return date
 
     def extract_game_id(self) -> Optional[str]:
@@ -80,8 +82,12 @@ class TracabHierarchicalXMLMetadataParser(TracabMetadataParser):
         return (home_team, away_team)
 
     def extract_pitch_dimensions(self) -> Tuple[float, float]:
-        pitch_size_width = float(self.root.match.attrib["fPitchXSizeMeters"].replace(",", "."))
-        pitch_size_height = float(self.root.match.attrib["fPitchYSizeMeters"].replace(",", "."))
+        pitch_size_width = float(
+            self.root.match.attrib["fPitchXSizeMeters"].replace(",", ".")
+        )
+        pitch_size_height = float(
+            self.root.match.attrib["fPitchYSizeMeters"].replace(",", ".")
+        )
         return pitch_size_width, pitch_size_height
 
     def extract_frame_rate(self) -> int:

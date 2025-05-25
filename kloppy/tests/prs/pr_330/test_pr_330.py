@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
-
-from kloppy import statsperform, wyscout
+from kloppy import wyscout
 from kloppy.domain import EventType, FormationType
 
 
@@ -12,6 +10,8 @@ class TestPR330:
         )
 
         assert len(dataset.find_all("formation_change")) == 1
-        formation_change_event = dataset.get_event_by_id("synthetic-3164-1927028854")
+        formation_change_event = dataset.get_event_by_id(
+            "synthetic-3164-1927028854"
+        )
         assert formation_change_event.event_type == EventType.FORMATION_CHANGE
         assert formation_change_event.formation_type == FormationType.UNKNOWN

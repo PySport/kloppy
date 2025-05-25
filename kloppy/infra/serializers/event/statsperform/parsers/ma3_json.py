@@ -8,10 +8,14 @@ from .base import OptaEvent, OptaJSONParser
 
 def _parse_ma3_datetime(dt_str: str) -> datetime:
     try:
-        return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+        return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+            tzinfo=timezone.utc
+        )
 
     except ValueError:
-        return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        return datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=timezone.utc
+        )
 
 
 class MA3JSONParser(OptaJSONParser):
@@ -34,7 +38,10 @@ class MA3JSONParser(OptaJSONParser):
                 contestant_id=event.get("contestantId"),
                 player_id=event.get("playerId"),
                 outcome=event.get("outcome"),
-                qualifiers={qualifier["qualifierId"]: qualifier.get("value") for qualifier in event["qualifier"]},
+                qualifiers={
+                    qualifier["qualifierId"]: qualifier.get("value")
+                    for qualifier in event["qualifier"]
+                },
             )
             for event in live_data["event"]
         ]

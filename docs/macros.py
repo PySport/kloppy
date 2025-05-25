@@ -3,15 +3,15 @@ Mkdocs-macros module
 """
 
 import copy
-import re
 from pathlib import Path
+import re
 from typing import Any
 
 import griffe
-import pandas as pd
-import yaml
 from griffe import Docstring
 from griffe_generics import GenericsExtension
+import pandas as pd
+import yaml
 
 extensions = griffe.load_extensions(GenericsExtension)
 kloppy = griffe.load(
@@ -31,10 +31,16 @@ _EVENT_DATA_PROVIDERS = {
     "metrica_json": "Metrica (JSON)",
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
-    "providers": {provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS},
+    "providers": {
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
+    },
 }
 _DEFAULT_EVENT_TYPE_SPEC = {
-    "providers": {provider_key: {"status": "unknown"} for provider_key in _EVENT_DATA_PROVIDERS},
+    "providers": {
+        provider_key: {"status": "unknown"}
+        for provider_key in _EVENT_DATA_PROVIDERS
+    },
     "attributes": {
         attr_name: _DEFAULT_EVENT_ATTRIBUTE_SPEC
         for attr_name in [
@@ -72,14 +78,21 @@ def convert_to_md_table(df: pd.DataFrame, markdown_kwargs: dict) -> str:
     """
     # Escape any pipe characters, | to \|
     # See https://github.com/astanin/python-tabulate/issues/241
-    df.columns = [replace_unescaped_pipes(c) if isinstance(c, str) else c for c in df.columns]
+    df.columns = [
+        replace_unescaped_pipes(c) if isinstance(c, str) else c
+        for c in df.columns
+    ]
 
     # Avoid deprecated applymap warning on pandas>=2.0
     # See https://github.com/timvink/mkdocs-table-reader-plugin/issues/55
     if pd.__version__ >= "2.1.0":
-        df = df.map(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
+        df = df.map(
+            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
+        )
     else:
-        df = df.applymap(lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s)
+        df = df.applymap(
+            lambda s: replace_unescaped_pipes(s) if isinstance(s, str) else s
+        )
 
     if "index" not in markdown_kwargs:
         markdown_kwargs["index"] = False
@@ -96,11 +109,15 @@ def render_provider_spec(spec, provider_key):
     if provider_key in spec["providers"]:
         provider_spec = spec["providers"][provider_key]
         status = provider_spec.get("status", "unknown")
-        implementation = provider_spec.get("implementation", "No implementation details")
+        implementation = provider_spec.get(
+            "implementation", "No implementation details"
+        )
         if status == "parsed":
             return f':material-check:{{ title="{implementation}" }}'
         if status == "inferred":
-            return f':material-check-circle-outline:{{ title="{implementation}" }}'
+            return (
+                f':material-check-circle-outline:{{ title="{implementation}" }}'
+            )
         elif status == "not implemented":
             return ':material-progress-helper:{ title="Not implemented" }'
         elif status == "not supported":
@@ -119,12 +136,19 @@ def annotation_to_md(annotation):
         else:
             return "?"
     elif isinstance(annotation, griffe.ExprSubscript):
-        return annotation_to_md(annotation.left) + "\[" + annotation_to_md(annotation.slice) + "\]"
+        return (
+            annotation_to_md(annotation.left)
+            + "\["
+            + annotation_to_md(annotation.slice)
+            + "\]"
+        )
     elif isinstance(annotation, griffe.ExprTuple):
         return ", ".join([annotation_to_md(a) for a in annotation.elements])
     elif isinstance(annotation, str):
         return annotation
-    raise ValueError(f"Unsupported annotation type: {type(annotation)} for {annotation}")
+    raise ValueError(
+        f"Unsupported annotation type: {type(annotation)} for {annotation}"
+    )
 
 
 def _deepupdate(target: dict[Any, Any], src: dict[Any, Any]) -> None:
@@ -207,7 +231,9 @@ def define_env(env):
                 row += [render_provider_spec(event_type_spec, provider_key)]
             data += [row]
 
-        table = convert_to_md_table(pd.DataFrame(data=data, columns=columns), {"index": False})
+        table = convert_to_md_table(
+            pd.DataFrame(data=data, columns=columns), {"index": False}
+        )
 
         return f"""
 <p><span class="doc-section-title">Event types:</span></p>
@@ -239,7 +265,8 @@ def define_env(env):
 
         # Generate checkboxes dynamically
         checkboxes_html = "\n".join(
-            checkbox_template.format(key=key, label=label) for key, label in _EVENT_DATA_PROVIDERS.items()
+            checkbox_template.format(key=key, label=label)
+            for key, label in _EVENT_DATA_PROVIDERS.items()
         )
 
         # Insert checkboxes into the template
@@ -270,7 +297,11 @@ def define_env(env):
         def _create_attribute_row(attr):
             row = [attr.name]
             attr_annotation = class_obj.all_members[attr.name].annotation
-            row += [attr.description + "<br/><br/>**TYPE:** " + annotation_to_md(attr_annotation)]
+            row += [
+                attr.description
+                + "<br/><br/>**TYPE:** "
+                + annotation_to_md(attr_annotation)
+            ]
 
             # Check if there is a record in the spec file for the attribute
             if attr.name in spec["attributes"]:
@@ -293,8 +324,12 @@ def define_env(env):
             row = [""]
             row += [attr_value.name, attr_value.description]
             # Check if there is a record in the spec file for the attribute value
-            if attr.name in spec["attributes"] and attr_value.name in spec["attributes"][attr.name].get("values", {}):
-                attr_value_spec = spec["attributes"][attr.name]["values"][attr_value.name]
+            if attr.name in spec["attributes"] and attr_value.name in spec[
+                "attributes"
+            ][attr.name].get("values", {}):
+                attr_value_spec = spec["attributes"][attr.name]["values"][
+                    attr_value.name
+                ]
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
                     row += [render_provider_spec(attr_value_spec, provider_key)]
             else:
@@ -309,7 +344,11 @@ def define_env(env):
 
             # Get event type attribute docstrings
             attr_docstrings = next(
-                (d.value for d in class_docstring if d.kind.name == "attributes"),
+                (
+                    d.value
+                    for d in class_docstring
+                    if d.kind.name == "attributes"
+                ),
                 list(),
             )
             # Create a row for each attribute
@@ -319,26 +358,43 @@ def define_env(env):
                 attr_annotation = class_obj.all_members[attr.name].annotation
                 attr_anchor = (
                     attr_annotation.canonical_path
-                    if attr_annotation is not None and not isinstance(attr_annotation, str)
+                    if attr_annotation is not None
+                    and not isinstance(attr_annotation, str)
                     else None
                 )
-                if attr_anchor is not None and attr_anchor.startswith("kloppy."):
+                if attr_anchor is not None and attr_anchor.startswith(
+                    "kloppy."
+                ):
                     attr_class_spec = _get_object(attr_anchor)
-                    anchor_is_enum = any([b.name == "Enum" for a in attr_class_spec.resolved_bases for b in a.bases])
+                    anchor_is_enum = any(
+                        [
+                            b.name == "Enum"
+                            for a in attr_class_spec.resolved_bases
+                            for b in a.bases
+                        ]
+                    )
                     if attr_class_spec.docstring and anchor_is_enum:
                         value_data = []
                         attr_class_docstring = _get_docstring(attr_anchor)
                         attr_class_attr_docstrings = next(
-                            (d.value for d in attr_class_docstring if d.kind.name == "attributes"),
+                            (
+                                d.value
+                                for d in attr_class_docstring
+                                if d.kind.name == "attributes"
+                            ),
                             list(),
                         )
                         for attr_value in attr_class_attr_docstrings:
-                            value_data += [_create_attribute_value_row(attr_value)]
+                            value_data += [
+                                _create_attribute_value_row(attr_value)
+                            ]
                         value_data_tables += [
                             (
                                 attr_anchor,
                                 convert_to_md_table(
-                                    pd.DataFrame(data=value_data, columns=columns).drop(columns=["group"]),
+                                    pd.DataFrame(
+                                        data=value_data, columns=columns
+                                    ).drop(columns=["group"]),
                                     {"index": False},
                                 ),
                             )
@@ -349,17 +405,25 @@ def define_env(env):
 
         description = class_docstring[0].value
 
-        table = pd.DataFrame(data=data, columns=columns).drop_duplicates(subset=["Name"], keep="last")
+        table = pd.DataFrame(data=data, columns=columns).drop_duplicates(
+            subset=["Name"], keep="last"
+        )
 
         if not show_providers:
-            table.drop(columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True)
+            table.drop(
+                columns=list(_EVENT_DATA_PROVIDERS.values()), inplace=True
+            )
 
         specific_table = convert_to_md_table(
-            table.loc[table["group"] != "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] != "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
         generic_table = convert_to_md_table(
-            table.loc[table["group"] == "kloppy.domain.Event"].drop(columns=["group"]),
+            table.loc[table["group"] == "kloppy.domain.Event"].drop(
+                columns=["group"]
+            ),
             {"index": False},
         )
 
@@ -412,7 +476,11 @@ def define_env(env):
 
         # Get qualifier value type
         attr_docstrings = next(
-            (d.value for d in qualifier_docstring if d.kind.name == "attributes"),
+            (
+                d.value
+                for d in qualifier_docstring
+                if d.kind.name == "attributes"
+            ),
             list(),
         )
 
@@ -483,7 +551,9 @@ def define_env(env):
 
         description = qualifier_docstring[0].value
 
-        table = convert_to_md_table(pd.DataFrame(data, columns=columns), {"index": False})
+        table = convert_to_md_table(
+            pd.DataFrame(data, columns=columns), {"index": False}
+        )
 
         return f"""
 {render_provider_selectbox()}
@@ -504,8 +574,8 @@ def define_env(env):
 
     @env.macro
     def plot_coordinate_systems(providers=None, cols=3):
-        import math
         from io import StringIO
+        import math
 
         import matplotlib.pyplot as plt
         from mplsoccer import Pitch
@@ -565,7 +635,9 @@ def define_env(env):
             providers = [
                 {
                     "provider": Provider(item["provider"]),
-                    "dataset_type": DatasetType(item["dataset_type"]) if "dataset_type" in item else None,
+                    "dataset_type": DatasetType(item["dataset_type"])
+                    if "dataset_type" in item
+                    else None,
                 }
                 for item in providers
             ]
@@ -586,7 +658,9 @@ def define_env(env):
                 pitch_width=68,
             )
 
-            pitch = Pitch(pitch_type=coordinate_system.to_mplsoccer(), **pitch_kwargs)
+            pitch = Pitch(
+                pitch_type=coordinate_system.to_mplsoccer(), **pitch_kwargs
+            )
             pitch.draw(ax=ax)
 
             if provider.get("dataset_type"):
@@ -623,10 +697,8 @@ def define_env(env):
 
             # Draw axis arrows
             x_axis_length = 0.1 * (
-                coordinate_system.pitch_dimensions.x_dim.max - coordinate_system.pitch_dimensions.x_dim.min
-            )
-            y_axis_length = 0.1 * (
-                coordinate_system.pitch_dimensions.y_dim.max - coordinate_system.pitch_dimensions.y_dim.min
+                coordinate_system.pitch_dimensions.x_dim.max
+                - coordinate_system.pitch_dimensions.x_dim.min
             )
             ax.annotate(
                 "",
@@ -653,7 +725,10 @@ def define_env(env):
                 fontweight="bold",
                 zorder=10,
             )
-            if coordinate_system.vertical_orientation == VerticalOrientation.BOTTOM_TO_TOP:
+            if (
+                coordinate_system.vertical_orientation
+                == VerticalOrientation.BOTTOM_TO_TOP
+            ):
                 ax.text(
                     0,
                     x_axis_length,
@@ -679,8 +754,14 @@ def define_env(env):
                 )
 
             # Add unit and if standardized
-            unit = coordinate_system.pitch_dimensions.unit.name  # e.g., "meters"
-            standardized = "yes" if coordinate_system.pitch_dimensions.standardized else "no"
+            unit = (
+                coordinate_system.pitch_dimensions.unit.name
+            )  # e.g., "meters"
+            standardized = (
+                "yes"
+                if coordinate_system.pitch_dimensions.standardized
+                else "no"
+            )
 
             ax.text(
                 0.5,

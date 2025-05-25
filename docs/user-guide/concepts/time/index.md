@@ -14,7 +14,7 @@ To address these inconsistencies, kloppy introduces a standardized approach to m
 >>> print(goal_event.time)
 ```
 
-A [`Time`][kloppy.domain.Time] entity consist of two parts: a reference to a period and a timestamp relative to the kick-off in that period.
+A \[`Time`\][kloppy.domain.Time] entity consist of two parts: a reference to a period and a timestamp relative to the kick-off in that period.
 
 ```pycon exec="true" source="console" session="concept-time"
 >>> print(f"{goal_event.time.period} - {goal_event.time.timestamp}")
@@ -24,7 +24,7 @@ Let's take a closer look at both of these.
 
 ## Periods
 
-[`Period`][kloppy.domain.Period] entities are used to split up a game into periods.
+\[`Period`\][kloppy.domain.Period] entities are used to split up a game into periods.
 
 ```python exec="true" source="above" session="concept-time"
 from kloppy.domain import Period
@@ -44,9 +44,9 @@ periods = [
 ]
 ```
 
-Ideally, the [`start_timestamp`][kloppy.domain.Period.start_timestamp] and [`end_timestamp`][kloppy.domain.Period.end_timestamp] values are expressed as absolute time-zone aware `datetime` objects, with the [`start_timestamp`][kloppy.domain.Period.start_timestamp] marking the exact time of the period's kick-off and the [`end_timestamp`][kloppy.domain.Period.end_timestamp] marking the time of the final whistle. This allows users to link and sync different datasets (e.g., tracking data with video).
+Ideally, the \[`start_timestamp`\][kloppy.domain.Period.start_timestamp] and \[`end_timestamp`\][kloppy.domain.Period.end_timestamp] values are expressed as absolute time-zone aware `datetime` objects, with the \[`start_timestamp`\][kloppy.domain.Period.start_timestamp] marking the exact time of the period's kick-off and the \[`end_timestamp`\][kloppy.domain.Period.end_timestamp] marking the time of the final whistle. This allows users to link and sync different datasets (e.g., tracking data with video).
 
-However, when absolute times are not available, kloppy falls back to using offsets. In this case, the [`start_timestamp`][kloppy.domain.Period.start_timestamp] is defined as the offset between the start of the data feed for the period and the kick-off of the period, while the [`end_timestamp`][kloppy.domain.Period.end_timestamp] is defined as the offset between the start of the data feed and the final whistle of the period. This ensures that even in the absence of absolute time data, a relative timeline is maintained.
+However, when absolute times are not available, kloppy falls back to using offsets. In this case, the \[`start_timestamp`\][kloppy.domain.Period.start_timestamp] is defined as the offset between the start of the data feed for the period and the kick-off of the period, while the \[`end_timestamp`\][kloppy.domain.Period.end_timestamp] is defined as the offset between the start of the data feed and the final whistle of the period. This ensures that even in the absence of absolute time data, a relative timeline is maintained.
 
 ```python exec="true" source="above" session="concept-time"
 from kloppy.domain import Period
@@ -66,7 +66,7 @@ periods = [
 ]
 ```
 
-Each period also has an [`id`][kloppy.domain.Period.id]. Therefore, kloppy uses the following convention.
+Each period also has an \[`id`\][kloppy.domain.Period.id]. Therefore, kloppy uses the following convention.
 
 - `1`: First half
 - `2`: Second half
@@ -76,8 +76,7 @@ Each period also has an [`id`][kloppy.domain.Period.id]. Therefore, kloppy uses 
 
 ## Timestamps
 
-
-The `timestamp` represents the time elapsed since the start of the period. 
+The `timestamp` represents the time elapsed since the start of the period.
 
 ```pycon exec="true" source="console" session="concept-time"
 >>> rel_time = goal_event.time.timestamp
@@ -93,12 +92,13 @@ The absolute time in the match can be obtained by combining both the `period` an
 
 !!! note
 
-    Kloppy uses the built-in `datetime` objects to handle absolute timestamps and `timedelta` objects to handle relative timestamps. Absolute timestamps always include timezone information.
-
+```
+Kloppy uses the built-in `datetime` objects to handle absolute timestamps and `timedelta` objects to handle relative timestamps. Absolute timestamps always include timezone information.
+```
 
 ## Operations on time
 
-The [`Time`][kloppy.domain.Time] class supports mathematical operations that allow navigation across different periods and timestamps seamlessly.
+The \[`Time`\][kloppy.domain.Time] class supports mathematical operations that allow navigation across different periods and timestamps seamlessly.
 
 ### Subtraction (`-`)
 
@@ -118,6 +118,7 @@ duration = time_obj1 - time_obj2
 ```
 
 ### Addition (`+`)
+
 You can add a `timedelta` to a `Time`, resulting in a new `Time`. If the addition moves the `Time` beyond the end of the current period, it transitions into the next period automatically.
 
 **Examples:**

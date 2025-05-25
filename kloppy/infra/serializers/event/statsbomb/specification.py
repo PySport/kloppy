@@ -139,7 +139,11 @@ class TypesEnumMeta(EnumMeta):
             if value["id"] not in cls._value2member_map_:
                 raise DeserializationError(
                     "Unknown StatsBomb {}: {}/{}".format(
-                        (cls.__qualname__.replace("_", " ").replace(".", " ").title()),
+                        (
+                            cls.__qualname__.replace("_", " ")
+                            .replace(".", " ")
+                            .title()
+                        ),
                         value["id"],
                         value["name"],
                     )
@@ -148,7 +152,11 @@ class TypesEnumMeta(EnumMeta):
         elif value not in cls._value2member_map_:
             raise DeserializationError(
                 "Unknown StatsBomb {}: {}".format(
-                    (cls.__qualname__.replace("_", " ").replace(".", " ").title()),
+                    (
+                        cls.__qualname__.replace("_", " ")
+                        .replace(".", " ")
+                        .title()
+                    ),
                     value,
                 )
             )
@@ -247,9 +255,18 @@ class EVENT:
     def set_refs(self, periods, teams, events):
         self.period = get_period_by_id(self.raw_event["period"], periods)
         self.team = get_team_by_id(self.raw_event["team"]["id"], teams)
-        self.possession_team = get_team_by_id(self.raw_event["possession_team"]["id"], teams)
-        self.player = self.team.get_player_by_id(self.raw_event["player"]["id"]) if "player" in self.raw_event else None
-        self.related_events = [events.get(event_id) for event_id in self.raw_event.get("related_events", [])]
+        self.possession_team = get_team_by_id(
+            self.raw_event["possession_team"]["id"], teams
+        )
+        self.player = (
+            self.team.get_player_by_id(self.raw_event["player"]["id"])
+            if "player" in self.raw_event
+            else None
+        )
+        self.related_events = [
+            events.get(event_id)
+            for event_id in self.raw_event.get("related_events", [])
+        ]
         return self
 
     def deserialize(self, event_factory: EventFactory) -> List[Event]:
@@ -265,8 +282,12 @@ class EVENT:
 
         # create events
         base_events = self._create_events(event_factory, **generic_event_kwargs)
-        aerial_won_events = self._create_aerial_won_event(event_factory, **generic_event_kwargs)
-        ball_out_events = self._create_ball_out_event(event_factory, **generic_event_kwargs)
+        aerial_won_events = self._create_aerial_won_event(
+            event_factory, **generic_event_kwargs
+        )
+        ball_out_events = self._create_ball_out_event(
+            event_factory, **generic_event_kwargs
+        )
 
         # add qualifiers
         for event in aerial_won_events + base_events:
@@ -300,11 +321,18 @@ class EVENT:
             "statistics": [game_state_value] if game_state_value else [],
         }
 
-    def _create_aerial_won_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_aerial_won_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         """Add possible aerial won - Applicable to multiple event types"""
         for type_name in ["shot", "clearance", "miscontrol", "pass"]:
-            if type_name in self.raw_event and "aerial_won" in self.raw_event[type_name]:
-                generic_event_kwargs["event_id"] = f"duel-{generic_event_kwargs['event_id']}"
+            if (
+                type_name in self.raw_event
+                and "aerial_won" in self.raw_event[type_name]
+            ):
+                generic_event_kwargs["event_id"] = (
+                    f"duel-{generic_event_kwargs['event_id']}"
+                )
                 duel_qualifiers = [
                     DuelQualifier(value=DuelType.LOOSE_BALL),
                     DuelQualifier(value=DuelType.AERIAL),
@@ -317,9 +345,13 @@ class EVENT:
                 return [duel_event]
         return []
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         if self.raw_event.get("out", False):
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -339,14 +371,18 @@ class EVENT:
         return event
 
     def _add_under_pressure_qualifier(self, event: Event) -> Event:
-        if ("under_pressure" in self.raw_event) and (self.raw_event["under_pressure"]):
+        if ("under_pressure" in self.raw_event) and (
+            self.raw_event["under_pressure"]
+        ):
             q = UnderPressureQualifier(True)
             event.qualifiers = event.qualifiers or []
             event.qualifiers.append(q)
 
         return event
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         generic_event = event_factory.build_generic(
             result=None,
             qualifiers=None,
@@ -387,7 +423,9 @@ class PASS(EVENT):
         OUTSWINGING = 105
         STRAIGHT = 107
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         team = generic_event_kwargs["team"]
         timestamp = generic_event_kwargs["timestamp"]
         pass_dict = self.raw_event["pass"]
@@ -398,7 +436,9 @@ class PASS(EVENT):
             pass_dict["end_location"],
             self.fidelity_version,
         )
-        receive_timestamp = timestamp + timedelta(seconds=self.raw_event.get("duration", 0.0))
+        receive_timestamp = timestamp + timedelta(
+            seconds=self.raw_event.get("duration", 0.0)
+        )
 
         if "outcome" in pass_dict:
             outcome_id = pass_dict["outcome"]["id"]
@@ -412,7 +452,9 @@ class PASS(EVENT):
             result = outcome_mapping.get(PASS.OUTCOME(outcome_id))
         else:
             result = PassResult.COMPLETE
-            receiver_player = team.get_player_by_id(pass_dict["recipient"]["id"])
+            receiver_player = team.get_player_by_id(
+                pass_dict["recipient"]["id"]
+            )
 
         qualifiers = (
             _get_pass_qualifiers(pass_dict)
@@ -431,7 +473,9 @@ class PASS(EVENT):
 
         # if pass is an interception, insert interception prior to pass event
         if "type" in pass_dict:
-            generic_event_kwargs["event_id"] = f"interception-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"interception-{generic_event_kwargs['event_id']}"
+            )
             type_id = PASS.TYPE(pass_dict["type"]["id"])
             if type_id == PASS.TYPE.ONE_TOUCH_INTERCEPTION:
                 interception_event = event_factory.build_interception(
@@ -443,7 +487,9 @@ class PASS(EVENT):
 
         return [pass_event]
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         pass_dict = self.raw_event["pass"]
         if (
             self.raw_event.get("out", False)
@@ -452,9 +498,14 @@ class PASS(EVENT):
         ):
             # If there is a related (failed) ball receipt event recorded for
             # the pass, we create the ball out event from that event.
-            if any(isinstance(related_event, BALL_RECEIPT) for related_event in self.related_events):
+            if any(
+                isinstance(related_event, BALL_RECEIPT)
+                for related_event in self.related_events
+            ):
                 return []
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             generic_event_kwargs["coordinates"] = parse_coordinates(
                 pass_dict["end_location"],
@@ -473,7 +524,9 @@ class PASS(EVENT):
 class BALL_RECEIPT(EVENT):
     """StatsBomb 42/Ball Receipt* event."""
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         for related_event in self.related_events:
             if isinstance(related_event, PASS):
                 pass_dict = related_event.raw_event.get("pass", {})
@@ -482,7 +535,9 @@ class BALL_RECEIPT(EVENT):
                     or "outcome" in pass_dict
                     and PASS.OUTCOME(pass_dict["outcome"]) == PASS.OUTCOME.OUT
                 ):
-                    generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+                    generic_event_kwargs["event_id"] = (
+                        f"out-{generic_event_kwargs['event_id']}"
+                    )
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     generic_event_kwargs["coordinates"] = parse_coordinates(
                         pass_dict["end_location"],
@@ -524,7 +579,9 @@ class SHOT(EVENT):
         self.fidelity_version = data_version.shot_fidelity_version
         return self
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         shot_dict = self.raw_event["shot"]
 
         outcome_id = SHOT.OUTCOME(shot_dict["outcome"]["id"])
@@ -545,7 +602,9 @@ class SHOT(EVENT):
         if result is None:
             raise DeserializationError(f"Unknown shot outcome: {outcome_id}")
 
-        qualifiers = _get_set_piece_qualifiers(EVENT_TYPE.SHOT, shot_dict) + _get_body_part_qualifiers(shot_dict)
+        qualifiers = _get_set_piece_qualifiers(
+            EVENT_TYPE.SHOT, shot_dict
+        ) + _get_body_part_qualifiers(shot_dict)
 
         for statistic_cls, prop_name in {
             ExpectedGoals: "statsbomb_xg",
@@ -553,7 +612,9 @@ class SHOT(EVENT):
         }.items():
             value = shot_dict.get(prop_name, None)
             if value is not None:
-                generic_event_kwargs["statistics"].append(statistic_cls(value=value))
+                generic_event_kwargs["statistics"].append(
+                    statistic_cls(value=value)
+                )
 
         shot_event = event_factory.build_shot(
             result=result,
@@ -567,7 +628,9 @@ class SHOT(EVENT):
 
         return [shot_event]
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         shot_dict = self.raw_event["shot"]
         if (
             self.raw_event.get("out", False)
@@ -576,9 +639,14 @@ class SHOT(EVENT):
         ):
             # If there is a related goalkeeper event recorded for
             # the shot, we create the ball out event from that event.
-            if any(isinstance(related_event, GOALKEEPER) for related_event in self.related_events):
+            if any(
+                isinstance(related_event, GOALKEEPER)
+                for related_event in self.related_events
+            ):
                 return []
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             generic_event_kwargs["coordinates"] = parse_coordinates(
                 shot_dict["end_location"],
@@ -606,7 +674,9 @@ class INTERCEPTION(EVENT):
         SUCCESS_IN_PLAY = 16
         SUCCESS_OUT = 17
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         interception_dict = self.raw_event.get("interception", {})
 
         outcome = interception_dict.get("outcome", {})
@@ -628,7 +698,9 @@ class INTERCEPTION(EVENT):
         ]:
             result = InterceptionResult.LOST
         else:
-            raise DeserializationError(f"Unknown interception outcome: {outcome.get('name')}({outcome_id})")
+            raise DeserializationError(
+                f"Unknown interception outcome: {outcome.get('name')}({outcome_id})"
+            )
 
         interception_event = event_factory.build_interception(
             result=result,
@@ -638,7 +710,9 @@ class INTERCEPTION(EVENT):
 
         return [interception_event]
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         interception_dict = self.raw_event.get("interception", {})
         if (
             self.raw_event.get("out", False)
@@ -649,7 +723,9 @@ class INTERCEPTION(EVENT):
                 INTERCEPTION.OUTCOME.SUCCESS_OUT,
             ]
         ):
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -663,7 +739,9 @@ class INTERCEPTION(EVENT):
 class OWN_GOAL_AGAINST(EVENT):
     """StatsBomb 20/Own goal against event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         shot_event = event_factory.build_shot(
             result=ShotResult.OWN_GOAL,
             qualifiers=None,
@@ -675,14 +753,18 @@ class OWN_GOAL_AGAINST(EVENT):
 class OWN_GOAL_FOR(EVENT):
     """StatsBomb 25/Own goal for event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         return []
 
 
 class CLEARANCE(EVENT):
     """StatsBomb 9/Clearance event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         clearance_dict = self.raw_event.get("clearance", {})
         # Old versions of the data (< v1.1) don't define extra attributes for clearances
         qualifiers = _get_body_part_qualifiers(clearance_dict)
@@ -699,7 +781,9 @@ class CLEARANCE(EVENT):
 class MISCONTROL(EVENT):
     """StatsBomb 38/Miscontrol event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         miscontrol_event = event_factory.build_miscontrol(
             result=None,
             qualifiers=None,
@@ -716,7 +800,9 @@ class DRIBBLE(EVENT):
         COMPLETE = 8
         INCOMPLETE = 9
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         dribble_dict = self.raw_event.get("dribble", {})
         result_mapping = {
             DRIBBLE.OUTCOME.INCOMPLETE: TakeOnResult.INCOMPLETE,
@@ -732,7 +818,9 @@ class DRIBBLE(EVENT):
             for related_event in self.related_events:
                 if isinstance(related_event, DUEL):
                     duel_dict = related_event.raw_event.get("duel", {})
-                    if "outcome" in duel_dict and DUEL.OUTCOME(duel_dict["outcome"]) in [
+                    if "outcome" in duel_dict and DUEL.OUTCOME(
+                        duel_dict["outcome"]
+                    ) in [
                         DUEL.OUTCOME.SUCCESS_OUT,
                         DUEL.OUTCOME.LOST_OUT,
                     ]:
@@ -750,12 +838,15 @@ class DRIBBLE(EVENT):
 class CARRY(EVENT):
     """StatsBomb 43/Carry event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         timestamp = generic_event_kwargs["timestamp"]
         carry_dict = self.raw_event["carry"]
         carry_event = event_factory.build_carry(
             qualifiers=None,
-            end_timestamp=timestamp + timedelta(seconds=self.raw_event.get("duration", 0)),
+            end_timestamp=timestamp
+            + timedelta(seconds=self.raw_event.get("duration", 0)),
             result=CarryResult.COMPLETE,
             end_coordinates=parse_coordinates(
                 carry_dict["end_location"],
@@ -782,7 +873,9 @@ class DUEL(EVENT):
         SUCCESS_IN_PLAY = 16
         SUCCESS_OUT = 17
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         duel_dict = self.raw_event.get("duel", {})
 
         # Get duel qualifiers
@@ -805,7 +898,8 @@ class DUEL(EVENT):
         ]
         result = (
             DuelResult.WON
-            if type_id != DUEL.TYPE.AERIAL_LOST and DUEL.OUTCOME(duel_dict.get("outcome", {})) in duel_won_outcomes
+            if type_id != DUEL.TYPE.AERIAL_LOST
+            and DUEL.OUTCOME(duel_dict.get("outcome", {})) in duel_won_outcomes
             else DuelResult.LOST
         )
 
@@ -816,14 +910,19 @@ class DUEL(EVENT):
         )
         return [duel_event]
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         duel_dict = self.raw_event.get("duel", {})
         if (
             self.raw_event.get("out", False)
             or "outcome" in duel_dict
-            and DUEL.OUTCOME(duel_dict["outcome"]) in [DUEL.OUTCOME.LOST_OUT, DUEL.OUTCOME.SUCCESS_OUT]
+            and DUEL.OUTCOME(duel_dict["outcome"])
+            in [DUEL.OUTCOME.LOST_OUT, DUEL.OUTCOME.SUCCESS_OUT]
         ):
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -843,7 +942,9 @@ class FIFTY_FIFTY(EVENT):
         SUCCESS_TO_TEAM = 3
         SUCCESS_TO_OPPONENT = 2
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         duel_dict = self.raw_event.get("50_50", {})
 
         # Get duel qualifiers
@@ -859,7 +960,8 @@ class FIFTY_FIFTY(EVENT):
         ]
         result = (
             DuelResult.WON
-            if FIFTY_FIFTY.OUTCOME(duel_dict.get("outcome", {})) in duel_won_outcomes
+            if FIFTY_FIFTY.OUTCOME(duel_dict.get("outcome", {}))
+            in duel_won_outcomes
             else DuelResult.LOST
         )
 
@@ -887,7 +989,9 @@ class GOALKEEPER(EVENT):
         SHOT_FACED = 32
         SHOT_SAVED = 33
         SHOT_SAVED_OFF_TARGET = 113
-        SHOT_SAVED_TO_POST = 114  # A shot saved by the goalkeeper that hits the post
+        SHOT_SAVED_TO_POST = (
+            114  # A shot saved by the goalkeeper that hits the post
+        )
         SMOTHER = 34
 
     class KEEPER_SWEEPER:
@@ -897,7 +1001,9 @@ class GOALKEEPER(EVENT):
             WON = 4
             SUCCESS = 15
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         goalkeeper_dict = self.raw_event["goalkeeper"]
         generic_event_kwargs = self._parse_generic_kwargs()
 
@@ -935,19 +1041,31 @@ class GOALKEEPER(EVENT):
         outcome_id = goalkeeper_dict.get("outcome", {}).get("id")
         qualifiers = []
         if type_id in save_event_types:
-            qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+            )
         elif type_id == GOALKEEPER.TYPE.SMOTHER:
-            qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER))
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER)
+            )
         elif type_id == GOALKEEPER.TYPE.PUNCH:
-            qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.PUNCH))
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.PUNCH)
+            )
         elif type_id == GOALKEEPER.TYPE.COLLECTED:
-            qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM))
+            qualifiers.append(
+                GoalkeeperQualifier(value=GoalkeeperActionType.CLAIM)
+            )
         elif type_id == GOALKEEPER.TYPE.KEEPER_SWEEPER:
-            outcome_id = GOALKEEPER.KEEPER_SWEEPER.OUTCOME(goalkeeper_dict.get("outcome", {}).get("id"))
+            outcome_id = GOALKEEPER.KEEPER_SWEEPER.OUTCOME(
+                goalkeeper_dict.get("outcome", {}).get("id")
+            )
             if outcome_id == GOALKEEPER.KEEPER_SWEEPER.OUTCOME.CLAIM:
                 # a goalkeeper can only pick up the ball with his hands
                 if hands_used or bodypart_missing:
-                    qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.PICK_UP))
+                    qualifiers.append(
+                        GoalkeeperQualifier(value=GoalkeeperActionType.PICK_UP)
+                    )
                 # otherwise it's a recovery
                 else:
                     recovery = event_factory.build_recovery(
@@ -970,7 +1088,9 @@ class GOALKEEPER(EVENT):
                     return [clearance]
                 # otherwise, it's a save
                 else:
-                    qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
+                    qualifiers.append(
+                        GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)
+                    )
 
         if qualifiers:
             goalkeeper_event = event_factory.build_goalkeeper_event(
@@ -988,14 +1108,18 @@ class GOALKEEPER(EVENT):
         )
         return [generic_event]
 
-    def _create_ball_out_event(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_ball_out_event(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         goalkeeper_dict = self.raw_event["goalkeeper"]
         if (
             self.raw_event.get("out", False)
             or "outcome" in goalkeeper_dict
             and "Out" in goalkeeper_dict["outcome"]["name"]
         ):
-            generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+            generic_event_kwargs["event_id"] = (
+                f"out-{generic_event_kwargs['event_id']}"
+            )
             generic_event_kwargs["ball_state"] = BallState.DEAD
             ball_out_event = event_factory.build_ball_out(
                 result=None,
@@ -1009,9 +1133,12 @@ class GOALKEEPER(EVENT):
                 if (
                     related_event.raw_event.get("out", False)
                     or "outcome" in shot_dict
-                    and SHOT.OUTCOME(shot_dict["outcome"]) == SHOT.OUTCOME.OFF_TARGET
+                    and SHOT.OUTCOME(shot_dict["outcome"])
+                    == SHOT.OUTCOME.OFF_TARGET
                 ):
-                    generic_event_kwargs["event_id"] = f"out-{generic_event_kwargs['event_id']}"
+                    generic_event_kwargs["event_id"] = (
+                        f"out-{generic_event_kwargs['event_id']}"
+                    )
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     generic_event_kwargs["coordinates"] = parse_coordinates(
                         shot_dict["end_location"],
@@ -1032,18 +1159,26 @@ class GOALKEEPER(EVENT):
 class SUBSTITUTION(EVENT):
     """StatsBomb 19/Substitution event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         team = generic_event_kwargs["team"]
         substitution_dict = self.raw_event["substitution"]
 
         replacement_player_id = substitution_dict["replacement"]["id"]
         replacement_player = next(
-            (player for player in team.players if player.player_id == str(replacement_player_id)),
+            (
+                player
+                for player in team.players
+                if player.player_id == str(replacement_player_id)
+            ),
             None,
         )
 
         if replacement_player is None:
-            raise DeserializationError(f"Could not find replacement player {replacement_player_id}")
+            raise DeserializationError(
+                f"Could not find replacement player {replacement_player_id}"
+            )
 
         substitution_event = event_factory.build_substitution(
             result=None,
@@ -1062,7 +1197,9 @@ class BAD_BEHAVIOUR(EVENT):
         SECOND_YELLOW = 6
         RED = 5
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         bad_behaviour_dict = self.raw_event.get("bad_behaviour", {})
         card_type = _get_card_type(EVENT_TYPE.BAD_BEHAVIOUR, bad_behaviour_dict)
         if card_type:
@@ -1091,9 +1228,13 @@ class FOUL_COMMITTED(EVENT):
         SECOND_YELLOW = 6
         RED = 5
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         foul_committed_dict = self.raw_event.get("foul_committed", {})
-        card_type = _get_card_type(EVENT_TYPE.FOUL_COMMITTED, foul_committed_dict)
+        card_type = _get_card_type(
+            EVENT_TYPE.FOUL_COMMITTED, foul_committed_dict
+        )
         if card_type:
             foul_committed_event = event_factory.build_foul_committed(
                 result=None,
@@ -1119,7 +1260,9 @@ class FOUL_COMMITTED(EVENT):
 class PLAYER_ON(EVENT):
     """StatsBomb 26/Player on event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         player_on_event = event_factory.build_player_on(
             result=None,
             qualifiers=None,
@@ -1131,7 +1274,9 @@ class PLAYER_ON(EVENT):
 class PLAYER_OFF(EVENT):
     """StatsBomb 27/Player off event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         player_off_event = event_factory.build_player_off(
             result=None,
             qualifiers=None,
@@ -1143,7 +1288,9 @@ class PLAYER_OFF(EVENT):
 class BALL_RECOVERY(EVENT):
     """StatsBomb 2/Ball recovery event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         recovery_dict = self.raw_event.get("ball_recovery", {})
         recovery_failure = recovery_dict.get("recovery_failure", False)
         if recovery_failure:
@@ -1167,8 +1314,12 @@ class BALL_RECOVERY(EVENT):
 class PRESSURE(EVENT):
     """StatsBomb 17/Pressure event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
-        end_timestamp = generic_event_kwargs["timestamp"] + timedelta(seconds=self.raw_event.get("duration", 0.0))
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        end_timestamp = generic_event_kwargs["timestamp"] + timedelta(
+            seconds=self.raw_event.get("duration", 0.0)
+        )
 
         pressure_event = event_factory.build_pressure_event(
             result=None,
@@ -1182,14 +1333,16 @@ class PRESSURE(EVENT):
 class TACTICAL_SHIFT(EVENT):
     """StatsBomb 36/Tactical shift event."""
 
-    def _create_events(self, event_factory: EventFactory, **generic_event_kwargs) -> List[Event]:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
         formation = FORMATIONS[self.raw_event["tactics"]["formation"]]
         player_positions = {}
         team = generic_event_kwargs["team"]
         for player in self.raw_event["tactics"]["lineup"]:
-            player_positions[team.get_player_by_id(player["player"]["id"])] = position_types_mapping[
-                player["position"]["id"]
-            ]
+            player_positions[team.get_player_by_id(player["player"]["id"])] = (
+                position_types_mapping[player["position"]["id"]]
+            )
 
         formation_change_event = event_factory.build_formation_change(
             result=None,
@@ -1201,7 +1354,9 @@ class TACTICAL_SHIFT(EVENT):
         return [formation_change_event]
 
 
-def _get_card_type(event_type: EVENT_TYPE, event_dict: Dict) -> Optional[CardType]:
+def _get_card_type(
+    event_type: EVENT_TYPE, event_dict: Dict
+) -> Optional[CardType]:
     sb_to_kloppy_card_mappings = {
         FOUL_COMMITTED.CARD.FIRST_YELLOW: CardType.FIRST_YELLOW,
         FOUL_COMMITTED.CARD.SECOND_YELLOW: CardType.SECOND_YELLOW,
@@ -1280,7 +1435,9 @@ def _get_pass_qualifiers(pass_dict: Dict) -> List[PassQualifier]:
     return qualifiers
 
 
-def _get_set_piece_qualifiers(event_type: EVENT_TYPE, event_dict: Dict) -> List[SetPieceQualifier]:
+def _get_set_piece_qualifiers(
+    event_type: EVENT_TYPE, event_dict: Dict
+) -> List[SetPieceQualifier]:
     sb_to_kloppy_set_piece_mapping = {
         PASS.TYPE.CORNER_KICK: SetPieceType.CORNER_KICK,
         SHOT.TYPE.CORNER_KICK: SetPieceType.CORNER_KICK,

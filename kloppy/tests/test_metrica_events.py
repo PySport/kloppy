@@ -1,17 +1,18 @@
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 import pytest
 
 from kloppy import metrica
 from kloppy.domain import (
-    Orientation,
-    Provider,
-    SetPieceType,
     BodyPart,
-    EventDataset,
-    Point,
-    SetPieceQualifier,
     BodyPartQualifier,
+    EventDataset,
+    Orientation,
+    Point,
+    Provider,
+    SetPieceQualifier,
+    SetPieceType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -45,22 +46,30 @@ class TestMetricaEvents:
         assert player.starting_position.name == "Goalkeeper"
 
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == timedelta(seconds=18)
-        assert dataset.metadata.periods[0].end_timestamp == timedelta(seconds=19.96)
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=18
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=19.96
+        )
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == timedelta(seconds=26)
-        assert dataset.metadata.periods[1].end_timestamp == timedelta(seconds=27.96)
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=26
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=27.96
+        )
 
     def test_timestamps(self, dataset: EventDataset):
         """It should parse the timestamps correctly."""
         # note: these timestamps are odd because the metadata and event data
         # are from different matches
-        assert dataset.events[0].timestamp == timedelta(seconds=14.44) - timedelta(
-            seconds=450 / 25
-        )  # kickoff first half
-        assert dataset.events[1749].timestamp == timedelta(seconds=2803.6) - timedelta(
-            seconds=650 / 25
-        )  # kickoff second half
+        assert dataset.events[0].timestamp == timedelta(
+            seconds=14.44
+        ) - timedelta(seconds=450 / 25)  # kickoff first half
+        assert dataset.events[1749].timestamp == timedelta(
+            seconds=2803.6
+        ) - timedelta(seconds=650 / 25)  # kickoff second half
 
     def test_coordinates(self, dataset: EventDataset):
         """It should parse the coordinates of events correctly."""
@@ -81,9 +90,15 @@ class TestMetricaEvents:
         kick_off_event = dataset.get_event_by_id("1")
         assert kick_off_event is None
         pass_after_kick_off = dataset.get_event_by_id("2")
-        assert pass_after_kick_off.get_qualifier_value(SetPieceQualifier) == SetPieceType.KICK_OFF
+        assert (
+            pass_after_kick_off.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.KICK_OFF
+        )
         # or a shot
         free_kick_event = dataset.get_event_by_id("130")
         assert free_kick_event is None
         shot_after_free_kick = dataset.get_event_by_id("131")
-        assert shot_after_free_kick.get_qualifier_value(SetPieceQualifier) == SetPieceType.FREE_KICK
+        assert (
+            shot_after_free_kick.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.FREE_KICK
+        )

@@ -3,15 +3,15 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from kloppy.domain import Ground, Period, Player, Score, Team, PositionType
+from kloppy.domain import Ground, Period, Player, PositionType, Score, Team
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaJSONParser
 from ..formation_mapping import (
+    FormationType,
     formation_name_mapping,
     formation_position_mapping,
-    FormationType,
 )
+from .base import OptaJSONParser
 
 
 class MA1JSONParser(OptaJSONParser):
@@ -34,12 +34,14 @@ class MA1JSONParser(OptaJSONParser):
             parsed_periods.append(
                 Period(
                     id=period["id"],
-                    start_timestamp=datetime.strptime(period_start_raw, "%Y-%m-%dT%H:%M:%SZ").replace(
-                        tzinfo=timezone.utc
-                    )
+                    start_timestamp=datetime.strptime(
+                        period_start_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=timezone.utc)
                     if period_start_raw
                     else None,
-                    end_timestamp=datetime.strptime(period_end_raw, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                    end_timestamp=datetime.strptime(
+                        period_end_raw, "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=timezone.utc)
                     if period_end_raw
                     else None,
                 )
@@ -62,7 +64,11 @@ class MA1JSONParser(OptaJSONParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=(Ground.HOME if parsed_team["ground"] == "home" else Ground.AWAY),
+                ground=(
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
+                ),
             )
 
         for parsed_player in self._parse_players():
@@ -100,7 +106,9 @@ class MA1JSONParser(OptaJSONParser):
     def extract_date(self) -> Optional[datetime]:
         """Return the date of the game."""
         if "matchInfo" in self.root and "date" in self.root["matchInfo"]:
-            return datetime.strptime(self.root["matchInfo"]["date"], "%Y-%m-%dZ").replace(tzinfo=timezone.utc)
+            return datetime.strptime(
+                self.root["matchInfo"]["date"], "%Y-%m-%dZ"
+            ).replace(tzinfo=timezone.utc)
         else:
             return None
 
@@ -129,7 +137,9 @@ class MA1JSONParser(OptaJSONParser):
         for line_up in line_ups:
             team_id = line_up["contestantId"]
             raw_formation = line_up["formationUsed"]
-            formation = formation_name_mapping.get(raw_formation, FormationType.UNKNOWN)
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
             team_formations[team_id] = formation
 
         for team in teams:
@@ -151,14 +161,18 @@ class MA1JSONParser(OptaJSONParser):
         for line_up in line_ups:
             team_id = line_up["contestantId"]
             raw_formation = line_up["formationUsed"]
-            formation = formation_name_mapping.get(raw_formation, FormationType.UNKNOWN)
+            formation = formation_name_mapping.get(
+                raw_formation, FormationType.UNKNOWN
+            )
 
             players = line_up["player"]
             for player in players:
                 player_id = player["playerId"]
                 if "formationPlace" in player:
                     player_position = (
-                        formation_position_mapping[formation][int(player["formationPlace"])]
+                        formation_position_mapping[formation][
+                            int(player["formationPlace"])
+                        ]
                         if formation != FormationType.UNKNOWN
                         else PositionType.Unknown
                     )
@@ -172,8 +186,12 @@ class MA1JSONParser(OptaJSONParser):
                         "team_id": team_id,
                         "jersey_no": player["shirtNumber"],
                         "name": player["matchName"],
-                        "first_name": player["shortFirstName"] if "shortFirstName" in player else player["firstName"],
-                        "last_name": player["shortLastName"] if "shortLastName" in player else player["lastName"],
+                        "first_name": player["shortFirstName"]
+                        if "shortFirstName" in player
+                        else player["firstName"],
+                        "last_name": player["shortLastName"]
+                        if "shortLastName" in player
+                        else player["lastName"],
                         "starting": starting,
                         "position": player_position,
                     }

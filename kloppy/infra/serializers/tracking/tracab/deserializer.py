@@ -1,6 +1,6 @@
 import logging
-import warnings
 from typing import IO, NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
@@ -53,12 +53,20 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
             game_id = metadata_parser.extract_game_id()
             orientation = metadata_parser.extract_orientation()
 
-        transformer = self.get_transformer(pitch_length=pitch_length, pitch_width=pitch_width)
+        transformer = self.get_transformer(
+            pitch_length=pitch_length, pitch_width=pitch_width
+        )
 
         with performance_logging("Loading data", logger=logger):
-            raw_data_parser = get_raw_data_parser(inputs.raw_data, periods, teams, frame_rate)
+            raw_data_parser = get_raw_data_parser(
+                inputs.raw_data, periods, teams, frame_rate
+            )
             frames = []
-            for n, frame in enumerate(raw_data_parser.extract_frames(self.sample_rate, self.only_alive)):
+            for n, frame in enumerate(
+                raw_data_parser.extract_frames(
+                    self.sample_rate, self.only_alive
+                )
+            ):
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
@@ -67,14 +75,19 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
 
         if orientation is None:
             try:
-                first_frame = next(frame for frame in frames if frame.period.id == 1)
+                first_frame = next(
+                    frame for frame in frames if frame.period.id == 1
+                )
                 orientation = (
                     Orientation.HOME_AWAY
-                    if attacking_direction_from_frame(first_frame) == AttackingDirection.LTR
+                    if attacking_direction_from_frame(first_frame)
+                    == AttackingDirection.LTR
                     else Orientation.AWAY_HOME
                 )
             except StopIteration:
-                warnings.warn("Could not determine orientation of dataset, defaulting to NOT_SET")
+                warnings.warn(
+                    "Could not determine orientation of dataset, defaulting to NOT_SET"
+                )
                 orientation = Orientation.NOT_SET
 
         metadata = Metadata(

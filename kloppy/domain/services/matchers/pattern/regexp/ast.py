@@ -59,9 +59,13 @@ class Node(Generic[Tok, Out]):
 
         if isinstance(other, int):
             if other < 1:
-                raise ValueError("Cannot repeat item a negative number of times")
+                raise ValueError(
+                    "Cannot repeat item a negative number of times"
+                )
 
-            return reduce(lambda a, b: a + b, [replace(self) for _ in range(0, other)])
+            return reduce(
+                lambda a, b: a + b, [replace(self) for _ in range(0, other)]
+            )
         elif isinstance(other, slice):
             parts = []
 

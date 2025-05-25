@@ -12,10 +12,7 @@
       "relatedEventId": 1927028859,
       "type": {
         "primary": "pass",
-        "secondary": [
-          "back_pass",
-          "short_or_medium_pass"
-        ]
+        "secondary": ["back_pass", "short_or_medium_pass"]
       },
       "location": {
         "x": 51,
@@ -59,9 +56,7 @@
       "possession": {
         "id": 1927028854,
         "duration": "8.693585",
-        "types": [
-          "attack"
-        ],
+        "types": ["attack"],
         "eventsNumber": 7,
         "eventIndex": 0,
         "startLocation": {
@@ -148,9 +143,7 @@
       "possession": {
         "id": 1927028854,
         "duration": "8.693585",
-        "types": [
-          "attack"
-        ],
+        "types": ["attack"],
         "eventsNumber": 7,
         "eventIndex": 1,
         "startLocation": {

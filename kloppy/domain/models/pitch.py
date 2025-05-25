@@ -1,8 +1,8 @@
-import warnings
 from dataclasses import dataclass
 from enum import Enum
 from math import sqrt
 from typing import Optional
+import warnings
 
 from kloppy.exceptions import MissingDimensionError
 
@@ -50,8 +50,12 @@ class Unit(Enum):
 
         factor_to_meter = conversion_factors.get((Unit.METERS, self))
         factor_from_meter = conversion_factors.get((Unit.METERS, to_unit))
-        assert factor_to_meter is not None, f"Conversion factor for {self} is not defined"
-        assert factor_from_meter is not None, f"Conversion factor for {to_unit} is not defined"
+        assert factor_to_meter is not None, (
+            f"Conversion factor for {self} is not defined"
+        )
+        assert factor_from_meter is not None, (
+            f"Conversion factor for {to_unit} is not defined"
+        )
         return value / factor_to_meter * factor_from_meter
 
 
@@ -173,25 +177,53 @@ class PitchDimensions:
         """
         return PitchDimensions(
             x_dim=Dimension(
-                min=(self.unit.convert(to_unit, self.x_dim.min) if self.x_dim.min is not None else None),
-                max=(self.unit.convert(to_unit, self.x_dim.max) if self.x_dim.max is not None else None),
+                min=(
+                    self.unit.convert(to_unit, self.x_dim.min)
+                    if self.x_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.x_dim.max)
+                    if self.x_dim.max is not None
+                    else None
+                ),
             ),
             y_dim=Dimension(
-                min=(self.unit.convert(to_unit, self.y_dim.min) if self.y_dim.min is not None else None),
-                max=(self.unit.convert(to_unit, self.y_dim.max) if self.y_dim.max is not None else None),
+                min=(
+                    self.unit.convert(to_unit, self.y_dim.min)
+                    if self.y_dim.min is not None
+                    else None
+                ),
+                max=(
+                    self.unit.convert(to_unit, self.y_dim.max)
+                    if self.y_dim.max is not None
+                    else None
+                ),
             ),
             standardized=self.standardized,
             unit=to_unit,
             goal_width=self.unit.convert(to_unit, self.goal_width),
-            goal_height=(self.unit.convert(to_unit, self.goal_height) if self.goal_height is not None else None),
+            goal_height=(
+                self.unit.convert(to_unit, self.goal_height)
+                if self.goal_height is not None
+                else None
+            ),
             six_yard_width=self.unit.convert(to_unit, self.six_yard_width),
             six_yard_length=self.unit.convert(to_unit, self.six_yard_length),
-            penalty_area_width=self.unit.convert(to_unit, self.penalty_area_width),
-            penalty_area_length=self.unit.convert(to_unit, self.penalty_area_length),
+            penalty_area_width=self.unit.convert(
+                to_unit, self.penalty_area_width
+            ),
+            penalty_area_length=self.unit.convert(
+                to_unit, self.penalty_area_length
+            ),
             circle_radius=self.unit.convert(to_unit, self.circle_radius),
             corner_radius=self.unit.convert(to_unit, self.corner_radius),
-            penalty_spot_distance=self.unit.convert(to_unit, self.penalty_spot_distance),
-            penalty_arc_radius=self.unit.convert(to_unit, self.penalty_arc_radius),
+            penalty_spot_distance=self.unit.convert(
+                to_unit, self.penalty_spot_distance
+            ),
+            penalty_arc_radius=self.unit.convert(
+                to_unit, self.penalty_arc_radius
+            ),
             pitch_length=self.pitch_length,
             pitch_width=self.pitch_width,
         )
@@ -269,8 +301,15 @@ class PitchDimensions:
         Returns:
             The point in the IFAB pitch dimensions
         """
-        if self.x_dim.min is None or self.x_dim.max is None or self.y_dim.min is None or self.y_dim.max is None:
-            raise MissingDimensionError("The pitch boundaries need to be fully specified to convert coordinates.")
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise MissingDimensionError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
 
         ifab_dims = MetricPitchDimensions(
             x_dim=Dimension(0, pitch_length),
@@ -281,8 +320,12 @@ class PitchDimensions:
         )
         x_ifab_zones = ifab_dims._transformation_zones_x(pitch_length)
         y_ifab_zones = ifab_dims._transformation_zones_y(pitch_width)
-        x_from_zones = self._transformation_zones_x(self.x_dim.max - self.x_dim.min)
-        y_from_zones = self._transformation_zones_y(self.y_dim.max - self.y_dim.min)
+        x_from_zones = self._transformation_zones_x(
+            self.x_dim.max - self.x_dim.min
+        )
+        y_from_zones = self._transformation_zones_y(
+            self.y_dim.max - self.y_dim.min
+        )
 
         def transform(v, from_zones, from_length, ifab_zones, ifab_length):
             mirror = False
@@ -291,7 +334,13 @@ class PitchDimensions:
                 mirror = True
             # find the zone the v coordinate is in
             try:
-                zone = next((idx for idx, zone in enumerate(from_zones) if zone[0] <= v <= zone[1]))
+                zone = next(
+                    (
+                        idx
+                        for idx, zone in enumerate(from_zones)
+                        if zone[0] <= v <= zone[1]
+                    )
+                )
                 scale = (
                     # length of the zone in IFAB dimensions
                     (ifab_zones[zone][1] - ifab_zones[zone][0])
@@ -302,7 +351,9 @@ class PitchDimensions:
                 ifab = ifab_zones[zone][0] + (v - from_zones[zone][0]) * scale
             except StopIteration:
                 # value is outside of the pitch dimensions
-                ifab = ifab_zones[0][0] + (v - from_zones[0][0]) * (ifab_length / from_length)
+                ifab = ifab_zones[0][0] + (v - from_zones[0][0]) * (
+                    ifab_length / from_length
+                )
             if mirror:
                 ifab = ifab_length - ifab
             return ifab
@@ -324,7 +375,11 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    (point.z * 2.44 / self.goal_height if self.goal_height is not None else point.z)
+                    (
+                        point.z * 2.44 / self.goal_height
+                        if self.goal_height is not None
+                        else point.z
+                    )
                     if point.z is not None
                     else None
                 ),
@@ -362,8 +417,15 @@ class PitchDimensions:
         Returns:
             The point in the regular pitch dimensions
         """
-        if self.x_dim.min is None or self.x_dim.max is None or self.y_dim.min is None or self.y_dim.max is None:
-            raise MissingDimensionError("The pitch boundaries need to be fully specified to convert coordinates.")
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
+            raise MissingDimensionError(
+                "The pitch boundaries need to be fully specified to convert coordinates."
+            )
 
         ifab_dims = MetricPitchDimensions(
             x_dim=Dimension(0, pitch_length),
@@ -374,8 +436,12 @@ class PitchDimensions:
         )
         x_ifab_zones = ifab_dims._transformation_zones_x(pitch_length)
         y_ifab_zones = ifab_dims._transformation_zones_y(pitch_width)
-        x_to_zones = self._transformation_zones_x(self.x_dim.max - self.x_dim.min)
-        y_to_zones = self._transformation_zones_y(self.y_dim.max - self.y_dim.min)
+        x_to_zones = self._transformation_zones_x(
+            self.x_dim.max - self.x_dim.min
+        )
+        y_to_zones = self._transformation_zones_y(
+            self.y_dim.max - self.y_dim.min
+        )
 
         def transform(v, to_zones, to_length, ifab_zones, ifab_length):
             mirror = False
@@ -384,7 +450,13 @@ class PitchDimensions:
                 mirror = True
             # find the zone the v coordinate is in
             try:
-                zone = next((idx for idx, zone in enumerate(ifab_zones) if zone[0] <= v <= zone[1]))
+                zone = next(
+                    (
+                        idx
+                        for idx, zone in enumerate(ifab_zones)
+                        if zone[0] <= v <= zone[1]
+                    )
+                )
                 scale = (
                     # length of the zone in the original dimensions
                     (to_zones[zone][1] - to_zones[zone][0])
@@ -395,7 +467,9 @@ class PitchDimensions:
                 v = to_zones[zone][0] + (v - ifab_zones[zone][0]) * scale
             except StopIteration:
                 # value is outside of the pitch dimensions
-                v = to_zones[0][0] + (v - ifab_zones[0][0]) * (to_length / ifab_length)
+                v = to_zones[0][0] + (v - ifab_zones[0][0]) * (
+                    to_length / ifab_length
+                )
             if mirror:
                 v = (to_length + to_zones[0][0] - v) + to_zones[0][0]
             return v
@@ -417,7 +491,11 @@ class PitchDimensions:
                     pitch_width,
                 ),
                 z=(
-                    (point.z * self.goal_height / 2.44 if self.goal_height is not None else point.z)
+                    (
+                        point.z * self.goal_height / 2.44
+                        if self.goal_height is not None
+                        else point.z
+                    )
                     if point.z is not None
                     else None
                 ),
@@ -440,7 +518,9 @@ class PitchDimensions:
                 ),
             )
 
-    def distance_between(self, point1: Point, point2: Point, unit: Unit = Unit.METERS) -> float:
+    def distance_between(
+        self, point1: Point, point2: Point, unit: Unit = Unit.METERS
+    ) -> float:
         """
         Calculate the distance between two points in the coordinate system.
 
@@ -541,19 +621,34 @@ class NormalizedPitchDimensions(MetricPitchDimensions):
     def __post_init__(self):
         if self.pitch_length is None or self.pitch_width is None:
             raise ValueError("The pitch length and width need to be specified")
-        if self.x_dim.min is None or self.x_dim.max is None or self.y_dim.min is None or self.y_dim.max is None:
+        if (
+            self.x_dim.min is None
+            or self.x_dim.max is None
+            or self.y_dim.min is None
+            or self.y_dim.max is None
+        ):
             raise ValueError("The pitch dimensions need to be fully specified.")
         dim_width = self.y_dim.max - self.y_dim.min
         dim_length = self.x_dim.max - self.x_dim.min
         self.goal_width = self.goal_width / self.pitch_width * dim_width
         self.six_yard_width = self.six_yard_width / self.pitch_width * dim_width
-        self.six_yard_length = self.six_yard_length / self.pitch_length * dim_length
-        self.penalty_area_width = self.penalty_area_width / self.pitch_width * dim_width
-        self.penalty_area_length = self.penalty_area_length / self.pitch_length * dim_length
+        self.six_yard_length = (
+            self.six_yard_length / self.pitch_length * dim_length
+        )
+        self.penalty_area_width = (
+            self.penalty_area_width / self.pitch_width * dim_width
+        )
+        self.penalty_area_length = (
+            self.penalty_area_length / self.pitch_length * dim_length
+        )
         self.circle_radius = self.circle_radius / self.pitch_length * dim_length
         self.corner_radius = self.corner_radius / self.pitch_length * dim_length
-        self.penalty_spot_distance = self.penalty_spot_distance / self.pitch_length * dim_length
-        self.penalty_arc_radius = self.penalty_arc_radius / self.pitch_length * dim_length
+        self.penalty_spot_distance = (
+            self.penalty_spot_distance / self.pitch_length * dim_length
+        )
+        self.penalty_arc_radius = (
+            self.penalty_arc_radius / self.pitch_length * dim_length
+        )
 
 
 @dataclass

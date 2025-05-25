@@ -45,7 +45,9 @@ class TestAdapter:
             def is_file(self, url: str) -> bool:
                 return True
 
-            def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+            def list_directory(
+                self, url: str, recursive: bool = True
+            ) -> List[str]:
                 return []
 
         with config_context("cache", None):
@@ -55,7 +57,9 @@ class TestAdapter:
             custom_adapter = CustomAdapter()
             adapters.append(custom_adapter)
 
-            dataset = opta.load(f24_data="test123://f24", f7_data="test123://f7")
+            dataset = opta.load(
+                f24_data="test123://f24", f7_data="test123://f7"
+            )
 
             # cleanup
             adapters.remove(custom_adapter)

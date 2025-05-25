@@ -1,5 +1,5 @@
-import re
 from datetime import timedelta
+import re
 from typing import IO, Iterator, List
 
 from .models import (
@@ -29,7 +29,12 @@ def build_regex(
     return data_format_specification.to_regex(
         player_channel_map=player_channel_map,
         ball_channel_map=(
-            {channel.channel_id: channel for channel in position_sensor.channels} if position_sensor else {}
+            {
+                channel.channel_id: channel
+                for channel in position_sensor.channels
+            }
+            if position_sensor
+            else {}
         ),
     )
 
@@ -41,7 +46,11 @@ def read_raw_data(
     sample_rate: float = 1.0,
     limit: int = 0,
 ) -> Iterator[dict]:
-    sensors = [sensor for sensor in metadata.sensors if sensor_ids is None or sensor.sensor_id in sensor_ids]
+    sensors = [
+        sensor
+        for sensor in metadata.sensors
+        if sensor_ids is None or sensor.sensor_id in sensor_ids
+    ]
 
     data_specs = metadata.data_format_specifications
 
@@ -61,7 +70,9 @@ def read_raw_data(
 
         end_frame_id = data_specs[current_data_spec_idx].end_frame
         regex = re.compile(regex_str)
-        frame_name = data_specs[current_data_spec_idx].split_register.children[0].name
+        frame_name = (
+            data_specs[current_data_spec_idx].split_register.children[0].name
+        )
 
     _set_current_data_spec(0)
 
@@ -77,7 +88,9 @@ def read_raw_data(
             return float(v) if v else float("nan")
 
         line = line.strip().decode("ascii")
-        row = {k: to_float(v) for k, v in regex.search(line).groupdict().items()}
+        row = {
+            k: to_float(v) for k, v in regex.search(line).groupdict().items()
+        }
         frame_id = int(row[frame_name])
         if frame_id <= end_frame_id:
             timestamp = timedelta(seconds=frame_id / metadata.frame_rate)

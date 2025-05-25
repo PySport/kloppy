@@ -1,6 +1,6 @@
 # Dataset transformations
 
-Kloppy's [`.transform()`][kloppy.domain.Dataset.transform] method allows you to adapt the [spatial representation](../../concepts/coordinates/index.md) of a dataset. This can be useful if you need to align data from different providers or to run analyses that assume a standard pitch size or attacking direction.
+Kloppy's \[`.transform()`\][kloppy.domain.Dataset.transform] method allows you to adapt the [spatial representation](../../concepts/coordinates/index.md) of a dataset. This can be useful if you need to align data from different providers or to run analyses that assume a standard pitch size or attacking direction.
 
 ```python
 dataset.transform(
@@ -19,12 +19,10 @@ In soccer, the direction of play changes between halves. This can be inconvenien
 ```python
 from kloppy.domain import Orientation
 
-ds = dataset.transform(
-    to_orientation=Orientation.HOME_AWAY
-)
+ds = dataset.transform(to_orientation=Orientation.HOME_AWAY)
 ```
 
-The `to_orientation` argument accepts both an [`Orientation`][kloppy.domain.Orientation] (e.g., `Orientation.HOME_AWAY`) and an orientation mode's name (e.g., `"home-away"`).
+The `to_orientation` argument accepts both an \[`Orientation`\][kloppy.domain.Orientation] (e.g., `Orientation.HOME_AWAY`) and an orientation mode's name (e.g., `"home-away"`).
 
 #### Supported orientations
 
@@ -65,22 +63,22 @@ ds = dataset.transform(
 
 Kloppy defines a couple of common pitch configurations:
 
-- [`MetricPitchDimensions`][kloppy.domain.MetricPitchDimensions]: The standard pitch dimensions in meters by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play). The length of the pitch can be between 90 and 120 meters, and the width can be between 45 and 90 meters. All other dimensions are fixed.
-- [`ImperialPitchDimensions`][kloppy.domain.ImperialPitchDimensions]: The same standard pitch dimensions by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play) but in yards.
-- [`NormalizedPitchDimensions`][kloppy.domain.NormalizedPitchDimensions]: The pitch dimensions are normalized to a unit square, where the length and width of the pitch are 1. All other dimensions are scaled accordingly from the `MetricPitchDimensions` based on the `pitch_length` and `pitch_width`. For example, for a pitch of 70m wide, the goal will be 7.32 / 70 = 0.1046 units wide.
-- [`OptaPitchDimensions`][kloppy.domain.OptaPitchDimensions]: The standardized pitch dimensions used by Opta.
-- [`WyscoutPitchDimensions`][kloppy.domain.WyscoutPitchDimensions]: The standardized pitch dimensions used by Wyscout.
+- \[`MetricPitchDimensions`\]\[kloppy.domain.MetricPitchDimensions\]: The standard pitch dimensions in meters by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play). The length of the pitch can be between 90 and 120 meters, and the width can be between 45 and 90 meters. All other dimensions are fixed.
+- \[`ImperialPitchDimensions`\]\[kloppy.domain.ImperialPitchDimensions\]: The same standard pitch dimensions by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play) but in yards.
+- \[`NormalizedPitchDimensions`\]\[kloppy.domain.NormalizedPitchDimensions\]: The pitch dimensions are normalized to a unit square, where the length and width of the pitch are 1. All other dimensions are scaled accordingly from the `MetricPitchDimensions` based on the `pitch_length` and `pitch_width`. For example, for a pitch of 70m wide, the goal will be 7.32 / 70 = 0.1046 units wide.
+- \[`OptaPitchDimensions`\]\[kloppy.domain.OptaPitchDimensions\]: The standardized pitch dimensions used by Opta.
+- \[`WyscoutPitchDimensions`\]\[kloppy.domain.WyscoutPitchDimensions\]: The standardized pitch dimensions used by Wyscout.
 
-|                           | [`MetricPitchDimensions`][kloppy.domain.MetricPitchDimensions] | [`ImperialPitchDimensions`][kloppy.domain.ImperialPitchDimensions] | [`NormalizedPitchDimensions`][kloppy.domain.NormalizedPitchDimensions] | [`OptaPitchDimensions`][kloppy.domain.OptaPitchDimensions] | [`WyscoutPitchDimensions`][kloppy.domain.WyscoutPitchDimensions] |
-| ------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Length**                | 90-120 m                                                       | 100-130 yd                                                         | 1 unit                                                                 | 100 units                                                  | 100 units                                                        |
-| **Width**                 | 45-90 m                                                        | 50-100 yd                                                          | 1 unit                                                                 | 100 units                                                  | 100 units                                                        |
-| **Goal Width**            | 7.32 m                                                         | 8 yd                                                               | -                                                                      | 9.6 units                                                  | 12.0 units                                                       |
-| **Goal Area (Width)**     | 18.32 m                                                        | 20 yd                                                              | -                                                                      | 26.4 units                                                 | 26.0 units                                                       |
-| **Goal Area (Length)**    | 5.5 m                                                          | 6 yd                                                               | -                                                                      | 5.8 units                                                  | 6.0 units                                                        |
-| **Penalty Area (Width)**  | 40.32 m                                                        | 44.1 yd                                                            | -                                                                      | 57.8 units                                                 | 62.0 units                                                       |
-| **Penalty Area (Length)** | 16.5 m                                                         | 18 yd                                                              | -                                                                      | 17.0 units                                                 | 16.0 units                                                       |
-| **Center Circle Radius**  | 9.15 m                                                         | 10 yd                                                              | -                                                                      | 9.0 units                                                  | 8.84 units                                                       |
+|                           | \[`MetricPitchDimensions`\][kloppy.domain.MetricPitchDimensions] | \[`ImperialPitchDimensions`\][kloppy.domain.ImperialPitchDimensions] | \[`NormalizedPitchDimensions`\][kloppy.domain.NormalizedPitchDimensions] | \[`OptaPitchDimensions`\][kloppy.domain.OptaPitchDimensions] | \[`WyscoutPitchDimensions`\][kloppy.domain.WyscoutPitchDimensions] |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| **Length**                | 90-120 m                                                         | 100-130 yd                                                           | 1 unit                                                                   | 100 units                                                    | 100 units                                                          |
+| **Width**                 | 45-90 m                                                          | 50-100 yd                                                            | 1 unit                                                                   | 100 units                                                    | 100 units                                                          |
+| **Goal Width**            | 7.32 m                                                           | 8 yd                                                                 | -                                                                        | 9.6 units                                                    | 12.0 units                                                         |
+| **Goal Area (Width)**     | 18.32 m                                                          | 20 yd                                                                | -                                                                        | 26.4 units                                                   | 26.0 units                                                         |
+| **Goal Area (Length)**    | 5.5 m                                                            | 6 yd                                                                 | -                                                                        | 5.8 units                                                    | 6.0 units                                                          |
+| **Penalty Area (Width)**  | 40.32 m                                                          | 44.1 yd                                                              | -                                                                        | 57.8 units                                                   | 62.0 units                                                         |
+| **Penalty Area (Length)** | 16.5 m                                                           | 18 yd                                                                | -                                                                        | 17.0 units                                                   | 16.0 units                                                         |
+| **Center Circle Radius**  | 9.15 m                                                           | 10 yd                                                                | -                                                                        | 9.0 units                                                    | 8.84 units                                                         |
 
 You can also define custom pitch dimensions. This is explained [here](../../concepts/coordinates/index.md#pitchdimensions).
 
@@ -89,7 +87,7 @@ You can also define custom pitch dimensions. This is explained [here](../../conc
 Choosing the right pitch dimension type depends on two main considerations:
 
 1. Do you want to preserve real-world measurements (in meters/yards) or normalize to a unit scale?
-2. Should the pitch be standardized to a common format, or should it reflect the original stadium-specific size?
+1. Should the pitch be standardized to a common format, or should it reflect the original stadium-specific size?
 
 Here’s how to decide:
 
@@ -119,11 +117,13 @@ from kloppy.domain import Provider
 ds = dataset.transform(to_coordinate_system=Provider.TRACAB)
 ```
 
-The `to_coordinate_system` argument accepts a [`Provider`][kloppy.domain.Provider] (e.g., `Provider.TRACAB`), a provider's name (e.g., `"tracab"`) or a coordinate system (e.g., `TracabCoordinateSystem(pitch_length=108, pitch_width=69)`).
+The `to_coordinate_system` argument accepts a \[`Provider`\][kloppy.domain.Provider] (e.g., `Provider.TRACAB`), a provider's name (e.g., `"tracab"`) or a coordinate system (e.g., `TracabCoordinateSystem(pitch_length=108, pitch_width=69)`).
 
 !!! note
 
-    You **cannot** use `to_pitch_dimensions` and `to_coordinate_system` together in a single call.
+```
+You **cannot** use `to_pitch_dimensions` and `to_coordinate_system` together in a single call.
 
-    - Use `to_coordinate_system` when aligning coordinate systems across providers.
-    - Use `to_pitch_dimensions` when normalizing the physical scale of the pitch.
+- Use `to_coordinate_system` when aligning coordinate systems across providers.
+- Use `to_pitch_dimensions` when normalizing the physical scale of the pitch.
+```

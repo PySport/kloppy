@@ -101,7 +101,7 @@ default-groups = ["dev", "docs", "nb"]
 
 [tool.ruff]
 target-version = "py39"
-line-length = 120  # use whatever number makes you happy
+line-length = 80  # use whatever number makes you happy
 format = { quote-style = "double", indent-style = "space" }
 exclude = [
     "examples",

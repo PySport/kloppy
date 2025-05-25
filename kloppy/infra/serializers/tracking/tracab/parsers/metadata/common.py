@@ -1,5 +1,5 @@
-import html
 from datetime import timedelta
+import html
 from typing import Dict, Optional
 
 from kloppy.domain import (
@@ -17,7 +17,9 @@ position_types_mapping: Dict[str, PositionType] = {
 }
 
 
-def create_team(team_data, ground, start_frame_id, id_suffix="Id", player_item="Player"):
+def create_team(
+    team_data, ground, start_frame_id, id_suffix="Id", player_item="Player"
+):
     """
     Create a team object from team data
     """
@@ -27,7 +29,11 @@ def create_team(team_data, ground, start_frame_id, id_suffix="Id", player_item="
         ground=ground,
     )
 
-    players = team_data["Players"][player_item] if player_item else team_data["Players"]
+    players = (
+        team_data["Players"][player_item]
+        if player_item
+        else team_data["Players"]
+    )
     team.players = [
         Player(
             player_id=str(player[f"Player{id_suffix}"]),
@@ -37,7 +43,9 @@ def create_team(team_data, ground, start_frame_id, id_suffix="Id", player_item="
             name=html.unescape(player["FirstName"] + " " + player["LastName"]),
             jersey_no=int(player["JerseyNo"]),
             starting=player["StartFrameCount"] == start_frame_id,
-            starting_position=position_types_mapping.get(player.get("StartingPosition"), PositionType.Unknown),
+            starting_position=position_types_mapping.get(
+                player.get("StartingPosition"), PositionType.Unknown
+            ),
         )
         for player in players
     ]
@@ -45,7 +53,9 @@ def create_team(team_data, ground, start_frame_id, id_suffix="Id", player_item="
     return team
 
 
-def create_period(period_id: int, start_frame: int, end_frame: int, frame_rate: int) -> Optional[Period]:
+def create_period(
+    period_id: int, start_frame: int, end_frame: int, frame_rate: int
+) -> Optional[Period]:
     """
     Create a period object if frames are valid.
     """

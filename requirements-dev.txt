@@ -2,186 +2,579 @@
 #    uv export --no-hashes --output-file requirements-dev.txt
 -e .
 aiohappyeyeballs==2.6.1
+    # via aiohttp
 aiohttp==3.11.18
+    # via fsspec
 aiosignal==1.3.2
+    # via aiohttp
 annotated-types==0.7.0
+    # via pydantic
 antlr4-python3-runtime==4.13.2
+    # via moto
 appnope==0.1.4 ; sys_platform == 'darwin'
+    # via ipykernel
 asttokens==3.0.0
+    # via stack-data
 async-timeout==5.0.1 ; python_full_version < '3.11'
+    # via aiohttp
 attrs==25.3.0
+    # via
+    #   aiohttp
+    #   jsonschema
+    #   referencing
 aws-sam-translator==1.97.0
+    # via cfn-lint
 aws-xray-sdk==2.14.0
+    # via moto
 babel==2.17.0
+    # via mkdocs-material
 beautifulsoup4==4.13.4
+    # via nbconvert
 bleach==6.2.0
+    # via nbconvert
 blinker==1.9.0
+    # via flask
 boto3==1.37.3
+    # via
+    #   aws-sam-translator
+    #   moto
 botocore==1.37.3
+    # via
+    #   aws-xray-sdk
+    #   boto3
+    #   moto
+    #   s3transfer
 certifi==2025.4.26
+    # via requests
 cffi==1.17.1 ; implementation_name == 'pypy' or platform_python_implementation != 'PyPy'
+    # via
+    #   cryptography
+    #   pyzmq
 cfgv==3.4.0
+    # via pre-commit
 cfn-lint==1.34.2
+    # via moto
 charset-normalizer==3.4.2
+    # via requests
 click==8.1.8
+    # via
+    #   flask
+    #   mkdocs
+    #   mkdocstrings
 colorama==0.4.6
+    # via
+    #   click
+    #   griffe
+    #   ipython
+    #   mkdocs
+    #   mkdocs-material
+    #   pytest
 comm==0.2.2
+    # via ipykernel
 contourpy==1.3.0 ; python_full_version < '3.10'
+    # via matplotlib
 contourpy==1.3.2 ; python_full_version >= '3.10'
+    # via matplotlib
 cryptography==44.0.3
+    # via
+    #   joserfc
+    #   moto
 cycler==0.12.1
+    # via matplotlib
 debugpy==1.8.14
+    # via ipykernel
 decorator==5.2.1
+    # via ipython
 defusedxml==0.7.1
+    # via nbconvert
 distlib==0.3.9
+    # via virtualenv
 docker==7.1.0
+    # via moto
 exceptiongroup==1.3.0 ; python_full_version < '3.11'
+    # via
+    #   ipython
+    #   pytest
 executing==2.2.0
+    # via stack-data
 fastjsonschema==2.21.1
+    # via nbformat
 filelock==3.18.0
+    # via virtualenv
 flask==3.1.0
+    # via
+    #   flask-cors
+    #   moto
 flask-cors==5.0.1
+    # via moto
 fonttools==4.58.0
+    # via matplotlib
 frozenlist==1.6.0
+    # via
+    #   aiohttp
+    #   aiosignal
 fsspec==2025.3.2
+    # via kloppy
 ghp-import==2.1.0
+    # via mkdocs
 graphql-core==3.2.6
+    # via moto
 griffe==1.7.3
+    # via
+    #   griffe-generics
+    #   mkdocstrings-python
 griffe-generics==1.0.13
 identify==2.6.12
+    # via pre-commit
 idna==3.10
+    # via
+    #   requests
+    #   yarl
 importlib-metadata==8.7.0 ; python_full_version < '3.10'
+    # via
+    #   flask
+    #   jupyter-client
+    #   markdown
+    #   mkdocs
+    #   mkdocs-get-deps
+    #   mkdocstrings
+    #   nbconvert
 importlib-resources==6.5.2 ; python_full_version < '3.10'
+    # via matplotlib
 iniconfig==2.1.0
+    # via pytest
 ipykernel==6.29.5
+    # via mkdocs-jupyter
 ipython==8.18.1 ; python_full_version < '3.10'
+    # via ipykernel
 ipython==8.36.0 ; python_full_version == '3.10.*'
+    # via ipykernel
 ipython==9.2.0 ; python_full_version >= '3.11'
+    # via ipykernel
 ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11'
+    # via ipython
 itsdangerous==2.2.0
+    # via flask
 jedi==0.19.2
+    # via ipython
 jinja2==3.1.6
+    # via
+    #   flask
+    #   mkdocs
+    #   mkdocs-macros-plugin
+    #   mkdocs-material
+    #   mkdocstrings
+    #   moto
+    #   nbconvert
+    #   pandas
 jmespath==1.0.1
+    # via
+    #   boto3
+    #   botocore
 joserfc==1.0.4
+    # via moto
 jsonpatch==1.33
+    # via cfn-lint
 jsonpath-ng==1.7.0
+    # via moto
 jsonpointer==3.0.0
+    # via jsonpatch
 jsonschema==4.23.0
+    # via
+    #   aws-sam-translator
+    #   nbformat
+    #   openapi-schema-validator
+    #   openapi-spec-validator
 jsonschema-path==0.3.4
+    # via openapi-spec-validator
 jsonschema-specifications==2025.4.1
+    # via
+    #   jsonschema
+    #   openapi-schema-validator
 jupyter-client==8.6.3
+    # via
+    #   ipykernel
+    #   nbclient
 jupyter-core==5.7.2
+    # via
+    #   ipykernel
+    #   jupyter-client
+    #   nbclient
+    #   nbconvert
+    #   nbformat
 jupyterlab-pygments==0.3.0
+    # via nbconvert
 jupytext==1.17.1
+    # via mkdocs-jupyter
 kiwisolver==1.4.7 ; python_full_version < '3.10'
+    # via matplotlib
 kiwisolver==1.4.8 ; python_full_version >= '3.10'
+    # via matplotlib
 lazy-object-proxy==1.11.0
+    # via openapi-spec-validator
 lxml==5.4.0
+    # via kloppy
 markdown==3.8
+    # via
+    #   mkdocs
+    #   mkdocs-autorefs
+    #   mkdocs-material
+    #   mkdocstrings
+    #   pymdown-extensions
 markdown-exec==1.10.3
 markdown-it-py==3.0.0
+    # via
+    #   jupytext
+    #   mdit-py-plugins
 markupsafe==3.0.2
+    # via
+    #   jinja2
+    #   mkdocs
+    #   mkdocs-autorefs
+    #   mkdocstrings
+    #   nbconvert
+    #   werkzeug
 matplotlib==3.9.4 ; python_full_version < '3.10'
+    # via
+    #   mplsoccer
+    #   seaborn
 matplotlib==3.10.3 ; python_full_version >= '3.10'
+    # via
+    #   mplsoccer
+    #   seaborn
 matplotlib-inline==0.1.7
+    # via
+    #   ipykernel
+    #   ipython
 mdit-py-plugins==0.4.2
+    # via jupytext
 mdurl==0.1.2
+    # via markdown-it-py
 mergedeep==1.3.4
+    # via
+    #   mkdocs
+    #   mkdocs-get-deps
 mistune==3.1.3
+    # via nbconvert
 mkdocs==1.6.1
+    # via
+    #   mkdocs-autorefs
+    #   mkdocs-exclude
+    #   mkdocs-jupyter
+    #   mkdocs-macros-plugin
+    #   mkdocs-material
+    #   mkdocstrings
 mkdocs-autorefs==1.2.0
+    # via
+    #   mkdocstrings
+    #   mkdocstrings-python
 mkdocs-exclude==1.0.2
 mkdocs-get-deps==0.2.0
+    # via mkdocs
 mkdocs-jupyter==0.24.7
 mkdocs-macros-plugin==1.0.5
 mkdocs-material==9.5.44
+    # via mkdocs-jupyter
 mkdocs-material-extensions==1.3.1
+    # via mkdocs-material
 mkdocstrings==0.27.0
+    # via mkdocstrings-python
 mkdocstrings-python==1.12.2
 moto==5.1.4
 mplsoccer==1.3.0
 mpmath==1.3.0
+    # via sympy
 multidict==6.4.3
+    # via
+    #   aiohttp
+    #   yarl
 nbclient==0.10.2
+    # via nbconvert
 nbconvert==7.16.6
+    # via mkdocs-jupyter
 nbformat==5.10.4
+    # via
+    #   jupytext
+    #   nbclient
+    #   nbconvert
 nest-asyncio==1.6.0
+    # via ipykernel
 networkx==2.8.8
+    # via cfn-lint
 nodeenv==1.9.1
+    # via
+    #   pre-commit
+    #   pyright
 numpy==2.0.2 ; python_full_version < '3.10'
+    # via
+    #   contourpy
+    #   matplotlib
+    #   mplsoccer
+    #   pandas
+    #   scipy
+    #   seaborn
 numpy==2.2.5 ; python_full_version >= '3.10'
+    # via
+    #   contourpy
+    #   matplotlib
+    #   mplsoccer
+    #   pandas
+    #   scipy
+    #   seaborn
 openapi-schema-validator==0.6.3
+    # via openapi-spec-validator
 openapi-spec-validator==0.7.1
+    # via moto
 packaging==25.0
+    # via
+    #   ipykernel
+    #   jupytext
+    #   matplotlib
+    #   mkdocs
+    #   nbconvert
+    #   pytest
 paginate==0.5.7
+    # via mkdocs-material
 pandas==2.2.3
+    # via
+    #   mplsoccer
+    #   seaborn
 pandocfilters==1.5.1
+    # via nbconvert
 parso==0.8.4
+    # via jedi
 pathable==0.4.4
+    # via jsonschema-path
 pathspec==0.12.1
+    # via mkdocs
 pexpect==4.9.0 ; (python_full_version < '3.10' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')
+    # via ipython
 pillow==11.2.1
+    # via
+    #   matplotlib
+    #   mplsoccer
 platformdirs==4.3.8
+    # via
+    #   jupyter-core
+    #   mkdocs-get-deps
+    #   mkdocstrings
+    #   virtualenv
 pluggy==1.5.0
+    # via pytest
 ply==3.11
+    # via jsonpath-ng
 pre-commit==4.2.0
 prompt-toolkit==3.0.51
+    # via ipython
 propcache==0.3.1
+    # via
+    #   aiohttp
+    #   yarl
 psutil==7.0.0
+    # via ipykernel
 ptyprocess==0.7.0 ; (python_full_version < '3.10' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')
+    # via pexpect
 pure-eval==0.2.3
+    # via stack-data
 py-partiql-parser==0.6.1
+    # via moto
 pycparser==2.22 ; implementation_name == 'pypy' or platform_python_implementation != 'PyPy'
+    # via cffi
 pydantic==2.11.4
+    # via aws-sam-translator
 pydantic-core==2.33.2
+    # via pydantic
 pygments==2.19.1
+    # via
+    #   ipython
+    #   ipython-pygments-lexers
+    #   mkdocs-jupyter
+    #   mkdocs-material
+    #   nbconvert
+    #   pygments-ansi-color
 pygments-ansi-color==0.3.0
+    # via markdown-exec
 pymdown-extensions==10.15
+    # via
+    #   markdown-exec
+    #   mkdocs-material
+    #   mkdocstrings
 pyparsing==3.2.3
+    # via
+    #   matplotlib
+    #   moto
 pyright==1.1.400
 pytest==7.4.4
+    # via pytest-lazy-fixture
 pytest-httpserver==1.1.3
 pytest-lazy-fixture==0.6.3
 python-dateutil==2.9.0.post0
+    # via
+    #   botocore
+    #   ghp-import
+    #   jupyter-client
+    #   kloppy
+    #   matplotlib
+    #   mkdocs-macros-plugin
+    #   moto
+    #   pandas
 pytz==2025.2
+    # via
+    #   kloppy
+    #   pandas
 pywin32==310 ; sys_platform == 'win32'
+    # via
+    #   docker
+    #   jupyter-core
 pyyaml==6.0.2
+    # via
+    #   cfn-lint
+    #   jsonschema-path
+    #   jupytext
+    #   mkdocs
+    #   mkdocs-get-deps
+    #   mkdocs-macros-plugin
+    #   moto
+    #   pre-commit
+    #   pymdown-extensions
+    #   pyyaml-env-tag
+    #   responses
 pyyaml-env-tag==1.1
+    # via mkdocs
 pyzmq==26.4.0
+    # via
+    #   ipykernel
+    #   jupyter-client
 referencing==0.36.2
+    # via
+    #   jsonschema
+    #   jsonschema-path
+    #   jsonschema-specifications
 regex==2024.11.6
+    # via
+    #   cfn-lint
+    #   mkdocs-material
 requests==2.32.3
+    # via
+    #   docker
+    #   jsonschema-path
+    #   mkdocs-material
+    #   moto
+    #   mplsoccer
+    #   responses
 responses==0.25.7
+    # via moto
 rfc3339-validator==0.1.4
+    # via openapi-schema-validator
 rpds-py==0.24.0
+    # via
+    #   jsonschema
+    #   referencing
 ruff==0.11.8
 s3transfer==0.11.3
+    # via boto3
 scipy==1.13.1 ; python_full_version < '3.10'
+    # via mplsoccer
 scipy==1.15.3 ; python_full_version >= '3.10'
+    # via mplsoccer
 seaborn==0.13.2
+    # via mplsoccer
 setuptools==80.3.1
+    # via moto
 six==1.17.0
+    # via
+    #   python-dateutil
+    #   rfc3339-validator
 sortedcontainers==2.4.0
+    # via kloppy
 soupsieve==2.7
+    # via beautifulsoup4
 stack-data==0.6.3
+    # via ipython
 sympy==1.14.0
+    # via cfn-lint
 tabulate==0.9.0
+    # via pandas
 termcolor==3.1.0
+    # via mkdocs-macros-plugin
 tinycss2==1.4.0
+    # via bleach
 tomli==2.2.1 ; python_full_version < '3.11'
+    # via
+    #   jupytext
+    #   pytest
 tornado==6.5.1
+    # via
+    #   ipykernel
+    #   jupyter-client
 traitlets==5.14.3
+    # via
+    #   comm
+    #   ipykernel
+    #   ipython
+    #   jupyter-client
+    #   jupyter-core
+    #   matplotlib-inline
+    #   nbclient
+    #   nbconvert
+    #   nbformat
 typing-extensions==4.13.2
+    # via
+    #   aws-sam-translator
+    #   beautifulsoup4
+    #   cfn-lint
+    #   exceptiongroup
+    #   graphql-core
+    #   griffe-generics
+    #   ipython
+    #   kloppy
+    #   mistune
+    #   mkdocstrings
+    #   multidict
+    #   pydantic
+    #   pydantic-core
+    #   pyright
+    #   referencing
+    #   typing-inspection
 typing-inspection==0.4.0
+    # via pydantic
 tzdata==2025.2
+    # via pandas
 urllib3==1.26.20 ; python_full_version < '3.10'
+    # via
+    #   botocore
+    #   docker
+    #   requests
+    #   responses
 urllib3==2.4.0 ; python_full_version >= '3.10'
+    # via
+    #   botocore
+    #   docker
+    #   requests
+    #   responses
 virtualenv==20.31.2
+    # via pre-commit
 watchdog==6.0.0
+    # via mkdocs
 wcwidth==0.2.13
+    # via prompt-toolkit
 webencodings==0.5.1
+    # via
+    #   bleach
+    #   tinycss2
 werkzeug==3.1.3
+    # via
+    #   flask
+    #   flask-cors
+    #   moto
+    #   pytest-httpserver
 wrapt==1.17.2
+    # via aws-xray-sdk
 xmltodict==0.14.2
+    # via moto
 yarl==1.20.0
+    # via aiohttp
 zipp==3.21.0 ; python_full_version < '3.10'
+    # via
+    #   importlib-metadata
+    #   importlib-resources

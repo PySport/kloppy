@@ -1,0 +1,119 @@
+version: "3"
+
+vars:
+  DOCS_PORT: "8000"
+
+tasks:
+
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  ###############################################################################
+  # Dependencies & Environment
+  ###############################################################################
+
+  venv:create:
+    desc: Set up python interpreter environment
+    cmds:
+      - uv venv
+      - echo ">>> New virtualenv with uv created. Activate with 'source .venv/bin/activate'"
+
+  venv:install:
+    desc: Install Python dependencies
+    cmds:
+      - uv sync --all-extras
+
+  ###############################################################################
+  # Utilities
+  ###############################################################################
+
+  clean:
+    desc: Clean project
+    deps: [clean:mac, clean:python]
+
+  clean:mac:
+    desc: Remove macOS artifacts
+    cmds:
+      - find . -name ".DS_Store" -delete
+
+  clean:python:
+    desc: Remove Python cache files
+    cmds:
+      - find . -name "*.py[co]" -delete
+      - find . -name "__pycache__" -delete
+
+  ###############################################################################
+  # Code Quality
+  ###############################################################################
+
+  lint:
+    desc: Lint using ruff
+    cmds:
+      - ruff check --fix --config pyproject.toml
+
+  format:
+    desc: Format source code with ruff
+    cmds:
+      - ruff format --config pyproject.toml
+
+  ###############################################################################
+  # Documentation
+  ###############################################################################
+
+  docs:serve:
+    desc: Serve documentation locally
+    dir: docs
+    cmds:
+      - mkdocs serve --dirty -a localhost:{{.DOCS_PORT}}
+
+  docs:build:
+    desc: Build documentation
+    dir: docs
+    cmds:
+      - mkdocs build
+
+  ###############################################################################
+  # Testing
+  ###############################################################################
+
+  test:
+    desc: Run all tests
+    cmds:
+      - pytest -vvv
+
+  test:debug-last:
+    desc: Debug last failed test with pdb
+    cmds:
+      - pytest --lf --pdb
+
+  ###############################################################################
+  # Pre-commit
+  ###############################################################################
+
+  pre-commit-test:
+    desc: Test hooks
+    cmds:
+      - pre-commit run --all-files
+      - git add .pre-commit-config.yaml
+      - pre-commit run commitizen --hook-stage commit-msg --commit-msg-filename ".git/COMMIT_EDITMSG"
+
+  pre-commit-update:
+    desc: Update, install, and test hooks w/ new config
+    cmds:
+      - pre-commit autoupdate
+      - pre-commit install
+      - task: pre-commit-test
+
+  ###############################################################################
+  # CI/CD
+  ###############################################################################
+
+  ci:format:
+    cmds:
+      - ruff format --check
+
+  ci:lint:
+    cmds:
+      - ruff check

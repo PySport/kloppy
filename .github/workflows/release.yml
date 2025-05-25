@@ -14,7 +14,7 @@ on:
         default: false
 jobs:
   publish:
-    environment: release       # needed for PyPI OIDC
+    environment: release # needed for PyPI OIDC
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -25,4 +25,3 @@ jobs:
           version: "0.5.14"
       - run: uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
-

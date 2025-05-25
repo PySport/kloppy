@@ -1,33 +1,51 @@
 name: Test
+
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
+
 jobs:
-  test:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{hashFiles('.pre-commit-config.yaml')}}
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Run pre-commit
+        run: uv run pre-commit run -a --show-diff-on-failure
+
+      - name: Check lock file consistency
+        run: uv sync --locked
+
+  tests:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      fail-fast: false
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v5
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
         with:
-          version: "0.5.14"
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: uv sync --all-extras --locked # abort if the lockfile changes
-      - name: Code formatting
-        run: uv run poe ci:fmt             # check formatting is correct
-      # - name: Linting
-      #   run: uv run poe ci:lint            # and linting
-      # - name: Type check
-      #   run: uv run poe check              # typecheck too
-      - name: Test with pytest
-        if: '!cancelled()'
-        run: uv run poe test               # then run your tests!
+          python-version: ${{matrix.python-version}}
+
+      - name: Run tests
+        run: uv run python -m pytest kloppy/tests

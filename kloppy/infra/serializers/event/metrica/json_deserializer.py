@@ -1,7 +1,7 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import timedelta
+import json
+import logging
 from typing import IO, Dict, List, NamedTuple, Optional
 
 from kloppy.domain import (
@@ -132,9 +132,7 @@ def _parse_pass(
             else:
                 result = PassResult.INCOMPLETE
         else:
-            raise DeserializationError(
-                f"Unknown pass outcome: {event_type_id}"
-            )
+            raise DeserializationError(f"Unknown pass outcome: {event_type_id}")
 
         receiver_player = None
         receiver_coordinates = None
@@ -170,9 +168,7 @@ def _get_event_setpiece_qualifiers(
     if previous_event_type_id == MS_SET_PIECE:
         set_piece_subtypes = _parse_subtypes(previous_event)
         if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
-            qualifiers.append(
-                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
-            )
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
         elif MS_SET_PIECE_FREE_KICK in set_piece_subtypes:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
         elif MS_SET_PIECE_PENALTY in set_piece_subtypes:
@@ -384,9 +380,9 @@ class MetricaJsonEventDataDeserializer(
                 ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
-                        generic_event_kwargs[
-                            "coordinates"
-                        ] = _parse_coordinates(raw_event["end"])
+                        generic_event_kwargs["coordinates"] = (
+                            _parse_coordinates(raw_event["end"])
+                        )
                         generic_event_kwargs["timestamp"] = (
                             timedelta(seconds=raw_event["end"]["time"])
                             - period.start_timestamp

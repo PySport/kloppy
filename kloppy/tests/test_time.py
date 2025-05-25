@@ -4,7 +4,7 @@ from typing import Tuple
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import Time, Period, TimeContainer
+from kloppy.domain import Period, Time, TimeContainer
 
 
 @pytest.fixture

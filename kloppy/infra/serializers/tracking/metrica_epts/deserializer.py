@@ -1,22 +1,22 @@
-import logging
-from typing import NamedTuple, IO
 from dataclasses import replace
+import logging
+from typing import IO, NamedTuple
 
 from kloppy.domain import (
-    TrackingDataset,
+    DatasetTransformer,
     Frame,
+    PlayerData,
     Point,
     Point3D,
     Provider,
-    PlayerData,
-    DatasetTransformer,
+    TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import performance_logging
 
-from .metadata import load_metadata, EPTSMetadata
-from .reader import read_raw_data
 from ..deserializer import TrackingDataDeserializer
+from .metadata import EPTSMetadata, load_metadata
+from .reader import read_raw_data
 
 logger = logging.getLogger(__name__)
 

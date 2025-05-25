@@ -1,6 +1,6 @@
-import warnings
 from dataclasses import fields, replace
 from typing import Optional, Union
+import warnings
 
 from kloppy.domain import (
     DEFAULT_PITCH_LENGTH,
@@ -340,20 +340,16 @@ class DatasetTransformer:
                 getattr(event, field.name)
             )
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)
 
     def __change_event_dimensions(self, event: Event):
         position_changes = {
-            field.name: self.change_point_dimensions(
-                getattr(event, field.name)
-            )
+            field.name: self.change_point_dimensions(getattr(event, field.name))
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)
@@ -362,8 +358,7 @@ class DatasetTransformer:
         position_changes = {
             field.name: self.flip_point(getattr(event, field.name))
             for field in fields(event)
-            if field.name.endswith("coordinates")
-            and getattr(event, field.name)
+            if field.name.endswith("coordinates") and getattr(event, field.name)
         }
 
         return replace(event, **position_changes)

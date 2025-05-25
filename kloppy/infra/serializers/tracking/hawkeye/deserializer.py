@@ -1,23 +1,21 @@
+from datetime import datetime, timedelta, timezone
+from itertools import zip_longest
 import json
 import logging
-from datetime import datetime, timedelta, timezone
-from dateutil.parser import parse
-import warnings
 import re
-from lxml import objectify
-
 from typing import (
-    IO,
     Any,
     Dict,
+    Iterable,
     List,
     NamedTuple,
     Optional,
     Union,
-    Iterable,
-    Callable,
 )
-from itertools import zip_longest
+import warnings
+
+from dateutil.parser import parse
+from lxml import objectify
 
 from kloppy.domain import (
     AttackingDirection,
@@ -35,9 +33,9 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
-from kloppy.utils import performance_logging
-from kloppy.io import FileLike, open_as_file, get_file_extension
 from kloppy.exceptions import DeserializationError
+from kloppy.io import FileLike, get_file_extension, open_as_file
+from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
 
@@ -97,9 +95,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         return Provider.HAWKEYE
 
     @staticmethod
-    def __parse_periods(
-        raw_periods: List[Dict[str, Any]]
-    ) -> Dict[str, Period]:
+    def __parse_periods(raw_periods: List[Dict[str, Any]]) -> Dict[str, Period]:
         parsed_periods = {}
         for period in raw_periods:
             if period["segment"] == 0:
@@ -117,9 +113,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             )
         return parsed_periods
 
-    def __parse_teams(
-        self, raw_teams: List[Dict[str, Any]]
-    ) -> Dict[str, Team]:
+    def __parse_teams(self, raw_teams: List[Dict[str, Any]]) -> Dict[str, Team]:
         parsed_teams = {}
         for team in raw_teams:
             team_id = team["id"][self.object_id]
@@ -239,7 +233,6 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             )
 
     def deserialize(self, inputs: HawkEyeInputs) -> TrackingDataset:
-
         self.__parse_meta_data(inputs.meta_data)
 
         transformer = self.get_transformer(
@@ -378,9 +371,9 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
                             speed=centroid["speed"]["mps"],
                         )
                         if frame_id in parsed_frames:
-                            parsed_frames[frame_id].players_data[
-                                player
-                            ] = player_data
+                            parsed_frames[frame_id].players_data[player] = (
+                                player_data
+                            )
                         else:
                             parsed_frames[frame_id] = Frame(
                                 frame_id=frame_id,

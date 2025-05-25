@@ -49,9 +49,9 @@ class F24XMLParser(OptaXMLParser):
                     else None
                 ),
                 qualifiers={
-                    int(
-                        qualifier.attrib["qualifier_id"]
-                    ): qualifier.attrib.get("value")
+                    int(qualifier.attrib["qualifier_id"]): qualifier.attrib.get(
+                        "value"
+                    )
                     for qualifier in event.iterchildren("Q")
                 },
             )

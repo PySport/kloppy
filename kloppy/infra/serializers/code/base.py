@@ -3,7 +3,6 @@ from typing import Generic, TypeVar
 
 from kloppy.domain import CodeDataset
 
-
 T = TypeVar("T")
 
 

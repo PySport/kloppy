@@ -1,5 +1,5 @@
-from collections import defaultdict, Counter
-from typing import List, Dict
+from collections import Counter, defaultdict
+from typing import Dict, List
 
 from kloppy.domain import AttackingDirection, Frame, Ground, Period
 

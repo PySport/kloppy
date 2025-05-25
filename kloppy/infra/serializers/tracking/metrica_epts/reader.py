@@ -1,5 +1,5 @@
-import re
 from datetime import timedelta
+import re
 from typing import IO, Iterator, List
 
 from .models import (

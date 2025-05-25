@@ -1,5 +1,5 @@
-import html
 from datetime import timedelta
+import html
 from typing import Dict, Optional
 
 from kloppy.domain import (

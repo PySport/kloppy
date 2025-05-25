@@ -1,7 +1,6 @@
-import logging
-import warnings
 from collections import defaultdict
 from datetime import datetime, timedelta
+import logging
 from typing import IO, Dict, NamedTuple, Optional, Set, Union
 
 from lxml import etree, objectify
@@ -101,9 +100,7 @@ def _unstack_framesets(
     current_period = None
     current_obj = None
 
-    context = etree.iterparse(
-        raw_data, events=("start", "end"), huge_tree=True
-    )
+    context = etree.iterparse(raw_data, events=("start", "end"), huge_tree=True)
 
     for event, elem in context:
         try:
@@ -185,9 +182,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
 
-    def deserialize(
-        self, inputs: SportecTrackingDataInputs
-    ) -> TrackingDataset:
+    def deserialize(self, inputs: SportecTrackingDataInputs) -> TrackingDataset:
         with performance_logging("parse metadata", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)

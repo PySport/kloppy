@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Generic, TypeVar, Union
+from typing import Generic, List, Optional, TypeVar, Union
 
 from kloppy.domain import (
-    EventDataset,
-    Event,
-    EventType,
     DatasetTransformer,
-    Provider,
-    EventFactory,
-    DatasetType,
     DatasetTransformerBuilder,
+    DatasetType,
+    Event,
+    EventDataset,
+    EventFactory,
+    EventType,
+    Provider,
 )
 
 T = TypeVar("T")

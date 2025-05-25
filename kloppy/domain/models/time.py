@@ -70,7 +70,9 @@ class Period:
 
     @property
     def end_time(self) -> "Time":
-        return Time(period=self, timestamp=self.end_timestamp - self.start_timestamp)  # type: ignore
+        return Time(
+            period=self, timestamp=self.end_timestamp - self.start_timestamp
+        )  # type: ignore
 
     @property
     def duration(self) -> timedelta:
@@ -132,12 +134,10 @@ class Time:
         )
 
     @overload
-    def __sub__(self, other: timedelta) -> "Time":
-        ...
+    def __sub__(self, other: timedelta) -> "Time": ...
 
     @overload
-    def __sub__(self, other: "Time") -> timedelta:
-        ...
+    def __sub__(self, other: "Time") -> timedelta: ...
 
     def __sub__(
         self, other: Union["Time", timedelta]

@@ -1,6 +1,6 @@
 import logging
-import warnings
 from typing import IO, NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,

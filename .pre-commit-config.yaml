@@ -1,6 +1,119 @@
+exclude: |
+  (?x)^(
+      docs/site/.*|       # Exclude mkdocs compiled files
+      \.history/.*|       # Exclude history files
+      .*cache.*/.*|       # Exclude cache directories
+      .*venv.*/.*|        # Exclude virtual environment directories
+  )$
+fail_fast: true
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
 repos:
--   repo: https://github.com/ambv/black
-    rev: 22.3.0
+  # --------------------------- 🔍 Code Quality Tools -------------------------- #
+
+  ### Python Tools ###
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.11
     hooks:
-    - id: black
-      language_version: python3
+      - id: ruff-format
+        name: "🐍 python · Format with Ruff"
+      - id: ruff
+        name: "🐍 python · Lint and perform safe auto-fixes with Ruff"
+        args: [--fix]
+
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.391
+  #   hooks:
+  #     - id: pyright
+  #       name: "🐍 python · Check types"
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24.1
+    hooks:
+      - id: validate-pyproject
+        name: "🐍 python · Validate pyproject.toml"
+        additional_dependencies: ["validate-pyproject-schema-store[all]"]
+
+  ### Data & Config Validation ###
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.0
+    hooks:
+      - id: check-github-workflows
+        name: "🐙 github-actions · Validate gh workflow files"
+        args: ["--verbose"]
+
+  ### Markdown ###
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        name: "📝 markdown · Format markdown"
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-ruff
+          - mdformat-frontmatter
+          - mdformat-mkdocs
+          - ruff
+
+  # - repo: https://github.com/markdownlint/markdownlint
+  #   rev: v0.12.0
+  #   hooks:
+  #     - id: markdownlint
+  #       name: "📝 markdown · Lint markdown"
+
+  ### Notebooks ###
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.9.1
+    hooks:
+      - id: nbqa
+        entry: nbqa mdformat
+        name: "📓 notebook · Format markdown cells"
+        args: ["--nbqa-md"]
+        types: [jupyter]
+        additional_dependencies:
+          - mdformat
+          - mdformat-gfm
+          - mdformat-ruff
+          - mdformat-frontmatter
+          - ruff
+
+  ### Additional File Types ###
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        name: "✨ misc-files · Format misc files"
+        types_or: [yaml, html, css, javascript, toml]
+        additional_dependencies:
+          - prettier@3.4.2
+
+  # ----------------------------- ⚡️ uv Build Tools ---------------------------- #
+
+  # This helps ensure cross-compatibility with people who don't wish to use uv
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.7.8
+    hooks:
+      - id: uv-sync
+        name: "⚡️ uv · Sync dependencies with uv"
+      - id: uv-lock
+        name: "⚡️ uv · Update dependency lockfile"
+      - id: uv-export
+        name: "⚡️ uv · Export dependencies to requirements.txt"
+        args: ["--no-hashes", --output-file, requirements-dev.txt]
+
+  # ---------------------------------------------------------------------------- #
+  #                               🧪 Tests (Local)                               #
+  # ---------------------------------------------------------------------------- #
+
+  - repo: local
+    hooks:
+      - id: pytest-collect
+        name: 🧪 test · Validate test formatting
+        entry: ./.venv/bin/pytest kloppy/tests
+        language: system
+        types: [python]
+        args: ["--collect-only"]
+        pass_filenames: false
+        always_run: true

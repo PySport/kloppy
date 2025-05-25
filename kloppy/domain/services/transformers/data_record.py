@@ -1,6 +1,6 @@
-import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
+import sys
 from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
 
 if sys.version_info >= (3, 11):
@@ -23,8 +23,7 @@ NamedColumns = Dict[str, Column]
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]:
-        ...
+    def default_transformer(self) -> Callable[[T], Dict]: ...
 
     def __init__(
         self,
@@ -35,9 +34,7 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
             converter = self.default_transformer()
         else:
             default = self.default_transformer()
-            has_string_columns = any(
-                not callable(column) for column in columns
-            )
+            has_string_columns = any(not callable(column) for column in columns)
 
             def converter(data_record: T) -> Dict[str, Any]:
                 if has_string_columns:

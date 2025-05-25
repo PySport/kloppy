@@ -1,8 +1,8 @@
 import sys
 
-import pytest
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
+import pytest
 
 from kloppy import opta, statsbomb, tracab
 from kloppy.config import config_context
@@ -121,9 +121,7 @@ class TestHelpers:
         assert transformed_dataset.frames[1].ball_coordinates == Point3D(
             x=1, y=0, z=1
         )
-        assert (
-            transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
-        )
+        assert transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
         assert transformed_dataset.metadata.coordinate_system is None
         assert (
             transformed_dataset.metadata.pitch_dimensions
@@ -236,8 +234,7 @@ class TestHelpers:
             to_pitch_dimensions=to_pitch_dimensions,
         )
         assert (
-            transform4.metadata.orientation
-            == Orientation.ACTION_EXECUTING_TEAM
+            transform4.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
         assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
         for frame_t3, frame_t4 in zip(transform3.frames, transform4.frames):
@@ -262,9 +259,7 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=5270.0, y=27.0)
@@ -303,9 +298,7 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=5270.0, y=27.0)

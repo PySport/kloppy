@@ -24,8 +24,7 @@ class ZipAdapter(FSSpecAdapter):
         fo = get_config("adapters.zip.fo")
         if fo is None:
             raise AdapterError(
-                "No zip archive provided for the zip adapter."
-                " Please provide one using the 'adapters.zip.fo' config."
+                "No zip archive provided for the zip adapter. Please provide one using the 'adapters.zip.fo' config."
             )
         return fsspec.filesystem(
             protocol="zip",

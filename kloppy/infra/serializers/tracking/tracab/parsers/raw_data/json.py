@@ -1,5 +1,5 @@
-import json
 from datetime import timedelta
+import json
 from typing import IO, Iterator, List, Tuple
 
 from kloppy.domain import (
@@ -44,12 +44,12 @@ class TracabJSONParser(TracabDataParser):
 
             frame_id = frame["FrameCount"]
             for period in self.periods:
-                assert isinstance(
-                    period.start_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
-                assert isinstance(
-                    period.end_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                assert isinstance(period.start_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
+                assert isinstance(period.end_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
 
                 if (
                     period.start_timestamp

@@ -1,6 +1,6 @@
+from abc import ABC, abstractmethod
 import math
 import sys
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Type, Union
 
 from kloppy.domain import (
@@ -166,9 +166,7 @@ class DefaultEventTransformer(EventAttributeTransformer):
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
@@ -290,9 +288,7 @@ class DefaultFrameTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
@@ -370,9 +366,7 @@ class DefaultCodeTransformer:
         exclude: Optional[List[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []

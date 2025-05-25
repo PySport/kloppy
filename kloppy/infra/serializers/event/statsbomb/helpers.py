@@ -60,9 +60,7 @@ def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
     raise DeserializationError(f"Unknown period_id {period_id}")
 
 
-def parse_coordinates(
-    coordinates: List[float], fidelity_version: int
-) -> Point:
+def parse_coordinates(coordinates: List[float], fidelity_version: int) -> Point:
     """Parse coordinates into a kloppy Point.
 
     Coordinates are cell-based, so 1,1 (low-granularity) or 0.1,0.1
@@ -93,9 +91,7 @@ def parse_coordinates(
             z=coordinates[2] - 0.05,
         )
     else:
-        raise DeserializationError(
-            f"Unknown coordinates format: {coordinates}"
-        )
+        raise DeserializationError(f"Unknown coordinates format: {coordinates}")
 
 
 def parse_freeze_frame(

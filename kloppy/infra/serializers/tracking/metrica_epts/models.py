@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
-from kloppy.domain import Player, Metadata
-
+from kloppy.domain import Metadata, Player
 
 # TODO: fill this with from SplitRegisters
 from kloppy.exceptions import DeserializationError
@@ -107,9 +106,7 @@ class BallChannelRef:
 class SplitRegister:
     separator: str
     children: List[
-        Union[
-            BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"
-        ]
+        Union[BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"]
     ]
 
     def to_regex(self, **kwargs) -> str:

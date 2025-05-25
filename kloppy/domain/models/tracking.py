@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -9,6 +9,11 @@ from kloppy.utils import (
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D
+
+if TYPE_CHECKING:
+    from pandas import (
+        DataFrame,  # type: ignore[import-untyped]  # pragma: no cover
+    )
 
 
 @dataclass
@@ -92,8 +97,7 @@ class TrackingDataset(Dataset[Frame]):
             import pandas as pd
         except ImportError:
             raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
+                "Seems like you don't have pandas installed. Please install it using: pip install pandas"
             )
 
         if not record_converter:

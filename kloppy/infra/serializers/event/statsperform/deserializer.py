@@ -1,6 +1,6 @@
+from datetime import datetime, timedelta
 import logging
 import math
-from datetime import datetime, timedelta
 from typing import IO, Dict, List, NamedTuple, Optional
 
 import pytz
@@ -255,9 +255,7 @@ def _parse_pass(
     team: Team,
     period: Period,
 ) -> Dict:
-    result = (
-        PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
-    )
+    result = PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
     qualifiers = _get_pass_qualifiers(
         raw_event.qualifiers
@@ -609,7 +607,7 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
 
 
 def _get_event_setpiece_qualifiers(
-    raw_qualifiers: Dict[int, str]
+    raw_qualifiers: Dict[int, str],
 ) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
@@ -631,7 +629,7 @@ def _get_event_setpiece_qualifiers(
 
 
 def _get_event_bodypart_qualifiers(
-    raw_qualifiers: Dict[int, str]
+    raw_qualifiers: Dict[int, str],
 ) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
@@ -650,7 +648,7 @@ def _get_event_bodypart_qualifiers(
 
 
 def _get_event_card_qualifiers(
-    raw_qualifiers: Dict[int, str]
+    raw_qualifiers: Dict[int, str],
 ) -> List[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
@@ -752,14 +750,10 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     )
 
                 next_event = (
-                    raw_events[idx + 1]
-                    if (idx + 1) < len(raw_events)
-                    else None
+                    raw_events[idx + 1] if (idx + 1) < len(raw_events) else None
                 )
                 next_next_event = (
-                    raw_events[idx + 2]
-                    if (idx + 2) < len(raw_events)
-                    else None
+                    raw_events[idx + 2] if (idx + 2) < len(raw_events) else None
                 )
                 period = next(
                     (
@@ -952,8 +946,8 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         generic_event_kwargs["timestamp"] = max(
                             timedelta(0), generic_event_kwargs["timestamp"]
                         )
-                        formation_change_event_kwargs = (
-                            _parse_formation_change(raw_event, team)
+                        formation_change_event_kwargs = _parse_formation_change(
+                            raw_event, team
                         )
                         event = self.event_factory.build_formation_change(
                             result=None,

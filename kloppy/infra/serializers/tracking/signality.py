@@ -1,25 +1,25 @@
-import logging
-from datetime import timedelta, datetime, timezone
-import warnings
-from typing import List, Dict, NamedTuple, IO, Optional, Union, Iterable
+from datetime import datetime, timedelta, timezone
 import json
+import logging
+from typing import IO, Dict, Iterable, List, NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
+    BallState,
+    DatasetTransformer,
     Ground,
     Metadata,
     Orientation,
     Period,
     Player,
+    PlayerData,
     Point,
     Point3D,
     Provider,
     Team,
     TrackingDataset,
-    PlayerData,
     attacking_directions_from_multi_frames,
-    DatasetTransformer,
-    BallState,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -163,9 +163,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             start_time = datetime.fromtimestamp(start_ts, tz=timezone.utc)
 
             last_frame = p_tracking[-1]
-            assert (
-                last_frame["state"] == "end"
-            ), "Last frame must have state 'end'"
+            assert last_frame["state"] == "end", (
+                "Last frame must have state 'end'"
+            )
             # compute the seconds since epoch
             end_ts = (last_frame["utc_time"]) / 1000
             # create an aware UTC datetime

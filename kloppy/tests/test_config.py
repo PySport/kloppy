@@ -1,6 +1,7 @@
 import pytest
+
 from kloppy import opta
-from kloppy.config import set_config, get_config, config_context, reset_config
+from kloppy.config import config_context, get_config, reset_config, set_config
 from kloppy.domain import KloppyCoordinateSystem, OptaCoordinateSystem
 
 

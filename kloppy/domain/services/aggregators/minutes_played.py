@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import List, NamedTuple, Union
 
-from kloppy.domain import EventDataset, Player, Time, PositionType
+from kloppy.domain import EventDataset, Player, PositionType, Time
 from kloppy.domain.services.aggregators.aggregator import (
     EventDatasetAggregator,
 )

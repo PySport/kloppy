@@ -10,18 +10,17 @@ from kloppy.domain import (
     Ground,
     Period,
     Player,
+    PositionType,
     Score,
     Team,
-    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser
 from ..formation_mapping import (
-    formation_position_mapping,
     formation_name_mapping,
-    FormationType,
+    formation_position_mapping,
 )
+from .base import OptaXMLParser
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")

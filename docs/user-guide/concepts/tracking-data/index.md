@@ -8,12 +8,12 @@ One widely used open dataset is the [Metrica Sports dataset](https://github.com/
 from kloppy import metrica
 
 dataset = metrica.load_open_data(
-    match_id=1, 
-    limit=1000  # Optional: load the first 1000 frames only
+    match_id=1,
+    limit=1000,  # Optional: load the first 1000 frames only
 )
 ```
 
-This will create a [`TrackingDataset`][kloppy.domain.TrackingDataset] that wraps a list of [`Frame`][kloppy.domain.Frame] entities. The tracking data is sampled at a fixed frame rate, available via the `metadata.frame_rate` attribute.
+This will create a \[`TrackingDataset`\][kloppy.domain.TrackingDataset] that wraps a list of \[`Frame`\][kloppy.domain.Frame] entities. The tracking data is sampled at a fixed frame rate, available via the `metadata.frame_rate` attribute.
 
 ```pycon exec="true" source="console" session="concept-trackingdata"
 >>> print(dataset.metadata.frame_rate)
@@ -21,11 +21,11 @@ This will create a [`TrackingDataset`][kloppy.domain.TrackingDataset] that wraps
 
 This value represents the number of frames recorded per second. For example, a frame rate of `25` means there are 25 frames per second of game time.
 
-The remainder of this section explains the [`Frame`][kloppy.domain.Frame] entities. Later sections of the user guide will explain in-depth how to process a tracking dataset.
+The remainder of this section explains the \[`Frame`\][kloppy.domain.Frame] entities. Later sections of the user guide will explain in-depth how to process a tracking dataset.
 
 ## Kloppy’s tracking data model
 
-Kloppy uses [`Frame`][kloppy.domain.Frame] objects to store tracking data. Each frame contains:
+Kloppy uses \[`Frame`\][kloppy.domain.Frame] objects to store tracking data. Each frame contains:
 
 - The exact moment the frame was recorded.
 - The (x, y) coordinates of the ball.
@@ -39,30 +39,27 @@ frame = dataset.frames[500]
 
 ### Timestamp
 
-The [`.timestamp`][kloppy.domain.Frame.timestamp] attribute returns a [`Time`][kloppy.domain.Time] object representing when the frame was recorded.
+The \[`.timestamp`\][kloppy.domain.Frame.timestamp] attribute returns a \[`Time`\][kloppy.domain.Time] object representing when the frame was recorded.
 
 ```pycon exec="true" source="console" session="concept-trackingdata"
 >>> print(frame.time)
 ```
 
-For more on the [`Time`][kloppy.domain.Time] object, see the [next section](../time/index.md).
-
+For more on the \[`Time`\][kloppy.domain.Time] object, see the [next section](../time/index.md).
 
 ### Ball coordinates
 
-The [`.ball_coordinates`][kloppy.domain.Frame.ball_coordinates] attribute provides the position of the ball as a [`Point`][kloppy.domain.Point] object:
+The \[`.ball_coordinates`\][kloppy.domain.Frame.ball_coordinates] attribute provides the position of the ball as a \[`Point`\][kloppy.domain.Point] object:
 
 ```pycon exec="true" source="console" session="concept-trackingdata"
 >>> print(frame.ball_coordinates)
 ```
 
-Some tracking data providers also include the ball's height (z-axis). In those cases, `.ball_coordinates` will return a [`Point3D`][kloppy.domain.Point3D] object instead.
-
+Some tracking data providers also include the ball's height (z-axis). In those cases, `.ball_coordinates` will return a \[`Point3D`\][kloppy.domain.Point3D] object instead.
 
 ### Player coordinates
 
-Each [`Frame`][kloppy.domain.Frame] includes a [`.players_coordinates`][kloppy.domain.Frame.players_coordinates] dictionary. This maps each [`Player`][kloppy.domain.Player] object to a [`Point`][kloppy.domain.Point] indicating the player’s location on the pitch.
-
+Each \[`Frame`\][kloppy.domain.Frame] includes a \[`.players_coordinates`\][kloppy.domain.Frame.players_coordinates] dictionary. This maps each \[`Player`\][kloppy.domain.Player] object to a \[`Point`\][kloppy.domain.Point] indicating the player’s location on the pitch.
 
 ```pycon exec="true" source="console" session="concept-trackingdata"
 >>> print(f"Number of players in the frame: {len(frame.players_coordinates)}")
@@ -73,7 +70,7 @@ Each [`Frame`][kloppy.domain.Frame] includes a [`.players_coordinates`][kloppy.d
 ```pycon exec="true" source="console" session="concept-trackingdata"
 >>> home_team, away_team = dataset.metadata.teams
 >>> print("List home team players coordinates", [
-...    player_coordinates 
+...    player_coordinates
 ...    for player, player_coordinates
 ...    in frame.players_coordinates.items()
 ...    if player.team == home_team

@@ -1,4 +1,5 @@
 # Exporting to SportsCode XML
+
 Kloppy provides support for exporting event datasets to XML compatible with Hudl Sportscode. This functionality enables you to:
 
 - Import events from all supported data providers in a Sportscode timeline
@@ -7,10 +8,10 @@ Kloppy provides support for exporting event datasets to XML compatible with Hudl
 
 ## Converting to Sportcode
 
-To export data into a format compatible with Sportscode, you first need to create a [`CodeDataset`][kloppy.domain.CodeDataset]. This is a collection of "codes", which is Sportscode’s basic unit for marking moments in a match, each with a start and end time, labels (like player and team), and other metadata.
+To export data into a format compatible with Sportscode, you first need to create a \[`CodeDataset`\][kloppy.domain.CodeDataset]. This is a collection of "codes", which is Sportscode’s basic unit for marking moments in a match, each with a start and end time, labels (like player and team), and other metadata.
 
 The recommended workflow starts by filtering your raw event data to the specific actions you want to turn into codes (for example, shots, passes, or defensive actions).
-Once filtered, you can use the [`from_dataset`][kloppy.domain.CodeDataset.from_dataset] method to map each event into a [`Code`][kloppy.domain.Code] object.
+Once filtered, you can use the \[`from_dataset`\][kloppy.domain.CodeDataset.from_dataset] method to map each event into a \[`Code`\][kloppy.domain.Code] object.
 
 Below is a full example showing how to extract all shots from a StatsBomb dataset and prepare them as Sportscode codes:
 
@@ -18,33 +19,23 @@ Below is a full example showing how to extract all shots from a StatsBomb datase
 from kloppy import statsbomb
 from kloppy.domain import Code, CodeDataset, EventType
 
-dataset_shots = (
-    statsbomb.load_open_data()
-    .filter(
-        lambda event: event.event_type == EventType.SHOT
-    )
+dataset_shots = statsbomb.load_open_data().filter(
+    lambda event: event.event_type == EventType.SHOT
 )
 
-code_dataset = (
-    CodeDataset
-    .from_dataset(
-        dataset_shots,
-        lambda event: Code(
-            code_id=None,  # make it auto increment on write
-            code=event.event_name,
-            period=event.period,
-            timestamp=max(0, event.timestamp - 7),
-            end_timestamp=event.timestamp + 5,
-            labels={
-                'Player': str(event.player),
-                'Team': str(event.team)
-            },
-
-            # In the future next two won't be needed anymore
-            ball_owning_team=None,
-            ball_state=None
-        )
-    )
+code_dataset = CodeDataset.from_dataset(
+    dataset_shots,
+    lambda event: Code(
+        code_id=None,  # make it auto increment on write
+        code=event.event_name,
+        period=event.period,
+        timestamp=max(0, event.timestamp - 7),
+        end_timestamp=event.timestamp + 5,
+        labels={"Player": str(event.player), "Team": str(event.team)},
+        # In the future next two won't be needed anymore
+        ball_owning_team=None,
+        ball_state=None,
+    ),
 )
 ```
 
@@ -56,7 +47,7 @@ In this example:
 
 ## Saving to Sportscode format
 
-Once you have created a [`CodeDataset`][kloppy.domain.CodeDataset], you can easily export it into a format compatible with Sportscode by using the [`sportscode.save()`][kloppy.sportscode.save] function from Kloppy.
+Once you have created a \[`CodeDataset`\][kloppy.domain.CodeDataset], you can easily export it into a format compatible with Sportscode by using the \[`sportscode.save()`\][kloppy.sportscode.save] function from Kloppy.
 
 Here’s a simple example:
 

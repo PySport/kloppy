@@ -23,7 +23,7 @@ Below is an overview of all currently supported providers, along with links to d
 | [HawkEye (2D)](hawkeye.ipynb)              |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
 | [Metrica](metrica.ipynb)                   |                             :material-minus:                             | :material-check: | :material-minus: |                [:material-eye:](https://github.com/metrica-sports/sample-data)                 |
 | [PFF FC](pff.ipynb)                        |                             :material-minus:                             | :material-check: | :material-minus: | [:material-eye:](https://drive.google.com/drive/u/0/folders/1_a_q1e9CXeEPJ3GdCv_3-rNO3gPqacfa) |
-| [SecondSpectrum](secondspectrum.ipynb)     | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus: |
+| [SecondSpectrum](secondspectrum.ipynb)     | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus: |                                                                                                |
 | [Signality](signality.ipynb)               |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
 | [SkillCorner](skillcorner.ipynb)           |                             :material-minus:                             | :material-check: | :material-minus: |                   [:material-eye:](https://github.com/SkillCorner/opendata)                    |
 | [Sportec](sportec.ipynb)                   |                             :material-check:                             | :material-check: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-025-04505-y)              |
@@ -55,7 +55,9 @@ This assumes that you have the data stored locally in your current working direc
 
 !!! todo
 
-    Some data loaders accept a list of input files.
+```
+Some data loaders accept a list of input files.
+```
 
 Alternatively, you can also provide a binary stream.
 
@@ -98,15 +100,15 @@ dataset = statsbomb.load(
 )
 ```
 
-You can pass credentials for authentication via [`set_config`][kloppy.config.set_config].
+You can pass credentials for authentication via \[`set_config`\][kloppy.config.set_config].
 
 ```python
 from kloppy import statsbomb
 from kloppy.config import set_config
 
 set_config(
-    'adapters.http.basic_authentication',
-    { 'user': 'JohnDoe', 'pass': 'asecretkey' }
+    "adapters.http.basic_authentication",
+    {"user": "JohnDoe", "pass": "asecretkey"},
 )
 
 dataset = statsbomb.load(
@@ -128,7 +130,7 @@ dataset = statsbomb.load(
 )
 ```
 
-To make this work, you'll most likely have to set up authentication. The most secure way to do this is via [boto environment variables](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-environment-variables). Alternatively, if preferred, you can create a [`s3fs.S3FileSystem`](https://s3fs.readthedocs.io/en/latest/api.html#s3fs.core.S3FileSystem) instance and pass it via [`set_config`][kloppy.config.set_config].
+To make this work, you'll most likely have to set up authentication. The most secure way to do this is via [boto environment variables](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-environment-variables). Alternatively, if preferred, you can create a [`s3fs.S3FileSystem`](https://s3fs.readthedocs.io/en/latest/api.html#s3fs.core.S3FileSystem) instance and pass it via \[`set_config`\][kloppy.config.set_config].
 
 ```python
 import s3fs
@@ -137,16 +139,16 @@ from kloppy import statsbomb
 from kloppy.config import set_config
 
 set_config(
-    'adapters.s3.s3fs',
+    "adapters.s3.s3fs",
     s3fs.S3FileSystem(
-      key='s3key...',
-      secret='asecretkey...',
-    )
+        key="s3key...",
+        secret="asecretkey...",
+    ),
 )
 
 dataset = statsbomb.load(
-    event_data='s3://some-bucket/match_3788741/events.json',
-    lineup_data='s3://some-bucket/match_3788741/lineups.json'
+    event_data="s3://some-bucket/match_3788741/events.json",
+    lineup_data="s3://some-bucket/match_3788741/lineups.json",
 )
 ```
 
@@ -173,7 +175,7 @@ The following options are supported by both event data and tracking data loaders
 
 #### `coordinates`
 
-By default, kloppy will parse all data to the [`KloppyCoordinateSystem`][kloppy.domain.KloppyCoordinateSystem], which uses normalized pitch dimensions in the range \[0, 1\]. By providing the `coordinates` option, you can parse the data to the coordinate system of any other data provider. This parameter accepts a [`Provider`][kloppy.domain.Provider] value or a provider's name.
+By default, kloppy will parse all data to the \[`KloppyCoordinateSystem`\][kloppy.domain.KloppyCoordinateSystem], which uses normalized pitch dimensions in the range [0, 1]. By providing the `coordinates` option, you can parse the data to the coordinate system of any other data provider. This parameter accepts a \[`Provider`\][kloppy.domain.Provider] value or a provider's name.
 
 ```python
 from kloppy import statsbomb
@@ -182,14 +184,14 @@ from kloppy.domain import Provider
 dataset = statsbomb.load(
     event_data="./events/3788741.json.gz",
     lineup_data="./lineups/3788741.json.gz",
-    coordinates=Provider.StatsBomb
+    coordinates=Provider.StatsBomb,
     # or: coordinates="statsbomb"
 )
 ```
 
 #### `additional_metadata`
 
-You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadat trough the `additional_metadat` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the [`Metadata`][kloppy.domain.Metadata] entity.
+You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadat trough the `additional_metadat` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the \[`Metadata`\][kloppy.domain.Metadata] entity.
 
 ```python
 from kloppy import statsbomb
@@ -202,7 +204,7 @@ dataset = statsbomb.load(
         "date": datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc),
         "game_week": "7",
         "game_id": "3888787",
-    }
+    },
 )
 ```
 
@@ -212,7 +214,7 @@ The following options are only supported by event data loaders.
 
 #### `event_types`
 
-Through the `event_types` parameter you can limit the event types that should be loaded. You can pass a list of [`EventType`][kloppy.domain.EventType] values or a list of event type names.
+Through the `event_types` parameter you can limit the event types that should be loaded. You can pass a list of \[`EventType`\][kloppy.domain.EventType] values or a list of event type names.
 
 ```python
 from kloppy import statsbomb
@@ -221,14 +223,14 @@ from kloppy.domain import EventType
 dataset = statsbomb.load(
     event_data="./events/3788741.json.gz",
     lineup_data="./lineups/3788741.json.gz",
-    event_types=[EventType.Pass, EventType.Shot]
+    event_types=[EventType.Pass, EventType.Shot],
     # or: event_types=["pass", "shot"]
 )
 ```
 
 #### `event_factory`
 
-In some cases, you might want to use certain data is not included in kloppy's data model. This is supported through the `event_factory` parameter. You can define your own customized subclasses of [`Event`][kloppy.domain.Event] that can store the additional data and then implement a [`EventFactory`][kloppy.domain.EventFactory] to parse the data. Below, we illustrate this by parsing StatsBomb's xG values.
+In some cases, you might want to use certain data is not included in kloppy's data model. This is supported through the `event_factory` parameter. You can define your own customized subclasses of \[`Event`\][kloppy.domain.Event] that can store the additional data and then implement a \[`EventFactory`\][kloppy.domain.EventFactory] to parse the data. Below, we illustrate this by parsing StatsBomb's xG values.
 
 ```python
 from dataclasses import dataclass
@@ -244,13 +246,14 @@ class StatsBombShotEvent(ShotEvent):
 
 class StatsBombEventFactory(EventFactory):
     def build_shot(self, **kwargs) -> ShotEvent:
-        kwargs['statsbomb_xg'] = kwargs['raw_event']['shot']['statsbomb_xg']
+        kwargs["statsbomb_xg"] = kwargs["raw_event"]["shot"]["statsbomb_xg"]
         return create_event(StatsBombShotEvent, **kwargs)
+
 
 dataset = statsbomb.load(
     event_data="./events/3788741.json.gz",
     lineup_data="./lineups/3788741.json.gz",
-    event_factory=StatsBombEventFactory()
+    event_factory=StatsBombEventFactory(),
 )
 ```
 

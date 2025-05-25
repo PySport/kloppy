@@ -1,7 +1,7 @@
 site_name: kloppy 3.16.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
-repo_name: 'PySport/kloppy'
+repo_name: "PySport/kloppy"
 edit_uri: blob/master/docs/
 google_analytics: null # TODO: set-up Google Analytics project to track
 theme:
@@ -24,11 +24,11 @@ extra_javascript: [assets/javascripts/extra.js]
 nav:
   - Home: index.md
   - User guide:
-      - Getting started: 
+      - Getting started:
           - user-guide/getting-started/index.md
-      - Installation: 
+      - Installation:
           - user-guide/installation/index.md
-      - Configuration: 
+      - Configuration:
           - user-guide/configuration/index.md
       - Concepts:
           - user-guide/concepts/index.md
@@ -182,7 +182,7 @@ nav:
           - kloppy.exceptions: reference/exceptions.md
   - Development:
       - Contributing: contributor-guide/contributing.md
-      - Issues: contributor-guide/issues.md
+      - Creating a development environment: contributor-guide/dev-environment.md
       - Adding a data provider: contributor-guide/add-new-provider.md
       - License: license.md
   - Releases: https://github.com/PySport/kloppy/releases
@@ -196,8 +196,8 @@ plugins:
   - autorefs
   - macros:
       module_name: docs/macros
-      j2_comment_start_string: '$#'
-      j2_comment_end_string: '#$'
+      j2_comment_start_string: "$#"
+      j2_comment_end_string: "#$"
   - mkdocstrings:
       handlers:
         python:
@@ -209,7 +209,7 @@ plugins:
             separate_signature: true
             unwrap_annotated: true
             filters:
-              - '!^_'
+              - "!^_"
             merge_init_into_class: true
             docstring_section_style: spacy
             signature_crossrefs: true

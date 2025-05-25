@@ -2,13 +2,13 @@
 
 import bz2
 import contextlib
+from dataclasses import dataclass, replace
 import gzip
+from io import BufferedWriter, BytesIO, TextIOWrapper
 import logging
 import lzma
 import os
 import re
-from dataclasses import dataclass, replace
-from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
     IO,
     Any,
@@ -177,7 +177,7 @@ def _open(
     filename: FileOrPath,
     mode: str = "rb",
     compresslevel: Optional[int] = None,
-    format: Optional[str] = None,
+    format: Optional[str] = None,  # noqa: A002
 ) -> BinaryIO:
     """
         A replacement for the "open" function that can also read and write
@@ -272,7 +272,9 @@ def _open_gz(
 
     if "r" in mode:
         return gzip.open(filename, mode)  # type: ignore
-    return BufferedWriter(gzip.open(filename, mode, compresslevel=compresslevel))  # type: ignore
+    return BufferedWriter(
+        gzip.open(filename, mode, compresslevel=compresslevel)
+    )  # type: ignore
 
 
 def get_file_extension(file_or_path: FileLike) -> str:
@@ -439,7 +441,7 @@ def expand_inputs(
         inputs: The input object, a list of input objects, or a directory with input objects to be opened.
         regex_filter: A regex pattern to filter files (only applies to directories).
         sort_key: A callable to define sorting logic for files (only applies to directories).
-          If not provided, files are sorted as ["file1.txt", "file2.txt", "file10.txt"].
+            If not provided, files are sorted as ["file1.txt", "file2.txt", "file10.txt"].
 
     Returns:
         An iterator over the resolved file paths or stream content.

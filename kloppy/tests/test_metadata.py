@@ -1,14 +1,15 @@
 from math import sqrt
+
 import pytest
 
 from kloppy.domain import (
     Dimension,
+    MetricPitchDimensions,
     NormalizedPitchDimensions,
+    OptaPitchDimensions,
     Point,
     Point3D,
-    OptaPitchDimensions,
     Unit,
-    MetricPitchDimensions,
 )
 from kloppy.domain.services.transformers import DatasetTransformer
 
@@ -95,9 +96,7 @@ class TestPitchdimensions:
         distance = pitch.distance_between(Point(0, 50), Point(11.5, 50))
         assert distance == 11
 
-        distance = pitch.distance_between(
-            Point(100, 50), Point(100 - 11.5, 50)
-        )
+        distance = pitch.distance_between(Point(100, 50), Point(100 - 11.5, 50))
         assert distance == 11
 
         distance = pitch.distance_between(
@@ -130,8 +129,6 @@ class TestPitchdimensions:
         )
         # the corner of the penalty area should remain the corner of
         # the penalty area in the new coordinate system
-        transformed_point = transformer.change_point_dimensions(
-            Point(17, 78.9)
-        )
+        transformed_point = transformer.change_point_dimensions(Point(17, 78.9))
         assert transformed_point.x == pytest.approx(16.5)
         assert transformed_point.y == pytest.approx(54.16)

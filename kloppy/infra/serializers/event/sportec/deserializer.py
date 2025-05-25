@@ -1,6 +1,6 @@
-import logging
 from collections import OrderedDict
 from datetime import datetime, timedelta
+import logging
 from typing import IO, Dict, List, NamedTuple
 
 from lxml import objectify
@@ -149,9 +149,10 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
-        "Result"
-    ].split(":")
+    (
+        home_score,
+        away_score,
+    ) = match_root.MatchInformation.General.attrib["Result"].split(":")
     score = Score(home=int(home_score), away=int(away_score))
     teams = [home_team, away_team]
 
@@ -230,9 +231,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         referee_path = objectify.ObjectPath(
             "PutDataRequest.MatchInformation.Referees"
         )
-        referee_elms = referee_path.find(match_root).iterchildren(
-            tag="Referee"
-        )
+        referee_elms = referee_path.find(match_root).iterchildren(tag="Referee")
 
         for referee in referee_elms:
             ref_attrib = referee.attrib
@@ -425,9 +424,7 @@ def _parse_caution(event_attributes: Dict) -> Dict:
     elif event_attributes["CardColor"] == "red":
         card_type = CardType.RED
     else:
-        raise ValueError(
-            f"Unknown card color: {event_attributes['CardColor']}"
-        )
+        raise ValueError(f"Unknown card color: {event_attributes['CardColor']}")
 
     return dict(card_type=card_type)
 
@@ -495,8 +492,7 @@ class SportecEventDataDeserializer(
 
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
-                    and "GameSection"
-                    in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
+                    and "GameSection" in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
                 ):
                     period_id += 1
                     period = Period(
@@ -538,9 +534,7 @@ class SportecEventDataDeserializer(
                 if "Player" in flatten_attributes:
                     if not team:
                         raise ValueError("Player set while team is not set")
-                    player = team.get_player_by_id(
-                        flatten_attributes["Player"]
-                    )
+                    player = team.get_player_by_id(flatten_attributes["Player"])
 
                 generic_event_kwargs = dict(
                     # from DataRecord
@@ -676,14 +670,10 @@ class SportecEventDataDeserializer(
                         events[i + 1].replace(
                             coordinates=Point(
                                 x=float(
-                                    events[i + 1].raw_event[
-                                        "X-Source-Position"
-                                    ]
+                                    events[i + 1].raw_event["X-Source-Position"]
                                 ),
                                 y=float(
-                                    events[i + 1].raw_event[
-                                        "Y-Source-Position"
-                                    ]
+                                    events[i + 1].raw_event["Y-Source-Position"]
                                 ),
                             )
                         )

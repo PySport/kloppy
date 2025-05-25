@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -24,6 +24,10 @@ from typing import (
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
+    from pandas import (
+        DataFrame,  # type: ignore[import-untyped]  # pragma: no cover
+    )
+
     from ..services.transformers.data_record import (
         Column,
         NamedColumns,
@@ -618,8 +622,7 @@ class CoordinateSystem(ABC):
             from mplsoccer.dimensions import BaseDims
         except ImportError:
             raise ImportError(
-                "Seems like you don't have `mplsoccer` installed. "
-                "Please install it using: pip install mplsoccer"
+                "Seems like you don't have `mplsoccer` installed. Please install it using: pip install mplsoccer"
             )
 
         if (
@@ -1798,8 +1801,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1807,8 +1809,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1877,8 +1878,7 @@ class Dataset(ABC, Generic[T]):
                 types_mapper = pd.ArrowDtype
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
+                    "Seems like you don't have pandas installed. Please install it using: pip install pandas"
                 )
             except AttributeError:
                 raise AttributeError(
@@ -1890,8 +1890,7 @@ class Dataset(ABC, Generic[T]):
                 import pyarrow as pa
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pyarrow installed. Please"
-                    " install it using: pip install pyarrow"
+                    "Seems like you don't have pyarrow installed. Please install it using: pip install pyarrow"
                 )
 
             table = pa.Table.from_pydict(
@@ -1904,8 +1903,7 @@ class Dataset(ABC, Generic[T]):
                 from pandas import DataFrame
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
+                    "Seems like you don't have pandas installed. Please install it using: pip install pandas"
                 )
 
             return DataFrame.from_dict(
@@ -1916,8 +1914,7 @@ class Dataset(ABC, Generic[T]):
                 from polars import from_dict
             except ImportError:
                 raise ImportError(
-                    "Seems like you don't have polars installed. Please"
-                    " install it using: pip install polars"
+                    "Seems like you don't have polars installed. Please install it using: pip install polars"
                 )
 
             return from_dict(

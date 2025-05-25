@@ -169,21 +169,21 @@ Add any changes you're committing via [Pull Request](#creating-pull-request) to 
 To cleanly share the additions made to kloppy you need to make what is called a Pull Request (PR). To do this cleanly it is advised to do the following:
 
 1. If you start for the first time, create a ["fork"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of the kloppy repository.
-2. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the newly created fork locally.
-3. Create a new branch using something like `git checkout -b <branch_name>`
-4. After you have made your changes in this newly created branch:
-   - Run `pytest kloppy/tests` or `pytest kloppy/tests/test_{provider_name}.py` to ensure all tests complete successfully.
-   - [Update the documentation](#updating-documentation) with any and all changes.
-   - Run `black <filename>` on all the new files.
-   - Run `git add <filename>` on all the new files.
-   - Run `git commit -m "<some message>"`
-   - Push the changes to your remote reposity with `git push` or `git push --set-upstream origin` if you're pushing for the first time.
-5. Now, go to [kloppy > Pull Requests](https://github.com/PySport/kloppy/pulls) and click the green "New pull request" button.
-   - Set base: `master`
-   - Set compare: `<branch_name>`
-   - Click "Create pull request"
-   - Write an exhaustive Pull Request message to inform everything you've contributed.
-6. Finally, after the PR has been completed automated tests will run on GitHub to make sure eveything (still) functions as expected.
+1. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the newly created fork locally.
+1. Create a new branch using something like `git checkout -b <branch_name>`
+1. After you have made your changes in this newly created branch:
+    - Run `pytest kloppy/tests` or `pytest kloppy/tests/test_{provider_name}.py` to ensure all tests complete successfully.
+    - [Update the documentation](#updating-documentation) with any and all changes.
+    - Run `black <filename>` on all the new files.
+    - Run `git add <filename>` on all the new files.
+    - Run `git commit -m "<some message>"`
+    - Push the changes to your remote reposity with `git push` or `git push --set-upstream origin` if you're pushing for the first time.
+1. Now, go to [kloppy > Pull Requests](https://github.com/PySport/kloppy/pulls) and click the green "New pull request" button.
+    - Set base: `master`
+    - Set compare: `<branch_name>`
+    - Click "Create pull request"
+    - Write an exhaustive Pull Request message to inform everything you've contributed.
+1. Finally, after the PR has been completed automated tests will run on GitHub to make sure eveything (still) functions as expected.
 
 ## Event Data
 
@@ -197,9 +197,9 @@ The loading file should have a function `load` (or `load_event` if this data pro
 
 This function takes at least:
 
-- One or more [`FileLike`][kloppy.io.FileLike] objects, generally a file of event data and a meta data file.
-- `event_types`, an optional list of strings to filter the dataset at load time. (e.g. event_types can be `["pass", "shot"]`) these string values relate to the [`EventType`][kloppy.domain.EventType] class.
-- `coordinates`, an optional string that relates to [`Provider`][kloppy.domain.Provider] and their associated [Coordinate Systems][kloppy.domain.CoordinateSystem]. (e.g. coordinates can be `"secondspectrum"` or `"statsbomb"`).
+- One or more \[`FileLike`\][kloppy.io.FileLike] objects, generally a file of event data and a meta data file.
+- `event_types`, an optional list of strings to filter the dataset at load time. (e.g. event_types can be `["pass", "shot"]`) these string values relate to the \[`EventType`\][kloppy.domain.EventType] class.
+- `coordinates`, an optional string that relates to \[`Provider`\][kloppy.domain.Provider] and their associated [Coordinate Systems][kloppy.domain.CoordinateSystem]. (e.g. coordinates can be `"secondspectrum"` or `"statsbomb"`).
 - `event_factory`, an optional `EventFactory`.
 
 Within the function we instantiate the `ProviderNameDeserialzer` that we import from `from kloppy.infra.serializers.event.{new_provider}` alongside the `ProviderNameInputs`.
@@ -216,6 +216,7 @@ from kloppy.infra.serializers.tracking.new_provider import (
 )
 from kloppy.io import FileLike, open_as_file
 
+
 def load(
     event_data: FileLike,
     meta_data: FileLike,
@@ -228,12 +229,12 @@ def load(
     """
     deserializer = ProviderNameDeserializer(
         coordinate_system=coordinates,
-        event_factory=event_factory
-        or get_config("event_factory")
+        event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=ProviderNameInputs(
                 event_data=event_data_fp,
@@ -273,7 +274,7 @@ class ProviderNameEventDataDeserializer(
 Create a `deserialize` method that takes the `ProviderNameDataInputs` as inputs. Within the `deserialize` method we do two high level actions:
 
 1. [Parse meta data items into a `Metadata` object.](#parsing-metadata)
-2. [Parse events into an `events` list.](#parsing-events)
+1. [Parse events into an `events` list.](#parsing-events)
 
 These two will ultimately form the `EventDataset` that is returned from the `deserialize` method. i.e.
 
@@ -292,19 +293,19 @@ Use the meta data and event data feeds to parse:
 
 - `teams` as `Team` objects in a list `[home_team, away_team]`
 - `periods` a list of `Period` objects (don't forget about optional extra time.)
-  - Each period has an `id` (1, 2, 3, 4)
-  - Each period has a `start_timestamp` and `end_timestamp` of type `timedelta`. This `timedelta` object describes the time elapsed since the start of the period in question.
+    - Each period has an `id` (1, 2, 3, 4)
+    - Each period has a `start_timestamp` and `end_timestamp` of type `timedelta`. This `timedelta` object describes the time elapsed since the start of the period in question.
 - `pitch_dimensions` is a `PitchDimensions`
 - `orientation`. Identify the direction of play (`Orientation`) (e.g. `orientation = Orientation.ACTION_EXECUTING_TEAM`)
 - `flags`. Indicate if our dataset contains information on who the ball owning team is and/or if we know ball state.
-  - For example: `flags = DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM` or `flags = ~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM`)
+    - For example: `flags = DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM` or `flags = ~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM`)
 - `provider`. Update the `Provider` enum class and add the new provider.
 - `coordinate_system`. A `CoordinateSystem` object that contains information like `pitch_length`, `vertical_orientation` etc. Create a new `ProviderNameCoordinateSytem` class that inherits from `ProviderCoordinateSystem`.
 - Optional metadata such as:
-  - `score` (`Score`)
-  - `frame_rate` (`float`)
-  - `date` (`datetime`)
-  - etc.
+    - `score` (`Score`)
+    - `frame_rate` (`float`)
+    - `date` (`datetime`)
+    - etc.
 
 #### Parsing Events
 
@@ -350,34 +351,34 @@ Finally, each `event` is appended to the `events` list.
 
 - Make sure the `FileLike` objects are processed correctly in the deserializer. This means opening the files in the [Loader File](#loader-file) using `open_as_file`.
 - Create variables for each string representation of events, to make the code less error prone. e.g.
-  - `SPORTEC_EVENT_NAME_OWN_GOAL = "OwnGoal"`
+    - `SPORTEC_EVENT_NAME_OWN_GOAL = "OwnGoal"`
 - Don't forget about different types (i.e. `SetPieceType`, `CardType`, `PassType`, `BodyPartType`, `GoalKeeperActionType` or `DuelType`)
 - Don't forget about different result types (i.e. `PassResult`, `ShotResult`, `TakeOnResult`, `CarryResult`, `DuelResult`, `InterceptionResult`)
 - Don't forget to include own goals, yellow and red cards, extra time, penalties etc.
 - Map provider specific position labels to Kloppy standardized position labels, e.g.:
-  ```python
-  """
-  Here the 'str' keys are the position labels as provided by the data provider (in this case they are German labels)
-  """
-  position_types_mapping: Dict[str, PositionType] = {
-      "TW": PositionType.Goalkeeper,
-      "IVR": PositionType.RightCenterBack,
-      "IVL": PositionType.LeftCenterBack,
-      ...
-      "OLM": PositionType.LeftMidfield,
-      "RA": PositionType.RightWing,
-      "LA": PositionType.LeftWing,
-  }
-  ```
+    ```python
+    """
+    Here the 'str' keys are the position labels as provided by the data provider (in this case they are German labels)
+    """
+    position_types_mapping: Dict[str, PositionType] = {
+        "TW": PositionType.Goalkeeper,
+        "IVR": PositionType.RightCenterBack,
+        "IVL": PositionType.LeftCenterBack,
+        ...
+        "OLM": PositionType.LeftMidfield,
+        "RA": PositionType.RightWing,
+        "LA": PositionType.LeftWing,
+    }
+    ```
 - When converting these position labels use `position_types_mapping.get(provider_position_label, PositionType.Unknown)`. This will ensure even if we have a missing position label our newly built deserializer every position will be of type `PositionType`.
 - `deserialize` returns an `EventDataset(metadata=metadata, records=events)`
 - `Period` `start_timestamp` is of type `timedelta`. This time delta relates to the start of a period (i.e. each period starts at `0`)
 - Parse `Substitutions` seperately from `PlayerOn` and `PlayerOff` (if this is provided by the provider).
-  - Player Off / Player On events represent players (temporarily) leaving the pitch (e.g. injury treatment, red card)
-  - Substitutions represent a one for one exchange of two players.
+    - Player Off / Player On events represent players (temporarily) leaving the pitch (e.g. injury treatment, red card)
+    - Substitutions represent a one for one exchange of two players.
 - Update the `event-spec.yml` file in the Documentation to cover:
-  - parsed. If this event is now included in the event data parser.
-  - not implemented. If this event is provided by the data provider, but is currently not included in kloppy.
-  - not supported. If this event is not provided by the data provider.
-  - unknown. If the status is unknown.
-  - inferred. When an event is inferred from other events (e.g. Ball out events for some providers)
+    - parsed. If this event is now included in the event data parser.
+    - not implemented. If this event is provided by the data provider, but is currently not included in kloppy.
+    - not supported. If this event is not provided by the data provider.
+    - unknown. If the status is unknown.
+    - inferred. When an event is inferred from other events (e.g. Ball out events for some providers)

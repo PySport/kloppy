@@ -1,32 +1,31 @@
+from datetime import datetime, timedelta, timezone
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from typing import IO, Dict, NamedTuple, Optional, Union
 import warnings
-from typing import Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    PlayerData,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
-    Ground,
-    Player,
-    Provider,
-    PlayerData,
-    Score,
     PositionType,
+    Provider,
+    Score,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-
 from kloppy.utils import Readable, performance_logging
 
 from .deserializer import TrackingDataDeserializer
@@ -229,7 +228,7 @@ class SecondSpectrumDeserializer(
                             .split(":")[0]
                             .strip()
                         )
-                    except:
+                    except Exception:
                         home_name, away_name = "home", "away"
 
                     teams[0].team_id = home_team_id
@@ -264,7 +263,7 @@ class SecondSpectrumDeserializer(
                             )
                             team.players.append(player)
 
-                except:  # TODO: More specific exception
+                except Exception:  # TODO: More specific exception
                     logging.warning(
                         "Optional JSON Metadata is malformed. Continuing without"
                     )

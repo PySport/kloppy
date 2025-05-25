@@ -1,7 +1,7 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+import json
+import logging
 from typing import IO, Dict, List, NamedTuple, Tuple
 
 from kloppy.domain import (
@@ -420,9 +420,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                 ):
                     continue
                 timestamp = datetime.strptime(
-                    match["date"]
-                    + status_update["time"]
-                    + match["stadiumGMT"],
+                    match["date"] + status_update["time"] + match["stadiumGMT"],
                     "%Y%m%d%H:%M:%S%z",
                 )
                 half = status_update["t"]["half"]

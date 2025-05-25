@@ -1,13 +1,13 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 from .domain import (
+    CoordinateSystem,
     Dataset,
+    DatasetTransformer,
     Orientation,
     PitchDimensions,
-    DatasetTransformer,
     Provider,
     build_coordinate_system,
-    CoordinateSystem,
 )
 
 

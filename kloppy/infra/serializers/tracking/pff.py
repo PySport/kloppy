@@ -1,7 +1,7 @@
-import json
-import logging
 from collections import defaultdict
 from datetime import timedelta, timezone
+import json
+import logging
 from typing import IO, Dict, NamedTuple, Optional, Union
 
 from dateutil.parser import parse
@@ -22,7 +22,6 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
 )
-
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -272,7 +271,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-
                 team_id = player["team"]["id"]
                 player_col = player["player"]
 

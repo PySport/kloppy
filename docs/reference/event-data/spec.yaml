@@ -97,7 +97,7 @@ event_types:
           statsbomb:
             status: parsed
             implementation: value of 'pass.end_location' field
-          sportec: 
+          sportec:
             status: parsed
             implementation: X/Y-Source-Position of subsequent event
           metrica_json:
@@ -152,7 +152,7 @@ event_types:
                 implementation: outcome 75/'Out' or 74/'Injury Clearance'
               sportec:
                 status: inferred
-                implementation: When action is SET_PIECE, and previous action was pass, set pass outcome to unsuccessful 
+                implementation: When action is SET_PIECE, and previous action was pass, set pass outcome to unsuccessful
               metrica_json:
                 status: parsed
                 implementation: outcome 6/'OUT'
@@ -427,7 +427,7 @@ event_types:
             providers:
               statsbomb:
                 status: parsed
-                implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+                implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception'
           LOST:
             providers:
               statsbomb:
@@ -944,7 +944,7 @@ qualifiers:
       sportec:
         status: not supported
       metrica_json:
-          status: not implemented
+        status: not implemented
     values:
       FIRST_YELLOW:
         providers:

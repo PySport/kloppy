@@ -3,22 +3,21 @@ from pathlib import Path
 
 import pytest
 
+from kloppy import sportec
 from kloppy.domain import (
-    Provider,
-    Orientation,
-    Point,
-    SetPieceType,
-    ShotResult,
+    BallState,
     BodyPart,
     DatasetType,
-    BallState,
+    Official,
+    OfficialType,
+    Orientation,
+    Point,
     Point3D,
     PositionType,
-    OfficialType,
-    Official,
+    Provider,
+    SetPieceType,
+    ShotResult,
 )
-
-from kloppy import sportec
 
 
 class TestSportecEventData:
@@ -89,19 +88,13 @@ class TestSportecEventData:
     def test_correct_normalized_event_data_deserialization(
         self, event_data: Path, meta_data: Path
     ):
-        dataset = sportec.load_event(
-            event_data=event_data, meta_data=meta_data
-        )
+        dataset = sportec.load_event(event_data=event_data, meta_data=meta_data)
 
         assert dataset.events[0].coordinates == Point(0.5641, 0.0)
 
-    def test_pass_receiver_coordinates(
-        self, event_data: Path, meta_data: Path
-    ):
+    def test_pass_receiver_coordinates(self, event_data: Path, meta_data: Path):
         """Pass receiver_coordinates must match the X/Y-Source-Position of next event"""
-        dataset = sportec.load_event(
-            event_data=event_data, meta_data=meta_data
-        )
+        dataset = sportec.load_event(event_data=event_data, meta_data=meta_data)
 
         first_pass = dataset.find("pass")
         assert first_pass.receiver_coordinates != first_pass.next().coordinates
@@ -192,9 +185,9 @@ class TestSportecTrackingData:
         second_period = dataset.metadata.periods[1]
         for frame in dataset:
             if frame.period == second_period:
-                assert frame.timestamp == timedelta(
-                    seconds=0
-                ), "First frame must start at timestamp 0.0"
+                assert frame.timestamp == timedelta(seconds=0), (
+                    "First frame must start at timestamp 0.0"
+                )
                 break
         else:
             # No data found in second half

@@ -41,9 +41,10 @@ def load_tracking_csv(
     deserializer = MetricaCSVTrackingDataDeserializer(
         sample_rate=sample_rate, limit=limit, coordinate_system=coordinates
     )
-    with open_as_file(home_data) as home_data_fp, open_as_file(
-        away_data
-    ) as away_data_fp:
+    with (
+        open_as_file(home_data) as home_data_fp,
+        open_as_file(away_data) as away_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=MetricaCSVTrackingDataInputs(
                 home_data=home_data_fp, away_data=away_data_fp
@@ -74,9 +75,10 @@ def load_tracking_epts(
     deserializer = MetricaEPTSTrackingDataDeserializer(
         sample_rate=sample_rate, limit=limit, coordinate_system=coordinates
     )
-    with open_as_file(raw_data) as raw_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(raw_data) as raw_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=MetricaEPTSTrackingDataInputs(
                 raw_data=raw_data_fp, meta_data=meta_data_fp
@@ -109,9 +111,10 @@ def load_event(
         event_factory=event_factory or get_config("event_factory"),
     )
 
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=MetricaJsonEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp

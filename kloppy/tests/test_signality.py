@@ -1,20 +1,19 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List
 
 import pytest
 
+from kloppy import signality
 from kloppy.domain import (
-    Provider,
+    BallState,
+    DatasetType,
+    Ground,
     Orientation,
     Point,
     Point3D,
-    DatasetType,
-    Ground,
-    BallState,
+    Provider,
 )
-
-from kloppy import signality
 
 
 class TestSignalityTracking:

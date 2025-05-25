@@ -1,18 +1,24 @@
 /* overrides */
 .md-content header {
-    display: block;
-    transition: opacity .75s
+  display: block;
+  transition: opacity 0.75s;
 }
 
 .js .md-content header[hidden] {
-    opacity: 0
+  opacity: 0;
 }
 .md-header--shadow {
-    transition: background-color .25s, transform .25s cubic-bezier(.1,.7,.1,1), box-shadow .25s;
+  transition:
+    background-color 0.25s,
+    transform 0.25s cubic-bezier(0.1, 0.7, 0.1, 1),
+    box-shadow 0.25s;
 }
 .md-header:not(.md-header--shadow) {
-    background-color: initial;
-    transition: background-color 125ms, transform 125ms cubic-bezier(.1,.7,.1,1), box-shadow 0ms;
+  background-color: initial;
+  transition:
+    background-color 125ms,
+    transform 125ms cubic-bezier(0.1, 0.7, 0.1, 1),
+    box-shadow 0ms;
 }
 
 .md-content__inner {
@@ -21,11 +27,11 @@
 }
 
 .md-content__inner:before {
-    display: none
+  display: none;
 }
 
 .md-typeset {
-    color: var(--md-typeset-color)
+  color: var(--md-typeset-color);
 }
 
 .md-typeset h2 {
@@ -33,19 +39,20 @@
   margin-top: 0.175em;
 }
 
-.md-typeset h2+h3 {
-    font-size: 1em;
-    margin-top: -.8em
+.md-typeset h2 + h3 {
+  font-size: 1em;
+  margin-top: -0.8em;
 }
 
 .md-typeset :target {
-    --md-scroll-margin: 5.2rem
+  --md-scroll-margin: 5.2rem;
 }
 
 .md-main__inner {
   margin: 0;
 }
-.md-main__inner > .md-content, .md-main__inner > .md-sidebar--secondary {
+.md-main__inner > .md-content,
+.md-main__inner > .md-sidebar--secondary {
   display: none;
 }
 
@@ -72,7 +79,7 @@
 
 /* parallax */
 :root {
-    --md-parallax-perspective: 2.5rem
+  --md-parallax-perspective: 2.5rem;
 }
 
 .mdx-parallax {
@@ -107,39 +114,43 @@
 }
 
 .mdx-content__column:last-child {
-    margin-top: 2.4rem
+  margin-top: 2.4rem;
 }
 
 .mdx-content__column p:last-child {
-    margin-bottom: 0
+  margin-bottom: 0;
 }
 
 @media screen and (min-width: 60em) {
-    .mdx-content__inner {
-        display:flex;
-        flex-wrap: nowrap;
-        gap: 6.4rem
-    }
+  .mdx-content__inner {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6.4rem;
+  }
 
-    .mdx-content__column {
-        margin-top: 0
-    }
+  .mdx-content__column {
+    margin-top: 0;
+  }
 
-    .mdx-content__column:first-child {
-        flex: 2 0
-    }
+  .mdx-content__column:first-child {
+    flex: 2 0;
+  }
 
-    .mdx-content__column:last-child {
-        flex: 1 0;
-        margin-top: 0
-    }
+  .mdx-content__column:last-child {
+    flex: 1 0;
+    margin-top: 0;
+  }
 }
 
 /* hero */
 .mdx-hero {
   display: block;
   height: inherit;
-  background: linear-gradient(to bottom, var(--md-primary-fg-color), var(--md-default-bg-color) 99%)
+  background: linear-gradient(
+    to bottom,
+    var(--md-primary-fg-color),
+    var(--md-default-bg-color) 99%
+  );
 }
 .mdx-hero .mdx-hero__attribution {
   position: absolute;
@@ -150,7 +161,9 @@
   background-color: var(--md-default-bg-color--light);
   color: var(--md-default-fg-color);
   font-size: 0.75rem;
-  transition: color 125ms, background-color 125ms;
+  transition:
+    color 125ms,
+    background-color 125ms;
 }
 
 .mdx-hero__more {
@@ -186,7 +199,9 @@
   bottom: 6rem;
   display: block;
   position: absolute;
-  transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1), opacity 0.25s;
+  transition:
+    transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1),
+    opacity 0.25s;
   width: 100%;
 }
 
@@ -215,18 +230,18 @@
 }
 
 .mdx-hero .md-button {
-    border-width: 0;
-    color: var(--md-primary-bg-color);
-    margin-right: .5rem;
-    margin-top: .5rem;
+  border-width: 0;
+  color: var(--md-primary-bg-color);
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .mdx-hero .md-button--primary {
-    background-color: #dd2e57;
+  background-color: #dd2e57;
 }
 .mdx-hero .md-button:focus,
 .mdx-hero .md-button:hover {
-    background-color: var(--md-accent-fg-color);
+  background-color: var(--md-accent-fg-color);
 }
 
 @media screen and (max-width: 1023px) {
@@ -241,7 +256,6 @@
     display: none;
   }
 }
-
 
 /* expect */
 .mdx-expect {
@@ -273,7 +287,9 @@
   display: flex;
   flex: 0 1 calc(25% - 1.2rem);
   margin: 0;
-  transition: transform 0.75s cubic-bezier(0.075, 0.85, 0.175, 1), opacity 0.75s;
+  transition:
+    transform 0.75s cubic-bezier(0.075, 0.85, 0.175, 1),
+    opacity 0.75s;
 }
 .mdx-expect__item:first-child {
   transition-delay: 0.2s;
@@ -303,39 +319,43 @@
 .mdx-trust {
   display: block;
   max-width: 40rem;
-  transition: transform 0.75s cubic-bezier(0.075, 0.85, 0.175, 1) 125ms, opacity 0.75s 125ms;
+  transition:
+    transform 0.75s cubic-bezier(0.075, 0.85, 0.175, 1) 125ms,
+    opacity 0.75s 125ms;
 }
 
 /* connect */
 .mdx-connect {
-    display: block;
-    transition: transform .75s cubic-bezier(.075,.85,.175,1) 125ms,opacity .75s 125ms
+  display: block;
+  transition:
+    transform 0.75s cubic-bezier(0.075, 0.85, 0.175, 1) 125ms,
+    opacity 0.75s 125ms;
 }
 
 .js .mdx-connect[hidden] {
-    opacity: 0;
-    transform: translateY(1.6rem)
+  opacity: 0;
+  transform: translateY(1.6rem);
 }
 
 .mdx-connect .mdx-connect__link {
-    color: var(--md-default-fg-color);
-    display: block
+  color: var(--md-default-fg-color);
+  display: block;
 }
 
 .mdx-connect .mdx-connect__link span {
-    margin-right: .2rem
+  margin-right: 0.2rem;
 }
 
 .mdx-connect .md-button {
-    border-width: 0;
-    color: var(--md-primary-bg-color);
-    margin-right: .5rem;
-    margin-top: .5rem;
+  border-width: 0;
+  color: var(--md-primary-bg-color);
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
 }
 .mdx-connect .md-button--primary {
-    background-color: #dd2e57;
+  background-color: #dd2e57;
 }
 .mdx-connect .md-button:focus,
 .mdx-connect .md-button:hover {
-    background-color: var(--md-accent-fg-color);
+  background-color: var(--md-accent-fg-color);
 }

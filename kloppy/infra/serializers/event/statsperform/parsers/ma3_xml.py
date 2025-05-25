@@ -33,9 +33,7 @@ class MA3XMLParser(OptaXMLParser):
                 x=float(event.attrib["x"]),
                 y=float(event.attrib["y"]),
                 timestamp=_parse_ma3_datetime(event.attrib["timeStamp"]),
-                last_modified=_parse_ma3_datetime(
-                    event.attrib["lastModified"]
-                ),
+                last_modified=_parse_ma3_datetime(event.attrib["lastModified"]),
                 contestant_id=event.attrib.get("contestantId"),
                 player_id=event.attrib.get("playerId"),
                 outcome=(

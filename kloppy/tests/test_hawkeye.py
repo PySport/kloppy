@@ -1,5 +1,5 @@
-import math
 from datetime import datetime, timedelta, timezone
+import math
 from pathlib import Path
 from typing import List
 
@@ -178,18 +178,14 @@ class TestHawkEyeDeserializer:
         assert dataset.metadata.periods[0].id == 1
         assert len(dataset.metadata.periods) == 2
 
-        assert dataset.metadata.periods[
-            0
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[0].start_timestamp == datetime.strptime(
             "2024-09-22T21:00:49.383Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[0].end_timestamp == datetime.strptime(
             "2024-09-22T21:47:30.592Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
-        assert dataset.metadata.periods[
-            1
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[1].start_timestamp == datetime.strptime(
             "2024-09-22T22:03:13.540Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime.strptime(

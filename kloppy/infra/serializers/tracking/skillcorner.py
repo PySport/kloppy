@@ -1,8 +1,8 @@
+from datetime import datetime, timedelta, timezone
 import json
 import logging
-import warnings
-from datetime import datetime, timedelta, timezone
 from typing import IO, Dict, NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
@@ -195,9 +195,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             return timedelta(seconds=60 * float(m) + float(s))
         elif len(parts) == 3:
             h, m, s = parts
-            return timedelta(
-                seconds=3600 * float(h) + 60 * float(m) + float(s)
-            )
+            return timedelta(seconds=3600 * float(h) + 60 * float(m) + float(s))
         else:
             raise ValueError("Invalid timestring format")
 
@@ -243,9 +241,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         # Extract unique periods while filtering out None values
         unique_periods = {
-            frame["period"]
-            for frame in tracking
-            if frame["period"] is not None
+            frame["period"] for frame in tracking if frame["period"] is not None
         }
 
         for period in unique_periods:

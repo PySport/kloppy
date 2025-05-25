@@ -9,7 +9,6 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
-    PassResult,
     Point,
     Point3D,
     PositionType,
@@ -144,9 +143,7 @@ class TestStatsPerformMetadata:
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
         assert tracking_dataset.metadata.periods[0].id == 1
-        assert tracking_dataset.metadata.periods[
-            0
-        ].start_timestamp == datetime(
+        assert tracking_dataset.metadata.periods[0].start_timestamp == datetime(
             2020, 8, 23, 11, 0, 10, tzinfo=timezone.utc
         )
         assert tracking_dataset.metadata.periods[0].end_timestamp == datetime(
@@ -154,9 +151,7 @@ class TestStatsPerformMetadata:
         )
 
         assert tracking_dataset.metadata.periods[1].id == 2
-        assert tracking_dataset.metadata.periods[
-            1
-        ].start_timestamp == datetime(
+        assert tracking_dataset.metadata.periods[1].start_timestamp == datetime(
             2020, 8, 23, 12, 6, 22, tzinfo=timezone.utc
         )
         assert tracking_dataset.metadata.periods[1].end_timestamp == datetime(
@@ -285,7 +280,6 @@ class TestStatsPerformTracking:
     def test_correct_deserialization_limit_sample(
         self, tracking_data: Path, tracking_metadata_xml: Path
     ):
-
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,

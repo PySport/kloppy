@@ -4,6 +4,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Generic,
     Iterator,
     Mapping,
@@ -11,7 +12,6 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    Dict,
 )
 
 if TYPE_CHECKING:

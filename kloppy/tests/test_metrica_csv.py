@@ -2,14 +2,13 @@ from datetime import timedelta
 
 import pytest
 
+from kloppy import metrica
 from kloppy.domain import (
-    Provider,
+    DatasetType,
     Orientation,
     Point,
-    DatasetType,
+    Provider,
 )
-
-from kloppy import metrica
 
 
 class TestMetricaCsvTracking:

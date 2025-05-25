@@ -1,7 +1,8 @@
 from abc import abstractmethod
 from typing import TypeVar
 
-from kloppy.domain import EventDataset, Event
+from kloppy.domain import Event, EventDataset
+
 from .registered import RegisteredStateBuilder
 
 T = TypeVar("T")

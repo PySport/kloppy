@@ -39,6 +39,10 @@ from .formation import FormationType
 from .pitch import Point
 
 if TYPE_CHECKING:
+    from pandas import (
+        DataFrame,  # type: ignore[import-untyped]  # pragma: no cover
+    )
+
     from ..services.transformers.data_record import NamedColumns
     from .tracking import Frame
 
@@ -780,14 +784,10 @@ class Event(DataRecord, ABC):
     """Define all related events for easy access"""
 
     def related_pass(self) -> Optional[PassEvent]:
-        return cast(
-            Optional[PassEvent], self.get_related_event(EventType.PASS)
-        )
+        return cast(Optional[PassEvent], self.get_related_event(EventType.PASS))
 
     def related_shot(self) -> Optional[ShotEvent]:
-        return cast(
-            Optional[ShotEvent], self.get_related_event(EventType.SHOT)
-        )
+        return cast(Optional[ShotEvent], self.get_related_event(EventType.SHOT))
 
     def related_take_on(self) -> Optional[TakeOnEvent]:
         return cast(
@@ -806,9 +806,7 @@ class Event(DataRecord, ABC):
         )
 
     def related_card(self) -> Optional[CardEvent]:
-        return cast(
-            Optional[CardEvent], self.get_related_event(EventType.CARD)
-        )
+        return cast(Optional[CardEvent], self.get_related_event(EventType.CARD))
 
     def related_player_on(self) -> Optional[PlayerOnEvent]:
         return cast(
@@ -891,13 +889,7 @@ class Event(DataRecord, ABC):
             else f"GenericEvent:{self.event_name}"
         )
 
-        return (
-            f"<{event_type} "
-            f"event_id='{self.event_id}' "
-            f"time='{self.time}' "
-            f"team='{self.team}' "
-            f"player='{self.player}'>"
-        )
+        return f"<{event_type} event_id='{self.event_id}' time='{self.time}' team='{self.team}' player='{self.player}'>"
 
     def __repr__(self):
         return str(self)
@@ -1502,8 +1494,7 @@ class EventDataset(Dataset[Event]):
             import pandas as pd
         except ImportError:
             raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
+                "Seems like you don't have pandas installed. Please install it using: pip install pandas"
             )
 
         if not record_converter:

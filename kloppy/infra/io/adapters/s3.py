@@ -17,8 +17,7 @@ class S3Adapter(FSSpecAdapter):
             import s3fs
         except ImportError:
             raise AdapterError(
-                "Seems like you don't have s3fs installed. Please"
-                " install it using: pip install s3fs"
+                "Seems like you don't have s3fs installed. Please install it using: pip install s3fs"
             )
 
         s3_fs = get_config("adapters.s3.s3fs") or s3fs.S3FileSystem()

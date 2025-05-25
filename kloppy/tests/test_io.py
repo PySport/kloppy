@@ -1,16 +1,16 @@
 import bz2
 import gzip
+from io import BytesIO
 import json
 import lzma
 import os
+from pathlib import Path
 import sys
 import zipfile
-from io import BytesIO
-from pathlib import Path
 
-import pytest
 from botocore.session import Session
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
+import pytest
 
 from kloppy.config import set_config
 from kloppy.exceptions import InputNotFoundError
@@ -203,9 +203,7 @@ class TestHTTPAdapter:
         httpserver.expect_request("/testfile.txt").respond_with_data(content)
 
         # Serve the compressed text file with Content-Encoding header
-        httpserver.expect_request(
-            "/compressed_testfile.txt"
-        ).respond_with_data(
+        httpserver.expect_request("/compressed_testfile.txt").respond_with_data(
             compressed_content,
             headers={"Content-Encoding": "gzip", "Content-Type": "text/plain"},
         )

@@ -1,10 +1,10 @@
+from collections import Counter
 import logging
 import sys
-from collections import Counter
 
-from kloppy import metrica
 import matplotlib.pyplot as plt
 
+from kloppy import metrica
 from kloppy.domain import Ground
 
 
@@ -23,17 +23,11 @@ def main():
     playing_seconds_per_player = Counter()
     for frame in dataset.frames:
         playing_seconds_per_player.update(
-            [
-                player.jersey_no
-                for player in frame.players_coordinates.keys()
-                if player.team.ground == Ground.HOME
-            ]
+            [player.jersey_no for player in frame.players_coordinates.keys() if player.team.ground == Ground.HOME]
         )
 
     x = range(len(playing_seconds_per_player))
-    jersey_numbers, playing_seconds = zip(
-        *sorted(playing_seconds_per_player.items())
-    )
+    jersey_numbers, playing_seconds = zip(*sorted(playing_seconds_per_player.items()))
     playing_minutes = [seconds / 60 for seconds in playing_seconds]
 
     plt.bar(x, playing_minutes, align="center", alpha=0.5)

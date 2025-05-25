@@ -349,9 +349,7 @@
       "name": "Team A"
     },
     "duration": 0.0,
-    "related_events": [
-      "262b88a9-e39f-4e21-bc06-02ce3b316ec9"
-    ]
+    "related_events": ["262b88a9-e39f-4e21-bc06-02ce3b316ec9"]
   },
   {
     "id": "787f08bd-7973-48d5-a972-d3d62841490d",
@@ -385,9 +383,7 @@
       "name": "Team B"
     },
     "duration": 0.0,
-    "related_events": [
-      "be0c4d1a-457e-4a10-84b9-cff8be9fd73d"
-    ]
+    "related_events": ["be0c4d1a-457e-4a10-84b9-cff8be9fd73d"]
   },
   {
     "id": "262b88a9-e39f-4e21-bc06-02ce3b316ec9",
@@ -421,9 +417,7 @@
       "name": "Team B"
     },
     "duration": 0.0,
-    "related_events": [
-      "83097dfa-eff0-4523-8744-ebfdf174b091"
-    ]
+    "related_events": ["83097dfa-eff0-4523-8744-ebfdf174b091"]
   },
   {
     "id": "be0c4d1a-457e-4a10-84b9-cff8be9fd73d",
@@ -457,9 +451,7 @@
       "name": "Team A"
     },
     "duration": 0.0,
-    "related_events": [
-      "787f08bd-7973-48d5-a972-d3d62841490d"
-    ]
+    "related_events": ["787f08bd-7973-48d5-a972-d3d62841490d"]
   },
   {
     "id": "628bf3b3-d340-4e6b-afd9-68ec3bf5a28c",
@@ -486,7 +478,7 @@
     "obv_for_net": 0.009884467,
     "obv_against_after": 0.00986372,
     "obv_against_before": 0.009690916,
-    "obv_against_net": 1.728041E-4,
+    "obv_against_net": 1.728041e-4,
     "obv_total_net": 0.009711663,
     "off_camera": true,
     "team": {
@@ -501,14 +493,9 @@
       "id": 21,
       "name": "Left Wing"
     },
-    "location": [
-      61.0,
-      40.1
-    ],
+    "location": [61.0, 40.1],
     "duration": 0.9,
-    "related_events": [
-      "ead32169-7bdd-4ffd-9d74-f5478528f8f7"
-    ],
+    "related_events": ["ead32169-7bdd-4ffd-9d74-f5478528f8f7"],
     "pass": {
       "recipient": {
         "id": 398255,
@@ -520,10 +507,7 @@
         "id": 1,
         "name": "Ground Pass"
       },
-      "end_location": [
-        51.1,
-        37.4
-      ],
+      "end_location": [51.1, 37.4],
       "pass_success_probability": 0.9986205101,
       "body_part": {
         "id": 40,
@@ -567,9 +551,7 @@
       "name": "Team A"
     },
     "duration": 0.0,
-    "related_events": [
-      "5cb24b77-3995-46a3-aea7-ef95795243dd"
-    ]
+    "related_events": ["5cb24b77-3995-46a3-aea7-ef95795243dd"]
   },
   {
     "id": "5cb24b77-3995-46a3-aea7-ef95795243dd",
@@ -603,9 +585,7 @@
       "name": "Team B"
     },
     "duration": 0.0,
-    "related_events": [
-      "e314cc8a-0a83-45c3-bd9c-b62a9c2a9313"
-    ]
+    "related_events": ["e314cc8a-0a83-45c3-bd9c-b62a9c2a9313"]
   },
   {
     "id": "fefe31d4-9942-4e8a-8103-b6e74d568ce9",
@@ -639,9 +619,7 @@
       "name": "Team A"
     },
     "duration": 0.0,
-    "related_events": [
-      "89a8555e-b911-4a7c-a800-0cd10c1d2b3f"
-    ]
+    "related_events": ["89a8555e-b911-4a7c-a800-0cd10c1d2b3f"]
   },
   {
     "id": "89a8555e-b911-4a7c-a800-0cd10c1d2b3f",
@@ -675,9 +653,7 @@
       "name": "Team B"
     },
     "duration": 0.0,
-    "related_events": [
-      "fefe31d4-9942-4e8a-8103-b6e74d568ce9"
-    ]
+    "related_events": ["fefe31d4-9942-4e8a-8103-b6e74d568ce9"]
   },
   {
     "id": "846d68ef-4afa-4505-b322-e9ed4a71d7ec",
@@ -965,7 +941,7 @@
     "obv_for_net": 0.009405566,
     "obv_against_after": 0.010076826,
     "obv_against_before": 0.009690916,
-    "obv_against_net": 3.859103E-4,
+    "obv_against_net": 3.859103e-4,
     "obv_total_net": 0.009019656,
     "off_camera": true,
     "team": {
@@ -980,14 +956,9 @@
       "id": 24,
       "name": "Left Center Forward"
     },
-    "location": [
-      61.0,
-      40.1
-    ],
+    "location": [61.0, 40.1],
     "duration": 1.0515,
-    "related_events": [
-      "76026eae-c2d6-43f4-92f9-f6ad9acd7ca5"
-    ],
+    "related_events": ["76026eae-c2d6-43f4-92f9-f6ad9acd7ca5"],
     "pass": {
       "recipient": {
         "id": 346672,
@@ -999,10 +970,7 @@
         "id": 1,
         "name": "Ground Pass"
       },
-      "end_location": [
-        52.3,
-        41.8
-      ],
+      "end_location": [52.3, 41.8],
       "pass_success_probability": 0.9984976053,
       "body_part": {
         "id": 40,
@@ -1046,9 +1014,7 @@
       "name": "Team B"
     },
     "duration": 0.0,
-    "related_events": [
-      "eba8aad9-314e-4ebf-b0ef-3abc161748b8"
-    ]
+    "related_events": ["eba8aad9-314e-4ebf-b0ef-3abc161748b8"]
   },
   {
     "id": "eba8aad9-314e-4ebf-b0ef-3abc161748b8",
@@ -1082,8 +1048,6 @@
       "name": "Team A"
     },
     "duration": 0.0,
-    "related_events": [
-      "16ea5483-dee9-48ba-8a51-2992383c3047"
-    ]
+    "related_events": ["16ea5483-dee9-48ba-8a51-2992383c3047"]
   }
 ]

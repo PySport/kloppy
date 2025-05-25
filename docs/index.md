@@ -5,5 +5,3 @@ social:
   cards_layout_options:
     title: Soccer Data Processing, Simplified
 ---
-
-

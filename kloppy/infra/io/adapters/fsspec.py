@@ -1,5 +1,5 @@
-import re
 from abc import ABC, abstractmethod
+import re
 from typing import BinaryIO, List, Optional
 
 import fsspec
@@ -18,9 +18,7 @@ class FSSpecAdapter(Adapter, ABC):
         protocol_pattern = re.compile(r"^[a-zA-Z\d]+://")
         match = protocol_pattern.match(url)
         if match:
-            return match.group(0)[
-                :-3
-            ]  # Remove '://' from the matched protocol
+            return match.group(0)[:-3]  # Remove '://' from the matched protocol
         return "file"  # Default to 'file' for local paths
 
     def _get_filesystem(

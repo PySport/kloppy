@@ -1,12 +1,12 @@
+from contextlib import contextmanager
 import functools
 import inspect
-import re
-import time
-import warnings
-from contextlib import contextmanager
 from io import BytesIO
 from logging import Logger
+import re
+import time
 from typing import BinaryIO, Optional, Union
+import warnings
 
 Readable = Union[bytes, BinaryIO]
 

@@ -1,7 +1,7 @@
 from typing import List
-from lxml import etree
 
 from cssselect import GenericTranslator
+from lxml import etree
 
 from kloppy.domain import Event, EventType
 
@@ -17,9 +17,7 @@ class CSSPatternMatcher:
             if event.event_type != EventType.GENERIC:
                 elm = etree.SubElement(
                     elm,
-                    event.event_name.lower()
-                    .replace(" ", "_")
-                    .replace("*", ""),
+                    event.event_name.lower().replace(" ", "_").replace("*", ""),
                     index=i,
                     result=str(event.result).lower(),
                     team=str(event.team.ground).lower(),

@@ -1,10 +1,10 @@
-import json
-import logging
-import warnings
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+import json
+import logging
 from typing import Dict, List, Optional
+import warnings
 
 from kloppy.domain import (
     BodyPart,
@@ -513,9 +513,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_pass(raw_event, next_event, team)
-    elif (
-        raw_event["type"]["primary"] == "corner"
-    ) and "shot" not in raw_event["type"]["secondary"]:
+    elif (raw_event["type"]["primary"] == "corner") and "shot" not in raw_event[
+        "type"
+    ]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
@@ -627,9 +627,7 @@ def _create_timestamp_timedelta(
     raw_event: Dict, start_ts: Dict, period_id: int
 ) -> timedelta:
     time_delta = (
-        timedelta(
-            seconds=float(raw_event["second"] + raw_event["minute"] * 60)
-        )
+        timedelta(seconds=float(raw_event["second"] + raw_event["minute"] * 60))
         - start_ts[period_id]
     )
 
@@ -654,9 +652,7 @@ def _get_team_formation(team_formation):
 
 def get_home_away_team_formation(event, team):
     team_formation = event["team"]["formation"]
-    team_id = str(event["team"]["id"])
     opponent_formation = event["opponentTeam"]["formation"]
-    opponent_team_id = str(event["opponentTeam"]["id"])
 
     if team.ground == Ground.HOME:
         home_team_formation = _get_team_formation(team_formation)
@@ -762,20 +758,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_coach = None
             coaches = raw_events.get("coaches")
             if coaches:
-                if (
-                    home_team_id in coaches
-                    and "coach" in coaches[home_team_id]
-                ):
-                    home_coach = coaches[home_team_id]["coach"].get(
-                        "shortName"
-                    )
-                if (
-                    away_team_id in coaches
-                    and "coach" in coaches[away_team_id]
-                ):
-                    away_coach = coaches[away_team_id]["coach"].get(
-                        "shortName"
-                    )
+                if home_team_id in coaches and "coach" in coaches[home_team_id]:
+                    home_coach = coaches[home_team_id]["coach"].get("shortName")
+                if away_team_id in coaches and "coach" in coaches[away_team_id]:
+                    away_coach = coaches[away_team_id]["coach"].get("shortName")
 
             events = []
 
@@ -785,9 +771,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = _parse_period_id(
-                        next_event["matchPeriod"]
-                    )
+                    next_period_id = _parse_period_id(next_event["matchPeriod"])
 
                 if (
                     idx == 0

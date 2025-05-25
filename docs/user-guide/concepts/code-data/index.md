@@ -1,6 +1,5 @@
 # Code data
 
-
 Code (or "timeline") data is a time-coded feed that captures **key moments during a match, often manually tagged by analysts** using software such as [Hudl Sportscode](https://www.hudl.com/en_gb/products/sportscode), [Metrica Nexus](https://www.metrica-sports.com/metrica-nexus) or [Nacsport](https://www.nacsport.com/) while reviewing game footage. These key moments are defined by "labels" or "codes" (e.g., Pass, Shot, Counter) and are usually associated with a start and end time, and optional metadata like players involved, outcomes or field location.
 
 Code data is typically used within coaching setups, and unlike structured feeds from event data providers like StatsBomb or Opta, it is highly customizable. Teams can define their own coding templates, tag schemes, and event taxonomies.
@@ -38,7 +37,7 @@ This snippet defines:
 - Starting at 3.6 seconds and ending at 9.7 seconds,
 - Tagged with team, player, packing value, and the receiving player.
 
-In Kloppy, this XML instance would be parsed into a [`Code`][kloppy.domain.Code] object.
+In Kloppy, this XML instance would be parsed into a \[`Code`\][kloppy.domain.Code] object.
 
 ```python
 from kloppy.domain import Code
@@ -49,15 +48,15 @@ Code(
     end_timestamp=182.67,
     code="Pass",
     labels={
-      "team": "France",
-      "player": "Antoine Griezmann",
-      "receiver": "Tchouaméni",
-      "Packing.Value": "1",
-    }
+        "team": "France",
+        "player": "Antoine Griezmann",
+        "receiver": "Tchouaméni",
+        "Packing.Value": "1",
+    },
 )
 ```
 
-A [`Code`][kloppy.domain.Code] object has the following fields:
+A \[`Code`\][kloppy.domain.Code] object has the following fields:
 
 - `code_id`: A unique identifier for the code.
 - `timestamp`: The event’s start time in seconds.

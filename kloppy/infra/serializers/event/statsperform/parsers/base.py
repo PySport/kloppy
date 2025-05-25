@@ -4,16 +4,14 @@ A parser reads a single data file and should extend the 'OptaParser' class to
 extract data about players, teams and events that is encoded in the file.
 """
 
+from dataclasses import dataclass, field
+from datetime import datetime
 import json
-from typing import Tuple, List, Optional, IO, Dict
+from typing import IO, Dict, List, Optional, Tuple
 
 from lxml import objectify
 
-from kloppy.domain import Team, Score, Period, PositionType
-
-from datetime import datetime
-from dataclasses import dataclass, field
-
+from kloppy.domain import Period, PositionType, Score, Team
 
 position_types_mapping: Dict[str, PositionType] = {
     "Goalkeeper": PositionType.Goalkeeper,

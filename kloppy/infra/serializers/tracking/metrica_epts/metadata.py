@@ -1,6 +1,6 @@
-import warnings
 from datetime import timedelta
 from typing import IO, Dict, List, Optional, Tuple, Union
+import warnings
 
 from lxml import objectify
 

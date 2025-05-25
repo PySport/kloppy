@@ -1,31 +1,30 @@
-import logging
-import warnings
 from collections import namedtuple
 from datetime import timedelta
-from typing import Iterator, IO, NamedTuple
+import logging
+from typing import IO, Iterator, NamedTuple
+import warnings
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
-    TrackingDataset,
     AttackingDirection,
-    Point,
-    Period,
-    Orientation,
-    Provider,
     DatasetFlag,
-    Metadata,
-    Team,
     Ground,
+    Metadata,
+    Orientation,
+    Period,
     Player,
     PlayerData,
+    Point,
     PositionType,
+    Provider,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
 from kloppy.utils import performance_logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +134,7 @@ class MetricaCSVTrackingDataDeserializer(
     ):
         if home_partial_frame.frame_id != away_partial_frame.frame_id:
             raise ValueError(
-                f"frame_id mismatch: home {home_partial_frame.frame_id}, "
-                f"away: {away_partial_frame.frame_id}"
+                f"frame_id mismatch: home {home_partial_frame.frame_id}, away: {away_partial_frame.frame_id}"
             )
         if (
             home_partial_frame.ball_coordinates
@@ -180,9 +178,7 @@ class MetricaCSVTrackingDataDeserializer(
             for n, (home_partial_frame, away_partial_frame) in enumerate(
                 partial_frames
             ):
-                self.__validate_partials(
-                    home_partial_frame, away_partial_frame
-                )
+                self.__validate_partials(home_partial_frame, away_partial_frame)
 
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id

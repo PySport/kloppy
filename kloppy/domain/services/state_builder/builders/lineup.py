@@ -2,15 +2,16 @@ from dataclasses import dataclass
 from typing import Set
 
 from kloppy.domain import (
+    CardEvent,
+    CardType,
     Event,
     EventDataset,
     Player,
-    SubstitutionEvent,
     PlayerOffEvent,
     PlayerOnEvent,
-    CardEvent,
-    CardType,
+    SubstitutionEvent,
 )
+
 from ..builder import StateBuilder
 
 

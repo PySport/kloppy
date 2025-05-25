@@ -2,7 +2,6 @@ import logging
 import sys
 
 from kloppy import wyscout
-from kloppy.utils import performance_logging
 
 
 def main():

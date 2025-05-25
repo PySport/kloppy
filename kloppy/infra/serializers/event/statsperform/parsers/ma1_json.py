@@ -3,15 +3,15 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from kloppy.domain import Ground, Period, Player, Score, Team, PositionType
+from kloppy.domain import Ground, Period, Player, PositionType, Score, Team
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaJSONParser
 from ..formation_mapping import (
+    FormationType,
     formation_name_mapping,
     formation_position_mapping,
-    FormationType,
 )
+from .base import OptaJSONParser
 
 
 class MA1JSONParser(OptaJSONParser):

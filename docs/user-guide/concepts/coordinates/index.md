@@ -39,7 +39,7 @@ Each of these are represented with a dedicated core object.
 
 ##### Origin
 
-The [`Origin`][kloppy.domain.Origin] defines the location of the (0, 0) coordinate on the pitch. Kloppy supports the following options:
+The \[`Origin`\][kloppy.domain.Origin] defines the location of the (0, 0) coordinate on the pitch. Kloppy supports the following options:
 
 - `Origin.TOP_LEFT` → Origin at the top-left corner of the field.
 - `Origin.BOTTOM_LEFT` → Origin at the bottom-left corner of the field.
@@ -49,16 +49,16 @@ The [`Origin`][kloppy.domain.Origin] defines the location of the (0, 0) coordina
 
 ##### VerticalOrientation
 
-The [`VerticalOrientation`][kloppy.domain.VerticalOrientation] defines the orientation of the y-axis. Kloppy supports the following options:
+The \[`VerticalOrientation`\][kloppy.domain.VerticalOrientation] defines the orientation of the y-axis. Kloppy supports the following options:
 
-- `VerticalOrientation.TOP_TO_BOTTOM` → The Y-axis increases as you move from the top to the bottom of the pitch.  
+- `VerticalOrientation.TOP_TO_BOTTOM` → The Y-axis increases as you move from the top to the bottom of the pitch.
 - `VerticalOrientation.BOTTOM_TO_TOP` → The Y-axis decreases as you move from the top to the bottom of the pitch.
 
 ![VerticalOrientation](./images/vertical_orientation.png)
 
 ##### PitchDimensions
 
-A [`PitchDimensions`][kloppy.domain.PitchDimensions] entity fully describes the dimensions and markings of a pitch. This is how you create a 105-by-68 meter pitch with the standard dimensions according to the [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play):
+A \[`PitchDimensions`\][kloppy.domain.PitchDimensions] entity fully describes the dimensions and markings of a pitch. This is how you create a 105-by-68 meter pitch with the standard dimensions according to the [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play):
 
 ```python
 from kloppy.domain import PitchDimensions, Dimension, Unit
@@ -113,7 +113,7 @@ pitch_dimensions = PitchDimensions(
     penalty_arc_radius=9.15,
     # actual pitch size
     pitch_length=111,
-    pitch_width=72
+    pitch_width=72,
 )
 ```
 
@@ -121,27 +121,26 @@ For standardized pitches, you can optionally specify the actual `pitch_length` a
 
 As it can be cumbersome to specify all pitch markings, kloppy defines a couple of common pitch configurations:
 
-- [`MetricPitchDimensions`][kloppy.domain.MetricPitchDimensions]: The standard pitch dimensions in meters by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play). The length of the pitch can be between 90 and 120 meters, and the width can be between 45 and 90 meters. All other dimensions are fixed.
-- [`ImperialPitchDimensions`][kloppy.domain.ImperialPitchDimensions]: The same standard pitch dimensions by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play) but in yards.
-- [`NormalizedPitchDimensions`][kloppy.domain.NormalizedPitchDimensions]: The pitch dimensions are normalized to a unit square, where the length and width of the pitch are 1. All other dimensions are scaled accordingly from the `MetricPitchDimensions` based on the `pitch_length` and `pitch_width`. For example, for a pitch of 70m wide, the goal will be 7.32 / 70 = 0.1046 units wide.
-- [`OptaPitchDimensions`][kloppy.domain.OptaPitchDimensions]: The standardized pitch dimensions used by Opta.
-- [`WyscoutPitchDimensions`][kloppy.domain.WyscoutPitchDimensions]: The standardized pitch dimensions used by Wyscout.
+- \[`MetricPitchDimensions`\]\[kloppy.domain.MetricPitchDimensions\]: The standard pitch dimensions in meters by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play). The length of the pitch can be between 90 and 120 meters, and the width can be between 45 and 90 meters. All other dimensions are fixed.
+- \[`ImperialPitchDimensions`\]\[kloppy.domain.ImperialPitchDimensions\]: The same standard pitch dimensions by [IFAB regulations](https://www.theifab.com/laws/latest/the-field-of-play) but in yards.
+- \[`NormalizedPitchDimensions`\]\[kloppy.domain.NormalizedPitchDimensions\]: The pitch dimensions are normalized to a unit square, where the length and width of the pitch are 1. All other dimensions are scaled accordingly from the `MetricPitchDimensions` based on the `pitch_length` and `pitch_width`. For example, for a pitch of 70m wide, the goal will be 7.32 / 70 = 0.1046 units wide.
+- \[`OptaPitchDimensions`\]\[kloppy.domain.OptaPitchDimensions\]: The standardized pitch dimensions used by Opta.
+- \[`WyscoutPitchDimensions`\]\[kloppy.domain.WyscoutPitchDimensions\]: The standardized pitch dimensions used by Wyscout.
 
-| | [`MetricPitchDimensions`][kloppy.domain.MetricPitchDimensions] | [`ImperialPitchDimensions`][kloppy.domain.ImperialPitchDimensions] | [`NormalizedPitchDimensions`][kloppy.domain.NormalizedPitchDimensions] | [`OptaPitchDimensions`][kloppy.domain.OptaPitchDimensions] | [`WyscoutPitchDimensions`][kloppy.domain.WyscoutPitchDimensions] |
-|---------------------------|----------------|-------------------|----------|---------------|-------------------|
-| **Length**                | 90-120 m       | 100-130 yd        | 1 unit   | 100 units     | 100 units         |
-| **Width**                 | 45-90 m        | 50-100 yd         | 1 unit   | 100 units     | 100 units         |
-| **Goal Width**            | 7.32 m         | 8 yd              | -        | 9.6 units     | 12.0 units        |
-| **Goal Area (Width)**     | 18.32 m        | 20 yd             | -        | 26.4 units    | 26.0 units        |
-| **Goal Area (Length)**    | 5.5 m          | 6 yd              | -        | 5.8 units     | 6.0 units         |
-| **Penalty Area (Width)**  | 40.32 m        | 44.1 yd           | -        | 57.8 units    | 62.0 units        |
-| **Penalty Area (Length)** | 16.5 m         | 18 yd             | -        | 17.0 units    | 16.0 units        |
-| **Center Circle Radius**  | 9.15 m         | 10 yd             | -        | 9.0 units     | 8.84 units        |
-
+|                           | \[`MetricPitchDimensions`\][kloppy.domain.MetricPitchDimensions] | \[`ImperialPitchDimensions`\][kloppy.domain.ImperialPitchDimensions] | \[`NormalizedPitchDimensions`\][kloppy.domain.NormalizedPitchDimensions] | \[`OptaPitchDimensions`\][kloppy.domain.OptaPitchDimensions] | \[`WyscoutPitchDimensions`\][kloppy.domain.WyscoutPitchDimensions] |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| **Length**                | 90-120 m                                                         | 100-130 yd                                                           | 1 unit                                                                   | 100 units                                                    | 100 units                                                          |
+| **Width**                 | 45-90 m                                                          | 50-100 yd                                                            | 1 unit                                                                   | 100 units                                                    | 100 units                                                          |
+| **Goal Width**            | 7.32 m                                                           | 8 yd                                                                 | -                                                                        | 9.6 units                                                    | 12.0 units                                                         |
+| **Goal Area (Width)**     | 18.32 m                                                          | 20 yd                                                                | -                                                                        | 26.4 units                                                   | 26.0 units                                                         |
+| **Goal Area (Length)**    | 5.5 m                                                            | 6 yd                                                                 | -                                                                        | 5.8 units                                                    | 6.0 units                                                          |
+| **Penalty Area (Width)**  | 40.32 m                                                          | 44.1 yd                                                              | -                                                                        | 57.8 units                                                   | 62.0 units                                                         |
+| **Penalty Area (Length)** | 16.5 m                                                           | 18 yd                                                                | -                                                                        | 17.0 units                                                   | 16.0 units                                                         |
+| **Center Circle Radius**  | 9.15 m                                                           | 10 yd                                                                | -                                                                        | 9.0 units                                                    | 8.84 units                                                         |
 
 ### Specifying a coordinate system
-Coordinate systems can be defined in two ways: by using the default system of a specific data provider, or by specifying a custom coordinate system.
 
+Coordinate systems can be defined in two ways: by using the default system of a specific data provider, or by specifying a custom coordinate system.
 
 #### Built-in coordinate systems
 
@@ -151,7 +150,7 @@ You can retrieve the coordinate system of a particular provider in kloppy as fol
 >>> from kloppy.domain import build_coordinate_system, Provider, DatasetType
 >>> coordinate_system = build_coordinate_system(
 ...     Provider.SPORTEC,
-...     dataset_type=DatasetType.EVENT, 
+...     dataset_type=DatasetType.EVENT,
 ...     pitch_length=105, pitch_width=68
 ... )
 >>> print(coordinate_system)
@@ -163,10 +162,16 @@ The figure below gives an overview of all built-in coordinate systems with the l
 
 #### Custom coordinate systems
 
-Apart from the above data providers, kloppy also provides support to create a custom coordinate system using the [`CustomCoordinateSystem`][kloppy.domain.CustomCoordinateSystem] class.
+Apart from the above data providers, kloppy also provides support to create a custom coordinate system using the \[`CustomCoordinateSystem`\][kloppy.domain.CustomCoordinateSystem] class.
 
 ```python
-from kloppy.domain import CustomCoordinateSystem, Origin, VerticalOrientation, NormalizedPitchDimensions, Dimension
+from kloppy.domain import (
+    CustomCoordinateSystem,
+    Origin,
+    VerticalOrientation,
+    NormalizedPitchDimensions,
+    Dimension,
+)
 
 my_coordinate_system = CustomCoordinateSystem(
     origin=Origin.TOP_LEFT,
@@ -180,18 +185,17 @@ my_coordinate_system = CustomCoordinateSystem(
 
 ## Orientations
 
-In kloppy, the [`Orientation`][kloppy.domain.Orientation] defines the direction of play of each team within a dataset. The following orientations are supported:
+In kloppy, the \[`Orientation`\][kloppy.domain.Orientation] defines the direction of play of each team within a dataset. The following orientations are supported:
 
-| Orientation            | Description                                                                                                                                     |
-|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `BALL_OWNING_TEAM`     | The team that is currently in possession of the ball plays from left to right.                                                                  |
-| `ACTION_EXECUTING_TEAM`| The team that executes the action plays from left to right. Used in event stream data only. Equivalent to "BALL_OWNING_TEAM" for tracking data. |
-| `HOME_AWAY`            | The home team plays from left to right in the first period. The away team plays from left to right in the second period.                        |
-| `AWAY_HOME`            | The away team plays from left to right in the first period. The home team plays from left to right in the second period.                        |
-| `STATIC_HOME_AWAY`     | The home team plays from left to right in both periods.                                                                                         |
-| `STATIC_AWAY_HOME`     | The away team plays from left to right in both periods.                                                                                         |
-| `NOT_SET`              | The attacking direction is not defined.                                                                                                         |
-
+| Orientation             | Description                                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BALL_OWNING_TEAM`      | The team that is currently in possession of the ball plays from left to right.                                                                  |
+| `ACTION_EXECUTING_TEAM` | The team that executes the action plays from left to right. Used in event stream data only. Equivalent to "BALL_OWNING_TEAM" for tracking data. |
+| `HOME_AWAY`             | The home team plays from left to right in the first period. The away team plays from left to right in the second period.                        |
+| `AWAY_HOME`             | The away team plays from left to right in the first period. The home team plays from left to right in the second period.                        |
+| `STATIC_HOME_AWAY`      | The home team plays from left to right in both periods.                                                                                         |
+| `STATIC_AWAY_HOME`      | The away team plays from left to right in both periods.                                                                                         |
+| `NOT_SET`               | The attacking direction is not defined.                                                                                                         |
 
 The orientation is set at the dataset level, but individual records (e.g., frames or events) are interpreted relative to this configuration.
 Here's how to load an event dataset, inspect its orientation, and determine the attacking direction of a specific event:
@@ -218,7 +222,6 @@ In this example:
 - The dataset uses the `ACTION_EXECUTING_TEAM` orientation, meaning the team performing the action is considered to be attacking from left to right.
 - The attribute `.attacking_direction` lets you query the direction of a specific event. It will be either `LTR` (meaning that the player who performs the action attacks from left to right) or `RTL` (meaning that the player who performs the action attacks from right to left).
 
+\[^1\]: Pitch sizes are sometimes provided as metadata by the data provider. When this information is absent, a common approach is to assume a standard pitch size of 105 by 68 meters. However, it's worth noting that actual pitch lengths can vary significantly from 90 to 120 meters and widths from 45 to 90 meters. Therefore, this naive approach can introduce significant errors. Alternatively, the dimensions of the pitch can sometimes be estimated by analyzing corner kick positions.
 
-[^1]: Pitch sizes are sometimes provided as metadata by the data provider. When this information is absent, a common approach is to assume a standard pitch size of 105 by 68 meters. However, it's worth noting that actual pitch lengths can vary significantly from 90 to 120 meters and widths from 45 to 90 meters. Therefore, this naive approach can introduce significant errors. Alternatively, the dimensions of the pitch can sometimes be estimated by analyzing corner kick positions.
-
-[^2]: All commonly used coordinate systems orient the x-axis left-to-right. Only the orientation of the y-axis varies.
+\[^2\]: All commonly used coordinate systems orient the x-axis left-to-right. Only the orientation of the y-axis varies.

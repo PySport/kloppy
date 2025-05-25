@@ -1,5 +1,5 @@
-import json
 from datetime import datetime, timezone
+import json
 from typing import IO, List, Optional, Tuple
 
 from kloppy.domain import Ground, Orientation, Period, Team

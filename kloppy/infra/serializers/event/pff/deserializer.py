@@ -5,11 +5,14 @@ from typing import Any, Dict, List, NamedTuple, IO, Optional, Tuple, Union
 from kloppy.domain import (
     Provider,
     EventDataset,
+    EventFactory,
     Metadata,
     Team,
     Player,
     DatasetFlag,
     Period,
+    Event,
+    Point,
 )
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.exceptions import DeserializationError
@@ -183,6 +186,121 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
 
         return periods
 
+    def _extract_coordinates(
+        self, event: Dict[str, Any], player_id: str, team_id: str, home_team_id: str
+    ) -> Point:
+        """
+        Extract the coordinates from the event data.
+        """
+
+        player_list_index = "homePlayers" if team_id == home_team_id else "awayPlayers"
+
+        player_list = event[player_list_index]
+
+        coordinates_list = [
+            {
+                "x": player["x"],
+                "y": player["y"],
+            }
+            for player in player_list
+            if player["playerId"] == player_id
+        ]
+
+        if coordinates_list:
+            coordinates = coordinates_list.pop()
+            return Point(x=coordinates["x"], y=coordinates["y"])
+        return Point(x=None, y=None)
+
+    def _extract_possession_team(
+        self,
+        team_id: str,
+        home_team: Team,
+        away_team: Team,
+    ) -> Team:
+        return home_team if home_team.team_id == team_id else away_team
+
+    def _extract_ball_state(self, event: Dict[str, Any]) -> str:
+        return "dead" if event["gameEvents"]["gameEventType"] == "OUT" else "alive"
+
+    def _extract_player(self, player_id: str, team: Team) -> Player:
+        player_list = [
+            player for player in team.players if player.player_id == player_id
+        ]
+        return player_list.pop() if player_list else None
+
+    def build_generic_event_kwargs(
+        self,
+        event: Dict[str, Any],
+        home_team: Team,
+        away_team: Team,
+    ) -> Dict[str, Any]:
+        team_id = str(event["gameEvents"]["teamId"])
+        team = home_team if team_id == home_team.team_id else away_team
+        player_id = event["gameEvents"]["playerId"]
+        coordinates = self._extract_coordinates(
+            event=event,
+            player_id=player_id,
+            team_id=team_id,
+            home_team_id=home_team.team_id,
+        )
+
+        return {
+            "period": event["gameEvents"]["period"],
+            "timestamp": event["possessionEvents"]["gameClock"],
+            "ball_owning_team": self._extract_possession_team(
+                team_id=event,
+                home_team=home_team,
+                away_team=away_team,
+            ),
+            "ball_state": self._extract_ball_state(event=event),
+            "event_id": event["gameEventId"],
+            "team": team,
+            "player": self._extract_player(str(player_id), team),
+            "coordinates": coordinates,
+            "raw_event": event,
+        }
+
+    def transform_event(
+        self,
+        event: Dict[str, Any],
+        home_team: Team,
+        away_team: Team,
+    ) -> Event:
+        """
+        Transform the event data to the desired format.
+        """
+
+        generic_event_kwargs = self.build_generic_event_kwargs(
+            event=event,
+            home_team=home_team,
+            away_team=away_team,
+        )
+
+        return generic_event_kwargs
+
+    def build_events(
+        self,
+        raw_events: List[Dict[str, Any]],
+        home_team: Team,
+        away_team: Team,
+    ) -> List[Dict[str, Any]]:
+        """
+        Build the events from the raw event data.
+        """
+
+        event_factory = EventFactory()
+
+        events = [
+            self.transform_event(
+                event=event,
+                home_team=home_team,
+                away_team=away_team,
+            )
+            for event in raw_events
+        ]
+
+        return events
+
     def deserialize(self, inputs: PFFEventDataInput) -> EventDataset:
         """
         Deserialize the PFF event.
@@ -204,14 +322,19 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
                 provider=self.provider,
             )
 
-            teams = [
-                self.build_team(
-                    team_data=metadata_information["home_team"],
-                    rooster_data=roster_data,
-                    ground_type="home" if team == "home_team" else "away",
-                )
-                for team in ["home_team", "away_team"]
-            ]
+            home_team = self.build_team(
+                team_data=metadata_information["home_team"],
+                rooster_data=roster_data,
+                ground_type="home",
+            )
+
+            away_team = self.build_team(
+                team_data=metadata_information["away_team"],
+                rooster_data=roster_data,
+                ground_type="away",
+            )
+
+            teams = [home_team, away_team]
 
             orientation = self.get_orientation(actual_meta_data)
 
@@ -224,6 +347,12 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
                 teams=teams,
                 orientation=orientation,
                 periods=periods,
+            )
+
+            events = self.build_events(
+                raw_events=raw_events,
+                home_team=home_team,
+                away_team=away_team,
             )
 
             return EventDataset(events=None, metadata=metadata)

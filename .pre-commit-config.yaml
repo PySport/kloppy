@@ -53,6 +53,7 @@ repos:
           - mdformat-gfm
           - mdformat-ruff
           - mdformat-frontmatter
+          - mdformat-mkdocs
           - ruff
 
   # - repo: https://github.com/markdownlint/markdownlint

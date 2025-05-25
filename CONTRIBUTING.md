@@ -12,12 +12,12 @@ the project and make changes:
 1. Fork the repo and create your branch from `master`.
 1. Make code changes to fix a bug/add features
 1. If you have added new code, add test(s) which cover the changes you have made. If you have updated existing code,
-   verify that the existing tests cover the changes you have made and add/modify tests if needed.
+    verify that the existing tests cover the changes you have made and add/modify tests if needed.
 1. Ensure that tests pass.
 1. Ensure that your code conforms to the coding standard by either using the git hook (see instructions below) or by
-   executing the command `black .` prior to committing your code.
+    executing the command `black .` prior to committing your code.
 1. Commit your code and create your Pull Request. Please specify in your Pull Request what change you have made and
-   please specify if it relates to any existing issues.
+    please specify if it relates to any existing issues.
 
 ## Project Setup
 
@@ -35,5 +35,5 @@ follow these instructions:
 
 - Execute the command `pre-commit install` to install the Git hook.
 - When you next run a `git commit` command on the repository, _black_ will run and automatically format any changed
-  files. _Note_: if _black_ needs to re-format a file, the commit will fail, meaning you will then need to execute
-  `git add .` and `git commit` again to commit the files updated by _black_.
+    files. _Note_: if _black_ needs to re-format a file, the commit will fail, meaning you will then need to execute
+    `git add .` and `git commit` again to commit the files updated by _black_.

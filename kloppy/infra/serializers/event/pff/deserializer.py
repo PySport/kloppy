@@ -2,7 +2,15 @@ import json
 
 from typing import Any, Dict, List, NamedTuple, IO, Optional, Tuple, Union
 
-from kloppy.domain import Provider, EventDataset, Metadata, Team, Player
+from kloppy.domain import (
+    Provider,
+    EventDataset,
+    Metadata,
+    Team,
+    Player,
+    DatasetFlag,
+    Period,
+)
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.exceptions import DeserializationError
 
@@ -27,6 +35,10 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
             coordinate_system=coordinate_system,
         )
 
+    @property
+    def provider(self) -> Provider:
+        return Provider.PFF
+
     def load_data(
         self, inputs: PFFEventDataInput
     ) -> tuple[IO[bytes], IO[bytes], IO[bytes]]:
@@ -39,7 +51,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
             json.load(inputs.roster_data),
         )
 
-    def get_match_information(self, metadata: List) -> Dict[str, Any]:
+    def get_match_information(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         Get metadata from the input files.
         """
@@ -48,6 +60,8 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
             "away_team": metadata["awayTeam"],
             "stadium": metadata["stadium"],
             "game_week": metadata["week"],
+            "game_id": metadata["id"],
+            "game_date": metadata["date"],
         }
 
     def get_pitch_information(
@@ -63,9 +77,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
 
         return pitch_size_width, pitch_size_length
 
-
     def build_player(self, player: Dict[str, Any], team: Team) -> Player:
-
         player = Player(
             player_id=player["player"]["id"],
             team=team,
@@ -76,7 +88,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
         )
 
         return player
-    
+
     def build_squad(self, rooster_data: Dict[str, Any], team: Team) -> List[Player]:
         team_id = team.team_id
 
@@ -87,8 +99,9 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
         ]
         return players
 
-    def build_team(self, team_data: Dict[str, Any], rooster_data: Dict[str, Any], ground_type: str) -> Team:
-
+    def build_team(
+        self, team_data: Dict[str, Any], rooster_data: Dict[str, Any], ground_type: str
+    ) -> Team:
         team_id = team_data["id"]
 
         team = Team(
@@ -101,26 +114,74 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
 
         return team
 
-    # def get_metadata_information(self) -> Metadata:
+    def get_orientation(self, metadata: Dict[str, Any]) -> str:
+        """
+        Get the orientation of the event data.
+        """
 
-    #     metadata = Metadata(
-    #             teams=teams,
-    #             periods=periods,
-    #             pitch_dimensions=self.transformer.get_to_coordinate_system().pitch_dimensions,
-    #             frame_rate=None,
-    #             orientation=Orientation.ACTION_EXECUTING_TEAM,
-    #             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-    #             score=None,
-    #             provider=Provider.STATSBOMB,
-    #             coordinate_system=self.transformer.get_to_coordinate_system(),
-    #             **additional_metadata,
-    #         )
+        is_home_team_left = metadata["homeTeamStartLeft"]
 
-    #     return metadata
+        orientation = "home-away" if is_home_team_left else "away-home"
 
-    @property
-    def provider(self) -> Provider:
-        return Provider.PFF
+        return orientation
+
+    def get_metadata_information(
+        self,
+        match_information: Dict[str, Any],
+        teams: List[Team],
+        orientation: str,
+        periods: str,
+    ) -> Metadata:
+        additional_metadata = {}
+
+        metadata = Metadata(
+            game_id=match_information["game_id"],
+            game_week=match_information["game_week"],
+            date=match_information["game_date"],
+            teams=teams,
+            pitch_dimensions=self.transformer.get_to_coordinate_system().pitch_dimensions,
+            frame_rate=None,
+            orientation=orientation,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
+            score=None,
+            provider=self.provider,
+            coordinate_system=self.transformer.get_to_coordinate_system(),
+            periods=periods,
+            **additional_metadata,
+        )
+
+        return metadata
+
+    def get_period_data(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get the period data from the metadata.
+        """
+
+        period_data = {
+            "first_period": {
+                "id": 1,
+                "start_timestamp": metadata["startPeriod1"],
+                "end_timestamp": metadata["endPeriod1"],
+            },
+            "second_period": {
+                "id": 2,
+                "start_timestamp": metadata["startPeriod2"],
+                "end_timestamp": metadata["endPeriod2"],
+            },
+        }
+
+        return period_data
+
+    def build_periods(self, metadata: Dict[str, Any]) -> List[Period]:
+        """
+        Get the periods of the event data.
+        """
+
+        period_data = self.get_period_data(metadata)
+
+        periods = [Period(**data) for _, data in period_data.items()]
+
+        return periods
 
     def deserialize(self, inputs: PFFEventDataInput) -> EventDataset:
         """
@@ -129,7 +190,9 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
         try:
             raw_events, meta_data, roster_data = self.load_data(inputs)
 
-            metadata_information = self.get_match_information(meta_data.pop())
+            actual_meta_data = meta_data.pop()
+
+            metadata_information = self.get_match_information(actual_meta_data)
 
             pitch_size_width, pitch_size_length = self.get_pitch_information(
                 metadata_information["stadium"]
@@ -141,11 +204,29 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventDataInput]):
                 provider=self.provider,
             )
 
-            home_team = self.build_team(
-                team_data=metadata_information["home_team"],
-                rooster_data=roster_data,
-                ground_type="home",
+            teams = [
+                self.build_team(
+                    team_data=metadata_information["home_team"],
+                    rooster_data=roster_data,
+                    ground_type="home" if team == "home_team" else "away",
+                )
+                for team in ["home_team", "away_team"]
+            ]
+
+            orientation = self.get_orientation(actual_meta_data)
+
+            periods = self.build_periods(
+                metadata=actual_meta_data,
             )
+
+            metadata = self.get_metadata_information(
+                match_information=metadata_information,
+                teams=teams,
+                orientation=orientation,
+                periods=periods,
+            )
+
+            return EventDataset(events=None, metadata=metadata)
 
         except Exception as e:
             raise DeserializationError(

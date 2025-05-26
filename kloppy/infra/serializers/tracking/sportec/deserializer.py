@@ -95,15 +95,47 @@ def _unstack_framesets(
         This function assumes that the framesets are ordered by period and
         that the frames in each frameset are ordered.
     """
+    # First pass: collect ball status for each frame
+    ball_status_by_frame = dict()
+    context = etree.iterparse(
+        raw_data, events=("start", "end"), huge_tree=True
+    )
+
+    for event, elem in context:
+        try:
+            if event == "start" and elem.tag == "FrameSet":
+                current_obj = (
+                    "ball"
+                    if elem.get("TeamId") == "BALL"
+                    else elem.get("PersonId")
+                )
+            elif (
+                event == "start"
+                and elem.tag == "Frame"
+                and current_obj == "ball"
+            ):
+                ball_status_by_frame[elem.get("N")] = int(
+                    elem.get(BALL_STATUS, 0)
+                )
+            elif event == "end" and elem.tag == "FrameSet":
+                elem.clear()
+        finally:
+            elem.clear()
+            while elem.getprevious() is not None:
+                del elem.getparent()[0]
+
+    # Reset the stream to the beginning
+    raw_data.seek(0)
+
+    # Second pass: process all framesets with ball status information
+    context = etree.iterparse(
+        raw_data, events=("start", "end"), huge_tree=True
+    )
     objects_to_skip = objects_to_skip or set()
     frames = defaultdict(lambda: defaultdict(dict))
     frames_per_obj = defaultdict(int)
     current_period = None
     current_obj = None
-
-    context = etree.iterparse(
-        raw_data, events=("start", "end"), huge_tree=True
-    )
 
     for event, elem in context:
         try:
@@ -141,9 +173,13 @@ def _unstack_framesets(
                 # we can skip this frame if ...
                 if (
                     # it does not track a known object in a known period
-                    (current_period and current_obj)
+                    current_period
+                    and current_obj
                     # we are not tracking frames in which the ball is not in play
-                    and (not only_alive or int(elem.get(BALL_STATUS, 0)) == 1)
+                    and (
+                        not only_alive
+                        or ball_status_by_frame.get(elem.get("N"), 0) == 1
+                    )
                     # we have reached the limit for this object
                     and (
                         not limit or frames_per_obj.get(current_obj, 0) < limit

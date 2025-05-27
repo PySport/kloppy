@@ -27,6 +27,7 @@ from kloppy.domain import (
 )
 
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.domain.services import attacking_direction_from_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -34,35 +35,6 @@ from kloppy.infra.serializers.tracking.deserializer import (
 from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
-
-
-def avg(items: List[float]) -> float:
-    if not items:
-        return 0
-    return sum(items) / len(items)
-
-
-def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
-    """This method should only be called for the first frame of a period."""
-    avg_x_home = avg(
-        [
-            player_data.coordinates.x
-            for player, player_data in frame.players_data.items()
-            if player.team.ground == Ground.HOME
-        ]
-    )
-    avg_x_away = avg(
-        [
-            player_data.coordinates.x
-            for player, player_data in frame.players_data.items()
-            if player.team.ground == Ground.AWAY
-        ]
-    )
-
-    if avg_x_home < avg_x_away:
-        return AttackingDirection.LTR
-    else:
-        return AttackingDirection.RTL
 
 
 position_types_mapping: Dict[str, PositionType] = {

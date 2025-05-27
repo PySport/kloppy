@@ -192,7 +192,7 @@ class TestWyscoutV3:
         )
         assert dataset.metadata.periods[1].end_timestamp == timedelta(
             minutes=45, seconds=5
-        ) + timedelta(minutes=46, seconds=53)
+        ) + timedelta(minutes=46, seconds=58)
 
         assert (
             dataset.metadata.teams[0].starting_formation
@@ -205,6 +205,17 @@ class TestWyscoutV3:
         assert (
             dataset.metadata.teams[1].formations.items[formation_time_change]
             == FormationType.FOUR_THREE_ONE_TWO
+        )
+
+        second_period_end_time = Time(
+            period=dataset.metadata.periods[1],
+            timestamp=timedelta(seconds=2818),
+        )
+        assert (
+            dataset.metadata.teams[1]
+            .formations.items.keys()[0]
+            .period.end_time
+            == second_period_end_time
         )
 
         cr7 = dataset.metadata.teams[0].get_player_by_id("3322")
@@ -233,8 +244,10 @@ class TestWyscoutV3:
     def test_timestamps(self, dataset: EventDataset):
         kickoff_p1 = dataset.get_event_by_id(1927028854)
         assert kickoff_p1.timestamp == timedelta(minutes=0, seconds=3)
+        assert kickoff_p1.time.period.id == 1
         kickoff_p2 = dataset.get_event_by_id(1927029460)
         assert kickoff_p2.timestamp == timedelta(minutes=0, seconds=0)
+        assert kickoff_p2.time.period.id == 2
 
     def test_coordinates(self, dataset: EventDataset):
         assert dataset.records[2].coordinates == Point(32.0, 56.0)

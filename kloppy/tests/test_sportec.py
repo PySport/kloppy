@@ -208,7 +208,7 @@ class TestSportecTrackingData:
             only_alive=True,
         )
         assert len(dataset) == 199
-        assert len(dataset.records[2].players_data.keys() == 1)
+        assert len(dataset.records[2].players_data.keys()) == 1
 
     def test_limit_sample(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(

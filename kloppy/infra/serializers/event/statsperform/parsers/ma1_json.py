@@ -64,9 +64,11 @@ class MA1JSONParser(OptaJSONParser):
             teams[team_id] = Team(
                 team_id=team_id,
                 name=parsed_team["name"],
-                ground=Ground.HOME
-                if parsed_team["ground"] == "home"
-                else Ground.AWAY,
+                ground=(
+                    Ground.HOME
+                    if parsed_team["ground"] == "home"
+                    else Ground.AWAY
+                ),
             )
 
         for parsed_player in self._parse_players():

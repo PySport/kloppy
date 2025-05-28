@@ -19,6 +19,21 @@ def load(
     include_empty_frames: Optional[bool] = False,
     data_version: Optional[str] = None,
 ) -> TrackingDataset:
+    """
+    Load SkillCorner broadcast tracking data.
+
+    Args:
+        meta_data: A json feed containing the meta data.
+        raw_data: A json feed containing the raw tracking data.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        include_empty_frames: Include frames in which no objects were tracked.
+        data_version: Specify the input data version.
+
+    Returns:
+        The parsed tracking data.
+    """
     if data_version not in ["V2", "V3", None]:
         raise ValueError(
             f"data_version must be either 'V2', 'V3'. Provided: {data_version}"
@@ -49,6 +64,22 @@ def load_open_data(
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
 ) -> TrackingDataset:
+    """
+    Load SkillCorner open data.
+
+    This function loads tracking data directly from the SkillCorner open data
+    GitHub repository.
+
+    Args:
+        match_id: The id of the match to load data for.
+        sample_rate: Sample the data at a specific rate.
+        limit: Limit the number of frames to load to the first `limit` frames.
+        coordinates: The coordinate system to use.
+        include_empty_frames: Include frames in which no objects were tracked.
+
+    Returns:
+        The parsed tracking data.
+    """
     return load(
         meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/match_data.json",
         raw_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/structured_data.json",

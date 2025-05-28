@@ -15,6 +15,7 @@ from kloppy.domain import (
     Point,
     Provider,
     Qualifier,
+    ResultMixin,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
@@ -377,7 +378,10 @@ class MetricaJsonEventDataDeserializer(
                     events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
-                if event.result in OUT_EVENT_RESULTS:
+                if (
+                    isinstance(event, ResultMixin)
+                    and event.result in OUT_EVENT_RESULTS
+                ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
                         generic_event_kwargs[

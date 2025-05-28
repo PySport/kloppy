@@ -1,71 +1,232 @@
 site_name: kloppy 3.16.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
-repo_name: 'GitHub'
+repo_name: 'PySport/kloppy'
 edit_uri: blob/master/docs/
-extra_css: [style.css]
-# TODO: set-up Google Analytics project to track
-google_analytics: null
+google_analytics: null # TODO: set-up Google Analytics project to track
 theme:
   name: material
+  language: en
+  palette:
+    scheme: default
   custom_dir: docs/overrides
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.tracking
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - content.tooltips
+extra_css: [assets/stylesheets/style.css]
+extra_javascript: [assets/javascripts/extra.js]
 nav:
   - Home: index.md
-  - Open-data: open-data.md
-  - Getting-started:
-      - Datafactory: getting-started/datafactory.ipynb
-      - Metrica: getting-started/metrica.ipynb
-      - Opta: getting-started/opta.ipynb
-      - SecondSpectrum: getting-started/secondspectrum.ipynb
-      - SkillCorner: getting-started/skillcorner.ipynb
-      - Sportec: getting-started/sportec.ipynb
-      - Sportscode: getting-started/sportscode.ipynb
-      - Statsbomb: getting-started/statsbomb.ipynb
-      - StatsPerform: getting-started/statsperform.ipynb
-      - TRACAB: getting-started/tracab.ipynb
-      - Wyscout: getting-started/wyscout.ipynb
-  - Examples:
-      - Event Data: examples/event_data.ipynb
-      - Tracking Data: examples/tracking_data.ipynb
-      - Broadcast Tracking Data: examples/broadcast_tracking_data.ipynb
-      - Code data: examples/code_data.ipynb
-      - State: examples/state.ipynb
-      - Navigating: examples/navigating.ipynb
-      - Plotting: examples/plotting.ipynb
-      - Config: examples/config.ipynb
-      - Adapters: examples/adapter.ipynb
-        #  - API Reference:
-        #    - Domain:
-        #      - Common: api/domain/common.md
-        #      - Pitch: api/domain/pitch.md
-        #      - Tracking: api/domain/tracking.md
-        #      - Event: api/domain/event.md
-  - Providers: 'providers.md'
-  - Other:
-      - Issues: 'issues.md'
-      - Contributing: 'contributing.md'
-      - Sponsors: 'sponsors.md'
-      - About: 'about.md'
-      - Changelog: 'changelog.md'
-      - License: 'license.md'
+  - User guide:
+      - Getting started: 
+          - user-guide/getting-started/index.md
+      - Installation: 
+          - user-guide/installation/index.md
+      - Configuration: 
+          - user-guide/configuration/index.md
+      - Concepts:
+          - user-guide/concepts/index.md
+          - Event data: user-guide/concepts/event-data/index.md
+          - Tracking data: user-guide/concepts/tracking-data/index.md
+          - Code data: user-guide/concepts/code-data/index.md
+          - Metadata: user-guide/concepts/metadata/index.md
+          - Coordinates: user-guide/concepts/coordinates/index.md
+          - Time: user-guide/concepts/time/index.md
+          - Positions: user-guide/concepts/positions/index.md
+      - Loading data:
+          - user-guide/loading-data/index.md
+          - Datafactory: user-guide/loading-data/datafactory.ipynb
+          - HawkEye: user-guide/loading-data/hawkeye.ipynb
+          - Hudl SportsCode: user-guide/loading-data/sportscode.ipynb
+          - Hudl Statsbomb: user-guide/loading-data/statsbomb.ipynb
+          - Metrica Sports: user-guide/loading-data/metrica.ipynb
+          - PFF: user-guide/loading-data/pff.ipynb
+          - SecondSpectrum: user-guide/loading-data/secondspectrum.ipynb
+          - Signality: user-guide/loading-data/signality.ipynb
+          - SkillCorner: user-guide/loading-data/skillcorner.ipynb
+          - Sportec: user-guide/loading-data/sportec.ipynb
+          - Stats Perform / Opta: user-guide/loading-data/statsperform.ipynb
+          - TRACAB: user-guide/loading-data/tracab.ipynb
+          - Wyscout: user-guide/loading-data/wyscout.ipynb
+      # - Querying data:
+      #     - user-guide/querying-data/index.md
+      #     - Selections: user-guide/querying-data/selections/index.md
+      #     - Pattern matching: user-guide/querying-data/pattern-matching/index.md
+      - Transforming data:
+          - user-guide/transformations/coordinates/index.md
+      # - Aggregating data:
+      #     - user-guide/aggregating-data/index.md
+      # - Enriching data:
+      #     - user-guide/enriching-data/index.md
+      - Exporting data:
+          - user-guide/exporting-data/index.md
+          - Dataframes: user-guide/exporting-data/dataframes.md
+          - Sportscode XML: user-guide/exporting-data/sportscode.md
+  - How-to guides:
+      - examples/index.md
+      - examples/transformations.ipynb
+      - examples/pattern_matching.ipynb
+      - examples/to_dataframe.ipynb
+      - examples/aggregations.ipynb
+      - examples/event_factory.ipynb
+      - examples/adapter.ipynb
+  - Reference:
+      - reference/index.md
+      - Data Loaders:
+          - DataFactory: reference/providers/datafactory.md
+          - HawkEye: reference/providers/hawkeye.md
+          - Hudl Sportscode: reference/providers/sportscode.md
+          - Hudl Statsbomb: reference/providers/statsbomb.md
+          - Metrica Sports: reference/providers/metrica.md
+          - Opta: reference/providers/opta.md
+          - PFF: reference/providers/pff.md
+          - SecondSpectrum: reference/providers/secondspectrum.md
+          - Signality: reference/providers/signality.md
+          - SkillCorner: reference/providers/skillcorner.md
+          - Sportec Solutions: reference/providers/sportec.md
+          - Stats Perform: reference/providers/statsperform.md
+          - TRACAB: reference/providers/tracab.md
+          - Wyscout: reference/providers/wyscout.md
+      - Domain Concepts:
+          - reference/domain/models/index.md
+          - Dataset:
+              - reference/domain/models/common/dataset/index.md
+              - DataRecord:
+                  - reference/domain/models/common/data-record/index.md
+                  - Time: reference/domain/models/time/time/index.md
+                  - Team: reference/domain/models/common/team/index.md
+                  - Player: reference/domain/models/common/player/index.md
+                  - Point: reference/domain/models/pitch/point/index.md
+                  - BallState: reference/domain/models/common/ball-state/index.md
+                  - AttackingDirection: reference/domain/models/common/attacking-direction/index.md
+                  - Result: reference/domain/models/event/result/index.md
+                  - Statistic: reference/domain/models/common/statistic/index.md
+              - DatasetType:
+                  - reference/domain/models/common/dataset-type/index.md
+                  - EventDataset:
+                      - reference/domain/models/event/event-dataset/index.md
+                      - Event: reference/domain/models/event/event/index.md
+                  - TrackingDataset:
+                      - reference/domain/models/tracking/tracking-dataset/index.md
+                      - Frame: reference/domain/models/tracking/frame/index.md
+                  - CodeDataset:
+                      - reference/domain/models/code/code-dataset/index.md
+                      - Code: reference/domain/models/code/code/index.md
+          - Metadata:
+              - reference/domain/models/common/metadata/index.md
+              - Team:
+                  - reference/domain/models/common/team/index.md
+                  - FormationType: reference/domain/models/formation/formation-type/index.md
+                  - Player:
+                      - reference/domain/models/common/player/index.md
+                      - Position: reference/domain/models/position/position/index.md
+                  - Ground: reference/domain/models/common/ground/index.md
+              - Period: reference/domain/models/time/period/index.md
+              - Score: reference/domain/models/common/score/index.md
+              - Provider: reference/domain/models/common/provider/index.md
+              - Orientation: reference/domain/models/common/orientation/index.md
+              - CoordinateSystem:
+                  - reference/domain/models/common/coordinate-system/index.md
+                  - Origin: reference/domain/models/common/origin/index.md
+                  - VerticalOrientation: reference/domain/models/common/vertical-orientation/index.md
+                  - PitchDimensions:
+                      - reference/domain/models/pitch/pitch-dimensions/index.md
+                      - Unit: reference/domain/models/pitch/unit/index.md
+                      - Dimension: reference/domain/models/pitch/dimension/index.md
+              - Official: reference/domain/models/common/official/index.md
+              - DatasetFlag: reference/domain/models/common/dataset-flag/index.md
+      - Event Data Model:
+          - reference/event-data/index.md
+          - Event Types:
+              - reference/event-data/event-types/index.md
+              - Generic: reference/event-data/event-types/generic.md
+              - Pass: reference/event-data/event-types/pass.md
+              - Shot: reference/event-data/event-types/shot.md
+              - Take on: reference/event-data/event-types/take_on.md
+              - Carry: reference/event-data/event-types/carry.md
+              - Clearance: reference/event-data/event-types/clearance.md
+              - Interception: reference/event-data/event-types/interception.md
+              - Duel: reference/event-data/event-types/duel.md
+              - Substitution: reference/event-data/event-types/substitution.md
+              - Card: reference/event-data/event-types/card.md
+              - Player on: reference/event-data/event-types/player_on.md
+              - Player off: reference/event-data/event-types/player_off.md
+              - Recovery: reference/event-data/event-types/recovery.md
+              - Miscontrol: reference/event-data/event-types/miscontrol.md
+              - Ball out: reference/event-data/event-types/ball_out.md
+              - Foul committed: reference/event-data/event-types/foul_committed.md
+              - Goalkeeper: reference/event-data/event-types/goalkeeper.md
+              - Pressure: reference/event-data/event-types/pressure.md
+              - Formation change: reference/event-data/event-types/formation_change.md
+          - Qualifiers:
+              - reference/event-data/qualifiers/index.md
+              - BodyPartQualifier: reference/event-data/qualifiers/bodypart.md
+              - CardQualifier: reference/event-data/qualifiers/card.md
+              - CounterAttackQualifier: reference/event-data/qualifiers/counterattack.md
+              - DuelQualifier: reference/event-data/qualifiers/duel.md
+              - GoalKeeperQualifier: reference/event-data/qualifiers/goalkeeper.md
+              - PassQualifier: reference/event-data/qualifiers/pass.md
+              - SetPieceQualifier: reference/event-data/qualifiers/set-piece.md
+      - Tracking Data Model:
+          - reference/tracking-data/index.md
+      - Other Modules:
+          - kloppy.config: reference/config.md
+          - kloppy.helpers: reference/helpers.md
+          - kloppy.io: reference/io.md
+          - kloppy.exceptions: reference/exceptions.md
+  - Development:
+      - Contributing: contributor-guide/contributing.md
+      - Issues: contributor-guide/issues.md
+      - Adding a data provider: contributor-guide/add-new-provider.md
+      - License: license.md
+  - Releases: https://github.com/PySport/kloppy/releases
 plugins:
   - mkdocs-jupyter:
-      include_source: True
+      include: ["*.ipynb"]
+      include_source: true
+      execute: false
+  - markdown-exec
   - search
+  - autorefs
+  - macros:
+      module_name: docs/macros
+      j2_comment_start_string: '$#'
+      j2_comment_end_string: '#$'
   - mkdocstrings:
-      default_handler: python
       handlers:
         python:
-          rendering:
-            show_source: true
+          options:
             show_root_heading: true
-            heading_level: 3
-      watch:
-        - kloppy
+            show_if_no_docstring: true
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            filters:
+              - '!^_'
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            extensions:
+              - griffe_generics
   - exclude:
       glob:
         - presentations/*
 markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.details
   - pymdownx.highlight:
       use_pygments: true
       linenums: true
@@ -74,4 +235,10 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - footnotes
+  - md_in_html
+watch:
+  - mkdocs.yml
+  - kloppy

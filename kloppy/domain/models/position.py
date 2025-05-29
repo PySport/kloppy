@@ -78,6 +78,19 @@ class PositionType(Enum):
             return PositionType[self._parent]
         return None
 
+    @property
+    def root(self):
+        if self._parent is None:
+            return self
+
+        current = (
+            self.parent
+        )  # Start with the actual parent object, not the string
+        while current.parent is not None:
+            current = current.parent
+
+        return current
+
     def is_subtype_of(self, other):
         current = self
         while current is not None:

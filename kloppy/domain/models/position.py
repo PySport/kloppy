@@ -83,7 +83,7 @@ class PositionType(Enum):
         if self._parent is None:
             return self
 
-        current = self.parent
+        current = self
         while current.parent is not None:
             current = current.parent
 

@@ -83,9 +83,7 @@ class PositionType(Enum):
         if self._parent is None:
             return self
 
-        current = (
-            self.parent
-        )  # Start with the actual parent object, not the string
+        current = self.parent
         while current.parent is not None:
             current = current.parent
 

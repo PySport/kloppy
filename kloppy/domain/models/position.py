@@ -80,9 +80,6 @@ class PositionType(Enum):
 
     @property
     def root(self):
-        if self._parent is None:
-            return self
-
         current = self
         while current.parent is not None:
             current = current.parent

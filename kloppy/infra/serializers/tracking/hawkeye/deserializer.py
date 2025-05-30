@@ -132,7 +132,6 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     ) -> Dict[str, Team]:
         parsed_teams = {}
         for team in raw_teams:
-            print(team)
             team_id = team["id"][self.object_id]
             parsed_teams[team_id] = Team(
                 team_id=team["id"][self.object_id],
@@ -281,12 +280,11 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
 
-            if HawkEyeObjectIdentifier.is_priority(self.object_id):
-                self.object_id = (
-                    HawkEyeObjectIdentifier.get_identifier_variable(
-                        player_tracking_data
-                    )
-                )
+            _object_id = HawkEyeObjectIdentifier.get_identifier_variable(
+                player_tracking_data
+            )
+            if HawkEyeObjectIdentifier.is_priority(_object_id):
+                self.object_id = _object_id
 
             if frame_rate is None:
                 frame_rate = self.__infer_frame_rate(ball_tracking_data)

@@ -98,6 +98,8 @@ class Provider(Enum):
         HAWKEYE:
         SPORTVU:
         IMPECT:
+        SIGNALITY:
+        SMRTSTATS:
     """
 
     METRICA = "metrica"
@@ -116,6 +118,7 @@ class Provider(Enum):
     SPORTVU = "sportvu"
     IMPECT = "impect"
     SIGNALITY = "signality"
+    SMRTSTATS = "smrtstats"
     OTHER = "other"
 
     def __str__(self):
@@ -1019,6 +1022,30 @@ class ImpectCoordinateSystem(ProviderCoordinateSystem):
         return ImpectPitchDimensions()
 
 
+class SmrtStatsCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SMRTSTATS
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(0, 105),
+            y_dim=Dimension(0, 68),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
+            standardized=False,
+        )
+
+
 class DatasetType(Enum):
     """
     DatasetType
@@ -1073,6 +1100,7 @@ def build_coordinate_system(
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.IMPECT: ImpectCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.SMRTSTATS: SmrtStatsCoordinateSystem,
     }
 
     if provider in coordinate_systems:

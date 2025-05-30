@@ -73,6 +73,13 @@ class HawkEyeObjectIdentifier:
                 return identifier
         return object_id
 
+    @classmethod
+    def is_priority(cls, object_id):
+        if object_id in cls.PRIORITY_IDS:
+            return True
+        else:
+            return False
+
 
 class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     def __init__(
@@ -82,9 +89,12 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
+        object_id: Optional[str] = None,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
-        self.object_id: HawkEyeObjectIdentifier = None
+        self.object_id: HawkEyeObjectIdentifier = (
+            None if object_id is None else object_id
+        )
         self.pitch_width = pitch_width
         self.pitch_length = pitch_length
 
@@ -122,6 +132,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
     ) -> Dict[str, Team]:
         parsed_teams = {}
         for team in raw_teams:
+            print(team)
             team_id = team["id"][self.object_id]
             parsed_teams[team_id] = Team(
                 team_id=team["id"][self.object_id],
@@ -270,17 +281,20 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             with open_as_file(player_centroid_feed) as player_centroid_data_fp:
                 player_tracking_data = json.load(player_centroid_data_fp)
 
-            self.object_id = HawkEyeObjectIdentifier.get_identifier_variable(
-                player_tracking_data
-            )
+            if HawkEyeObjectIdentifier.is_priority(self.object_id):
+                self.object_id = (
+                    HawkEyeObjectIdentifier.get_identifier_variable(
+                        player_tracking_data
+                    )
+                )
 
             if frame_rate is None:
                 frame_rate = self.__infer_frame_rate(ball_tracking_data)
 
             if not self._game_id:
-                self._game_id = ball_tracking_data["details"]["match"]["id"][
-                    self.object_id
-                ]
+                self._game_id = ball_tracking_data["details"]["match"][
+                    "id"
+                ].get(self.object_id, None)
 
             # Parse the teams, players and periods. A value can be added by
             # later feeds, but we will not overwrite existing values.

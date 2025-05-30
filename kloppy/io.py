@@ -48,6 +48,7 @@ class Source:
         skip_if_missing (bool): Whether to skip the file if it is missing. Defaults to False.
 
     Example:
+
         >>> open_as_file(Source.create("example.csv", optional=True))
     """
 
@@ -290,6 +291,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
         Exception: If the extension cannot be determined.
 
     Example:
+
         >>> get_file_extension("example.xml.gz")
         '.xml'
         >>> get_file_extension(Path("example.txt"))
@@ -347,6 +349,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
         TypeError: If the input type is not supported.
 
     Example:
+
         >>> with open_as_file("example.txt") as f:
         ...     contents = f.read()
 

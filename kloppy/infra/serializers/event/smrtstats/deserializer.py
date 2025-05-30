@@ -477,24 +477,26 @@ def _get_pass_qualifiers(action_id: int) -> List[PassQualifier]:
 
 def _parse_pass(raw_event: Dict, action_id: int, team: Team) -> Dict:
     result = None
-    receiver_coordinates = None
     receiver_player = None
     # We could check whether next event is offside to set PassResult.OFFSIDE
     if action_id in PASS_INACCURATE_IDS:
         result = PassResult.INCOMPLETE
     elif action_id in PASS_ACCURATE_IDS:
         result = PassResult.COMPLETE
-        if (
-            raw_event["relative_coord_x_destination"]
-            and raw_event["relative_coord_y_destination"]
-        ):
-            receiver_coordinates = Point(
-                x=raw_event["relative_coord_x_destination"],
-                y=raw_event["relative_coord_y_destination"],
-            )
-        else:
-            receiver_coordinates = None
         receiver_player = team.get_player_by_id(str(raw_event["recipient_id"]))
+
+    receiver_x = (
+        raw_event["relative_coord_x_destination"]
+        if raw_event["relative_coord_x_destination"]
+        else 0
+    )
+    receiver_y = (
+        raw_event["relative_coord_y_destination"]
+        if raw_event["relative_coord_y_destination"]
+        else 0
+    )
+
+    receiver_coordinates = Point(x=receiver_x, y=receiver_y)
 
     event_qualifiers = _get_event_qualifiers(raw_event)
     pass_qualifiers = _get_pass_qualifiers(action_id)
@@ -645,19 +647,18 @@ class SmrtStatsDeserializer(EventDataDeserializer[SmrtStatsInputs]):
                     if action_id in BALL_OWNING_IDS:
                         possession_team = team
 
-                    if (
+                    x = (
                         raw_event["relative_coord_x"]
-                        and raw_event["relative_coord_y"]
-                    ):
-                        coordinates = Point(
-                            x=raw_event["relative_coord_x"],
-                            y=raw_event["relative_coord_y"],
-                        )
-                    else:
-                        logger.debug(
-                            f"Not setting coordinates for event with missing coordinates: {raw_event}"
-                        )
-                        coordinates = None
+                        if raw_event["relative_coord_x"]
+                        else 0
+                    )
+                    y = (
+                        raw_event["relative_coord_y"]
+                        if raw_event["relative_coord_y"]
+                        else 0
+                    )
+                    coordinates = Point(x=x, y=y)
+
                     generic_event_kwargs = dict(
                         period=period,
                         timestamp=timedelta(seconds=raw_event["second"])

@@ -398,6 +398,7 @@ def _update_recipient_event_kwargs(
     away_team: Team,
 ) -> Dict:
     recipient_event_kwargs = generic_event_kwargs.copy()
+    recipient_event_kwargs["event_id"] = f"opponent_duel-{raw_event['id']}"
     home_recipient_player = home_team.get_player_by_id(
         str(raw_event["recipient_id"])
     )

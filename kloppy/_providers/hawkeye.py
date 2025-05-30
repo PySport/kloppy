@@ -18,6 +18,7 @@ def load(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     show_progress: Optional[bool] = False,
+    object_id: Optional[str] = None,
 ) -> TrackingDataset:
     """
     Load HawkEye tracking data.
@@ -62,6 +63,7 @@ def load(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
+        object_id=object_id,
     )
     return deserializer.deserialize(
         inputs=HawkEyeInputs(

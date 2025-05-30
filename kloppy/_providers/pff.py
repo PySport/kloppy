@@ -1,9 +1,13 @@
+from typing import List
 from kloppy.domain import Optional, TrackingDataset
+from kloppy.domain.services.event_factory import EventFactory
 from kloppy.infra.serializers.tracking.pff import (
-    PFF_TrackingDeserializer,
-    PFF_TrackingInputs,
+    PFFTrackingDeserializer,
+    PFFTrackingInputs,
 )
+from kloppy.infra.serializers.event.pff import PFFEventDeserializer, PFFEventInputs
 from kloppy.io import FileLike, open_as_file
+from kloppy.config import get_config
 
 
 def load_tracking(
@@ -30,7 +34,7 @@ def load_tracking(
     Returns:
         TrackingDataset: A deserialized TrackingDataset object containing the processed tracking data.
     """
-    deserializer = PFF_TrackingDeserializer(
+    deserializer = PFFTrackingDeserializer(
         sample_rate=sample_rate,
         limit=limit,
         coordinate_system=coordinates,
@@ -40,9 +44,50 @@ def load_tracking(
         roster_meta_data
     ) as roster_meta_data_fp, open_as_file(raw_data) as raw_data_fp:
         return deserializer.deserialize(
-            inputs=PFF_TrackingInputs(
+            inputs=PFFTrackingInputs(
                 meta_data=meta_data_fp,
                 roster_meta_data=roster_meta_data_fp,
                 raw_data=raw_data_fp,
             )
+        )
+
+def load_event(
+    match_metadata: FileLike,
+    roster_metadata: FileLike,
+    raw_event_data: FileLike,
+    event_types: Optional[List[str]] = None,
+    coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
+    additional_metadata: dict = {},
+) -> EventDataset:
+    """
+    Load PFF event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+
+    Parameters:
+        match_metadata (FileLike): A file-like object containing metadata about the match.
+        roster_metadata (FileLike): filename of json containing the lineup information
+        raw_event_data (FileLike): filename of json containing the events
+        event_types (List[str], optional): A list of event types to filter the events. If None, all events are included. Defaults to None.
+        coordinates (str, optional): The coordinate system to use for the tracking data. Defaults to None.
+        event_factory: (EventFactory, optional): An optional event factory to use for creating events. If None, the default event factory is used. Defaults to None.
+        additional_metadata (dict, optional): Additional metadata to include in the deserialization process. Defaults to an empty dictionary.
+    """
+    deserializer = PFFEventDeserializer(
+        event_types=event_types,
+        coordinate_system=coordinates,
+        event_factory=event_factory or get_config("event_factory")
+    )
+
+    with (
+        open_as_file(match_metadata) as metadata_fp,
+        open_as_file(roster_metadata) as roster_metadata_fp,
+        open_as_file(raw_event_data) as raw_event_data_fp
+    ):
+        return deserializer.deserialize(
+            inputs=PFFEventInputs(
+                match_metadata=metadata_fp,
+                roster_metadata=roster_metadata_fp,
+                raw_event_data=raw_event_data_fp,
+            ),
+            additional_metadata=additional_metadata,
         )

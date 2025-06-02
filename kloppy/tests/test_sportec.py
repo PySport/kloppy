@@ -239,7 +239,7 @@ class TestSportecTrackingData:
             limit=100,
         )
 
-        rowwise_df = dataset.to_df(orient="row")
+        rowwise_df = dataset.to_df(orient="rows")
 
         assert rowwise_df.frame_id.nunique() == 100
         assert len(rowwise_df) == 256

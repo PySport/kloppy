@@ -1891,7 +1891,7 @@ class Dataset(ABC, Generic[T]):
                 Literal["pandas[pyarrow]"],
             ]
         ] = None,
-        orient: Literal["column", "row"] = "column",
+        orient: Literal["columns", "rows"] = "colums",
         **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config
@@ -1899,7 +1899,7 @@ class Dataset(ABC, Generic[T]):
         if not engine:
             engine = get_config("dataframe.engine")
 
-        if orient == "column":
+        if orient == "columns":
             # Original column-wise behavior using to_dict
             if engine == "pandas[pyarrow]":
                 try:
@@ -1957,7 +1957,7 @@ class Dataset(ABC, Generic[T]):
             else:
                 raise KloppyParameterError(f"Engine {engine} is not valid")
 
-        elif orient == "row":
+        elif orient == "rows":
             # Row-wise behavior using to_dict_rowwise
             all_rows = self.to_dict_rowwise(*columns, **named_columns)
 

@@ -421,7 +421,7 @@ class RowWiseFrameTransformer:
         )
         rows.append(ball_row)
 
-        for i, (player, player_data) in enumerate(frame.players_data.items()):
+        for player, player_data in frame.players_data.items():
             player_row = base_data.copy()
             player_row.update(
                 {

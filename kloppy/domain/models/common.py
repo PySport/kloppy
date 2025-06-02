@@ -1804,7 +1804,8 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]: ...
+    ) -> List[Dict[str, Any]]:
+        ...
 
     @overload
     def to_records(
@@ -1812,7 +1813,8 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]: ...
+    ) -> Iterable[Dict[str, Any]]:
+        ...
 
     def to_records(
         self,

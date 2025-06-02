@@ -1264,10 +1264,7 @@ class TestStatsBombAsTrackingDataset:
     """Tests related to deserializing 34/Tactical Shift events"""
 
     def test_convert_to_tracking(self, dataset: EventDataset):
-        sb_tracking = TrackingDataset.from_dataset(
-            dataset.filter(lambda event: event.freeze_frame is not None),
-            lambda event: event.freeze_frame,
-        )
+        sb_tracking = dataset.to_tracking_data()
         assert len(sb_tracking) == 3346
 
         with pytest.raises(

@@ -19,7 +19,6 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
-    as_tracking_dataset: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb event data.
@@ -64,7 +63,6 @@ def load_open_data(
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
-    as_tracking_dataset: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb open data.

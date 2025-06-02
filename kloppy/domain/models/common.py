@@ -1891,7 +1891,7 @@ class Dataset(ABC, Generic[T]):
                 Literal["pandas[pyarrow]"],
             ]
         ] = None,
-        orient: Literal["columns", "rows"] = "colums",
+        orient: Literal["columns", "rows"] = "columns",
         **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config
@@ -2010,7 +2010,7 @@ class Dataset(ABC, Generic[T]):
 
         else:
             raise KloppyParameterError(
-                f"Orient '{orient}' is not valid. Must be 'column' or 'row'"
+                f"Orient '{orient}' is not valid. Must be 'columns' or 'rows'"
             )
 
     def __repr__(self):

@@ -24,22 +24,19 @@ class Period:
     Attributes:
         id: `1` for first half, `2` for second half, `3` for first half of
             overtime, `4` for second half of overtime, `5` for penalty shootout
-        start_timestamp: The UTC datetime of the kick-off or, if the
+        start_timestamp: The timedelta datetime of the kick-off or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's kick-off
-        start_time: Same as `start_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
-        end_timestamp: The UTC datetime of the final whistle or, if the
+        end_timestamp: The timedelta of the final whistle or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's final whistle
-        end_time: Same as `end_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
-        duration: The length of the period.
         prev_period: Period before this period.
         next_period: Period after this period.
     """
 
     id: int
-    start_timestamp: Union[datetime, timedelta]
-    end_timestamp: Optional[Union[datetime, timedelta]]
+    start_timestamp: timedelta
+    end_timestamp: Optional[timedelta]
 
     prev_period: Optional["Period"] = field(init=False)
     next_period: Optional["Period"] = field(init=False)

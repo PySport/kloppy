@@ -150,7 +150,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         return frame_rate
 
     @classmethod
-    def __get_periods(cls, raw_data_feeds) -> List[Period]:
+    def __get_periods(cls, raw_data_feeds, frame_rate) -> List[Period]:
         """gets the Periods contained in the tracking data"""
         periods = []
         for period_id, p_tracking in enumerate(raw_data_feeds, 1):
@@ -174,8 +174,12 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             periods.append(
                 Period(
                     id=period_id,
-                    start_timestamp=start_time,
-                    end_timestamp=end_time,
+                    start_timestamp=timedelta(
+                        seconds=first_frame["match_time"] / 1000
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=last_frame["match_time"] / 1000
+                    ),
                 )
             )
 
@@ -230,7 +234,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         with performance_logging("Loading metadata", logger=logger):
             frame_rate = self.__get_frame_rate(p1_raw_data)
             teams = self.__create_teams(metadata)
-            periods = self.__get_periods(raw_data_feeds)
+            periods = self.__get_periods(raw_data_feeds, frame_rate)
             pitch_size_length = venue_information["pitch_size"][0]
             pitch_size_width = venue_information["pitch_size"][1]
 

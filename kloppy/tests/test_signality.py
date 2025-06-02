@@ -52,18 +52,20 @@ class TestSignalityTracking:
         assert len(dataset.metadata.periods) == 2
         assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert dataset.metadata.periods[0].id == 1
-        assert dataset.metadata.periods[0].start_timestamp == datetime(
-            2024, 10, 6, 12, 0, 1, 408000, timezone.utc
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            milliseconds=12
         )
-        assert dataset.metadata.periods[0].end_timestamp == datetime(
-            2024, 10, 6, 12, 48, 43, 858000, timezone.utc
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=2922,
+            milliseconds=450,
         )
         assert dataset.metadata.periods[1].id == 2
-        assert dataset.metadata.periods[1].start_timestamp == datetime(
-            2024, 10, 6, 13, 4, 45, 775000, timezone.utc
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            milliseconds=12
         )
-        assert dataset.metadata.periods[1].end_timestamp == datetime(
-            2024, 10, 6, 13, 54, 11, 730000, timezone.utc
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=2965,
+            milliseconds=955,
         )
 
         start_frame = dataset.records[0]

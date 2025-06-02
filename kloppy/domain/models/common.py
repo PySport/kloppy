@@ -680,12 +680,16 @@ class CoordinateSystem(ABC):
         dim = BaseDims(
             left=self.pitch_dimensions.x_dim.min,
             right=self.pitch_dimensions.x_dim.max,
-            bottom=self.pitch_dimensions.y_dim.min
-            if not invert_y
-            else self.pitch_dimensions.y_dim.max,
-            top=self.pitch_dimensions.y_dim.max
-            if not invert_y
-            else self.pitch_dimensions.y_dim.min,
+            bottom=(
+                self.pitch_dimensions.y_dim.min
+                if not invert_y
+                else self.pitch_dimensions.y_dim.max
+            ),
+            top=(
+                self.pitch_dimensions.y_dim.max
+                if not invert_y
+                else self.pitch_dimensions.y_dim.min
+            ),
             width=self.pitch_dimensions.x_dim.max
             - self.pitch_dimensions.x_dim.min,
             length=self.pitch_dimensions.y_dim.max
@@ -734,14 +738,16 @@ class CoordinateSystem(ABC):
                 - self.pitch_dimensions.x_dim.min
             ),
             pad_multiplier=1,
-            aspect_equal=False
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else True,
+            aspect_equal=(
+                False if self.pitch_dimensions.unit == Unit.NORMED else True
+            ),
             pitch_width=pitch_width,
             pitch_length=pitch_length,
-            aspect=pitch_width / pitch_length
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else 1.0,
+            aspect=(
+                pitch_width / pitch_length
+                if self.pitch_dimensions.unit == Unit.NORMED
+                else 1.0
+            ),
         )
         return dim
 
@@ -1798,8 +1804,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1807,8 +1812,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1853,6 +1857,28 @@ class Dataset(ABC, Generic[T]):
                 f"Orient {orient} is not supported. Only orient='list' is supported"
             )
 
+    def to_dict_rowwise(
+        self,
+        *columns: Unpack[tuple[Column]],
+        **named_columns: NamedColumns,
+    ) -> List[Dict[str, Any]]:
+        if self.dataset_type != DatasetType.TRACKING:
+            raise KloppyParameterError(
+                f"Row-wise format is only supported for tracking datasets, "
+                f"got {self.dataset_type}"
+            )
+
+        from ..services.transformers.data_record import RowWiseFrameTransformer
+
+        transformer = RowWiseFrameTransformer(*columns, **named_columns)
+
+        all_rows = []
+        for record in self.records:
+            rows = transformer(record)
+            all_rows.extend(rows)
+
+        return all_rows
+
     def to_df(
         self,
         *columns: Unpack[tuple[Column]],
@@ -1863,6 +1889,7 @@ class Dataset(ABC, Generic[T]):
                 Literal["pandas[pyarrow]"],
             ]
         ] = None,
+        orient: Literal["column", "row"] = "column",
         **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config
@@ -1870,61 +1897,119 @@ class Dataset(ABC, Generic[T]):
         if not engine:
             engine = get_config("dataframe.engine")
 
-        if engine == "pandas[pyarrow]":
-            try:
-                import pandas as pd
+        if orient == "column":
+            # Original column-wise behavior using to_dict
+            if engine == "pandas[pyarrow]":
+                try:
+                    import pandas as pd
 
-                types_mapper = pd.ArrowDtype
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
+                    types_mapper = pd.ArrowDtype
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have pandas installed. Please"
+                        " install it using: pip install pandas"
+                    )
+                except AttributeError:
+                    raise AttributeError(
+                        "Seems like you have an older version of pandas installed. Please"
+                        " upgrade to at least 1.5 using: pip install pandas>=1.5"
+                    )
+
+                try:
+                    import pyarrow as pa
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have pyarrow installed. Please"
+                        " install it using: pip install pyarrow"
+                    )
+
+                table = pa.Table.from_pydict(
+                    self.to_dict(*columns, orient="list", **named_columns)
                 )
-            except AttributeError:
-                raise AttributeError(
-                    "Seems like you have an older version of pandas installed. Please"
-                    " upgrade to at least 1.5 using: pip install pandas>=1.5"
+                return table.to_pandas(types_mapper=types_mapper)
+
+            elif engine == "pandas":
+                try:
+                    from pandas import DataFrame
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have pandas installed. Please"
+                        " install it using: pip install pandas"
+                    )
+
+                return DataFrame.from_dict(
+                    self.to_dict(*columns, orient="list", **named_columns)
                 )
+            elif engine == "polars":
+                try:
+                    from polars import from_dict
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have polars installed. Please"
+                        " install it using: pip install polars"
+                    )
 
-            try:
-                import pyarrow as pa
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pyarrow installed. Please"
-                    " install it using: pip install pyarrow"
+                return from_dict(
+                    self.to_dict(*columns, orient="list", **named_columns)
                 )
+            else:
+                raise KloppyParameterError(f"Engine {engine} is not valid")
 
-            table = pa.Table.from_pydict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
-            return table.to_pandas(types_mapper=types_mapper)
+        elif orient == "row":
+            # Row-wise behavior using to_dict_rowwise
+            all_rows = self.to_dict_rowwise(*columns, **named_columns)
 
-        elif engine == "pandas":
-            try:
-                from pandas import DataFrame
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
-                )
+            if engine == "pandas[pyarrow]":
+                try:
+                    import pandas as pd
+                    import pyarrow as pa
 
-            return DataFrame.from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
-        elif engine == "polars":
-            try:
-                from polars import from_dict
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have polars installed. Please"
-                    " install it using: pip install polars"
-                )
+                    types_mapper = pd.ArrowDtype
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have pandas and pyarrow installed. Please"
+                        " install them using: pip install pandas pyarrow"
+                    )
 
-            return from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
-            )
+                # Convert list of dicts to dict of lists for pyarrow
+                if all_rows:
+                    keys = all_rows[0].keys()
+                    data_dict = {
+                        key: [row.get(key) for row in all_rows] for key in keys
+                    }
+                    table = pa.Table.from_pydict(data_dict)
+                    return table.to_pandas(types_mapper=types_mapper)
+                else:
+                    return pd.DataFrame()
+
+            elif engine == "pandas":
+                try:
+                    from pandas import DataFrame
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have pandas installed. Please"
+                        " install it using: pip install pandas"
+                    )
+
+                return DataFrame(all_rows)
+
+            elif engine == "polars":
+                try:
+                    from polars import DataFrame
+                except ImportError:
+                    raise ImportError(
+                        "Seems like you don't have polars installed. Please"
+                        " install it using: pip install polars"
+                    )
+
+                return DataFrame(all_rows)
+            else:
+                raise KloppyParameterError(f"Engine {engine} is not valid")
+
         else:
-            raise KloppyParameterError(f"Engine {engine} is not valid")
+            raise KloppyParameterError(
+                f"Orient '{orient}' is not valid. Must be 'column' or 'row'"
+            )
 
     def __repr__(self):
         return f"<{self.__class__.__name__} record_count={len(self.records)}>"

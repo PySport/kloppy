@@ -1,7 +1,17 @@
 import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
-from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    List,
+)
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -13,6 +23,7 @@ from kloppy.domain.services.transformers.attribute import (
     DefaultCodeTransformer,
     DefaultEventTransformer,
     DefaultFrameTransformer,
+    RowWiseFrameTransformer,
 )
 from kloppy.exceptions import KloppyError
 
@@ -23,8 +34,7 @@ NamedColumns = Dict[str, Column]
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]:
-        ...
+    def default_transformer(self) -> Callable[[T], Dict]: ...
 
     def __init__(
         self,
@@ -96,6 +106,11 @@ class FrameToDictTransformer(DataRecordToDictTransformer[Frame]):
 class CodeToDictTransformer(DataRecordToDictTransformer[Code]):
     def default_transformer(self) -> Callable[[Code], Dict]:
         return DefaultCodeTransformer()
+
+
+class RowWiseFrameToDictTransformer(DataRecordToDictTransformer[Frame]):
+    def default_transformer(self) -> Callable[[Frame], List[Dict]]:
+        return RowWiseFrameTransformer()
 
 
 def get_transformer_cls(

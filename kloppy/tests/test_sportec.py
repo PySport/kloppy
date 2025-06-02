@@ -230,6 +230,37 @@ class TestSportecTrackingData:
         )
         assert len(dataset.records) == 100
 
+    def test_rowwise_df(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            only_alive=True,
+            limit=100,
+        )
+
+        rowwise_df = dataset.to_df(orient="row")
+
+        assert rowwise_df.frame_id.nunique() == 100
+        assert len(rowwise_df) == 256
+        assert list(rowwise_df.columns) == [
+            "period_id",
+            "timestamp",
+            "frame_id",
+            "ball_state",
+            "ball_owning_team_id",
+            "team_id",
+            "player_id",
+            "x",
+            "y",
+            "z",
+            "d",
+            "s",
+        ]
+        assert len(rowwise_df.dropna(subset=["z"])) == 100
+        assert len(rowwise_df[rowwise_df["team_id"] == "ball"]) == 100
+        assert rowwise_df.player_id.nunique() == 4
+
     def test_enriched_metadata(self, raw_data: Path, meta_data: Path):
         dataset = sportec.load_tracking(
             raw_data=raw_data,

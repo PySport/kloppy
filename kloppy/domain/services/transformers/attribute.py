@@ -363,6 +363,107 @@ class DefaultFrameTransformer:
             return row
 
 
+class RowWiseFrameTransformer:
+    def __init__(
+        self,
+        *include: str,
+        exclude: Optional[List[str]] = None,
+    ):
+        if include and exclude:
+            raise KloppyParameterError(
+                "Cannot specify both include as exclude"
+            )
+
+        self.exclude = exclude or []
+        self.include = include or []
+
+    def __call__(self, frame: Frame) -> List[Dict[str, Any]]:
+        rows = []
+
+        base_data = {
+            "period_id": frame.period.id if frame.period else None,
+            "timestamp": frame.timestamp,
+            "frame_id": frame.frame_id,
+            "ball_state": frame.ball_state.value if frame.ball_state else None,
+            "ball_owning_team_id": (
+                frame.ball_owning_team.team_id
+                if frame.ball_owning_team
+                else None
+            ),
+        }
+
+        if frame.other_data:
+            base_data.update(frame.other_data)
+
+        ball_row = base_data.copy()
+        ball_row.update(
+            {
+                "team_id": "ball",
+                "player_id": "ball",
+                "x": (
+                    frame.ball_coordinates.x
+                    if frame.ball_coordinates
+                    else None
+                ),
+                "y": (
+                    frame.ball_coordinates.y
+                    if frame.ball_coordinates
+                    else None
+                ),
+                "z": (
+                    getattr(frame.ball_coordinates, "z", None)
+                    if frame.ball_coordinates
+                    else None
+                ),
+                "d": None,
+                "s": frame.ball_speed,
+            }
+        )
+        rows.append(ball_row)
+
+        for i, (player, player_data) in enumerate(frame.players_data.items()):
+            player_row = base_data.copy()
+            player_row.update(
+                {
+                    "team_id": player.team.team_id if player else None,
+                    "player_id": player.player_id if player else None,
+                    "x": (
+                        player_data.coordinates.x
+                        if player_data.coordinates
+                        else None
+                    ),
+                    "y": (
+                        player_data.coordinates.y
+                        if player_data.coordinates
+                        else None
+                    ),
+                    "z": (
+                        getattr(player_data.coordinates, "z", None)
+                        if player_data.coordinates
+                        else None
+                    ),
+                    "d": player_data.distance,
+                    "s": player_data.speed,
+                }
+            )
+
+            if player_data.other_data:
+                player_row.update(player_data.other_data)
+
+            rows.append(player_row)
+
+        if self.include:
+            rows = [
+                {k: row[k] for k in self.include if k in row} for row in rows
+            ]
+        elif self.exclude:
+            rows = [
+                {k: v for k, v in row.items() if k not in self.exclude}
+                for row in rows
+            ]
+        return rows
+
+
 class DefaultCodeTransformer:
     def __init__(
         self,

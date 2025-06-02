@@ -19,6 +19,7 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
+    as_tracking_dataset: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb event data.
@@ -33,7 +34,6 @@ def load(
         additional_metadata: A dict with additional data that will be added to
             the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
             for a list of possible keys.
-
     Returns:
         The parsed event data.
     """
@@ -64,6 +64,7 @@ def load_open_data(
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
+    as_tracking_dataset: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb open data.

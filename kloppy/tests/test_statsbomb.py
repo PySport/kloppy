@@ -36,6 +36,7 @@ from kloppy.domain import (
     SubstitutionEvent,
     TakeOnResult,
     Time,
+    TrackingDataset,
     build_coordinate_system,
 )
 from kloppy.domain.models import PositionType
@@ -49,7 +50,7 @@ from kloppy.domain.models.event import (
     PassType,
     UnderPressureQualifier,
 )
-from kloppy.exceptions import DeserializationError
+from kloppy.exceptions import DeserializationError, KloppyParameterError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 
 ENABLE_PLOTTING = True
@@ -607,7 +608,7 @@ class TestStatsBombEvent:
             coordinates,
         ) in pass_event.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
-        print(coordinates_per_team)
+
         assert coordinates_per_team == {
             "Belgium": [
                 Point(x=0.30230680550305883, y=0.5224074534269804),
@@ -1257,3 +1258,64 @@ class TestStatsBombTacticalShiftEvent:
                 PositionType.LeftMidfield,
             )
         ]
+
+
+class TestStatsBombAsTrackingDataset:
+    """Tests related to deserializing 34/Tactical Shift events"""
+
+    def test_convert_to_tracking(self, dataset: EventDataset):
+        sb_tracking = TrackingDataset.from_dataset(
+            dataset.filter(lambda event: event.freeze_frame is not None),
+            lambda event: event.freeze_frame,
+        )
+        assert len(sb_tracking) == 3346
+
+        with pytest.raises(
+            AttributeError,
+            match=r"'NoneType' object has no attribute 'player_id'",
+        ):
+            sb_tracking.to_df(orient="columns")
+
+        with pytest.raises(
+            KloppyParameterError,
+            match=r"Row-wise format is only supported for tracking datasets, got DatasetType.EVENT",
+        ):
+            dataset.to_df(orient="rows")
+
+        df = sb_tracking.to_df(orient="rows")
+        assert list(df.columns) == [
+            "period_id",
+            "timestamp",
+            "frame_id",
+            "ball_state",
+            "ball_owning_team_id",
+            "visible_area",
+            "event_id",
+            "team_id",
+            "player_id",
+            "x",
+            "y",
+            "z",
+            "d",
+            "s",
+        ]
+
+        assert (
+            len(
+                df[df["frame_id"] == 37].drop_duplicates(
+                    subset=["period_id", "frame_id", "event_id"]
+                )
+            )
+            == 2
+        )
+
+        assert (
+            len(
+                df[df["frame_id"] == 37].drop_duplicates(
+                    subset=["period_id", "frame_id", "player_id"]
+                )
+            )
+            == 40
+        )
+
+        assert len(df) == 54540

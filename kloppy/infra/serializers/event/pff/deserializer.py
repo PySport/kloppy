@@ -2,7 +2,7 @@ from datetime import timedelta
 import json
 import logging
 from itertools import zip_longest
-from typing import IO, List, NamedTuple, Optional
+from typing import IO, NamedTuple
 
 from kloppy.domain import (
     DatasetFlag,
@@ -31,7 +31,7 @@ class PFFEventInputs(NamedTuple):
     raw_event_data: IO[bytes]
 
 
-class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
+class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
     @property
     def provider(self) -> Provider:
         return Provider.PFF
@@ -46,7 +46,7 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
         # and determine fidelity versions for x/y coordinates
         with performance_logging("load data", logger=logger):
             metadata = json.load(inputs.metadata)
-            players = json.load(inputs.roster_metadata)
+            players = json.load(inputs.players)
             raw_events = json.load(inputs.raw_event_data)
 
         # Create teams and players
@@ -58,19 +58,21 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
             periods = self.create_periods(raw_events)
 
         # Create events
-        with performance_logging("parse events", logger=logger):
-            events = []
-            for raw_event in raw_event_data:
-                new_events = (
-                    raw_event
-                        .set_refs(periods, teams, raw_events)
-                        .deserialize(self.event_factory)
-                )
-                for event in new_events:
-                    if self.should_include_event(event):
-                        # Transform event to the coordinate system
-                        event = self.transformer.transform_event(event)
-                        events.append(event)
+        # with performance_logging("parse events", logger=logger):
+        #     events = []
+        #     for raw_event in raw_event_data:
+        #         new_events = (
+        #             raw_event
+        #                 .set_refs(periods, teams, raw_events)
+        #                 .deserialize(self.event_factory)
+        #         )
+        #         for event in new_events:
+        #             if self.should_include_event(event):
+        #                 # Transform event to the coordinate system
+        #                 event = self.transformer.transform_event(event)
+        #                 events.append(event)
+
+        events = []
 
         pff_metadata = Metadata(
             teams=teams,
@@ -86,21 +88,23 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
         )
         dataset = EventDataset(metadata=pff_metadata, records=events)
 
-        for event in dataset:
-            if "homePlayers" in event.raw_event:
-                # TODO: Freeze frame parsing
-                # event.freeze_frame = self.transformer.transform_frame(
-                    # parse_freeze_frame(
-                    #     freeze_frame=event.raw_event["shot"]["freeze_frame"],
-                    #     home_team=teams[0],
-                    #     away_team=teams[1],
-                    #     event=event,
-                    #     fidelity_version=data_version.shot_fidelity_version,
-                    # )
-                # )
+#         for event in dataset:
+#             if "homePlayers" in event.raw_event:
+#                 # TODO: Freeze frame parsing
+#                 # event.freeze_frame = self.transformer.transform_frame(
+#                     # parse_freeze_frame(
+#                     #     freeze_frame=event.raw_event["shot"]["freeze_frame"],
+#                     #     home_team=teams[0],
+#                     #     away_team=teams[1],
+#                     #     event=event,
+#                     #     fidelity_version=data_version.shot_fidelity_version,
+#                     # )
+#                 # )
         return dataset
 
     def create_teams_and_players(self, metadata, players):
+        print(players)
+        print(metadata)
         def create_team(team_id, team_name, ground_type):
             team = Team(
                 team_id=team_id,
@@ -109,15 +113,14 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
             )
             team.players = [
                 Player(
-                    player_id=player["id"],
+                    player_id=entry["player"]["id"],
                     team=team,
-                    name=player["name"],
-                    jersey_no=int(player["shirtNumber"]),
-                    starting=player['started'],
-                    starting_position=player_positions.get(player['positionGroupType'])
+                    name=entry['player']["nickname"],
+                    jersey_no=int(entry["shirtNumber"]),
+                    starting_position=PFF.position_types_mapping[entry['positionGroupType']]
                 )
-                for player in players
-                if player['team']['id'] == team_id
+                for entry in players
+                if entry['team']['id'] == team_id
             ]
             return team
 
@@ -128,13 +131,13 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
         away = create_team(away_team['id'], away_team['name'], Ground.AWAY)
         return [home, away]
 
-    def create_periods(self, raw_event_data: list[dict]) -> List[Period]:
+    def create_periods(self, raw_event_data: list[dict]) -> list[Period]:
         half_start_events = {}
         half_end_events = {}
 
         for event in raw_event_data:
-            event_type = PFF.EVENT_TYPE(event.raw_event["gameEvents"]["gameEventType"])
-            period = event.raw_event["gameEvents"]["period"] 
+            event_type = PFF.EVENT_TYPE(event["gameEvents"]["gameEventType"])
+            period = event["gameEvents"]["period"] 
 
             if event_type in [
                 PFF.EVENT_TYPE.FIRST_HALF_KICKOFF,
@@ -142,9 +145,9 @@ class PFFDeserializer(EventDataDeserializer[PFFEventInputs]):
                 PFF.EVENT_TYPE.THIRD_HALF_KICKOFF,
                 PFF.EVENT_TYPE.FOURTH_HALF_KICKOFF,
             ]:
-                half_start_events[period] = event.raw_event
-            elif event_type == PFF.EVENT_TYPE.END:
-                half_end_events[period] = event.raw_event
+                half_start_events[period] = event
+            elif event_type == PFF.EVENT_TYPE.END_OF_HALF:
+                half_end_events[period] = event
 
         periods = []
 

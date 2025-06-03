@@ -47,7 +47,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         with performance_logging("load data", logger=logger):
             metadata = json.load(inputs.metadata)
             players = json.load(inputs.players)
-            raw_events = json.load(inputs.raw_event_data)
+            raw_events = self.load_raw_events(inputs.raw_event_data)
 
         # Create teams and players
         with performance_logging("parse teams ans players", logger=logger):
@@ -58,21 +58,18 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
             periods = self.create_periods(raw_events)
 
         # Create events
-        # with performance_logging("parse events", logger=logger):
-        #     events = []
-        #     for raw_event in raw_event_data:
-        #         new_events = (
-        #             raw_event
-        #                 .set_refs(periods, teams, raw_events)
-        #                 .deserialize(self.event_factory)
-        #         )
-        #         for event in new_events:
-        #             if self.should_include_event(event):
-        #                 # Transform event to the coordinate system
-        #                 event = self.transformer.transform_event(event)
-        #                 events.append(event)
-
-        events = []
+        with performance_logging("parse events", logger=logger):
+            events = []
+            for raw_event in raw_events.values():
+                new_events = (
+                    raw_event
+                        .set_refs(periods, teams, raw_events)
+                        .deserialize(self.event_factory)
+                )
+                for event in new_events:
+                    if self.should_include_event(event):
+                        event = self.transformer.transform_event(event)
+                        events.append(event)
 
         pff_metadata = Metadata(
             teams=teams,
@@ -102,6 +99,18 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
 #                 # )
         return dataset
 
+
+    def load_raw_events(self, raw_event_data: IO[bytes]) -> dict[str, PFF.EVENT]:
+        raw_events = {}
+        for event in json.load(raw_event_data):
+            event_id = (
+                f'{event['gameEventId']}_{event['possessionEventId']}'
+                if event['possessionEventId'] is not None
+                else f'{event['gameEventId']}'
+            )
+            raw_events[event_id] = PFF.event_decoder(event)
+        return raw_events
+
     def create_teams_and_players(self, metadata, players):
         def create_team(team_id, team_name, ground_type):
             team = Team(
@@ -130,13 +139,13 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         away = create_team(away_team['id'], away_team['name'], Ground.AWAY)
         return [home, away]
 
-    def create_periods(self, raw_event_data: list[dict]) -> list[Period]:
+    def create_periods(self, raw_events: dict[str, PFF.EVENT]) -> list[Period]:
         half_start_events = {}
         half_end_events = {}
 
-        for event in raw_event_data:
-            event_type = PFF.EVENT_TYPE(event["gameEvents"]["gameEventType"])
-            period = event["gameEvents"]["period"] 
+        for event in raw_events.values():
+            event_type = PFF.EVENT_TYPE(event.raw_event["gameEvents"]["gameEventType"])
+            period = event.raw_event["gameEvents"]["period"] 
 
             if event_type in [
                 PFF.EVENT_TYPE.FIRST_HALF_KICKOFF,
@@ -144,9 +153,9 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
                 PFF.EVENT_TYPE.THIRD_HALF_KICKOFF,
                 PFF.EVENT_TYPE.FOURTH_HALF_KICKOFF,
             ]:
-                half_start_events[period] = event
+                half_start_events[period] = event.raw_event
             elif event_type == PFF.EVENT_TYPE.END_OF_HALF:
-                half_end_events[period] = event
+                half_end_events[period] = event.raw_event
 
         periods = []
 

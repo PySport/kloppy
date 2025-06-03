@@ -191,10 +191,11 @@ class EVENT:
             if "player" in self.raw_event
             else None
         )
-        # self.related_events = [
-        #     events.get(event_id)
-        #     for event_id in self.raw_event.get("related_events", [])
-        # ]
+        self.related_events = [
+            events.get(event_id)
+            for event_id in events.keys()
+            if event_id.split('_')[0] == self.raw_event.get("gameEventId", "")
+        ]
         return self
 
     def deserialize(self, event_factory: EventFactory) -> list[Event]:
@@ -230,12 +231,17 @@ class EVENT:
         # return aerial_won_events + base_events + ball_out_events
 
     def _parse_generic_kwargs(self) -> dict:
+        event_id = (
+            self.raw_event["possessionEventId"]
+            if self.raw_event["possessionEventId"] is not None
+            else self.raw_event["gameEventId"]
+        )
         return {
             "period": self.period,
-            "timestamp": parse_str_ts(self.raw_event["timestamp"]),
+            "timestamp": self.raw_event["eventTime"],
             "ball_owning_team": self.possession_team,
             "ball_state": BallState.ALIVE,
-            "event_id": self.raw_event["id"],
+            "event_id": event_id,
             "team": self.team,
             "player": self.player,
             "coordinates": None,
@@ -258,7 +264,7 @@ class EVENT:
         generic_event = event_factory.build_generic(
             result=None,
             qualifiers=None,
-            event_name=self.raw_event["possessionEvent"]["name"],
+            event_name=self.raw_event["gameEvents"]["gameEventType"],
             **generic_event_kwargs,
         )
         return [generic_event]

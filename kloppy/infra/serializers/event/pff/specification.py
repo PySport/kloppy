@@ -30,7 +30,7 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
 )
-from kloppy.domain.models.event import UnderPressureQualifier
+from kloppy.domain.models.event import CardEvent, FoulCommittedEvent, UnderPressureQualifier
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.pff.helpers import (
     get_period_by_id,
@@ -132,7 +132,8 @@ class POSSESSION_EVENT_TYPE(Enum, metaclass=TypesEnumMeta):
     PASS = 'PA'
     REBOUND = 'RE'
     SHOT = 'SH'
-    TOUCHES = 'IT'
+    TOUCHES = 'TC'
+    EVT_START = 'IT'
 
 
 class BODYPART(Enum, metaclass=TypesEnumMeta):
@@ -163,6 +164,21 @@ class BODYPART(Enum, metaclass=TypesEnumMeta):
     RIGHT_THIGH = 'RT'
     TWO_HANDS = 'TWOHANDS'
     VIDEO_MISSING = 'VM'
+
+
+class FOUL_TYPE(Enum, metaclass=TypesEnumMeta):
+    ADVANTAGE = 'A'
+    INFRIGEMENT = 'I' 
+    MISSED_INFRIGEMENT = 'M'
+
+
+class FOUL_OUTCOME(Enum, metaclass=TypesEnumMeta):
+    FIRST_YELLOW = 'Y'
+    SECOND_YELLOW = 'S'
+    RED = 'R'
+    WARNING = 'W'
+    NO_FOUL = 'F'
+    NO_WARNING = 'N'
 
 
 class EVENT:
@@ -214,35 +230,19 @@ class EVENT:
         base_events = self._create_events(
             event_factory, **generic_event_kwargs
         )
-        # aerial_won_events = self._create_aerial_won_event(
-        #     event_factory, **generic_event_kwargs
-        # )
-        # ball_out_events = self._create_ball_out_event(
-        #     event_factory, **generic_event_kwargs
-        # )
 
-        # # add qualifiers
-        # for event in aerial_won_events + base_events:
-        #     self._add_under_pressure_qualifier(event)
-        # for event in aerial_won_events + base_events + ball_out_events:
-        #     self._add_play_pattern_qualifiers(event)
+        foul_events = self._create_foul(event_factory, **generic_event_kwargs)
 
         # return events (note: order is important)
-        return base_events
-        # return aerial_won_events + base_events + ball_out_events
+        return base_events + foul_events
 
     def _parse_generic_kwargs(self) -> dict:
-        event_id = (
-            self.raw_event["possessionEventId"]
-            if self.raw_event["possessionEventId"] is not None
-            else self.raw_event["gameEventId"]
-        )
         return {
             "period": self.period,
             "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
             "ball_owning_team": self.possession_team,
-            "ball_state": BallState.ALIVE,
-            "event_id": event_id,
+            "ball_state": BallState.DEAD,
+            "event_id": self.raw_event["gameEventId"],
             "team": self.team,
             "player": self.player,
             "coordinates": None,
@@ -259,6 +259,55 @@ class EVENT:
 
         return event
 
+    def _create_foul(self, event_factory: EventFactory, **generic_event_kwargs) -> list[CardEvent | FoulCommittedEvent]:
+        foul_type = self.raw_event['fouls'].get('foulType')
+
+        generic_event_kwargs['ball_state'] = BallState.DEAD
+
+        if foul_type != FOUL_TYPE.INFRIGEMENT.value:
+            return []
+
+        events = []
+
+        card_map = {
+            FOUL_OUTCOME.FIRST_YELLOW: CardType.FIRST_YELLOW,
+            FOUL_OUTCOME.SECOND_YELLOW: CardType.SECOND_YELLOW,
+            FOUL_OUTCOME.RED: CardType.RED,
+        }
+
+        committer_id = self.raw_event['fouls']['finalCulpritPlayerId']
+        team = next(t for t in self.teams if t.get_player_by_id(committer_id))
+
+        generic_event_kwargs['team'] = team
+        generic_event_kwargs['player'] = team.get_player_by_id(committer_id)
+        generic_event_kwargs['ball_state'] = BallState.DEAD
+
+        foul_outcome = self.raw_event['fouls']['finalFoulOutcomeType']
+        card_type = card_map.get(FOUL_OUTCOME(foul_outcome))
+        card_qualifier = [CardQualifier(value=card_type)] if card_type else []
+
+        foul = [
+            event_factory.build_foul_committed(
+                result=None,
+                qualifiers=card_qualifier,
+                **generic_event_kwargs,
+            )
+        ]
+
+        if card_type:
+            card = [
+                event_factory.build_card(
+                    result=None,
+                    qualifiers=None,
+                    card_type=card_type,
+                    **generic_event_kwargs,
+                )
+            ]
+        else:
+            card = []
+
+        return foul + card
+        
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -269,6 +318,21 @@ class EVENT:
             **generic_event_kwargs,
         )
         return [generic_event]
+
+
+class POSSESSION_EVENT(EVENT):
+    def _parse_generic_kwargs(self) -> dict:
+        return {
+            "period": self.period,
+            "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
+            "ball_owning_team": self.possession_team,
+            "ball_state": BallState.ALIVE,
+            "event_id": self.raw_event["possessionEventId"],
+            "team": self.team,
+            "player": self.player,
+            "coordinates": None,
+            "raw_event": self.raw_event,
+        }
 
 
 class SUBSTITUTION(EVENT):
@@ -284,8 +348,8 @@ class SUBSTITUTION(EVENT):
         player_on_id = self.raw_event["gameEvents"]["playerOnId"]
 
         team = next(
-            team for team in self.teams
-            if team.get_player_by_id(player_off_id)
+            t for t in self.teams
+            if t.get_player_by_id(player_off_id)
         )
 
         player_off = team.get_player_by_id(player_off_id)
@@ -304,30 +368,89 @@ class SUBSTITUTION(EVENT):
             )
         ]
 
+class PLAYER_OFF(EVENT):
+    """PFF Player Off event."""
 
-def possession_event_decoder(possession_event: dict) -> EVENT:
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        generic_event_kwargs['ball_state'] = BallState.DEAD
+
+        return [
+            event_factory.build_player_off(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class PLAYER_ON(EVENT):
+    """PFF Player On event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_player_on(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class BALL_OUT(EVENT):
+    """PFF OUT/Ball out of play event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        generic_event_kwargs['ball_state'] = BallState.DEAD
+        ball_out_event = event_factory.build_ball_out(
+            result=None,
+            qualifiers=None,
+            **generic_event_kwargs,
+        )
+        return [ball_out_event]
+
+
+def possession_event_decoder(raw_event: dict) -> POSSESSION_EVENT:
     type_to_possession_event = {
-        POSSESSION_EVENT_TYPE.PASS: EVENT,
-        POSSESSION_EVENT_TYPE.SHOT: EVENT,
-        POSSESSION_EVENT_TYPE.CROSS: EVENT,
-        POSSESSION_EVENT_TYPE.CLEARANCE: EVENT,
-        POSSESSION_EVENT_TYPE.BALL_CARRY: EVENT,
-        POSSESSION_EVENT_TYPE.CHALLENGE: EVENT,
-        POSSESSION_EVENT_TYPE.FOUL: EVENT,
-        POSSESSION_EVENT_TYPE.REBOUND: EVENT,
-        POSSESSION_EVENT_TYPE.TOUCHES: EVENT,
+        POSSESSION_EVENT_TYPE.PASS: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.SHOT: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.CROSS: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.CLEARANCE: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.BALL_CARRY: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.CHALLENGE: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.REBOUND: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.TOUCHES: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.EVT_START: POSSESSION_EVENT,
     }
+
+    p_evt_type = raw_event["possessionEvents"]["possessionEventType"]
+
+    if p_evt_type is None:
+        return POSSESSION_EVENT(raw_event)
+
+    event_type = POSSESSION_EVENT_TYPE(p_evt_type)
+    event_creator = type_to_possession_event.get(event_type, POSSESSION_EVENT)
+    return event_creator(raw_event)
 
 
 def event_decoder(raw_event: dict) -> EVENT:
     type_to_event = {
-        EVENT_TYPE.POSSESSION: EVENT,
+        EVENT_TYPE.POSSESSION: possession_event_decoder,
+        EVENT_TYPE.FIRST_HALF_KICKOFF: possession_event_decoder,
+        EVENT_TYPE.SECOND_HALF_KICKOFF: possession_event_decoder,
+        EVENT_TYPE.THIRD_HALF_KICKOFF: possession_event_decoder,
+        EVENT_TYPE.FOURTH_HALF_KICKOFF: possession_event_decoder,
         EVENT_TYPE.GAME_CLOCK_OBSERVATION: EVENT,
         EVENT_TYPE.GROUND: EVENT,
-        EVENT_TYPE.BALL_OUT_OF_PLAY: EVENT,
+        EVENT_TYPE.BALL_OUT_OF_PLAY: BALL_OUT,
         EVENT_TYPE.SUB: SUBSTITUTION,
-        EVENT_TYPE.PLAYER_ON: EVENT,
-        EVENT_TYPE.PLAYER_OFF: EVENT,
+        EVENT_TYPE.PLAYER_ON: PLAYER_ON,
+        EVENT_TYPE.PLAYER_OFF: PLAYER_OFF,
     }
 
     event_type = EVENT_TYPE(raw_event["gameEvents"]["gameEventType"])

@@ -16,6 +16,7 @@ from kloppy.domain import (
     Provider,
     Team,
 )
+from kloppy.domain.models.pitch import PitchDimensions
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
@@ -74,6 +75,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         pff_metadata = Metadata(
             teams=teams,
             periods=periods,
+            # TODO: get pitch dimensions from a event
             pitch_dimensions=self.transformer.get_to_coordinate_system().pitch_dimensions,
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,

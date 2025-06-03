@@ -196,7 +196,9 @@ class EVENT:
         self.raw_event = raw_event
 
     def set_refs(self, periods, teams, events):
-        # Some PFF events do not have a teamId assigned but we can get the team via the player
+        # temp: some PFF events do not have a 'teamId' assigned but we can get
+        # the team using the player id. Until this is fixed in the PFF data,
+        # both teams are being "carried over" in the event.
         self.teams = teams
         self.period = get_period_by_id(self.raw_event["gameEvents"]["period"], periods)
         self.team = get_team_by_id(self.raw_event["gameEvents"]["teamId"], teams)
@@ -249,23 +251,11 @@ class EVENT:
             "raw_event": self.raw_event,
         }
 
-    def _add_under_pressure_qualifier(self, event: Event) -> Event:
-        if ("under_pressure" in self.raw_event) and (
-            self.raw_event["under_pressure"]
-        ):
-            q = UnderPressureQualifier(True)
-            event.qualifiers = event.qualifiers or []
-            event.qualifiers.append(q)
-
-        return event
-
     def _create_foul(self, event_factory: EventFactory, **generic_event_kwargs) -> list[CardEvent | FoulCommittedEvent]:
         foul_type = self.raw_event['fouls'].get('foulType')
 
         if foul_type != FOUL_TYPE.INFRIGEMENT.value:
             return []
-
-        events = []
 
         card_map = {
             FOUL_OUTCOME.FIRST_YELLOW: CardType.FIRST_YELLOW,

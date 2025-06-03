@@ -114,7 +114,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
     def create_teams_and_players(self, metadata, players):
         def create_team(team_id, team_name, ground_type):
             team = Team(
-                team_id=team_id,
+                team_id=str(team_id),
                 name=team_name,
                 ground=ground_type,
             )

@@ -17,7 +17,7 @@ from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 
-def get_team_by_id(team_id: int | None, teams: List[Team]) -> Team | None:
+def get_team_by_id(team_id: int | None, teams: list[Team]) -> Team | None:
     """Get a team by its id."""
     if team_id is None:
         return None
@@ -29,18 +29,12 @@ def get_team_by_id(team_id: int | None, teams: List[Team]) -> Team | None:
         raise DeserializationError(f"Unknown team_id {team_id}")
 
 
-def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
+def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
     """Get a period by its id."""
     for period in periods:
         if period.id == period_id:
             return period
     raise DeserializationError(f"Unknown period_id {period_id}")
-
-
-def parse_str_ts(timestamp: str) -> timedelta:
-    """Parse a HH:mm:ss string timestamp into number of seconds."""
-    h, m, s = timestamp.split(":")
-    return timedelta(seconds=int(h) * 3600 + int(m) * 60 + float(s))
 
 
 def parse_coordinates(

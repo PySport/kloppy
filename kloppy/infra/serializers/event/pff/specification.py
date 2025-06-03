@@ -36,7 +36,6 @@ from kloppy.infra.serializers.event.pff.helpers import (
     get_period_by_id,
     get_team_by_id,
     parse_coordinates,
-    parse_str_ts,
 )
 
 
@@ -181,6 +180,8 @@ class EVENT:
         self.raw_event = raw_event
 
     def set_refs(self, periods, teams, events):
+        # Some PFF events do not have a teamId assigned but we can get the team via the player
+        self.teams = teams
         self.period = get_period_by_id(self.raw_event["gameEvents"]["period"], periods)
         self.team = get_team_by_id(self.raw_event["gameEvents"]["teamId"], teams)
         self.possession_team = get_team_by_id(
@@ -188,7 +189,7 @@ class EVENT:
         )
         self.player = (
             self.team.get_player_by_id(self.raw_event["gameEvents"]["playerId"])
-            if "player" in self.raw_event
+            if self.team and self.raw_event['gameEvents']['playerId'] is not None
             else None
         )
         self.related_events = [
@@ -238,7 +239,7 @@ class EVENT:
         )
         return {
             "period": self.period,
-            "timestamp": self.raw_event["eventTime"],
+            "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
             "ball_owning_team": self.possession_team,
             "ball_state": BallState.ALIVE,
             "event_id": event_id,
@@ -270,6 +271,40 @@ class EVENT:
         return [generic_event]
 
 
+class SUBSTITUTION(EVENT):
+    """PFF Substitution event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        # As of now, PFF Substitution events do not set teamId. 
+        # team = generic_event_kwargs['team']
+
+        player_off_id = self.raw_event["gameEvents"]["playerOffId"]
+        player_on_id = self.raw_event["gameEvents"]["playerOnId"]
+
+        team = next(
+            team for team in self.teams
+            if team.get_player_by_id(player_off_id)
+        )
+
+        player_off = team.get_player_by_id(player_off_id)
+        player_on = team.get_player_by_id(player_on_id)
+
+        generic_event_kwargs['team'] = team
+        generic_event_kwargs['player'] = player_off
+        generic_event_kwargs['ball_state'] = BallState.DEAD
+
+        return [
+            event_factory.build_substitution(
+                result=None,
+                qualifiers=None,
+                replacement_player=player_on,
+                **generic_event_kwargs,
+            )
+        ]
+
+
 def possession_event_decoder(possession_event: dict) -> EVENT:
     type_to_possession_event = {
         POSSESSION_EVENT_TYPE.PASS: EVENT,
@@ -290,7 +325,7 @@ def event_decoder(raw_event: dict) -> EVENT:
         EVENT_TYPE.GAME_CLOCK_OBSERVATION: EVENT,
         EVENT_TYPE.GROUND: EVENT,
         EVENT_TYPE.BALL_OUT_OF_PLAY: EVENT,
-        EVENT_TYPE.SUB: EVENT,
+        EVENT_TYPE.SUB: SUBSTITUTION,
         EVENT_TYPE.PLAYER_ON: EVENT,
         EVENT_TYPE.PLAYER_OFF: EVENT,
     }

@@ -1,5 +1,4 @@
-from typing import List
-from kloppy.domain import Optional, TrackingDataset
+from kloppy.domain import TrackingDataset, EventDataset
 from kloppy.domain.services.event_factory import EventFactory
 from kloppy.infra.serializers.tracking.pff import (
     PFFTrackingDeserializer,
@@ -14,10 +13,10 @@ def load_tracking(
     meta_data: FileLike,
     roster_meta_data: FileLike,
     raw_data: FileLike,
-    sample_rate: Optional[float] = None,
-    limit: Optional[int] = None,
-    coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    sample_rate: float | None = None,
+    limit: int | None = None,
+    coordinates: str | None = None,
+    only_alive: bool | None = True,
 ) -> TrackingDataset:
     """
     Load and deserialize tracking data from the provided metadata, roster metadata, and raw data files.
@@ -52,12 +51,12 @@ def load_tracking(
         )
 
 def load_event(
-    match_metadata: FileLike,
-    roster_metadata: FileLike,
+    metadata: FileLike,
+    players: FileLike,
     raw_event_data: FileLike,
-    event_types: Optional[List[str]] = None,
-    coordinates: Optional[str] = None,
-    event_factory: Optional[EventFactory] = None,
+    event_types: list[str] | None = None,
+    coordinates: str | None = None,
+    event_factory: EventFactory | None = None,
     additional_metadata: dict = {},
 ) -> EventDataset:
     """
@@ -79,14 +78,14 @@ def load_event(
     )
 
     with (
-        open_as_file(match_metadata) as metadata_fp,
-        open_as_file(roster_metadata) as roster_metadata_fp,
+        open_as_file(metadata) as metadata_fp,
+        open_as_file(players) as players_fp,
         open_as_file(raw_event_data) as raw_event_data_fp
     ):
         return deserializer.deserialize(
             inputs=PFFEventInputs(
-                match_metadata=metadata_fp,
-                roster_metadata=roster_metadata_fp,
+                metadata=metadata_fp,
+                players=players_fp,
                 raw_event_data=raw_event_data_fp,
             ),
             additional_metadata=additional_metadata,

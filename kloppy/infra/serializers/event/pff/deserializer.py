@@ -103,8 +103,6 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         return dataset
 
     def create_teams_and_players(self, metadata, players):
-        print(players)
-        print(metadata)
         def create_team(team_id, team_name, ground_type):
             team = Team(
                 team_id=team_id,
@@ -117,6 +115,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
                     team=team,
                     name=entry['player']["nickname"],
                     jersey_no=int(entry["shirtNumber"]),
+                    # started=entry['started'],
                     starting_position=PFF.position_types_mapping[entry['positionGroupType']]
                 )
                 for entry in players

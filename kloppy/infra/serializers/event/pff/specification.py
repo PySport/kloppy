@@ -262,8 +262,6 @@ class EVENT:
     def _create_foul(self, event_factory: EventFactory, **generic_event_kwargs) -> list[CardEvent | FoulCommittedEvent]:
         foul_type = self.raw_event['fouls'].get('foulType')
 
-        generic_event_kwargs['ball_state'] = BallState.DEAD
-
         if foul_type != FOUL_TYPE.INFRIGEMENT.value:
             return []
 
@@ -320,21 +318,6 @@ class EVENT:
         return [generic_event]
 
 
-class POSSESSION_EVENT(EVENT):
-    def _parse_generic_kwargs(self) -> dict:
-        return {
-            "period": self.period,
-            "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
-            "ball_owning_team": self.possession_team,
-            "ball_state": BallState.ALIVE,
-            "event_id": self.raw_event["possessionEventId"],
-            "team": self.team,
-            "player": self.player,
-            "coordinates": None,
-            "raw_event": self.raw_event,
-        }
-
-
 class SUBSTITUTION(EVENT):
     """PFF Substitution event."""
 
@@ -357,7 +340,6 @@ class SUBSTITUTION(EVENT):
 
         generic_event_kwargs['team'] = team
         generic_event_kwargs['player'] = player_off
-        generic_event_kwargs['ball_state'] = BallState.DEAD
 
         return [
             event_factory.build_substitution(
@@ -374,8 +356,6 @@ class PLAYER_OFF(EVENT):
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
-        generic_event_kwargs['ball_state'] = BallState.DEAD
-
         return [
             event_factory.build_player_off(
                 result=None,
@@ -406,23 +386,190 @@ class BALL_OUT(EVENT):
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
-        generic_event_kwargs['ball_state'] = BallState.DEAD
-        ball_out_event = event_factory.build_ball_out(
-            result=None,
-            qualifiers=None,
-            **generic_event_kwargs,
-        )
-        return [ball_out_event]
+        return [
+            event_factory.build_ball_out(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class POSSESSION_EVENT(EVENT):
+    def _parse_generic_kwargs(self) -> dict:
+        return {
+            "period": self.period,
+            "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
+            "ball_owning_team": self.possession_team,
+            "ball_state": BallState.ALIVE,
+            "event_id": self.raw_event["possessionEventId"],
+            "team": self.team,
+            "player": self.player,
+            "coordinates": None,
+            "raw_event": self.raw_event,
+        }
+
+
+class PASS(POSSESSION_EVENT):
+    """PFF Pass event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_pass(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class SHOT(POSSESSION_EVENT):
+    """PFF Shot event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_shot(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class CLEARANCE(POSSESSION_EVENT):
+    """PFF Clearance event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_clearance(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class CHALLENGE(POSSESSION_EVENT):
+    """PFF Challenge event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_duel(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class TAKE_ON(POSSESSION_EVENT):
+    """PFF Dribble event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_take_on(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class CARRY(POSSESSION_EVENT):
+    """PFF Carry event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_carry(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+
+class PRESSURE(POSSESSION_EVENT):
+    """PFF Pressure event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_pressure_event(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class INTERCEPTION(POSSESSION_EVENT):
+    """PFF Interception event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_interception(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class RECOVERY(POSSESSION_EVENT):
+    """PFF Recovery event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_recovery(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class MISCONTROL(POSSESSION_EVENT):
+    """PFF Miscontrol event."""
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_miscontrol(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
+
+class GOALKEEPER(POSSESSION_EVENT):
+    """PFF Goalkeeper event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_goalkeeper_event(
+                result=None,
+                qualifiers=None,
+                **generic_event_kwargs,
+            )
+        ]
 
 
 def possession_event_decoder(raw_event: dict) -> POSSESSION_EVENT:
     type_to_possession_event = {
-        POSSESSION_EVENT_TYPE.PASS: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.SHOT: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.CROSS: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.CLEARANCE: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.CROSS: PASS,
+        POSSESSION_EVENT_TYPE.PASS: PASS,
+        POSSESSION_EVENT_TYPE.SHOT: SHOT,
+        POSSESSION_EVENT_TYPE.CLEARANCE: CLEARANCE,
         POSSESSION_EVENT_TYPE.BALL_CARRY: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.CHALLENGE: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.CHALLENGE: CHALLENGE,
         POSSESSION_EVENT_TYPE.REBOUND: POSSESSION_EVENT,
         POSSESSION_EVENT_TYPE.TOUCHES: POSSESSION_EVENT,
         POSSESSION_EVENT_TYPE.EVT_START: POSSESSION_EVENT,

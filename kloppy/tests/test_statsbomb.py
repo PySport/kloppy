@@ -1227,7 +1227,9 @@ class TestStatsBombTacticalShiftEvent:
             event_data=base_dir / "files/statsbomb_event.json",
         )
 
-        for item in dataset.aggregate("minutes_played", breakdown_key = BreakdownKey.POSITION):
+        for item in dataset.aggregate(
+            "minutes_played", breakdown_key=BreakdownKey.POSITION
+        ):
             if item.key.player and item.key.position:
                 print(
                     f"{item.key.player} {item.key.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.key.position}"

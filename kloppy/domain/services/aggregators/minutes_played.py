@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Dict, Tuple
 from enum import Enum
 
 from kloppy.domain import EventDataset, Player, Team, Time, PositionType, BallState, FoulCommittedEvent, \
@@ -77,8 +77,8 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
 
     def _accumulate_player_time(
             self,
-            time_per_player: dict[Player, dict[PossessionState, timedelta]],
-            players_start_end_times: dict[Player, tuple[Time, Time, bool]],
+            time_per_player: Dict[Player, Dict[PossessionState, timedelta]],
+            players_start_end_times: Dict[Player, Tuple[Time, Time, bool]],
             start_time: Time,
             end_time: Time,
             possession_state: PossessionState

@@ -49,6 +49,7 @@ from kloppy.domain.models.event import (
     PassType,
     UnderPressureQualifier,
 )
+from kloppy.domain.services.aggregators.minutes_played import BreakdownKey
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 
@@ -1226,10 +1227,11 @@ class TestStatsBombTacticalShiftEvent:
             event_data=base_dir / "files/statsbomb_event.json",
         )
 
-        for item in dataset.aggregate("minutes_played", include_position=True):
-            print(
-                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
-            )
+        for item in dataset.aggregate("minutes_played", breakdown_key = BreakdownKey.POSITION):
+            if item.key.player and item.key.position:
+                print(
+                    f"{item.key.player} {item.key.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.key.position}"
+                )
 
         home_team, away_team = dataset.metadata.teams
         period1, period2 = dataset.metadata.periods

@@ -269,6 +269,77 @@ class EVENT:
         # return events (note: order is important)
         return base_events + foul_events
 
+    def _get_set_piece_qualifier(self) -> SetPieceQualifier | None:
+        pff_set_piece_type = self.raw_event['gameEvents']['setpieceType']
+
+        if pff_set_piece_type is None or pff_set_piece_type == 'O':
+            return None
+
+        pff_to_kloppy_set_piece = {
+            PFF_SET_PIECE.GOAL_KICK: SetPieceType.GOAL_KICK,
+            PFF_SET_PIECE.FREE_KICK: SetPieceType.FREE_KICK,
+            PFF_SET_PIECE.THROW_IN: SetPieceType.THROW_IN,
+            PFF_SET_PIECE.CORNER: SetPieceType.CORNER_KICK,
+            PFF_SET_PIECE.PENALTY: SetPieceType.PENALTY,
+            PFF_SET_PIECE.KICK_OFF: SetPieceType.KICK_OFF,
+        }
+
+        try:
+            pff_set_piece = PFF_SET_PIECE(pff_set_piece_type)
+            set_piece_type = pff_to_kloppy_set_piece[pff_set_piece]
+            return SetPieceQualifier(value=set_piece_type)
+        except KeyError:
+            return None
+
+    def _get_body_part_qualifier(self) -> BodyPartQualifier | None:
+        """Get the body part qualifier from the PFF body part type."""
+
+        pff_body_part_type = self.raw_event['possessionEvents']['bodyType']
+
+        if pff_body_part_type is None:
+            return None
+
+        pff_to_kloppy_body_part = {
+            PFF_BODYPART.HEAD: BodyPart.HEAD,
+
+            PFF_BODYPART.LEFT_FOOT: BodyPart.LEFT_FOOT,
+            PFF_BODYPART.LEFT_BACK_HEEL: BodyPart.LEFT_FOOT,
+            PFF_BODYPART.LEFT_SHIN: BodyPart.LEFT_FOOT,
+            PFF_BODYPART.LEFT_THIGH: BodyPart.LEFT_FOOT,
+            PFF_BODYPART.LEFT_KNEE: BodyPart.LEFT_FOOT,
+
+            PFF_BODYPART.RIGHT_FOOT: BodyPart.RIGHT_FOOT,
+            PFF_BODYPART.RIGHT_BACK_HEEL: BodyPart.RIGHT_FOOT,
+            PFF_BODYPART.RIGHT_SHIN: BodyPart.RIGHT_FOOT,
+            PFF_BODYPART.RIGHT_THIGH: BodyPart.RIGHT_FOOT,
+            PFF_BODYPART.RIGHT_KNEE: BodyPart.RIGHT_FOOT,
+
+            PFF_BODYPART.LEFT_ARM: BodyPart.LEFT_HAND,
+            PFF_BODYPART.LEFT_HAND: BodyPart.LEFT_HAND,
+            PFF_BODYPART.LEFT_SHOULDER: BodyPart.LEFT_HAND,
+
+            PFF_BODYPART.RIGHT_ARM: BodyPart.RIGHT_HAND,
+            PFF_BODYPART.RIGHT_HAND: BodyPart.RIGHT_HAND,
+            PFF_BODYPART.RIGHT_SHOULDER: BodyPart.RIGHT_HAND,
+
+            PFF_BODYPART.TWO_HAND_PALM: BodyPart.BOTH_HANDS,
+            PFF_BODYPART.TWO_HAND_CATCH: BodyPart.BOTH_HANDS,
+            PFF_BODYPART.TWO_HAND_PUNCH: BodyPart.BOTH_HANDS,
+            PFF_BODYPART.TWO_HANDS: BodyPart.BOTH_HANDS,
+
+            PFF_BODYPART.BACK: BodyPart.OTHER,
+            PFF_BODYPART.BOTTOM: BodyPart.OTHER,
+
+            PFF_BODYPART.CHEST: BodyPart.CHEST,
+        }
+
+        try:
+            pff_body_part = PFF_BODYPART(pff_body_part_type)
+            body_part = pff_to_kloppy_body_part[pff_body_part]
+            return BodyPartQualifier(value=body_part)
+        except KeyError:
+            return None
+
     def _parse_generic_kwargs(self) -> dict:
         return {
             "period": self.period,
@@ -638,74 +709,6 @@ class GOALKEEPER(POSSESSION_EVENT):
                 **generic_event_kwargs,
             )
         ]
-
-def get_set_piece_qualifier(pff_set_piece_type: str) -> SetPieceQualifier | None:
-    # PFF sets 'O' for... no set piece?
-    if pff_set_piece_type == 'O':
-        return None
-
-    pff_to_kloppy_set_piece = {
-        PFF_SET_PIECE.GOAL_KICK: SetPieceType.GOAL_KICK,
-        PFF_SET_PIECE.FREE_KICK: SetPieceType.FREE_KICK,
-        PFF_SET_PIECE.THROW_IN: SetPieceType.THROW_IN,
-        PFF_SET_PIECE.CORNER: SetPieceType.CORNER_KICK,
-        PFF_SET_PIECE.PENALTY: SetPieceType.PENALTY,
-        PFF_SET_PIECE.KICK_OFF: SetPieceType.KICK_OFF,
-    }
-
-    try:
-        pff_set_piece = PFF_SET_PIECE(pff_set_piece_type)
-        set_piece_type = pff_to_kloppy_set_piece[pff_set_piece]
-        return SetPieceQualifier(value=set_piece_type)
-    except ValueError:
-        raise DeserializationError(
-            f"Can't map PFF set piece type: {pff_set_piece_type}"
-        )
-
-
-def get_body_part_qualifier(pff_body_part_type: str) -> BodyPartQualifier | None:
-    pff_to_kloppy_body_part = {
-        PFF_BODYPART.HEAD: BodyPart.HEAD,
-
-        PFF_BODYPART.LEFT_FOOT: BodyPart.LEFT_FOOT,
-        PFF_BODYPART.LEFT_BACK_HEEL: BodyPart.LEFT_FOOT,
-        PFF_BODYPART.LEFT_SHIN: BodyPart.LEFT_FOOT,
-        PFF_BODYPART.LEFT_THIGH: BodyPart.LEFT_FOOT,
-        PFF_BODYPART.LEFT_KNEE: BodyPart.LEFT_FOOT,
-
-        PFF_BODYPART.RIGHT_FOOT: BodyPart.RIGHT_FOOT,
-        PFF_BODYPART.RIGHT_BACK_HEEL: BodyPart.RIGHT_FOOT,
-        PFF_BODYPART.RIGHT_SHIN: BodyPart.RIGHT_FOOT,
-        PFF_BODYPART.RIGHT_THIGH: BodyPart.RIGHT_FOOT,
-        PFF_BODYPART.RIGHT_KNEE: BodyPart.RIGHT_FOOT,
-
-        PFF_BODYPART.LEFT_ARM: BodyPart.LEFT_HAND,
-        PFF_BODYPART.LEFT_HAND: BodyPart.LEFT_HAND,
-        PFF_BODYPART.LEFT_SHOULDER: BodyPart.LEFT_HAND,
-
-        PFF_BODYPART.RIGHT_ARM: BodyPart.RIGHT_HAND,
-        PFF_BODYPART.RIGHT_HAND: BodyPart.RIGHT_HAND,
-        PFF_BODYPART.RIGHT_SHOULDER: BodyPart.RIGHT_HAND,
-
-        PFF_BODYPART.TWO_HAND_PALM: BodyPart.BOTH_HANDS,
-        PFF_BODYPART.TWO_HAND_CATCH: BodyPart.BOTH_HANDS,
-        PFF_BODYPART.TWO_HAND_PUNCH: BodyPart.BOTH_HANDS,
-        PFF_BODYPART.TWO_HANDS: BodyPart.BOTH_HANDS,
-
-        PFF_BODYPART.BACK: BodyPart.OTHER,
-        PFF_BODYPART.BOTTOM: BodyPart.OTHER,
-
-        PFF_BODYPART.CHEST: BodyPart.CHEST,
-    }
-
-    try:
-        pff_body_part = PFF_BODYPART(pff_body_part_type)
-        body_part = pff_to_kloppy_body_part[pff_body_part]
-        return BodyPartQualifier(value=body_part)
-    except ValueError:
-        raise DeserializationError(
-            f"Unknown PFF body part: {pff_body_part_type}"
-        )
 
 
 def possession_event_decoder(raw_event: dict) -> POSSESSION_EVENT:

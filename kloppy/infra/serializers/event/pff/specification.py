@@ -37,6 +37,7 @@ from kloppy.domain.models.event import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.pff.helpers import (
+    collect_qualifiers,
     get_period_by_id,
     get_team_by_id,
     parse_coordinates,
@@ -481,10 +482,18 @@ class SHOT(POSSESSION_EVENT):
         outcome = SHOT.OUTCOME(raw_outcome)
         result = self.shot_outcome_to_result(outcome)
 
+        body_part_value = self.raw_event['possessionEvents']['bodyType']
+        body_part = get_body_part_qualifier(body_part_value)
+
+        set_piece_value = self.raw_event['gameEvents']['setpieceType']
+        set_piece = get_set_piece_qualifier(set_piece_value)
+        
+        qualifiers = collect_qualifiers(body_part, set_piece)
+
         return [
             event_factory.build_shot(
                 result=result,
-                qualifiers=None,
+                qualifiers=qualifiers,
                 **generic_event_kwargs,
             )
         ]

@@ -38,22 +38,28 @@ def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
 
 
 def parse_coordinates(
-    player_id: str, player_coordinates: list[dict[str, object]]
-) -> Point:
+    player: Player | None, raw_event: dict[str, object]
+) -> Point | None:
     """Parse PFF coordinates into a kloppy Point."""
+    if player is None:
+        return None
+
+    players = raw_event["homePlayers"] + raw_event["awayPlayers"]
+
     try:
-        player = next(
-            player
-            for player in player_coordinates
-            if str(player["playerId"]) == player_id
+        player_dict = next(
+            player_dict
+            for player_dict in players
+            if str(player_dict["playerId"]) == player.player_id
         )
 
         return Point(
-            x=player["x"],
-            y=player["y"],
+            x=player_dict["x"],
+            y=player_dict["y"],
         )
     except StopIteration:
-        raise DeserializationError(f"Unknown player_id {player_id}")
+        print(player)
+        raise DeserializationError(f"Unknown player {player}")
 
 
 def parse_freeze_frame(

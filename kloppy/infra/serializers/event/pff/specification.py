@@ -259,7 +259,7 @@ class EVENT:
             "event_id": self.raw_event["gameEventId"],
             "team": self.team,
             "player": self.player,
-            "coordinates": None,
+            "coordinates": parse_coordinates(self.player, self.raw_event),
             "raw_event": self.raw_event,
         }
 
@@ -407,7 +407,7 @@ class POSSESSION_EVENT(EVENT):
             "event_id": self.raw_event["possessionEventId"],
             "team": self.team,
             "player": self.player,
-            "coordinates": None,
+            "coordinates": parse_coordinates(self.player, self.raw_event),
             "raw_event": self.raw_event,
         }
 

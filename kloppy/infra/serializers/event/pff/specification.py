@@ -529,8 +529,9 @@ class SHOT(POSSESSION_EVENT):
         OFF_TARGET = "O"
         ON_TARGET = "S"
 
+
     @staticmethod
-    def shot_outcome_to_result(outcome: OUTCOME) -> ShotResult | None:
+    def shot_outcome_to_result(raw_event: dict) -> ShotResult | None:
         outcome_map = {
             SHOT.OUTCOME.ON_TARGET_BLOCKED: ShotResult.BLOCKED,
             SHOT.OUTCOME.OFF_TARGET_BLOCKED: ShotResult.BLOCKED,
@@ -540,31 +541,23 @@ class SHOT(POSSESSION_EVENT):
             SHOT.OUTCOME.OFF_TARGET: ShotResult.OFF_TARGET,
             SHOT.OUTCOME.ON_TARGET: ShotResult.SAVED,
         }
-        return outcome_map.get(outcome)
+
+        try:
+            outcome_type = raw_event['possessionEvents']['shotOutcomeType']
+            outcome = SHOT.OUTCOME(outcome_type)
+            return outcome_map.get(outcome)
+        except KeyError:
+            raise DeserializationError(
+                'Unable to map shot outcome from PFF'
+            )
 
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
-        raw_outcome = self.raw_event["possessionEvents"]["shotOutcomeType"]
-        if raw_outcome is None:
-            return [
-                event_factory.build_generic(
-                    result=None,
-                    qualifiers=None,
-                    event_name=self.raw_event["gameEvents"]["gameEventType"],
-                    **generic_event_kwargs,
-                )
-            ]
+        result = self.shot_outcome_to_result(self.raw_event)
 
-        outcome = SHOT.OUTCOME(raw_outcome)
-        result = self.shot_outcome_to_result(outcome)
-
-        body_part_value = self.raw_event['possessionEvents']['bodyType']
-        body_part = get_body_part_qualifier(body_part_value)
-
-        set_piece_value = self.raw_event['gameEvents']['setpieceType']
-        set_piece = get_set_piece_qualifier(set_piece_value)
-        
+        body_part = self._get_body_part_qualifier()
+        set_piece = self._get_set_piece_qualifier()
         qualifiers = collect_qualifiers(body_part, set_piece)
 
         return [

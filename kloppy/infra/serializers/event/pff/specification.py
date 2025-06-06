@@ -430,12 +430,48 @@ class PASS(POSSESSION_EVENT):
 class SHOT(POSSESSION_EVENT):
     """PFF Shot event."""
 
+    class OUTCOME(Enum, metaclass=TypesEnumMeta):
+        ON_TARGET_BLOCKED = "B"
+        OFF_TARGET_BLOCKED = "C"
+        SAVED_OFF_TARGET = "F"
+        GOAL = "G"
+        GOAL_LINE_CLEARANCE = "L"
+        OFF_TARGET = "O"
+        ON_TARGET = "S"
+
+    @staticmethod
+    def shot_outcome_to_result(outcome: OUTCOME) -> ShotResult | None:
+        outcome_map = {
+            SHOT.OUTCOME.ON_TARGET_BLOCKED: ShotResult.BLOCKED,
+            SHOT.OUTCOME.OFF_TARGET_BLOCKED: ShotResult.BLOCKED,
+            SHOT.OUTCOME.SAVED_OFF_TARGET: ShotResult.SAVED,
+            SHOT.OUTCOME.GOAL: ShotResult.GOAL,
+            SHOT.OUTCOME.GOAL_LINE_CLEARANCE: ShotResult.BLOCKED,
+            SHOT.OUTCOME.OFF_TARGET: ShotResult.OFF_TARGET,
+            SHOT.OUTCOME.ON_TARGET: ShotResult.SAVED,
+        }
+        return outcome_map.get(outcome)
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
+        raw_outcome = self.raw_event["possessionEvents"]["shotOutcomeType"]
+        if raw_outcome is None:
+            return [
+                event_factory.build_generic(
+                    result=None,
+                    qualifiers=None,
+                    event_name=self.raw_event["gameEvents"]["gameEventType"],
+                    **generic_event_kwargs,
+                )
+            ]
+
+        outcome = SHOT.OUTCOME(raw_outcome)
+        result = self.shot_outcome_to_result(outcome)
+
         return [
             event_factory.build_shot(
-                result=None,
+                result=result,
                 qualifiers=None,
                 **generic_event_kwargs,
             )

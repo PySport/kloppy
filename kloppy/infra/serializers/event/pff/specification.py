@@ -171,6 +171,18 @@ class PFF_BODYPART(Enum, metaclass=TypesEnumMeta):
     VIDEO_MISSING = "VM"
 
 
+class PFF_SET_PIECE(Enum, metaclass=TypesEnumMeta):
+    """The list of set piece types used in PFF data."""
+
+    CORNER = 'C'
+    DROP_BALL = 'D'
+    FREE_KICK = 'F'
+    GOAL_KICK = 'G'
+    KICK_OFF = 'K'
+    PENALTY = 'P'
+    THROW_IN = 'T'
+
+
 class FOUL_TYPE(Enum, metaclass=TypesEnumMeta):
     ADVANTAGE = "A"
     INFRIGEMENT = "I"
@@ -611,6 +623,30 @@ class GOALKEEPER(POSSESSION_EVENT):
                 **generic_event_kwargs,
             )
         ]
+
+def get_set_piece_qualifier(pff_set_piece_type: str) -> SetPieceQualifier | None:
+    # PFF sets 'O' for... no set piece?
+    if pff_set_piece_type == 'O':
+        return None
+
+    pff_to_kloppy_set_piece = {
+        PFF_SET_PIECE.GOAL_KICK: SetPieceType.GOAL_KICK,
+        PFF_SET_PIECE.FREE_KICK: SetPieceType.FREE_KICK,
+        PFF_SET_PIECE.THROW_IN: SetPieceType.THROW_IN,
+        PFF_SET_PIECE.CORNER: SetPieceType.CORNER_KICK,
+        PFF_SET_PIECE.PENALTY: SetPieceType.PENALTY,
+        PFF_SET_PIECE.KICK_OFF: SetPieceType.KICK_OFF,
+    }
+
+    try:
+        pff_set_piece = PFF_SET_PIECE(pff_set_piece_type)
+        set_piece_type = pff_to_kloppy_set_piece[pff_set_piece]
+        return SetPieceQualifier(value=set_piece_type)
+    except ValueError:
+        raise DeserializationError(
+            f"Can't map PFF set piece type: {pff_set_piece_type}"
+        )
+
 
 def get_body_part_qualifier(pff_body_part_type: str) -> BodyPartQualifier | None:
     pff_to_kloppy_body_part = {

@@ -505,13 +505,126 @@ class POSSESSION_EVENT(EVENT):
 class PASS(POSSESSION_EVENT):
     """PFF Pass event."""
 
+    class TYPE(Enum, metaclass=TypesEnumMeta):
+        CUTBACK = 'B'
+        CREATE_CONTEST = 'C'
+        FLICK_ON = 'F'
+        LONG_THROW = 'H'
+        LONG_PASS = 'L'
+        MISS_HIT = 'M'
+        BALL_OVER_THE_TOP = 'O'
+        STANDARD_PASS = 'S'
+        THROUGH_BALL = 'T'
+        SWITCH = 'W'
+
+    class OUTCOME(Enum, metaclass=TypesEnumMeta):
+        BLOCKED = 'B'
+        COMPLETE = 'C'
+        DEFENSIVE_INTERCEPTION = 'D'
+        INADVERTENT_SHOT_OWN_GOAL = 'G'
+        INADVERTENT_SHOT_GOAL = 'I'
+        OUT_OF_PLAY = 'O'
+        STOPPAGE = 'S'
+
+    class CROSS_TYPE(Enum, metaclass=TypesEnumMeta):
+        DRILLED = 'D'
+        FLOATED = 'F'
+        SWING_IN = 'I'
+        SWING_OUT = 'O'
+        PLACED = 'P'
+
+    class CROSS_OUTCOME(Enum, metaclass=TypesEnumMeta):
+        BLOCKED = 'B'
+        COMPLETE = 'C'
+        DEFENSIVE_INTERCEPTION = 'D'
+        INADVERTENT_SHOT_GOAL = 'I'
+        OUT_OF_PLAY = 'O'
+        STOPPAGE = 'S'
+        UNTOUCHED = 'U'
+
+    class HEIGHT(Enum, metaclass=TypesEnumMeta):
+        ABOVE_HEAD = "A"
+        GROUND = "G"
+        BETWEEN_WAIST_AND_HEAD = "H"
+        OFF_GROUND_BUT_BELOW_WAIST = "L"
+        VIDEO_MISSING = "M"
+        HALF_VOLLEY = "V"
+
+    
+    @staticmethod
+    def pass_outcome_to_result(raw_event: dict) -> PassResult | None:
+        outcome_type = (
+            raw_event['possessionEvents']['passOutcomeType']
+            or raw_event['possessionEvents']['crossOutcomeType']
+        )
+
+        if outcome_type is None:
+            return None
+
+        outcome_mapping = {
+            PASS.OUTCOME.COMPLETE: PassResult.COMPLETE,
+            PASS.OUTCOME.OUT_OF_PLAY: PassResult.OUT,
+            PASS.OUTCOME.BLOCKED: PassResult.INCOMPLETE,
+            PASS.OUTCOME.DEFENSIVE_INTERCEPTION: PassResult.INCOMPLETE,
+            PASS.OUTCOME.INADVERTENT_SHOT_OWN_GOAL: None,
+            PASS.OUTCOME.INADVERTENT_SHOT_GOAL: None,
+            PASS.OUTCOME.STOPPAGE: None,
+
+            PASS.CROSS_OUTCOME.COMPLETE: PassResult.COMPLETE,
+            PASS.CROSS_OUTCOME.OUT_OF_PLAY: PassResult.OUT,
+            PASS.CROSS_OUTCOME.BLOCKED: PassResult.INCOMPLETE,
+            PASS.CROSS_OUTCOME.DEFENSIVE_INTERCEPTION: PassResult.INCOMPLETE,
+            PASS.CROSS_OUTCOME.INADVERTENT_SHOT_GOAL: None,
+            PASS.CROSS_OUTCOME.UNTOUCHED: PassResult.INCOMPLETE,
+            PASS.CROSS_OUTCOME.STOPPAGE: None,
+        }
+
+        pff_outcome = PASS.OUTCOME(outcome_type)
+        return outcome_mapping[pff_outcome]
+ 
+
+    def _get_pass_qualifiers(
+        self, body_part: BodyPartQualifier | None
+    ) -> list[PassQualifier]:
+        qualifiers = []
+
+        if self.raw_event['possessionEvents']['possessionEventType'] == 'CR':
+            qualifiers.append(PassQualifier(value=PassType.CROSS))
+
+        pass_type = self.raw_event['possessionEvents']['passType']
+        if pass_type is not None:
+            pass_type = PASS.TYPE(pass_type)
+            if pass_type == PASS.TYPE.THROUGH_BALL:
+                qualifiers.append(PassQualifier(value=PassType.THROUGH_BALL))
+            if pass_type == PASS.TYPE.FLICK_ON:
+                qualifiers.append(PassQualifier(value=PassType.FLICK_ON))
+            if pass_type == PASS.TYPE.STANDARD_PASS:
+                qualifiers.append(PassQualifier(value=PassType.SIMPLE_PASS))
+
+        if body_part is not None:
+            if body_part.value in [BodyPart.LEFT_HAND, BodyPart.RIGHT_HAND]:
+                qualifiers.append(PassQualifier(value=PassType.HAND_PASS))
+
+            if body_part.value == BodyPart.HEAD:
+                qualifiers.append(PassQualifier(value=PassType.HEAD_PASS))
+
+        return qualifiers
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
+        set_piece = self._get_set_piece_qualifier()
+        body_part = self._get_body_part_qualifier()
+        pass_quals = self._get_pass_qualifiers(body_part)
+
+        qualifiers = collect_qualifiers(body_part, set_piece, *pass_quals)
+
+        result = self.pass_outcome_to_result(self.raw_event)
+
         return [
             event_factory.build_pass(
-                result=None,
-                qualifiers=None,
+                result=result,
+                qualifiers=qualifiers,
                 **generic_event_kwargs,
             )
         ]

@@ -218,15 +218,19 @@ class EVENT:
         # the team using the player id. Until this is fixed in the PFF data,
         # both teams are being "carried over" in the event.
         self.teams = teams
+
         self.period = get_period_by_id(
             self.raw_event["gameEvents"]["period"], periods
         )
+
         self.team = get_team_by_id(
             self.raw_event["gameEvents"]["teamId"], teams
         )
+
         self.possession_team = get_team_by_id(
             self.raw_event["gameEvents"]["teamId"], teams
         )
+
         self.player = (
             self.team.get_player_by_id(
                 self.raw_event["gameEvents"]["playerId"]
@@ -235,11 +239,13 @@ class EVENT:
             and self.raw_event["gameEvents"]["playerId"] is not None
             else None
         )
+
         self.related_events = [
-            events.get(event_id)
+            events[event_id]
             for event_id in events.keys()
-            if event_id.split("_")[0] == self.raw_event.get("gameEventId", "")
+            if event_id.split("_")[0] == str(self.raw_event["gameEventId"])
         ]
+
         return self
 
     def deserialize(self, event_factory: EventFactory) -> list[Event]:

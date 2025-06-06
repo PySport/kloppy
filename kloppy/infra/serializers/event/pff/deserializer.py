@@ -43,22 +43,17 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 
-        # Load data from JSON files
-        # and determine fidelity versions for x/y coordinates
         with performance_logging("load data", logger=logger):
             metadata = json.load(inputs.metadata)
             players = json.load(inputs.players)
             raw_events = self.load_raw_events(inputs.raw_event_data)
 
-        # Create teams and players
         with performance_logging("parse teams ans players", logger=logger):
             teams = self.create_teams_and_players(metadata, players)
 
-        # Create periods
         with performance_logging("parse periods", logger=logger):
             periods = self.create_periods(raw_events)
 
-        # Create events
         with performance_logging("parse events", logger=logger):
             events = []
             for raw_event in raw_events.values():

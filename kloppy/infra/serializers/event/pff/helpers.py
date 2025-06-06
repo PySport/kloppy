@@ -38,41 +38,22 @@ def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
 
 
 def parse_coordinates(
-    coordinates: List[float], fidelity_version: int
+    player_id: str, player_coordinates: list[dict[str, object]]
 ) -> Point:
-    """Parse coordinates into a kloppy Point.
+    """Parse PFF coordinates into a kloppy Point."""
+    try:
+        player = next(
+            player
+            for player in player_coordinates
+            if str(player["playerId"]) == player_id
+        )
 
-    Coordinates are cell-based, so 1,1 (low-granularity) or 0.1,0.1
-    (high-granularity) is the top-left square 'yard' of the field (in
-    landscape), even though 0,0 is the true coordinate of the corner flag.
-
-    [1, 120] x [1, 80]
-    +-----+-----+
-    | 1,1 | 2,1 |
-    +-----+-----+
-    | 1,2 | 2,2 |
-    +-----+-----+
-    """
-    cell_side = 0.1 if fidelity_version == 2 else 1.0
-    cell_relative_center = cell_side / 2
-    if len(coordinates) == 2:
         return Point(
-            x=coordinates[0] - cell_relative_center,
-            y=coordinates[1] - cell_relative_center,
+            x=player["x"],
+            y=player["y"],
         )
-    elif len(coordinates) == 3:
-        # A coordinate in the goal frame, only used for the end location of
-        # Shot events. The y-coordinates and z-coordinates are always detailed
-        # to a tenth of a yard.
-        return Point3D(
-            x=coordinates[0] - cell_relative_center,
-            y=coordinates[1] - 0.05,
-            z=coordinates[2] - 0.05,
-        )
-    else:
-        raise DeserializationError(
-            f"Unknown coordinates format: {coordinates}"
-        )
+    except StopIteration:
+        raise DeserializationError(f"Unknown player_id {player_id}")
 
 
 def parse_freeze_frame(

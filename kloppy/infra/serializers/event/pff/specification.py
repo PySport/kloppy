@@ -30,7 +30,11 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
 )
-from kloppy.domain.models.event import CardEvent, FoulCommittedEvent, UnderPressureQualifier
+from kloppy.domain.models.event import (
+    CardEvent,
+    FoulCommittedEvent,
+    UnderPressureQualifier,
+)
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.pff.helpers import (
     get_period_by_id,
@@ -40,26 +44,26 @@ from kloppy.infra.serializers.event.pff.helpers import (
 
 
 position_types_mapping: dict[str, PositionType] = {
-    'GK': PositionType.Goalkeeper,  # Provider: Goalkeeper
-    'RB': PositionType.RightBack,  # Provider: Right Back
-    'RCB': PositionType.RightCenterBack,  # Provider: Right Center Back
-    'CB': PositionType.CenterBack,  # Provider: Center Back
-    'MCB': PositionType.CenterBack,  # Provider: Mid Center Back
-    'LCB': PositionType.LeftCenterBack,  # Provider: Left Center Back
-    'LB': PositionType.LeftBack,  # Provider: Left Back
-    'LWB': PositionType.LeftWingBack,  # Provider: Left Wing Back
-    'RWB': PositionType.RightWingBack,  # Provider: Right Wing Back
-    'D': PositionType.Defender,  # Provider: Defender
-    'M': PositionType.Midfielder,  # Provider: Midfielder
-    'DM': PositionType.DefensiveMidfield,  # Provider: Defensive Midfield
-    'RM': PositionType.RightMidfield,  # Provider: Right Midfield
-    'CM': PositionType.CenterMidfield,  # Provider: Center Midfield
-    'LM': PositionType.LeftMidfield,  # Provider: Left Midfield
-    'RW': PositionType.RightWing,  # Provider: Right Wing
-    'AM': PositionType.AttackingMidfield,  # Provider: Attacking Midfield
-    'LW': PositionType.LeftWing,  # Provider: Left Wing
-    'CF': PositionType.Striker,  # Provider: Center Forward (mapped to Striker)
-    'F': PositionType.Attacker,  # Provider: Forward (mapped to Attacker)
+    "GK": PositionType.Goalkeeper,  # Provider: Goalkeeper
+    "RB": PositionType.RightBack,  # Provider: Right Back
+    "RCB": PositionType.RightCenterBack,  # Provider: Right Center Back
+    "CB": PositionType.CenterBack,  # Provider: Center Back
+    "MCB": PositionType.CenterBack,  # Provider: Mid Center Back
+    "LCB": PositionType.LeftCenterBack,  # Provider: Left Center Back
+    "LB": PositionType.LeftBack,  # Provider: Left Back
+    "LWB": PositionType.LeftWingBack,  # Provider: Left Wing Back
+    "RWB": PositionType.RightWingBack,  # Provider: Right Wing Back
+    "D": PositionType.Defender,  # Provider: Defender
+    "M": PositionType.Midfielder,  # Provider: Midfielder
+    "DM": PositionType.DefensiveMidfield,  # Provider: Defensive Midfield
+    "RM": PositionType.RightMidfield,  # Provider: Right Midfield
+    "CM": PositionType.CenterMidfield,  # Provider: Center Midfield
+    "LM": PositionType.LeftMidfield,  # Provider: Left Midfield
+    "RW": PositionType.RightWing,  # Provider: Right Wing
+    "AM": PositionType.AttackingMidfield,  # Provider: Attacking Midfield
+    "LW": PositionType.LeftWing,  # Provider: Left Wing
+    "CF": PositionType.Striker,  # Provider: Center Forward (mapped to Striker)
+    "F": PositionType.Attacker,  # Provider: Forward (mapped to Attacker)
 }
 
 
@@ -92,93 +96,94 @@ class TypesEnumMeta(EnumMeta):
             )
         return super().__call__(value, *args, **kw)
 
-class END_TYPE(Enum, metaclass=TypesEnumMeta):
-    """"The list of end of half types used in PFF data."""
 
-    FIRST_HALF_END = 'FIRST'
-    SECOND_HALF_END = 'SECOND'
-    THIRD_HALF_END  = 'F'
-    FOURTH_HALF_END = 'S'
-    GAME_END = 'G'
+class END_TYPE(Enum, metaclass=TypesEnumMeta):
+    """ "The list of end of half types used in PFF data."""
+
+    FIRST_HALF_END = "FIRST"
+    SECOND_HALF_END = "SECOND"
+    THIRD_HALF_END = "F"
+    FOURTH_HALF_END = "S"
+    GAME_END = "G"
 
 
 class EVENT_TYPE(Enum, metaclass=TypesEnumMeta):
     """The list of game event types used in PFF data."""
 
-    FIRST_HALF_KICKOFF = 'FIRSTKICKOFF'
-    SECOND_HALF_KICKOFF = 'SECONDKICKOFF'
-    THIRD_HALF_KICKOFF = 'THIRDKICKOFF'
-    FOURTH_HALF_KICKOFF = 'FOURTHKICKOFF'
-    GAME_CLOCK_OBSERVATION = 'CLK'
-    END_OF_HALF = 'END'
-    GROUND = 'G'
-    PLAYER_OFF = 'OFF'
-    PLAYER_ON = 'ON'
-    POSSESSION = 'OTB'
-    BALL_OUT_OF_PLAY = 'OUT'
-    PAUSE_OF_GAME_TIME = 'PAU'
-    SUB = 'SUB'
-    VIDEO = 'VID'
+    FIRST_HALF_KICKOFF = "FIRSTKICKOFF"
+    SECOND_HALF_KICKOFF = "SECONDKICKOFF"
+    THIRD_HALF_KICKOFF = "THIRDKICKOFF"
+    FOURTH_HALF_KICKOFF = "FOURTHKICKOFF"
+    GAME_CLOCK_OBSERVATION = "CLK"
+    END_OF_HALF = "END"
+    GROUND = "G"
+    PLAYER_OFF = "OFF"
+    PLAYER_ON = "ON"
+    POSSESSION = "OTB"
+    BALL_OUT_OF_PLAY = "OUT"
+    PAUSE_OF_GAME_TIME = "PAU"
+    SUB = "SUB"
+    VIDEO = "VID"
 
 
 class POSSESSION_EVENT_TYPE(Enum, metaclass=TypesEnumMeta):
     """The list of possession event types used in PFF data."""
 
-    BALL_CARRY = 'BC'
-    CHALLENGE = 'CH'
-    CLEARANCE = 'CL'
-    CROSS = 'CR'
-    FOUL = 'FO'
-    PASS = 'PA'
-    REBOUND = 'RE'
-    SHOT = 'SH'
-    TOUCHES = 'TC'
-    EVT_START = 'IT'
+    BALL_CARRY = "BC"
+    CHALLENGE = "CH"
+    CLEARANCE = "CL"
+    CROSS = "CR"
+    FOUL = "FO"
+    PASS = "PA"
+    REBOUND = "RE"
+    SHOT = "SH"
+    TOUCHES = "TC"
+    EVT_START = "IT"
 
 
 class BODYPART(Enum, metaclass=TypesEnumMeta):
     """The list of body parts used in PFF data."""
 
-    BACK = 'BA'
-    BOTTOM = 'BO'
-    TWO_HAND_CATCH = 'CA'
-    CHEST = 'CH'
-    HEAD = 'HE'
-    LEFT_FOOT = 'L'
-    LEFT_ARM = 'LA'
-    LEFT_BACK_HEEL = 'LB'
-    LEFT_SHOULDER = 'LC'
-    LEFT_HAND = 'LH'
-    LEFT_KNEE = 'LK'
-    LEFT_SHIN = 'LS'
-    LEFT_THIGH = 'LT'
-    TWO_HAND_PALM = 'PA'
-    TWO_HAND_PUNCH = 'PU'
-    RIGHT_FOOT = 'R'
-    RIGHT_ARM = 'RA'
-    RIGHT_BACK_HEEL = 'RB'
-    RIGHT_SHOULDER = 'RC'
-    RIGHT_HAND = 'RH'
-    RIGHT_KNEE = 'RK'
-    RIGHT_SHIN = 'RS'
-    RIGHT_THIGH = 'RT'
-    TWO_HANDS = 'TWOHANDS'
-    VIDEO_MISSING = 'VM'
+    BACK = "BA"
+    BOTTOM = "BO"
+    TWO_HAND_CATCH = "CA"
+    CHEST = "CH"
+    HEAD = "HE"
+    LEFT_FOOT = "L"
+    LEFT_ARM = "LA"
+    LEFT_BACK_HEEL = "LB"
+    LEFT_SHOULDER = "LC"
+    LEFT_HAND = "LH"
+    LEFT_KNEE = "LK"
+    LEFT_SHIN = "LS"
+    LEFT_THIGH = "LT"
+    TWO_HAND_PALM = "PA"
+    TWO_HAND_PUNCH = "PU"
+    RIGHT_FOOT = "R"
+    RIGHT_ARM = "RA"
+    RIGHT_BACK_HEEL = "RB"
+    RIGHT_SHOULDER = "RC"
+    RIGHT_HAND = "RH"
+    RIGHT_KNEE = "RK"
+    RIGHT_SHIN = "RS"
+    RIGHT_THIGH = "RT"
+    TWO_HANDS = "TWOHANDS"
+    VIDEO_MISSING = "VM"
 
 
 class FOUL_TYPE(Enum, metaclass=TypesEnumMeta):
-    ADVANTAGE = 'A'
-    INFRIGEMENT = 'I' 
-    MISSED_INFRIGEMENT = 'M'
+    ADVANTAGE = "A"
+    INFRIGEMENT = "I"
+    MISSED_INFRIGEMENT = "M"
 
 
 class FOUL_OUTCOME(Enum, metaclass=TypesEnumMeta):
-    FIRST_YELLOW = 'Y'
-    SECOND_YELLOW = 'S'
-    RED = 'R'
-    WARNING = 'W'
-    NO_FOUL = 'F'
-    NO_WARNING = 'N'
+    FIRST_YELLOW = "Y"
+    SECOND_YELLOW = "S"
+    RED = "R"
+    WARNING = "W"
+    NO_FOUL = "F"
+    NO_WARNING = "N"
 
 
 class EVENT:
@@ -200,20 +205,27 @@ class EVENT:
         # the team using the player id. Until this is fixed in the PFF data,
         # both teams are being "carried over" in the event.
         self.teams = teams
-        self.period = get_period_by_id(self.raw_event["gameEvents"]["period"], periods)
-        self.team = get_team_by_id(self.raw_event["gameEvents"]["teamId"], teams)
+        self.period = get_period_by_id(
+            self.raw_event["gameEvents"]["period"], periods
+        )
+        self.team = get_team_by_id(
+            self.raw_event["gameEvents"]["teamId"], teams
+        )
         self.possession_team = get_team_by_id(
             self.raw_event["gameEvents"]["teamId"], teams
         )
         self.player = (
-            self.team.get_player_by_id(self.raw_event["gameEvents"]["playerId"])
-            if self.team and self.raw_event['gameEvents']['playerId'] is not None
+            self.team.get_player_by_id(
+                self.raw_event["gameEvents"]["playerId"]
+            )
+            if self.team
+            and self.raw_event["gameEvents"]["playerId"] is not None
             else None
         )
         self.related_events = [
             events.get(event_id)
             for event_id in events.keys()
-            if event_id.split('_')[0] == self.raw_event.get("gameEventId", "")
+            if event_id.split("_")[0] == self.raw_event.get("gameEventId", "")
         ]
         return self
 
@@ -251,8 +263,10 @@ class EVENT:
             "raw_event": self.raw_event,
         }
 
-    def _create_foul(self, event_factory: EventFactory, **generic_event_kwargs) -> list[CardEvent | FoulCommittedEvent]:
-        foul_type = self.raw_event['fouls'].get('foulType')
+    def _create_foul(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[CardEvent | FoulCommittedEvent]:
+        foul_type = self.raw_event["fouls"].get("foulType")
 
         if foul_type != FOUL_TYPE.INFRIGEMENT.value:
             return []
@@ -263,14 +277,14 @@ class EVENT:
             FOUL_OUTCOME.RED: CardType.RED,
         }
 
-        committer_id = self.raw_event['fouls']['finalCulpritPlayerId']
+        committer_id = self.raw_event["fouls"]["finalCulpritPlayerId"]
         team = next(t for t in self.teams if t.get_player_by_id(committer_id))
 
-        generic_event_kwargs['team'] = team
-        generic_event_kwargs['player'] = team.get_player_by_id(committer_id)
-        generic_event_kwargs['ball_state'] = BallState.DEAD
+        generic_event_kwargs["team"] = team
+        generic_event_kwargs["player"] = team.get_player_by_id(committer_id)
+        generic_event_kwargs["ball_state"] = BallState.DEAD
 
-        foul_outcome = self.raw_event['fouls']['finalFoulOutcomeType']
+        foul_outcome = self.raw_event["fouls"]["finalFoulOutcomeType"]
         card_type = card_map.get(FOUL_OUTCOME(foul_outcome))
         card_qualifier = [CardQualifier(value=card_type)] if card_type else []
 
@@ -295,7 +309,7 @@ class EVENT:
             card = []
 
         return foul + card
-        
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -314,22 +328,19 @@ class SUBSTITUTION(EVENT):
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
-        # As of now, PFF Substitution events do not set teamId. 
+        # As of now, PFF Substitution events do not set teamId.
         # team = generic_event_kwargs['team']
 
         player_off_id = self.raw_event["gameEvents"]["playerOffId"]
         player_on_id = self.raw_event["gameEvents"]["playerOnId"]
 
-        team = next(
-            t for t in self.teams
-            if t.get_player_by_id(player_off_id)
-        )
+        team = next(t for t in self.teams if t.get_player_by_id(player_off_id))
 
         player_off = team.get_player_by_id(player_off_id)
         player_on = team.get_player_by_id(player_on_id)
 
-        generic_event_kwargs['team'] = team
-        generic_event_kwargs['player'] = player_off
+        generic_event_kwargs["team"] = team
+        generic_event_kwargs["player"] = player_off
 
         return [
             event_factory.build_substitution(
@@ -339,6 +350,7 @@ class SUBSTITUTION(EVENT):
                 **generic_event_kwargs,
             )
         ]
+
 
 class PLAYER_OFF(EVENT):
     """PFF Player Off event."""
@@ -432,6 +444,7 @@ class SHOT(POSSESSION_EVENT):
 
 class CLEARANCE(POSSESSION_EVENT):
     """PFF Clearance event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -443,8 +456,10 @@ class CLEARANCE(POSSESSION_EVENT):
             )
         ]
 
+
 class CHALLENGE(POSSESSION_EVENT):
     """PFF Challenge event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -456,8 +471,10 @@ class CHALLENGE(POSSESSION_EVENT):
             )
         ]
 
+
 class TAKE_ON(POSSESSION_EVENT):
     """PFF Dribble event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -487,6 +504,7 @@ class CARRY(POSSESSION_EVENT):
 
 class PRESSURE(POSSESSION_EVENT):
     """PFF Pressure event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -498,8 +516,10 @@ class PRESSURE(POSSESSION_EVENT):
             )
         ]
 
+
 class INTERCEPTION(POSSESSION_EVENT):
     """PFF Interception event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -511,8 +531,10 @@ class INTERCEPTION(POSSESSION_EVENT):
             )
         ]
 
+
 class RECOVERY(POSSESSION_EVENT):
     """PFF Recovery event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -524,8 +546,10 @@ class RECOVERY(POSSESSION_EVENT):
             )
         ]
 
+
 class MISCONTROL(POSSESSION_EVENT):
     """PFF Miscontrol event."""
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
@@ -536,6 +560,7 @@ class MISCONTROL(POSSESSION_EVENT):
                 **generic_event_kwargs,
             )
         ]
+
 
 class GOALKEEPER(POSSESSION_EVENT):
     """PFF Goalkeeper event."""

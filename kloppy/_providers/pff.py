@@ -4,7 +4,10 @@ from kloppy.infra.serializers.tracking.pff import (
     PFFTrackingDeserializer,
     PFFTrackingInputs,
 )
-from kloppy.infra.serializers.event.pff import PFFEventDeserializer, PFFEventInputs
+from kloppy.infra.serializers.event.pff import (
+    PFFEventDeserializer,
+    PFFEventInputs,
+)
 from kloppy.io import FileLike, open_as_file
 from kloppy.config import get_config
 
@@ -39,9 +42,11 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        roster_meta_data
-    ) as roster_meta_data_fp, open_as_file(raw_data) as raw_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(roster_meta_data) as roster_meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=PFFTrackingInputs(
                 meta_data=meta_data_fp,
@@ -49,6 +54,7 @@ def load_tracking(
                 raw_data=raw_data_fp,
             )
         )
+
 
 def load_event(
     metadata: FileLike,
@@ -74,13 +80,13 @@ def load_event(
     deserializer = PFFEventDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory or get_config("event_factory")
+        event_factory=event_factory or get_config("event_factory"),
     )
 
     with (
         open_as_file(metadata) as metadata_fp,
         open_as_file(players) as players_fp,
-        open_as_file(raw_event_data) as raw_event_data_fp
+        open_as_file(raw_event_data) as raw_event_data_fp,
     ):
         return deserializer.deserialize(
             inputs=PFFEventInputs(

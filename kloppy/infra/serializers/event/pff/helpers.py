@@ -13,6 +13,7 @@ from kloppy.domain import (
     PositionType,
     Team,
 )
+from kloppy.domain.models.event import QualifierT
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
@@ -58,8 +59,11 @@ def parse_coordinates(
             y=player_dict["y"],
         )
     except StopIteration:
-        print(player)
         raise DeserializationError(f"Unknown player {player}")
+
+
+def collect_qualifiers(*qualifiers: QualifierT | None) -> list[QualifierT]:
+    return [q for q in qualifiers if q is not None]
 
 
 def parse_freeze_frame(

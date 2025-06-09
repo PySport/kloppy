@@ -564,37 +564,41 @@ class PASS(POSSESSION_EVENT):
         VIDEO_MISSING = "M"
         HALF_VOLLEY = "V"
 
-    
-    @staticmethod
-    def pass_outcome_to_result(raw_event: dict) -> PassResult | None:
-        outcome_type = (
-            raw_event['possessionEvents']['passOutcomeType']
-            or raw_event['possessionEvents']['crossOutcomeType']
-        )
+    @property
+    def outcome(self) -> Union[OUTCOME, CROSS_OUTCOME, None]:
+        try:
+            return (
+                self.OUTCOME(self.possession_event['passOutcomeType'])
+                or self.CROSS_OUTCOME(
+                    self.possession_event['crossOutcomeType']
+                )
+            )
+        except Exception:
+            return None
 
-        if outcome_type is None:
+    def _pass_outcome_to_result(self) -> PassResult | None:
+        if self.outcome is None:
             return None
 
         outcome_mapping = {
             PASS.OUTCOME.COMPLETE: PassResult.COMPLETE,
-            PASS.OUTCOME.OUT_OF_PLAY: PassResult.OUT,
             PASS.OUTCOME.BLOCKED: PassResult.INCOMPLETE,
             PASS.OUTCOME.DEFENSIVE_INTERCEPTION: PassResult.INCOMPLETE,
+            PASS.OUTCOME.OUT_OF_PLAY: PassResult.OUT,
             PASS.OUTCOME.INADVERTENT_SHOT_OWN_GOAL: None,
             PASS.OUTCOME.INADVERTENT_SHOT_GOAL: None,
             PASS.OUTCOME.STOPPAGE: None,
 
             PASS.CROSS_OUTCOME.COMPLETE: PassResult.COMPLETE,
-            PASS.CROSS_OUTCOME.OUT_OF_PLAY: PassResult.OUT,
             PASS.CROSS_OUTCOME.BLOCKED: PassResult.INCOMPLETE,
             PASS.CROSS_OUTCOME.DEFENSIVE_INTERCEPTION: PassResult.INCOMPLETE,
-            PASS.CROSS_OUTCOME.INADVERTENT_SHOT_GOAL: None,
             PASS.CROSS_OUTCOME.UNTOUCHED: PassResult.INCOMPLETE,
+            PASS.CROSS_OUTCOME.OUT_OF_PLAY: PassResult.OUT,
+            PASS.CROSS_OUTCOME.INADVERTENT_SHOT_GOAL: None,
             PASS.CROSS_OUTCOME.STOPPAGE: None,
         }
 
-        pff_outcome = PASS.OUTCOME(outcome_type)
-        return outcome_mapping[pff_outcome]
+        return outcome_mapping[self.outcome]
  
 
     def _get_pass_qualifiers(
@@ -602,10 +606,10 @@ class PASS(POSSESSION_EVENT):
     ) -> list[PassQualifier]:
         qualifiers = []
 
-        if self.raw_event['possessionEvents']['possessionEventType'] == 'CR':
+        if self.possession_event['possessionEventType'] == 'CR':
             qualifiers.append(PassQualifier(value=PassType.CROSS))
 
-        pass_type = self.raw_event['possessionEvents']['passType']
+        pass_type = self.possession_event['passType']
         if pass_type is not None:
             pass_type = PASS.TYPE(pass_type)
             if pass_type == PASS.TYPE.THROUGH_BALL:
@@ -632,8 +636,7 @@ class PASS(POSSESSION_EVENT):
         pass_quals = self._get_pass_qualifiers(body_part)
 
         qualifiers = collect_qualifiers(body_part, set_piece, *pass_quals)
-
-        result = self.pass_outcome_to_result(self.raw_event)
+        result = self._pass_outcome_to_result()
 
         return [
             event_factory.build_pass(

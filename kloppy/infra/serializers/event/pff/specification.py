@@ -489,12 +489,18 @@ class BALL_OUT(EVENT):
 
 class POSSESSION_EVENT(EVENT):
     def _parse_generic_kwargs(self) -> dict:
+        event_id = (
+            self.raw_event["possessionEventId"] 
+            if self.raw_event["possessionEventId"] is not None
+            else self.raw_event["gameEventId"]
+        )
+
         return {
             "period": self.period,
             "timestamp": timedelta(seconds=self.raw_event["eventTime"]),
             "ball_owning_team": self.possession_team,
             "ball_state": BallState.ALIVE,
-            "event_id": self.raw_event["possessionEventId"],
+            "event_id": event_id,
             "team": self.team,
             "player": self.player,
             "coordinates": parse_coordinates(self.player, self.raw_event),
@@ -697,7 +703,7 @@ class CLEARANCE(POSSESSION_EVENT):
         ]
 
 
-class CHALLENGE(POSSESSION_EVENT):
+class DUEL(POSSESSION_EVENT):
     """PFF Challenge event."""
 
     def _create_events(
@@ -823,11 +829,11 @@ def possession_event_decoder(raw_event: dict) -> POSSESSION_EVENT:
         POSSESSION_EVENT_TYPE.PASS: PASS,
         POSSESSION_EVENT_TYPE.SHOT: SHOT,
         POSSESSION_EVENT_TYPE.CLEARANCE: CLEARANCE,
-        POSSESSION_EVENT_TYPE.BALL_CARRY: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.CHALLENGE: CHALLENGE,
+        POSSESSION_EVENT_TYPE.BALL_CARRY: CARRY,
+        POSSESSION_EVENT_TYPE.CHALLENGE: DUEL,
         POSSESSION_EVENT_TYPE.REBOUND: POSSESSION_EVENT,
         POSSESSION_EVENT_TYPE.TOUCHES: POSSESSION_EVENT,
-        POSSESSION_EVENT_TYPE.EVT_START: POSSESSION_EVENT,
+        POSSESSION_EVENT_TYPE.EVT_START: BALL_RECEIPT,
     }
 
     p_evt_type = raw_event["possessionEvents"]["possessionEventType"]

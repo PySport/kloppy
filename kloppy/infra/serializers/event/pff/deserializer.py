@@ -88,9 +88,11 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
         self, raw_event_data: IO[bytes]
     ) -> dict[str, PFF.EVENT]:
         raw_events = {}
-        for event in json.load(raw_event_data):
+        events = json.load(raw_event_data)
+        events = sorted(events, key=lambda x: x['eventTime'])
+        for event in events:
             event_id = (
-                f"{event['gameEventId']}_{event['possessionEventId']}"
+                f"{event['gameEventId']}_{event['possessionEventId']}_{event['gameEvents']['gameEventType']}_{event['eventTime']}"
                 if event["possessionEventId"] is not None
                 else f"{event['gameEventId']}"
             )
@@ -104,6 +106,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
                 name=team_name,
                 ground=ground_type,
             )
+
             team.players = [
                 Player(
                     player_id=entry["player"]["id"],
@@ -118,6 +121,7 @@ class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
                 for entry in players
                 if entry["team"]["id"] == team_id
             ]
+
             return team
 
         home_team = metadata["homeTeam"]

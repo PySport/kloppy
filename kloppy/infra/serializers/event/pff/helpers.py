@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from kloppy.domain import (
     ActionValue,
@@ -18,7 +18,7 @@ from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 
 
-def get_team_by_id(team_id: int | None, teams: list[Team]) -> Team | None:
+def get_team_by_id(team_id: Optional[int], teams: list[Team]) -> Optional[Team]:
     """Get a team by its id."""
     if team_id is None:
         return None
@@ -37,6 +37,12 @@ def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
             return period
     raise DeserializationError(f"Unknown period_id {period_id}")
 
+
+def find_player(player_id: Union[int, str], teams: list[Team]) -> Optional[Player]:
+   for team in teams:
+        player = team.get_player_by_id(player_id)
+        if player is not None:
+            return player
 
 def parse_coordinates(
     player: Player | None, raw_event: dict[str, object]

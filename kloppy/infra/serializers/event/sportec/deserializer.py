@@ -487,8 +487,19 @@ class SportecEventDataDeserializer(
             period_id = 0
             events = []
 
+            # We need to re-order the event_elm objects by EventTime, because
+            # certain types of events are all positioned at the end of the files
+            event_chains = []
             for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
+                event_chains.append(event_chain)
+
+            sorted_event_chains = sorted(
+                event_chains,
+                key=lambda x: _parse_datetime(x["Event"]["EventTime"]),
+            )
+
+            for event_chain in sorted_event_chains:
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
 
                 if (

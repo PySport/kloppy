@@ -152,6 +152,11 @@ class TestSportecEventData:
         assert EventType.CLEARANCE in event_types_set
         assert EventType.INTERCEPTION in event_types_set
 
+        interceptions = dataset.find_all("interception")
+        # All interceptions in the sportec_events_J03WPY.xml are at the end of the file,
+        # but should be distributed throughout the match properly by the deserializer
+        assert interceptions[0].period.id == 1
+
 
 class TestSportecTrackingData:
     """

@@ -701,6 +701,22 @@ class SHOT(POSSESSION_EVENT):
         ]
 
 
+class BALL_RECEIPT(POSSESSION_EVENT):
+    """PFF IT event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        return [
+            event_factory.build_generic(
+                result=None,
+                qualifiers=None,
+                event_name="RECEIVAL",
+                **generic_event_kwargs,
+            )
+        ]
+
+
 class CLEARANCE(POSSESSION_EVENT):
     """PFF Clearance event."""
 

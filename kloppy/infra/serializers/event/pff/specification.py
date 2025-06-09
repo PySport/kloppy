@@ -1,6 +1,6 @@
 from datetime import timedelta
 from enum import Enum, EnumMeta
-from typing import NamedTuple
+from typing import List, Dict, NamedTuple, Union
 
 from kloppy.domain import (
     BallState,
@@ -648,9 +648,17 @@ class SHOT(POSSESSION_EVENT):
         OFF_TARGET = "O"
         ON_TARGET = "S"
 
+    @property
+    def outcome(self) -> Union[OUTCOME, None]:
+        try:
+            return self.OUTCOME(self.possession_event['shotOutcomeType'])
+        except Exception:
+            return None
 
-    @staticmethod
-    def shot_outcome_to_result(raw_event: dict) -> ShotResult | None:
+    def _shot_outcome_to_result(self) -> ShotResult | None:
+        if self.outcome is None:
+            return None
+
         outcome_map = {
             SHOT.OUTCOME.ON_TARGET_BLOCKED: ShotResult.BLOCKED,
             SHOT.OUTCOME.OFF_TARGET_BLOCKED: ShotResult.BLOCKED,
@@ -661,23 +669,16 @@ class SHOT(POSSESSION_EVENT):
             SHOT.OUTCOME.ON_TARGET: ShotResult.SAVED,
         }
 
-        try:
-            outcome_type = raw_event['possessionEvents']['shotOutcomeType']
-            outcome = SHOT.OUTCOME(outcome_type)
-            return outcome_map.get(outcome)
-        except KeyError:
-            raise DeserializationError(
-                'Unable to map shot outcome from PFF'
-            )
+        return outcome_map.get(self.outcome)
 
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
-        result = self.shot_outcome_to_result(self.raw_event)
-
         body_part = self._get_body_part_qualifier()
         set_piece = self._get_set_piece_qualifier()
+
         qualifiers = collect_qualifiers(body_part, set_piece)
+        result = self._shot_outcome_to_result()
 
         return [
             event_factory.build_shot(

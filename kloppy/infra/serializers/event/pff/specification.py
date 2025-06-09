@@ -718,31 +718,240 @@ class CLEARANCE(POSSESSION_EVENT):
 class DUEL(POSSESSION_EVENT):
     """PFF Challenge event."""
 
-    def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
-    ) -> list[Event]:
-        return [
-            event_factory.build_duel(
-                result=None,
-                qualifiers=None,
-                **generic_event_kwargs,
+    class TYPE(Enum, metaclass=TypesEnumMeta):
+        AERIAL_DUEL = 'A'
+        FROM_BEHIND = 'B'
+        DRIBBLE = 'D'
+        FIFTY = 'FIFTY'
+        GK_SMOTHERS = 'G'
+        SHIELDING = 'H'
+        HAND_TACKLE = 'K'  # GK specific event
+        SLIDE_TACKLE = 'L'
+        SHOULDER_TO_SHOULDER = 'S'
+        STANDING_TACKLE = 'T'
+
+    class OUTCOME(Enum, metaclass=TypesEnumMeta):
+        DISTRIBUTION_DISRUPTED = 'B'
+        FORCED_OUT_OF_PLAY = 'C'
+        DISTRIBUTES_BALL = 'D'
+        FOUL = 'F'
+        SHIELDS_IN_PLAY = 'I'
+        KEEPS_BALL_WITH_CONTACT = 'K'
+        ROLLS = 'L'
+        BEATS_MAN_LOSES_BALL = 'M'
+        NO_WIN_KEEP_BALL = 'N'
+        OUT_OF_PLAY = 'O'
+        PLAYER = 'P'
+        RETAIN = 'R'
+        SHIELDS_OUT_OF_PLAY = 'S'
+
+    @property
+    def outcome(self):
+        try:
+            return self.OUTCOME(
+                self.raw_event['possessionEvents']['challengeOutcomeType']
             )
-        ]
+        except Exception:
+            return None
 
+    @property
+    def duel_type(self):
+        try:
+            return self.TYPE(
+                self.raw_event['possessionEvents']['challengeType']
+            )
+        except Exception:
+            return None
 
-class TAKE_ON(POSSESSION_EVENT):
-    """PFF Dribble event."""
-
-    def _create_events(
-        self, event_factory: EventFactory, **generic_event_kwargs
+    def _handle_dribble(
+            self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
+        if self.outcome in [
+            DUEL.OUTCOME.OUT_OF_PLAY,
+            DUEL.OUTCOME.FORCED_OUT_OF_PLAY
+        ]:
+            result = TakeOnResult.OUT
+        elif self.outcome in [
+            DUEL.OUTCOME.NO_WIN_KEEP_BALL,
+            DUEL.OUTCOME.ROLLS,
+            DUEL.OUTCOME.DISTRIBUTION_DISRUPTED,
+            DUEL.OUTCOME.DISTRIBUTES_BALL,
+            DUEL.OUTCOME.PLAYER,
+        ]:
+            result = TakeOnResult.INCOMPLETE
+        else:
+            result = TakeOnResult.COMPLETE
+
         return [
             event_factory.build_take_on(
-                result=None,
-                qualifiers=None,
-                **generic_event_kwargs,
+                result=result,
+                qualifiers=[DuelQualifier(value=DuelType.GROUND)],
+                **generic_event_kwargs
             )
         ]
+
+    def _handle_aerial(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        events = []
+
+        qualifiers = [
+            DuelQualifier(value=DuelType.LOOSE_BALL),
+            DuelQualifier(value=DuelType.AERIAL)
+        ]
+
+        aerialChallengeColumns = [
+            'homeDuelPlayerId',
+            'awayDuelPlayerId',
+            'challengeKeeperPlayerId',
+            'additionalDuelerPlayerId'
+        ]
+
+        players_involved = [
+            find_player(self.possession_event[col], self.teams)
+            for col in aerialChallengeColumns
+            if self.raw_event['possessionEvents'][col] is not None
+        ]
+
+        winner = find_player(
+            self.raw_event['possessionEvents']['challengeWinnerPlayerId'],
+            self.teams
+        )
+
+        if winner is None:
+            player_duel_result = [
+                (player, DuelResult.NEUTRAL)
+                for player in players_involved
+                if player is not None
+            ]
+        else:
+            player_duel_result = [
+                (
+                    player,
+                    (
+                        DuelResult.WON
+                        if player.team == winner.team
+                        else DuelResult.LOST
+                    )
+                )
+                for player in players_involved
+                if player is not None
+            ]
+
+        for (player, result) in player_duel_result:
+            kwargs = deepcopy(generic_event_kwargs)
+            kwargs['team'] = player.team
+            kwargs['player'] = player
+            events.append(
+                event_factory.build_duel(
+                    result=result,
+                    qualifiers=qualifiers,
+                    **kwargs,
+                )
+            )
+
+        return events
+
+    def _handle_tackle(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        events = []
+
+        qualifiers = [DuelQualifier(value=DuelType.GROUND)]
+
+        if self.duel_type == DUEL.TYPE.SLIDE_TACKLE:
+            qualifiers.append(DuelQualifier(value=DuelType.SLIDING_TACKLE))
+        elif self.duel_type == DUEL.TYPE.FIFTY:
+            qualifiers.append(DuelQualifier(value=DuelType.LOOSE_BALL))
+
+        challengeColumns = [
+            'ballCarrierPlayerId',
+            'challengerPlayerId',
+            'challengeKeeperPlayerId',
+            'additionalDuelerPlayerId',
+        ]
+
+        players_involved = [
+            find_player(self.raw_event['possessionEvents'][col], self.teams)
+            for col in challengeColumns 
+            if self.raw_event['possessionEvents'][col] is not None
+        ]
+
+        winner = find_player(
+            self.raw_event['possessionEvents']['challengeWinnerPlayerId'],
+            self.teams
+        )
+
+        if not winner:
+            player_duel_result = [
+                (player, DuelResult.NEUTRAL)
+                for player in players_involved
+                if player is not None
+            ]
+        else:
+            player_duel_result = [
+                (
+                    player,
+                    (
+                        DuelResult.WON
+                        if player.team == winner.team
+                        else DuelResult.LOST
+                    )
+                )
+                for player in players_involved
+                if player is not None
+            ]
+
+        for (player, result) in player_duel_result:
+            kwargs = deepcopy(generic_event_kwargs)
+            kwargs['team'] = player.team
+            kwargs['player'] = player
+            events.append(
+                event_factory.build_duel(
+                    result=result,
+                    qualifiers=qualifiers,
+                    **kwargs,
+                )
+            )
+
+        return events
+
+    def _handle_gk(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        qualifiers = [
+            GoalkeeperQualifier(value=GoalkeeperActionType.SMOTHER)
+        ]
+
+        return [
+            event_factory.build_goalkeeper_event(
+                result=None,
+                qualifiers=qualifiers,
+                **generic_event_kwargs
+            )
+        ]
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> list[Event]:
+        if self.duel_type == DUEL.TYPE.DRIBBLE:
+            return self._handle_dribble(event_factory, **generic_event_kwargs)
+        elif self.duel_type == DUEL.TYPE.AERIAL_DUEL:
+            return self._handle_aerial(event_factory, **generic_event_kwargs)
+        elif self.duel_type in [
+            DUEL.TYPE.SLIDE_TACKLE,
+            DUEL.TYPE.FIFTY,
+            DUEL.TYPE.FROM_BEHIND,
+            DUEL.TYPE.STANDING_TACKLE,
+            DUEL.TYPE.SHOULDER_TO_SHOULDER,
+            DUEL.TYPE.SHIELDING,
+            DUEL.TYPE.HAND_TACKLE # GK Event
+        ]:
+            return self._handle_tackle(event_factory, **generic_event_kwargs)
+        elif self.duel_type == DUEL.TYPE.GK_SMOTHERS:
+            return self._handle_gk(event_factory, **generic_event_kwargs)
+ 
+        return [event_factory.build_generic(**generic_event_kwargs)]
 
 
 class CARRY(POSSESSION_EVENT):

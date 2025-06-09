@@ -210,8 +210,16 @@ class EVENT:
         raw_event: The raw JSON event.
     """
 
-    def __init__(self, raw_event: dict):
+    def __init__(self, raw_event: Dict):
         self.raw_event = raw_event
+
+    @property
+    def game_event(self) -> Dict[str, Union[int, float, str, bool, None]]:
+        return self.raw_event['gameEvents']
+
+    @property
+    def possession_event(self) -> Dict[str, Union[int, float, str, bool, None]]:
+        return self.raw_event['possessionEvents']
 
     def set_refs(self, periods, teams, events):
         # temp: some PFF events do not have a 'teamId' assigned but we can get

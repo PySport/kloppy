@@ -957,13 +957,33 @@ class DUEL(POSSESSION_EVENT):
 class CARRY(POSSESSION_EVENT):
     """PFF Carry event."""
 
+    class OUTCOME(Enum, metaclass=TypesEnumMeta):
+        RETAIN = 'R'
+        STOPPAGE = 'S'
+        BALL_LOSS = 'L'
+        LEADS_INTO_CHALLENGE = 'C'
+
+    @property
+    def outcome(self):
+        try:
+            return self.OUTCOME(self.possession_event['ballCarryOutcome'])
+        except Exception:
+            return None
+
     def _create_events(
         self, event_factory: EventFactory, **generic_event_kwargs
     ) -> list[Event]:
+        if self.outcome == CARRY.OUTCOME.BALL_LOSS:
+            result = CarryResult.INCOMPLETE
+        else:
+            result = CarryResult.COMPLETE
+
         return [
             event_factory.build_carry(
-                result=None,
+                result=result,
                 qualifiers=None,
+                end_timestamp=timedelta(seconds=self.raw_event['endTime']),
+                end_coordinates=None,
                 **generic_event_kwargs,
             )
         ]

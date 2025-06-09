@@ -16,7 +16,8 @@ from kloppy.domain import (
     Provider,
     Team,
 )
-from kloppy.domain.models.pitch import PitchDimensions
+from kloppy.domain.models.event import Event, EventType
+from kloppy.domain.models.pitch import PitchDimensions, Point
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import timedelta
 from enum import Enum, EnumMeta
 from typing import List, Dict, NamedTuple, Union
@@ -38,6 +39,7 @@ from kloppy.domain.models.event import (
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.pff.helpers import (
     collect_qualifiers,
+    find_player,
     get_period_by_id,
     get_team_by_id,
     parse_coordinates,
@@ -273,13 +275,15 @@ class EVENT:
             event_factory, **generic_event_kwargs
         )
 
-        foul_events = self._create_foul(event_factory, **generic_event_kwargs)
+        foul_events = self._create_foul(
+            event_factory, **generic_event_kwargs
+        )
 
         # return events (note: order is important)
         return base_events + foul_events
 
     def _get_set_piece_qualifier(self) -> SetPieceQualifier | None:
-        pff_set_piece_type = self.raw_event['gameEvents']['setpieceType']
+        pff_set_piece_type = self.game_event['setpieceType']
 
         if pff_set_piece_type is None or pff_set_piece_type == 'O':
             return None

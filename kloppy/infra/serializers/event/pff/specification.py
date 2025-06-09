@@ -125,6 +125,7 @@ class EVENT_TYPE(Enum, metaclass=TypesEnumMeta):
     PAUSE_OF_GAME_TIME = "PAU"
     SUB = "SUB"
     VIDEO = "VID"
+    FOUL = "FOUL"
 
 
 class POSSESSION_EVENT_TYPE(Enum, metaclass=TypesEnumMeta):
@@ -1075,6 +1076,7 @@ def possession_event_decoder(raw_event: dict) -> POSSESSION_EVENT:
         POSSESSION_EVENT_TYPE.REBOUND: POSSESSION_EVENT,
         POSSESSION_EVENT_TYPE.TOUCHES: POSSESSION_EVENT,
         POSSESSION_EVENT_TYPE.EVT_START: BALL_RECEIPT,
+        POSSESSION_EVENT_TYPE.FOUL: POSSESSION_EVENT,
     }
 
     p_evt_type = raw_event["possessionEvents"]["possessionEventType"]
@@ -1100,6 +1102,7 @@ def event_decoder(raw_event: dict) -> EVENT:
         EVENT_TYPE.SUB: SUBSTITUTION,
         EVENT_TYPE.PLAYER_ON: PLAYER_ON,
         EVENT_TYPE.PLAYER_OFF: PLAYER_OFF,
+        EVENT_TYPE.FOUL: EVENT,
     }
 
     event_type = EVENT_TYPE(raw_event["gameEvents"]["gameEventType"])

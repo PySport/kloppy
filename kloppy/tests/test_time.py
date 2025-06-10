@@ -315,6 +315,7 @@ class TestAbsTime:
             PossessionState.OUT_OF_POSSESSION: timedelta(seconds=677.191000),
             PossessionState.BALL_DEAD: timedelta(seconds=1863.308000),
         }
+        assert playtime_ramos == team_minutes_played_map[home_team]
 
 
 class TestAbsTimeContainer:

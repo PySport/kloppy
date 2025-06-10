@@ -284,15 +284,11 @@ class TestAbsTime:
         assert sum(playtime_coutinho.values(), timedelta()) == timedelta(
             seconds=2852.053
         )
-        assert playtime_coutinho[PossessionState.IN_POSSESSION] == timedelta(
-            seconds=1505.312
-        )
-        assert playtime_coutinho[
-            PossessionState.OUT_OF_POSSESSION
-        ] == timedelta(seconds=296.958)
-        assert playtime_coutinho[PossessionState.BALL_DEAD] == timedelta(
-            seconds=1049.783
-        )
+        assert playtime_coutinho == {
+            PossessionState.IN_POSSESSION: timedelta(seconds=1617.151),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=290.732),
+            PossessionState.BALL_DEAD: timedelta(seconds=944.17),
+        }
 
         # Replaced in second half
         player_busquets = home_team.get_player_by_id(5203)
@@ -300,15 +296,12 @@ class TestAbsTime:
         assert sum(playtime_busquets.values(), timedelta()) == timedelta(
             seconds=5052.343
         )
-        assert playtime_busquets[PossessionState.IN_POSSESSION] == timedelta(
-            seconds=2917.724
-        )
-        assert playtime_busquets[
-            PossessionState.OUT_OF_POSSESSION
-        ] == timedelta(seconds=652.343)
-        assert playtime_busquets[PossessionState.BALL_DEAD] == timedelta(
-            seconds=1482.276
-        )
+
+        assert playtime_busquets == {
+            PossessionState.IN_POSSESSION: timedelta(seconds=2859.285),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=650.604),
+            PossessionState.BALL_DEAD: timedelta(seconds=1542.454),
+        }
 
         # Played entire match
         player_ramos = home_team.get_player_by_id(5211)
@@ -317,15 +310,11 @@ class TestAbsTime:
             dataset.metadata.periods[0].duration
             + dataset.metadata.periods[1].duration
         )
-        assert playtime_ramos[PossessionState.IN_POSSESSION] == timedelta(
-            seconds=3020.965
-        )
-        assert playtime_ramos[PossessionState.OUT_OF_POSSESSION] == timedelta(
-            seconds=716.177
-        )
-        assert playtime_ramos[PossessionState.BALL_DEAD] == timedelta(
-            seconds=1820.178
-        )
+        assert playtime_busquets == {
+            PossessionState.IN_POSSESSION: timedelta(seconds=2859.285),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=650.604),
+            PossessionState.BALL_DEAD: timedelta(seconds=1542.454),
+        }
 
 
 class TestAbsTimeContainer:

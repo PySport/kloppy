@@ -19,6 +19,9 @@ from kloppy.domain import (
     Period,
     GenericEvent,
     ShotResult,
+    InterceptionResult,
+    TakeOnResult,
+    BallOutEvent,
 )
 from kloppy.domain.services.aggregators.aggregator import (
     EventDatasetAggregator,
@@ -42,12 +45,17 @@ EVENTS_CAUSING_DEAD_BALL = (
     CardEvent,
     PlayerOnEvent,
     PlayerOffEvent,
+    BallOutEvent,
 )
 
 RESULTS_CAUSING_DEAD_BALL = (
     PassResult.OFFSIDE,
     ShotResult.GOAL,
     ShotResult.OWN_GOAL,
+    ShotResult.OFF_TARGET,
+    PassResult.OUT,
+    InterceptionResult.OUT,
+    TakeOnResult.OUT,
 )
 
 
@@ -174,8 +182,11 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
             ball_owning_team: Optional[Team] = None
             ball_state: Optional[BallState] = None
             period: Optional[Period] = dataset.metadata.periods[0]
+
             for event in dataset.events:
                 if isinstance(event, GenericEvent):
+                    continue
+                if event.time < start_time:
                     continue
                 actual_event_ball_state = (
                     BallState.DEAD
@@ -183,6 +194,26 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
                     or (event.result in RESULTS_CAUSING_DEAD_BALL)
                     else event.ball_state
                 )
+
+                if (
+                    actual_event_ball_state == BallState.DEAD
+                    and event.result in RESULTS_CAUSING_DEAD_BALL
+                ):
+
+                    _actual_event_timestamp = (
+                        event.receive_timestamp
+                        if hasattr(event, "receive_timestamp")
+                        and event.receive_timestamp is not None
+                        else event.end_timestamp
+                        if hasattr(event, "end_timestamp")
+                        and event.end_timestamp is not None
+                        else event.timestamp
+                    )
+                    actual_event_time = Time(
+                        event.period, _actual_event_timestamp
+                    )
+                else:
+                    actual_event_time = event.time
                 if event.period != period:
 
                     possession_state = self.get_possession_state(
@@ -205,7 +236,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
                         possession_state,
                     )
 
-                    start_time = event.time
+                    start_time = actual_event_time
                     period = event.period
                     ball_state = actual_event_ball_state
                     ball_owning_team = event.ball_owning_team
@@ -219,19 +250,20 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
                         ball_state, ball_owning_team, first_team
                     )
                     time_per_possession_state[possession_state] += (
-                        event.time - start_time
+                        actual_event_time - start_time
                     )
                     self._accumulate_player_time(
                         time_per_player,
                         players_start_end_times,
                         start_time,
-                        event.time,
+                        actual_event_time,
                         possession_state,
                     )
 
-                    start_time = event.time
+                    start_time = actual_event_time
                     ball_state = actual_event_ball_state
                     ball_owning_team = event.ball_owning_team
+
             # Handle the last event in the period
             possession_state = self.get_possession_state(
                 ball_state, ball_owning_team, first_team
@@ -243,6 +275,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
             time_per_possession_state[possession_state] += (
                 end_time - start_time
             )
+
             self._accumulate_player_time(
                 time_per_player,
                 players_start_end_times,

@@ -50,6 +50,12 @@ class TestStateBuilder:
             events = list(events)
             events_per_sequence[sequence_id] = len(events)
 
+            # Check if the sequence start and end times match the first and last event
+            sequence_start = events[0].state["sequence"].start
+            sequence_end = events[-1].state["sequence"].end
+            assert events[0].time == sequence_start
+            assert events[-1].time == sequence_end
+
         assert events_per_sequence[0] == 4
         assert events_per_sequence[51] == 10
 

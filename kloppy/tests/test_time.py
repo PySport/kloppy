@@ -285,9 +285,9 @@ class TestAbsTime:
             seconds=2852.053
         )
         assert playtime_coutinho == {
-            PossessionState.IN_POSSESSION: timedelta(seconds=1617.151),
-            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=290.732),
-            PossessionState.BALL_DEAD: timedelta(seconds=944.17),
+            PossessionState.IN_POSSESSION: timedelta(seconds=1559.075),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=287.916),
+            PossessionState.BALL_DEAD: timedelta(seconds=1005.062),
         }
 
         # Replaced in second half
@@ -298,9 +298,9 @@ class TestAbsTime:
         )
 
         assert playtime_busquets == {
-            PossessionState.IN_POSSESSION: timedelta(seconds=2859.285),
-            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=650.604),
-            PossessionState.BALL_DEAD: timedelta(seconds=1542.454),
+            PossessionState.IN_POSSESSION: timedelta(seconds=2751.232000),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=611.662000),
+            PossessionState.BALL_DEAD: timedelta(seconds=1689.449000),
         }
 
         # Played entire match
@@ -310,10 +310,10 @@ class TestAbsTime:
             dataset.metadata.periods[0].duration
             + dataset.metadata.periods[1].duration
         )
-        assert playtime_busquets == {
-            PossessionState.IN_POSSESSION: timedelta(seconds=2859.285),
-            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=650.604),
-            PossessionState.BALL_DEAD: timedelta(seconds=1542.454),
+        assert playtime_ramos == {
+            PossessionState.IN_POSSESSION: timedelta(seconds=3016.821000),
+            PossessionState.OUT_OF_POSSESSION: timedelta(seconds=677.191000),
+            PossessionState.BALL_DEAD: timedelta(seconds=1863.308000),
         }
 
 

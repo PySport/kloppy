@@ -31,6 +31,7 @@ from kloppy.domain import (
     ShotResult,
     Team,
 )
+from kloppy.domain.models.event import DuelResult, DuelType, TakeOnResult
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
@@ -307,6 +308,8 @@ SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
 SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
 SPORTEC_EVENT_NAME_CAUTION = "Caution"
 SPORTEC_EVENT_NAME_FOUL = "Foul"
+SPORTEC_EVENT_NAME_TACKLING_GAME = "TacklingGame"
+SPORTEC_EVENT_NAME_OTHER = "OtherBallAction"
 
 SPORTEC_EVENT_TYPE_OF_SHOT = "TypeOfShot"
 SPORTEC_EVENT_BODY_PART_HEAD = "head"
@@ -443,6 +446,22 @@ def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
     return dict(team=team, player=player)
 
 
+def _parse_successful_tackling_game(event_attributes: Dict) -> Dict:
+    """Parsing the appropriate player and team of successful TacklingGame events"""
+    return dict(
+        team=event_attributes["WinnerTeam"],
+        player=event_attributes["Winner"],
+    )
+
+
+def _parse_unsuccessful_tackling_game(event_attributes: Dict) -> Dict:
+    """Parsing the appropriate player and team of unsuccessful TacklingGame events"""
+    return dict(
+        team=event_attributes["LoserTeam"],
+        player=event_attributes["Loser"],
+    )
+
+
 def _parse_coordinates(event_attributes: Dict) -> Point:
     if "X-Position" not in event_attributes:
         return None
@@ -489,8 +508,19 @@ class SportecEventDataDeserializer(
             period_id = 0
             events = []
 
+            # We need to re-order the event_elm objects by EventTime, because
+            # certain types of events are all positioned at the end of the files
+            event_chains = []
             for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
+                event_chains.append(event_chain)
+
+            sorted_event_chains = sorted(
+                event_chains,
+                key=lambda x: _parse_datetime(x["Event"]["EventTime"]),
+            )
+
+            for event_chain in sorted_event_chains:
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
 
                 if (
@@ -576,11 +606,18 @@ class SportecEventDataDeserializer(
                         receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
-                    event = self.event_factory.build_recovery(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
+                    if event_attributes.get("Type") == "BallClaimed":
+                        event = self.event_factory.build_recovery(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get("Type") == "InterceptedBall":
+                        event = self.event_factory.build_interception(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
                 elif event_name == SPORTEC_EVENT_NAME_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
                         event_attributes=event_attributes, team=team
@@ -607,6 +644,100 @@ class SportecEventDataDeserializer(
                     foul_kwargs = _parse_foul(event_attributes, teams=teams)
                     generic_event_kwargs.update(foul_kwargs)
                     event = self.event_factory.build_foul_committed(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                elif event_name == SPORTEC_EVENT_NAME_TACKLING_GAME:
+                    # Different combinations of TacklingGame winnerRole and winnerResult identified in file J03WPY
+                    # [X] WinnerRole='withBallControl', WinnerResult='dribbledAround' -- this seems like a Take On
+                    # [X] WinnerRole='withBallControl', WinnerResult='fouled'  -- this is obviously a foul
+                    # [X] WinnerRole='withBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like an 'unsuccessful tackle', in Opta speak
+                    # [X] WinnerRole='withBallControl', WinnerResult='ballControlRetained'  -- this seems like a failed tackle
+                    # WinnerRole='withBallControl', WinnerResult='layoff' -- *might* be loose ball duels
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like a 'successful tackle', in Opta speak
+                    # WinnerRole='withoutBallControl', WinnerResult='layoff' -- *might* be loose ball duels
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='fouled'  -- this is obviously a foul
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballClaimed'  -- this seems like a tackle
+                    duel_type = event_attributes.get("Type", "ground")
+                    kloppy_duel_type = (
+                        DuelType.AERIAL
+                        if duel_type == "air"
+                        else DuelType.GROUND
+                    )
+
+                    if (
+                        event_attributes.get("WinnerRole") == "withBallControl"
+                        and event_attributes.get("WinnerResult")
+                        == "dribbledAround"
+                    ):
+                        tackling_game_kwargs = _parse_successful_tackling_game(
+                            event_attributes
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_take_on(
+                            result=TakeOnResult.COMPLETE,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get(
+                        "WinnerRole"
+                    ) == "withoutBallControl" and event_attributes.get(
+                        "WinnerResult"
+                    ) in [
+                        "ballClaimed",
+                        "ballContactSucceeded",
+                    ]:
+                        tackling_game_kwargs = _parse_successful_tackling_game(
+                            event_attributes
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_duel(
+                            qualifiers=[kloppy_duel_type, DuelType.TACKLE],
+                            result=DuelResult.WON,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get(
+                        "WinnerRole"
+                    ) == "withBallControl" and event_attributes.get(
+                        "WinnerResult"
+                    ) in [
+                        "ballcontactSucceeded",
+                        "ballControlRetained",
+                    ]:
+                        tackling_game_kwargs = (
+                            _parse_unsuccessful_tackling_game(event_attributes)
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_duel(
+                            qualifiers=[kloppy_duel_type],
+                            result=DuelResult.LOST,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get("WinnerResult") == "fouled":
+                        tackle_game_foul_kwargs = (
+                            _parse_unsuccessful_tackling_game(event_attributes)
+                        )
+                        generic_event_kwargs.update(tackle_game_foul_kwargs)
+                        event = self.event_factory.build_foul_committed(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    # Some 'TacklingGame' events are still not parsed
+                    else:
+                        event = self.event_factory.build_generic(
+                            result=None,
+                            qualifiers=None,
+                            event_name=event_name,
+                            **generic_event_kwargs,
+                        )
+
+                elif (
+                    event_name == SPORTEC_EVENT_NAME_OTHER
+                    and event_attributes.get("DefensiveClearance") == "true"
+                ):
+                    event = self.event_factory.build_clearance(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,

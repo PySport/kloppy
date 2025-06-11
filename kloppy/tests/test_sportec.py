@@ -151,6 +151,8 @@ class TestSportecEventData:
         # Kloppy types added in PR #XXXX
         assert EventType.CLEARANCE in event_types_set
         assert EventType.INTERCEPTION in event_types_set
+        assert EventType.DUEL in event_types_set
+        assert EventType.TAKE_ON in event_types_set
 
         interceptions = dataset.find_all("interception")
         # All interceptions in the sportec_events_J03WPY.xml are at the end of the file,

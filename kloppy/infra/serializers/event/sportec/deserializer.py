@@ -724,10 +724,11 @@ class SportecEventDataDeserializer(
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
+                    # Some 'TacklingGame' events are still not parsed
                     else:
                         event = self.event_factory.build_generic(
                             result=None,
-                            qualifiers=["silly layoff events"],
+                            qualifiers=None,
                             event_name=event_name,
                             **generic_event_kwargs,
                         )

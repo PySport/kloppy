@@ -1,17 +1,24 @@
-from abc import abstractmethod, ABC
+import sys
+from abc import ABC, abstractmethod
 from fnmatch import fnmatch
-from typing import Union, Callable, Any, Dict, TypeVar, Generic, Type
+from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
 
-from kloppy.domain import DataRecord, Event, DatasetType, Code, Frame
+if sys.version_info >= (3, 11):
+    from typing import Unpack
+else:
+    from typing_extensions import Unpack
+
+from kloppy.domain import Code, DataRecord, DatasetType, Event, Frame
 from kloppy.domain.services.transformers.attribute import (
+    DefaultCodeTransformer,
     DefaultEventTransformer,
     DefaultFrameTransformer,
-    DefaultCodeTransformer,
 )
 from kloppy.exceptions import KloppyError
 
-
 T = TypeVar("T", bound=DataRecord)
+Column = Union[str, Callable[[T], Any]]
+NamedColumns = Dict[str, Column]
 
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
@@ -21,8 +28,8 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
 
     def __init__(
         self,
-        *columns: Union[str, Callable[[T], Any]],
-        **named_columns: Union[str, Callable[[T], Any]],
+        *columns: Unpack[Tuple[Column]],
+        **named_columns: NamedColumns,
     ):
         if not columns and not named_columns:
             converter = self.default_transformer()

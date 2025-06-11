@@ -2,7 +2,8 @@ import json
 import logging
 from collections import defaultdict
 from datetime import timedelta, timezone
-from typing import IO, Dict, NamedTuple, Optional, Union
+from typing import IO, Dict, NamedTuple, Optional, Union, List
+import warnings
 
 from dateutil.parser import parse
 
@@ -21,9 +22,12 @@ from kloppy.domain import (
     Provider,
     Team,
     TrackingDataset,
+    AttackingDirection,
+    Frame,
 )
 
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.domain.services import attacking_direction_from_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -32,7 +36,6 @@ from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
-# frame_rate = 10
 
 position_types_mapping: Dict[str, PositionType] = {
     "CB": PositionType.CenterBack,
@@ -47,6 +50,7 @@ position_types_mapping: Dict[str, PositionType] = {
     "D": PositionType.Defender,
     "CF": PositionType.Striker,
     "M": PositionType.Midfielder,
+    "AM": PositionType.AttackingMidfield,
     "GK": PositionType.Goalkeeper,
     "F": PositionType.Attacker,
 }
@@ -296,29 +300,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     jersey_no=shirt_number,
                     name=player_name,
                     starting_position=position_types_mapping.get(
-                        player_position
+                        player_position, PositionType.Unknown
                     ),
                     starting=None,
                 )
 
             home_team.players = list(players["HOME"].values())
             away_team.players = list(players["AWAY"].values())
-
-        # Check if home team plays left or right and assign orientation accordingly.
-        try:
-            is_home_team_left = metadata["homeTeamStartLeft"]
-            is_home_team_extra_time_left = metadata[
-                "homeTeamStartLeftExtraTime"
-            ]
-        except AttributeError:
-            raise DeserializationError(
-                "The metadata file does not contain the 'homeTeamStartLeft' field"
-            )
-        orientation = (
-            Orientation.HOME_AWAY
-            if is_home_team_left
-            else Orientation.AWAY_HOME
-        )
 
         with performance_logging("Loading data", logger=logger):
 
@@ -398,7 +386,26 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             if self.limit and n_frames >= self.limit:
                 break
 
+        first_frame_p1 = next(
+            frame for frame in frames if frame.period.id == 1
+        )
+        is_home_team_left = (
+            True
+            if attacking_direction_from_frame(first_frame_p1)
+            == AttackingDirection.LTR
+            else False
+        )
+
         if et_frames:
+            first_frame_p3 = next(
+                frame for frame in et_frames if frame.period.id == 3
+            )
+            is_home_team_extra_time_left = (
+                True
+                if attacking_direction_from_frame(first_frame_p3)
+                == AttackingDirection.LTR
+                else False
+            )
             # If first period and third period attacking direction for home team is inconsistent, flip the direction of the extra time frames
             if is_home_team_left != is_home_team_extra_time_left:
                 for et_frame in et_frames:
@@ -426,6 +433,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                             -et_frame.ball_coordinates.y,
                             et_frame.ball_coordinates.z,
                         )
+
+        orientation = (
+            Orientation.HOME_AWAY
+            if is_home_team_left
+            else Orientation.AWAY_HOME
+        )
 
         frames.extend(et_frames)
 

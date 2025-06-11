@@ -1,14 +1,14 @@
-from datetime import timedelta
 from dataclasses import dataclass, field
-from typing import List, Dict, Callable, Union, Any
+from datetime import timedelta
+from typing import Any, Callable, Dict, Optional, Union
 
 from kloppy.domain.models.common import DatasetType
-
-from .common import Dataset, DataRecord
 from kloppy.utils import (
-    docstring_inherit_attributes,
     deprecated,
+    docstring_inherit_attributes,
 )
+
+from .common import DataRecord, Dataset
 
 
 @dataclass
@@ -18,11 +18,10 @@ class Code(DataRecord):
     Single code
 
     Attributes:
-        id: identifier provided by the coding software
-        code: string describing the code
-        end_timestamp: float
-        labels: Text labels describing this code instance
-
+        code_id: Unique identifier provided by the coding software. Aias for `record_id`.
+        code: A string describing the code.
+        end_timestamp: End timestamp for the period of time this code instance is active.
+        labels: Text labels describing this code instance.
     """
 
     code_id: str
@@ -41,7 +40,14 @@ class Code(DataRecord):
 
 @dataclass
 class CodeDataset(Dataset[Code]):
-    records: List[Code]
+    """
+    A dataset containing SportsCode annotations.
+
+    Attributes:
+        dataset_type (DatasetType): `"DatasetType.CODE"`
+        codes (List[Code]): A list of codes. Alias for `records`.
+        metadata (Metadata): Metadata of the code dataset.
+    """
 
     dataset_type: DatasetType = DatasetType.CODE
 
@@ -54,10 +60,8 @@ class CodeDataset(Dataset[Code]):
     )
     def to_pandas(
         self,
-        record_converter: Callable[[Code], Dict] = None,
-        additional_columns: Dict[
-            str, Union[Callable[[Code], Any], Any]
-        ] = None,
+        record_converter: Optional[Callable[[Code], Dict]] = None,
+        additional_columns=None,
     ) -> "DataFrame":
         try:
             import pandas as pd

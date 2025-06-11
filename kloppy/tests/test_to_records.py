@@ -1,14 +1,14 @@
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
-from kloppy import statsbomb
 
+from kloppy import statsbomb
 from kloppy.domain import EventDataset, Point
 from kloppy.domain.services.transformers.attribute import (
+    AngleToGoalTransformer,
     DistanceToGoalTransformer,
     DistanceToOwnGoalTransformer,
-    AngleToGoalTransformer,
 )
 
 
@@ -35,8 +35,6 @@ class TestToRecords:
         assert list(records[0].keys()) == [
             "event_id",
             "event_type",
-            "result",
-            "success",
             "period_id",
             "timestamp",
             "end_timestamp",
@@ -46,6 +44,8 @@ class TestToRecords:
             "player_id",
             "coordinates_x",
             "coordinates_y",
+            "result",
+            "success",
         ]
 
     def test_string_columns(self, dataset: EventDataset):

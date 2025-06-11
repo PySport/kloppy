@@ -1,0 +1,3 @@
+# Metadata
+
+::: kloppy.domain.Metadata

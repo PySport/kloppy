@@ -1,10 +1,10 @@
 from kloppy.config import get_config
+from kloppy.domain import EventDataset, EventFactory, List, Optional
 from kloppy.infra.serializers.event.datafactory import (
     DatafactoryDeserializer,
     DatafactoryInputs,
 )
-from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike
+from kloppy.io import FileLike, open_as_file
 
 
 def load(
@@ -14,13 +14,16 @@ def load(
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
-    Load DataFactory event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
+    Load DataFactory event data.
 
-    Parameters:
-        event_data: filename of json containing the events
-        event_types:
-        coordinates:
-        event_factory:
+    Args:
+        event_data: JSON feed with the raw event data of a game.
+        event_types: A list of event types to load.
+        coordinates: The coordinate system to use.
+        event_factory: A custom event factory.
+
+    Returns:
+        The parsed event data.
     """
     deserializer = DatafactoryDeserializer(
         event_types=event_types,

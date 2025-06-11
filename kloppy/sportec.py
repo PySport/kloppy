@@ -1,3 +1,5 @@
+"""Functions for loading Sportec Solutions event and tracking data."""
+
 from ._providers.sportec import (
     load,
     load_event,

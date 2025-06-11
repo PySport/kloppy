@@ -1,12 +1,12 @@
-import re
-import time
-from contextlib import contextmanager
-from io import BytesIO
-from typing import BinaryIO, Union
 import functools
 import inspect
+import re
+import time
 import warnings
-
+from contextlib import contextmanager
+from io import BytesIO
+from logging import Logger
+from typing import BinaryIO, Optional, Union
 
 Readable = Union[bytes, BinaryIO]
 
@@ -18,7 +18,11 @@ def to_file_object(s: Readable) -> BinaryIO:
 
 
 @contextmanager
-def performance_logging(description: str, counter: int = None, logger=None):
+def performance_logging(
+    description: str,
+    counter: Optional[int] = None,
+    logger: Optional[Logger] = None,
+):
     start = time.time()
     try:
         yield

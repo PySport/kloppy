@@ -1,40 +1,40 @@
-from collections import OrderedDict
-from typing import Dict, List, NamedTuple, IO
-from datetime import timedelta, datetime
 import logging
+from collections import OrderedDict
+from datetime import datetime, timedelta
+from typing import IO, Dict, List, NamedTuple
+
 from lxml import objectify
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Period,
-    Point,
     BallState,
+    BodyPart,
+    BodyPartQualifier,
+    CardType,
     DatasetFlag,
-    Orientation,
-    PassResult,
-    ShotResult,
+    EventDataset,
     EventType,
     Ground,
-    Score,
-    Provider,
     Metadata,
-    Player,
-    SetPieceQualifier,
-    SetPieceType,
-    BodyPartQualifier,
-    BodyPart,
-    Qualifier,
-    CardType,
-    PositionType,
     Official,
     OfficialType,
+    Orientation,
+    PassResult,
+    Period,
+    Player,
+    Point,
+    PositionType,
+    Provider,
+    Qualifier,
+    Score,
+    SetPieceQualifier,
+    SetPieceType,
+    ShotResult,
+    Team,
 )
 from kloppy.domain.models.event import DuelResult, DuelType, TakeOnResult
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
-
 
 position_types_mapping: Dict[str, PositionType] = {
     "TW": PositionType.Goalkeeper,
@@ -60,6 +60,7 @@ referee_types_mapping: Dict[str, OfficialType] = {
     "referee": OfficialType.MainReferee,
     "firstAssistant": OfficialType.AssistantReferee,
     "videoReferee": OfficialType.VideoAssistantReferee,
+    "videoRefereeAssistant": OfficialType.AssistantVideoAssistantReferee,
     "secondAssistant": OfficialType.AssistantReferee,
     "fourthOfficial": OfficialType.FourthOfficial,
 }
@@ -71,9 +72,9 @@ def _team_from_xml_elm(team_elm) -> Team:
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
-        ground=Ground.HOME
-        if team_elm.attrib["Role"] == "home"
-        else Ground.AWAY,
+        ground=(
+            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
+        ),
     )
     team.players = [
         Player(
@@ -242,7 +243,9 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
                     name=ref_attrib["Shortname"],
                     first_name=ref_attrib["FirstName"],
                     last_name=ref_attrib["LastName"],
-                    role=referee_types_mapping[ref_attrib["Role"]],
+                    role=referee_types_mapping.get(
+                        ref_attrib["Role"], OfficialType.Unknown
+                    ),
                 )
             )
     else:
@@ -544,6 +547,9 @@ class SportecEventDataDeserializer(
                     periods.append(period)
                 elif SPORTEC_EVENT_NAME_FINAL_WHISTLE in event_chain:
                     period.end_timestamp = timestamp
+                    continue
+                elif period_id == 0:
+                    # Skip any events that happened before the first kick off
                     continue
 
                 team = None

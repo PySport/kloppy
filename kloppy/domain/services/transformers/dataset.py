@@ -329,8 +329,8 @@ class DatasetTransformer:
             ):
                 event = self.__flip_event(event)
 
-            if event.freeze_frame:
-                event.freeze_frame = self.transform_frame(event.freeze_frame)
+        if event.freeze_frame:
+            event.freeze_frame = self.transform_frame(event.freeze_frame)
 
         return event
 

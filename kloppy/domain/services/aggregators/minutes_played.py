@@ -91,7 +91,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
             except ValueError:
                 raise ValueError(
                     f"BreakdownKey {breakdown_key} not found. Known keys: {', '.join(key.value for key in BreakdownKey)}")
-            self.breakdown_key = breakdown_key
+        self.breakdown_key = breakdown_key
 
     @staticmethod
     def get_possession_state(

@@ -267,10 +267,22 @@ class TestAbsTime:
             )
 
         teams = list(team_minutes_played_map.keys())
-        assert team_minutes_played_map[teams[0]][PossessionState.IN_POSSESSION] == team_minutes_played_map[teams[1]][PossessionState.OUT_OF_POSSESSION]
-        assert team_minutes_played_map[teams[0]][PossessionState.OUT_OF_POSSESSION] == team_minutes_played_map[teams[1]][PossessionState.IN_POSSESSION]
-        assert team_minutes_played_map[teams[0]][PossessionState.BALL_DEAD] == team_minutes_played_map[teams[1]][PossessionState.BALL_DEAD]
-
+        assert (
+            team_minutes_played_map[teams[0]][PossessionState.IN_POSSESSION]
+            == team_minutes_played_map[teams[1]][
+                PossessionState.OUT_OF_POSSESSION
+            ]
+        )
+        assert (
+            team_minutes_played_map[teams[0]][
+                PossessionState.OUT_OF_POSSESSION
+            ]
+            == team_minutes_played_map[teams[1]][PossessionState.IN_POSSESSION]
+        )
+        assert (
+            team_minutes_played_map[teams[0]][PossessionState.BALL_DEAD]
+            == team_minutes_played_map[teams[1]][PossessionState.BALL_DEAD]
+        )
 
         home_team, away_team = dataset.metadata.teams
 

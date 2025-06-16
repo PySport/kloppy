@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import List, NamedTuple, Optional, Dict, Tuple
+from typing import List, NamedTuple, Optional, Dict, Tuple, Union
 from enum import Enum
 
 from kloppy.domain import (
@@ -84,8 +84,14 @@ class MinutesPlayed(NamedTuple):
 
 
 class MinutesPlayedAggregator(EventDatasetAggregator):
-    def __init__(self, breakdown_key: Optional[BreakdownKey] = None):
-        self.breakdown_key = breakdown_key
+    def __init__(self, breakdown_key: Optional[Union[BreakdownKey, str]] = None):
+        if isinstance(breakdown_key, str):
+            try:
+                breakdown_key = BreakdownKey(breakdown_key)
+            except ValueError:
+                raise ValueError(
+                    f"BreakdownKey {breakdown_key} not found. Known keys: {', '.join(key.value for key in BreakdownKey)}")
+            self.breakdown_key = breakdown_key
 
     @staticmethod
     def get_possession_state(

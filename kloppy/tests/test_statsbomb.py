@@ -1228,7 +1228,7 @@ class TestStatsBombTacticalShiftEvent:
         )
 
         for item in dataset.aggregate(
-            "minutes_played", breakdown_key=BreakdownKey.POSITION
+            "minutes_played", breakdown_key="position"
         ):
             if item.key.player and item.key.position:
                 print(

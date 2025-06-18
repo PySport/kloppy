@@ -472,11 +472,6 @@ class TestStatsBombEvent:
         ]
         assert event_player_coordinates == pass_event.coordinates
 
-        dataset.transform(
-            to_coordinate_system="secondspectrum",
-            to_orientation="ACTION_EXECUTING_TEAM",
-        )
-
         # The freeze-frame should contain the location of all players
         coordinates_per_team = defaultdict(list)
         for (

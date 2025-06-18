@@ -417,6 +417,7 @@ class PitchDimensions:
         Returns:
             The point in the regular pitch dimensions
         """
+
         if (
             self.x_dim.min is None
             or self.x_dim.max is None

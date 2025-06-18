@@ -85,6 +85,26 @@ def dataset() -> EventDataset:
     return dataset
 
 
+@pytest.fixture(scope="module")
+def dataset_kl() -> EventDataset:
+    """Load StatsBomb data for Belgium - Portugal at Euro 2020"""
+    dataset = statsbomb.load(
+        event_data=f"{API_URL}/events/3794687.json",
+        lineup_data=f"{API_URL}/lineups/3794687.json",
+        three_sixty_data=f"{API_URL}/three-sixty/3794687.json",
+        coordinates="kloppy",
+        additional_metadata={
+            "date": datetime(2020, 8, 23, 0, 0, tzinfo=timezone.utc),
+            "game_week": "7",
+            "game_id": "3888787",
+            "home_coach": "R. Martínez Montoliù",
+            "away_coach": "F. Fernandes da Costa Santos",
+        },
+    )
+    assert dataset.dataset_type == DatasetType.EVENT
+    return dataset
+
+
 def test_get_enum_type():
     """Test retrieving enum types for StatsBomb IDs"""
     # retrieve by id
@@ -417,6 +437,29 @@ class TestStatsBombEvent:
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_shot.png"
             )
 
+    def test_freeze_frame_360_transform(self, dataset_kl: EventDataset):
+        post_transform_pass = dataset_kl.transform(
+            to_coordinate_system="secondspectrum",
+            to_orientation="ACTION_EXECUTING_TEAM",
+        ).filter(lambda event: event.event_type == EventType.PASS)[4]
+        print("ID", post_transform_pass.event_id)
+        print(
+            "X",
+            dataset_kl.get_event_by_id(
+                post_transform_pass.event_id
+            ).coordinates,
+        )
+        print("A", post_transform_pass.coordinates)
+        print("B", post_transform_pass.freeze_frame.ball_coordinates)
+        assert (
+            post_transform_pass.coordinates.x
+            == post_transform_pass.freeze_frame.ball_coordinates.x
+        )
+        assert (
+            post_transform_pass.coordinates.y
+            == post_transform_pass.freeze_frame.ball_coordinates.y
+        )
+
     def test_freeze_frame_360(self, dataset: EventDataset, base_dir: Path):
         """Test if 360 freeze-frame is properly parsed and attached to shot events"""
         pass_event = dataset.get_event_by_id(
@@ -436,6 +479,11 @@ class TestStatsBombEvent:
             pass_event.player
         ]
         assert event_player_coordinates == pass_event.coordinates
+
+        dataset.transform(
+            to_coordinate_system="secondspectrum",
+            to_orientation="ACTION_EXECUTING_TEAM",
+        )
 
         # The freeze-frame should contain the location of all players
         coordinates_per_team = defaultdict(list)

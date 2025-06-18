@@ -69,6 +69,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
         # Create events
         with performance_logging("parse events", logger=logger):
             events = []
+            freeze_frames = []
             for raw_event in raw_events.values():
                 new_events = (
                     raw_event.set_version(data_version)
@@ -80,7 +81,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         # Transform event to the coordinate system
                         event = self.transformer.transform_event(event)
                         events.append(event)
-
+        
         metadata = Metadata(
             teams=teams,
             periods=periods,
@@ -94,6 +95,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             **additional_metadata,
         )
         dataset = EventDataset(metadata=metadata, records=events)
+        
         for event in dataset:
             if "freeze_frame" in event.raw_event.get("shot", {}):
                 event.freeze_frame = self.transformer.transform_frame(
@@ -103,7 +105,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         away_team=teams[1],
                         event=event,
                         fidelity_version=data_version.shot_fidelity_version,
-                    )
+                    ),
+                    transform_ball_coordinates=False
                 )
             if not event.freeze_frame and event.event_id in three_sixty_data:
                 freeze_frame = three_sixty_data[event.event_id]
@@ -115,7 +118,8 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         event=event,
                         fidelity_version=data_version.xy_fidelity_version,
                         visible_area=freeze_frame["visible_area"],
-                    )
+                    ),
+                    transform_ball_coordinates=False
                 )
         return dataset
 

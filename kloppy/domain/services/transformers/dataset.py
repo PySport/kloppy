@@ -115,8 +115,6 @@ class DatasetTransformer:
         point_base = self._from_pitch_dimensions.to_metric_base(
             point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
         )
-        print(point_base)
-        print(self._to_pitch_dimensions.from_metric_base)
         point_to = self._to_pitch_dimensions.from_metric_base(
             point=point_base,
             pitch_length=base_pitch_length,
@@ -179,26 +177,26 @@ class DatasetTransformer:
             )
         return flip
 
-    def transform_frame(self, frame: Frame) -> Frame:
+    def transform_frame(self, frame: Frame, transform_ball_coordinates: bool = True) -> Frame:
         # Change coordinate system
         if self._needs_coordinate_system_change:
-            frame = self.__change_frame_coordinate_system(frame)
+            frame = self.__change_frame_coordinate_system(frame, transform_ball_coordinates=transform_ball_coordinates)
 
         # Change dimensions
         elif self._needs_pitch_dimensions_change:
-            frame = self.__change_frame_dimensions(frame)
+            frame = self.__change_frame_dimensions(frame, transform_ball_coordinates=transform_ball_coordinates)
 
         # Flip frame based on orientation
         if self._needs_orientation_change:
             if self.__needs_flip(
                 period=frame.period,
-                ball_owning_team=frame.ball_owning_team,
+                ball_owning_team=frame.ball_owning_team
             ):
-                frame = self.__flip_frame(frame)
+                frame = self.__flip_frame(frame, transform_ball_coordinates=transform_ball_coordinates)
 
         return frame
 
-    def __change_frame_coordinate_system(self, frame: Frame):
+    def __change_frame_coordinate_system(self, frame: Frame, transform_ball_coordinates: bool = True):
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -209,7 +207,7 @@ class DatasetTransformer:
             # changes
             ball_coordinates=self.__change_point_coordinate_system(
                 frame.ball_coordinates
-            ),
+            ) if transform_ball_coordinates else frame.ball_coordinates,
             ball_speed=frame.ball_speed,
             players_data={
                 key: PlayerData(
@@ -226,7 +224,7 @@ class DatasetTransformer:
             statistics=frame.statistics,
         )
 
-    def __change_frame_dimensions(self, frame: Frame):
+    def __change_frame_dimensions(self, frame: Frame, transform_ball_coordinates: bool = True):
         return Frame(
             # doesn't change
             timestamp=frame.timestamp,
@@ -237,7 +235,7 @@ class DatasetTransformer:
             # changes
             ball_coordinates=self.change_point_dimensions(
                 frame.ball_coordinates
-            ),
+            ) if transform_ball_coordinates else frame.ball_coordinates,
             players_data={
                 key: PlayerData(
                     coordinates=self.change_point_dimensions(
@@ -278,7 +276,6 @@ class DatasetTransformer:
                 point_base,
                 y=base_pitch_width - point_base.y,
             )
-
         point_to = self._to_pitch_dimensions.from_metric_base(
             point_base,
             pitch_length=base_pitch_length,
@@ -287,7 +284,7 @@ class DatasetTransformer:
 
         return point_to
 
-    def __flip_frame(self, frame: Frame):
+    def __flip_frame(self, frame: Frame, transform_ball_coordinates: bool = True):
         players_data = {}
         for player, data in frame.players_data.items():
             players_data[player] = PlayerData(
@@ -305,7 +302,7 @@ class DatasetTransformer:
             ball_state=frame.ball_state,
             period=frame.period,
             # changes
-            ball_coordinates=self.flip_point(frame.ball_coordinates),
+            ball_coordinates=self.flip_point(frame.ball_coordinates) if transform_ball_coordinates else frame.ball_coordinates,
             players_data=players_data,
             other_data=frame.other_data,
             statistics=frame.statistics,
@@ -329,8 +326,8 @@ class DatasetTransformer:
             ):
                 event = self.__flip_event(event)
 
-            if event.freeze_frame:
-                event.freeze_frame = self.transform_frame(event.freeze_frame)
+        if event.freeze_frame:
+            event.freeze_frame = self.transform_frame(event.freeze_frame)
 
         return event
 

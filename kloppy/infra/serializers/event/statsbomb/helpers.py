@@ -109,6 +109,9 @@ def parse_freeze_frame(
     """Parse a freeze frame into a kloppy Frame."""
     players_data = {}
 
+    if event.event_id == "d2097850-bd6b-4749-8db6-15ded7b6b118":
+        print("FF0", event.coordinates.x, event.coordinates.y)
+        
     def get_player_from_freeze_frame(player_data, team, i):
         if "player" in player_data:
             return team.get_player_by_id(player_data["player"]["id"])
@@ -149,7 +152,9 @@ def parse_freeze_frame(
         event.period.start_timestamp.total_seconds()
         + event.timestamp.total_seconds() * FREEZE_FRAME_FPS
     )
-
+    if event.event_id == "d2097850-bd6b-4749-8db6-15ded7b6b118":
+        print("FF1", event.coordinates.x, event.coordinates.y)
+        
     frame = create_frame(
         frame_id=frame_id,
         ball_coordinates=Point3D(

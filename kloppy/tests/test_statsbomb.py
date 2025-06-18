@@ -442,15 +442,7 @@ class TestStatsBombEvent:
             to_coordinate_system="secondspectrum",
             to_orientation="ACTION_EXECUTING_TEAM",
         ).filter(lambda event: event.event_type == EventType.PASS)[4]
-        print("ID", post_transform_pass.event_id)
-        print(
-            "X",
-            dataset_kl.get_event_by_id(
-                post_transform_pass.event_id
-            ).coordinates,
-        )
-        print("A", post_transform_pass.coordinates)
-        print("B", post_transform_pass.freeze_frame.ball_coordinates)
+
         assert (
             post_transform_pass.coordinates.x
             == post_transform_pass.freeze_frame.ball_coordinates.x

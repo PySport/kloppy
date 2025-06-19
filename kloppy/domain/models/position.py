@@ -79,7 +79,7 @@ class PositionType(Enum):
         return None
 
     @property
-    def root(self):
+    def position_group(self):
         current = self
         while current.parent is not None:
             current = current.parent

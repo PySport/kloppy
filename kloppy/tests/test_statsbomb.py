@@ -184,6 +184,20 @@ class TestStatsBombMetadata:
         )
         assert away_starting_gk.player_id == "5205"  # Rui Patricio
 
+        assert (
+            PositionType.Goalkeeper.position_group == PositionType.Goalkeeper
+        )
+        assert (
+            PositionType.CenterDefensiveMidfield.position_group
+            == PositionType.Midfielder
+        )
+        assert (
+            PositionType.AttackingMidfield.position_group
+            == PositionType.Midfielder
+        )
+        assert PositionType.CenterBack.position_group == PositionType.Defender
+        assert PositionType.Striker.position_group == PositionType.Attacker
+
     def test_periods(self, dataset):
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2

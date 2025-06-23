@@ -187,6 +187,21 @@ class Time:
             self.period == other.period and self.timestamp < other.timestamp
         )
 
+    def __le__(self, other):
+        return self.period < other.period or (
+            self.period == other.period and self.timestamp <= other.timestamp
+        )
+
+    def __gt__(self, other):
+        return self.period > other.period or (
+            self.period == other.period and self.timestamp > other.timestamp
+        )
+
+    def __ge__(self, other):
+        return self.period > other.period or (
+            self.period == other.period and self.timestamp >= other.timestamp
+        )
+
     def __str__(self):
         m, s = divmod(self.timestamp.total_seconds(), 60)
         return f"P{self.period.id}T{m:02.0f}:{s:02.0f}"

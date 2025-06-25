@@ -26,6 +26,7 @@ from kloppy.domain import (
     SubstitutionEvent,
     PlayerOffEvent,
     FormationChangeEvent,
+    ClearanceEvent,
 )
 from ..builder import StateBuilder
 
@@ -48,6 +49,13 @@ EXCLUDED_OFF_BALL_EVENTS = (
 CLOSE_SEQUENCE = (BallOutEvent, FoulCommittedEvent, ShotEvent)
 
 
+def is_ball_winning_defensive_action(event: Event) -> bool:
+    if isinstance(event, DuelEvent) and event.result == DuelResult.WON:
+        return True
+    elif isinstance(event, ClearanceEvent):
+        return True
+
+
 def is_possessing_event(event: Event) -> bool:
     if isinstance(event, (PassEvent, CarryEvent, RecoveryEvent, TakeOnEvent)):
         return True
@@ -63,8 +71,6 @@ def is_possessing_event(event: Event) -> bool:
         and event.result == InterceptionResult.SUCCESS
     ):
         return True
-    else:
-        return False
 
 
 def should_open_sequence(
@@ -74,9 +80,9 @@ def should_open_sequence(
     if is_possessing_event(event):
         can_open_sequence = True
     elif (
-        isinstance(event, DuelEvent)
-        and event.result == DuelResult.WON
+        is_ball_winning_defensive_action(event)
         and next_event is not None
+        and next_event.team == event.team
         and is_possessing_event(next_event)
     ):
         can_open_sequence = True
@@ -90,7 +96,6 @@ def should_open_sequence(
 def should_close_sequence(event: Event) -> bool:
     if isinstance(event, CLOSE_SEQUENCE):
         return True
-    return False
 
 
 class SequenceStateBuilder(StateBuilder):

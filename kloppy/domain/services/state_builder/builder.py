@@ -19,3 +19,6 @@ class StateBuilder(metaclass=RegisteredStateBuilder):
     @abstractmethod
     def reduce_after(self, state: T, event: Event) -> T:
         pass
+
+    def post_process(self, events: list[Event]) -> list[Event]:
+        pass

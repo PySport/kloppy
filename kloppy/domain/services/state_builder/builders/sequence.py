@@ -1,5 +1,5 @@
 from dataclasses import replace, dataclass
-from typing import Optional
+from typing import Optional, List
 
 from kloppy.domain import (
     Event,
@@ -20,15 +20,30 @@ from kloppy.domain import (
     GoalkeeperQualifier,
     DuelEvent,
     DuelResult,
+    GenericEvent,
+    PlayerOnEvent,
+    CardEvent,
+    SubstitutionEvent,
+    PlayerOffEvent,
+    FormationChangeEvent,
 )
 from ..builder import StateBuilder
 
 
 @dataclass
 class Sequence:
-    sequence_id: int
-    team: Team
+    sequence_id: Optional[int]
+    team: Optional[Team]
 
+
+EXCLUDED_OFF_BALL_EVENTS = (
+    GenericEvent,
+    SubstitutionEvent,
+    CardEvent,
+    PlayerOnEvent,
+    PlayerOffEvent,
+    FormationChangeEvent,
+)
 
 CLOSE_SEQUENCE = (BallOutEvent, FoulCommittedEvent, ShotEvent)
 
@@ -99,3 +114,28 @@ class SequenceStateBuilder(StateBuilder):
             )
 
         return state
+
+    def post_process(self, events: List[Event]):
+        current_sequence_id = 1
+        sequence_id_mapping = {}
+
+        for event in events:
+            sequence = event.state["sequence"]
+
+            if (
+                isinstance(event, EXCLUDED_OFF_BALL_EVENTS)
+                or sequence.team is None
+            ):
+                event.state["sequence"] = Sequence(sequence_id=None, team=None)
+            else:
+                # Map old sequence IDs to new consecutive IDs
+                # Get or assign a new sequence ID
+                new_sequence_id = sequence_id_mapping.setdefault(
+                    sequence.sequence_id, current_sequence_id
+                )
+                if new_sequence_id == current_sequence_id:
+                    current_sequence_id += 1
+                # Assign the new sequence ID
+                event.state["sequence"] = Sequence(
+                    sequence_id=new_sequence_id, team=sequence.team
+                )

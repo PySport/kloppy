@@ -1,6 +1,8 @@
+import json
+from collections import defaultdict
 from itertools import groupby
 
-from kloppy import statsbomb
+from kloppy import statsbomb, statsperform
 from kloppy.domain import Event, EventDataset, EventType, FormationType
 from kloppy.domain.services.state_builder.builder import StateBuilder
 from kloppy.utils import performance_logging
@@ -9,14 +11,22 @@ from kloppy.utils import performance_logging
 class TestStateBuilder:
     """"""
 
-    def _load_dataset(self, base_dir, base_filename="statsbomb"):
+    def _load_dataset_statsbomb(self, base_dir, base_filename="statsbomb"):
         return statsbomb.load(
             event_data=base_dir / f"files/{base_filename}_event.json",
             lineup_data=base_dir / f"files/{base_filename}_lineup.json",
         )
 
+    def _load_dataset_statsperform(
+        self, base_dir, base_filename="statsperform"
+    ):
+        return statsperform.load_event(
+            ma1_data=base_dir / f"files/{base_filename}_event_ma1.json",
+            ma3_data=base_dir / f"files/{base_filename}_event_ma3.json",
+        )
+
     def test_score_state_builder(self, base_dir):
-        dataset = self._load_dataset(base_dir)
+        dataset = self._load_dataset_statsbomb(base_dir)
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("score")
@@ -36,25 +46,44 @@ class TestStateBuilder:
             "3-1": 2,
         }
 
-    def test_sequence_state_builder(self, base_dir):
-        dataset = self._load_dataset(base_dir)
+    def test_sequence_state_builder_statsbomb(self, base_dir):
+        dataset = self._load_dataset_statsbomb(base_dir)
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("sequence")
 
-        events_per_sequence = {}
+        events_per_sequence = defaultdict(int)
         for sequence_id, events in groupby(
             dataset_with_state.events,
             lambda event: event.state["sequence"].sequence_id,
         ):
             events = list(events)
-            events_per_sequence[sequence_id] = len(events)
+            events_per_sequence[sequence_id] += len(events)
 
-        assert events_per_sequence[0] == 4
-        assert events_per_sequence[51] == 10
+        assert events_per_sequence[1] == 3
+        assert events_per_sequence[72] == 11
+
+    def test_sequence_state_builder_statsperform(self, base_dir):
+        dataset = self._load_dataset_statsperform(base_dir)
+
+        with performance_logging("add_state"):
+            dataset_with_state = dataset.add_state("sequence")
+
+        events_per_sequence = defaultdict(int)
+        for sequence_id, events in groupby(
+            dataset_with_state.events,
+            lambda event: event.state["sequence"].sequence_id,
+        ):
+            events = list(events)
+            events_per_sequence[sequence_id] += len(events)
+
+        assert events_per_sequence[1] == 5
+        assert events_per_sequence[89] == 12
 
     def test_lineup_state_builder(self, base_dir):
-        dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")
+        dataset = self._load_dataset_statsbomb(
+            base_dir, base_filename="statsbomb_15986"
+        )
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("lineup")
@@ -79,7 +108,9 @@ class TestStateBuilder:
         ]
 
     def test_formation_state_builder(self, base_dir):
-        dataset = self._load_dataset(base_dir, base_filename="statsbomb")
+        dataset = self._load_dataset_statsbomb(
+            base_dir, base_filename="statsbomb"
+        )
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("formation")
@@ -114,7 +145,9 @@ class TestStateBuilder:
             def reduce_after(self, state: int, event: Event) -> int:
                 return state + 1
 
-        dataset = self._load_dataset(base_dir, base_filename="statsbomb_15986")
+        dataset = self._load_dataset_statsbomb(
+            base_dir, base_filename="statsbomb_15986"
+        )
 
         with performance_logging("add_state"):
             dataset_with_state = dataset.add_state("custom")

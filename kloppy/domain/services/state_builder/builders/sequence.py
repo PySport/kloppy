@@ -68,7 +68,7 @@ def is_possessing_event(event: Event) -> bool:
 
 
 def should_open_sequence(
-    event: Event, next_event: Event, state: Optional[Sequence] = None
+    event: Event, next_event: Optional[Event], state: Optional[Sequence] = None
 ) -> bool:
     can_open_sequence = False
     if is_possessing_event(event):
@@ -76,6 +76,7 @@ def should_open_sequence(
     elif (
         isinstance(event, DuelEvent)
         and event.result == DuelResult.WON
+        and next_event is not None
         and is_possessing_event(next_event)
     ):
         can_open_sequence = True

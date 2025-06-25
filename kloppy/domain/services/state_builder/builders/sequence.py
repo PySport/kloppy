@@ -127,7 +127,7 @@ class SequenceStateBuilder(StateBuilder):
                 or sequence.team is None
             ):
                 event.state["sequence"] = Sequence(sequence_id=None, team=None)
-            else:
+            elif sequence.sequence_id is not None:
                 # Map old sequence IDs to new consecutive IDs
                 # Get or assign a new sequence ID
                 new_sequence_id = sequence_id_mapping.setdefault(

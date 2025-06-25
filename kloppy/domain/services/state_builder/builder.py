@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TypeVar
+from typing import TypeVar, List
 
 from kloppy.domain import EventDataset, Event
 from .registered import RegisteredStateBuilder
@@ -20,5 +20,5 @@ class StateBuilder(metaclass=RegisteredStateBuilder):
     def reduce_after(self, state: T, event: Event) -> T:
         pass
 
-    def post_process(self, events: list[Event]) -> list[Event]:
+    def post_process(self, events: List[Event]):
         pass

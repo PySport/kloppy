@@ -1435,10 +1435,14 @@ class EventDataset(Dataset[Event]):
                     replacement_player_position = event.player.positions.last(
                         default=PositionType.Unknown
                     )
-                event.replacement_player.set_position(
-                    event.time,
-                    replacement_player_position,
-                )
+                if (
+                    event.replacement_player.positions.last(default=None)
+                    is None
+                ):
+                    event.replacement_player.set_position(
+                        event.time,
+                        replacement_player_position,
+                    )
                 event.player.set_position(event.time, None)
 
             elif isinstance(event, FormationChangeEvent):

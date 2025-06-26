@@ -384,6 +384,9 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     player_positions = {}
     for player_id, position_id in zip(player_ids, position_ids):
         player = team.get_player_by_id(player_id)
+        if player is None:
+            continue
+
         position = positions_mapping[int(position_id)]
         player_positions[player] = position
 

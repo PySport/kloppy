@@ -43,6 +43,7 @@ from .pitch import (
     Unit,
     WyscoutPitchDimensions,
     ImpectPitchDimensions,
+    KoraStatsPitchDimensions,
 )
 from .time import Period, Time, TimeContainer
 
@@ -119,6 +120,7 @@ class Provider(Enum):
     IMPECT = "impect"
     SIGNALITY = "signality"
     SMRTSTATS = "smrtstats"
+    KORASTATS = "korastats"
     OTHER = "other"
 
     def __str__(self):
@@ -1046,6 +1048,33 @@ class SmrtStatsCoordinateSystem(ProviderCoordinateSystem):
         )
 
 
+class KoraStatsCoordinateSystem(ProviderCoordinateSystem):
+    """
+    KoraSports coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The coordinates range from 0 to 100.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.KORASTATS
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.TOP_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.TOP_TO_BOTTOM
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return KoraStatsPitchDimensions(
+            pitch_length=self._pitch_length, pitch_width=self._pitch_width
+        )
+
+
 class DatasetType(Enum):
     """
     DatasetType
@@ -1100,6 +1129,7 @@ def build_coordinate_system(
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.IMPECT: ImpectCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.KORASTATS: KoraStatsCoordinateSystem,
         Provider.SMRTSTATS: SmrtStatsCoordinateSystem,
     }
 

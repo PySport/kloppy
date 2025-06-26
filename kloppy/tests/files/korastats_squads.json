@@ -1,0 +1,496 @@
+
+        {
+            "_type": "MATCH SUMMARY",
+            "matchId": 76336,
+            "tournament_id": 575,
+            "tournament": "Sweden Superettan",
+            "season_id": 1347,
+            "season": "2025",
+            "round": 14,
+            "dateTime": "2025-06-14 16:00:00",
+            "lastUpdateDateTime": "2025-06-23 20:01:21",
+            "stadium": {
+                "_type": "STADIUM",
+                "id": 2881,
+                "name": "Guldfågeln Arena"
+            },
+            "referee": {
+                "_type": "REFEREE",
+                "id": 4629,
+                "name": "Kaspar Sjöberg",
+                "dob": "1987-05-16",
+                "nationality": {
+                    "_type": "NATIONALITY",
+                    "id": 179,
+                    "name": "Sweden"
+                }
+            },
+            "assistant1": {
+                "_type": "ASSISTANT RFFEREE",
+                "id": 4222,
+                "name": "Abdelmasih Gergess",
+                "dob": null,
+                "gender": "MALE",
+                "nationality": {
+                    "_type": "NATIONALITY",
+                    "id": 179,
+                    "name": "Sweden"
+                }
+            },
+            "assistant2": {
+                "_type": "ASSISTANT RFFEREE",
+                "id": 6772,
+                "name": "Danha Jean Bachiri",
+                "dob": "1989-10-21",
+                "gender": "MALE",
+                "nationality": {
+                    "_type": "NATIONALITY",
+                    "id": 179,
+                    "name": "Sweden"
+                }
+            },
+            "home": {
+                "_type": "TEAM",
+                "team": {
+                    "_type": "TEAM",
+                    "id": 10107,
+                    "name": "Kalmar FF"
+                },
+                "squad": [
+                    {
+                        "_type": "PLAYER",
+                        "id": 194622,
+                        "name": "Samuel Erik Oskar Brolin",
+                        "nick_name": "Samuel Brolin",
+                        "shirt_number": 1,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 1,
+                            "name": "GK"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436608,
+                        "name": "Aboubacar Kobele Keita",
+                        "nick_name": "Aboubacar Keita",
+                        "shirt_number": 47,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 3,
+                            "name": "CB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194627,
+                        "name": "Charles Melker Otto Hallberg",
+                        "nick_name": "Melker Hallberg",
+                        "shirt_number": 5,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 3,
+                            "name": "CB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194760,
+                        "name": "Arash Motaraghebjafarpour",
+                        "nick_name": "Arash Motaraghebjafarpour",
+                        "shirt_number": 26,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 4,
+                            "name": "RB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436607,
+                        "name": "Sivert Engh Øverby",
+                        "nick_name": "Sivert Øverby",
+                        "shirt_number": 3,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 5,
+                            "name": "LB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 195863,
+                        "name": "Antonio Kujundzic",
+                        "nick_name": "Antonio Kujundzic",
+                        "shirt_number": 18,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436613,
+                        "name": "Awaka Djoro",
+                        "nick_name": "Awaka Djoro",
+                        "shirt_number": 14,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 358812,
+                        "name": "Gibril Sosseh",
+                        "nick_name": "Gibril Sosseh",
+                        "shirt_number": 20,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194633,
+                        "name": "Rasmus Stellan Sjöstedt",
+                        "nick_name": "Rasmus Sjöstedt",
+                        "shirt_number": 6,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194765,
+                        "name": "Abdussalam Muhammad Magashy",
+                        "nick_name": "Abdussalam Magashy",
+                        "shirt_number": 21,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 8,
+                            "name": "AM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194620,
+                        "name": "Camil Abdelhakim Jebara",
+                        "nick_name": "Camil Jebara",
+                        "shirt_number": 10,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 9,
+                            "name": "RW"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436609,
+                        "name": "Abdi Mohamed Sabriye",
+                        "nick_name": "Abdi Sabriye",
+                        "shirt_number": 28,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 10,
+                            "name": "LW"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436611,
+                        "name": "Charlie Rosenqvist",
+                        "nick_name": "Charlie Rosenqvist",
+                        "shirt_number": 33,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 12,
+                            "name": "CF"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436610,
+                        "name": "Anthony Olusanya",
+                        "nick_name": "Anthony Olusanya",
+                        "shirt_number": 11,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 12,
+                            "name": "CF"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    }
+                ]
+            },
+            "away": {
+                "_type": "TEAM",
+                "team": {
+                    "_type": "TEAM",
+                    "id": 23109,
+                    "name": "Landskrona"
+                },
+                "squad": [
+                    {
+                        "_type": "PLAYER",
+                        "id": 436614,
+                        "name": "Svante Hildeman",
+                        "nick_name": "Svante Hildeman",
+                        "shirt_number": 29,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 1,
+                            "name": "GK"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436618,
+                        "name": "Gustaf Bruzelius",
+                        "nick_name": "Gustaf Bruzelius",
+                        "shirt_number": 4,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 3,
+                            "name": "CB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436627,
+                        "name": "Gustaf Westström",
+                        "nick_name": "Gustaf Westström",
+                        "shirt_number": 3,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 3,
+                            "name": "CB"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436616,
+                        "name": "Melker Jonsson",
+                        "nick_name": "Melker Jonsson",
+                        "shirt_number": 12,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 3,
+                            "name": "CB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436623,
+                        "name": "Max Nilsson",
+                        "nick_name": "Max Nilsson",
+                        "shirt_number": 23,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 4,
+                            "name": "RB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436615,
+                        "name": "Rassa Rahmani",
+                        "nick_name": "Rassa Rahmani",
+                        "shirt_number": 16,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 5,
+                            "name": "LB"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194709,
+                        "name": "Gunnar Hampus Nasstrom",
+                        "nick_name": "Hampus Nasstrom",
+                        "shirt_number": 6,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 6,
+                            "name": "DM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436624,
+                        "name": "Constantino Capotondi",
+                        "nick_name": "Constantino Capotondi",
+                        "shirt_number": 10,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436617,
+                        "name": "Adam Egnell",
+                        "nick_name": "Adam Egnell",
+                        "shirt_number": 5,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 7,
+                            "name": "CM"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436628,
+                        "name": "Victor Karlsson",
+                        "nick_name": "Victor Karlsson",
+                        "shirt_number": 7,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 8,
+                            "name": "AM"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436629,
+                        "name": "Christian Ernst Gabriel Stark",
+                        "nick_name": "Christian Stark",
+                        "shirt_number": 22,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 9,
+                            "name": "RW"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 194635,
+                        "name": "Kevin Alexander Jensen",
+                        "nick_name": "Kevin  Jensen",
+                        "shirt_number": 21,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 9,
+                            "name": "RW"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436622,
+                        "name": "Max'Med Omar Mohamed",
+                        "nick_name": "Max'Med Mohamed",
+                        "shirt_number": 15,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 10,
+                            "name": "LW"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436625,
+                        "name": "Edi Sylisufaj",
+                        "nick_name": "Edi Sylisufaj",
+                        "shirt_number": 9,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 10,
+                            "name": "LW"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436626,
+                        "name": "Cameron Streete",
+                        "nick_name": "Cameron Streete",
+                        "shirt_number": 14,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 12,
+                            "name": "CF"
+                        },
+                        "lineup": true,
+                        "bench": false
+                    },
+                    {
+                        "_type": "PLAYER",
+                        "id": 436630,
+                        "name": "Xavier Odhiambo",
+                        "nick_name": "Xavier Odhiambo",
+                        "shirt_number": 20,
+                        "position": {
+                            "_type": "POSITION",
+                            "id": 12,
+                            "name": "CF"
+                        },
+                        "lineup": false,
+                        "bench": true
+                    }
+                ]
+            },
+            "status": {
+                "id": 10,
+                "status": "Approved"
+            }
+        }

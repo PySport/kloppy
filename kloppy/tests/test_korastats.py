@@ -149,7 +149,7 @@ class TestKoraStatsEvent:
         event = dataset.get_event_by_id("144880351")
         assert event.event_id == "144880351"
         assert event.team.team_id == "10107"
-        # assert event.ball_owning_team.team_id == '10107'
+        assert event.ball_owning_team.team_id == "10107"
         assert event.player.full_name == "Gibril Sosseh"
         assert event.coordinates == Point(x=50, y=50)
         assert event.raw_event["_id"] == 144880351
@@ -392,3 +392,12 @@ class TestKoraStatsRecoveryEvent:
     def test_deserialize_recoveries(self, dataset: EventDataset):
         events = dataset.find_all("recovery")
         assert len(events) == 157
+
+
+def test_add_synthetic_event(dataset: EventDataset):
+    events_dataset = (
+        dataset.add_synthetic_event(EventType.CARRY)
+        .add_synthetic_event(EventType.BALL_RECEIPT)
+        .add_state(["score", "sequence"])
+    )
+    pass

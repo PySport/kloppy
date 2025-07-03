@@ -240,7 +240,7 @@ class EVENT:
         Returns:
             A list of kloppy events.
         """
-        generic_event_kwargs = self._parse_generic_kwargs()
+        generic_event_kwargs = self._parse_generic_kwargs(teams)
         events = self._create_events(
             event_factory,
             teams,
@@ -251,11 +251,16 @@ class EVENT:
 
         return events
 
-    def _parse_generic_kwargs(self) -> Dict:
+    def _parse_generic_kwargs(self, teams: List[Team]) -> Dict:
+        # defensive events
+        if self.event_category_type.value[0] == 3:
+            ball_owning_team = next(t for t in teams if t != self.team)
+        else:
+            ball_owning_team = self.team
         return {
             "period": self.period,
             "timestamp": timedelta(seconds=self.raw_event["timeInSec"]),
-            "ball_owning_team": None,
+            "ball_owning_team": ball_owning_team,
             "ball_state": None,
             "event_id": str(self.raw_event["_id"]),
             "team": self.team,

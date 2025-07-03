@@ -216,20 +216,20 @@ class TestKoraStatsPassEvent:
             == 22
         )
 
-    # def test_assists(self, dataset: EventDataset):
-    #     shot_assists = [
-    #         e
-    #         for e in dataset.events
-    #         if PassType.SHOT_ASSIST in e.get_qualifier_values(PassQualifier)
-    #     ]
-    #     assert len(shot_assists) == 8
-    #
-    #     goal_assists = [
-    #         e
-    #         for e in dataset.events
-    #         if PassType.ASSIST in e.get_qualifier_values(PassQualifier)
-    #     ]
-    #     assert len(goal_assists) == 3
+    def test_assists(self, dataset: EventDataset):
+        shot_assists = [
+            e
+            for e in dataset.events
+            if PassType.SHOT_ASSIST in e.get_qualifier_values(PassQualifier)
+        ]
+        assert len(shot_assists) == 16
+
+        goal_assists = [
+            e
+            for e in dataset.events
+            if PassType.ASSIST in e.get_qualifier_values(PassQualifier)
+        ]
+        assert len(goal_assists) == 1
 
 
 class TestKoraStatsInterceptionEvent:
@@ -262,7 +262,7 @@ class TestKoraStatsShotEvent:
         assert shot.result == ShotResult.GOAL
         # A shot event should have end coordinates
         assert shot.result_coordinates == Point3D(
-            x=100, y=-2.9842666666666666, z=1.5046666666666666
+            x=100, y=45.86666666666667, z=37
         )
         # A shot event should have a body part
         assert (
@@ -326,6 +326,15 @@ class TestKoraStatsDuelEvent:
     #         DuelType.LOOSE_BALL,
     #         DuelType.AERIAL,
     #     ]
+
+
+class TestsKoraStatsCardEvent:
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should create a card event for each card given"""
+        events = dataset.find_all("card")
+        assert len(events) == 8
+        for event in events:
+            assert event.event_type == EventType.CARD
 
 
 class TestKoraStatsGoalkeeperEvent:

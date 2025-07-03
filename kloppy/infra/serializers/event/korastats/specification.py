@@ -24,6 +24,7 @@ from kloppy.domain import (
     Team,
     Point,
     Point3D,
+    CardType,
 )
 from kloppy.infra.serializers.event.korastats.helpers import (
     get_period_by_id,
@@ -430,8 +431,8 @@ class SHOT(EVENT):
         result_coordinates = None
         if next_event["event"] == "Shoot Location":
             x_coordinate = 100
-            y_coordinate = (next_event["x"] / 300) * 7.22  # Convert to meters
-            z_coordinate = (next_event["y"] / 60) * 2.44  # Convert to meters
+            y_coordinate = (next_event["x"] / 300) * 10 + 50
+            z_coordinate = next_event["y"]
             result_coordinates = Point3D(
                 x_coordinate, y_coordinate, z_coordinate
             )
@@ -628,13 +629,28 @@ class FOUL(EVENT):
         # Only create event for 'Committed' administrativeType
         if self.extra == EXTRA.AWARDED:
             return []
-        return [
+
+        events = [
             event_factory.build_foul_committed(
                 result=None,
                 qualifiers=None,
                 **generic_event_kwargs,
             )
         ]
+        if self.result == RESULT.YELLOW_CARD:
+            generic_event_kwargs[
+                "event_id"
+            ] = f"{generic_event_kwargs['event_id']}-yellow-card"
+            events.append(
+                event_factory.build_card(
+                    result=None,
+                    qualifiers=None,
+                    card_type=CardType.FIRST_YELLOW,
+                    **generic_event_kwargs,
+                )
+            )
+
+        return events
 
 
 class SUBSTITUTION(EVENT):

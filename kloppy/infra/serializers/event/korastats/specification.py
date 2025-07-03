@@ -296,12 +296,11 @@ class PASS(EVENT):
 
         # Determine receiver and coordinates for successful passes
         receiver_player = None
-        receiver_coordinates = None
+        receiver_coordinates = Point(self.raw_event["x"], self.raw_event["y"])
         receive_timestamp = (
             timedelta(seconds=next_event["timeInSec"]) if next_event else None
         )
-
-        if result == PassResult.COMPLETE and next_event:
+        if next_event:
             receiver_player, receiver_coordinates = check_pass_receiver(
                 self.raw_event, teams, next_event
             )

@@ -1,6 +1,36 @@
+exclude: |
+  (?x)^(
+      docs/site/.*|       # Exclude mkdocs compiled files
+      \.history/.*|       # Exclude history files
+      .*cache.*/.*|       # Exclude cache directories
+      .*venv.*/.*|        # Exclude virtual environment directories
+  )$
+fail_fast: true
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
 repos:
--   repo: https://github.com/ambv/black
+  # -------------------------- 🔍 Code Quality Tools ------------------------- #
+
+  - repo: https://github.com/ambv/black
     rev: 22.3.0
     hooks:
-    - id: black
-      language_version: python3
+      - id: black
+        language_version: python3
+
+  # ---------------------------- ⚡️ uv Build Tools --------------------------- #
+
+  # This helps ensure cross-compatibility with people who don't wish to use uv
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.7.18
+    hooks:
+      - id: uv-sync
+        name: "⚡️ uv · Sync dependencies with uv"
+      - id: uv-lock
+        name: "⚡️ uv · Update dependency lockfile"
+      - id: uv-export
+        name: "⚡️ uv · Export dependencies to requirements-dev.txt"
+        args: ["--no-hashes", --output-file, requirements-dev.txt]
+

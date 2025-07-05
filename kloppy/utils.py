@@ -178,3 +178,38 @@ class DeprecatedEnumValue:
 def snake_case(s: str) -> str:
     """Convert a string to snake_case."""
     return re.sub(r"[\s\-]+", "_", s.strip()).lower()
+
+
+def find_json_key(data, pattern, first_only=True):
+    def search(obj, path=""):
+        results = {}
+
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                current_path = f"{path}.{key}" if path else key
+
+                if pattern.lower() in key.lower():
+                    if first_only:
+                        return value
+                    results[current_path] = value
+
+                if isinstance(value, (dict, list)):
+                    nested = search(value, current_path)
+                    if first_only and nested is not None:
+                        return nested
+                    elif not first_only:
+                        results.update(nested)
+
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                current_path = f"{path}[{i}]" if path else f"[{i}]"
+                if isinstance(item, (dict, list)):
+                    nested = search(item, current_path)
+                    if first_only and nested is not None:
+                        return nested
+                    elif not first_only:
+                        results.update(nested)
+
+        return results if not first_only else None
+
+    return search(data)

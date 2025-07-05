@@ -27,7 +27,7 @@ from kloppy.domain import (
 )
 from kloppy.domain.services.frame_factory import create_frame
 
-from kloppy.utils import Readable, performance_logging
+from kloppy.utils import Readable, performance_logging, find_json_key
 
 from .deserializer import TrackingDataDeserializer
 
@@ -143,6 +143,115 @@ class SecondSpectrumDeserializer(
         if "raw_data" not in inputs:
             raise ValueError("Please specify a value for 'raw_data'")
 
+    @staticmethod
+    def __infer_frame_rate(raw_frames, n_samples=25):
+        total_time_difference = 0
+
+        prev_frame = None
+        for i, line_ in enumerate(raw_frames):
+            line_ = line_.strip().decode("ascii")
+            frame_data = json.loads(line_)
+            if i == 0:
+                prev_frame = frame_data
+                continue
+
+            current_time = frame_data["gameClock"]
+            prev_time = prev_frame["gameClock"]
+
+            prev_frame = frame_data
+
+            time_difference = current_time - prev_time
+            total_time_difference += time_difference
+
+            if i >= n_samples:
+                break
+
+        return int(1 / (total_time_difference / n_samples))
+
+    @staticmethod
+    def __periods_from_raw_data(raw_frames):
+        def extract_period_boundaries(raw_frames):
+            start_frames = {}
+            end_frames = {}
+
+            for i, line_ in enumerate(raw_frames):
+                line_ = line_.strip().decode("ascii")
+                frame_data = json.loads(line_)
+
+                period = frame_data["period"]
+                game_clock = frame_data["gameClock"]
+
+                if period not in start_frames:
+                    start_frames[period] = game_clock
+
+                end_frames[period] = game_clock
+
+            # Combine results
+            periods = {}
+            for period in start_frames:
+                periods[period] = {
+                    "start": start_frames[period],
+                    "end": end_frames[period],
+                }
+
+            return periods
+
+        boundaries = extract_period_boundaries(raw_frames)
+
+        periods = []
+        for period_id, times in boundaries.items():
+            periods.append(
+                Period(
+                    id=int(period_id),
+                    start_timestamp=timedelta(seconds=times["start"]),
+                    end_timestamp=timedelta(seconds=times["end"]),
+                )
+            )
+
+        return periods
+
+    @staticmethod
+    def __periods_from_json_metadata(metadata_periods, frame_rate):
+        periods = []
+        for period in metadata_periods:
+            start_frame_id = int(period["startFrameIdx"])
+            end_frame_id = int(period["endFrameIdx"])
+            if start_frame_id != 0 or end_frame_id != 0:
+                # Frame IDs are unix timestamps (in milliseconds)
+                periods.append(
+                    Period(
+                        id=int(period["number"]),
+                        start_timestamp=timedelta(
+                            seconds=start_frame_id / frame_rate
+                        ),
+                        end_timestamp=timedelta(
+                            seconds=end_frame_id / frame_rate
+                        ),
+                    )
+                )
+        return periods
+
+    @staticmethod
+    def __periods_from_xml_metadata(match, frame_rate):
+        periods = []
+        for period in match.iterchildren(tag="period"):
+            start_frame_id = int(period.attrib["iStartFrame"])
+            end_frame_id = int(period.attrib["iEndFrame"])
+            if start_frame_id != 0 or end_frame_id != 0:
+                # Frame IDs are unix timestamps (in milliseconds)
+                periods.append(
+                    Period(
+                        id=int(period.attrib["iId"]),
+                        start_timestamp=timedelta(
+                            seconds=start_frame_id / frame_rate
+                        ),
+                        end_timestamp=timedelta(
+                            seconds=end_frame_id / frame_rate
+                        ),
+                    )
+                )
+        return periods
+
     def deserialize(self, inputs: SecondSpectrumInputs) -> TrackingDataset:
         metadata = None
 
@@ -152,30 +261,35 @@ class SecondSpectrumDeserializer(
             # it also contains the 'additional metadata'.
             # First do a 'peek' to determine the char
             first_byte = inputs.meta_data.read(1)
+            raw_frames = inputs.raw_data.readlines()
+
             if first_byte == b"{":
                 metadata = json.loads(first_byte + inputs.meta_data.read())
 
-                frame_rate = int(metadata["fps"])
-                pitch_size_height = float(metadata["pitchLength"])
-                pitch_size_width = float(metadata["pitchWidth"])
+                frame_rate = find_json_key(metadata, "fps")
+                frame_rate = (
+                    int(frame_rate)
+                    if frame_rate is not None
+                    else self.__infer_frame_rate(raw_frames)
+                )
 
-                periods = []
-                for period in metadata["periods"]:
-                    start_frame_id = int(period["startFrameIdx"])
-                    end_frame_id = int(period["endFrameIdx"])
-                    if start_frame_id != 0 or end_frame_id != 0:
-                        # Frame IDs are unix timestamps (in milliseconds)
-                        periods.append(
-                            Period(
-                                id=int(period["number"]),
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
-                            )
-                        )
+                pitch_size_height = float(
+                    find_json_key(metadata, "pitchLength")
+                )
+                pitch_size_width = float(find_json_key(metadata, "pitchWidth"))
+                if not pitch_size_height or not pitch_size_width:
+                    raise ValueError(
+                        "Could not locate pitch dimension(s) in meta_data..."
+                    )
+
+                metadata_periods = find_json_key(metadata, "periods")
+
+                if metadata_periods is not None:
+                    periods = self.__periods_from_json_metadata(
+                        metadata_periods, frame_rate
+                    )
+                else:
+                    periods = self.__periods_from_raw_data(raw_frames)
             else:
                 match = objectify.fromstring(
                     first_byte + inputs.meta_data.read()
@@ -184,23 +298,7 @@ class SecondSpectrumDeserializer(
                 pitch_size_height = float(match.attrib["fPitchXSizeMeters"])
                 pitch_size_width = float(match.attrib["fPitchYSizeMeters"])
 
-                periods = []
-                for period in match.iterchildren(tag="period"):
-                    start_frame_id = int(period.attrib["iStartFrame"])
-                    end_frame_id = int(period.attrib["iEndFrame"])
-                    if start_frame_id != 0 or end_frame_id != 0:
-                        # Frame IDs are unix timestamps (in milliseconds)
-                        periods.append(
-                            Period(
-                                id=int(period.attrib["iId"]),
-                                start_timestamp=timedelta(
-                                    seconds=start_frame_id / frame_rate
-                                ),
-                                end_timestamp=timedelta(
-                                    seconds=end_frame_id / frame_rate
-                                ),
-                            )
-                        )
+                periods = self.__periods_from_xml_metadata(match, frame_rate)
 
         # Default team initialisation
         home_team = Team(team_id="home", name="home", ground=Ground.HOME)
@@ -215,11 +313,13 @@ class SecondSpectrumDeserializer(
                             inputs.additional_meta_data.read()
                         )
 
-                    home_team_id = metadata["homeOptaId"]
-                    away_team_id = metadata["awayOptaId"]
+                    home_team = find_json_key(metadata, "HomeTeam")
+                    away_team = find_json_key(metadata, "AwayTeam")
 
-                    # Tries to parse (short) team names from the description string
-                    try:
+                    if home_team is None and away_team is None:
+                        home_team_id = metadata["homeOptaId"]
+                        away_team_id = metadata["awayOptaId"]
+
                         home_name = (
                             metadata["description"].split("-")[0].strip()
                         )
@@ -229,18 +329,45 @@ class SecondSpectrumDeserializer(
                             .split(":")[0]
                             .strip()
                         )
-                    except:
+                    elif home_team.get("Name", None) and away_team.get(
+                        "Name", None
+                    ):
+                        home_team_id = home_team["Id"]
+                        away_team_id = away_team["Id"]
+                        home_name = home_team["Name"]
+                        away_name = away_team["Name"]
+                    else:
                         home_name, away_name = "home", "away"
+                        home_team_id, away_team_id = None, None
 
                     teams[0].team_id = home_team_id
                     teams[0].name = home_name
                     teams[1].team_id = away_team_id
                     teams[1].name = away_name
 
-                    for team, team_str in zip(
-                        teams, ["homePlayers", "awayPlayers"]
-                    ):
-                        for player_data in metadata[team_str]:
+                    for team, team_str in zip(teams, ["home", "away"]):
+                        if find_json_key(metadata, f"{team_str}Players"):
+                            id_key = "optaId"
+                            name_key = "name"
+                            position_key = "position"
+                            jersey_no_key = "number"
+                            players = find_json_key(
+                                metadata, f"{team_str}Players"
+                            )
+
+                        elif find_json_key(metadata, f"{team_str}Team"):
+                            id_key = "Id"
+                            name_key = "Name"
+                            position_key = None
+                            jersey_no_key = "JerseyNumber"
+                            players = find_json_key(
+                                metadata, f"{team_str}Team"
+                            )["Players"]
+
+                        else:
+                            raise Exception()
+
+                        for player_data in players:
                             # We use the attributes field of Player to store the extra IDs provided by the
                             # metadata. We designate the player_id to be the 'optaId' field as this is what's
                             # used as 'player_id' in the raw frame data file
@@ -250,16 +377,21 @@ class SecondSpectrumDeserializer(
                                 if k in ["ssiId", "optaUuid"]
                             }
 
+                            position = player_data.get(position_key, None)
                             player = Player(
-                                player_id=player_data["optaId"],
-                                name=player_data["name"],
-                                starting=player_data["position"] != "SUB",
+                                player_id=player_data[id_key],
+                                name=player_data[name_key],
+                                starting=player_data[position_key] != "SUB"
+                                if position_key is not None
+                                else None,
                                 starting_position=position_mapping.get(
-                                    player_data["position"],
+                                    position,
                                     PositionType.Unknown,
-                                ),
+                                )
+                                if position is not None
+                                else PositionType.Unknown,
                                 team=team,
-                                jersey_no=int(player_data["number"]),
+                                jersey_no=int(player_data[jersey_no_key]),
                                 attributes=player_attributes,
                             )
                             team.players.append(player)
@@ -279,7 +411,7 @@ class SecondSpectrumDeserializer(
                 n = 0
                 sample = 1 / self.sample_rate
 
-                for line_ in inputs.raw_data.readlines():
+                for line_ in raw_frames:
                     line_ = line_.strip().decode("ascii")
                     if not line_:
                         continue
@@ -326,20 +458,26 @@ class SecondSpectrumDeserializer(
             orientation = Orientation.NOT_SET
 
         if metadata:
-            score = Score(
-                home=metadata["homeScore"], away=metadata["awayScore"]
-            )
-            year, month, day = (
-                metadata["year"],
-                metadata["month"],
-                metadata["day"],
-            )
-            date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
-            game_id = metadata["ssiId"]
-        else:
-            score = None
-            date = None
-            game_id = None
+            home_goals = find_json_key(metadata, "homeScore")
+            away_goals = find_json_key(metadata, "awayScore")
+            if home_goals is not None and away_goals is not None:
+                score = Score(home=home_goals, away=away_goals)
+            else:
+                score = None
+
+            year = find_json_key(metadata, "year")
+            month = find_json_key(metadata, "month")
+            day = find_json_key(metadata, "day")
+
+            if (
+                (year is not None)
+                and (month is not None)
+                and (day is not None)
+            ):
+                date = datetime(year, month, day, 0, 0, tzinfo=timezone.utc)
+            else:
+                date = find_json_key(metadata, "date")
+            game_id = metadata["ssiId"] or find_json_key(metadata, "MatchId")
 
         metadata = Metadata(
             teams=teams,

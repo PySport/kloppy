@@ -182,7 +182,7 @@ nav:
           - kloppy.exceptions: reference/exceptions.md
   - Development:
       - Contributing: contributor-guide/contributing.md
-      - Issues: contributor-guide/issues.md
+      - Creating a development environment: contributor-guide/dev-environment.md
       - Adding a data provider: contributor-guide/add-new-provider.md
       - License: license.md
   - Releases: https://github.com/PySport/kloppy/releases

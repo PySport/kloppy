@@ -107,24 +107,34 @@ class EVENT_CATEGORY_TYPE(Enum):
 
 
 class RESULT(Enum):
-    NONE = 1  # "None"
-    YELLOW_CARD = 2  # "YellowCard"
-    GOAL_CONCEDED = 4  # "GoalConceded"
-    SAVE = 5  # "Save"
-    OWN_GOAL = 9  # "OwnGoal"
-    SUCCESS = 10  # "Success"
-    FAIL = 11  # "Fail"
-    OFF_TARGET = 12  # "OffTarget"
-    BARS = 13  # "Bars" (first occurrence)
-    ON_TARGET = 14  # "OnTarget"
-    BLOCK_BY_DEFENSE = 15  # "BlockByDefense"
-    GOAL = 17  # "Goal"
-    OFF = 19  # "OFF"
-    BARS_ALT = 20  # "Bars" (second occurrence)
-    OUTSIDE = 21  # "Outside"
-    GOAL_KICK = 22  # "Goalkick"
-    CORNER = 23  # "Corner"
-    GOAL_POST = 24  # "Goal Post"
+    ADMINISTRATIVE_NONE = 1  # "None"
+    ADMINISTRATIVE_YELLOW_CARD = 2  # "YellowCard"
+    ADMINISTRATIVE_SECOND_YELLOW_CARD = 18  # "SecondYellowCard"
+    ADMINISTRATIVE_RED_CARD = 3  # "RedCard"
+
+    GOALKEEPER_GOAL_CONCEDED = 4  # "GoalConceded"
+    GOALKEEPER_SAVE = 5  # "Save"
+    GOALKEEPER_OFF = 19  # "Off"
+    GOALKEEPER_BARS = 20  # "Bars"
+
+    DEFENSIVE_GOAL_KICK = 6  # "GoalKick"
+    DEFENSIVE_CLEAR = 7  # "Clear"
+    DEFENSIVE_CORNER_KICK = 8  # "CornerKick"
+    DEFENSIVE_OWN_GOAL = 9  # "OwnGoal"
+    POSSESSION_SUCCESS = 10  # "Success"
+    POSSESSION_FAIL = 11  # "Fail"
+
+    ATTACK_OFF_TARGET = 12  # "OffTarget"
+    ATTACK_BARS = 13  # "Bars"
+    ATTACK_ON_TARGET = 14  # "OnTarget"
+    ATTACK_BLOCK_BY_DEFENSE = 15  # "BlockByDefense"
+    ATTACK_CORNER_KICK = 16  # "CornerKick"
+    ATTACK_GOAL = 17  # "Goal"
+
+    BALL_ACTIONS_OUTSIDE = 21  # "Outside"
+    BALL_ACTIONS_GOAL_KICK = 22  # "Goalkick"
+    BALL_ACTIONS_CORNER = 23  # "Corner"
+    BALL_ACTIONS_GOAL_POST = 24  # "Goal Post"
 
 
 class EXTRA(Enum):
@@ -142,41 +152,42 @@ class EXTRA(Enum):
     END_LINE = 13  # "End Line"
     GOAL_LINE = 14  # "Goal Line"
     ERROR_LEAD_TO_GOAL = 15  # "ErrorLeadToGoal"
+    ERROR_LEAD_TO_OPPORTUNITY = 16  # "ErrorLeadToOpportunity"
+    COVERING_OFFSIDE = 17  # "Covering Offside"
     OPPORTUNITY_SAVED = 18  # "Opportunity Saved"
 
 
 pass_result_mapping = {
-    RESULT.SUCCESS: PassResult.COMPLETE,
-    RESULT.FAIL: PassResult.INCOMPLETE,
+    RESULT.POSSESSION_SUCCESS: PassResult.COMPLETE,
+    RESULT.POSSESSION_FAIL: PassResult.INCOMPLETE,
 }
 
 shot_result_mapping = {
-    RESULT.GOAL: ShotResult.GOAL,
-    RESULT.ON_TARGET: ShotResult.SAVED,
-    RESULT.OFF_TARGET: ShotResult.OFF_TARGET,
-    RESULT.BARS: ShotResult.POST,
-    RESULT.BARS_ALT: ShotResult.POST,
-    RESULT.BLOCK_BY_DEFENSE: ShotResult.BLOCKED,
+    RESULT.ATTACK_GOAL: ShotResult.GOAL,
+    RESULT.ATTACK_ON_TARGET: ShotResult.SAVED,
+    RESULT.ATTACK_OFF_TARGET: ShotResult.OFF_TARGET,
+    RESULT.ATTACK_BARS: ShotResult.POST,
+    RESULT.ATTACK_BLOCK_BY_DEFENSE: ShotResult.BLOCKED,
 }
 
 take_on_result_mapping = {
-    RESULT.SUCCESS: TakeOnResult.COMPLETE,
-    RESULT.FAIL: TakeOnResult.INCOMPLETE,
+    RESULT.POSSESSION_SUCCESS: TakeOnResult.COMPLETE,
+    RESULT.POSSESSION_FAIL: TakeOnResult.INCOMPLETE,
 }
 
 duel_result_mapping = {
-    RESULT.SUCCESS: DuelResult.WON,
-    RESULT.FAIL: DuelResult.LOST,
+    RESULT.POSSESSION_SUCCESS: DuelResult.WON,
+    RESULT.POSSESSION_FAIL: DuelResult.LOST,
 }
 
 interception_result_mapping = {
-    RESULT.SUCCESS: InterceptionResult.SUCCESS,
-    RESULT.FAIL: InterceptionResult.LOST,
+    RESULT.POSSESSION_SUCCESS: InterceptionResult.SUCCESS,
+    RESULT.POSSESSION_FAIL: InterceptionResult.LOST,
 }
 
 carry_result_mapping = {
-    RESULT.SUCCESS: CarryResult.COMPLETE,
-    RESULT.FAIL: CarryResult.INCOMPLETE,
+    RESULT.POSSESSION_SUCCESS: CarryResult.COMPLETE,
+    RESULT.POSSESSION_FAIL: CarryResult.INCOMPLETE,
 }
 
 body_part_mapping = {
@@ -644,18 +655,29 @@ class FOUL(EVENT):
                 **generic_event_kwargs,
             )
         ]
-        if self.result == RESULT.YELLOW_CARD:
-            generic_event_kwargs[
-                "event_id"
-            ] = f"{generic_event_kwargs['event_id']}-yellow-card"
-            events.append(
-                event_factory.build_card(
-                    result=None,
-                    qualifiers=None,
-                    card_type=CardType.FIRST_YELLOW,
-                    **generic_event_kwargs,
+        card_provider_results = [
+            RESULT.ADMINISTRATIVE_YELLOW_CARD,
+            RESULT.ADMINISTRATIVE_SECOND_YELLOW_CARD,
+            RESULT.ADMINISTRATIVE_RED_CARD,
+        ]
+        card_kloppy_types = [
+            CardType.FIRST_YELLOW,
+            CardType.SECOND_YELLOW,
+            CardType.RED,
+        ]
+        for result, card_type in zip(card_provider_results, card_kloppy_types):
+            if self.result == result:
+                generic_event_kwargs[
+                    "event_id"
+                ] = f"{generic_event_kwargs['event_id']}-{card_type.value.lower()}"
+                events.append(
+                    event_factory.build_card(
+                        result=None,
+                        qualifiers=None,
+                        card_type=card_type,
+                        **generic_event_kwargs,
+                    )
                 )
-            )
 
         return events
 
@@ -768,7 +790,7 @@ class GOALKEEPER(EVENT):
         next_event: Optional[Dict],
         **generic_event_kwargs,
     ) -> List[Event]:
-        if self.result == RESULT.SAVE:
+        if self.result == RESULT.GOALKEEPER_SAVE:
             qualifiers = [GoalkeeperQualifier(value=GoalkeeperActionType.SAVE)]
             return [
                 event_factory.build_goalkeeper_event(

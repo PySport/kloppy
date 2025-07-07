@@ -155,6 +155,7 @@ class EXTRA(Enum):
     ERROR_LEAD_TO_OPPORTUNITY = 16  # "ErrorLeadToOpportunity"
     COVERING_OFFSIDE = 17  # "Covering Offside"
     OPPORTUNITY_SAVED = 18  # "Opportunity Saved"
+    GOAL_SAVED = 19  # "Goal Saved"
 
 
 pass_result_mapping = {
@@ -319,9 +320,12 @@ class PASS(EVENT):
         # Determine receiver and coordinates for successful passes
         receiver_player = None
         receiver_coordinates = Point(self.raw_event["x"], self.raw_event["y"])
-        receive_timestamp = (
-            timedelta(seconds=next_event["timeInSec"]) if next_event else None
-        )
+        if next_event:
+            receive_timestamp = timedelta(seconds=next_event["timeInSec"])
+        else:
+            receive_timestamp = generic_event_kwargs["timestamp"] + timedelta(
+                milliseconds=500
+            )
         if next_event:
             receiver_player, receiver_coordinates = check_pass_receiver(
                 self.raw_event, teams, next_event

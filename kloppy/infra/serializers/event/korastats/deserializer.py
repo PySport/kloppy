@@ -66,6 +66,8 @@ position_types_mapping: Dict[str, PositionType] = {
     "LCM": PositionType.LeftCentralMidfield,
     "CM": PositionType.CenterMidfield,
     "RCM": PositionType.RightCentralMidfield,
+    "LM": PositionType.LeftMidfield,
+    "RM": PositionType.RightMidfield,
     "LAM": PositionType.LeftAttackingMidfield,
     "AM": PositionType.CenterAttackingMidfield,
     "RAM": PositionType.RightAttackingMidfield,

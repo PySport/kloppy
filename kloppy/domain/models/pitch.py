@@ -677,7 +677,7 @@ class KoraStatsPitchDimensions(PitchDimensions):
     unit: Unit = Unit.NORMED
 
     goal_width: float = 10.0
-    goal_height: float = 60
+    goal_height: float = 100.0
     six_yard_width: float = 24.0
     six_yard_length: float = 5.0
     penalty_area_width: float = 54.0

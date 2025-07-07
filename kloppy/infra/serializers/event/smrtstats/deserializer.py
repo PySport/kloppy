@@ -192,6 +192,9 @@ ACTION_IDS_TO_IGNORE = (
         CREATED_OFFSIDE_TRAP,
         BLOCKED_SHOT_BY_FIELD_PLAYER,
         BALL_RECEIVING,
+        GRAVE_MISTAKE,
+        GRAVE_GOAL_MISTAKE,
+        ASSIST,  # This is added as a separate event besides the pass
     ]
     + list(FORMATIONS.keys())
     + list(POSITIONS.keys())
@@ -644,6 +647,12 @@ class SmrtStatsDeserializer(EventDataDeserializer[SmrtStatsInputs]):
                     )
                     if action_id in BALL_OWNING_IDS:
                         possession_team = team
+
+                    if (
+                        raw_event["coord_x"] is None
+                        or raw_event["coord_y"] is None
+                    ):
+                        pass
 
                     x = (
                         raw_event["relative_coord_x"]

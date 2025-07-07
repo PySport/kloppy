@@ -40,15 +40,16 @@ class EVENT_CATEGORY_TYPE(Enum):
     ADMINISTRATIVE_HANDBALL = (1, 3)
     ADMINISTRATIVE_PENALTY = (1, 4)
     ADMINISTRATIVE_BAD_BEHAVIOR = (1, 5)
-    # ADMINISTRATIVE_ADVANTAGE = "Advantage"
-    # ADMINISTRATIVE_GK_6_SEC = "GK6Sec"
-    # ADMINISTRATIVE_GK_HAND = "GKHand"
+    ADMINISTRATIVE_ADVANTAGE = (1, 52)
+    ADMINISTRATIVE_GK_6_SEC = (1, 53)
+    ADMINISTRATIVE_GK_HAND = (1, 54)
     ADMINISTRATIVE_SUBSTITUTION = (1, 28)
     ADMINISTRATIVE_END_OF_HALF = (1, 47)
     ADMINISTRATIVE_END_OF_MATCH = (1, 48)
 
     # Goalkeeper events
     GOALKEEPER_CROSS = (2, 6)
+    GOALKEEPER_FREEKICK = (2, 7)
     GOALKEEPER_PENALTY = (2, 8)
     GOALKEEPER_ONE_ON_ONE = (2, 9)
     GOALKEEPER_SHOOT = (2, 10)
@@ -60,10 +61,10 @@ class EVENT_CATEGORY_TYPE(Enum):
     DEFENSIVE_INTERCEPT_CLEAR = (3, 37)
     DEFENSIVE_CLEAR = (3, 38)
     DEFENSIVE_SHIELD = (3, 44)
-    # DEFENSIVE_OWN_GOAL = "OwnGoal"
-    # DEFENSIVE_OUT_OF_POSITION = "OutOfPosition"
-    # DEFENSIVE_COVERING_OFFSIDE = "CoveringOffside"
-    # DEFENSIVE_PRESSING = "Pressing"
+    DEFENSIVE_OWN_GOAL = (3, 14)
+    DEFENSIVE_OUT_OF_POSITION = (3, 55)
+    DEFENSIVE_COVERING_OFFSIDE = (3, 56)
+    DEFENSIVE_PRESSING = (3, 57)
 
     # Possession events
     POSSESSION_PASS = (4, 15)
@@ -71,6 +72,7 @@ class EVENT_CATEGORY_TYPE(Enum):
     POSSESSION_CROSS = (4, 17)
     POSSESSION_POSSESSION = (4, 18)
     POSSESSION_DRIBBLE = (4, 19)
+    POSSESSION_EFFECTIVE_PASS = (4, 20)
     POSSESSION_FREEKICK_CROSS = (4, 26)
     POSSESSION_CORNER_CROSS = (4, 27)
     POSSESSION_LONG_PASS = (4, 29)
@@ -82,10 +84,13 @@ class EVENT_CATEGORY_TYPE(Enum):
     POSSESSION_FREEKICK_PASS = (4, 39)
     POSSESSION_FREEKICK_LONG_PASS = (4, 40)
     POSSESSION_THROW_IN_SHORT_PASS = (4, 41)
+    POSSESSION_THROW_IN_LONG_PASS = (4, 42)
+    POSSESSION_THROW_IN_CROSS = (4, 43)
     POSSESSION_GK_PASS = (4, 58)
     POSSESSION_GK_LONG_PASS = (4, 59)
-    # POSSESSION_BALL_LOST_UNDER_PRESSURE = "BallLostUnderPressure"
-    # POSSESSION_TACKLE_FAIL = "TackleFail"
+    POSSESSION_MISS_TOUCH = (4, 64)
+    POSSESSION_TAKE_ON_AGAINST = (4, 65)
+    POSSESSION_TAKE_ON = (4, 66)
 
     # Attack events
     ATTACK_SHOOT = (5, 21)
@@ -93,9 +98,9 @@ class EVENT_CATEGORY_TYPE(Enum):
     ATTACK_PENALTY = (5, 23)
     ATTACK_OWN_GOAL_IN_OPPONENT = (5, 30)
     ATTACK_SHOOT_LOCATION = (5, 50)
-    # ATTACK_CORNER = "Corner"
-    # ATTACK_FREEKICK = "FreeKick"
-    # ATTACK_PENALTY_SHOOTOUT = "PenaltyShootOut"
+    ATTACK_CORNER = (5, 24)
+    ATTACK_FREEKICK = (5, 25)
+    ATTACK_PENALTY_SHOOTOUT = (5, 45)
 
     # Ball actions
     BALL_ACTIONS_BALL_PAST_LINE = (6, 60)
@@ -350,6 +355,12 @@ class PASS(EVENT):
             EVENT_CATEGORY_TYPE.POSSESSION_GK_LONG_PASS,
         ]:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
+        if self.event_category_type in [
+            EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_SHORT_PASS,
+            EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_LONG_PASS,
+            EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_CROSS,
+        ]:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
 
         first_event_of_period = (
             prior_event is None
@@ -405,12 +416,6 @@ class SHOT(EVENT):
         **generic_event_kwargs,
     ) -> List[Event]:
         result = shot_result_mapping[self.result]
-
-        # # For Penalty and PenaltyShootOut, only create event for 'Awarded' administrativeType
-        # if self.raw_event["event"] in ("Penalty", "PenaltyShootOut"):
-        #     if self.raw_event.get("administrativeType") != "Awarded":
-        #         return []
-
         # Build qualifiers
         qualifiers = []
 
@@ -423,10 +428,12 @@ class SHOT(EVENT):
         # Set piece qualifiers
         if self.event_category_type in [EVENT_CATEGORY_TYPE.ATTACK_PENALTY]:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
-        # if event_category_type in [EVENT_CATEGORY_TYPE.ATTACK_CORNER]:
-        #     qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
-        # if event_category_type in [EVENT_CATEGORY_TYPE.ATTACK_FREEKICK]:
-        #     qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
+        if self.event_category_type in [EVENT_CATEGORY_TYPE.ATTACK_CORNER]:
+            qualifiers.append(
+                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
+            )
+        if self.event_category_type in [EVENT_CATEGORY_TYPE.ATTACK_FREEKICK]:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
 
         result_coordinates = None
         if next_event["event"] == "Shoot Location":
@@ -819,15 +826,15 @@ def event_decoder(raw_event: Dict) -> Optional[EVENT]:
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_HANDBALL: FOUL,
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_PENALTY: FOUL,
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_BAD_BEHAVIOR: FOUL,
-        # EVENT_CATEGORY_TYPE.ADMINISTRATIVE_ADVANTAGE: FOUL,
-        # EVENT_CATEGORY_TYPE.ADMINISTRATIVE_GK_6_SEC: FOUL,
-        # EVENT_CATEGORY_TYPE.ADMINISTRATIVE_GK_HAND: FOUL,
+        EVENT_CATEGORY_TYPE.ADMINISTRATIVE_ADVANTAGE: FOUL,
+        EVENT_CATEGORY_TYPE.ADMINISTRATIVE_GK_6_SEC: FOUL,
+        EVENT_CATEGORY_TYPE.ADMINISTRATIVE_GK_HAND: FOUL,
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_SUBSTITUTION: SUBSTITUTION,
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_END_OF_HALF: None,
         EVENT_CATEGORY_TYPE.ADMINISTRATIVE_END_OF_MATCH: None,
         # Goalkeeper events
         EVENT_CATEGORY_TYPE.GOALKEEPER_CROSS: GOALKEEPER,
-        # EVENT_CATEGORY_TYPE.GOALKEEPER_FREEKICK: GOALKEEPER_SAVE,
+        EVENT_CATEGORY_TYPE.GOALKEEPER_FREEKICK: GOALKEEPER,
         EVENT_CATEGORY_TYPE.GOALKEEPER_PENALTY: GOALKEEPER,
         EVENT_CATEGORY_TYPE.GOALKEEPER_ONE_ON_ONE: None,
         EVENT_CATEGORY_TYPE.GOALKEEPER_SHOOT: GOALKEEPER,
@@ -842,11 +849,12 @@ def event_decoder(raw_event: Dict) -> Optional[EVENT]:
         EVENT_CATEGORY_TYPE.DEFENSIVE_SHIELD: None,
         # (EVENT_CATEGORY.DEFENSIVE, EVENT_TYPE.OUT_OF_POSITION): None,
         # (EVENT_CATEGORY.DEFENSIVE, EVENT_TYPE.COVERING_OFFSIDE): None,
-        # (EVENT_CATEGORY.DEFENSIVE, EVENT_TYPE.PRESSING): PRESSING,
+        EVENT_CATEGORY_TYPE.DEFENSIVE_PRESSING: PRESSING,
         # Possession events
         EVENT_CATEGORY_TYPE.POSSESSION_PASS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_AERIAL_BALL: AERIAL_BALL,
         EVENT_CATEGORY_TYPE.POSSESSION_CROSS: PASS,
+        EVENT_CATEGORY_TYPE.POSSESSION_EFFECTIVE_PASS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_POSSESSION: None,
         EVENT_CATEGORY_TYPE.POSSESSION_DRIBBLE: DRIBBLE,
         EVENT_CATEGORY_TYPE.POSSESSION_FREEKICK_CROSS: PASS,
@@ -860,17 +868,19 @@ def event_decoder(raw_event: Dict) -> Optional[EVENT]:
         EVENT_CATEGORY_TYPE.POSSESSION_FREEKICK_PASS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_FREEKICK_LONG_PASS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_SHORT_PASS: PASS,
+        EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_LONG_PASS: PASS,
+        EVENT_CATEGORY_TYPE.POSSESSION_THROW_IN_CROSS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_GK_PASS: PASS,
         EVENT_CATEGORY_TYPE.POSSESSION_GK_LONG_PASS: PASS,
-        # POSSESSION_BALL_LOST_UNDER_PRESSURE = "BallLostUnderPressure"
-        # POSSESSION_TACKLE_FAIL = "TackleFail"
+        EVENT_CATEGORY_TYPE.POSSESSION_TAKE_ON: DRIBBLE,
+        # EVENT_CATEGORY_TYPE.POSSESSION_TAKE_ON_AGAINST: DRIBBLE,
         EVENT_CATEGORY_TYPE.ATTACK_SHOOT: SHOT,
         EVENT_CATEGORY_TYPE.ATTACK_ONE_ON_ONE: None,
         EVENT_CATEGORY_TYPE.ATTACK_PENALTY: SHOT,
+        EVENT_CATEGORY_TYPE.ATTACK_CORNER: SHOT,
+        EVENT_CATEGORY_TYPE.ATTACK_FREEKICK: SHOT,
         EVENT_CATEGORY_TYPE.ATTACK_OWN_GOAL_IN_OPPONENT: SHOT,
         EVENT_CATEGORY_TYPE.ATTACK_SHOOT_LOCATION: None,
-        # ATTACK_CORNER = "Corner"
-        # ATTACK_FREEKICK = "FreeKick"
         # ATTACK_PENALTY_SHOOTOUT = "PenaltyShootOut"
         # Ball actions
         EVENT_CATEGORY_TYPE.BALL_ACTIONS_BALL_PAST_LINE: BALL_OUT,

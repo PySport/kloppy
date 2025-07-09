@@ -5,6 +5,7 @@ import pytest
 
 from kloppy.domain import (
     Provider,
+    BallState,
     Orientation,
     Point,
     Point3D,
@@ -175,6 +176,7 @@ class TestSkillCornerTracking:
 
         assert len(dataset.records) == 34783
         assert dataset.records[0].timestamp == timedelta(seconds=11.2)
+        assert dataset.records[-1].ball_state == BallState.ALIVE
 
     def test_correct_deserialization_v3(
         self, raw_data_v3: Path, meta_data_v3: Path
@@ -221,3 +223,6 @@ class TestSkillCornerTracking:
         assert dataset.records[10].players_data[
             away_team_gk
         ].coordinates == Point(x=-41.97, y=-0.61)
+
+        assert dataset.records[-1].ball_state == BallState.ALIVE
+        assert dataset.records[-2].ball_state == BallState.DEAD

@@ -575,7 +575,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             frame_rate=10,
             orientation=orientation,
             provider=Provider.SKILLCORNER,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_id=game_id,

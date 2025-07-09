@@ -6,6 +6,7 @@ from typing import IO, Dict, NamedTuple, Optional, Union, List
 
 from kloppy.domain import (
     AttackingDirection,
+    BallState,
     DatasetFlag,
     Ground,
     Metadata,
@@ -158,7 +159,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame["period"]],
-            ball_state=None,
+            ball_state=BallState.ALIVE
+            if ball_owning_team is not None
+            else BallState.DEAD,
             ball_owning_team=ball_owning_team,
             other_data={},
         )
@@ -209,7 +212,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             ball_coordinates=ball_coordinates,
             players_data=players_data,
             period=periods[frame["period"]],
-            ball_state=None,
+            ball_state=BallState.ALIVE
+            if ball_owning_team is not None
+            else BallState.DEAD,
             ball_owning_team=ball_owning_team,
             other_data={},
         )
@@ -570,7 +575,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             frame_rate=10,
             orientation=orientation,
             provider=Provider.SKILLCORNER,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_id=game_id,

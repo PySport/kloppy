@@ -138,6 +138,7 @@ class RESULT(Enum):
 
 
 class EXTRA(Enum):
+    NA = 1  # "N/A"
     AWARDED = 2  # "Awarded"
     COMMITTED = 3  # "Committed"
     RIGHT_FOOT = 4  # "RightFoot"
@@ -701,12 +702,18 @@ class SUBSTITUTION(EVENT):
         if self.extra == EXTRA.SUBSTITUTE_IN:
             return []
 
-        replacement_player = None
-        if next_event["extra"] == "SubstituteIn":
+        if next_event.get("extra") == "SubstituteIn":
             replacement_player_id = next_event["player_id"]
             replacement_player = self.team.get_player_by_id(
                 str(replacement_player_id)
             )
+        elif prior_event.get("extra") == "SubstituteIn":
+            replacement_player_id = prior_event["player_id"]
+            replacement_player = self.team.get_player_by_id(
+                str(replacement_player_id)
+            )
+        else:
+            raise ValueError("Substitution event without replacement player")
 
         sub_event = event_factory.build_substitution(
             result=None,
@@ -873,7 +880,7 @@ def event_decoder(raw_event: Dict) -> Optional[EVENT]:
         EVENT_CATEGORY_TYPE.DEFENSIVE_INTERCEPT_CLEAR: INTERCEPTION,
         EVENT_CATEGORY_TYPE.DEFENSIVE_CLEAR: CLEAR,
         EVENT_CATEGORY_TYPE.DEFENSIVE_SHIELD: None,
-        # (EVENT_CATEGORY.DEFENSIVE, EVENT_TYPE.OUT_OF_POSITION): None,
+        EVENT_CATEGORY_TYPE.DEFENSIVE_OUT_OF_POSITION: None,
         # (EVENT_CATEGORY.DEFENSIVE, EVENT_TYPE.COVERING_OFFSIDE): None,
         EVENT_CATEGORY_TYPE.DEFENSIVE_PRESSING: PRESSING,
         # Possession events

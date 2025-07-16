@@ -387,8 +387,13 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     player_positions = {}
     for player_id, position_id in zip(player_ids, position_ids):
         player = team.get_player_by_id(player_id)
-        position = positions_mapping[int(position_id)]
-        player_positions[player] = position
+        if player:
+            position = positions_mapping[int(position_id)]
+            player_positions[player] = position
+        else:
+            logger.warning(
+                f"Player with ID {player_id} not found in team {team} during formation change parsing"
+            )
 
     return dict(formation_type=formation, player_positions=player_positions)
 

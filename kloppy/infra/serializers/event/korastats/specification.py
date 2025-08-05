@@ -785,6 +785,8 @@ class PRESSING(EVENT):
             event_factory.build_pressure_event(
                 end_timestamp=end_timestamp
                 or generic_event_kwargs["timestamp"] + timedelta(seconds=1),
+                result=None,
+                qualifiers=None,
                 **generic_event_kwargs,
             )
         ]

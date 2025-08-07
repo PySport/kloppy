@@ -42,7 +42,6 @@ GAME_SECTION_TO_PERIOD_ID = {
 
 def _unstack_framesets(
     raw_data: IO[bytes],
-    limit: Optional[int] = None,
     only_alive: bool = True,
     objects_to_skip: Optional[Set] = None,
 ) -> Dict[int, Dict[int, Dict]]:
@@ -131,10 +130,11 @@ def _unstack_framesets(
     # First pass: only ball
     def stop_ball() -> bool:
         """
-        Stop if a `limit` is set and we have already collected
-        at least `limit` frames for the ball
+        Never stop early during ball collection - we need ball frames
+        from all periods to properly filter player frames later.
+        The limit will be applied at the frame creation level instead.
         """
-        return bool(limit) and frames_per_obj.get("ball", 0) >= limit
+        return False  # Never stop early for ball frames
 
     def skip_ball(
         elem: etree.Element, current_period: int, current_obj: str
@@ -142,13 +142,10 @@ def _unstack_framesets(
         """
         Skip if any of the following is true:
           1. The frame does not belong to the ball.
-          2. We only want “alive” frames and this one isn’t BALL_STATUS == 1.
-          3. A `limit` is set and we already hit that limit for the ball.
+          2. We only want "alive" frames and this one isn't BALL_STATUS == 1.
         """
-        return (
-            (current_obj != "ball")
-            or (only_alive and int(elem.get(BALL_STATUS, "0")) != 1)
-            or (bool(limit) and frames_per_obj.get("ball", 0) >= limit)
+        return (current_obj != "ball") or (
+            only_alive and int(elem.get(BALL_STATUS, "0")) != 1
         )
 
     _make_pass(stop_predicate=stop_ball, skip_predicate=skip_ball)
@@ -158,33 +155,25 @@ def _unstack_framesets(
 
     def stop_players() -> bool:
         """
-        Stop if a non‐zero `limit` is set and *every* non‐skipped object
-        has already collected at least `limit` frames.
+        Never stop early during player collection either.
+        The limit will be applied at the frame creation level.
         """
-        return limit is not None and all(
-            count >= limit
-            for obj, count in frames_per_obj.items()
-            if obj not in objects_to_skip
-        )
+        return False
 
     def skip_players(
         elem: etree.Element, current_period: int, current_obj: str
     ):
         """
         Skip if any of the following is true:
-          1. The object is in `objects_to_skip` (including “ball”).
-          2. A non‐zero `limit` is set and we already hit it for this object.
-          3. We only want "alive" ball frames, and this frame occurs at a
-             moment when the ball isn’t alive (so the player frame is irrelevant).
+          1. The object is in `objects_to_skip` (including "ball").
+          2. We only want "alive" ball frames, and this frame occurs at a
+             moment when the ball isn't alive (so the player frame is irrelevant).
         """
         fid = int(elem.get("N"))
-        return (
-            (current_obj in objects_to_skip)
-            or (bool(limit) and frames_per_obj[current_obj] >= limit)
-            or (
-                only_alive
-                and "ball" not in frames.get(current_period, {}).get(fid, {})
-            )
+
+        return (current_obj in objects_to_skip) or (
+            only_alive
+            and "ball" not in frames.get(current_period, {}).get(fid, {})
         )
 
     _make_pass(stop_predicate=stop_players, skip_predicate=skip_players)
@@ -244,9 +233,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         with performance_logging("parse tracking data", logger=logger):
             period_frames = _unstack_framesets(
                 inputs.raw_data,
-                limit=int(self.limit / self.sample_rate)
-                if self.sample_rate and self.limit
-                else self.limit,
                 only_alive=self.only_alive,
                 objects_to_skip=official_ids,
             )

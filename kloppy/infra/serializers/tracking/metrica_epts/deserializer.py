@@ -59,18 +59,24 @@ class MetricaEPTSTrackingDataDeserializer(
                     other_data.update({sensor.sensor_id: player_sensor_val})
 
                 players_data[player] = PlayerData(
-                    coordinates=Point(
-                        x=row[f"player_{player.player_id}_x"],
-                        y=row[f"player_{player.player_id}_y"],
-                    )
-                    if f"player_{player.player_id}_x" in row
-                    else None,
-                    speed=row[f"player_{player.player_id}_s"]
-                    if f"player_{player.player_id}_s" in row
-                    else None,
-                    distance=row[f"player_{player.player_id}_d"]
-                    if f"player_{player.player_id}_d" in row
-                    else None,
+                    coordinates=(
+                        Point(
+                            x=row[f"player_{player.player_id}_x"],
+                            y=row[f"player_{player.player_id}_y"],
+                        )
+                        if f"player_{player.player_id}_x" in row
+                        else None
+                    ),
+                    speed=(
+                        row[f"player_{player.player_id}_s"]
+                        if f"player_{player.player_id}_s" in row
+                        else None
+                    ),
+                    distance=(
+                        row[f"player_{player.player_id}_d"]
+                        if f"player_{player.player_id}_d" in row
+                        else None
+                    ),
                     other_data=other_data,
                 )
 

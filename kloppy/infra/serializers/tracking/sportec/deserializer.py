@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import IO, Callable, Dict, NamedTuple, Optional, Set, Union
@@ -40,11 +39,38 @@ GAME_SECTION_TO_PERIOD_ID = {
 }
 
 
+def elem2dict(node):
+    """Convert an lxml.etree node tree into a dict."""
+    return dict(node.items())
+
+
+def any_of(*predicates: Callable[..., bool]) -> Callable[..., bool]:
+    """
+    Return a new function that is True if ANY of the given predicates are True.
+    """
+
+    def combined(*args, **kwargs) -> bool:
+        return any(pred(*args, **kwargs) for pred in predicates)
+
+    return combined
+
+
+def all_of(*predicates: Callable[..., bool]) -> Callable[..., bool]:
+    """
+    Return a new function that is True if ALL of the given predicates are True.
+    """
+
+    def combined(*args, **kwargs) -> bool:
+        return all(pred(*args, **kwargs) for pred in predicates)
+
+    return combined
+
+
 def _unstack_framesets(
     raw_data: IO[bytes],
     limit: Optional[int] = None,
     only_alive: bool = True,
-    objects_to_skip: Optional[Set] = None,
+    objects_to_skip: Optional[Set[str]] = None,
 ) -> Dict[int, Dict[int, Dict]]:
     """Unstack framesets.
 
@@ -73,15 +99,18 @@ def _unstack_framesets(
     frames_per_obj: Dict[str, int] = defaultdict(int)
 
     def _make_pass(
-        stop_predicate: Callable[[], bool],
-        skip_predicate: Callable[[etree.Element, int, str], bool],
+        skip_frameset: Optional[Callable[[int, str], bool]] = None,
+        end_frameset: Optional[Callable[[int, str], bool]] = None,
+        skip_frame: Optional[
+            Callable[[int, str, Dict[str, str]], bool]
+        ] = None,
     ) -> None:
         """Generic pass over the XML to collect frames.
 
         Args:
-            stop_predicate: A callable that returns True when the parsing should stop
-                for the first frameset of a new period.
-            skip_predicate: A callable that returns True when a frame should be skipped.
+            skip_framset: A callable that returns True when the parsing should skip a frameset.
+            end_frameset: A callable that returns True when the frameset should be ended.
+            skip_frame: A callable that returns True when a frame should be skipped.
         """
         raw_data.seek(0)
         context = etree.iterparse(
@@ -93,34 +122,61 @@ def _unstack_framesets(
         for event, elem in context:
             if event == "start" and elem.tag == "FrameSet":
                 section = elem.get("GameSection")
-                if section in GAME_SECTION_TO_PERIOD_ID:
-                    new_period = GAME_SECTION_TO_PERIOD_ID[section]
-                    # break if we've moved to a new period and stop_predicate says so
-                    if (
-                        current_period is not None
-                        and new_period != current_period
-                        and stop_predicate()
-                    ):
-                        break
-
-                    current_period = new_period
-                    # decide which object this frameset belongs to
-                    current_obj = (
-                        "ball"
-                        if elem.get("TeamId") == "BALL"
-                        else elem.get("PersonId")
+                current_period = GAME_SECTION_TO_PERIOD_ID.get(section)
+                if current_period is None:
+                    logger.warning(
+                        "Found FrameSet with unknown or missing period: %s",
+                        elem2dict(elem),
                     )
+                    continue
+                current_obj = (
+                    "ball"
+                    if elem.get("TeamId") == "BALL"
+                    else elem.get("PersonId")
+                )
+                if current_obj is None:
+                    logger.warning(
+                        "Found FrameSet with unknown or missing object ID: %s",
+                        elem2dict(elem),
+                    )
+                    continue
+                if skip_frameset is not None and skip_frameset(
+                    current_period, current_obj
+                ):
+                    current_period = None
+                    current_obj = None
+                    continue
+                logger.debug(
+                    "Processing FrameSet for object %s in period %s",
+                    current_obj,
+                    current_period,
+                )
 
             elif (
                 event == "start"
                 and elem.tag == "Frame"
                 and current_period is not None
                 and current_obj is not None
-                and not skip_predicate(elem, current_period, current_obj)
             ):
-                fid = int(elem.get("N"))
-                frames[current_period][fid][current_obj] = dict(elem.items())
+                frame_data = elem2dict(elem)
+                if skip_frame is not None and skip_frame(
+                    current_period, current_obj, frame_data
+                ):
+                    continue
+                if "N" not in frame_data:
+                    logger.warning(
+                        "Found Frame with missing ID: %s",
+                        frame_data,
+                    )
+                    continue
+                fid = int(frame_data["N"])
+                frames[current_period][fid][current_obj] = elem2dict(elem)
                 frames_per_obj[current_obj] += 1
+                if end_frameset is not None and end_frameset(
+                    current_period, current_obj
+                ):
+                    current_period = None
+                    current_obj = None
 
             # Always clear elements to save memory
             elif event == "end" and elem.tag in ("Frame", "FrameSet"):
@@ -128,66 +184,148 @@ def _unstack_framesets(
                 while elem.getprevious() is not None:
                     del elem.getparent()[0]
 
-    # First pass: only ball
-    def stop_ball() -> bool:
+    def include_objects(objects: Set[str]) -> Callable[[int, str], bool]:
         """
-        Stop if a `limit` is set and we have already collected
-        at least `limit` frames for the ball
+        Returns a callable that checks if the current object is in the given set.
         """
-        return bool(limit) and frames_per_obj.get("ball", 0) >= limit
 
-    def skip_ball(
-        elem: etree.Element, current_period: int, current_obj: str
+        def _filter(current_period, current_obj: str) -> bool:
+            skip = current_obj not in objects
+            if skip:
+                logger.debug(
+                    "Skipping FrameSet for object %s in period %s (reason: not in objects=%s)",
+                    current_obj,
+                    current_period,
+                    objects,
+                )
+            return skip
+
+        return _filter
+
+    def exclude_objects(objects: Set[str]) -> Callable[[int, str], bool]:
+        """
+        Returns a callable that checks if the current object is not in the given set.
+        """
+
+        def _filter(current_period, current_obj: str) -> bool:
+            skip = current_obj in objects
+            if skip:
+                logger.debug(
+                    "Skipping FrameSet for object %s in period %s (reason: in objects=%s)",
+                    current_obj,
+                    current_period,
+                    objects,
+                )
+            return skip
+
+        return _filter
+
+    def make_object_filter(
+        objects: Set[str],
+        include: bool = True,
+    ) -> Callable[[int, str], bool]:
+        """
+        Returns a callable that checks if the current object should be skipped
+        based on membership in the given set.
+
+        Args:
+            objects: Set of object names to include/exclude.
+            include: If True, only allow objects IN the set. If False, exclude objects IN the set.
+        """
+
+        def _filter(current_period: int, current_obj: str) -> bool:
+            skip = (
+                (current_obj not in objects)
+                if include
+                else (current_obj in objects)
+            )
+            if skip:
+                logger.debug(
+                    "Skipping FrameSet for object %s in period %s (reason: %s objects=%s)",
+                    current_obj,
+                    current_period,
+                    ("not in" if include else "in"),
+                    objects,
+                )
+            return skip
+
+        return _filter
+
+    def check_limit(current_period: int, current_obj: str) -> bool:
+        """
+        Check if the limit has been reached for the current object.
+        """
+        assert limit is not None
+        skip = frames_per_obj.get(current_obj, 0) >= limit
+        if skip:
+            logger.debug(
+                "Reached limit=%d for object %s in period %s",
+                frames_per_obj.get(current_obj, 0),
+                current_obj,
+                current_period,
+            )
+        return skip
+
+    def check_only_alive(
+        current_period: int, current_obj: str, frame_data: Dict[str, str]
     ) -> bool:
         """
-        Skip if any of the following is true:
-          1. The frame does not belong to the ball.
-          2. We only want “alive” frames and this one isn’t BALL_STATUS == 1.
-          3. A `limit` is set and we already hit that limit for the ball.
+        Check if the ball is out of play in the current frame.
         """
-        return (
-            (current_obj != "ball")
-            or (only_alive and int(elem.get(BALL_STATUS, "0")) != 1)
-            or (bool(limit) and frames_per_obj.get("ball", 0) >= limit)
-        )
+        assert only_alive is True
+        fid = int(frame_data.get("N", 0))
 
-    _make_pass(stop_predicate=stop_ball, skip_predicate=skip_ball)
+        if current_obj == "ball":
+            skip = int(frame_data.get(BALL_STATUS, "0")) != 1
+        else:
+            skip = "ball" not in frames.get(current_period, {}).get(fid, {})
 
-    # Second pass: all other objects
-    objects_to_skip.add("ball")
-
-    def stop_players() -> bool:
-        """
-        Stop if a non‐zero `limit` is set and *every* non‐skipped object
-        has already collected at least `limit` frames.
-        """
-        return limit is not None and all(
-            count >= limit
-            for obj, count in frames_per_obj.items()
-            if obj not in objects_to_skip
-        )
-
-    def skip_players(
-        elem: etree.Element, current_period: int, current_obj: str
-    ):
-        """
-        Skip if any of the following is true:
-          1. The object is in `objects_to_skip` (including “ball”).
-          2. A non‐zero `limit` is set and we already hit it for this object.
-          3. We only want "alive" ball frames, and this frame occurs at a
-             moment when the ball isn’t alive (so the player frame is irrelevant).
-        """
-        fid = int(elem.get("N"))
-        return (
-            (current_obj in objects_to_skip)
-            or (bool(limit) and frames_per_obj[current_obj] >= limit)
-            or (
-                only_alive
-                and "ball" not in frames.get(current_period, {}).get(fid, {})
+        if skip:
+            logger.debug(
+                "Skipping Frame %d for object %s in period %s (reason: ball not in play)",
+                fid,
+                current_obj,
+                current_period,
             )
-        )
+        return skip
 
-    _make_pass(stop_predicate=stop_players, skip_predicate=skip_players)
+    # --- Build predicates dynamically ---
+
+    skip_frameset = make_object_filter(objects_to_skip, include=False)
+    skip_frameset_ball = make_object_filter({"ball"}, include=True)
+    skip_frameset_players = make_object_filter(
+        objects_to_skip | {"ball"}, include=False
+    )
+
+    if limit:
+        skip_frameset = any_of(skip_frameset, check_limit)
+        skip_frameset_ball = any_of(skip_frameset_ball, check_limit)
+        skip_frameset_players = any_of(skip_frameset_players, check_limit)
+
+    end_frameset = check_limit if limit else None
+    skip_frame = check_only_alive if only_alive else None
+
+    # --- Processing passes ---
+
+    if only_alive:
+        # First pass: only the ball to get the frames where the ball is alive
+        _make_pass(
+            skip_frameset=skip_frameset_ball,
+            end_frameset=end_frameset,
+            skip_frame=skip_frame,
+        )
+        # Second pass: all other objects in these frames
+        _make_pass(
+            skip_frameset=skip_frameset_players,
+            end_frameset=end_frameset,
+            skip_frame=skip_frame,
+        )
+    else:
+        _make_pass(
+            skip_frameset=skip_frameset,
+            end_frameset=end_frameset,
+            skip_frame=skip_frame,
+        )
 
     return dict(frames)
 
@@ -244,9 +382,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         with performance_logging("parse tracking data", logger=logger):
             period_frames = _unstack_framesets(
                 inputs.raw_data,
-                limit=int(self.limit / self.sample_rate)
-                if self.sample_rate and self.limit
-                else self.limit,
+                limit=(
+                    int(self.limit / self.sample_rate)
+                    if self.sample_rate and self.limit
+                    else self.limit
+                ),
                 only_alive=self.only_alive,
                 objects_to_skip=official_ids,
             )
@@ -291,12 +431,16 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                                 )
                                 / sportec_metadata.fps
                             ),
-                            ball_owning_team=home_team
-                            if int(ball_data.get(BALL_POSSESSION, 0)) == 1
-                            else away_team,
-                            ball_state=BallState.ALIVE
-                            if int(ball_data.get(BALL_STATUS, 0)) == 1
-                            else BallState.DEAD,
+                            ball_owning_team=(
+                                home_team
+                                if int(ball_data.get(BALL_POSSESSION, 0)) == 1
+                                else away_team
+                            ),
+                            ball_state=(
+                                BallState.ALIVE
+                                if int(ball_data.get(BALL_STATUS, 0)) == 1
+                                else BallState.DEAD
+                            ),
                             period=period,
                             players_data={
                                 player_map[object_id]: PlayerData(

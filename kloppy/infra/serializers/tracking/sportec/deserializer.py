@@ -184,42 +184,6 @@ def _unstack_framesets(
                 while elem.getprevious() is not None:
                     del elem.getparent()[0]
 
-    def include_objects(objects: Set[str]) -> Callable[[int, str], bool]:
-        """
-        Returns a callable that checks if the current object is in the given set.
-        """
-
-        def _filter(current_period, current_obj: str) -> bool:
-            skip = current_obj not in objects
-            if skip:
-                logger.debug(
-                    "Skipping FrameSet for object %s in period %s (reason: not in objects=%s)",
-                    current_obj,
-                    current_period,
-                    objects,
-                )
-            return skip
-
-        return _filter
-
-    def exclude_objects(objects: Set[str]) -> Callable[[int, str], bool]:
-        """
-        Returns a callable that checks if the current object is not in the given set.
-        """
-
-        def _filter(current_period, current_obj: str) -> bool:
-            skip = current_obj in objects
-            if skip:
-                logger.debug(
-                    "Skipping FrameSet for object %s in period %s (reason: in objects=%s)",
-                    current_obj,
-                    current_period,
-                    objects,
-                )
-            return skip
-
-        return _filter
-
     def make_object_filter(
         objects: Set[str],
         include: bool = True,

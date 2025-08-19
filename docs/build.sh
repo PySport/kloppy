@@ -7,7 +7,7 @@ export PATH="$PWD/deps/d2/bin:$PATH"
 
 # Install kloppy and docs requirements
 pip install .
-pip install -r docs-requirements.txt
+pip install -r requirements-docs.txt
 
 # Build MkDocs site
 mkdocs build -d site

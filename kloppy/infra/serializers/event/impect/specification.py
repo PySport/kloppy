@@ -242,7 +242,7 @@ class DRIBBLE(EVENT):
                 end_coordinates_info["adjCoordinates"]
             )
         else:
-            end_coordinates = None
+            end_coordinates = generic_event_kwargs["coordinates"]
         duration = (
             self.raw_event["duration"] if self.raw_event["duration"] else 0
         )

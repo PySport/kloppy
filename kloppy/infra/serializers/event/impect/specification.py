@@ -118,7 +118,12 @@ class EVENT:
             if self.raw_event["player"]
             else None
         )
-        self.statistics = [PressingIntensity(value=self.raw_event["pressure"])]
+        statistics = []
+        if self.raw_event["pressure"]:
+            statistics.append(
+                PressingIntensity(value=self.raw_event["pressure"])
+            )
+        self.statistics = statistics
 
         return self
 
@@ -302,9 +307,12 @@ class SHOT(EVENT):
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
         qualifiers = _get_body_part_qualifiers(body_part)
-        action = self.ACTION(self.raw_event["action"])
-        if action == self.ACTION.PENALTY_KICK:
-            qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
+        if self.raw_event["action"]:
+            action = self.ACTION(self.raw_event["action"])
+            if action == self.ACTION.PENALTY_KICK:
+                qualifiers.append(
+                    SetPieceQualifier(value=SetPieceType.PENALTY)
+                )
 
         shot_event = event_factory.build_shot(
             result=shot_result,

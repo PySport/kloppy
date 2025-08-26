@@ -260,14 +260,16 @@ class TestImpectPassEvent:
         shot_assists = [
             e
             for e in dataset.events
-            if PassType.SHOT_ASSIST in e.get_qualifier_values(PassQualifier)
+            if e.event_type == EventType.PASS
+            and PassType.SHOT_ASSIST in e.get_qualifier_values(PassQualifier)
         ]
         assert len(shot_assists) == 8
 
         goal_assists = [
             e
             for e in dataset.events
-            if PassType.ASSIST in e.get_qualifier_values(PassQualifier)
+            if e.event_type == EventType.PASS
+            and PassType.ASSIST in e.get_qualifier_values(PassQualifier)
         ]
         assert len(goal_assists) == 3
 

@@ -1501,6 +1501,14 @@ class ActionValue(Statistic):
 
 
 @dataclass
+class PressingIntensity(ScalarStatistic):
+    """Pressing Intensity"""
+
+    def __post_init__(self):
+        self.name = "Pressing Intensity"
+
+
+@dataclass
 class DataRecord(ABC):
     """
     Base class for a data record in a dataset.

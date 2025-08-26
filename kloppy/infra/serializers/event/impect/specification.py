@@ -23,6 +23,8 @@ from kloppy.domain import (
     SetPieceQualifier,
     SetPieceType,
     Team,
+    ShotResult,
+    PressingIntensity,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.impect.helpers import (
@@ -49,6 +51,7 @@ class EVENT_TYPE(Enum):
     KICK_OFF = "KICK_OFF"
     THROW_IN = "THROW_IN"
     FREE_KICK = "FREE_KICK"
+    PENALTY_KICK = "PENALTY_KICK"
     GOAL_KICK = "GOAL_KICK"
     CORNER = "CORNER"
     GK_CATCH = "GK_CATCH"
@@ -115,6 +118,7 @@ class EVENT:
             if self.raw_event["player"]
             else None
         )
+        self.statistics = [PressingIntensity(value=self.raw_event["pressure"])]
 
         return self
 
@@ -154,6 +158,7 @@ class EVENT:
             )
             if self.raw_event["start"]
             else None,
+            "statistics": self.statistics,
             "related_event_ids": self.raw_event.get("related_events", []),
             "raw_event": self.raw_event,
         }
@@ -274,6 +279,8 @@ class SHOT(EVENT):
         CLOSE_RANGE_SHOT = "CLOSE_RANGE_SHOT"
         ONE_VS_ONE_AGAINST_GK = "ONE_VS_ONE_AGAINST_GK"
         OPEN_GOAL_SHOT = "OPEN_GOAL_SHOT"
+        PENALTY_KICK = "PENALTY_KICK"
+        HEADER = "HEADER"
 
     class RESULT(Enum):
         FAIL = "FAIL"
@@ -292,11 +299,12 @@ class SHOT(EVENT):
             shot_dict, result
         )
 
-        # action = self.ACTION(self.raw_event["action"])
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
         qualifiers = _get_body_part_qualifiers(body_part)
+        action = self.ACTION(self.raw_event["action"])
+        if action == self.ACTION.PENALTY_KICK:
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
 
         shot_event = event_factory.build_shot(
             result=shot_result,
@@ -574,6 +582,7 @@ class FREE_KICK(EVENT):
             )
             body_part = BODYPART(self.raw_event["bodyPartExtended"])
             qualifiers = _get_body_part_qualifiers(body_part)
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
 
             shot_event = event_factory.build_shot(
                 result=shot_result,
@@ -803,6 +812,28 @@ class RED_CARD(EVENT):
         return [card_event]
 
 
+class OWN_GOAL(EVENT):
+    class ACTION(Enum):
+        OWN_GOAL = "OWN_GOAL"
+
+    def _create_events(
+        self,
+        event_factory: EventFactory,
+        teams: List[Team],
+        **generic_event_kwargs,
+    ) -> List[Event]:
+
+        body_part = BODYPART(self.raw_event["bodyPartExtended"])
+        qualifiers = _get_body_part_qualifiers(body_part)
+
+        own_goal_event = event_factory.build_shot(
+            result=ShotResult.OWN_GOAL,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+        return [own_goal_event]
+
+
 def create_pass_props(
     event: Union[PASS, KICK_OFF, THROW_IN, FREE_KICK, GOAL_KICK, CORNER],
     generic_event_kwargs,
@@ -919,6 +950,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.YELLOW_CARD: YELLOW_CARD,
         EVENT_TYPE.SECOND_YELLOW_CARD: SECOND_YELLOW_CARD,
         EVENT_TYPE.RED_CARD: RED_CARD,
+        EVENT_TYPE.OWN_GOAL: OWN_GOAL,
     }
     event_type = EVENT_TYPE(raw_event["actionType"])
     event_creator = type_to_event.get(event_type, EVENT)

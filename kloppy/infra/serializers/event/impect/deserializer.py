@@ -7,6 +7,7 @@ from typing import Dict, List, NamedTuple, IO, Tuple
 from datetime import timedelta, datetime
 import logging
 from lxml import objectify
+import re
 
 from kloppy.domain import (
     EventDataset,
@@ -155,10 +156,11 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
     @staticmethod
     def create_teams_and_players(metadata: Dict) -> List[Team]:
         def create_team(team_info: Dict, ground: Ground) -> Team:
+            starting_formation_stripped = re.sub(
+                r"[^0-9-]", "", team_info["startingFormation"]
+            )
             try:
-                starting_formation = FormationType(
-                    team_info["startingFormation"]
-                )
+                starting_formation = FormationType(starting_formation_stripped)
             except ValueError:
                 warnings.warn(
                     f"Unknown starting formation {team_info['startingFormation']}, defaulting to UNKNOWN"
@@ -304,6 +306,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                             )
                         )
                     else:
+                        warnings.warn(
+                            f"A substitution without replacement player was recognized for player {rec_out['player']}"
+                        )
                         eid = f"substitution-{rec_out['player'].player_id}"
                         substitutions.append(
                             self.event_factory.build_substitution(

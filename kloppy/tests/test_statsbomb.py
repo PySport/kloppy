@@ -1257,3 +1257,56 @@ class TestStatsBombTacticalShiftEvent:
                 PositionType.LeftMidfield,
             )
         ]
+
+
+class TestStatsBombBlockEvent:
+    """Tests related to deserializing 6/Block events"""
+
+    def test_block_event_type(self, dataset: EventDataset):
+        """It should recognize block as a valid event type"""
+        # Test that we can filter for block events
+        block_events = dataset.filter("block")
+        assert len(block_events) == 37
+
+    def test_block_event_properties(self, dataset: EventDataset):
+        """Test that block events have the correct properties"""
+        block_events = dataset.find_all("block")
+
+        # Test the first block event
+        first_block = block_events[0]
+        assert first_block.event_type == EventType.BLOCK
+        assert first_block.event_name == "block"
+        assert hasattr(first_block, "shot_block")
+        assert isinstance(first_block.shot_block, bool)
+
+        # Test that all block events have the correct event type
+        for block_event in block_events:
+            assert block_event.event_type == EventType.BLOCK
+            assert block_event.event_name == "block"
+            assert hasattr(block_event, "shot_block")
+            assert isinstance(block_event.shot_block, bool)
+
+    def test_shot_block_vs_pass_block_counts(self, dataset: EventDataset):
+        """Test that the correct number of shot blocks and pass blocks are identified"""
+        block_events = dataset.find_all("block")
+
+        # Separate shot blocks from pass blocks
+        shot_blocks = [b for b in block_events if b.shot_block]
+        pass_blocks = [b for b in block_events if not b.shot_block]
+
+        # For StatsBomb dataset, all blocks should be pass blocks (no shot blocks)
+        assert (
+            len(shot_blocks) == 0
+        ), f"Expected 0 shot blocks, got {len(shot_blocks)}"
+        assert (
+            len(pass_blocks) == 37
+        ), f"Expected 37 pass blocks, got {len(pass_blocks)}"
+        assert (
+            len(block_events) == 37
+        ), f"Expected 37 total block events, got {len(block_events)}"
+
+        # Verify that all pass blocks have shot_block=False
+        for pass_block in pass_blocks:
+            assert (
+                pass_block.shot_block is False
+            ), f"Pass block event {pass_block.event_id} has shot_block=True"

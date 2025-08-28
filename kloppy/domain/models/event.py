@@ -304,6 +304,7 @@ class EventType(Enum):
         GOALKEEPER (EventType):
         PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
+        BLOCK (EventType):
     """
 
     GENERIC = "generic"
@@ -326,6 +327,7 @@ class EventType(Enum):
     GOALKEEPER = "GOALKEEPER"
     PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    BLOCK = "BLOCK"
 
     def __repr__(self):
         return self.value
@@ -1110,6 +1112,34 @@ class ClearanceEvent(
 
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
+class BlockEvent(
+    QualifierMixin[CounterAttackQualifier],
+    NoResultMixin,
+    Event,
+):
+    """
+    A defensive action when a player blocks a pass or shot from an opponent.
+
+    Attributes:
+        event_type (EventType): `EventType.BLOCK`
+        event_name (str): `"block"`
+        shot_block (bool): True if the block was blocking a shot; otherwise False.
+        qualifiers: A list of qualifiers providing additional information about the block.
+    """
+
+    shot_block: bool
+
+    @property
+    def event_type(self) -> EventType:
+        return EventType.BLOCK
+
+    @property
+    def event_name(self) -> str:
+        return "block"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
 class DuelEvent(
     QualifierMixin[Union[DuelQualifier, CounterAttackQualifier]],
     ResultMixin[DuelResult],
@@ -1556,6 +1586,7 @@ __all__ = [
     "TakeOnEvent",
     "CarryEvent",
     "ClearanceEvent",
+    "BlockEvent",
     "InterceptionEvent",
     "InterceptionResult",
     "SubstitutionEvent",

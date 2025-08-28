@@ -3,7 +3,7 @@
   <Metadata>
     <GlobalConfig>
       <FileDate>2025-08-23T06:25:36</FileDate>
-      <FileName>20250822 Helmond Sport vs FC Emmen - FIFA.xml</FileName>
+      <FileName>match.xml</FileName>
       <ProviderName>Scisports</ProviderName>
       <Software>Scisports Optical</Software>
       <Version>smart-0.28.0-PROD</Version>
@@ -50,7 +50,7 @@
             <Width>68.0</Width>
           </FieldSize>
         </MatchParameters>
-        <Location>GS Staalwerken Stadion - Helmond Sport - NL</Location>
+        <Location>Stadium - City - Country</Location>
         <Competition>Keuken Kampioen Divisie</Competition>
         <ProviderSessionParameters>
           <ProviderParameter>

@@ -108,6 +108,19 @@ class PassResult(ResultType):
         return self == self.COMPLETE
 
 
+class BlockType(Enum):
+    """
+    BlockType
+
+    Attributes:
+        SHOT (BlockType): Block was blocking a shot
+        PASS (BlockType): Block was blocking a pass
+    """
+
+    SHOT = "SHOT"
+    PASS = "PASS"
+
+
 class TakeOnResult(ResultType):
     """
     TakeOnResult
@@ -304,6 +317,7 @@ class EventType(Enum):
         GOALKEEPER (EventType):
         PRESSURE (EventType):
         FORMATION_CHANGE (EventType):
+        BLOCK (EventType):
     """
 
     GENERIC = "generic"
@@ -326,6 +340,7 @@ class EventType(Enum):
     GOALKEEPER = "GOALKEEPER"
     PRESSURE = "PRESSURE"
     FORMATION_CHANGE = "FORMATION_CHANGE"
+    BLOCK = "BLOCK"
 
     def __repr__(self):
         return self.value
@@ -685,6 +700,17 @@ class QualifierMixin(Generic[QualifierT]):
 @dataclass
 class UnderPressureQualifier(BoolQualifier):
     pass
+
+
+@dataclass
+class BlockQualifier(EnumQualifier[BlockType]):
+    """
+    Indicates the type of block event.
+
+    Attributes:
+        name (str): `"block"`
+        value (BlockType): The type of block (SHOT or PASS).
+    """
 
 
 @dataclass
@@ -1106,6 +1132,31 @@ class ClearanceEvent(
     @property
     def event_name(self) -> str:
         return "clearance"
+
+
+@dataclass(repr=False)
+@docstring_inherit_attributes(Event)
+class BlockEvent(
+    QualifierMixin[Union[BlockQualifier, CounterAttackQualifier]],
+    NoResultMixin,
+    Event,
+):
+    """
+    A defensive action when a player blocks a pass or shot from an opponent.
+
+    Attributes:
+        event_type (EventType): `EventType.BLOCK`
+        event_name (str): `"block"`
+        qualifiers: A list of qualifiers providing additional information about the block.
+    """
+
+    @property
+    def event_type(self) -> EventType:
+        return EventType.BLOCK
+
+    @property
+    def event_name(self) -> str:
+        return "block"
 
 
 @dataclass(repr=False)
@@ -1547,6 +1598,7 @@ __all__ = [
     "EventType",
     "ShotResult",
     "PassResult",
+    "BlockType",
     "TakeOnResult",
     "CarryResult",
     "Event",
@@ -1556,6 +1608,7 @@ __all__ = [
     "TakeOnEvent",
     "CarryEvent",
     "ClearanceEvent",
+    "BlockEvent",
     "InterceptionEvent",
     "InterceptionResult",
     "SubstitutionEvent",
@@ -1584,6 +1637,7 @@ __all__ = [
     "GoalkeeperActionType",
     "CounterAttackQualifier",
     "UnderPressureQualifier",
+    "BlockQualifier",
     "DuelEvent",
     "DuelType",
     "DuelQualifier",

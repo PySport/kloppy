@@ -4,6 +4,8 @@ from typing import Dict, List, NamedTuple, Optional, Union
 
 from kloppy.domain import (
     BallState,
+    BlockQualifier,
+    BlockType,
     BodyPart,
     BodyPartQualifier,
     CardQualifier,
@@ -780,6 +782,35 @@ class CLEARANCE(EVENT):
         return [clearance_event]
 
 
+class BLOCK(EVENT):
+    """StatsBomb 6/Block event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        block_dict = self.raw_event.get("block", {})
+        qualifiers = []
+
+        # Check if this is a shot block based on the save_block attribute
+        shot_block = block_dict.get("save_block", False)
+
+        # Add block type qualifier
+        block_type = BlockType.SHOT if shot_block else BlockType.PASS
+        qualifiers.append(BlockQualifier(value=block_type))
+
+        # Add body part qualifiers if available
+        body_part_qualifiers = _get_body_part_qualifiers(block_dict)
+        qualifiers.extend(body_part_qualifiers)
+
+        block_event = event_factory.build_block(
+            result=None,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [block_event]
+
+
 class MISCONTROL(EVENT):
     """StatsBomb 38/Miscontrol event."""
 
@@ -1473,6 +1504,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.OWN_GOAL_FOR: OWN_GOAL_FOR,
         EVENT_TYPE.OWN_GOAL_AGAINST: OWN_GOAL_AGAINST,
         EVENT_TYPE.CLEARANCE: CLEARANCE,
+        EVENT_TYPE.BLOCK: BLOCK,
         EVENT_TYPE.MISCONTROL: MISCONTROL,
         EVENT_TYPE.DRIBBLE: DRIBBLE,
         EVENT_TYPE.CARRY: CARRY,

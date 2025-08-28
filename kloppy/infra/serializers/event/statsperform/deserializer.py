@@ -7,6 +7,8 @@ import pytz
 
 from kloppy.domain import (
     BallState,
+    BlockQualifier,
+    BlockType,
     BodyPart,
     BodyPartQualifier,
     CardQualifier,
@@ -39,6 +41,7 @@ from kloppy.domain import (
     TakeOnResult,
     Team,
 )
+
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
@@ -898,10 +901,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **duel_event_kwargs,
                             **generic_event_kwargs,
                         )
-                    elif raw_event.type_id in (
-                        EVENT_TYPE_INTERCEPTION,
-                        EVENT_TYPE_BLOCKED_PASS,
-                    ):
+                    elif raw_event.type_id == EVENT_TYPE_INTERCEPTION:
                         interception_event_kwargs = _parse_interception(
                             raw_event, team, next_event
                         )
@@ -909,14 +909,24 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             **interception_event_kwargs,
                             **generic_event_kwargs,
                         )
+                    elif raw_event.type_id == EVENT_TYPE_BLOCKED_PASS:
+                        # Create a block event for blocked passes
+                        qualifiers = [BlockQualifier(value=BlockType.PASS)]
+
+                        event = self.event_factory.build_block(
+                            result=None,
+                            qualifiers=qualifiers,
+                            **generic_event_kwargs,
+                        )
                     elif raw_event.type_id in KEEPER_EVENTS:
                         # Qualifier 94 means the "save" event is a shot block by a defender
                         if 94 in raw_event.qualifiers:
-                            event = self.event_factory.build_generic(
-                                **generic_event_kwargs,
+                            qualifiers = [BlockQualifier(value=BlockType.SHOT)]
+
+                            event = self.event_factory.build_block(
                                 result=None,
-                                qualifiers=None,
-                                event_name="block",
+                                qualifiers=qualifiers,
+                                **generic_event_kwargs,
                             )
                         else:
                             goalkeeper_event_kwargs = _parse_goalkeeper_events(

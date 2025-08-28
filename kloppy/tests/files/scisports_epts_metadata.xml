@@ -1,0 +1,1044 @@
+<?xml version='1.0' encoding='utf-8'?>
+<FIFADataTransferFormatEPTS xmlns:tns="IFADataTransferFormatEPTSNamespace/FIFADataTransferFormatEPTS">
+  <Metadata>
+    <GlobalConfig>
+      <FileDate>2025-08-23T06:25:36</FileDate>
+      <FileName>20250822 Helmond Sport vs FC Emmen - FIFA.xml</FileName>
+      <ProviderName>Scisports</ProviderName>
+      <Software>Scisports Optical</Software>
+      <Version>smart-0.28.0-PROD</Version>
+      <TrackingType>Optical</TrackingType>
+      <FrameRate>25</FrameRate>
+      <Encoding>UTF-8</Encoding>
+      <ProviderGlobalParameters>
+        <ProviderParameter>
+          <Value>25.00</Value>
+          <Description>A more accurate value for frame rate</Description>
+          <Name>FrameRate</Name>
+        </ProviderParameter>
+        <ProviderParameter>
+          <Value>34.0</Value>
+          <Description>X coordinate of the centre of the pitch</Description>
+          <Name>Pitch Centre X</Name>
+        </ProviderParameter>
+        <ProviderParameter>
+          <Value>52.5</Value>
+          <Description>Y coordinate of the centre of the pitch</Description>
+          <Name>Pitch Centre Y</Name>
+        </ProviderParameter>
+        <ProviderParameter>
+          <Value>Labeled</Value>
+          <Description>Indicator describing whether data is generated autonomously, or also includes labeled data</Description>
+          <Name>Processing Type</Name>
+        </ProviderParameter>
+        <ProviderParameter>
+          <Value>Full ID</Value>
+          <Description>Indicator describing what level of detail is in the output data</Description>
+          <Name>Tracking Level</Name>
+        </ProviderParameter>
+      </ProviderGlobalParameters>
+    </GlobalConfig>
+    <Sessions>
+      <Session id="1527118440">
+        <SessionType>Full Match</SessionType>
+        <SessionName>Match</SessionName>
+        <Start>2025-08-22T17:59:57</Start>
+        <End>2025-08-22T19:55:19</End>
+        <MatchParameters>
+          <FieldSize>
+            <Length>105.0</Length>
+            <Width>68.0</Width>
+          </FieldSize>
+        </MatchParameters>
+        <Location>GS Staalwerken Stadion - Helmond Sport - NL</Location>
+        <Competition>Keuken Kampioen Divisie</Competition>
+        <ProviderSessionParameters>
+          <ProviderParameter>
+            <Value>44585</Value>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217637</Value>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderSessionParameters>
+      </Session>
+      <Session id="1527118440-1">
+        <SessionType>Period</SessionType>
+        <SessionName>1st Half</SessionName>
+        <Start>2025-08-22T18:00:00</Start>
+        <End>2025-08-22T18:46:16</End>
+        <ProviderSessionParameters>
+          <ProviderParameter>
+            <Value>44659</Value>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>114059</Value>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>1</Value>
+            <Name>Label</Name>
+          </ProviderParameter>
+        </ProviderSessionParameters>
+      </Session>
+      <Session id="1527118440-2">
+        <SessionType>Period</SessionType>
+        <SessionName>2nd Half</SessionName>
+        <Start>2025-08-22T19:03:10</Start>
+        <End>2025-08-22T19:55:16</End>
+        <ProviderSessionParameters>
+          <ProviderParameter>
+            <Value>139406</Value>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217562</Value>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>2</Value>
+            <Name>Label</Name>
+          </ProviderParameter>
+        </ProviderSessionParameters>
+      </Session>
+    </Sessions>
+    <Teams>
+      <Team id="T-00176">
+        <Name>Home Team</Name>
+        <ProviderTeamParameters>
+          <ProviderParameter>
+            <Value>H</Value>
+            <Description>Indicator for Home/Local (H) or Away/Visiting (A) team</Description>
+            <Name>Side</Name>
+          </ProviderParameter>
+        </ProviderTeamParameters>
+      </Team>
+      <Team id="T-00267">
+        <Name>Away Team</Name>
+        <ProviderTeamParameters>
+          <ProviderParameter>
+            <Value>A</Value>
+            <Description>Indicator for Home/Local (H) or Away/Visiting (A) team</Description>
+            <Name>Side</Name>
+          </ProviderParameter>
+        </ProviderTeamParameters>
+      </Team>
+    </Teams>
+    <Players>
+      <Player id="P-009102" teamId="T-00176">
+        <Name>home_1</Name>
+        <ShirtNumber>1</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Goalkeeper</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-001814" teamId="T-00176">
+        <Name>home_2</Name>
+        <ShirtNumber>2</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>169995</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>p61761</Value>
+            <Name>Opta ID</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-002372" teamId="T-00176">
+        <Name>home_3</Name>
+        <ShirtNumber>3</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-001751" teamId="T-00176">
+        <Name>home_4</Name>
+        <ShirtNumber>4</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>p43981</Value>
+            <Name>Opta ID</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-001756" teamId="T-00176">
+        <Name>home_5</Name>
+        <ShirtNumber>5</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>170229</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>p96252</Value>
+            <Name>Opta ID</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009108" teamId="T-00176">
+        <Name>home_6</Name>
+        <ShirtNumber>6</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>170929</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-001696" teamId="T-00176">
+        <Name>home_8</Name>
+        <ShirtNumber>8</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>p34309</Value>
+            <Name>Opta ID</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009109" teamId="T-00176">
+        <Name>home_9</Name>
+        <ShirtNumber>9</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>206506</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007856" teamId="T-00176">
+        <Name>home_11</Name>
+        <ShirtNumber>11</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199698</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009105" teamId="T-00176">
+        <Name>home_16</Name>
+        <ShirtNumber>16</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>206505</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009107" teamId="T-00176">
+        <Name>home_19</Name>
+        <ShirtNumber>19</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199699</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007973" teamId="T-00176">
+        <Name>home_22</Name>
+        <ShirtNumber>22</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>170228</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009103" teamId="T-00176">
+        <Name>home_24</Name>
+        <ShirtNumber>24</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009104" teamId="T-00176">
+        <Name>home_26</Name>
+        <ShirtNumber>26</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007854" teamId="T-00176">
+        <Name>home_27</Name>
+        <ShirtNumber>27</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>170928</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009106" teamId="T-00176">
+        <Name>home_36</Name>
+        <ShirtNumber>36</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>169994</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007816" teamId="T-00267">
+        <Name>away_38</Name>
+        <ShirtNumber>38</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Goalkeeper</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-009060" teamId="T-00267">
+        <Name>away_4</Name>
+        <ShirtNumber>4</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007829" teamId="T-00267">
+        <Name>away_5</Name>
+        <ShirtNumber>5</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>189223</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007817" teamId="T-00267">
+        <Name>away_6</Name>
+        <ShirtNumber>6</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-002240" teamId="T-00267">
+        <Name>away_9</Name>
+        <ShirtNumber>9</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>p92842</Value>
+            <Name>Opta ID</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008982" teamId="T-00267">
+        <Name>away_11</Name>
+        <ShirtNumber>11</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>189222</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008003" teamId="T-00267">
+        <Name>away_12</Name>
+        <ShirtNumber>12</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199639</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008337" teamId="T-00267">
+        <Name>away_14</Name>
+        <ShirtNumber>14</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199225</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008981" teamId="T-00267">
+        <Name>away_17</Name>
+        <ShirtNumber>17</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199224</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007828" teamId="T-00267">
+        <Name>away_18</Name>
+        <ShirtNumber>18</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>177129</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008987" teamId="T-00267">
+        <Name>away_19</Name>
+        <ShirtNumber>19</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007821" teamId="T-00267">
+        <Name>away_21</Name>
+        <ShirtNumber>21</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199884</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-008980" teamId="T-00267">
+        <Name>away_22</Name>
+        <ShirtNumber>22</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>177128</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-004161" teamId="T-00267">
+        <Name>away_24</Name>
+        <ShirtNumber>24</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-000559" teamId="T-00267">
+        <Name>away_25</Name>
+        <ShirtNumber>25</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>44575</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199883</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+      <Player id="P-007660" teamId="T-00267">
+        <Name>away_34</Name>
+        <ShirtNumber>34</ShirtNumber>
+        <ProviderPlayerParameters>
+          <ProviderParameter>
+            <Value>Field player</Value>
+            <Name>PlayerType</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>199640</Value>
+            <Description>First frame player is part of line-up</Description>
+            <Name>Start Frame</Name>
+          </ProviderParameter>
+          <ProviderParameter>
+            <Value>217625</Value>
+            <Description>Last frame player is part of line-up</Description>
+            <Name>End Frame</Name>
+          </ProviderParameter>
+        </ProviderPlayerParameters>
+      </Player>
+    </Players>
+    <Devices>
+      <Device id="inmotio-optical">
+        <Name>Inmotio Optical Tracker</Name>
+        <Sensors>
+          <Sensor id="position">
+            <Name>Position</Name>
+            <Channels>
+              <Channel id="x">
+                <Name>X Position</Name>
+                <Unit>m</Unit>
+              </Channel>
+              <Channel id="y">
+                <Name>Y Position</Name>
+                <Unit>m</Unit>
+              </Channel>
+            </Channels>
+          </Sensor>
+          <Sensor id="height-estimator">
+            <Name>Height Estimator</Name>
+            <Channels>
+              <Channel id="z-estimate">
+                <Name>Z Position Estimate</Name>
+                <Unit>m</Unit>
+              </Channel>
+            </Channels>
+          </Sensor>
+          <Sensor id="state">
+            <Name>State</Name>
+            <Channels>
+              <Channel id="air">
+                <Name>Ball Is In Air</Name>
+                <Unit>Boolean</Unit>
+              </Channel>
+              <Channel id="alive">
+                <Name>Game Is Alive</Name>
+                <Unit>Boolean</Unit>
+              </Channel>
+            </Channels>
+          </Sensor>
+        </Sensors>
+      </Device>
+    </Devices>
+    <PlayerChannels>
+      <PlayerChannel id="P-009102_x" channelId="x" playerId="P-009102"/>
+      <PlayerChannel id="P-009102_y" channelId="y" playerId="P-009102"/>
+      <PlayerChannel id="P-001814_x" channelId="x" playerId="P-001814"/>
+      <PlayerChannel id="P-001814_y" channelId="y" playerId="P-001814"/>
+      <PlayerChannel id="P-002372_x" channelId="x" playerId="P-002372"/>
+      <PlayerChannel id="P-002372_y" channelId="y" playerId="P-002372"/>
+      <PlayerChannel id="P-001751_x" channelId="x" playerId="P-001751"/>
+      <PlayerChannel id="P-001751_y" channelId="y" playerId="P-001751"/>
+      <PlayerChannel id="P-001756_x" channelId="x" playerId="P-001756"/>
+      <PlayerChannel id="P-001756_y" channelId="y" playerId="P-001756"/>
+      <PlayerChannel id="P-009108_x" channelId="x" playerId="P-009108"/>
+      <PlayerChannel id="P-009108_y" channelId="y" playerId="P-009108"/>
+      <PlayerChannel id="P-001696_x" channelId="x" playerId="P-001696"/>
+      <PlayerChannel id="P-001696_y" channelId="y" playerId="P-001696"/>
+      <PlayerChannel id="P-009109_x" channelId="x" playerId="P-009109"/>
+      <PlayerChannel id="P-009109_y" channelId="y" playerId="P-009109"/>
+      <PlayerChannel id="P-007856_x" channelId="x" playerId="P-007856"/>
+      <PlayerChannel id="P-007856_y" channelId="y" playerId="P-007856"/>
+      <PlayerChannel id="P-009105_x" channelId="x" playerId="P-009105"/>
+      <PlayerChannel id="P-009105_y" channelId="y" playerId="P-009105"/>
+      <PlayerChannel id="P-009107_x" channelId="x" playerId="P-009107"/>
+      <PlayerChannel id="P-009107_y" channelId="y" playerId="P-009107"/>
+      <PlayerChannel id="P-007973_x" channelId="x" playerId="P-007973"/>
+      <PlayerChannel id="P-007973_y" channelId="y" playerId="P-007973"/>
+      <PlayerChannel id="P-009103_x" channelId="x" playerId="P-009103"/>
+      <PlayerChannel id="P-009103_y" channelId="y" playerId="P-009103"/>
+      <PlayerChannel id="P-009104_x" channelId="x" playerId="P-009104"/>
+      <PlayerChannel id="P-009104_y" channelId="y" playerId="P-009104"/>
+      <PlayerChannel id="P-007854_x" channelId="x" playerId="P-007854"/>
+      <PlayerChannel id="P-007854_y" channelId="y" playerId="P-007854"/>
+      <PlayerChannel id="P-009106_x" channelId="x" playerId="P-009106"/>
+      <PlayerChannel id="P-009106_y" channelId="y" playerId="P-009106"/>
+      <PlayerChannel id="P-007816_x" channelId="x" playerId="P-007816"/>
+      <PlayerChannel id="P-007816_y" channelId="y" playerId="P-007816"/>
+      <PlayerChannel id="P-009060_x" channelId="x" playerId="P-009060"/>
+      <PlayerChannel id="P-009060_y" channelId="y" playerId="P-009060"/>
+      <PlayerChannel id="P-007829_x" channelId="x" playerId="P-007829"/>
+      <PlayerChannel id="P-007829_y" channelId="y" playerId="P-007829"/>
+      <PlayerChannel id="P-007817_x" channelId="x" playerId="P-007817"/>
+      <PlayerChannel id="P-007817_y" channelId="y" playerId="P-007817"/>
+      <PlayerChannel id="P-002240_x" channelId="x" playerId="P-002240"/>
+      <PlayerChannel id="P-002240_y" channelId="y" playerId="P-002240"/>
+      <PlayerChannel id="P-008982_x" channelId="x" playerId="P-008982"/>
+      <PlayerChannel id="P-008982_y" channelId="y" playerId="P-008982"/>
+      <PlayerChannel id="P-008003_x" channelId="x" playerId="P-008003"/>
+      <PlayerChannel id="P-008003_y" channelId="y" playerId="P-008003"/>
+      <PlayerChannel id="P-008337_x" channelId="x" playerId="P-008337"/>
+      <PlayerChannel id="P-008337_y" channelId="y" playerId="P-008337"/>
+      <PlayerChannel id="P-008981_x" channelId="x" playerId="P-008981"/>
+      <PlayerChannel id="P-008981_y" channelId="y" playerId="P-008981"/>
+      <PlayerChannel id="P-007828_x" channelId="x" playerId="P-007828"/>
+      <PlayerChannel id="P-007828_y" channelId="y" playerId="P-007828"/>
+      <PlayerChannel id="P-008987_x" channelId="x" playerId="P-008987"/>
+      <PlayerChannel id="P-008987_y" channelId="y" playerId="P-008987"/>
+      <PlayerChannel id="P-007821_x" channelId="x" playerId="P-007821"/>
+      <PlayerChannel id="P-007821_y" channelId="y" playerId="P-007821"/>
+      <PlayerChannel id="P-008980_x" channelId="x" playerId="P-008980"/>
+      <PlayerChannel id="P-008980_y" channelId="y" playerId="P-008980"/>
+      <PlayerChannel id="P-004161_x" channelId="x" playerId="P-004161"/>
+      <PlayerChannel id="P-004161_y" channelId="y" playerId="P-004161"/>
+      <PlayerChannel id="P-000559_x" channelId="x" playerId="P-000559"/>
+      <PlayerChannel id="P-000559_y" channelId="y" playerId="P-000559"/>
+      <PlayerChannel id="P-007660_x" channelId="x" playerId="P-007660"/>
+      <PlayerChannel id="P-007660_y" channelId="y" playerId="P-007660"/>
+    </PlayerChannels>
+  </Metadata>
+  <DataFormatSpecifications>
+    <DataFormatSpecification separator=":" startFrame="44585" endFrame="217637">
+      <StringRegister name="frame"/>
+      <SplitRegister separator=";">
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009102_x"/>
+          <PlayerChannelRef playerChannelId="P-009102_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-001814_x"/>
+          <PlayerChannelRef playerChannelId="P-001814_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-002372_x"/>
+          <PlayerChannelRef playerChannelId="P-002372_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-001751_x"/>
+          <PlayerChannelRef playerChannelId="P-001751_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-001756_x"/>
+          <PlayerChannelRef playerChannelId="P-001756_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009108_x"/>
+          <PlayerChannelRef playerChannelId="P-009108_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-001696_x"/>
+          <PlayerChannelRef playerChannelId="P-001696_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009109_x"/>
+          <PlayerChannelRef playerChannelId="P-009109_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007856_x"/>
+          <PlayerChannelRef playerChannelId="P-007856_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009105_x"/>
+          <PlayerChannelRef playerChannelId="P-009105_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009107_x"/>
+          <PlayerChannelRef playerChannelId="P-009107_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007973_x"/>
+          <PlayerChannelRef playerChannelId="P-007973_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009103_x"/>
+          <PlayerChannelRef playerChannelId="P-009103_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009104_x"/>
+          <PlayerChannelRef playerChannelId="P-009104_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007854_x"/>
+          <PlayerChannelRef playerChannelId="P-007854_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009106_x"/>
+          <PlayerChannelRef playerChannelId="P-009106_y"/>
+        </SplitRegister>
+      </SplitRegister>
+      <SplitRegister separator=";">
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007816_x"/>
+          <PlayerChannelRef playerChannelId="P-007816_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-009060_x"/>
+          <PlayerChannelRef playerChannelId="P-009060_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007829_x"/>
+          <PlayerChannelRef playerChannelId="P-007829_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007817_x"/>
+          <PlayerChannelRef playerChannelId="P-007817_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-002240_x"/>
+          <PlayerChannelRef playerChannelId="P-002240_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008982_x"/>
+          <PlayerChannelRef playerChannelId="P-008982_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008003_x"/>
+          <PlayerChannelRef playerChannelId="P-008003_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008337_x"/>
+          <PlayerChannelRef playerChannelId="P-008337_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008981_x"/>
+          <PlayerChannelRef playerChannelId="P-008981_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007828_x"/>
+          <PlayerChannelRef playerChannelId="P-007828_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008987_x"/>
+          <PlayerChannelRef playerChannelId="P-008987_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007821_x"/>
+          <PlayerChannelRef playerChannelId="P-007821_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-008980_x"/>
+          <PlayerChannelRef playerChannelId="P-008980_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-004161_x"/>
+          <PlayerChannelRef playerChannelId="P-004161_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-000559_x"/>
+          <PlayerChannelRef playerChannelId="P-000559_y"/>
+        </SplitRegister>
+        <SplitRegister separator=",">
+          <PlayerChannelRef playerChannelId="P-007660_x"/>
+          <PlayerChannelRef playerChannelId="P-007660_y"/>
+        </SplitRegister>
+      </SplitRegister>
+      <SplitRegister separator=",">
+        <BallChannelRef channelId="x"/>
+        <BallChannelRef channelId="y"/>
+        <BallChannelRef channelId="z-estimate"/>
+        <BallChannelRef channelId="air"/>
+        <BallChannelRef channelId="alive"/>
+      </SplitRegister>
+    </DataFormatSpecification>
+  </DataFormatSpecifications>
+</FIFADataTransferFormatEPTS>

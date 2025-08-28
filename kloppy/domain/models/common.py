@@ -111,6 +111,7 @@ class Provider(Enum):
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
+    SCISPORTS = "scisports"
     WYSCOUT = "wyscout"
     KLOPPY = "kloppy"
     DATAFACTORY = "datafactory"
@@ -720,6 +721,38 @@ class SportecEventDataCoordinateSystem(ProviderCoordinateSystem):
         )
 
 
+class SciSportsCoordinateSystem(ProviderCoordinateSystem):
+    """
+    SciSports tracking coordinate system.
+
+    Uses a pitch with the origin at the bottom left and the y-axis oriented
+    from bottom to top. The coordinates are in meters and range from
+    0..pitch_length (x) and 0..pitch_width (y).
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.SCISPORTS
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.BOTTOM_LEFT
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(0, self._pitch_length),
+            y_dim=Dimension(0, self._pitch_width),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
+            standardized=False,
+        )
+
+
 class SportecTrackingDataCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -1131,6 +1164,7 @@ def build_coordinate_system(
         Provider.SIGNALITY: SignalityCoordinateSystem,
         Provider.KORASTATS: KoraStatsCoordinateSystem,
         Provider.SMRTSTATS: SmrtStatsCoordinateSystem,
+        Provider.SCISPORTS: SciSportsCoordinateSystem,
     }
 
     if provider in coordinate_systems:

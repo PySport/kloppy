@@ -4,19 +4,15 @@ from dataclasses import replace
 
 from kloppy.domain import (
     TrackingDataset,
-    Frame,
-    Point,
-    Point3D,
     Provider,
-    PlayerData,
     DatasetTransformer,
 )
-from kloppy.domain.services.frame_factory import create_frame
 from kloppy.utils import performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
 from .reader import read_raw_data
 from ..deserializer import TrackingDataDeserializer
+from ..epts_common import create_frame_from_row
 
 logger = logging.getLogger(__name__)
 
@@ -36,61 +32,8 @@ class MetricaEPTSTrackingDataDeserializer(
     @staticmethod
     def _frame_from_row(
         row: dict, metadata: EPTSMetadata, transformer: DatasetTransformer
-    ) -> Frame:
-        timestamp = row["timestamp"]
-        if metadata.periods and row["period_id"]:
-            # might want to search for it instead
-            period = metadata.periods[row["period_id"] - 1]
-        else:
-            period = None
-
-        other_sensors = []
-        for sensor in metadata.sensors:
-            if sensor.sensor_id not in ["position", "distance", "speed"]:
-                other_sensors.append(sensor)
-
-        players_data = {}
-        for team in metadata.teams:
-            for player in team.players:
-                other_data = {}
-                for sensor in other_sensors:
-                    player_sensor_field_str = f"player_{player.player_id}_{sensor.channels[0].channel_id}"
-                    player_sensor_val = row.get(player_sensor_field_str)
-                    other_data.update({sensor.sensor_id: player_sensor_val})
-
-                players_data[player] = PlayerData(
-                    coordinates=Point(
-                        x=row[f"player_{player.player_id}_x"],
-                        y=row[f"player_{player.player_id}_y"],
-                    )
-                    if f"player_{player.player_id}_x" in row
-                    else None,
-                    speed=row[f"player_{player.player_id}_s"]
-                    if f"player_{player.player_id}_s" in row
-                    else None,
-                    distance=row[f"player_{player.player_id}_d"]
-                    if f"player_{player.player_id}_d" in row
-                    else None,
-                    other_data=other_data,
-                )
-
-        frame = create_frame(
-            frame_id=row["frame_id"],
-            timestamp=timestamp,
-            ball_owning_team=None,
-            ball_state=None,
-            period=period,
-            players_data=players_data,
-            other_data={},
-            ball_coordinates=Point3D(
-                x=row["ball_x"], y=row["ball_y"], z=row.get("ball_z")
-            ),
-        )
-
-        if transformer:
-            frame = transformer.transform_frame(frame)
-
-        return frame
+    ):
+        return create_frame_from_row(row, metadata, transformer)
 
     def deserialize(
         self, inputs: MetricaEPTSTrackingDataInputs

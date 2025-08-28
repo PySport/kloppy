@@ -5,6 +5,8 @@ import pytest
 
 from kloppy import statsperform
 from kloppy.domain import (
+    BlockQualifier,
+    BlockType,
     DatasetFlag,
     EventDataset,
     OptaCoordinateSystem,
@@ -445,15 +447,11 @@ class TestStatsPerformBlockEvent:
         first_block = block_events[0]
         assert first_block.event_type == EventType.BLOCK
         assert first_block.event_name == "block"
-        assert hasattr(first_block, "shot_block")
-        assert isinstance(first_block.shot_block, bool)
 
         # Test that all block events have the correct event type
         for block_event in block_events:
             assert block_event.event_type == EventType.BLOCK
             assert block_event.event_name == "block"
-            assert hasattr(block_event, "shot_block")
-            assert isinstance(block_event.shot_block, bool)
 
     def test_shot_block_vs_pass_block_counts(
         self, event_dataset: EventDataset
@@ -461,9 +459,17 @@ class TestStatsPerformBlockEvent:
         """Test that the correct number of shot blocks and pass blocks are identified"""
         block_events = event_dataset.find_all("block")
 
-        # Separate shot blocks from pass blocks
-        shot_blocks = [b for b in block_events if b.shot_block]
-        pass_blocks = [b for b in block_events if not b.shot_block]
+        # Separate shot blocks from pass blocks using qualifier
+        shot_blocks = [
+            b
+            for b in block_events
+            if b.get_qualifier_value(BlockQualifier) == BlockType.SHOT
+        ]
+        pass_blocks = [
+            b
+            for b in block_events
+            if b.get_qualifier_value(BlockQualifier) == BlockType.PASS
+        ]
 
         # Verify the counts match our expected values
         assert (
@@ -476,14 +482,16 @@ class TestStatsPerformBlockEvent:
             len(block_events) == 11
         ), f"Expected 11 total block events, got {len(block_events)}"
 
-        # Verify that all shot blocks have shot_block=True
+        # Verify that all shot blocks have block_type=SHOT
         for shot_block in shot_blocks:
             assert (
-                shot_block.shot_block is True
-            ), f"Shot block event {shot_block.event_id} has shot_block=False"
+                shot_block.get_qualifier_value(BlockQualifier)
+                == BlockType.SHOT
+            ), f"Shot block event {shot_block.event_id} has block_type=PASS"
 
-        # Verify that all pass blocks have shot_block=False
+        # Verify that all pass blocks have block_type=PASS
         for pass_block in pass_blocks:
             assert (
-                pass_block.shot_block is False
-            ), f"Pass block event {pass_block.event_id} has shot_block=True"
+                pass_block.get_qualifier_value(BlockQualifier)
+                == BlockType.PASS
+            ), f"Pass block event {pass_block.event_id} has block_type=SHOT"

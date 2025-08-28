@@ -417,15 +417,6 @@ event_types:
       metrica_json:
         status: not implemented
         implementation: null
-    attributes:
-      shot_block:
-        providers:
-          statsbomb:
-            status: parsed
-            implementation: value of 'block.save_block' field
-          statsperform:
-            status: parsed
-            implementation: True for event type 10/'Save' with qualifier 94/'Blocked shot', False for event type 74/'Blocked pass'
   kloppy.domain.InterceptionEvent:
     providers:
       statsbomb:
@@ -1009,6 +1000,43 @@ qualifiers:
       metrica_json:
         status: not supported
     values: []
+  kloppy.domain.BlockQualifier:
+    providers:
+      statsbomb:
+        status: parsed
+        implementation: BlockType.SHOT if 'block.save_block' is True, otherwise BlockType.PASS
+      statsperform:
+        status: parsed
+        implementation: BlockType.SHOT for event type 10/'Save' with qualifier 94/'Blocked shot', BlockType.PASS for event type 74/'Blocked pass'
+      wyscout_v2:
+        status: not implemented
+        implementation: null
+      wyscout_v3:
+        status: not implemented
+        implementation: null
+      sportec:
+        status: not implemented
+        implementation: null
+      metrica_json:
+        status: not implemented
+        implementation: null
+    values:
+      SHOT:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: when 'block.save_block' is True
+          statsperform:
+            status: parsed
+            implementation: for event type 10/'Save' with qualifier 94/'Blocked shot'
+      PASS:
+        providers:
+          statsbomb:
+            status: parsed
+            implementation: when 'block.save_block' is False
+          statsperform:
+            status: parsed
+            implementation: for event type 74/'Blocked pass'
   kloppy.domain.DuelQualifier:
     providers:
       statsbomb:

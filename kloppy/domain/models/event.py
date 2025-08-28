@@ -108,6 +108,19 @@ class PassResult(ResultType):
         return self == self.COMPLETE
 
 
+class BlockType(Enum):
+    """
+    BlockType
+
+    Attributes:
+        SHOT (BlockType): Block was blocking a shot
+        PASS (BlockType): Block was blocking a pass
+    """
+
+    SHOT = "SHOT"
+    PASS = "PASS"
+
+
 class TakeOnResult(ResultType):
     """
     TakeOnResult
@@ -690,6 +703,17 @@ class UnderPressureQualifier(BoolQualifier):
 
 
 @dataclass
+class BlockQualifier(EnumQualifier[BlockType]):
+    """
+    Indicates the type of block event.
+
+    Attributes:
+        name (str): `"block"`
+        value (BlockType): The type of block (SHOT or PASS).
+    """
+
+
+@dataclass
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):
     """
@@ -1113,7 +1137,7 @@ class ClearanceEvent(
 @dataclass(repr=False)
 @docstring_inherit_attributes(Event)
 class BlockEvent(
-    QualifierMixin[CounterAttackQualifier],
+    QualifierMixin[Union[BlockQualifier, CounterAttackQualifier]],
     NoResultMixin,
     Event,
 ):
@@ -1123,11 +1147,8 @@ class BlockEvent(
     Attributes:
         event_type (EventType): `EventType.BLOCK`
         event_name (str): `"block"`
-        shot_block (bool): True if the block was blocking a shot; otherwise False.
         qualifiers: A list of qualifiers providing additional information about the block.
     """
-
-    shot_block: bool
 
     @property
     def event_type(self) -> EventType:
@@ -1577,6 +1598,7 @@ __all__ = [
     "EventType",
     "ShotResult",
     "PassResult",
+    "BlockType",
     "TakeOnResult",
     "CarryResult",
     "Event",
@@ -1615,6 +1637,7 @@ __all__ = [
     "GoalkeeperActionType",
     "CounterAttackQualifier",
     "UnderPressureQualifier",
+    "BlockQualifier",
     "DuelEvent",
     "DuelType",
     "DuelQualifier",

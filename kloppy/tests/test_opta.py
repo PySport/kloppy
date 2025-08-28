@@ -540,7 +540,7 @@ class TestOptaBlockEvent:
     def test_correct_deserialization(self, dataset: EventDataset):
         """Test if the block event is correctly deserialized"""
         event = dataset.get_event_by_id("1515097981")
-        assert event.event_type == EventType.GENERIC
+        assert event.event_type == EventType.BLOCK
         assert event.event_name == "block"
 
 

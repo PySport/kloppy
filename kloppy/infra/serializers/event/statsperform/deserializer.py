@@ -7,6 +7,8 @@ import pytz
 
 from kloppy.domain import (
     BallState,
+    BlockQualifier,
+    BlockType,
     BodyPart,
     BodyPartQualifier,
     CardQualifier,
@@ -909,22 +911,20 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         )
                     elif raw_event.type_id == EVENT_TYPE_BLOCKED_PASS:
                         # Create a block event for blocked passes
-                        qualifiers = []
+                        qualifiers = [BlockQualifier(value=BlockType.PASS)]
 
                         event = self.event_factory.build_block(
                             result=None,
-                            shot_block=False,  # Not a shot block
                             qualifiers=qualifiers,
                             **generic_event_kwargs,
                         )
                     elif raw_event.type_id in KEEPER_EVENTS:
                         # Qualifier 94 means the "save" event is a shot block by a defender
                         if 94 in raw_event.qualifiers:
-                            qualifiers = []
+                            qualifiers = [BlockQualifier(value=BlockType.SHOT)]
 
                             event = self.event_factory.build_block(
                                 result=None,
-                                shot_block=True,  # This is a shot block
                                 qualifiers=qualifiers,
                                 **generic_event_kwargs,
                             )

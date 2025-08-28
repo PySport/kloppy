@@ -4,6 +4,8 @@ from typing import Dict, List, NamedTuple, Optional, Union
 
 from kloppy.domain import (
     BallState,
+    BlockQualifier,
+    BlockType,
     BodyPart,
     BodyPartQualifier,
     CardQualifier,
@@ -792,13 +794,16 @@ class BLOCK(EVENT):
         # Check if this is a shot block based on the save_block attribute
         shot_block = block_dict.get("save_block", False)
 
+        # Add block type qualifier
+        block_type = BlockType.SHOT if shot_block else BlockType.PASS
+        qualifiers.append(BlockQualifier(value=block_type))
+
         # Add body part qualifiers if available
         body_part_qualifiers = _get_body_part_qualifiers(block_dict)
         qualifiers.extend(body_part_qualifiers)
 
         block_event = event_factory.build_block(
             result=None,
-            shot_block=shot_block,
             qualifiers=qualifiers,
             **generic_event_kwargs,
         )

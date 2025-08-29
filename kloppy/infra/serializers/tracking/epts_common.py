@@ -15,7 +15,9 @@ def _sanitize(identifier: str) -> str:
     return re.sub(r"[^0-9a-zA-Z_]", "_", identifier)
 
 
-def build_players_data(row: Dict, metadata) -> Dict:
+def build_players_data(
+    row: Dict, metadata, swap_coordinates: bool = False
+) -> Dict:
     other_sensors = [
         sensor
         for sensor in metadata.sensors
@@ -35,12 +37,19 @@ def build_players_data(row: Dict, metadata) -> Dict:
                 player_sensor_val = row.get(player_sensor_field_str)
                 other_data.update({sensor.sensor_id: player_sensor_val})
 
+            # Get raw coordinates
+            raw_x = row.get(f"player_{safe_player_id}_x")
+            raw_y = row.get(f"player_{safe_player_id}_y")
+
+            # Swap coordinates if needed (for SciSports)
+            if swap_coordinates:
+                x, y = raw_y, raw_x
+            else:
+                x, y = raw_x, raw_y
+
             players_data[player] = PlayerData(
                 coordinates=(
-                    Point(
-                        x=row.get(f"player_{safe_player_id}_x"),
-                        y=row.get(f"player_{safe_player_id}_y"),
-                    )
+                    Point(x=x, y=y)
                     if f"player_{safe_player_id}_x" in row
                     else None
                 ),
@@ -61,7 +70,10 @@ def build_players_data(row: Dict, metadata) -> Dict:
 
 
 def create_frame_from_row(
-    row: Dict, metadata, transformer: DatasetTransformer
+    row: Dict,
+    metadata,
+    transformer: DatasetTransformer,
+    swap_coordinates: bool = False,
 ) -> Frame:
     timestamp = row["timestamp"]
 
@@ -72,7 +84,17 @@ def create_frame_from_row(
                 period = p
                 break
 
-    players_data = build_players_data(row, metadata)
+    players_data = build_players_data(row, metadata, swap_coordinates)
+
+    # Get raw ball coordinates
+    raw_ball_x = row.get("ball_x")
+    raw_ball_y = row.get("ball_y")
+
+    # Swap ball coordinates if needed (for SciSports)
+    if swap_coordinates:
+        ball_x, ball_y = raw_ball_y, raw_ball_x
+    else:
+        ball_x, ball_y = raw_ball_x, raw_ball_y
 
     frame = create_frame(
         frame_id=row["frame_id"],
@@ -83,7 +105,7 @@ def create_frame_from_row(
         players_data=players_data,
         other_data={},
         ball_coordinates=Point3D(
-            x=row.get("ball_x"), y=row.get("ball_y"), z=row.get("ball_z")
+            x=ball_x, y=ball_y, z=row.get("ball_z_estimate")
         ),
     )
 

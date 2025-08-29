@@ -70,16 +70,17 @@ class TestSciSportsEPTSTracking:
         )
 
         # Expected coordinates when using scisports coordinate system (meters, origin bottom-left)
+        # Coordinates are now correctly swapped: X spans field length, Y spans field width
         assert first_p1.players_data[home_gk].coordinates == Point(
-            x=34.17, y=8.36
+            x=8.36, y=34.17
         )
         assert first_p1.players_data[away_gk].coordinates == Point(
-            x=35.33, y=85.39
+            x=85.39, y=35.33
         )
 
         assert first_p2.players_data[home_gk].coordinates == Point(
-            x=32.25, y=89.15
+            x=89.15, y=32.25
         )
         assert first_p2.players_data[away_gk].coordinates == Point(
-            x=34.23, y=3.88
+            x=3.88, y=34.23
         )

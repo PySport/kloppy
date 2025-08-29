@@ -39,7 +39,9 @@ class SciSportsEPTSTrackingDataDeserializer(
     def _frame_from_row(
         row: dict, metadata: EPTSMetadata, transformer: DatasetTransformer
     ):
-        return create_frame_from_row(row, metadata, transformer)
+        return create_frame_from_row(
+            row, metadata, transformer, swap_coordinates=True
+        )
 
     def deserialize(
         self, inputs: SciSportsEPTSTrackingDataInputs

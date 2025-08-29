@@ -22,18 +22,16 @@ def build_regex(
         if player_channel.channel.sensor in sensors
     }
 
-    position_sensor = None
+    # Build ball channel map from all sensors that have ball data
+    ball_channel_map = {}
     for sensor in sensors:
-        if sensor.sensor_id == "position":
-            position_sensor = sensor
+        if sensor.sensor_id in ["position", "height-estimator", "state"]:
+            for channel in sensor.channels:
+                ball_channel_map[channel.channel_id] = channel
 
     return data_format_specification.to_regex(
         player_channel_map=player_channel_map,
-        ball_channel_map={
-            channel.channel_id: channel for channel in position_sensor.channels
-        }
-        if position_sensor
-        else {},
+        ball_channel_map=ball_channel_map,
     )
 
 

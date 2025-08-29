@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import re
 from typing import List, Dict, Union
 
 from kloppy.domain import Player, Metadata
@@ -79,7 +80,13 @@ class PlayerChannelRef:
     ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
-            return f"(?P<player_{player_channel.player.player_id}_{player_channel.channel.channel_id}>{NON_SPLIT_CHAR_REGEX})"
+            safe_player_id = re.sub(
+                r"[^0-9a-zA-Z_]", "_", player_channel.player.player_id
+            )
+            safe_channel_id = re.sub(
+                r"[^0-9a-zA-Z_]", "_", player_channel.channel.channel_id
+            )
+            return f"(?P<player_{safe_player_id}_{safe_channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
             return NON_SPLIT_CHAR_REGEX
 
@@ -94,7 +101,8 @@ class BallChannelRef:
 
     def to_regex(self, ball_channel_map: Dict[str, Channel], **kwargs) -> str:
         if self.channel_id in ball_channel_map:
-            return f"(?P<ball_{self.channel_id}>{NON_SPLIT_CHAR_REGEX})"
+            safe_channel_id = re.sub(r"[^0-9a-zA-Z_]", "_", self.channel_id)
+            return f"(?P<ball_{safe_channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
             return NON_SPLIT_CHAR_REGEX
 

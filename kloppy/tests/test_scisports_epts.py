@@ -1,7 +1,8 @@
 from datetime import timedelta
+import math
 
 from kloppy import scisports
-from kloppy.domain import Provider, Point
+from kloppy.domain import Provider, Point, Orientation, AttackingDirection
 
 
 class TestSciSportsEPTSTracking:
@@ -33,6 +34,9 @@ class TestSciSportsEPTSTracking:
 
         assert first_frame.ball_coordinates.x is not None
         assert first_frame.ball_coordinates.y is not None
+
+        # Verify orientation is correctly determined from first frame analysis
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
 
     def test_gk_positions_first_frames(self, base_dir):
         meta = base_dir / "files/scisports_epts_metadata.xml"

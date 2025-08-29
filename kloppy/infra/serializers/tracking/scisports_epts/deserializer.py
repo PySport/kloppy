@@ -1,5 +1,6 @@
 import logging
 import re
+import warnings
 from typing import NamedTuple, IO
 from dataclasses import replace
 
@@ -7,8 +8,11 @@ from kloppy.domain import (
     TrackingDataset,
     Provider,
     DatasetTransformer,
+    Orientation,
+    AttackingDirection,
 )
 from kloppy.utils import performance_logging
+from kloppy.domain.services import attacking_direction_from_frame
 
 from ..deserializer import TrackingDataDeserializer
 from ..metrica_epts.metadata import EPTSMetadata
@@ -66,11 +70,33 @@ class SciSportsEPTSTrackingDataDeserializer(
                 )
             ]
 
+        # Determine orientation from first frame analysis
+        try:
+            first_frame = next(
+                frame
+                for frame in frames
+                if frame.period and frame.period.id == 1
+            )
+            orientation = (
+                Orientation.HOME_AWAY
+                if attacking_direction_from_frame(first_frame)
+                == AttackingDirection.LTR
+                else Orientation.AWAY_HOME
+            )
+        except StopIteration:
+            warnings.warn(
+                "Could not determine orientation of dataset, defaulting to NOT_SET"
+            )
+            orientation = Orientation.NOT_SET
+
         if transformer:
             metadata = replace(
                 metadata,
                 pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
                 coordinate_system=transformer.get_to_coordinate_system(),
+                orientation=orientation,
             )
+        else:
+            metadata = replace(metadata, orientation=orientation)
 
         return TrackingDataset(records=frames, metadata=metadata)

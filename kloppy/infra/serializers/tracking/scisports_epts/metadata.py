@@ -193,9 +193,6 @@ def load_metadata(
     pitch_dimensions = _load_pitch_dimensions(metadata, sensors)
     periods = _load_periods(metadata)
 
-    # Orientation unknown from sample; default NOT_SET
-    orientation = Orientation.NOT_SET
-
     provider_name = _text(metadata.find("GlobalConfig").find("ProviderName"))
     provider = provider or _parse_provider(provider_name)
 
@@ -213,7 +210,7 @@ def load_metadata(
         frame_rate=frame_rate,
         sensors=sensors,
         score=score,
-        orientation=orientation,
+        orientation=None,  # Will be determined from data in deserializer
         provider=provider,
         flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
         coordinate_system=from_coordinate_system,

@@ -57,7 +57,7 @@ class SciSportsEPTSTrackingDataDeserializer(
                 transformer = None
 
         with performance_logging("Loading data", logger=logger):
-            frames = [
+            all_frames = [
                 self._frame_from_row(row, metadata, transformer)
                 for row in read_raw_data(
                     raw_data=inputs.raw_data,
@@ -69,6 +69,17 @@ class SciSportsEPTSTrackingDataDeserializer(
                     limit=self.limit,
                 )
             ]
+
+            # Filter out frames that don't belong to any period (pre/post-match frames)
+            frames = [
+                frame for frame in all_frames if frame.period is not None
+            ]
+
+            if len(frames) < len(all_frames):
+                logger.info(
+                    f"Filtered out {len(all_frames) - len(frames)} frames "
+                    f"that don't belong to any period (pre/post-match frames)"
+                )
 
         # Determine orientation from first frame analysis
         try:

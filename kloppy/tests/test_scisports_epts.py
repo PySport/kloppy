@@ -15,22 +15,20 @@ class TestSciSportsEPTSTracking:
         )
 
         assert dataset.metadata.provider == Provider.SCISPORTS
-        assert len(dataset.records) == 100
+        assert len(dataset.records) == 26  # Only frames that belong to periods
         assert dataset.metadata.frame_rate == 25
         assert len(dataset.metadata.teams) == 2
         assert len(dataset.metadata.periods) >= 2
 
-        first_frame = dataset.records[0]
-        assert first_frame.frame_id == 44585
-        # First frames are pre-period; timestamp should be absolute time (frame/frame_rate)
-        assert first_frame.period is None
-        assert first_frame.timestamp == timedelta(seconds=44585 / 25)
+        # All frames should now have periods (no pre/post-match frames)
+        assert all(frame.period is not None for frame in dataset.records)
 
-        # Find first in-period frame and verify timestamp reset to 0
-        first_in_period = next(
-            f for f in dataset.records if f.period is not None
-        )
-        assert first_in_period.timestamp == timedelta(seconds=0)
+        first_frame = dataset.records[0]
+        # First frame should now be the first frame of period 1
+        assert first_frame.period is not None
+        assert first_frame.period.id == 1
+        # Timestamp should be relative to period start (0 for first frame)
+        assert first_frame.timestamp == timedelta(seconds=0)
 
         assert first_frame.ball_coordinates.x is not None
         assert first_frame.ball_coordinates.y is not None

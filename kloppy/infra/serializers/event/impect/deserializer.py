@@ -264,7 +264,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
                 ts, period_id = parse_timestamp(sub["gameTime"]["gameTime"])
                 player = team.get_player_by_id(sub["playerId"])
-                position = None
+                position = PositionType.Unknown
                 if is_in:
                     position_key = (sub["toPosition"], sub["positionSide"])
                     try:
@@ -273,7 +273,6 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         warnings.warn(
                             f"Unknown substitution position {position_key}, defaulting to Unknown"
                         )
-                        position = PositionType.Unknown
 
                 records.append(
                     {

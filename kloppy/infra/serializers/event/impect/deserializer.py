@@ -173,15 +173,22 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 ground=ground,
                 starting_formation=starting_formation,
             )
-            player_starting_positions = {
-                player_starting_info["playerId"]: position_types_mapping[
-                    (
-                        player_starting_info["position"],
-                        player_starting_info["positionSide"],
+            player_starting_positions = {}
+            for player_starting_info in team_info["startingPositions"]:
+                position_key = (
+                    player_starting_info["position"],
+                    player_starting_info["positionSide"],
+                )
+                try:
+                    position = position_types_mapping[position_key]
+                except KeyError:
+                    warnings.warn(
+                        f"Unknown position {position_key}, defaulting to Unknown"
                     )
-                ]
-                for player_starting_info in team_info["startingPositions"]
-            }
+                    position = PositionType.Unknown
+                player_starting_positions[
+                    player_starting_info["playerId"]
+                ] = position
 
             players = []
             for player in team_info["players"]:
@@ -257,13 +264,16 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
                 ts, period_id = parse_timestamp(sub["gameTime"]["gameTime"])
                 player = team.get_player_by_id(sub["playerId"])
-                position = (
-                    position_types_mapping[
-                        (sub["toPosition"], sub["positionSide"])
-                    ]
-                    if is_in
-                    else None
-                )
+                position = None
+                if is_in:
+                    position_key = (sub["toPosition"], sub["positionSide"])
+                    try:
+                        position = position_types_mapping[position_key]
+                    except KeyError:
+                        warnings.warn(
+                            f"Unknown substitution position {position_key}, defaulting to Unknown"
+                        )
+                        position = PositionType.Unknown
 
                 records.append(
                     {

@@ -286,6 +286,7 @@ class SHOT(EVENT):
         OPEN_GOAL_SHOT = "OPEN_GOAL_SHOT"
         PENALTY_KICK = "PENALTY_KICK"
         HEADER = "HEADER"
+        DIRECT_FREE_KICK = "DIRECT_FREE_KICK"
 
     class RESULT(Enum):
         FAIL = "FAIL"
@@ -312,6 +313,10 @@ class SHOT(EVENT):
             if action == self.ACTION.PENALTY_KICK:
                 qualifiers.append(
                     SetPieceQualifier(value=SetPieceType.PENALTY)
+                )
+            elif action == self.ACTION.DIRECT_FREE_KICK:
+                qualifiers.append(
+                    SetPieceQualifier(value=SetPieceType.FREE_KICK)
                 )
 
         shot_event = event_factory.build_shot(
@@ -564,7 +569,11 @@ class FREE_KICK(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-        # action = self.ACTION(self.raw_event["action"])
+        action = (
+            self.ACTION(self.raw_event["action"])
+            if self.raw_event["action"]
+            else None
+        )
         if self.raw_event["pass"]:
             (
                 qualifiers,
@@ -573,6 +582,7 @@ class FREE_KICK(EVENT):
                 receiver_player,
                 result,
             ) = create_pass_props(self, generic_event_kwargs)
+            # For passes, always use FREE_KICK regardless of action type
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
             pass_event = event_factory.build_pass(
                 result=result,
@@ -590,6 +600,7 @@ class FREE_KICK(EVENT):
             )
             body_part = BODYPART(self.raw_event["bodyPartExtended"])
             qualifiers = _get_body_part_qualifiers(body_part)
+            # For shots, always use FREE_KICK regardless of action type
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
 
             shot_event = event_factory.build_shot(

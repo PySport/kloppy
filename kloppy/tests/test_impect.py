@@ -63,7 +63,7 @@ class TestImpectHelpers:
             2,
         )
         assert parse_timestamp("90:00.000 (+04:16.9200)") == (
-            timedelta(minutes=94, seconds=16, microseconds=920000),
+            timedelta(minutes=49, seconds=16, microseconds=920000),
             2,
         )
         assert parse_timestamp("90:00.0000") == (timedelta(minutes=0), 3)
@@ -153,17 +153,17 @@ class TestImpectMetadata:
         assert home_starting_gk.player_id == "13"
         assert home_starting_gk.jersey_no == 30
 
-        home_starting_rcb = dataset.metadata.teams[0].get_player_by_position(
+        home_starting_lwb = dataset.metadata.teams[0].get_player_by_position(
             PositionType.LeftWingBack,
             time=Time(period=period_1, timestamp=timedelta(seconds=0)),
         )
-        assert home_starting_rcb.player_id == "15"
+        assert home_starting_lwb.player_id == "15"
 
-        home_ending_rcb = dataset.metadata.teams[0].get_player_by_position(
+        home_ending_lwb = dataset.metadata.teams[0].get_player_by_position(
             PositionType.LeftWingBack,
             time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
         )
-        assert home_ending_rcb.player_id == "1"
+        assert home_ending_lwb.player_id == "12"
 
         away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
             PositionType.Goalkeeper,
@@ -172,9 +172,47 @@ class TestImpectMetadata:
         assert away_starting_gk.player_id == "26"
 
     def test_periods(self, dataset):
-        """It should create the periods"""
+        """It should create the periods with correct cumulative timestamps"""
         assert len(dataset.metadata.periods) == 2
-        assert dataset.metadata.periods[0].id == 1
+
+        # Period 1 assertions
+        period_1 = dataset.metadata.periods[0]
+        assert period_1.id == 1
+        assert period_1.start_timestamp == timedelta(
+            seconds=0
+        )  # Should start at 0
+        assert period_1.end_timestamp is not None
+        assert period_1.end_timestamp > period_1.start_timestamp
+
+        # Period 2 assertions
+        period_2 = dataset.metadata.periods[1]
+        assert period_2.id == 2
+        assert (
+            period_2.start_timestamp == period_1.end_timestamp
+        )  # Should start where period 1 ended
+        assert period_2.end_timestamp is not None
+        assert period_2.end_timestamp > period_2.start_timestamp
+
+        # Verify cumulative nature: period 2 should start after period 1 ends
+        assert period_2.start_timestamp > period_1.start_timestamp
+        assert period_2.end_timestamp > period_1.end_timestamp
+
+        # Verify reasonable duration (each period should be around 45+ minutes)
+        period_1_duration = period_1.end_timestamp - period_1.start_timestamp
+        period_2_duration = period_2.end_timestamp - period_2.start_timestamp
+
+        assert period_1_duration >= timedelta(
+            minutes=45
+        )  # At least 45 minutes
+        assert period_1_duration <= timedelta(
+            minutes=60
+        )  # At most 60 minutes (allows for extra time)
+        assert period_2_duration >= timedelta(
+            minutes=45
+        )  # At least 45 minutes
+        assert period_2_duration <= timedelta(
+            minutes=100
+        )  # At most 100 minutes (allows for extra time)
 
 
 class TestImpectEvent:
@@ -215,6 +253,37 @@ class TestImpectEvent:
         assert kickoff_p1.timestamp == timedelta(seconds=0)
         kick_off_p2 = kick_offs[1]
         assert kick_off_p2.timestamp == timedelta(seconds=0)
+
+        # Verify that kickoffs are in different periods but both start at 0
+        assert kickoff_p1.period.id == 1
+        assert kick_off_p2.period.id == 2
+        assert (
+            kickoff_p1.timestamp == kick_off_p2.timestamp
+        )  # Both should be 0
+
+        # Verify that events within each period have timestamps relative to that period
+        period_1_events = [e for e in dataset.events if e.period.id == 1]
+        period_2_events = [e for e in dataset.events if e.period.id == 2]
+
+        # First event in each period should be close to 0
+        assert period_1_events[0].timestamp <= timedelta(seconds=1)
+        assert period_2_events[0].timestamp <= timedelta(seconds=1)
+
+        # Events should be in chronological order within each period
+        for i in range(
+            1, min(10, len(period_1_events))
+        ):  # Check first 10 events
+            assert (
+                period_1_events[i].timestamp
+                >= period_1_events[i - 1].timestamp
+            )
+        for i in range(
+            1, min(10, len(period_2_events))
+        ):  # Check first 10 events
+            assert (
+                period_2_events[i].timestamp
+                >= period_2_events[i - 1].timestamp
+            )
 
 
 class TestImpectPassEvent:

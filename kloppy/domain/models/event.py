@@ -1429,10 +1429,9 @@ class EventDataset(Dataset[Event]):
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 if event.replacement_player:
-                    if event.replacement_player.starting_position:
-                        replacement_player_position = (
-                            event.replacement_player.starting_position
-                        )
+                    # Prefer explicit position on the substitution event when available.
+                    if event.position is not None:
+                        replacement_player_position = event.position
                     else:
                         replacement_player_position = (
                             event.player.positions.last(

@@ -45,6 +45,7 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.infra.serializers.event.impect.helpers import (
     insert,
     parse_timestamp,
+    parse_cumulative_timestamp,
 )
 from kloppy.infra.serializers.event.impect.specification import (
     event_decoder,
@@ -223,7 +224,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 next_event = raw_events[idx + 1]
                 next_period_id = next_event["periodId"]
 
-            timestamp, _ = parse_timestamp(raw_event["gameTime"]["gameTime"])
+            timestamp, _ = parse_cumulative_timestamp(
+                raw_event["gameTime"]["gameTime"]
+            )
             period_id = raw_event["periodId"]
 
             if len(periods) == 0 or periods[-1].id != period_id:
@@ -240,9 +243,10 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 )
 
             if next_period_id != period_id:
+                # Set period end to cumulative timestamp
                 periods[-1] = replace(
                     periods[-1],
-                    end_timestamp=timestamp,
+                    end_timestamp=periods[-1].start_timestamp + timestamp,
                 )
 
         return periods
@@ -262,6 +266,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 if not (is_in or is_out):
                     continue
 
+                # Substitution event timestamps must be period-relative
                 ts, period_id = parse_timestamp(sub["gameTime"]["gameTime"])
                 player = team.get_player_by_id(sub["playerId"])
                 position = PositionType.Unknown

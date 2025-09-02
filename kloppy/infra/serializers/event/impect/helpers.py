@@ -34,7 +34,7 @@ def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
 def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
     """
     Parse a football clock timestamp into:
-      - elapsed time (timedelta)
+      - elapsed time within the period (timedelta) - period-relative for events
       - period_id (1..4)
 
     Supported forms:
@@ -65,16 +65,22 @@ def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
         else:
             period_id = 4
 
-        # compute elapsed:
-        #  - in regulation: cumulative
-        #  - in ET: subtract the pre-ET 90 min so it's time into that ET-half
-        if main_min <= 2 * half_len:
-            total_secs = main_secs + add_secs
+        # compute time within the period
+        if main_min <= half_len:
+            # Period 1: time from start of match
+            period_secs = main_secs + add_secs
+        elif main_min <= 2 * half_len:
+            # Period 2: time from start of period 2 (subtract 45 minutes)
+            period_secs = main_secs + add_secs - (half_len * 60)
+        elif main_min <= 2 * half_len + et_len:
+            # Period 3: time from start of period 3 (subtract 90 minutes)
+            period_secs = main_secs + add_secs - (2 * half_len * 60)
         else:
-            total_secs = main_secs + add_secs - (2 * half_len) * 60
+            # Period 4: time from start of period 4 (subtract 105 minutes)
+            period_secs = main_secs + add_secs - ((2 * half_len + et_len) * 60)
 
-        whole = int(total_secs)
-        micros = int((total_secs - whole) * 1e6)
+        whole = int(period_secs)
+        micros = int((period_secs - whole) * 1e6)
         return timedelta(seconds=whole, microseconds=micros), period_id
 
     # 2) plain form: "MM:SS.sss"
@@ -105,6 +111,76 @@ def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
 
     whole = int(period_secs)
     micros = int((period_secs - whole) * 1e6)
+    return timedelta(seconds=whole, microseconds=micros), period_id
+
+
+def parse_cumulative_timestamp(ts_str: str) -> Tuple[timedelta, int]:
+    """
+    Parse a football clock timestamp into:
+      - cumulative elapsed time (timedelta) - for period creation
+      - period_id (1..4)
+
+    Supported forms:
+      • "MM:SS.sss"
+      • "MM:SS.sss (+MM:SS.sss)"
+    """
+    half_len = 45  # minutes per half
+    et_len = 15  # minutes per extra-time period
+
+    # 1) stoppage-time form?
+    m = re.match(
+        r"^\s*(\d+):(\d+(?:\.\d+))\s*\(\+(\d+):(\d+(?:\.\d+))\)\s*$", ts_str
+    )
+    if m:
+        main_min, main_sec = int(m.group(1)), float(m.group(2))
+        add_min, add_sec = int(m.group(3)), float(m.group(4))
+
+        main_secs = main_min * 60 + main_sec
+        add_secs = add_min * 60 + add_sec
+
+        # determine period_id from the main minute
+        if main_min <= half_len:
+            period_id = 1
+        elif main_min <= 2 * half_len:
+            period_id = 2
+        elif main_min <= 2 * half_len + et_len:
+            period_id = 3
+        else:
+            period_id = 4
+
+        # compute cumulative elapsed time
+        if main_min <= 2 * half_len:
+            total_secs = main_secs + add_secs
+        else:
+            total_secs = main_secs + add_secs - (2 * half_len) * 60
+
+        whole = int(total_secs)
+        micros = int((total_secs - whole) * 1e6)
+        return timedelta(seconds=whole, microseconds=micros), period_id
+
+    # 2) plain form: "MM:SS.sss"
+    m = re.match(r"^\s*(\d+):(\d+(?:\.\d+))\s*$", ts_str)
+    if not m:
+        raise ValueError(f"Unrecognized timestamp: {ts_str!r}")
+
+    total_min = int(m.group(1))
+    secs = float(m.group(2))
+
+    # figure out which period we're in
+    if total_min < half_len:
+        period_id = 1
+    elif total_min < 2 * half_len:
+        period_id = 2
+    elif total_min < 2 * half_len + et_len:
+        period_id = 3
+    else:
+        period_id = 4
+
+    # cumulative time from match start
+    cumulative_secs = total_min * 60 + secs
+
+    whole = int(cumulative_secs)
+    micros = int((cumulative_secs - whole) * 1e6)
     return timedelta(seconds=whole, microseconds=micros), period_id
 
 

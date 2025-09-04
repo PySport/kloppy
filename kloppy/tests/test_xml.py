@@ -129,7 +129,7 @@ class TestXMLCodeTracking:
         assert output == expected_output
 
     def test_serialization_with_multiple_labels_per_group(self, base_dir):
-        dataset = sportscode.load(base_dir / "fiqles/code_xml.xml")
+        dataset = sportscode.load(base_dir / "files/code_xml.xml")
 
         # Create a modified code with multiple labels for the same group
         modified_code = replace(

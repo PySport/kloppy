@@ -6,11 +6,13 @@ import cdf
 
 from kloppy import sportec
 from kloppy.domain import TrackingDataset
-from kloppy.infra.serializers.tracking.cdf.serializer import CDFTrackingDataSerializer, CDFOutputs
+from kloppy.infra.serializers.tracking.cdf.serializer import (
+    CDFTrackingDataSerializer,
+    CDFOutputs,
+)
 
 
 class TestCDFSerializer:
-
     @pytest.fixture
     def raw_data(self, base_dir) -> Path:
         return base_dir / "files/sportec_positional.xml"
@@ -33,32 +35,36 @@ class TestCDFSerializer:
     def test_produces_valid_cdf_output(self, dataset):
         """Test that CDFTrackingDataSerializer produces valid CDF output."""
         serializer = CDFTrackingDataSerializer()
-        
+
         # Create temporary files with .jsonl extension for CDF validation
-        with tempfile.NamedTemporaryFile(mode='w+b', suffix='.json', delete=False) as meta_file, \
-             tempfile.NamedTemporaryFile(mode='w+b', suffix='.jsonl', delete=False) as tracking_file:
-            
+        with tempfile.NamedTemporaryFile(
+            mode="w+b", suffix=".json", delete=False
+        ) as meta_file, tempfile.NamedTemporaryFile(
+            mode="w+b", suffix=".jsonl", delete=False
+        ) as tracking_file:
+
             outputs = CDFOutputs(
-                meta_data=meta_file,
-                tracking_data=tracking_file
+                meta_data=meta_file, tracking_data=tracking_file
             )
-            
+
             # Serialize the small Sportec dataset to CDF format
             success = serializer.serialize(dataset, outputs)
             assert success is True
-            
+
             # Close files to ensure data is written
             meta_file.close()
             tracking_file.close()
-            
-            # Validate using CDF validators
-            tracking_validator = cdf.TrackingSchemaValidator()
-            meta_validator = cdf.MetaSchemaValidator()
 
-            # This throws errors on invalid data
+            # Validate using CDF validators
+
+            # Validate meta data first.
+            tracking_validator = cdf.TrackingSchemaValidator()
             tracking_validator.validate_schema(sample=tracking_file.name)
+
+            # Validate tracking data
+            meta_validator = cdf.MetaSchemaValidator()
             meta_validator.validate_schema(sample=meta_file.name)
-            
+
             # Clean up temp files
             Path(meta_file.name).unlink()
             Path(tracking_file.name).unlink()

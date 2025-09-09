@@ -58,12 +58,12 @@ class TestCDFSerializer:
             # Validate using CDF validators
 
             # Validate meta data first.
-            tracking_validator = cdf.TrackingSchemaValidator()
-            tracking_validator.validate_schema(sample=tracking_file.name)
-
-            # Validate tracking data
             meta_validator = cdf.MetaSchemaValidator()
             meta_validator.validate_schema(sample=meta_file.name)
+
+            # Validate tracking data
+            tracking_validator = cdf.TrackingSchemaValidator()
+            tracking_validator.validate_schema(sample=tracking_file.name)
 
             # Clean up temp files
             Path(meta_file.name).unlink()

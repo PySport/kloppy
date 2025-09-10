@@ -134,5 +134,5 @@ class SyntheticCarryGenerator(SyntheticEventGenerator):
             new_carry = self.event_factory.build_carry(
                 **carry_event_args, **generic_event_args
             )
-            dataset.records.insert(idx + idx_plus, new_carry)
+            dataset.insert(new_carry, before_event_id=next_event.event_id)
         return dataset

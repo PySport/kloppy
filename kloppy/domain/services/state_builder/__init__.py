@@ -48,4 +48,7 @@ def add_state(dataset: EventDataset, *builder_keys: List[str]) -> EventDataset:
             for builder_key, builder in builders.items()
         }
 
+    for builder_key, builder in builders.items():
+        builder.post_process(events)
+
     return replace(dataset, records=events)

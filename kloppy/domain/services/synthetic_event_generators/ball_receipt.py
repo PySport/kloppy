@@ -106,6 +106,6 @@ class SyntheticBallReceiptGenerator(SyntheticEventGenerator):
                         **ball_receipt_event_args,
                         **generic_event_args,
                     )
-                    dataset.records.insert(idx + 1, new_ball_receipt)
+                    dataset.insert(new_ball_receipt, after_event_id=event.event_id)
 
         return dataset

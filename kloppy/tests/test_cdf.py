@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
-import cdf
+from kloppy.infra.serializers.tracking import cdf
 
 from kloppy import sportec
 from kloppy.domain import TrackingDataset

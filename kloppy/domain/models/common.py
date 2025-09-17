@@ -116,6 +116,7 @@ class Provider(Enum):
         DATAFACTORY (Provider):
         STATSPERFORM (Provider):
         SPORTVU (Provider):
+        CDF (Provider):
         OTHER (Provider):
     """
 
@@ -134,6 +135,7 @@ class Provider(Enum):
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
     SIGNALITY = "signality"
+    CDF = "common_data_format"
     OTHER = "other"
 
     def __str__(self):

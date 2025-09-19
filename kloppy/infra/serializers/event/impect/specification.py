@@ -287,6 +287,7 @@ class SHOT(EVENT):
         PENALTY_KICK = "PENALTY_KICK"
         HEADER = "HEADER"
         DIRECT_FREE_KICK = "DIRECT_FREE_KICK"
+        BLOCK = "BLOCK"
 
     class RESULT(Enum):
         FAIL = "FAIL"
@@ -318,6 +319,10 @@ class SHOT(EVENT):
                 qualifiers.append(
                     SetPieceQualifier(value=SetPieceType.FREE_KICK)
                 )
+            elif (
+                action == self.ACTION.BLOCK and shot_result != ShotResult.GOAL
+            ):
+                shot_result = ShotResult.BLOCKED
 
         shot_event = event_factory.build_shot(
             result=shot_result,

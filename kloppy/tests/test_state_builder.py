@@ -4,6 +4,7 @@ from itertools import groupby
 
 from kloppy import statsbomb, statsperform
 from kloppy.domain import Event, EventDataset, EventType, FormationType
+from kloppy.domain.models.event import PossessionSwitchQualifier, PossessionSwitchType
 from kloppy.domain.services.state_builder.builder import StateBuilder
 from kloppy.utils import performance_logging
 
@@ -53,15 +54,21 @@ class TestStateBuilder:
             dataset_with_state = dataset.add_state("sequence")
 
         events_per_sequence = defaultdict(int)
+        poss_switch = {PossessionSwitchType.LOSE: [], PossessionSwitchType.GAIN: []}
         for sequence_id, events in groupby(
-            dataset_with_state.events,
+            dataset_with_state,
             lambda event: event.state["sequence"].sequence_id,
         ):
             events = list(events)
             events_per_sequence[sequence_id] += len(events)
+            for e in events:
+                if e.get_qualifier_value(PossessionSwitchQualifier):
+                    poss_switch[e.get_qualifier_value(PossessionSwitchQualifier)].append(e.event_type)
 
         assert events_per_sequence[1] == 3
         assert events_per_sequence[72] == 11
+        assert len(poss_switch[PossessionSwitchType.GAIN]) == 171
+        assert len(poss_switch[PossessionSwitchType.LOSE]) == 157
 
     def test_sequence_state_builder_statsperform(self, base_dir):
         dataset = self._load_dataset_statsperform(base_dir)
@@ -70,15 +77,24 @@ class TestStateBuilder:
             dataset_with_state = dataset.add_state("sequence")
 
         events_per_sequence = defaultdict(int)
+        poss_switch = {PossessionSwitchType.LOSE: [], PossessionSwitchType.GAIN: []}
+
         for sequence_id, events in groupby(
-            dataset_with_state.events,
+            [e for e in dataset_with_state.events if e.state["sequence"].sequence_id is not None],
             lambda event: event.state["sequence"].sequence_id,
         ):
             events = list(events)
+
+            for e in events:
+                if e.get_qualifier_value(PossessionSwitchQualifier):
+                    poss_switch[e.get_qualifier_value(PossessionSwitchQualifier)].append(e.event_type)
+
             events_per_sequence[sequence_id] += len(events)
 
         assert events_per_sequence[1] == 5
         assert events_per_sequence[89] == 12
+        assert len(poss_switch[PossessionSwitchType.GAIN]) == 164
+        assert len(poss_switch[PossessionSwitchType.LOSE]) == 175
 
     def test_lineup_state_builder(self, base_dir):
         dataset = self._load_dataset_statsbomb(

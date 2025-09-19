@@ -521,6 +521,31 @@ class UnderPressureQualifier(BoolQualifier):
     pass
 
 
+class PossessionSwitchType(Enum):
+    """
+    PossessionSwitchType
+
+    Attributes:
+        GAIN (PossessionSwitchType): Possession gained
+        LOSE (PossessionSwitchType): Possession lost
+    """
+
+    GAIN = "GAIN"
+    LOSE = "LOSE"
+
+
+@dataclass
+class PossessionSwitchQualifier(EnumQualifier):
+    """
+    PossessionSwitchQualifier
+
+    Attributes:
+        value: Specifies whether the event represents a possession gain or loss
+    """
+
+    value: PossessionSwitchType
+
+
 @dataclass
 @docstring_inherit_attributes(DataRecord)
 class Event(DataRecord, ABC):

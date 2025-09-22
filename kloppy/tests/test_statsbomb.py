@@ -45,6 +45,8 @@ from kloppy.domain.models.event import (
     EventType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
+    InterceptionQualifier,
+    InterceptionType,
     PassQualifier,
     PassType,
     UnderPressureQualifier,
@@ -808,7 +810,7 @@ class TestStatsBombInterceptionEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all interception events"""
         events = dataset.find_all("interception")
-        assert len(events) == 25 + 9  # interceptions + pass interceptions
+        assert len(events) == 25 + 9 + 37 # interceptions + pass interceptions + blocks
 
     def test_attributes(self, dataset: EventDataset):
         """Verify specific attributes of interceptions"""
@@ -879,6 +881,34 @@ class TestStatsBombClearanceEvent:
             DuelType.AERIAL,
         ]
         assert duel.result == DuelResult.WON
+
+
+class TestStatsBombBlockEvent:
+    """Tests related to converting 6/Block events to interceptions"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should convert all block events into interceptions"""
+        events = dataset.find_all("interception")
+        assert len(events) == 25 + 9 + 37 # interceptions + pass interceptions + blocks
+
+    def test_attributes(self, dataset: EventDataset):
+        """Verify specific attributes of converted blocks"""
+        interception = dataset.get_event_by_id("308ef2a5-f649-473d-8230-6ac20ccd0b4a")
+        # Should have interception type qualifier PASS_BLOCK
+        assert interception.get_qualifier_value(InterceptionQualifier) == InterceptionType.PASS_BLOCK
+        assert interception.result == InterceptionResult.LOST
+
+    def test_shot_block_vs_pass_block_counts(self, dataset: EventDataset):
+        """Test that the correct number of shot/pass block interceptions are identified"""
+        interceptions = dataset.find_all("interception")
+        shot_blocks = [
+            e for e in interceptions if e.get_qualifier_value(InterceptionQualifier) == InterceptionType.SHOT_BLOCK
+        ]
+        pass_blocks = [
+            e for e in interceptions if e.get_qualifier_value(InterceptionQualifier) == InterceptionType.PASS_BLOCK
+        ]
+        assert len(shot_blocks) == 7
+        assert len(pass_blocks) == 30
 
 
 class TestStatsBombMiscontrolEvent:

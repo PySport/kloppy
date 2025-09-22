@@ -323,6 +323,17 @@ class SetPieceType(Enum):
     PENALTY = "PENALTY"
     KICK_OFF = "KICK_OFF"
 
+class InterceptionType(Enum):
+    """
+    InterceptionType
+
+    Attributes:
+        SHOT_BLOCK (InterceptionType): Interception that blocked a shot
+        PASS_BLOCK (InterceptionType): Interception that blocked a pass
+    """
+
+    SHOT_BLOCK = "SHOT_BLOCK"
+    PASS_BLOCK = "PASS_BLOCK"
 
 @dataclass
 class SetPieceQualifier(EnumQualifier):
@@ -545,6 +556,18 @@ class PossessionSwitchQualifier(EnumQualifier):
 
     value: PossessionSwitchType
 
+
+@dataclass
+class InterceptionQualifier(EnumQualifier):
+    """
+    Indicates the interception subtype.
+
+    Attributes:
+        name (str): `"interception"`
+        value (InterceptionType): The interception subtype (SHOT_BLOCK or PASS_BLOCK).
+    """
+
+    value: InterceptionType
 
 @dataclass
 @docstring_inherit_attributes(DataRecord)
@@ -1436,6 +1459,7 @@ __all__ = [
     "EventType",
     "ShotResult",
     "PassResult",
+    "InterceptionType",
     "TakeOnResult",
     "CarryResult",
     "Event",
@@ -1473,6 +1497,7 @@ __all__ = [
     "GoalkeeperActionType",
     "CounterAttackQualifier",
     "UnderPressureQualifier",
+    "InterceptionQualifier",
     "DuelEvent",
     "DuelType",
     "DuelQualifier",

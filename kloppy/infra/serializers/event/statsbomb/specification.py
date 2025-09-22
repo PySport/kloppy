@@ -20,6 +20,8 @@ from kloppy.domain import (
     GoalkeeperActionType,
     GoalkeeperQualifier,
     InterceptionResult,
+    InterceptionQualifier,
+    InterceptionType,
     PassQualifier,
     PassResult,
     PassType,
@@ -780,6 +782,36 @@ class CLEARANCE(EVENT):
         return [clearance_event]
 
 
+class BLOCK(EVENT):
+    """StatsBomb 6/Block event."""
+
+    def _create_events(
+        self, event_factory: EventFactory, **generic_event_kwargs
+    ) -> List[Event]:
+        block_dict = self.raw_event.get("block", {})
+        qualifiers = []
+
+        # Convert to Interception subtype
+        shot_block = any(isinstance(related_event, SHOT) for related_event in self.related_events)
+        interception_type = (
+            InterceptionType.SHOT_BLOCK if shot_block else InterceptionType.PASS_BLOCK
+        )
+        qualifiers.append(InterceptionQualifier(value=interception_type))
+
+        # Add body part qualifiers if available
+        body_part_qualifiers = _get_body_part_qualifiers(block_dict)
+        qualifiers.extend(body_part_qualifiers)
+
+        result = InterceptionResult.OUT if self.raw_event.get("out", False) else InterceptionResult.LOST
+        interception_event = event_factory.build_interception(
+            result=result,
+            qualifiers=qualifiers,
+            **generic_event_kwargs,
+        )
+
+        return [interception_event]
+
+
 class MISCONTROL(EVENT):
     """StatsBomb 38/Miscontrol event."""
 
@@ -1473,6 +1505,7 @@ def event_decoder(raw_event: Dict) -> Union[EVENT, Dict]:
         EVENT_TYPE.OWN_GOAL_FOR: OWN_GOAL_FOR,
         EVENT_TYPE.OWN_GOAL_AGAINST: OWN_GOAL_AGAINST,
         EVENT_TYPE.CLEARANCE: CLEARANCE,
+        EVENT_TYPE.BLOCK: BLOCK,
         EVENT_TYPE.MISCONTROL: MISCONTROL,
         EVENT_TYPE.DRIBBLE: DRIBBLE,
         EVENT_TYPE.CARRY: CARRY,

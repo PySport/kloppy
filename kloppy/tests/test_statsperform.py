@@ -17,7 +17,9 @@ from kloppy.domain import (
     SportVUCoordinateSystem,
     Time,
     TrackingDataset,
+    EventType,
 )
+from kloppy.domain.models.event import InterceptionQualifier, InterceptionType
 
 
 @pytest.fixture(scope="module")
@@ -264,6 +266,26 @@ class TestStatsPerformEvent:
         deflected_pass = event_dataset.get_event_by_id("2328596237")
         assert deflected_pass.receiver_player is None
 
+    def test_interceptions(self, event_dataset: EventDataset):
+        """It should convert all block events into interceptions"""
+        events = event_dataset.find_all("interception")
+        assert len(events) == 15 + 11 # interceptions + blocks
+        shot_blocks = [
+            e
+            for e in events
+            if e.get_qualifier_value(InterceptionQualifier)
+            == InterceptionType.SHOT_BLOCK
+        ]
+        pass_blocks = [
+            e
+            for e in events
+            if e.get_qualifier_value(InterceptionQualifier)
+            == InterceptionType.PASS_BLOCK
+        ]
+
+        assert len(shot_blocks) == 6
+        assert len(pass_blocks) == 5
+
 
 class TestStatsPerformTracking:
     """Tests related to deserializing tracking data delivered by StatsPerform."""
@@ -420,3 +442,5 @@ class TestStatsPerformTracking:
                 tracking_system="sportvu",
                 coordinates="kloppy",
             )
+
+

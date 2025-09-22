@@ -1,6 +1,8 @@
+import json
+from datetime import timedelta
 from typing import IO, NamedTuple
 
-from kloppy.domain import Provider, TrackingDataset
+from kloppy.domain import Provider, TrackingDataset, Time
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
 
 
@@ -11,6 +13,22 @@ class CDFOutputs(NamedTuple):
 
 class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     provider = Provider.CDF
+
+    @staticmethod
+    def default_serializer(obj):
+        "handle timedelta and Time type during serialization."
+        if isinstance(obj, timedelta):
+            return obj.total_seconds()  
+        if isinstance(obj, Time):
+            return {
+                "period_id": obj.period.id,
+                "start": obj.period.start_timestamp.total_seconds(),
+                "end": obj.period.end_timestamp.total_seconds(),
+                "timestamp": obj.timestamp.total_seconds(),
+            }
+        raise TypeError(f"Type {type(obj)} not serializable")
+
+
 
     def serialize(self, dataset: TrackingDataset, outputs: CDFOutputs) -> bool:
         """
@@ -25,7 +43,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         Note:
             TODO: Open question: should the serializer make sure the data is in the right format, and
-                  do a transformation if not in the right format?
+                  do a transformation if not in the right format? yes normally.
         """
 
         # Normalize the coordinate system
@@ -37,8 +55,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             NormalizedPitchDimensions,
             Dimension,
             Orientation,
-            BallState
+            BallState,
         )
+
         # length and width of the pitch
         length = dataset.metadata.pitch_dimensions.pitch_length
         width = dataset.metadata.pitch_dimensions.pitch_length
@@ -62,8 +81,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         ## building Tracking jsonl
         # Output containers
         metadata_json = {}
+        # tracking_datas = [] use if we want to manage all the frames
 
-        # Convert the dataset into a DataFrame
+        # list of different periods within a game
         periods = {
             1: "first_half",
             2: "second_half",
@@ -80,42 +100,61 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             [player.player_id for player in away_team.players],
         )
 
-        for frame_id in range(len([1])):
+        for frame_id in range(
+            len([1])
+        ):  # change this when we would like to manage all the frames
             frame_data = {}
 
             # Frame ID
             frame_data["frame_id"] = frame_id
             # Timestamp
-            frame_data["timestamp"] = dataset[frame_id].timestamp
+            frame_data["timestamp"] = dataset[
+                frame_id
+            ].timestamp.total_seconds()
             # Period
-            frame_data["period"] = periods.get(dataset[frame_id].period, "unknown")
+            frame_data["period"] = periods.get(
+                dataset[frame_id].period, "unknown"
+            )
             # Match ID (placeholder)
             frame_data["match"] = {"id": dataset.metadata.game_id}
             # Ball status
-            ball_state = dataset[frame_id].ball_state
-            frame_data["ball_status"] = dataset[0].ball_state == BallState.ALIVE
+            frame_data["ball_status"] = (
+                dataset[0].ball_state == BallState.ALIVE
+            )
 
             # Teams and players
             home_players = []
-            for player, coordinates in dataset[frame_id].players_coordinates.items():
+            for player, coordinates in dataset[
+                frame_id
+            ].players_coordinates.items():
                 if player.player_id in home_player_ids:
                     try:
                         x = coordinates.x
                         y = coordinates.x
                         home_players.append(
-                            {"id": player.player_id, "x": round(x, 3), "y": round(y, 3)}
+                            {
+                                "id": player.player_id,
+                                "x": round(x, 3),
+                                "y": round(y, 3),
+                            }
                         )
                     except KeyError:
                         continue
 
             away_players = []
-            for player, coordinates in dataset[frame_id].players_coordinates.items():
+            for player, coordinates in dataset[
+                frame_id
+            ].players_coordinates.items():
                 if player.player_id in away_player_ids:
                     try:
                         x = coordinates.x
                         y = coordinates.x
-                        home_players.append(
-                            {"id": player.player_id, "x": round(x, 3), "y": round(y, 3)}
+                        away_players.append(
+                            {
+                                "id": player.player_id,
+                                "x": round(x, 3),
+                                "y": round(y, 3),
+                            }
                         )
                     except KeyError:
                         continue
@@ -135,13 +174,21 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                     ball_x = ball_y = ball_z = None
                 frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
 
-            # Add to tracking list
-            outputs.tracking_data.write(frame_data)
+            # normally here when we will use all the frames we are suppose to add them successivelly to a list that we will then write as tracking data outputs
+
+        # Add to tracking list
+        outputs.tracking_data.write(
+            (
+                json.dumps(frame_data, default=self.default_serializer) + "\n"
+            ).encode("utf-8")
+        )
 
         ### build now the metadata.
 
-        # Copetition infos.
-        metadata_json["competition"] = {  # w don't have any of these informations
+        # Competition infos.
+        metadata_json[
+            "competition"
+        ] = {  # we don't have any of these informations
             "id": "",
             "name": "",
             "format": "",
@@ -150,7 +197,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         }
 
         # season infos.
-        metadata_json["season"] = {  # w don't have any of these informations
+        metadata_json["season"] = {  # we don't have any of these informations
             "id": "",
             "name": "",
         }
@@ -161,20 +208,38 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             curent_period = {
                 "period": periods[period.id],
                 "play_direction": "left_to_rigth",
-                "start_time": dataset.metadata.date + period.start_time.timestamp,
-                "end_time": dataset.metadata.date + period.end_time.timestamp,
+                "start_time": (
+                    dataset.metadata.date + period.start_time.timestamp
+                ).timestamp(),
+                "end_time": (
+                    dataset.metadata.date + period.end_time.timestamp
+                ).timestamp(),
                 "start_frame_id": (
                     0
                     if period.id == 1
-                    else len(dataset.filter(lambda frame: frame.period.id == 1).to_df())
+                    else len(
+                        dataset.filter(
+                            lambda frame: frame.period.id == 1
+                        ).to_df()
+                    )
                 ),
                 "end_frame_id": (
-                    len(dataset.filter(lambda frame: frame.period.id == period.id).to_df())
+                    len(
+                        dataset.filter(
+                            lambda frame: frame.period.id == period.id
+                        ).to_df()
+                    )
                     - 1
                     if period.id == 1
-                    else len(dataset.filter(lambda frame: frame.period.id == 1).to_df())
+                    else len(
+                        dataset.filter(
+                            lambda frame: frame.period.id == 1
+                        ).to_df()
+                    )
                     + len(
-                        dataset.filter(lambda frame: frame.period.id == period.id).to_df()
+                        dataset.filter(
+                            lambda frame: frame.period.id == period.id
+                        ).to_df()
                     )
                     - 1
                 ),
@@ -243,5 +308,12 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             },
         }
 
-        outputs.meta_data.write(metadata_json)
+        outputs.meta_data.write(
+            (
+                json.dumps(metadata_json, default=self.default_serializer)
+                + "\n"
+            ).encode("utf-8")
+        )
+
+
         return True

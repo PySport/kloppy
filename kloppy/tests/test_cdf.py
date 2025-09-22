@@ -2,7 +2,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from kloppy.infra.serializers.tracking import cdf
+#from kloppy.infra.serializers.tracking import cdf
+import cdf
 
 from kloppy import sportec
 from kloppy.domain import TrackingDataset
@@ -58,11 +59,11 @@ class TestCDFSerializer:
             # Validate using CDF validators
 
             # Validate meta data first.
-            meta_validator = cdf.MetaSchemaValidator()
+            meta_validator = cdf.MetaSchemaValidator(schema="cdf/files/schema/meta_v0.2.0.json")
             meta_validator.validate_schema(sample=meta_file.name)
 
             # Validate tracking data
-            tracking_validator = cdf.TrackingSchemaValidator()
+            tracking_validator = cdf.TrackingSchemaValidator(schema="cdf/files/schema/tracking_v0.2.0.json")
             tracking_validator.validate_schema(sample=tracking_file.name)
 
             # Clean up temp files

@@ -227,7 +227,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "misc": {
                     "country": "",  # how to get this ?
                     "city": "",  # how to get this ?
-                    "percipitation": 0.5,  # how to get this ?
+                    "percipitation": 0,  # how to get this ?
                     "is_open_roof": True,  # how to get this ?
                 },
             },

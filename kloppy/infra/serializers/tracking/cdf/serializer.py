@@ -18,7 +18,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     def default_serializer(obj):
         "handle timedelta and Time type during serialization."
         if isinstance(obj, timedelta):
-            return obj.total_seconds()  
+            return obj.total_seconds()
         if isinstance(obj, Time):
             return {
                 "period_id": obj.period.id,
@@ -27,8 +27,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "timestamp": obj.timestamp.total_seconds(),
             }
         raise TypeError(f"Type {type(obj)} not serializable")
-
-
 
     def serialize(self, dataset: TrackingDataset, outputs: CDFOutputs) -> bool:
         """
@@ -113,10 +111,10 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             ].timestamp.total_seconds()
             # Period
             frame_data["period"] = periods.get(
-                dataset[frame_id].period, "unknown"
+                dataset[frame_id].period.id, "unknown"
             )
             # Match ID (placeholder)
-            frame_data["match"] = {"id": dataset.metadata.game_id}
+            frame_data["match"] = {"id": str(dataset.metadata.game_id)}
             # Ball status
             frame_data["ball_status"] = (
                 dataset[0].ball_state == BallState.ALIVE
@@ -160,19 +158,44 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                         continue
 
             frame_data["teams"] = {
-                "home": {"id": home_team.team_id, "players": home_players},
-                "away": {"id": away_team.team_id, "players": away_players},
+                "home": {
+                    "id": home_team.team_id,
+                    "players": home_players,
+                    "jersey_color": "Null",
+                    "name": home_team.name,
+                    "formation": (
+                        "Null"
+                        if str(home_team.starting_formation) == None
+                        else str(home_team.starting_formation)
+                    ),
+                },
+                "away": {
+                    "id": away_team.team_id,
+                    "players": away_players,
+                    "jersey_color": "Null",
+                    "name": away_team.name,
+                    "formation": (
+                        "Null"
+                        if str(away_team.starting_formation) == None
+                        else str(away_team.starting_formation)
+                    ),
+                },
             }
 
             # Ball
             if frame_data["ball_status"] == True:
                 try:
-                    ball_x = round(dataset[0].ball_coordinates.x, 3)
-                    ball_y = round(dataset[0].ball_coordinates.y, 3)
-                    ball_z = round(dataset[0].ball_coordinates.z, 3)
+                    ball_x = round(dataset[frame_id].ball_coordinates.x, 3)
+                    ball_y = round(dataset[frame_id].ball_coordinates.y, 3)
+                    ball_z = round(dataset[frame_id].ball_coordinates.z, 3)
                 except KeyError:
                     ball_x = ball_y = ball_z = None
-                frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
+            else:
+                ball_x = ball_y = ball_z = (
+                    dataset.metadata.pitch_dimensions.pitch_length + 10
+                )
+
+            frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
 
             # normally here when we will use all the frames we are suppose to add them successivelly to a list that we will then write as tracking data outputs
 
@@ -186,15 +209,15 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         ### build now the metadata.
 
         # Competition infos.
-        metadata_json[
-            "competition"
-        ] = {  # we don't have any of these informations
-            "id": "",
-            "name": "",
-            "format": "",
-            "age_restriction": "null",
-            "type": "",
-        }
+        metadata_json["competition"] = (
+            {  # we don't have any of these informations
+                "id": "",
+                "name": "",
+                "format": "",
+                "age_restriction": "null",
+                "type": "",
+            }
+        )
 
         # season infos.
         metadata_json["season"] = {  # we don't have any of these informations
@@ -256,7 +279,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         for player in home_team.players:
             try:
-                home_players.append(
+                meta_home_players.append(
                     {
                         "id": player.player_id,
                         "team_id": home_team.team_id,
@@ -270,7 +293,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         meta_away_players = []
         for player in away_team.players:
             try:
-                away_players.append(
+                meta_away_players.append(
                     {
                         "id": player.player_id,
                         "team_id": away_team.team_id,
@@ -300,10 +323,24 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "home": {
                     "id": home_team.team_id,  # same as for the jsonl
                     "players": meta_home_players,
+                    "jersey_color": "null",
+                    "name": home_team.name,
+                    "formation": (
+                        "null"
+                        if str(home_team.starting_formation) == None
+                        else str(home_team.starting_formation)
+                    ),
                 },
                 "away": {
                     "id": away_team.team_id,  # same as for the jsonl
                     "players": meta_away_players,
+                    "jersey_color": "null",
+                    "name": away_team.name,
+                    "formation": (
+                        "null"
+                        if str(away_team.starting_formation) == None
+                        else str(home_team.starting_formation)
+                    ),
                 },
             },
         }
@@ -314,6 +351,5 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 + "\n"
             ).encode("utf-8")
         )
-
 
         return True

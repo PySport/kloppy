@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<matchEvents>
+  <matchInfo id="71pif9hi2vwzp6q0xzilyxst0" coverageLevel="15" date="2021-09-11Z" time="18:30:00Z" localDate="2021-09-11" localTime="20:30:00" week="6" attendanceInfoId="2" attendanceInfo="Limited Audience" numberOfPeriods="2" periodLength="45" lastUpdated="2024-03-14T21:27:20Z">
+    <description>Hamburger SV vs Sandhausen</description>
+    <sport id="289u5typ3vp4ifwh5thalohmq">Soccer</sport>
+    <ruleset id="79plas4983031idr6vw83nuel">Men</ruleset>
+    <competition id="722fdbecxzcq9788l6jqclzlw" name="2. Bundesliga" knownName="German Bundesliga Zwei" competitionCode="2.B" competitionFormat="Domestic league">
+      <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+    </competition>
+    <tournamentCalendar id="93wcwtf25153hracvqva88aac" startDate="2021-07-23Z" endDate="2022-05-15Z">2021/2022</tournamentCalendar>
+    <stage id="9443wbz12vfz0f7ewmg8xhes4" formatId="e2q01r9o9jwiq1fls93d1sslx" startDate="2021-07-23Z" endDate="2022-05-15Z">Regular Season</stage>
+    <contestants>
+      <contestant id="75xi6hloabmnjn2kzgj1g8h1s" name="Hamburger SV" shortName="Hamburg" officialName="Hamburger SV" code="HSV" position="home">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+      <contestant id="884uzyf1wosc7ykji6e18gifp" name="Sandhausen" shortName="Sandhausen" officialName="SV Sandhausen" code="SVS" position="away">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+    </contestants>
+    <venue id="8gaqzo8y471bfkkc3tq7ra7o" neutral="no" longName="Volksparkstadion">Volksparkstadion</venue>
+  </matchInfo>
+  <liveData>
+    <matchDetails periodId="14" matchStatus="Played" winner="home" matchLengthMin="97" matchLengthSec="41">
+      <periods>
+        <period id="1" start="2021-09-11T18:30:06Z" end="2021-09-11T19:15:08Z" lengthMin="45" lengthSec="2"/>
+        <period id="2" start="2021-09-11T19:34:13Z" end="2021-09-11T20:26:52Z" lengthMin="52" lengthSec="39"/>
+      </periods>
+      <scores>
+        <ht home="0" away="0"/>
+        <ft home="2" away="1"/>
+        <total home="2" away="1"/>
+      </scores>
+    </matchDetails>
+    <events>
+      <event id="2328592303" eventId="35" typeId="1" periodId="1" timeMin="2" timeSec="34" contestantId="75xi6hloabmnjn2kzgj1g8h1s" playerId="2nrmndj0uq3f46c2cb1fbf85" playerName="M. Heyer" outcome="1" keyPass="1" x="85.7" y="97.1" timeStamp="2021-09-11T18:32:40.959Z" lastModified="2021-09-16T08:33:50Z">
+        <qualifier id="3088136087" qualifierId="155"/>
+        <qualifier id="3088136085" qualifierId="2"/>
+        <qualifier id="3088136089" qualifierId="56" value="Center"/>
+        <qualifier id="3088136091" qualifierId="140" value="92.0"/>
+        <qualifier id="3088141151" qualifierId="154"/>
+        <qualifier id="3088136097" qualifierId="213" value="4.9"/>
+        <qualifier id="3093691325" qualifierId="223"/>
+        <qualifier id="3098050259" qualifierId="178"/>
+        <qualifier id="3088141149" qualifierId="210" value="15"/>
+        <qualifier id="3093691327" qualifierId="20"/>
+      </event>
+      <event id="2328592321" eventId="36" typeId="44" periodId="1" timeMin="2" timeSec="36" contestantId="75xi6hloabmnjn2kzgj1g8h1s" playerId="aksjicf4keobpav3tuujngell" playerName="M. Wintzheimer" outcome="1" x="91.4" y="36.6" timeStamp="2021-09-11T18:32:43.177Z" lastModified="2021-09-16T08:33:49Z">
+        <qualifier id="3088136155" qualifierId="56" value="Center"/>
+        <qualifier id="3088136157" qualifierId="286"/>
+        <qualifier id="3088136211" qualifierId="233" value="19"/>
+      </event>
+    </events>
+  </liveData>
+</matchEvents>

@@ -268,9 +268,11 @@ def _parse_pass(
     # Look for a ball receipt event based on the result and sequence of events
     ball_receipt_event = None
     if result == PassResult.COMPLETE and next_event is not None:
-        if (
-            next_event.contestant_id == team.team_id
-            and next_event.type_id in BALL_OWNING_EVENTS
+        next_event_same_team = next_event.contestant_id == team.team_id
+        next_event_ball_owning_event = next_event.type_id in BALL_OWNING_EVENTS
+        next_event_duel_event = next_event.type_id == EVENT_TYPE_AERIAL
+        if next_event_same_team and (
+            next_event_ball_owning_event or next_event_duel_event
         ):
             ball_receipt_event = next_event
         elif (
@@ -517,7 +519,7 @@ def _parse_duel(raw_event: OptaEvent) -> Dict:
 def _parse_interception(
     raw_event: OptaEvent, team: Team, next_event: OptaEvent
 ) -> Dict:
-    qualifiers = _get_event_qualifiers(raw_event.qualifiers) 
+    qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     result = InterceptionResult.SUCCESS
 
     if next_event is not None:
@@ -533,6 +535,7 @@ def _parse_interception(
         result=result,
         qualifiers=qualifiers,
     )
+
 
 def _parse_pass_block(
     raw_event: OptaEvent, team: Team, next_event: OptaEvent
@@ -556,6 +559,7 @@ def _parse_pass_block(
         result=result,
         qualifiers=qualifiers,
     )
+
 
 def _parse_shot_block(
     raw_event: OptaEvent, team: Team, next_event: OptaEvent

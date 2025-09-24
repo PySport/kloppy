@@ -10,9 +10,8 @@ from kloppy.domain import (
 from kloppy.utils import performance_logging
 
 from .metadata import load_metadata, EPTSMetadata
-from .reader import read_raw_data
 from ..deserializer import TrackingDataDeserializer
-from ..epts_common import create_frame_from_row
+from ..epts_common import create_frame_from_row, read_raw_data
 
 logger = logging.getLogger(__name__)
 

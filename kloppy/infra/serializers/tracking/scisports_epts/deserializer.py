@@ -16,8 +16,7 @@ from kloppy.domain.services import attacking_direction_from_frame
 
 from ..deserializer import TrackingDataDeserializer
 from ..metrica_epts.metadata import EPTSMetadata
-from ..metrica_epts.reader import read_raw_data
-from ..epts_common import create_frame_from_row
+from ..epts_common import create_frame_from_row, read_raw_data
 from .metadata import load_metadata
 
 logger = logging.getLogger(__name__)

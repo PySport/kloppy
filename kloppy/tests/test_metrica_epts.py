@@ -6,7 +6,7 @@ from lxml import objectify
 from pandas import DataFrame
 
 from kloppy import metrica
-from kloppy.domain import Orientation, Point, Provider, Score
+from kloppy.domain import Orientation, Point, Provider, Score, BallState
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
     load_metadata,
@@ -15,15 +15,16 @@ from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
+from kloppy.infra.serializers.tracking.epts_common import (
+    build_regex as common_build_regex,
+    read_raw_data as common_read_raw_data,
+)
 from kloppy.utils import performance_logging
 
 
 class TestMetricaEPTSTracking:
-    def test_regex(self, base_dir):
-        with open(
-            base_dir / "files/epts_metrica_metadata.xml", "rb"
-        ) as metadata_fp:
-            metadata = load_metadata(metadata_fp)
+    def test_regex(self, metrica_metadata):
+        metadata = metrica_metadata
 
         regex_str = build_regex(
             metadata.data_format_specifications[0],
@@ -49,16 +50,11 @@ class TestMetricaEPTSTracking:
 
         assert provider_from_file == Provider.METRICA
 
-    def test_read(self, base_dir):
-        with open(
-            base_dir / "files/epts_metrica_metadata.xml", "rb"
-        ) as metadata_fp:
-            metadata = load_metadata(metadata_fp)
+    def test_read(self, metrica_metadata, raw_data: str):
+        metadata = metrica_metadata
 
-        with open(
-            base_dir / "files/epts_metrica_tracking.txt", "rb"
-        ) as raw_data:
-            iterator = read_raw_data(raw_data, metadata)
+        with open(raw_data, "rb") as raw_data_fp:
+            iterator = read_raw_data(raw_data_fp, metadata)
 
             with performance_logging("load"):
                 assert list(iterator)
@@ -98,6 +94,26 @@ class TestMetricaEPTSTracking:
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/epts_metrica_tracking.txt"
 
+    @pytest.fixture
+    def metrica_dataset(self, meta_data: str, raw_data: str):
+        """Fixture that loads the complete Metrica EPTS dataset."""
+        return metrica.load_tracking_epts(
+            meta_data=meta_data, raw_data=raw_data
+        )
+
+    @pytest.fixture
+    def metrica_dataset_limited(self, meta_data: str, raw_data: str):
+        """Fixture that loads limited Metrica EPTS dataset for faster tests."""
+        return metrica.load_tracking_epts(
+            meta_data=meta_data, raw_data=raw_data, limit=100
+        )
+
+    @pytest.fixture
+    def metrica_metadata(self, meta_data: str):
+        """Fixture that loads just the Metrica EPTS metadata."""
+        with open(meta_data, "rb") as metadata_fp:
+            return load_metadata(metadata_fp)
+
     def test_correct_deserialization_limit_sample(
         self, meta_data: str, raw_data: str
     ):
@@ -117,10 +133,8 @@ class TestMetricaEPTSTracking:
         )
         assert len(dataset.records) == 50
 
-    def test_correct_deserialization(self, meta_data: str, raw_data: str):
-        dataset = metrica.load_tracking_epts(
-            meta_data=meta_data, raw_data=raw_data
-        )
+    def test_correct_deserialization(self, metrica_dataset_limited):
+        dataset = metrica_dataset_limited
 
         first_player = next(iter(dataset.records[0].players_data))
 
@@ -158,10 +172,8 @@ class TestMetricaEPTSTracking:
         assert dataset.records[0].ball_coordinates.x == pytest.approx(0.52867)
         assert dataset.records[0].ball_coordinates.y == pytest.approx(0.7069)
 
-    def test_other_data_deserialization(self, meta_data: str, raw_data: str):
-        dataset = metrica.load_tracking_epts(
-            meta_data=meta_data, raw_data=raw_data
-        )
+    def test_other_data_deserialization(self, metrica_dataset_limited):
+        dataset = metrica_dataset_limited
 
         first_player = next(iter(dataset.records[0].players_data))
 

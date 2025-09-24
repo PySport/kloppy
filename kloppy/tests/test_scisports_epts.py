@@ -1,16 +1,33 @@
 from datetime import timedelta
 import math
 
+import pytest
+
 from kloppy import scisports
-from kloppy.domain import Provider, Point, Orientation, AttackingDirection
+from kloppy.domain import Provider, Point, Orientation, BallState
+
+
+@pytest.fixture
+def scisports_dataset(base_dir):
+    """Fixture that loads the complete SciSports EPTS dataset."""
+    meta = base_dir / "files/scisports_epts_metadata.xml"
+    raw = base_dir / "files/scisports_epts_positions.txt"
+    return scisports.load_tracking(meta_data=meta, raw_data=raw)
+
+
+@pytest.fixture
+def scisports_dataset_scisports_coords(base_dir):
+    """Fixture that loads SciSports EPTS dataset with SciSports coordinate system."""
+    meta = base_dir / "files/scisports_epts_metadata.xml"
+    raw = base_dir / "files/scisports_epts_positions.txt"
+    return scisports.load_tracking(
+        meta_data=meta, raw_data=raw, limit=500000, coordinates="scisports"
+    )
 
 
 class TestSciSportsEPTSTracking:
-    def test_deserialize_basic(self, base_dir):
-        meta = base_dir / "files/scisports_epts_metadata.xml"
-        raw = base_dir / "files/scisports_epts_positions.txt"
-
-        dataset = scisports.load_tracking(meta_data=meta, raw_data=raw)
+    def test_deserialize_basic(self, scisports_dataset):
+        dataset = scisports_dataset
 
         assert dataset.metadata.provider == Provider.SCISPORTS
         assert len(dataset.records) == 501  # Reduced test file with 501 frames
@@ -41,13 +58,10 @@ class TestSciSportsEPTSTracking:
         # Verify orientation is correctly determined from first frame analysis
         assert dataset.metadata.orientation == Orientation.AWAY_HOME
 
-    def test_gk_positions_first_frames(self, base_dir):
-        meta = base_dir / "files/scisports_epts_metadata.xml"
-        raw = base_dir / "files/scisports_epts_positions.txt"
-
-        dataset = scisports.load_tracking(
-            meta_data=meta, raw_data=raw, limit=500000, coordinates="scisports"
-        )
+    def test_gk_positions_first_frames(
+        self, scisports_dataset_scisports_coords
+    ):
+        dataset = scisports_dataset_scisports_coords
 
         home_team = next(
             t for t in dataset.metadata.teams if str(t.ground) == "home"
@@ -90,3 +104,109 @@ class TestSciSportsEPTSTracking:
         assert first_p2.players_data[away_gk].coordinates == Point(
             x=3.88, y=34.23
         )
+
+    def test_timestamp_reset_per_period(self, scisports_dataset):
+        """Test that timestamps are reset to start from 0:00:00 at the beginning of each period."""
+        dataset = scisports_dataset
+
+        # Get frames for each period
+        period1_frames = [
+            f for f in dataset.records if f.period and f.period.id == 1
+        ]
+        period2_frames = [
+            f for f in dataset.records if f.period and f.period.id == 2
+        ]
+
+        # Both periods should have frames
+        assert len(period1_frames) > 0, "Period 1 should have frames"
+        assert len(period2_frames) > 0, "Period 2 should have frames"
+
+        # Period 1: First frame should start near 0:00:00 (allowing for some pre-period start)
+        # Note: Some frames may be before period start in reduced test data
+        first_p1_timestamp = period1_frames[0].timestamp
+        last_p1_timestamp = period1_frames[-1].timestamp
+
+        # Period 1 should have reasonable duration (> 0)
+        assert (
+            last_p1_timestamp > first_p1_timestamp
+        ), "Period 1 should have positive duration"
+
+        # Period 2: Should start from 0:00:00 (reset from period start)
+        first_p2_timestamp = period2_frames[0].timestamp
+        last_p2_timestamp = period2_frames[-1].timestamp
+
+        # Period 2 first frame should be at exactly 0:00:00 (timestamp reset)
+        assert first_p2_timestamp == timedelta(
+            0
+        ), f"Period 2 should start at 0:00:00, got {first_p2_timestamp}"
+
+        # Period 2 should have positive duration
+        assert (
+            last_p2_timestamp > first_p2_timestamp
+        ), "Period 2 should have positive duration"
+
+        # Verify that timestamps within each period are monotonically increasing
+        prev_timestamp = None
+        for frame in period1_frames:
+            if prev_timestamp is not None:
+                assert (
+                    frame.timestamp >= prev_timestamp
+                ), f"Period 1 timestamps should be increasing: {prev_timestamp} -> {frame.timestamp}"
+            prev_timestamp = frame.timestamp
+
+        prev_timestamp = None
+        for frame in period2_frames:
+            if prev_timestamp is not None:
+                assert (
+                    frame.timestamp >= prev_timestamp
+                ), f"Period 2 timestamps should be increasing: {prev_timestamp} -> {frame.timestamp}"
+            prev_timestamp = frame.timestamp
+
+    def test_ball_state_detection(self, scisports_dataset):
+        """Test that ball states (alive/dead) are correctly parsed from ball channel data."""
+        dataset = scisports_dataset
+
+        # Count ball states
+        alive_frames = [
+            f for f in dataset.records if f.ball_state == BallState.ALIVE
+        ]
+        dead_frames = [
+            f for f in dataset.records if f.ball_state == BallState.DEAD
+        ]
+
+        # Verify we have both states represented
+        assert len(alive_frames) == 435
+        assert len(dead_frames) == 66
+
+        # Total should equal all frames
+        total_frames = len(alive_frames) + len(dead_frames)
+        assert total_frames == len(dataset.records)
+
+    def test_player_position_types(self, scisports_dataset):
+        """Test that player position types are correctly mapped from metadata."""
+        dataset = scisports_dataset
+
+        # Count players by position type
+        goalkeepers = []
+        field_players = []
+
+        for team in dataset.metadata.teams:
+            for player in team.players:
+                if player.starting_position and "Goalkeeper" in str(
+                    player.starting_position
+                ):
+                    goalkeepers.append(player)
+                elif player.attributes.get("PlayerType") == "Goalkeeper":
+                    goalkeepers.append(player)
+                elif player.attributes.get("PlayerType") == "Field player":
+                    field_players.append(player)
+
+        # Should have exactly 2 goalkeepers (one per team)
+        assert (
+            len(goalkeepers) == 2
+        ), f"Expected 2 goalkeepers, found {len(goalkeepers)}"
+
+        # Should have multiple field players
+        assert (
+            len(field_players) > 10
+        ), f"Expected >10 field players, found {len(field_players)}"

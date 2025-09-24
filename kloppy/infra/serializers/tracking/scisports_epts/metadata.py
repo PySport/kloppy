@@ -18,6 +18,7 @@ from kloppy.domain import (
     build_coordinate_system,
     Ground,
 )
+from kloppy.domain.models.position import PositionType
 
 from ..metrica_epts.models import (
     DataFormatSpecification,
@@ -33,6 +34,20 @@ def _text(elm: Optional[object]) -> Optional[str]:
 
 def _provider_value_map(value: str) -> str:
     return value
+
+
+def _map_player_type(player_type: Optional[str]) -> PositionType:
+    """Map SciSports player type to PositionType enum."""
+    if not player_type:
+        return PositionType.Unknown
+
+    player_type_lower = player_type.lower()
+    if "goalkeeper" in player_type_lower:
+        return PositionType.Goalkeeper
+    elif "field player" in player_type_lower:
+        return PositionType.Unknown
+    else:
+        return PositionType.Unknown
 
 
 def _load_provider_parameters(parent_elm) -> Dict:
@@ -75,6 +90,16 @@ def _load_players(players_elm, team: Team) -> List[Player]:
     for player_elm in players_elm.iterchildren(tag="Player"):
         if player_elm.attrib["teamId"] != team.team_id:
             continue
+
+        # Load provider parameters to get player type
+        attributes = _load_provider_parameters(
+            player_elm.find("ProviderPlayerParameters")
+        )
+
+        # Map player type to PositionType
+        player_type_str = attributes.get("PlayerType")
+        position = _map_player_type(player_type_str)
+
         players.append(
             Player(
                 team=team,
@@ -82,9 +107,8 @@ def _load_players(players_elm, team: Team) -> List[Player]:
                 player_id=player_elm.attrib["id"],
                 name=_text(player_elm.find("Name")),
                 starting=True,
-                attributes=_load_provider_parameters(
-                    player_elm.find("ProviderPlayerParameters")
-                ),
+                starting_position=position,
+                attributes=attributes,
             )
         )
     return players
@@ -212,6 +236,6 @@ def load_metadata(
         score=score,
         orientation=None,  # Will be determined from data in deserializer
         provider=provider,
-        flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+        flags=~DatasetFlag.BALL_OWNING_TEAM,
         coordinate_system=from_coordinate_system,
     )

@@ -266,9 +266,11 @@ def _parse_pass(
     # Look for a ball receipt event based on the result and sequence of events
     ball_receipt_event = None
     if result == PassResult.COMPLETE and next_event is not None:
-        if (
-            next_event.contestant_id == team.team_id
-            and next_event.type_id in BALL_OWNING_EVENTS
+        next_event_same_team = next_event.contestant_id == team.team_id
+        next_event_ball_owning_event = next_event.type_id in BALL_OWNING_EVENTS
+        next_event_duel_event = next_event.type_id == EVENT_TYPE_AERIAL
+        if next_event_same_team and (
+            next_event_ball_owning_event or next_event_duel_event
         ):
             ball_receipt_event = next_event
         elif (

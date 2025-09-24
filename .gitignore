@@ -155,3 +155,6 @@ examples/pattern_matching/repository/*.json
 !.gitignore
 
 scratchpad
+
+# Coding agents
+CLAUDE.md

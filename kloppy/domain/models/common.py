@@ -101,6 +101,8 @@ class Provider(Enum):
         IMPECT:
         SIGNALITY:
         SMRTSTATS:
+        SCISPORTS:
+        OTHER:
     """
 
     METRICA = "metrica"
@@ -721,7 +723,7 @@ class SportecEventDataCoordinateSystem(ProviderCoordinateSystem):
         )
 
 
-class SciSportsCoordinateSystem(ProviderCoordinateSystem):
+class SciSportsTrackingDataCoordinateSystem(ProviderCoordinateSystem):
     """
     SciSports tracking coordinate system.
 
@@ -811,6 +813,37 @@ class StatsBombCoordinateSystem(ProviderCoordinateSystem):
             pitch_length=self._pitch_length,
             pitch_width=self._pitch_width,
             standardized=True,
+        )
+
+
+class SciSportsEventDataCoordinateSystem(ProviderCoordinateSystem):
+    """
+    SciSports coordinate system.
+
+    Uses a pitch with coordinates in meters. The origin appears to be at the center
+    of the pitch with x-axis oriented from left to right and y-axis from bottom to top.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.SCISPORTS
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(-52.5, 52.5),  # Standard pitch is 105m long
+            y_dim=Dimension(-34, 34),  # Standard pitch is 68m wide
+            pitch_length=self._pitch_length or 105.0,
+            pitch_width=self._pitch_width or 68.0,
+            standardized=False,
         )
 
 
@@ -1164,7 +1197,10 @@ def build_coordinate_system(
         Provider.SIGNALITY: SignalityCoordinateSystem,
         Provider.KORASTATS: KoraStatsCoordinateSystem,
         Provider.SMRTSTATS: SmrtStatsCoordinateSystem,
-        Provider.SCISPORTS: SciSportsCoordinateSystem,
+        Provider.SCISPORTS: {
+            DatasetType.EVENT: SciSportsEventDataCoordinateSystem,
+            DatasetType.TRACKING: SciSportsTrackingDataCoordinateSystem,
+        },
     }
 
     if provider in coordinate_systems:

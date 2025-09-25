@@ -518,7 +518,7 @@ class INTERCEPTION(EVENT):
             self.event_category_type
             == EVENT_CATEGORY_TYPE.DEFENSIVE_INTERCEPT_CLEAR
         ):
-            result = InterceptionResult.SUCCESS
+            result = InterceptionResult.LOST
         else:
             result = interception_result_mapping[self.result]
 

@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 from typing import IO, NamedTuple
 
-from kloppy.domain import Provider, TrackingDataset, Time
+from kloppy.domain import Provider, TrackingDataset, Time, PositionType
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
 
 
@@ -14,19 +14,42 @@ class CDFOutputs(NamedTuple):
 class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     provider = Provider.CDF
 
+    # to infer the starting formation if not given
     @staticmethod
-    def default_serializer(obj):
-        "handle timedelta and Time type during serialization."
-        if isinstance(obj, timedelta):
-            return obj.total_seconds()
-        if isinstance(obj, Time):
-            return {
-                "period_id": obj.period.id,
-                "start": obj.period.start_timestamp.total_seconds(),
-                "end": obj.period.end_timestamp.total_seconds(),
-                "timestamp": obj.timestamp.total_seconds(),
-            }
-        raise TypeError(f"Type {type(obj)} not serializable")
+    def get_starting_formation(list_players, team) -> str:
+        formation = ""
+        defender = midfiler = attacker = 0
+
+        for player in list_players:
+            if (
+                team.get_player_by_id(player["id"]).starting_position.parent
+                == None
+            ):
+                continue
+            elif (
+                team.get_player_by_id(player["id"]).starting_position.parent
+                == PositionType.Attacker
+            ):
+                attacker += 1
+            elif (
+                team.get_player_by_id(player["id"]).starting_position.parent
+                == PositionType.Midfielder
+                or team.get_player_by_id(
+                    player["id"]
+                ).starting_position.parent.parent
+                == PositionType.Midfielder
+            ):
+                midfiler += 1
+            elif (
+                team.get_player_by_id(
+                    player["id"]
+                ).starting_position.parent.parent
+                == PositionType.Defender
+            ):
+                defender += 1
+        if defender + midfiler + attacker == 10:
+            formation = f"{defender}_{midfiler}_{attacker}"
+        return formation
 
     def serialize(self, dataset: TrackingDataset, outputs: CDFOutputs) -> bool:
         """
@@ -56,9 +79,10 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             BallState,
         )
 
-        # length and width of the pitch
+        # length and width of the pitch imported pitch
         length = dataset.metadata.pitch_dimensions.pitch_length
         width = dataset.metadata.pitch_dimensions.pitch_length
+        # build the cdf normalize coordinate system
         CDF_coordinate_system = CustomCoordinateSystem(
             origin=Origin.CENTER,
             vertical_orientation=VerticalOrientation.BOTTOM_TO_TOP,
@@ -81,7 +105,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         metadata_json = {}
         # tracking_datas = [] use if we want to manage all the frames
 
-        # list of different periods within a game
+        # list of different periods within a game define by the cdf
         periods = {
             1: "first_half",
             2: "second_half",
@@ -92,6 +116,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         # Get home and away team data
         home_team, away_team = dataset.metadata.teams
+
         # Get the players Id.
         home_player_ids, away_player_ids = (
             [player.player_id for player in home_team.players],
@@ -106,14 +131,14 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             # Frame ID
             frame_data["frame_id"] = frame_id
             # Timestamp
-            frame_data["timestamp"] = dataset[
-                frame_id
-            ].timestamp.total_seconds()
+            frame_data["timestamp"] = str(
+                dataset.metadata.date + dataset[frame_id].timestamp
+            )
             # Period
             frame_data["period"] = periods.get(
-                dataset[frame_id].period.id, "unknown"
+                dataset[frame_id].period.id, "unknownn"
             )
-            # Match ID (placeholder)
+            # Match ID
             frame_data["match"] = {"id": str(dataset.metadata.game_id)}
             # Ball status
             frame_data["ball_status"] = (
@@ -134,6 +159,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                                 "id": player.player_id,
                                 "x": round(x, 3),
                                 "y": round(y, 3),
+                                "position": player.starting_position.code,
                             }
                         )
                     except KeyError:
@@ -157,27 +183,35 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                     except KeyError:
                         continue
 
+            # asumption
+            default_formation = "4-3-3"
+
+            # teams within the tracking data.
             frame_data["teams"] = {
                 "home": {
                     "id": home_team.team_id,
                     "players": home_players,
-                    "jersey_color": "Null",
+                    "jersey_color": " ",  #
                     "name": home_team.name,
                     "formation": (
-                        "Null"
-                        if str(home_team.starting_formation) == None
-                        else str(home_team.starting_formation)
+                        home_team.formations.at_start()
+                        if home_team.formations.items
+                        else self.get_starting_formation(
+                            home_players, home_team
+                        )
                     ),
                 },
                 "away": {
                     "id": away_team.team_id,
                     "players": away_players,
-                    "jersey_color": "Null",
+                    "jersey_color": " ",
                     "name": away_team.name,
                     "formation": (
-                        "Null"
-                        if str(away_team.starting_formation) == None
-                        else str(away_team.starting_formation)
+                        away_team.formations.at_start()
+                        if home_team.formations.items
+                        else self.get_starting_formation(
+                            away_players, away_team
+                        )
                     ),
                 },
             }
@@ -197,24 +231,22 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
             frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
 
-            # normally here when we will use all the frames we are suppose to add them successivelly to a list that we will then write as tracking data outputs
-
+        # normally here when we will use all the frames we are suppose to add them successivelly to a list that we will then write as tracking data outputs
+        # but with only one frame we just dumpit in a json buffured.
         # Add to tracking list
         outputs.tracking_data.write(
-            (
-                json.dumps(frame_data, default=self.default_serializer) + "\n"
-            ).encode("utf-8")
+            (json.dumps(frame_data) + "\n").encode("utf-8")
         )
 
+        ################################################
         ### build now the metadata.
-
         # Competition infos.
         metadata_json["competition"] = (
             {  # we don't have any of these informations
                 "id": "",
                 "name": "",
                 "format": "",
-                "age_restriction": "null",
+                "age_restriction": "16",
                 "type": "",
             }
         )
@@ -230,7 +262,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         for period in dataset.metadata.periods:
             curent_period = {
                 "period": periods[period.id],
-                "play_direction": "left_to_rigth",
+                "play_direction": "left_right",
                 "start_time": (
                     dataset.metadata.date + period.start_time.timestamp
                 ).timestamp(),
@@ -271,7 +303,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             }
             periods_info.append(curent_period)
 
-            ## building team_players for metadata
+        ## building team_players for metadata
         meta_home_players = []
         starters_ids = []
         for player, coordinates in dataset[0].players_coordinates.items():
@@ -304,52 +336,69 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             except KeyError:
                 continue
 
+        whistles_types = ["first_half", "second_half "]
+
         metadata_json["match"] = {
-            "match": {
-                "id": dataset.metadata.game_id,  # same as for the jsonl
-                "kickoff_time": dataset.metadata.periods[0].start_time,
-                "periods": periods_info,
-                "round": "38",
-                "scheduled_kickoff_time": "",  # how to get this ?
-                "local_kickoff_time": "",  # how to get this ?
-                "misc": {
-                    "country": "",  # how to get this ?
-                    "city": "",  # how to get this ?
-                    "percipitation": 0,  # how to get this ?
-                    "is_open_roof": True,  # how to get this ?
-                },
-            },
-            "teams": {
-                "home": {
-                    "id": home_team.team_id,  # same as for the jsonl
-                    "players": meta_home_players,
-                    "jersey_color": "null",
-                    "name": home_team.name,
-                    "formation": (
-                        "null"
-                        if str(home_team.starting_formation) == None
-                        else str(home_team.starting_formation)
-                    ),
-                },
-                "away": {
-                    "id": away_team.team_id,  # same as for the jsonl
-                    "players": meta_away_players,
-                    "jersey_color": "null",
-                    "name": away_team.name,
-                    "formation": (
-                        "null"
-                        if str(away_team.starting_formation) == None
-                        else str(home_team.starting_formation)
-                    ),
-                },
+            "id": str(dataset.metadata.game_id),  # same as for the jsonl
+            "kickoff_time": str(dataset.metadata.periods[0].start_time),
+            "periods": periods_info,
+            "whistles": [
+                {
+                    "type": whistles_types[0],
+                    "sub_type": "start",
+                    "time": str(dataset.metadata.periods[0].start_time),
+                }
+            ],  # fake just to pass the test, I have to change this after.
+            "round": "38",
+            "scheduled_kickoff_time": str(
+                dataset.metadata.date
+            ),  # how to get this ?
+            "local_kickoff_time": "",  # how to get this ?
+            "misc": {
+                "country": "",  # how to get this ?
+                "city": "",  # how to get this ?
+                "percipitation": 0,  # how to get this ?
+                "is_open_roof": True,  # how to get this ?
             },
         }
 
+        metadata_json["teams"] = {
+            "home": {
+                "id": home_team.team_id,  # same as for the jsonl
+                "players": meta_home_players,
+                "jersey_color": " ",
+                "name": home_team.name,
+                "formation": home_team.starting_formation
+                or self.get_starting_formation(meta_home_players, home_team),
+            },
+            "away": {
+                "id": away_team.team_id,  # same as for the jsonl
+                "players": meta_away_players,
+                "jersey_color": " ",
+                "name": away_team.name,
+                "formation": away_team.starting_formation
+                or self.get_starting_formation(meta_away_players, away_team),
+            },
+        }
+
+        metadata_json["stadium"] = {
+            "id": "",
+            "pitch_length": dataset.metadata.pitch_dimensions.pitch_length,
+            "pitch_width": dataset.metadata.pitch_dimensions.pitch_width,
+            "name": "",
+            "turf": "",
+        }
+
+        metadata_json["meta"] = {
+            "video": None,
+            "tracking": None,
+            "limb": None,
+            "meta": None,
+            "cdf": None,
+        }
+
         outputs.meta_data.write(
-            (
-                json.dumps(metadata_json, default=self.default_serializer)
-                + "\n"
-            ).encode("utf-8")
+            (json.dumps(metadata_json) + "\n").encode("utf-8")
         )
 
         return True

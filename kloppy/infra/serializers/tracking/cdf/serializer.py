@@ -263,12 +263,12 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             curent_period = {
                 "period": periods[period.id],
                 "play_direction": "left_right",
-                "start_time": (
+                "start_time": str(
                     dataset.metadata.date + period.start_time.timestamp
-                ).timestamp(),
-                "end_time": (
+                ),
+                "end_time": str(
                     dataset.metadata.date + period.end_time.timestamp
-                ).timestamp(),
+                ),
                 "start_frame_id": (
                     0
                     if period.id == 1
@@ -336,23 +336,28 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             except KeyError:
                 continue
 
-        whistles_types = ["first_half", "second_half "]
+        # get whistles related to period directly from them.
+        whistles = []
+        for period in periods_info:
+            whistle_start = whistle_end = {}
+            # type
+            whistle_start["type"] = whistle_end["type"] = period["period"]
+            # sub_type
+            whistle_start["sub_type"] = "start"
+            whistle_end["sub_type"] = "end"
+            # time
+            whistle_start["time"] = period["start_time"]
+            whistle_end["time"] = period["end_time"]
+            whistles.append(whistle_start)
+            whistles.append(whistle_end)
 
         metadata_json["match"] = {
             "id": str(dataset.metadata.game_id),  # same as for the jsonl
             "kickoff_time": str(dataset.metadata.periods[0].start_time),
             "periods": periods_info,
-            "whistles": [
-                {
-                    "type": whistles_types[0],
-                    "sub_type": "start",
-                    "time": str(dataset.metadata.periods[0].start_time),
-                }
-            ],  # fake just to pass the test, I have to change this after.
-            "round": "38",
-            "scheduled_kickoff_time": str(
-                dataset.metadata.date
-            ),  # how to get this ?
+            "whistles": whistles,  # fake just to pass the test, I have to change this after.
+            "round": "",
+            "scheduled_kickoff_time": str(dataset.metadata.date),
             "local_kickoff_time": "",  # how to get this ?
             "misc": {
                 "country": "",  # how to get this ?

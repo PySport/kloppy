@@ -23,32 +23,32 @@ class TestCDFSerializer:
     @pytest.fixture
     def dataset(self, raw_data: Path, meta_data: Path) -> TrackingDataset:
         """Load a small Sportec tracking data snippet for testing CDF serialization."""
-        # return sportec.load_tracking(
-        #     raw_data=raw_data,
-        #     meta_data=meta_data,
-        #     coordinates="sportec",
-        #     limit=None,
-        #     only_alive=False,
-        # )
-    
-        from kloppy import pff
-
-        # Path to data
-        roster_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812_roster.json"
-        metadata_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812_metadata.json"
-        raw_data_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812.jsonl.bz2"
-
-        # Loading
-        dataset = pff.load_tracking(
-            raw_data=raw_data_path,
-            meta_data=metadata_path,
-            roster_meta_data=roster_path,
-            coordinates="pff",
-            limit=10,  # only ten frames even if we are just gona use one of them.
-            sample_rate=None,
+        return sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            limit=None,
+            only_alive=False,
         )
+    
+        # from kloppy import pff
 
-        return dataset
+        # # Path to data
+        # roster_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812_roster.json"
+        # metadata_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812_metadata.json"
+        # raw_data_path = "/home/student/Documents/AIMS/Intership/pysport/pysport-aims/first_week/data/3812/3812.jsonl.bz2"
+
+        # # Loading
+        # dataset = pff.load_tracking(
+        #     raw_data=raw_data_path,
+        #     meta_data=metadata_path,
+        #     roster_meta_data=roster_path,
+        #     coordinates="pff",
+        #     limit=10,  # only ten frames even if we are just gona use one of them.
+        #     sample_rate=None,
+        # )
+
+        # return dataset
 
     def test_produces_valid_cdf_output(self, dataset):
         """Test that CDFTrackingDataSerializer produces valid CDF output."""

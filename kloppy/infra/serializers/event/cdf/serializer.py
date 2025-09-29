@@ -2,16 +2,15 @@ import json
 from datetime import timedelta
 from typing import IO, NamedTuple
 
-from kloppy.domain import Provider, TrackingDataset, Time, PositionType
+from kloppy.domain import Provider, EventDataset, Time, PositionType
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
 
 
-class CDFOutputs(NamedTuple):
-    meta_data: IO[bytes]
-    tracking_data: IO[bytes]
+class CDFEventOutputs(NamedTuple):
+    event_data: IO[bytes]
 
 
-class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
+class CDFTrackingDataSerializer(TrackingDataSerializer[CDFEventOutputs]):
     provider = Provider.CDF
 
     # to infer the starting formation if not given

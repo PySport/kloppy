@@ -489,15 +489,18 @@ class TestImpectSubstitutionEvent:
     def test_deserialize_all(self, dataset: EventDataset):
         """It should deserialize all substitution events"""
         events = dataset.find_all("substitution")
-        assert len(events) == 6
+        assert len(events) == 7
 
         # Verify that the player and replacement player are set correctly
+        # Note: events are sorted when inserted, so order may differ from creation order
         subs = [
             ("15", "1"),
+            ("2", "11"),  # 60:00 OUT -> 60:15 IN (15 second gap)
             ("4", "6"),
+            # Player 10 at 75:00 had red card - skipped
             ("31", "29"),
-            ("38", "32"),
-            ("37", "28"),
+            ("38", "32"),  # At 79:59: events get reordered after insertion
+            ("37", "28"),  # At 79:59: events get reordered after insertion
             ("7", "12"),
         ]
         for event_idx, (player_id, replacement_player_id) in enumerate(subs):

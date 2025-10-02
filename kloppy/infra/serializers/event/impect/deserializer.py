@@ -1,4 +1,3 @@
-import collections
 import json
 import warnings
 from collections import OrderedDict
@@ -39,6 +38,7 @@ from kloppy.domain import (
     Event,
     PassQualifier,
     PassType,
+    CardEvent,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -136,7 +136,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
         self.mark_events_as_assists(events)
         substitution_events = self.parse_substitutions(
-            teams, periods, metadata
+            teams, periods, metadata, events
         )
         for sub_event in substitution_events:
             insert(sub_event, events)
@@ -252,23 +252,37 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         return periods
 
     def parse_substitutions(
-        self, teams: List[Team], periods: List[Period], metadata: Dict
+        self,
+        teams: List[Team],
+        periods: List[Period],
+        metadata: Dict,
+        events: List[Event],
     ) -> List[SubstitutionEvent]:
         substitutions: List[SubstitutionEvent] = []
         squads = [metadata["squadHome"], metadata["squadAway"]]
 
+        SUB_WINDOW = timedelta(seconds=60)
+
+        # Collect all players who received red cards or second yellow
+        red_card_players = []
+        for event in events:
+            if isinstance(event, CardEvent):
+                if event.card_type in [CardType.RED, CardType.SECOND_YELLOW]:
+                    red_card_players.append(event.player)
+
         for team, squad in zip(teams, squads):
-            # 1) flatten raw JSON into uniform records
-            records = []
+            # Parse all substitution records
+            all_subs = []
             for sub in squad["substitutions"]:
                 is_in = sub["fromPosition"] == "BANK"
                 is_out = sub["toPosition"] == "BANK"
                 if not (is_in or is_out):
                     continue
 
-                # Substitution event timestamps must be period-relative
                 ts, period_id = parse_timestamp(sub["gameTime"]["gameTime"])
                 player = team.get_player_by_id(sub["playerId"])
+                period = periods[period_id - 1]
+
                 position = PositionType.Unknown
                 if is_in:
                     position_key = (sub["toPosition"], sub["positionSide"])
@@ -279,68 +293,76 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                             f"Unknown substitution position {position_key}, defaulting to Unknown"
                         )
 
-                records.append(
+                all_subs.append(
                     {
-                        "type": "in" if is_in else "out",
+                        "is_out": is_out,
                         "player": player,
                         "position": position,
                         "timestamp": ts,
-                        "period_id": period_id,
+                        "period": period,
                     }
                 )
 
-            # 2) group by (timestamp, period_id)
-            grouped = collections.defaultdict(lambda: {"in": [], "out": []})
-            for rec in records:
-                key = (rec["timestamp"], rec["period_id"])
-                grouped[key][rec["type"]].append(rec)
+            # Separate into OUTs and INs (preserve original order)
+            outs = [s for s in all_subs if s["is_out"]]
+            ins = [s for s in all_subs if not s["is_out"]]
 
-            # 3) build events
-            for (ts, pid), bucket in grouped.items():
-                period = periods[pid - 1]
-                for rec_out in bucket["out"]:
-                    rec_in = bucket["in"].pop(0) if bucket["in"] else None
-                    if rec_in:
-                        eid = f"substitution-{rec_out['player'].player_id}-{rec_in['player'].player_id}"
+            # Sort both by period and timestamp (Python's sort is stable)
+            outs.sort(key=lambda x: (x["period"].id, x["timestamp"]))
+            ins.sort(key=lambda x: (x["period"].id, x["timestamp"]))
+
+            # For each OUT, find matching IN
+            for out_sub in outs:
+                # Check if player had red card - if so, skip and remove from list
+                if out_sub["player"] in red_card_players:
+                    red_card_players.remove(out_sub["player"])
+                    continue
+
+                # Find first IN within time window and pop it
+                found_match = False
+                for in_idx, in_sub in enumerate(ins):
+                    # Must be same period
+                    if in_sub["period"] != out_sub["period"]:
+                        continue
+
+                    # Must be within time window
+                    time_diff = abs(in_sub["timestamp"] - out_sub["timestamp"])
+                    if time_diff <= SUB_WINDOW:
+                        # Found match!
+                        eid = f"substitution-{out_sub['player'].player_id}-{in_sub['player'].player_id}"
                         substitutions.append(
                             self.event_factory.build_substitution(
                                 event_id=eid,
                                 ball_owning_team=None,
                                 ball_state=BallState.DEAD,
                                 coordinates=None,
-                                player=rec_out["player"],
-                                replacement_player=rec_in["player"],
-                                position=rec_in["position"],
+                                player=out_sub["player"],
+                                replacement_player=in_sub["player"],
+                                position=in_sub["position"],
                                 team=team,
-                                period=period,
-                                timestamp=ts,
+                                period=in_sub["period"],
+                                timestamp=in_sub["timestamp"],
                                 result=None,
                                 raw_event=None,
                                 qualifiers=None,
                             )
                         )
-                    else:
-                        warnings.warn(
-                            f"A substitution without replacement player was recognized for player {rec_out['player']}"
-                        )
-                        eid = f"substitution-{rec_out['player'].player_id}"
-                        substitutions.append(
-                            self.event_factory.build_substitution(
-                                event_id=eid,
-                                ball_owning_team=None,
-                                ball_state=BallState.DEAD,
-                                coordinates=None,
-                                player=rec_out["player"],
-                                replacement_player=None,
-                                position=None,
-                                team=team,
-                                period=period,
-                                timestamp=ts,
-                                result=None,
-                                raw_event=None,
-                                qualifiers=None,
-                            )
-                        )
+                        # Remove the matched IN so it can't be used again
+                        ins.pop(in_idx)
+                        found_match = True
+                        break
+
+                if not found_match:
+                    warnings.warn(
+                        f"Player {out_sub['player']} went OUT but no matching IN found within {SUB_WINDOW.seconds}s"
+                    )
+
+        # Check if there are any red card players still on the pitch
+        if red_card_players:
+            player_names = ", ".join([str(p) for p in red_card_players])
+            warnings.warn(
+                f"Players received red/second yellow card but have no substitution OUT record: {player_names}"
+            )
 
         return substitutions
 

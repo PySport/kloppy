@@ -51,7 +51,7 @@
           </FieldSize>
         </MatchParameters>
         <Location>Stadium - City - Country</Location>
-        <Competition>Keuken Kampioen Divisie</Competition>
+        <Competition>Competition</Competition>
         <ProviderSessionParameters>
           <ProviderParameter>
             <Value>44585</Value>

@@ -7,32 +7,31 @@ from .event_factory import EventFactory, create_event
 from .transformers import DatasetTransformer, DatasetTransformerBuilder
 
 # NOT YET: from .enrichers import TrackingPossessionEnricher
+import math
 
 
-def avg(items: List[float]) -> float:
-    if not items:
-        return 0
-    return sum(items) / len(items)
+def safe_avg(values):
+    clean = [v for v in values if v is not None and not math.isnan(v)]
+    return sum(clean) / len(clean) if clean else float("nan")
 
 
 def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
     """This method should only be called for the first frame of a period."""
-    avg_x_home = avg(
-        [
-            player_data.coordinates.x
-            for player, player_data in frame.players_data.items()
-            if player.team.ground == Ground.HOME
-        ]
+    avg_x_home = safe_avg(
+        player_data.coordinates.x
+        for player, player_data in frame.players_data.items()
+        if player.team.ground == Ground.HOME
     )
-    avg_x_away = avg(
-        [
-            player_data.coordinates.x
-            for player, player_data in frame.players_data.items()
-            if player.team.ground == Ground.AWAY
-        ]
+    avg_x_away = safe_avg(
+        player_data.coordinates.x
+        for player, player_data in frame.players_data.items()
+        if player.team.ground == Ground.AWAY
     )
 
-    if avg_x_home < avg_x_away:
+    # return whatever logic you already had
+    if math.isnan(avg_x_home) or math.isnan(avg_x_away):
+        return AttackingDirection.NOT_SET
+    elif avg_x_home < avg_x_away:
         return AttackingDirection.LTR
     else:
         return AttackingDirection.RTL

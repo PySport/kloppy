@@ -1,10 +1,16 @@
 from datetime import timedelta
-import math
 
 import pytest
 
 from kloppy import scisports
-from kloppy.domain import Provider, Point, Orientation, BallState
+from kloppy.domain import (
+    Provider,
+    Point,
+    Orientation,
+    BallState,
+    PositionType,
+    Origin,
+)
 
 
 @pytest.fixture
@@ -30,7 +36,7 @@ class TestSciSportsEPTSTracking:
         dataset = scisports_dataset
 
         assert dataset.metadata.provider == Provider.SCISPORTS
-        assert len(dataset.records) == 501  # Reduced test file with 501 frames
+        assert len(dataset.records) == 843  # Reduced test file with 501 frames
         assert dataset.metadata.frame_rate == 25
         assert len(dataset.metadata.teams) == 2
         assert len(dataset.metadata.periods) >= 2
@@ -55,9 +61,6 @@ class TestSciSportsEPTSTracking:
         assert first_frame.ball_coordinates.x is not None
         assert first_frame.ball_coordinates.y is not None
 
-        # Verify orientation is correctly determined from first frame analysis
-        assert dataset.metadata.orientation == Orientation.AWAY_HOME
-
     def test_gk_positions_first_frames(
         self, scisports_dataset_scisports_coords
     ):
@@ -73,12 +76,18 @@ class TestSciSportsEPTSTracking:
         home_gk = next(
             p
             for p in home_team.players
-            if p.attributes.get("PlayerType") == "Goalkeeper"
+            if p.position == PositionType.Goalkeeper
         )
         away_gk = next(
             p
             for p in away_team.players
-            if p.attributes.get("PlayerType") == "Goalkeeper"
+            if p.position == PositionType.Goalkeeper
+        )
+        home_lb = next(
+            p for p in home_team.players if p.player_id == "P-007854"
+        )
+        away_lb = next(
+            p for p in away_team.players if p.player_id == "P-008981"
         )
 
         first_p1 = next(
@@ -88,21 +97,36 @@ class TestSciSportsEPTSTracking:
             f for f in dataset.records if f.period and f.period.id == 2
         )
 
-        # Expected coordinates when using scisports coordinate system (meters, origin bottom-left)
-        # Coordinates are now correctly swapped: X spans field length, Y spans field width
-        # Updated for reduced test file with different frame selection
+        # orientation: home - away means home keeper low x and away keeper high x coordinate
+        assert dataset.metadata.orientation == Orientation.HOME_AWAY
         assert first_p1.players_data[home_gk].coordinates == Point(
-            x=2.84, y=34.51
+            x=8.36, y=34.17
         )
         assert first_p1.players_data[away_gk].coordinates == Point(
-            x=79.58, y=35.03
+            x=85.39, y=35.33
         )
 
+        # origin: top - left means home lb low y and away lb high y coordinate
+        assert dataset.metadata.coordinate_system.origin == Origin.TOP_LEFT
+        assert first_p1.players_data[home_lb].coordinates == Point(
+            x=36.43, y=16.22
+        )
+        assert first_p1.players_data[away_lb].coordinates == Point(
+            x=53.48, y=55.48
+        )
+
+        # In the second period, it should be flipped
         assert first_p2.players_data[home_gk].coordinates == Point(
             x=89.15, y=32.25
         )
         assert first_p2.players_data[away_gk].coordinates == Point(
             x=3.88, y=34.23
+        )
+        assert first_p2.players_data[home_lb].coordinates == Point(
+            x=52.79, y=54.6
+        )
+        assert first_p2.players_data[away_lb].coordinates == Point(
+            x=39.35, y=10.85
         )
 
     def test_timestamp_reset_per_period(self, scisports_dataset):
@@ -175,8 +199,8 @@ class TestSciSportsEPTSTracking:
         ]
 
         # Verify we have both states represented
-        assert len(alive_frames) == 435
-        assert len(dead_frames) == 66
+        assert len(alive_frames) == 775
+        assert len(dead_frames) == 68
 
         # Total should equal all frames
         total_frames = len(alive_frames) + len(dead_frames)

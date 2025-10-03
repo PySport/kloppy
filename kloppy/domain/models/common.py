@@ -1010,7 +1010,7 @@ class SciSportsCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.BOTTOM_TO_TOP
+        return VerticalOrientation.TOP_TO_BOTTOM
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:

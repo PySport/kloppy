@@ -10,6 +10,7 @@ from kloppy.domain import (
     BallState,
     PositionType,
     Origin,
+    VerticalOrientation,
 )
 
 
@@ -106,8 +107,13 @@ class TestSciSportsEPTSTracking:
             x=85.39, y=35.33
         )
 
-        # origin: top - left means home lb low y and away lb high y coordinate
+        # origin: top - left & vertical orientation: top to bottom
+        # means home lb low y and away lb high y coordinate
         assert dataset.metadata.coordinate_system.origin == Origin.TOP_LEFT
+        assert (
+            dataset.metadata.coordinate_system.vertical_orientation
+            == VerticalOrientation.TOP_TO_BOTTOM
+        )
         assert first_p1.players_data[home_lb].coordinates == Point(
             x=36.43, y=16.22
         )

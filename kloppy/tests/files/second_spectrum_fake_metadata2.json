@@ -1,0 +1,260 @@
+{
+    "MatchId": "1234456",
+    "CompetitionName": "FK1 - FK2 Championship",
+    "CompetitionId": "1234456",
+    "KickOffTime": {
+        "Date": "1900-01-26",
+        "DateTime": "1900-01-26T18:45:00Z",
+        "UTCOffsetInHours": 2
+    },
+    "MatchDay": "MD3",
+    "SeasonYear": "1900",
+    "HomeTeam": {
+        "Id": "123",
+        "Name": "FK1",
+        "Players": [
+            {
+                "Id": "pmafwsw7759idgzwmsae8absl4s043v0o2lt",
+                "Name": "y9xrbe545u3h",
+                "JerseyNumber": 1
+            },
+            {
+                "Id": "5mnvb8i8hxrram5dok68zmflj2i76ihmsfnq",
+                "Name": "pljb4cmv0t2z",
+                "JerseyNumber": 2
+            },
+            {
+                "Id": "fo4kmhzrknxs1ibs10a59swk54fhi3cozhtt",
+                "Name": "2hnoi7fknt5w",
+                "JerseyNumber": 3
+            },
+            {
+                "Id": "0j5hchyosbh83y8won01kb48hvulwmogumc8",
+                "Name": "z2224a1am6ne",
+                "JerseyNumber": 4
+            },
+            {
+                "Id": "o57l9ce1nihyjb1o24azg26bcw92g5dm0ij8",
+                "Name": "s3al5wlky1s7",
+                "JerseyNumber": 5
+            },
+            {
+                "Id": "5jp3vl5s2i7ly1cpjkk6g949tctsp6vascwk",
+                "Name": "xfkhouu9wppp",
+                "JerseyNumber": 6
+            },
+            {
+                "Id": "vsj66kfzeqm5mmvyfmimvjywlcok3qcn5ty9",
+                "Name": "fruoqyhyio73",
+                "JerseyNumber": 7
+            },
+            {
+                "Id": "o47hnemi4eso46t03330m91js45c180e1pp1",
+                "Name": "7axcwo4x6slo",
+                "JerseyNumber": 8
+            },
+            {
+                "Id": "mlspcvh7rswko6ababcqmfchzztryw7jhql9",
+                "Name": "xwol5cxmellx",
+                "JerseyNumber": 9
+            },
+            {
+                "Id": "67ub77tvf4i9d627odfe6ni33sq95bpjpumt",
+                "Name": "hcdfo582oz4g",
+                "JerseyNumber": 10
+            },
+            {
+                "Id": "ounznqziz3vtxl8npt4b0roamjaka3t6zob8",
+                "Name": "dacpohga5lht",
+                "JerseyNumber": 11
+            },
+            {
+                "Id": "ctglkajjq5qb8sx7dku5yoxm4oq40w3mnzns",
+                "Name": "antz61bhpdqb",
+                "JerseyNumber": 12
+            },
+            {
+                "Id": "g4hbf5qnu7r0qbawe2hkccwoq1j5l5hxnd9i",
+                "Name": "jnzm4acs4b8p",
+                "JerseyNumber": 13
+            },
+            {
+                "Id": "ynpvn297cz6cauziwfw40d6o7mhmwu60dzmw",
+                "Name": "6jjbi4p2nh2c",
+                "JerseyNumber": 14
+            },
+            {
+                "Id": "p5jrn0nyl5ik9yn8pkiin85d5zmuetm7bkcn",
+                "Name": "lab60egr8a0c",
+                "JerseyNumber": 15
+            },
+            {
+                "Id": "4oia2is8w1iji29l85d6uy7ig64sbx78x9d5",
+                "Name": "q9w9yolbn7nj",
+                "JerseyNumber": 16
+            },
+            {
+                "Id": "o2hdxbs3fyh7rh946af5tp9q8bgtmsqk97z3",
+                "Name": "8t3i0cmeticj",
+                "JerseyNumber": 17
+            },
+            {
+                "Id": "nulvti0zc3y4ztb323us9u61n3my7wu62trp",
+                "Name": "vi7hl0hgu9tw",
+                "JerseyNumber": 18
+            },
+            {
+                "Id": "44vxxq1yggcoq8981pxhznvm9okghwphl1y2",
+                "Name": "h8pglht9jmsk",
+                "JerseyNumber": 19
+            },
+            {
+                "Id": "712jbgbruvvh680sinq5vq18y7pwonx4y00r",
+                "Name": "iz21cqwk37wf",
+                "JerseyNumber": 20
+            },
+            {
+                "Id": "712jbgbruvvh680sinq5vq18y7pwonx4y00r",
+                "Name": "iz21cqwk37wf",
+                "JerseyNumber": 21
+            },
+            {
+                "Id": "712jbgbruvvh680sinq5vq18y7pwonx4y00r",
+                "Name": "iz21cqwk37wf",
+                "JerseyNumber": 22
+            },
+            {
+                "Id": "712jbgbruvvh680sinq5vq18y7pwonx4y00r",
+                "Name": "iz21cqwk37wf",
+                "JerseyNumber": 23
+            }
+        ]
+    },
+    "AwayTeam": {
+        "Id": "456",
+        "Name": "FK2",
+        "Players": [
+            {
+                "Id": "exkzuxbcc3f14k0oltdsvm9zanvl4su165wh",
+                "Name": "c6gupnmywca0",
+                "JerseyNumber": 1
+            },
+            {
+                "Id": "ysg04b3ailsdl9lnj383s8pvbkv79cqoadei",
+                "Name": "6dhssmztl3h3",
+                "JerseyNumber": 2
+            },
+            {
+                "Id": "7vz2bctjhdrkadsz3m2j7k7eg4s6hls1mfax",
+                "Name": "gyqlxo5rcvhn",
+                "JerseyNumber": 3
+            },
+            {
+                "Id": "65nit6f1fd7ln3hncx9uvvuu2txk3ow31g9u",
+                "Name": "ne8uj6ah5npc",
+                "JerseyNumber": 4
+            },
+            {
+                "Id": "lhe8p6vcw0cfrirmfajjpszituqdehivmpgk",
+                "Name": "60j1yv1rbowl",
+                "JerseyNumber": 5
+            },
+            {
+                "Id": "9c3a074a7gf3gih7a91t2sm8giul379lksr4",
+                "Name": "640fzrot7njs",
+                "JerseyNumber": 6
+            },
+            {
+                "Id": "6x0yiuaapy9n7o9iyc38fwgd3h3jyjl1vyge",
+                "Name": "bne4o954hzyv",
+                "JerseyNumber": 7
+            },
+            {
+                "Id": "cdby8yb4xlfn7ciypeue25ju6krya9xxza6x",
+                "Name": "rnlx2ina5frs",
+                "JerseyNumber": 8
+            },
+            {
+                "Id": "gl0nvpbkywd24ybj8mswpudoxf7b595rzso8",
+                "Name": "jgi0qzedhei6",
+                "JerseyNumber": 9
+            },
+            {
+                "Id": "wdfydi2l8yh4k6rv8y6kzv5py0aje6f45e5p",
+                "Name": "4kqjztd25fvo",
+                "JerseyNumber": 10
+            },
+            {
+                "Id": "tlvtu04csq94o3vsszv7byjnp5x8x9pmmzxv",
+                "Name": "toyo8gi9temj",
+                "JerseyNumber": 11
+            },
+            {
+                "Id": "u2zp3ezfhjs8zo55ymwpuwjnjur78kyrstj5",
+                "Name": "1w02mn5dc07a",
+                "JerseyNumber": 12
+            },
+            {
+                "Id": "reaa7v7o8mao0khye3ktzdwhnord0vt4be6m",
+                "Name": "2vspafo5in7z",
+                "JerseyNumber": 13
+            },
+            {
+                "Id": "skjamknv30h4co4y7f3ge34msy3hain27dqs",
+                "Name": "tilwmvwn05aa",
+                "JerseyNumber": 14
+            },
+            {
+                "Id": "npf8sg35gso4cddzar8t7ns7yolg1g5kkv4p",
+                "Name": "xrnp0q462tbi",
+                "JerseyNumber": 15
+            },
+            {
+                "Id": "ux9jbiwmum1bb3hsxtjrvavwpd1137htu6qa",
+                "Name": "ic7yufm76u08",
+                "JerseyNumber": 16
+            },
+            {
+                "Id": "ph04dvcgiw7jd45wdhduzn0mo7yuo66dfiop",
+                "Name": "iy75axf2n8qy",
+                "JerseyNumber": 17
+            },
+            {
+                "Id": "disn4hcjgz3qc2i8ixkdfjrqvw1syeec11wk",
+                "Name": "7gfm06ifb1y2",
+                "JerseyNumber": 18
+            },
+            {
+                "Id": "fjyghm80048r4nw2oxfdd1dckx5mwer7c59h",
+                "Name": "ur700ddnrd78",
+                "JerseyNumber": 19
+            },
+            {
+                "Id": "p190348pmn7u3pidfn8rvuug8axaztv1ht8e",
+                "Name": "zdsqx30l848t",
+                "JerseyNumber": 20
+            },
+            {
+                "Id": "p190348pmn7u3pidfn8rvuug8axaztv1ht8e",
+                "Name": "zdsqx30l848t",
+                "JerseyNumber": 21
+            },
+            {
+                "Id": "p190348pmn7u3pidfn8rvuug8axaztv1ht8e",
+                "Name": "zdsqx30l848t",
+                "JerseyNumber": 22
+            },
+            {
+                "Id": "p190348pmn7u3pidfn8rvuug8axaztv1ht8e",
+                "Name": "zdsqx30l848t",
+                "JerseyNumber": 23
+            }
+        ]
+    },
+    "Stadium": {
+        "Id": "62085",
+        "Name": "Anonymous Stadium",
+        "PitchLength": 104.8512,
+        "PitchWidth": 67.9704
+    }
+}

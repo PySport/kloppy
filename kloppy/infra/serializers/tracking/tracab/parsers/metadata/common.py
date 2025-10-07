@@ -38,8 +38,8 @@ def create_team(
         Player(
             player_id=str(player[f"Player{id_suffix}"]),
             team=team,
-            first_name=html.unescape(player["FirstName"]),
-            last_name=html.unescape(player["LastName"]),
+            first_name=str(html.unescape(player["FirstName"])),
+            last_name=str(html.unescape(player["LastName"])),
             name=html.unescape(player["FirstName"] + " " + player["LastName"]),
             jersey_no=int(player["JerseyNo"]),
             starting=player["StartFrameCount"] == start_frame_id,

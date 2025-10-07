@@ -94,6 +94,10 @@ def meta_tracking_assertions(dataset):
         player.player_id for player in dataset.records[6].players_data.keys()
     ]
 
+    assert player_home_1.first_name == "Player"
+    assert player_home_1.last_name == "One"
+    assert player_home_1.name == "Player One"
+
 
 class TestTracabJSONTracking:
     def test_correct_deserialization_limit_sample(

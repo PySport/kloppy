@@ -59,7 +59,6 @@ from .pitch import (
     PitchDimensions,
     Unit,
     WyscoutPitchDimensions,
-    ImpectPitchDimensions,
 )
 from .time import Period, Time, TimeContainer
 
@@ -1356,7 +1355,13 @@ class ImpectCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        return ImpectPitchDimensions()
+        return MetricPitchDimensions(
+            x_dim=Dimension(-52.5, 52.5),
+            y_dim=Dimension(-34, 34),
+            pitch_length=105,
+            pitch_width=68,
+            standardized=True,
+        )
 
 
 class DatasetType(Enum):
@@ -1498,14 +1503,6 @@ class ActionValue(Statistic):
         if self.offensive_value is None or self.defensive_value is None:
             return None
         return self.offensive_value - self.defensive_value
-
-
-@dataclass
-class PressingIntensity(ScalarStatistic):
-    """Pressing Intensity"""
-
-    def __post_init__(self):
-        self.name = "Pressing Intensity"
 
 
 @dataclass

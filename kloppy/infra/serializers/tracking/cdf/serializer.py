@@ -20,7 +20,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     def get_starting_formation(list_players, team) -> str:
         formation = ""
         defender = midfiler = attacker = 0
-
         for player in list_players:
             if (
                 team.get_player_by_id(player["id"]).starting_position.parent
@@ -87,7 +86,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         ## building Tracking jsonl
         # Output containers
         metadata_json = {}
-        tracking_jsonls = [] 
 
         # list of different periods within a game define by the cdf
         periods = {

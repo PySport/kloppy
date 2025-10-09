@@ -1185,6 +1185,41 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
                 pitch_width=None,
                 standardized=False,
             )
+        
+
+class CDFCoordinateSystem(ProviderCoordinateSystem):
+    """
+    CDFCoordinateSystem coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.CDF
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+            return NormalizedPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
 
 
 class SignalityCoordinateSystem(ProviderCoordinateSystem):
@@ -1392,6 +1427,7 @@ def build_coordinate_system(
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.CDF: CDFCoordinateSystem,
     }
 
     if provider in coordinate_systems:

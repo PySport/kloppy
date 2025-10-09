@@ -17,38 +17,29 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
     # to infer the starting formation if not given
     @staticmethod
-    def get_starting_formation(list_players, team) -> str:
+    def get_starting_formation(team_players) -> str:
         formation = ""
-        defender = midfiler = attacker = 0
-        for player in list_players:
-            if (
-                team.get_player_by_id(player["id"]).starting_position.parent
-                == None
-            ):
+        defender = midfielder = attacker = 0
+        for player in team_players:
+            if player.starting_position.position_group == None:
                 continue
             elif (
-                team.get_player_by_id(player["id"]).starting_position.parent
+                player.starting_position.position_group
                 == PositionType.Attacker
             ):
                 attacker += 1
             elif (
-                team.get_player_by_id(player["id"]).starting_position.parent
-                == PositionType.Midfielder
-                or team.get_player_by_id(
-                    player["id"]
-                ).starting_position.parent.parent
+                player.starting_position.position_group
                 == PositionType.Midfielder
             ):
-                midfiler += 1
+                midfielder += 1
             elif (
-                team.get_player_by_id(
-                    player["id"]
-                ).starting_position.parent.parent
+                player.starting_position.position_group
                 == PositionType.Defender
             ):
                 defender += 1
-        if defender + midfiler + attacker == 10:
-            formation = f"{defender}_{midfiler}_{attacker}"
+        if defender + midfielder + attacker == 10:
+            formation = f"{defender}-{midfielder}-{attacker}"
         return formation
 
     def serialize(self, dataset: TrackingDataset, outputs: CDFOutputs) -> bool:
@@ -73,12 +64,15 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             Orientation,
             BallState,
         )
+
         # builded class.
-        from . import CDFCoordinateSystem 
+        from . import CDFCoordinateSystem
 
         # setting it as coordinate system of the imported data
         dataset = dataset.transform(
-            to_coordinate_system = CDFCoordinateSystem(dataset).get_coordinate_system(),
+            to_coordinate_system=CDFCoordinateSystem(
+                dataset
+            ).get_coordinate_system(),
             to_orientation=Orientation.STATIC_HOME_AWAY,
         )
         ##--------------------------------------------------------------------------
@@ -96,14 +90,24 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             5: "shootout",
         }
 
-        # store the number of frame in each period
-        nbr_frame_per_period = {
-        1:0,
-        2:0,
-        3:0,
-        4:0,
-        5:0,
+        # container for stat and end frame_id
+        period_start_frame_id = {
+            period.id: None for period in dataset.metadata.periods
         }
+        period_end_frame_id = {
+            period.id: None for period in dataset.metadata.periods
+        }
+
+        # container for stat and end normalized frame_id
+        normalized_period_start_frame_id = {
+            period.id: None for period in dataset.metadata.periods
+        }
+        normalized_period_end_frame_id = {
+            period.id: None for period in dataset.metadata.periods
+        }
+
+        # diffence of ids between frame_ids
+        period_offset = {period.id: 0 for period in dataset.metadata.periods}
 
         # Get home and away team data
         home_team, away_team = dataset.metadata.teams
@@ -114,8 +118,8 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             [player.player_id for player in away_team.players],
         )
 
-        frame_id = 0 # Use for the cdf_frame_ids..
-        for frame in dataset.frames:  # change this when we would like to manage all the frames
+        frame_id = 0  # Use for the cdf_frame_ids..
+        for frame in dataset.frames:
             frame_data = {}
 
             # Frame ID specified by the CDF
@@ -127,19 +131,46 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 dataset.metadata.date + frame.timestamp
             )
             # Period
-            frame_data["period"] = periods.get(
-                frame.period.id, "unknownn"
-            )
+            frame_data["period"] = periods.get(frame.period.id, "unknownn")
+            period_id = frame.period.id
+            # Update the start and end id for this period
+            if period_start_frame_id[period_id] is None:
+                period_start_frame_id[period_id] = frame_data[
+                    "Original_frame_id"
+                ]
 
-            # Update the number of frame for this period
-            nbr_frame_per_period[frame.period.id] = nbr_frame_per_period[frame.period.id] + 1
+                if (
+                    period_id > 1
+                    and period_end_frame_id[period_id - 1] is not None
+                ):
+                    prev_period_length = (
+                        period_end_frame_id[period_id - 1]
+                        - period_start_frame_id[period_id - 1]
+                        + 1
+                    )
+                    period_offset[period_id] = (
+                        period_offset[period_id - 1] + prev_period_length
+                    )
+
+                # Set normalized start frame id
+                normalized_period_start_frame_id[period_id] = period_offset[
+                    period_id
+                ]
+
+            period_end_frame_id[period_id] = frame_data["Original_frame_id"]
+
+            normalized_frame_id = (
+                frame_data["Original_frame_id"]
+                - period_start_frame_id[period_id]
+            ) + period_offset[period_id]
+
+            # Update normalized end frame id
+            normalized_period_end_frame_id[period_id] = normalized_frame_id
 
             # Match ID
             frame_data["match"] = {"id": str(dataset.metadata.game_id)}
             # Ball status
-            frame_data["ball_status"] = (
-                frame.ball_state == BallState.ALIVE
-            )
+            frame_data["ball_status"] = frame.ball_state == BallState.ALIVE
 
             # Teams and players
             home_players = []
@@ -177,6 +208,17 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                         continue
 
             # teams within the tracking data.
+
+            home_players_id = []
+            away_players_id = []
+            for player, _ in frame.players_coordinates.items():
+                if player.team == home_team:
+                    home_players_id.append(player.player_id)
+                if player.team == away_team:
+                    away_players_id.append(player.player_id)
+            set_of_home_players_id_in_the_frame = set(home_players_id)
+            set_of_away_players_id_in_the_frame = set(away_players_id)
+
             frame_data["teams"] = {
                 "home": {
                     "id": home_team.team_id,
@@ -187,7 +229,12 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                         home_team.formations.at_start()
                         if home_team.formations.items
                         else self.get_starting_formation(
-                            home_players, home_team
+                            [
+                                p
+                                for p in home_team.players
+                                if p.player_id
+                                in set_of_home_players_id_in_the_frame
+                            ]
                         )
                     ),
                 },
@@ -200,14 +247,22 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                         away_team.formations.at_start()
                         if away_team.formations.items
                         else self.get_starting_formation(
-                            away_players, away_team
+                            [
+                                p
+                                for p in away_team.players
+                                if p.player_id
+                                in set_of_away_players_id_in_the_frame
+                            ]
                         )
                     ),
                 },
             }
 
             # Ball
-            if frame_data["ball_status"] == True and frame.ball_coordinates is not None:
+            if (
+                frame_data["ball_status"] == True
+                and frame.ball_coordinates is not None
+            ):
                 try:
                     ball_x = round(frame.ball_coordinates.x, 3)
                     ball_y = round(frame.ball_coordinates.y, 3)
@@ -215,19 +270,23 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 except KeyError:
                     ball_x = ball_y = ball_z = None
             else:
-                ball_x = ball_y = ball_z = 404   # default missing value for ball coordinates
+                ball_x = ball_y = ball_z = (
+                    404  # default missing value for ball coordinates
+                )
 
             frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
-            
+
             # update the frame_id
             frame_id += 1
 
             # build a temporary jsonl for each frame
-            frame_file = tempfile.NamedTemporaryFile(mode="w+b", suffix=".jsonl", delete=False)
+            frame_file = tempfile.NamedTemporaryFile(
+                mode="w+b", suffix=".jsonl", delete=False
+            )
             frame_file.write((json.dumps(frame_data) + "\n").encode("utf-8"))
             frame_file.flush()  # make sure data is written
-            
-            # Add to tracking list  
+
+            # Add to tracking list
             outputs.tracking_data.append(frame_file)
 
         ################################################
@@ -259,13 +318,8 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                     dataset.metadata.date + period.start_timestamp
                 ),
                 "end_time": str(dataset.metadata.date + period.end_timestamp),
-                "start_frame_id": (
-                    0
-                    if period.id == 1
-                    else sum([nbr_frame_per_period[i] for i in range(1,period.id)])
-                    ), # We should note that these are starting and end frame_id on the cdf not the original starting and end frame_id
-                "end_frame_id": ( nbr_frame_per_period[period.id]-1 if period.id == 1  else sum([nbr_frame_per_period[i] for i in range(1,(period.id +1))]) - 1
-                ),
+                "start_frame_id": normalized_period_start_frame_id[period.id],
+                "end_frame_id": normalized_period_end_frame_id[period.id],
                 "left_team_id": home_team.team_id,
                 "right_team_id": away_team.team_id,
             }
@@ -340,6 +394,18 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             },
         }
 
+        home_players_id_in_meta = []
+        away_players_id_in_meta = []
+        for player, _ in dataset[0].players_coordinates.items():
+            if player.team == home_team:
+                home_players_id_in_meta.append(player.player_id)
+            if player.team == away_team:
+                away_players_id_in_meta.append(player.player_id)
+        meta_set_of_home_players_id_in_the_frame = set(home_players_id_in_meta)
+        print(meta_set_of_home_players_id_in_the_frame)
+        meta_set_of_away_players_id_in_the_frame = set(away_players_id_in_meta)
+        print(meta_set_of_away_players_id_in_the_frame)
+
         metadata_json["teams"] = {
             "home": {
                 "id": home_team.team_id,  # same as for the jsonl
@@ -347,15 +413,29 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "jersey_color": " ",
                 "name": home_team.name,
                 "formation": home_team.starting_formation
-                or self.get_starting_formation(meta_home_players, home_team),
+                or self.get_starting_formation(
+                    [
+                        p
+                        for p in home_team.players
+                        if p.player_id
+                        in meta_set_of_home_players_id_in_the_frame
+                    ]
+                ),
             },
             "away": {
-                "id": away_team.team_id,  # same as for the jsonl
+                "id": away_team.team_id,
                 "players": meta_away_players,
                 "jersey_color": " ",
                 "name": away_team.name,
                 "formation": away_team.starting_formation
-                or self.get_starting_formation(meta_away_players, away_team),
+                or self.get_starting_formation(
+                    [
+                        p
+                        for p in away_team.players
+                        if p.player_id
+                        in meta_set_of_away_players_id_in_the_frame
+                    ]
+                ),
             },
         }
 

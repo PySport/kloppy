@@ -30,7 +30,7 @@ def performance_logging(
         took = (time.time() - start) * 1000
         extra = ""
         if counter is not None:
-            extra = f" ({int(counter / took * 1000)}items/sec)"
+            extra = f" ({counter / took * 1000:.1f}items/sec)"
 
         unit = "ms"
         if took < 0.1:

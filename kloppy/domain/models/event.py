@@ -1427,18 +1427,22 @@ class EventDataset(Dataset[Event]):
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
-                if event.replacement_player.starting_position:
-                    replacement_player_position = (
-                        event.replacement_player.starting_position
+                # substitution does not per se have a sub off (replacement player)
+                if event.replacement_player:
+                    if event.replacement_player.starting_position:
+                        replacement_player_position = (
+                            event.replacement_player.starting_position
+                        )
+                    else:
+                        replacement_player_position = (
+                            event.player.positions.last(
+                                default=PositionType.Unknown
+                            )
+                        )
+                    event.replacement_player.set_position(
+                        event.time,
+                        replacement_player_position,
                     )
-                else:
-                    replacement_player_position = event.player.positions.last(
-                        default=PositionType.Unknown
-                    )
-                event.replacement_player.set_position(
-                    event.time,
-                    replacement_player_position,
-                )
                 event.player.set_position(event.time, None)
 
             elif isinstance(event, FormationChangeEvent):

@@ -243,6 +243,9 @@ class Player:
     def __str__(self):
         return self.full_name
 
+    def __repr__(self):
+        return f"<Player name='{self.full_name}' player_id='{self.player_id}'>"
+
     def __hash__(self):
         return hash(self.player_id)
 

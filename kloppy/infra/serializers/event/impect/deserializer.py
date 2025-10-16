@@ -261,7 +261,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         substitutions: List[SubstitutionEvent] = []
         squads = [metadata["squadHome"], metadata["squadAway"]]
 
-        SUB_WINDOW = timedelta(seconds=60)
+        SUB_WINDOW = timedelta(seconds=30)
 
         # Collect all players who received red cards or second yellow
         red_card_players = []

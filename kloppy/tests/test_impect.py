@@ -43,7 +43,7 @@ from kloppy.infra.serializers.event.impect.helpers import parse_timestamp
 def dataset(base_dir) -> EventDataset:
     dataset = impect.load(
         event_data=base_dir / "files" / "impect_events.json",
-        lineup_data=base_dir / "files" / "impect_meta.json",
+        lineup_data=base_dir / "files" / "impect_lineups.json",
         coordinates="impect",
     )
 

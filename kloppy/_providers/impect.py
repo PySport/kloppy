@@ -1,7 +1,6 @@
 from typing import Union
 
 from kloppy.config import get_config
-from kloppy.domain.models.impect.event import ImpectEventFactory
 from kloppy.infra.serializers.event.impect import (
     ImpectDeserializer,
     ImpectInputs,
@@ -22,21 +21,22 @@ def load(
     """
     Load Impect event data into a [`EventDataset`][kloppy.domain.models.event.EventDataset]
 
-    Parameters:
-        event_data: filename of json containing the events
-        lineup_data: filename of json containing the lineup information
-        squads_data: optional filename of json containing squad information (for team names)
-        players_data: optional filename of json containing player information (for player names)
-        event_types:
-        coordinates:
-        event_factory:
+    Args:
+        event_data: JSON feed with the raw event data of a game.
+        lineup_data: JSON feed with the corresponding lineup information of the game.
+        squads_data: Optional JSON feed with squad information for team names.
+        players_data: Optional JSON feed with player information for player names.
+        event_types: A list of event types to load. When set, only the specified event types will be loaded.
+        coordinates: The coordinate system to use. Defaults to "impect". See [`kloppy.domain.models.common.Provider`][kloppy.domain.models.common.Provider] for available options.
+        event_factory: A custom event factory. When set, the factory is used to create event instances.
+
+    Returns:
+        The parsed event data.
     """
     deserializer = ImpectDeserializer(
         event_types=event_types,
         coordinate_system=coordinates,
-        event_factory=event_factory
-        or get_config("event_factory")
-        or ImpectEventFactory(),
+        event_factory=event_factory or get_config("event_factory"),
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data

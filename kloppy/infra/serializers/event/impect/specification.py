@@ -24,7 +24,6 @@ from kloppy.domain import (
     SetPieceType,
     Team,
     ShotResult,
-    PressingIntensity,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.impect.helpers import (
@@ -118,12 +117,7 @@ class EVENT:
             if self.raw_event["player"]
             else None
         )
-        statistics = []
-        if self.raw_event["pressure"]:
-            statistics.append(
-                PressingIntensity(value=self.raw_event["pressure"])
-            )
-        self.statistics = statistics
+        self.statistics = []
 
         return self
 

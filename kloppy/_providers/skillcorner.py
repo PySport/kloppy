@@ -58,7 +58,7 @@ def load(
 
 
 def load_open_data(
-    match_id: Union[str, int] = "4039",
+    match_id: Union[str, int] = "1925299",
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
@@ -81,8 +81,8 @@ def load_open_data(
         The parsed tracking data.
     """
     return load(
-        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/match_data.json",
-        raw_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/structured_data.json",
+        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/{match_id}_match.json",
+        raw_data=f"https://media.githubusercontent.com/media/SkillCorner/opendata/master/data/matches/{match_id}/{match_id}_tracking_extrapolated.jsonl",
         sample_rate=sample_rate,
         limit=limit,
         coordinates=coordinates,

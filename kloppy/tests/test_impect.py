@@ -50,6 +50,20 @@ def dataset(base_dir) -> EventDataset:
     return dataset
 
 
+@pytest.fixture(scope="module")
+def dataset_with_names(base_dir) -> EventDataset:
+    """Dataset loaded with squad and player names from separate files"""
+    dataset = impect.load(
+        event_data=base_dir / "files" / "impect_events.json",
+        lineup_data=base_dir / "files" / "impect_meta.json",
+        squads_data=base_dir / "files" / "impect_squads.json",
+        players_data=base_dir / "files" / "impect_players.json",
+        coordinates="impect",
+    )
+
+    return dataset
+
+
 class TestImpectHelpers:
     def test_parse_timestamp(self):
         assert parse_timestamp("00:00.000") == (timedelta(seconds=0), 1)
@@ -126,6 +140,31 @@ class TestImpectMetadata:
         assert player.player_id == "1"
         assert player.jersey_no == 5
         assert str(player) == "home_5"
+
+    def test_teams_with_names(self, dataset_with_names):
+        """It should load team and player names from squads and players files"""
+        # Teams should have names loaded
+        assert dataset_with_names.metadata.teams[0].team_id == "1"
+        assert dataset_with_names.metadata.teams[0].name == "Home Team FC"
+        assert dataset_with_names.metadata.teams[1].team_id == "2"
+        assert dataset_with_names.metadata.teams[1].name == "Away Team United"
+
+        # Players should have names loaded
+        player = dataset_with_names.metadata.teams[0].get_player_by_id("1")
+        assert player.player_id == "1"
+        assert player.jersey_no == 5
+        assert player.name == "John Doe"
+        assert str(player) == "John Doe"
+
+        # Check another player
+        player2 = dataset_with_names.metadata.teams[0].get_player_by_id("13")
+        assert player2.name == "Matthew Anderson"
+
+        # Check away team player
+        away_player = dataset_with_names.metadata.teams[1].get_player_by_id(
+            "26"
+        )
+        assert away_player.name == "Ronald Clark"
 
     def test_player_position(self, dataset):
         """It should set the correct player position from the events"""

@@ -7,12 +7,14 @@ from kloppy.infra.serializers.event.impect import (
     ImpectInputs,
 )
 from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike
+from kloppy.io import open_as_file, FileLike, Source
 
 
 def load(
     event_data: FileLike,
     lineup_data: FileLike,
+    squads_data: Optional[FileLike] = None,
+    players_data: Optional[FileLike] = None,
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
@@ -23,6 +25,8 @@ def load(
     Parameters:
         event_data: filename of json containing the events
         lineup_data: filename of json containing the lineup information
+        squads_data: optional filename of json containing squad information (for team names)
+        players_data: optional filename of json containing player information (for player names)
         event_types:
         coordinates:
         event_factory:
@@ -36,17 +40,24 @@ def load(
     )
     with open_as_file(event_data) as event_data_fp, open_as_file(
         lineup_data
-    ) as lineup_data_fp:
+    ) as lineup_data_fp, open_as_file(
+        Source.create(squads_data, optional=True)
+    ) as squads_data_fp, open_as_file(
+        Source.create(players_data, optional=True)
+    ) as players_data_fp:
         return deserializer.deserialize(
             inputs=ImpectInputs(
                 event_data=event_data_fp,
                 meta_data=lineup_data_fp,
+                squads_data=squads_data_fp,
+                players_data=players_data_fp,
             )
         )
 
 
 def load_open_data(
     match_id: Union[str, int] = "100214",
+    competition_id: Union[str, int] = "743",
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
@@ -59,6 +70,7 @@ def load_open_data(
 
     Parameters:
         match_id: The id of the match to load data for. Defaults to "100214".
+        competition_id: The competition id to load squad and player names from. Defaults to "743".
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
@@ -78,6 +90,8 @@ def load_open_data(
     return load(
         event_data=f"{base_url}/events/events_{match_id}.json",
         lineup_data=f"{base_url}/lineups/lineups_{match_id}.json",
+        squads_data=f"{base_url}/squads/squads_{competition_id}.json",
+        players_data=f"{base_url}/players/players_{competition_id}.json",
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,

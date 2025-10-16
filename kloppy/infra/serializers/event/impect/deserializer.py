@@ -2,7 +2,7 @@ import json
 import warnings
 from collections import OrderedDict
 from dataclasses import replace
-from typing import Dict, List, NamedTuple, IO, Tuple
+from typing import Dict, List, NamedTuple, IO, Tuple, Optional
 from datetime import timedelta, datetime
 import logging
 from lxml import objectify
@@ -98,6 +98,8 @@ position_types_mapping: Dict[Tuple[str, str], PositionType] = {
 class ImpectInputs(NamedTuple):
     meta_data: IO[bytes]
     event_data: IO[bytes]
+    squads_data: Optional[IO[bytes]] = None
+    players_data: Optional[IO[bytes]] = None
 
 
 class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
@@ -113,8 +115,24 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
             metadata = json.load(inputs.meta_data)
             raw_events = json.load(inputs.event_data)
 
+            # Load optional squads and players data for enrichment
+            squads_lookup = None
+            players_lookup = None
+            if inputs.squads_data:
+                squads_data = json.load(inputs.squads_data)
+                squads_lookup = {
+                    str(squad["id"]): squad for squad in squads_data
+                }
+            if inputs.players_data:
+                players_data = json.load(inputs.players_data)
+                players_lookup = {
+                    str(player["id"]): player for player in players_data
+                }
+
         with performance_logging("parse data", logger=logger):
-            teams = self.create_teams_and_players(metadata)
+            teams = self.create_teams_and_players(
+                metadata, squads_lookup, players_lookup
+            )
 
         # Create periods
         with performance_logging("parse periods", logger=logger):
@@ -155,7 +173,11 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         return dataset
 
     @staticmethod
-    def create_teams_and_players(metadata: Dict) -> List[Team]:
+    def create_teams_and_players(
+        metadata: Dict,
+        squads_lookup: Optional[Dict] = None,
+        players_lookup: Optional[Dict] = None,
+    ) -> List[Team]:
         def create_team(team_info: Dict, ground: Ground) -> Team:
             starting_formation_stripped = re.sub(
                 r"[^0-9-]", "", team_info["startingFormation"]
@@ -168,9 +190,15 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                 )
                 starting_formation = FormationType.UNKNOWN
 
+            # Get team name from squads lookup if available
+            team_id_str = str(team_info["id"])
+            team_name = ""
+            if squads_lookup and team_id_str in squads_lookup:
+                team_name = squads_lookup[team_id_str].get("name", "")
+
             team = Team(
-                team_id=str(team_info["id"]),
-                name="",
+                team_id=team_id_str,
+                name=team_name,
                 ground=ground,
                 starting_formation=starting_formation,
             )
@@ -193,12 +221,23 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
             players = []
             for player in team_info["players"]:
+                player_id_str = str(player["id"])
                 starting_position = player_starting_positions.get(player["id"])
+
+                # Get player name from players lookup if available
+                player_name = ""
+                if players_lookup and player_id_str in players_lookup:
+                    player_data = players_lookup[player_id_str]
+                    player_name = (
+                        player_data.get("commonname")
+                        or f"{player_data.get('firstname', '')} {player_data.get('lastname', '')}".strip()
+                    )
+
                 players.append(
                     Player(
-                        player_id=str(player["id"]),
+                        player_id=player_id_str,
                         team=team,
-                        name="",
+                        name=player_name,
                         jersey_no=player["shirtNumber"],
                         starting_position=starting_position,
                         starting=True if starting_position else False,

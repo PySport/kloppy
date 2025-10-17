@@ -1,3 +1,3 @@
-from .cdf_coordinate_system import CDFCoordinateSystem
+from kloppy.domain.models.common import CDFCoordinateSystem
 
 __all__ = ["CDFCoordinateSystem"]

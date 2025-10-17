@@ -116,6 +116,7 @@ class Provider(Enum):
         DATAFACTORY (Provider):
         STATSPERFORM (Provider):
         SPORTVU (Provider):
+        CDF (Provider):
         OTHER (Provider):
     """
 
@@ -134,6 +135,7 @@ class Provider(Enum):
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
     SIGNALITY = "signality"
+    CDF = "common_data_format"
     OTHER = "other"
 
     def __str__(self):
@@ -1183,6 +1185,45 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
                 pitch_width=None,
                 standardized=False,
             )
+        
+
+class CDFCoordinateSystem(ProviderCoordinateSystem):
+    """
+    CDFCoordinateSystem coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.CDF
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+            return NormalizedPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length = self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+    
+    def __init__(self, base_coordinate_system: ProviderCoordinateSystem):
+        self._pitch_length = base_coordinate_system.pitch_dimensions.pitch_length
+        self._pitch_width = base_coordinate_system.pitch_dimensions.pitch_width
 
 
 class SignalityCoordinateSystem(ProviderCoordinateSystem):
@@ -1390,6 +1431,7 @@ def build_coordinate_system(
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.CDF: CDFCoordinateSystem,
     }
 
     if provider in coordinate_systems:

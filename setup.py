@@ -58,6 +58,7 @@ def setup_package():
                 "flask",
                 "flask-cors",
                 "pytest-httpserver",
+                "common-data-format-validator @ git+https://github.com/koenvo/common-data-format-validator.git@bugfix/packaging",
             ],
             "development": ["pre-commit==2.6.0"],
             "query": ["networkx>=2.4,<3"],

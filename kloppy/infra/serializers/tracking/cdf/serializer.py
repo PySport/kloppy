@@ -1,9 +1,8 @@
 import json
-from datetime import timedelta
 import tempfile
 from typing import IO, NamedTuple
 
-from kloppy.domain import Provider, TrackingDataset, Time, PositionType
+from kloppy.domain import Provider, TrackingDataset, PositionType
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
 
 
@@ -58,29 +57,24 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                   do a transformation if not in the right format? yes normally.
         """
 
-        # Normalize the coordinate system
-        # creating the coordinate system according to the CDF paper specifications.
         from kloppy.domain import (
             Orientation,
             BallState,
         )
 
         # builded class.
-        from . import CDFCoordinateSystem
+        from kloppy.domain.models.common import CDFCoordinateSystem
 
         # setting it as coordinate system of the imported data
         dataset = dataset.transform(
             to_coordinate_system=CDFCoordinateSystem(
-                dataset
-            ).get_coordinate_system(),
+                dataset.metadata.coordinate_system
+            ),
             to_orientation=Orientation.STATIC_HOME_AWAY,
         )
-        ##--------------------------------------------------------------------------
+        ##---------------------------------------------------------------------
 
         ## building Tracking jsonl
-        # Output containers
-        metadata_json = {}
-
         # list of different periods within a game define by the cdf
         periods = {
             1: "first_half",
@@ -289,8 +283,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             # Add to tracking list
             outputs.tracking_data.append(frame_file)
 
-        ################################################
-        ### build now the metadata.
+        ###################### build now the metadata.
+        # Output containers
+        metadata_json = {}
         # Competition infos.
         metadata_json["competition"] = (
             {  # we don't have any of these informations
@@ -450,7 +445,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         metadata_json["meta"] = {
             "video": None,
             "tracking": None,
-            "limb": None,
+            "landmarks": None,
             "meta": None,
             "cdf": None,
         }

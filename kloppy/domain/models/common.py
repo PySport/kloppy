@@ -1216,10 +1216,14 @@ class CDFCoordinateSystem(ProviderCoordinateSystem):
                 y_dim=Dimension(
                     -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self._pitch_length,
+                pitch_length = self._pitch_length,
                 pitch_width=self._pitch_width,
                 standardized=False,
             )
+    
+    def __init__(self, base_coordinate_system: ProviderCoordinateSystem):
+        self._pitch_length = base_coordinate_system.pitch_dimensions.pitch_length
+        self._pitch_width = base_coordinate_system.pitch_dimensions.pitch_width
 
 
 class SignalityCoordinateSystem(ProviderCoordinateSystem):

@@ -55,7 +55,7 @@ def dataset_with_names(base_dir) -> EventDataset:
     """Dataset loaded with squad and player names from separate files"""
     dataset = impect.load(
         event_data=base_dir / "files" / "impect_events.json",
-        lineup_data=base_dir / "files" / "impect_meta.json",
+        lineup_data=base_dir / "files" / "impect_lineups.json",
         squads_data=base_dir / "files" / "impect_squads.json",
         players_data=base_dir / "files" / "impect_players.json",
         coordinates="impect",

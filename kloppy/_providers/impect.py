@@ -56,7 +56,7 @@ def load(
 
 
 def load_open_data(
-    match_id: Union[str, int] = "100214",
+    match_id: Union[str, int] = "188164",
     competition_id: Union[str, int] = "743",
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,

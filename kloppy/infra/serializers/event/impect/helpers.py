@@ -207,7 +207,7 @@ def parse_shot_end_coordinates(
             result = ShotResult.GOAL
         # elif is_own_goal:
         #     result = ShotResult.OWN_GOAL
-        elif shot_info["woodwork"]:
+        elif shot_info.get("woodwork"):
             result = ShotResult.POST
         elif abs(y_coordinate) < 3.66 and z_coordinate < 2.44:
             result = ShotResult.SAVED

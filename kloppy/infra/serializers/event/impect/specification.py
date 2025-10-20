@@ -24,6 +24,7 @@ from kloppy.domain import (
     SetPieceType,
     Team,
     ShotResult,
+    UnderPressureQualifier,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.impect.helpers import (
@@ -140,7 +141,21 @@ class EVENT:
             event_factory, teams, **generic_event_kwargs
         )
 
+        # Add UnderPressureQualifier to events if pressure > 0
+        for event in events:
+            self._add_under_pressure_qualifier(event)
+
         return events
+
+    def _add_under_pressure_qualifier(self, event: Event) -> Event:
+        """Add UnderPressureQualifier if pressure > 0."""
+        pressure = self.raw_event.get("pressure")
+        if pressure and pressure > 0:
+            q = UnderPressureQualifier(True)
+            event.qualifiers = event.qualifiers or []
+            event.qualifiers.append(q)
+
+        return event
 
     def _parse_generic_kwargs(self) -> Dict:
         timestamp, _ = parse_timestamp(self.raw_event["gameTime"]["gameTime"])

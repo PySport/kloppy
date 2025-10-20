@@ -34,6 +34,7 @@ from kloppy.domain.models.event import (
     GoalkeeperQualifier,
     PassQualifier,
     PassType,
+    UnderPressureQualifier,
 )
 
 from kloppy.infra.serializers.event.impect.helpers import parse_timestamp
@@ -590,3 +591,17 @@ class TestImpectRecoveryEvent:
     def test_deserialize_recoveries(self, dataset: EventDataset):
         events = dataset.find_all("recovery")
         assert len(events) == 156
+
+
+class TestImpectUnderPressureQualifier:
+    """Tests related to deserializing pressure data"""
+
+    def test_under_pressure(self, dataset: EventDataset):
+        """It should add the under pressure qualifier when pressure > 0"""
+        # Event 2 has pressure = 75
+        under_pressure = dataset.get_event_by_id("3")
+        assert under_pressure.get_qualifier_value(UnderPressureQualifier)
+
+        # Event 1 has pressure = null
+        no_pressure = dataset.get_event_by_id("1")
+        assert no_pressure.get_qualifier_value(UnderPressureQualifier) is None

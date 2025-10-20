@@ -365,6 +365,19 @@
         "fromPositionSide": "UNKNOWN",
         "exchangedPlayerId": null,
         "substitutionType": null
+      },
+      {
+        "gameTime": {
+          "gameTime": "85:00.0000",
+          "gameTimeInSec": 12400.0
+        },
+        "playerId": 14,
+        "toPosition": "BANK",
+        "positionSide": "UNKNOWN",
+        "fromPosition": "CENTRAL_MIDFIELD",
+        "fromPositionSide": "CENTRE",
+        "exchangedPlayerId": null,
+        "substitutionType": null
       }
     ],
     "startingFormation": "4-3-3",

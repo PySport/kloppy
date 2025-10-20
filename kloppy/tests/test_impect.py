@@ -549,6 +549,31 @@ class TestImpectSubstitutionEvent:
                 replacement_player_id
             )
 
+    def test_player_off_without_replacement(self, dataset: EventDataset):
+        """It should create PlayerOff event when player goes out without replacement"""
+        # Player 14 goes OUT at 85:00 with no matching IN (added to test data)
+        player_off_events = dataset.find_all("player_off")
+
+        assert (
+            len(player_off_events) >= 1
+        ), "Should have at least one PlayerOff event"
+
+        # Find PlayerOff event for player 14
+        player_14_offs = [
+            e for e in player_off_events if e.player.player_id == "14"
+        ]
+        assert (
+            len(player_14_offs) == 1
+        ), "Player 14 should have exactly one PlayerOff event"
+
+        player_off = player_14_offs[0]
+        assert player_off.player.player_id == "14"
+        assert player_off.team == dataset.metadata.teams[0]  # Home team
+        assert player_off.period.id == 2  # Second period
+        assert player_off.timestamp == timedelta(
+            minutes=40, seconds=0
+        )  # 85:00 - 45:00
+
 
 class TestImpectFoulCommittedEvent:
     """Tests related to deserializing 2/Foul Committed events"""

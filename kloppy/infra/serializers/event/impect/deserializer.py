@@ -392,8 +392,22 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         break
 
                 if not found_match:
-                    warnings.warn(
-                        f"Player {out_sub['player']} went OUT but no matching IN found within {SUB_WINDOW.seconds}s"
+                    # Player went OFF without replacement - emit PlayerOff event
+                    eid = f"player-off-{out_sub['player'].player_id}"
+                    substitutions.append(
+                        self.event_factory.build_player_off(
+                            event_id=eid,
+                            ball_owning_team=None,
+                            ball_state=BallState.DEAD,
+                            coordinates=None,
+                            player=out_sub["player"],
+                            team=team,
+                            period=out_sub["period"],
+                            timestamp=out_sub["timestamp"],
+                            result=None,
+                            qualifiers=None,
+                            raw_event=None,
+                        )
                     )
 
         # Check if there are any red card players still on the pitch

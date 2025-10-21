@@ -68,7 +68,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         coordinate_system: Optional[Union[str, Provider]] = None,
         include_empty_frames: Optional[bool] = False,
         data_version: Optional[str] = None,
-        only_alive: bool = False,
+        only_alive: bool = True,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.include_empty_frames = include_empty_frames

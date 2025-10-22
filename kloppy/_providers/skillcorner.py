@@ -81,6 +81,7 @@ def load_open_data(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         include_empty_frames: Include frames in which no objects were tracked.
+        only_alive: Only include frames in which the game is not dead.
 
     Returns:
         The parsed tracking data.

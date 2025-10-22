@@ -9,6 +9,7 @@ from kloppy.infra.serializers.event.wyscout import (
     WyscoutInputs,
 )
 from kloppy.io import FileLike, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
@@ -78,7 +79,11 @@ def load_open_data(
         [1] Pappalardo, L., Cintia, P., Rossi, A. et al. A public data set of spatio-temporal match events in soccer competitions. Sci Data 6, 236 (2019). https://doi.org/10.1038/s41597-019-0247-7
     """
     return load(
-        event_data=f"https://raw.githubusercontent.com/koenvo/wyscout-soccer-match-event-dataset/main/processed-v2/files/{match_id}.json",
+        event_data=github_resolve_raw_data_url(
+            repository="koenvo/wyscout-soccer-match-event-dataset",
+            branch="main",
+            file=f"processed-v2/files/{match_id}.json",
+        ),
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,

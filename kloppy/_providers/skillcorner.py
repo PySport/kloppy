@@ -8,6 +8,7 @@ from kloppy.infra.serializers.tracking.skillcorner import (
     SkillCornerInputs,
 )
 from kloppy.io import FileLike, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
@@ -81,8 +82,16 @@ def load_open_data(
         The parsed tracking data.
     """
     return load(
-        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/match_data.json",
-        raw_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/structured_data.json",
+        meta_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/match_data.json",
+        ),
+        raw_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/structured_data.json",
+        ),
         sample_rate=sample_rate,
         limit=limit,
         coordinates=coordinates,

@@ -8,6 +8,7 @@ from kloppy.infra.serializers.tracking.skillcorner import (
     SkillCornerInputs,
 )
 from kloppy.io import FileLike, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
@@ -80,13 +81,22 @@ def load_open_data(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         include_empty_frames: Include frames in which no objects were tracked.
+        only_alive: Only include frames in which the game is not dead.
 
     Returns:
         The parsed tracking data.
     """
     return load(
-        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/{match_id}_match.json",
-        raw_data=f"https://media.githubusercontent.com/media/SkillCorner/opendata/master/data/matches/{match_id}/{match_id}_tracking_extrapolated.jsonl",
+        meta_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/{match_id}_match.json",
+        ),
+        raw_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/{match_id}_tracking_extrapolated.jsonl",
+        ),
         sample_rate=sample_rate,
         limit=limit,
         coordinates=coordinates,

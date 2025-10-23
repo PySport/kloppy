@@ -1,54 +1,41 @@
 import json
-import warnings
-from collections import OrderedDict
-from dataclasses import replace
-from typing import Dict, List, NamedTuple, IO, Tuple, Optional
-from datetime import timedelta, datetime
 import logging
-from lxml import objectify
 import re
+import warnings
+from dataclasses import replace
+from datetime import timedelta
+from typing import IO, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Period,
-    Point,
     BallState,
-    DatasetFlag,
-    Orientation,
-    PassResult,
-    ShotResult,
-    EventType,
-    Ground,
-    Score,
-    Provider,
-    Metadata,
-    Player,
-    SetPieceQualifier,
-    SetPieceType,
-    BodyPartQualifier,
-    BodyPart,
-    Qualifier,
+    CardEvent,
     CardType,
-    PositionType,
-    Official,
-    OfficialType,
-    FormationType,
-    SubstitutionEvent,
+    DatasetFlag,
     Event,
+    EventDataset,
+    EventType,
+    FormationType,
+    Ground,
+    Metadata,
+    Orientation,
     PassQualifier,
     PassType,
-    CardEvent,
+    Period,
+    Player,
+    PlayerOffEvent,
+    PositionType,
+    Provider,
+    ShotResult,
+    SubstitutionEvent,
+    Team,
 )
-from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.infra.serializers.event.impect.helpers import (
     insert,
-    parse_timestamp,
     parse_cumulative_timestamp,
+    parse_timestamp,
 )
 from kloppy.infra.serializers.event.impect.specification import (
-    event_decoder,
     create_impect_events,
 )
 from kloppy.utils import performance_logging
@@ -215,9 +202,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         f"Unknown position {position_key}, defaulting to Unknown"
                     )
                     position = PositionType.Unknown
-                player_starting_positions[
-                    player_starting_info["playerId"]
-                ] = position
+                player_starting_positions[player_starting_info["playerId"]] = (
+                    position
+                )
 
             players = []
             for player in team_info["players"]:
@@ -296,8 +283,8 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         periods: List[Period],
         metadata: Dict,
         events: List[Event],
-    ) -> List[SubstitutionEvent]:
-        substitutions: List[SubstitutionEvent] = []
+    ) -> List[Union[SubstitutionEvent, PlayerOffEvent]]:
+        substitutions: List[Union[SubstitutionEvent, PlayerOffEvent]] = []
         squads = [metadata["squadHome"], metadata["squadAway"]]
 
         SUB_WINDOW = timedelta(seconds=30)

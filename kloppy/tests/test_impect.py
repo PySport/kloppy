@@ -36,7 +36,6 @@ from kloppy.domain.models.event import (
     PassType,
     UnderPressureQualifier,
 )
-
 from kloppy.infra.serializers.event.impect.helpers import parse_timestamp
 
 

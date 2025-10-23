@@ -1,14 +1,14 @@
 import bisect
-from datetime import timedelta
-from typing import List, Dict, Tuple
 import re
+from datetime import timedelta
+from typing import Dict, List, Optional, Tuple
 
 from kloppy.domain import (
-    Team,
     Period,
     Point,
     Point3D,
     ShotResult,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 
@@ -38,8 +38,8 @@ def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
       - period_id (1..4)
 
     Supported forms:
-      • "MM:SS.sss"
-      • "MM:SS.sss (+MM:SS.sss)"
+      - "MM:SS.sss"
+      - "MM:SS.sss (+MM:SS.sss)"
     """
     half_len = 45  # minutes per half
     et_len = 15  # minutes per extra-time period
@@ -121,8 +121,8 @@ def parse_cumulative_timestamp(ts_str: str) -> Tuple[timedelta, int]:
       - period_id (1..4)
 
     Supported forms:
-      • "MM:SS.sss"
-      • "MM:SS.sss (+MM:SS.sss)"
+      - "MM:SS.sss"
+      - "MM:SS.sss (+MM:SS.sss)"
     """
     half_len = 45  # minutes per half
     et_len = 15  # minutes per extra-time period
@@ -194,7 +194,7 @@ def parse_coordinates(raw_coordinates: Dict[str, float]) -> Point:
 def parse_shot_end_coordinates(
     shot_info: Dict,
     shot_result,
-) -> (Point, ShotResult):
+) -> Tuple[Optional[Point], ShotResult]:
     """Parse coordinates into a kloppy Point."""
     from kloppy.infra.serializers.event.impect.specification import SHOT
 

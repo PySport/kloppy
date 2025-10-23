@@ -6,7 +6,6 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
-    CardQualifier,
     CardType,
     CarryResult,
     DuelQualifier,
@@ -22,8 +21,8 @@ from kloppy.domain import (
     PassType,
     SetPieceQualifier,
     SetPieceType,
-    Team,
     ShotResult,
+    Team,
     UnderPressureQualifier,
 )
 from kloppy.exceptions import DeserializationError
@@ -167,11 +166,11 @@ class EVENT:
             "event_id": str(self.raw_event["id"]),
             "team": self.team,
             "player": self.player,
-            "coordinates": parse_coordinates(
-                self.raw_event["start"]["adjCoordinates"]
-            )
-            if self.raw_event["start"]
-            else None,
+            "coordinates": (
+                parse_coordinates(self.raw_event["start"]["adjCoordinates"])
+                if self.raw_event["start"]
+                else None
+            ),
             "statistics": self.statistics,
             "related_event_ids": self.raw_event.get("related_events", []),
             "raw_event": self.raw_event,
@@ -373,9 +372,9 @@ class LOOSE_BALL_REGAIN(EVENT):
 
             aerial_duel_generic_event_kwargs = generic_event_kwargs.copy()
             player_id = generic_event_kwargs["player"].player_id
-            aerial_duel_generic_event_kwargs[
-                "event_id"
-            ] = f"{player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            aerial_duel_generic_event_kwargs["event_id"] = (
+                f"{player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
+            )
             aerial_duel_event = event_factory.build_duel(
                 result=DuelResult.WON,
                 qualifiers=aerial_duel_qualifiers,
@@ -426,7 +425,6 @@ class INTERCEPTION(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
         qualifiers = _get_body_part_qualifiers(body_part)
@@ -450,7 +448,6 @@ class CLEARANCE(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
 
         qualifiers = _get_body_part_qualifiers(body_part)
@@ -583,11 +580,6 @@ class FREE_KICK(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-        action = (
-            self.ACTION(self.raw_event["action"])
-            if self.raw_event["action"]
-            else None
-        )
         if self.raw_event["pass"]:
             (
                 qualifiers,
@@ -704,7 +696,6 @@ class GK_CATCH(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
         qualifiers = _get_body_part_qualifiers(body_part)
         qualifiers.append(
@@ -730,7 +721,6 @@ class GK_SAVE(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
         qualifiers = _get_body_part_qualifiers(body_part)
         qualifiers.append(GoalkeeperQualifier(value=GoalkeeperActionType.SAVE))
@@ -776,7 +766,6 @@ class FOUL(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         foul_event = event_factory.build_foul_committed(
             result=None,
             qualifiers=None,
@@ -795,7 +784,6 @@ class YELLOW_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         card_event = event_factory.build_card(
             result=None,
             qualifiers=None,
@@ -815,7 +803,6 @@ class SECOND_YELLOW_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         card_event = event_factory.build_card(
             result=None,
             qualifiers=None,
@@ -835,7 +822,6 @@ class RED_CARD(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         card_event = event_factory.build_card(
             result=None,
             qualifiers=None,
@@ -855,7 +841,6 @@ class OWN_GOAL(EVENT):
         teams: List[Team],
         **generic_event_kwargs,
     ) -> List[Event]:
-
         body_part = BODYPART(self.raw_event["bodyPartExtended"])
         qualifiers = _get_body_part_qualifiers(body_part)
 

@@ -1,3 +1,4 @@
+import warnings
 from typing import Union
 
 from kloppy.config import get_config
@@ -83,6 +84,14 @@ def load_open_data(
         >>> dataset = impect.load_open_data(match_id="100214")
         >>> df = dataset.to_df(engine="pandas")
     """
+
+    warnings.warn(
+        "\n\nYou are about to use IMPECT public data."
+        "\nBy using this data, you are agreeing to the user agreement. "
+        "\nThe user agreement can be found here: https://github.com/ImpectAPI/open-data/blob/main/LICENSE.pdf"
+        "\n"
+    )
+
     base_url = (
         "https://raw.githubusercontent.com/ImpectAPI/open-data/main/data"
     )

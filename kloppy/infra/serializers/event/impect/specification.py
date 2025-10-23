@@ -372,9 +372,9 @@ class LOOSE_BALL_REGAIN(EVENT):
 
             aerial_duel_generic_event_kwargs = generic_event_kwargs.copy()
             player_id = generic_event_kwargs["player"].player_id
-            aerial_duel_generic_event_kwargs["event_id"] = (
-                f"{player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
-            )
+            aerial_duel_generic_event_kwargs[
+                "event_id"
+            ] = f"{player_id}-aerial-duel-{generic_event_kwargs['event_id']}"
             aerial_duel_event = event_factory.build_duel(
                 result=DuelResult.WON,
                 qualifiers=aerial_duel_qualifiers,
@@ -574,6 +574,10 @@ class FREE_KICK(EVENT):
         FREE_KICK = "FREE_KICK"
         DIRECT_FREE_KICK = "DIRECT_FREE_KICK"
 
+    class RESULT(Enum):
+        FAIL = "FAIL"
+        SUCCESS = "SUCCESS"
+
     def _create_events(
         self,
         event_factory: EventFactory,
@@ -601,8 +605,9 @@ class FREE_KICK(EVENT):
             return [pass_event]
         elif self.raw_event["shot"]:
             shot_dict = self.raw_event["shot"]
+            result = self.RESULT(self.raw_event["result"])
             shot_end_coordinates, shot_result = parse_shot_end_coordinates(
-                shot_dict
+                shot_dict, result
             )
             body_part = BODYPART(self.raw_event["bodyPartExtended"])
             qualifiers = _get_body_part_qualifiers(body_part)

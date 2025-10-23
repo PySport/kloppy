@@ -202,9 +202,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         f"Unknown position {position_key}, defaulting to Unknown"
                     )
                     position = PositionType.Unknown
-                player_starting_positions[player_starting_info["playerId"]] = (
-                    position
-                )
+                player_starting_positions[
+                    player_starting_info["playerId"]
+                ] = position
 
             players = []
             for player in team_info["players"]:

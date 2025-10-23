@@ -62,7 +62,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             BallState,
         )
 
-        # builded class.
+        # builded coordinateSystem class.
         from kloppy.domain.models.common import CDFCoordinateSystem
 
         # setting it as coordinate system of the imported data
@@ -72,7 +72,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             ),
             to_orientation=Orientation.STATIC_HOME_AWAY,
         )
-        ##---------------------------------------------------------------------
 
         ## building Tracking jsonl
         # list of different periods within a game define by the cdf
@@ -84,7 +83,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             5: "shootout",
         }
 
-        # container for stat and end frame_id
+        # container for start and end frame_id
         period_start_frame_id = {
             period.id: None for period in dataset.metadata.periods
         }
@@ -92,7 +91,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             period.id: None for period in dataset.metadata.periods
         }
 
-        # container for stat and end normalized frame_id
+        # container for start and end normalized frame_id
         normalized_period_start_frame_id = {
             period.id: None for period in dataset.metadata.periods
         }
@@ -115,7 +114,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         frame_id = 0  # Use for the cdf_frame_ids..
         for frame in dataset.frames:
             frame_data = {}
-
             # Frame ID specified by the CDF
             frame_data["frame_id"] = frame_id
             # Original frame_id
@@ -288,7 +286,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         metadata_json = {}
         # Competition infos.
         metadata_json["competition"] = (
-            {  # we don't have any of these informations
+            {  
                 "id": "MISSING_MANDATORY_COMPETITION_ID",
                 "name": "",
                 "format": "",
@@ -298,7 +296,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         )
 
         # season infos.
-        metadata_json["season"] = {  # we don't have any of these informations
+        metadata_json["season"] = {  
             "id": "MISSING_MANDATORY_SEASON_ID",
             "name": "",
         }
@@ -371,21 +369,21 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             whistles.append(whistle_end)
 
         metadata_json["match"] = {
-            "id": str(dataset.metadata.game_id),  # same as for the jsonl
+            "id": str(dataset.metadata.game_id),  
             "kickoff_time": str(
                 dataset.metadata.date
                 + dataset.metadata.periods[0].start_timestamp
             ),
             "periods": periods_info,
-            "whistles": whistles,  # fake just to pass the test, I have to change this after.
+            "whistles": whistles, 
             "round": "",
             "scheduled_kickoff_time": str(dataset.metadata.date),
-            "local_kickoff_time": "",  # how to get this ?
+            "local_kickoff_time": "",  
             "misc": {
-                "country": "",  # how to get this ?
-                "city": "",  # how to get this ?
-                "percipitation": 0,  # how to get this ?
-                "is_open_roof": True,  # how to get this ?
+                "country": "",  
+                "city": "",  
+                "percipitation": 0,  
+                "is_open_roof": True,  # Asume as default value
             },
         }
 
@@ -397,13 +395,11 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             if player.team == away_team:
                 away_players_id_in_meta.append(player.player_id)
         meta_set_of_home_players_id_in_the_frame = set(home_players_id_in_meta)
-        print(meta_set_of_home_players_id_in_the_frame)
         meta_set_of_away_players_id_in_the_frame = set(away_players_id_in_meta)
-        print(meta_set_of_away_players_id_in_the_frame)
 
         metadata_json["teams"] = {
             "home": {
-                "id": home_team.team_id,  # same as for the jsonl
+                "id": home_team.team_id, 
                 "players": meta_home_players,
                 "jersey_color": " ",
                 "name": home_team.name,

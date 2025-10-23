@@ -115,7 +115,9 @@ class Provider(Enum):
         KLOPPY (Provider):
         DATAFACTORY (Provider):
         STATSPERFORM (Provider):
+        HAWEKEYE (Provider):
         SPORTVU (Provider):
+        IMPECT (Provider):
         OTHER (Provider):
     """
 
@@ -134,6 +136,7 @@ class Provider(Enum):
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
     SIGNALITY = "signality"
+    IMPECT = "impect"
     OTHER = "other"
 
     def __str__(self):
@@ -238,6 +241,9 @@ class Player:
 
     def __str__(self):
         return self.full_name
+
+    def __repr__(self):
+        return f"<Player name='{self.full_name}' player_id='{self.player_id}'>"
 
     def __hash__(self):
         return hash(self.player_id)
@@ -1337,6 +1343,30 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
+class ImpectCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.IMPECT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(-52.5, 52.5),
+            y_dim=Dimension(-34, 34),
+            pitch_length=105,
+            pitch_width=68,
+            standardized=True,
+        )
+
+
 class DatasetType(Enum):
     """
     Dataset types.
@@ -1390,6 +1420,7 @@ def build_coordinate_system(
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
     }
 
     if provider in coordinate_systems:

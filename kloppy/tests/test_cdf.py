@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 import cdf
+from cdf import VERSION
 
 from kloppy import sportec
 from kloppy.domain import TrackingDataset
@@ -36,8 +37,8 @@ class TestCDFSerializer:
         serializer = CDFTrackingDataSerializer()
 
         # Instantiate Validators
-        meta_validator = cdf.MetaSchemaValidator(schema="cdf/files/v0.2.1/schema/meta.json")
-        tracking_validator = cdf.TrackingSchemaValidator(schema="cdf/files/v0.2.1/schema/tracking.json")
+        meta_validator = cdf.MetaSchemaValidator(schema="cdf/files/v{cdf.VERSION}/schema/meta.json")
+        tracking_validator = cdf.TrackingSchemaValidator(schema="cdf/files/v{cdf.VERSION}/schema/tracking.json")
 
         with tempfile.NamedTemporaryFile(mode="w+b", suffix=".json", delete=False) as meta_file:
             # Initialize empty list for tracking files

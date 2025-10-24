@@ -17,6 +17,15 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     # to infer the starting formation if not given
     @staticmethod
     def get_starting_formation(team_players) -> str:
+        """
+        determine the starting formation if not define.
+
+        Args:
+            team: The team on which we want to infer the formation.
+
+        Returns:
+            formation: the infered formation.
+        """
         formation = ""
         defender = midfielder = attacker = 0
         for player in team_players:
@@ -51,10 +60,6 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         Returns:
             bool: True if serialization was successful, False otherwise
-
-        Note:
-            TODO: Open question: should the serializer make sure the data is in the right format, and
-                  do a transformation if not in the right format? yes normally.
         """
 
         from kloppy.domain import (
@@ -262,9 +267,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 except KeyError:
                     ball_x = ball_y = ball_z = None
             else:
-                ball_x = ball_y = ball_z = (
-                    404  # default missing value for ball coordinates
-                )
+                ball_x = (
+                    ball_y
+                ) = ball_z = 404  # default missing value for ball coordinates
 
             frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
 
@@ -285,18 +290,16 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         # Output containers
         metadata_json = {}
         # Competition infos.
-        metadata_json["competition"] = (
-            {  
-                "id": "MISSING_MANDATORY_COMPETITION_ID",
-                "name": "",
-                "format": "",
-                "age_restriction": "",
-                "type": "",
-            }
-        )
+        metadata_json["competition"] = {
+            "id": "MISSING_MANDATORY_COMPETITION_ID",
+            "name": "",
+            "format": "",
+            "age_restriction": "",
+            "type": "",
+        }
 
         # season infos.
-        metadata_json["season"] = {  
+        metadata_json["season"] = {
             "id": "MISSING_MANDATORY_SEASON_ID",
             "name": "",
         }
@@ -369,20 +372,20 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             whistles.append(whistle_end)
 
         metadata_json["match"] = {
-            "id": str(dataset.metadata.game_id),  
+            "id": str(dataset.metadata.game_id),
             "kickoff_time": str(
                 dataset.metadata.date
                 + dataset.metadata.periods[0].start_timestamp
             ),
             "periods": periods_info,
-            "whistles": whistles, 
+            "whistles": whistles,
             "round": "",
             "scheduled_kickoff_time": str(dataset.metadata.date),
-            "local_kickoff_time": "",  
+            "local_kickoff_time": "",
             "misc": {
-                "country": "",  
-                "city": "",  
-                "percipitation": 0,  
+                "country": "",
+                "city": "",
+                "percipitation": 0,
                 "is_open_roof": True,  # Asume as default value
             },
         }
@@ -399,7 +402,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         metadata_json["teams"] = {
             "home": {
-                "id": home_team.team_id, 
+                "id": home_team.team_id,
                 "players": meta_home_players,
                 "jersey_color": " ",
                 "name": home_team.name,

@@ -52,6 +52,7 @@ class TestSkillCornerTracking:
             raw_data=raw_data,
             coordinates="skillcorner",
             include_empty_frames=True,
+            only_alive=False,
         )
 
         assert dataset.metadata.provider == Provider.SKILLCORNER
@@ -162,7 +163,9 @@ class TestSkillCornerTracking:
     def test_correct_normalized_deserialization(
         self, meta_data: str, raw_data: str
     ):
-        dataset = skillcorner.load(meta_data=meta_data, raw_data=raw_data)
+        dataset = skillcorner.load(
+            meta_data=meta_data, raw_data=raw_data, only_alive=False
+        )
 
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_data[
@@ -171,12 +174,37 @@ class TestSkillCornerTracking:
 
     def test_skip_empty_frames(self, meta_data: str, raw_data: str):
         dataset = skillcorner.load(
-            meta_data=meta_data, raw_data=raw_data, include_empty_frames=False
+            meta_data=meta_data,
+            raw_data=raw_data,
+            include_empty_frames=False,
+            only_alive=False,
         )
 
         assert len(dataset.records) == 34783
         assert dataset.records[0].timestamp == timedelta(seconds=11.2)
         assert dataset.records[-1].ball_state == BallState.ALIVE
+
+    def test_skip_dead_frames(self, meta_data: str, raw_data: str):
+        dataset = skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=False,
+        )
+
+        assert len(dataset.records) == 55632
+
+        dataset = skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=True,
+        )
+
+        assert len(dataset.records) == 40069
+        assert all([True for x in dataset if x.ball_state == BallState.ALIVE])
 
     def test_correct_deserialization_v3(
         self, raw_data_v3: Path, meta_data_v3: Path
@@ -186,6 +214,7 @@ class TestSkillCornerTracking:
             raw_data=raw_data_v3,
             coordinates="skillcorner",
             include_empty_frames=True,
+            only_alive=False,
         )
 
         assert dataset.metadata.provider == Provider.SKILLCORNER

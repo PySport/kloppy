@@ -1,4 +1,4 @@
-site_name: kloppy 3.17.1
+site_name: kloppy 3.18.0
 site_url: https://kloppy.pysport.org
 repo_url: https://github.com/PySport/kloppy
 repo_name: 'PySport/kloppy'
@@ -43,6 +43,7 @@ nav:
           - user-guide/loading-data/index.md
           - Datafactory: user-guide/loading-data/datafactory.ipynb
           - HawkEye: user-guide/loading-data/hawkeye.ipynb
+          - Impect: user-guide/loading-data/impect.ipynb
           - Hudl SportsCode: user-guide/loading-data/sportscode.ipynb
           - Hudl Statsbomb: user-guide/loading-data/statsbomb.ipynb
           - Metrica Sports: user-guide/loading-data/metrica.ipynb
@@ -81,6 +82,7 @@ nav:
       - Data Loaders:
           - DataFactory: reference/providers/datafactory.md
           - HawkEye: reference/providers/hawkeye.md
+          - Impect: reference/providers/impect.md
           - Hudl Sportscode: reference/providers/sportscode.md
           - Hudl Statsbomb: reference/providers/statsbomb.md
           - Metrica Sports: reference/providers/metrica.md

@@ -18,6 +18,7 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     data_version: Optional[str] = None,
+    exclude_penalty_shootouts: bool = False,
 ) -> EventDataset:
     """
     Load Wyscout event data.
@@ -28,6 +29,7 @@ def load(
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
         data_version: The version of the Wyscout data. Supported versions are "V2" and "V3".
+        exclude_penalty_shootouts: If True, excludes events from penalty shootouts (period 5).
 
     Returns:
         The parsed event data.
@@ -43,6 +45,7 @@ def load(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
+        exclude_penalty_shootouts=exclude_penalty_shootouts,
     )
 
     with open_as_file(event_data) as event_data_fp:
@@ -56,6 +59,7 @@ def load_open_data(
     event_types: Optional[List[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
+    exclude_penalty_shootouts: bool = False,
 ) -> EventDataset:
     """
     Load Wyscout open data.
@@ -71,6 +75,7 @@ def load_open_data(
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
+        exclude_penalty_shootouts: If True, excludes events from penalty shootouts (period 5).
 
     Returns:
         The parsed event data.
@@ -87,6 +92,7 @@ def load_open_data(
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,
+        exclude_penalty_shootouts=exclude_penalty_shootouts,
     )
 
 

@@ -117,6 +117,10 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         visible_area=freeze_frame["visible_area"],
                     )
                 )
+
+        # Remove penalty shootout data if requested
+        dataset = self.remove_penalty_shootout_data(dataset)
+
         return dataset
 
     def load_data(self, inputs: StatsBombInputs):

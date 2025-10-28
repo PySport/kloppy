@@ -83,6 +83,7 @@ class TrackingDataset(Dataset[Frame]):
     @deprecated(
         "to_pandas will be removed in the future. Please use to_df instead."
     )
+
     def to_pandas(
         self,
         record_converter: Optional[Callable[[Frame], Dict]] = None,
@@ -118,6 +119,10 @@ class TrackingDataset(Dataset[Frame]):
         return pd.DataFrame.from_records(
             map(generic_record_converter, self.records)
         )
-
+    
+    @property
+    def to_common_data_format(self)->[object]:
+        
+        return []
 
 __all__ = ["Frame", "TrackingDataset", "PlayerData"]

@@ -688,12 +688,16 @@ class CoordinateSystem(ABC):
         dim = BaseDims(
             left=self.pitch_dimensions.x_dim.min,
             right=self.pitch_dimensions.x_dim.max,
-            bottom=self.pitch_dimensions.y_dim.min
-            if not invert_y
-            else self.pitch_dimensions.y_dim.max,
-            top=self.pitch_dimensions.y_dim.max
-            if not invert_y
-            else self.pitch_dimensions.y_dim.min,
+            bottom=(
+                self.pitch_dimensions.y_dim.min
+                if not invert_y
+                else self.pitch_dimensions.y_dim.max
+            ),
+            top=(
+                self.pitch_dimensions.y_dim.max
+                if not invert_y
+                else self.pitch_dimensions.y_dim.min
+            ),
             width=self.pitch_dimensions.x_dim.max
             - self.pitch_dimensions.x_dim.min,
             length=self.pitch_dimensions.y_dim.max
@@ -742,14 +746,16 @@ class CoordinateSystem(ABC):
                 - self.pitch_dimensions.x_dim.min
             ),
             pad_multiplier=1,
-            aspect_equal=False
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else True,
+            aspect_equal=(
+                False if self.pitch_dimensions.unit == Unit.NORMED else True
+            ),
             pitch_width=pitch_width,
             pitch_length=pitch_length,
-            aspect=pitch_width / pitch_length
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else 1.0,
+            aspect=(
+                pitch_width / pitch_length
+                if self.pitch_dimensions.unit == Unit.NORMED
+                else 1.0
+            ),
         )
         return dim
 
@@ -1191,7 +1197,7 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
                 pitch_width=None,
                 standardized=False,
             )
-        
+
 
 class CDFCoordinateSystem(ProviderCoordinateSystem):
     """
@@ -1215,20 +1221,20 @@ class CDFCoordinateSystem(ProviderCoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-            return NormalizedPitchDimensions(
-                x_dim=Dimension(
-                    -1 * self._pitch_length / 2, self._pitch_length / 2
-                ),
-                y_dim=Dimension(
-                    -1 * self._pitch_width / 2, self._pitch_width / 2
-                ),
-                pitch_length = self._pitch_length,
-                pitch_width=self._pitch_width,
-                standardized=False,
-            )
-    
+        return NormalizedPitchDimensions(
+            x_dim=Dimension(
+                -1 * self._pitch_length / 2, self._pitch_length / 2
+            ),
+            y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
+            standardized=False,
+        )
+
     def __init__(self, base_coordinate_system: ProviderCoordinateSystem):
-        self._pitch_length = base_coordinate_system.pitch_dimensions.pitch_length
+        self._pitch_length = (
+            base_coordinate_system.pitch_dimensions.pitch_length
+        )
         self._pitch_width = base_coordinate_system.pitch_dimensions.pitch_width
 
 
@@ -1869,8 +1875,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1878,8 +1883,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1996,6 +2000,10 @@ class Dataset(ABC, Generic[T]):
             )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
+
+    def to_cdf(self):
+        if self.dataset_type != DatasetType.TRACKING:
+            raise ValueError(f"to_cdf() is only supported for TrackingDataset")
 
     def __repr__(self):
         return f"<{self.__class__.__name__} record_count={len(self.records)}>"

@@ -7,6 +7,8 @@ import logging
 import lzma
 import os
 import re
+import shutil
+import tempfile
 from dataclasses import dataclass, replace
 from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
@@ -26,6 +28,7 @@ from typing import (
 
 from kloppy.exceptions import AdapterError, InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
+from kloppy.infra.io.buffered_stream import BufferedStream
 
 logger = logging.getLogger(__name__)
 
@@ -321,8 +324,35 @@ def dummy_context_mgr() -> Generator[None, None, None]:
     yield
 
 
-def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
-    """Open a byte stream to the given input object.
+@contextlib.contextmanager
+def _write_context_manager(
+    uri: str, mode: str
+) -> Generator[BinaryIO, None, None]:
+    """
+    Context manager for write operations that buffers writes and flushes to adapter on exit.
+
+    Args:
+        uri: The destination URI
+        mode: Write mode ('wb' or 'ab')
+
+    Yields:
+        A BufferedStream for writing
+    """
+    buffer = BufferedStream()
+    try:
+        yield buffer
+    finally:
+        adapter = get_adapter(uri)
+        if adapter:
+            adapter.write_from_stream(uri, buffer, mode)
+        else:
+            raise AdapterError(f"No adapter found for {uri}")
+
+
+def open_as_file(
+    input_: FileLike, mode: str = "rb"
+) -> ContextManager[Optional[BinaryIO]]:
+    """Open a byte stream to/from the given input object.
 
     The following input types are supported:
         - A string or `pathlib.Path` object representing a local file path.
@@ -338,37 +368,54 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
           input types.
 
     Args:
-        input_ (FileLike): The input object to be opened.
+        input_ (FileLike): The input/output object to be opened.
+        mode (str): File mode - 'rb' (read), 'wb' (write), or 'ab' (append).
+            Defaults to 'rb'.
 
     Returns:
-        BinaryIO: A binary stream to the input object.
+        BinaryIO: A binary stream to/from the input object.
 
     Raises:
-        ValueError: If the input is required but not provided.
+        ValueError: If the input is required but not provided, or invalid mode.
         InputNotFoundError: If the input file is not found and should not be skipped.
         TypeError: If the input type is not supported.
+        NotImplementedError: If write mode is used with unsupported input types.
 
     Example:
 
+        >>> # Reading
         >>> with open_as_file("example.txt") as f:
         ...     contents = f.read()
+        >>>
+        >>> # Writing
+        >>> with open_as_file("output.txt", mode="wb") as f:
+        ...     f.write(b"Hello, world!")
 
     Note:
         To support reading data from other sources, see the
         [Adapter](`kloppy.io.adapters.Adapter`) class.
 
         If the given file path or URL ends with '.gz', '.xz', or '.bz2', the
-        file will be decompressed before being read.
+        file will be automatically compressed/decompressed.
+
+        Write mode limitations:
+            - HTTP/HTTPS URLs: Not supported
+            - Zip archives: Not supported
+            - Inline strings/bytes: Not supported (invalid output destination)
     """
+    # Validate mode
+    if mode not in ("rb", "wb", "ab"):
+        raise ValueError(f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'.")
+
+    # Handle Source wrapper
     if isinstance(input_, Source):
         if input_.data is None and input_.optional:
-            # This saves us some additional code in every vendor specific code
             return dummy_context_mgr()
         elif input_.data is None:
             raise ValueError("Input required but not provided.")
         else:
             try:
-                return open_as_file(input_.data)
+                return open_as_file(input_.data, mode=mode)
             except InputNotFoundError as exc:
                 if input_.skip_if_missing:
                     logging.info(f"Input {input_.data} not found. Skipping")
@@ -376,34 +423,54 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
                 else:
                     raise exc
 
-    if isinstance(input_, str) and ("{" in input_ or "<" in input_):
-        # If input_ is a JSON or XML string, return it as a binary stream
-        return BytesIO(input_.encode("utf8"))
+    # Write modes: Cannot write to inline data
+    if mode in ("wb", "ab"):
+        if isinstance(input_, str) and ("{" in input_ or "<" in input_):
+            raise TypeError("Cannot write to inline JSON/XML string.")
+        if isinstance(input_, bytes):
+            raise TypeError("Cannot write to bytes object. Use BytesIO instead.")
 
-    if isinstance(input_, bytes):
-        # If input_ is a bytes object, return it as a binary stream
-        return BytesIO(input_)
+    # Read modes: Handle inline data
+    if mode == "rb":
+        if isinstance(input_, str) and ("{" in input_ or "<" in input_):
+            return BytesIO(input_.encode("utf8"))
+        if isinstance(input_, bytes):
+            return BytesIO(input_)
 
+    # Handle paths (local files, URLs, S3, etc.)
     if isinstance(input_, str) or hasattr(input_, "__fspath__"):
-        # If input_ is a path-like object, open it and return the binary stream
         uri = _filepath_from_path_or_filelike(input_)
 
         adapter = get_adapter(uri)
-        if adapter:
-            stream = BytesIO()
+        if not adapter:
+            raise AdapterError(f"No adapter found for {uri}")
+
+        if mode == "rb":
+            # Read mode: buffer data from adapter
+            stream = BufferedStream()
             adapter.read_to_stream(uri, stream)
             stream.seek(0)
+            return stream
         else:
-            raise AdapterError(f"No adapter found for {uri}")
-        return stream
+            # Write mode: return context manager that flushes on exit
+            return _write_context_manager(uri, mode)
 
+    # Handle file-like objects
     if isinstance(input_, TextIOWrapper):
-        # If file_or_path is a TextIOWrapper, return its underlying binary buffer
         return input_.buffer
 
-    if hasattr(input_, "readinto"):
-        # If file_or_path is a file-like object, return it as is
-        return _open(input_)  # type: ignore
+    if hasattr(input_, "readinto") or (mode in ("wb", "ab") and hasattr(input_, "write")):
+        # File-like object (BytesIO, file handles, etc.)
+        if hasattr(input_, "mode") and input_.mode != mode:  # type: ignore
+            # If it's a real file with a mode, check compatibility
+            raise ValueError(f"File opened in mode '{input_.mode}' but '{mode}' requested")  # type: ignore
+
+        # Use _open to handle potential compression detection
+        if mode == "rb":
+            return _open(input_, mode)  # type: ignore
+        else:
+            # For write modes, return file-like object directly with nullcontext
+            return contextlib.nullcontext(input_)  # type: ignore
 
     raise TypeError(f"Unsupported input type: {type(input_)}")
 

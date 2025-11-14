@@ -6,6 +6,7 @@ import fsspec
 
 from kloppy.config import get_config
 from kloppy.exceptions import InputNotFoundError
+
 from kloppy.infra.io.buffered_stream import BufferedStream
 
 from .adapter import Adapter
@@ -63,24 +64,23 @@ class FSSpecAdapter(Adapter, ABC):
         Check if the adapter can handle the URL.
         """
 
-    def read_to_stream(self, url: str, output: BinaryIO):
+    def read_to_stream(self, url: str, output: BufferedStream):
         """
-        Reads content from the given URL and writes it to the provided binary stream.
-        Uses caching for remote files. Copies data in chunks via BufferedStream.
+        Reads content from the given URL and writes it to the provided BufferedStream.
+        Uses caching for remote files. Copies data in chunks.
         """
         fs = self._get_filesystem(url)
         compression = self._detect_compression(url)
 
         try:
             with fs.open(url, "rb", compression=compression) as source_file:
-                buffer = BufferedStream.from_stream(source_file)
-                output.write(buffer.read())
+                output.read_from(source_file)
         except FileNotFoundError as e:
             raise InputNotFoundError(f"Input file not found: {url}") from e
 
-    def write_from_stream(self, url: str, input: BinaryIO, mode: str):
+    def write_from_stream(self, url: str, input: BufferedStream, mode: str):
         """
-        Writes content from input stream to the given URL.
+        Writes content from BufferedStream to the given URL.
         Does not use caching for writes. Copies data in chunks.
 
         Args:
@@ -92,14 +92,7 @@ class FSSpecAdapter(Adapter, ABC):
         compression = self._detect_compression(url)
 
         with fs.open(url, mode, compression=compression) as dest_file:
-            # Assume input is a BufferedStream with write_to method
-            if isinstance(input, BufferedStream):
-                input.write_to(dest_file)
-            else:
-                # Fallback: wrap in BufferedStream
-                input.seek(0)
-                buffer = BufferedStream.from_stream(input)
-                buffer.write_to(dest_file)
+            input.write_to(dest_file)
 
     def list_directory(self, url: str, recursive: bool = True) -> List[str]:
         """

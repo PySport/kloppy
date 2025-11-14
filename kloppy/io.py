@@ -405,7 +405,9 @@ def open_as_file(
     """
     # Validate mode
     if mode not in ("rb", "wb", "ab"):
-        raise ValueError(f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'.")
+        raise ValueError(
+            f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'."
+        )
 
     # Handle Source wrapper
     if isinstance(input_, Source):
@@ -428,7 +430,9 @@ def open_as_file(
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
             raise TypeError("Cannot write to inline JSON/XML string.")
         if isinstance(input_, bytes):
-            raise TypeError("Cannot write to bytes object. Use BytesIO instead.")
+            raise TypeError(
+                "Cannot write to bytes object. Use BytesIO instead."
+            )
 
     # Read modes: Handle inline data
     if mode == "rb":
@@ -459,7 +463,9 @@ def open_as_file(
     if isinstance(input_, TextIOWrapper):
         return input_.buffer
 
-    if hasattr(input_, "readinto") or (mode in ("wb", "ab") and hasattr(input_, "write")):
+    if hasattr(input_, "readinto") or (
+        mode in ("wb", "ab") and hasattr(input_, "write")
+    ):
         # File-like object (BytesIO, file handles, etc.)
         if hasattr(input_, "mode") and input_.mode != mode:  # type: ignore
             # If it's a real file with a mode, check compatibility

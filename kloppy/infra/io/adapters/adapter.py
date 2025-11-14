@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import BinaryIO, List
 
+from kloppy.infra.io.buffered_stream import BufferedStream
+
 
 class Adapter(ABC):
     @abstractmethod
@@ -16,16 +18,16 @@ class Adapter(ABC):
         pass
 
     @abstractmethod
-    def read_to_stream(self, url: str, output: BinaryIO):
+    def read_to_stream(self, url: str, output: BufferedStream):
         pass
 
-    def write_from_stream(self, url: str, input: BinaryIO, mode: str):
+    def write_from_stream(self, url: str, input: BufferedStream, mode: str):
         """
-        Write content from input stream to the given URL.
+        Write content from BufferedStream to the given URL.
 
         Args:
             url: The destination URL
-            input: Binary stream to read from
+            input: BufferedStream to read from
             mode: Write mode ('wb' for write/overwrite or 'ab' for append)
 
         Raises:

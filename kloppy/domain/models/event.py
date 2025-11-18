@@ -979,13 +979,13 @@ class PassEvent(
         event_type (EventType): `EventType.PASS`
         event_name (str): `"pass"`
         result (PassResult): The pass's outcome.
-        receive_timestamp (Time): The time the pass was received.
+        receive_timestamp (timedelta): The time the pass was received.
         receiver_coordinates (Point): The coordinates where the pass was received.
         receiver_player (Player): The intended receiver of the pass.
         qualifiers: A list of qualifiers providing additional information about the pass.
     """
 
-    receive_timestamp: Optional[Time] = None
+    receive_timestamp: Optional[timedelta] = None
     receiver_player: Optional[Player] = None
     receiver_coordinates: Optional[Point] = None
 
@@ -1037,13 +1037,13 @@ class CarryEvent(
     Attributes:
         event_type (EventType): `EventType.CARRY`
         event_name (str): `"carry"`
-        end_timestamp (Time): Duration of the carry.
+        end_timestamp (timedelta): Duration of the carry.
         end_coordinates (Point): Coordinate on the pitch where the carry ended.
         result (CarryResult): The outcome of the carry.
         qualifiers: A list of qualifiers providing additional information about the carry.
     """
 
-    end_timestamp: Time
+    end_timestamp: timedelta
     end_coordinates: Point
 
     @property
@@ -1388,11 +1388,11 @@ class PressureEvent(
     Attributes:
         event_type (EventType): `EventType.Pressure`
         event_name (str): `"pressure"`
-        end_timestamp (Time): When the pressing ended.
+        end_timestamp (timedelta): When the pressing ended.
         qualifiers: A list of qualifiers providing additional information about the pressure event.
     """
 
-    end_timestamp: Time
+    end_timestamp: timedelta
 
     @property
     def event_type(self) -> EventType:

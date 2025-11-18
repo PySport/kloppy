@@ -32,7 +32,6 @@ class FSSpecAdapter(Adapter, ABC):
         Get the appropriate fsspec filesystem for the given URL, with caching enabled.
         """
         protocol = self._infer_protocol(url)
-
         if no_cache:
             return fsspec.filesystem(protocol)
 

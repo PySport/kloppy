@@ -3,6 +3,7 @@ from kloppy.infra.serializers.code.sportscode import (
     SportsCodeDeserializer,
     SportsCodeInputs,
     SportsCodeSerializer,
+    SportsCodeOutputs,
 )
 from kloppy.io import FileLike, open_as_file
 
@@ -31,6 +32,6 @@ def save(dataset: CodeDataset, output_filename: str) -> None:
         dataset: The SportsCode dataset to save.
         output_filename: The output filename.
     """
-    with open(output_filename, "wb") as fp:
+    with open_as_file(output_filename, "wb") as data_fp:
         serializer = SportsCodeSerializer()
-        fp.write(serializer.serialize(dataset))
+        serializer.serialize(dataset, outputs=SportsCodeOutputs(data=data_fp))

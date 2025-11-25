@@ -108,7 +108,7 @@ class CodeToDictTransformer(DataRecordToDictTransformer[Code]):
         return DefaultCodeTransformer()
 
 
-class RowWiseFrameToDictTransformer(DataRecordToDictTransformer[Frame]):
+class LongLayoutFrameToDictTransformer(DataRecordToDictTransformer[Frame]):
     def default_transformer(self) -> Callable[[Frame], List[Dict]]:
         return LongLayoutFrameTransformer()
 

@@ -34,7 +34,8 @@ NamedColumns = Dict[str, Column]
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]: ...
+    def default_transformer(self) -> Callable[[T], Dict]:
+        ...
 
     def __init__(
         self,

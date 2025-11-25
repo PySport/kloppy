@@ -23,7 +23,7 @@ from kloppy.domain.services.transformers.attribute import (
     DefaultCodeTransformer,
     DefaultEventTransformer,
     DefaultFrameTransformer,
-    RowWiseFrameTransformer,
+    LongLayoutFrameTransformer,
 )
 from kloppy.exceptions import KloppyError
 
@@ -34,8 +34,7 @@ NamedColumns = Dict[str, Column]
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]:
-        ...
+    def default_transformer(self) -> Callable[[T], Dict]: ...
 
     def __init__(
         self,
@@ -111,7 +110,7 @@ class CodeToDictTransformer(DataRecordToDictTransformer[Code]):
 
 class RowWiseFrameToDictTransformer(DataRecordToDictTransformer[Frame]):
     def default_transformer(self) -> Callable[[Frame], List[Dict]]:
-        return RowWiseFrameTransformer()
+        return LongLayoutFrameTransformer()
 
 
 def get_transformer_cls(

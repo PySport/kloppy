@@ -9,6 +9,7 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombInputs,
 )
 from kloppy.io import FileLike, Source, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
@@ -87,10 +88,22 @@ def load_open_data(
     )
 
     return load(
-        event_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json",
-        lineup_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json",
+        event_data=github_resolve_raw_data_url(
+            repository="statsbomb/open-data",
+            branch="master",
+            file=f"data/events/{match_id}.json",
+        ),
+        lineup_data=github_resolve_raw_data_url(
+            repository="statsbomb/open-data",
+            branch="master",
+            file=f"data/lineups/{match_id}.json",
+        ),
         three_sixty_data=Source(
-            f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/three-sixty/{match_id}.json",
+            github_resolve_raw_data_url(
+                repository="statsbomb/open-data",
+                branch="master",
+                file=f"data/three-sixty/{match_id}.json",
+            ),
             skip_if_missing=True,
         ),
         event_types=event_types,

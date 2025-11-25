@@ -16,6 +16,7 @@ from kloppy.infra.serializers.tracking.metrica_epts import (
     MetricaEPTSTrackingDataInputs,
 )
 from kloppy.io import FileLike, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load_tracking_csv(
@@ -141,30 +142,48 @@ def load_open_data(
     """
     if match_id == "1" or match_id == 1:
         return load_tracking_csv(
-            home_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv",
-            away_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv",
+            home_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv",
+            ),
+            away_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv",
+            ),
             sample_rate=sample_rate,
             limit=limit,
             coordinates=coordinates,
         )
     elif match_id == "2" or match_id == 2:
         return load_tracking_csv(
-            home_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Home_Team.csv",
-            away_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_2/Sample_Game_2_RawTrackingData_Away_Team.csv",
+            home_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_2/Sample_Game_2_RawTrackingData_Home_Team.csv",
+            ),
+            away_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_2/Sample_Game_2_RawTrackingData_Away_Team.csv",
+            ),
             sample_rate=sample_rate,
             limit=limit,
             coordinates=coordinates,
         )
     elif match_id == "3" or match_id == 3:
         return load_tracking_epts(
-            meta_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_3/Sample_Game_3_metadata.xml",
-            raw_data="https://raw.githubusercontent.com/metrica-sports/sample-data/"
-            "master/data/Sample_Game_3/Sample_Game_3_tracking.txt",
+            meta_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_3/Sample_Game_3_metadata.xml",
+            ),
+            raw_data=github_resolve_raw_data_url(
+                repository="metrica-sports/sample-data",
+                branch="master",
+                file="data/Sample_Game_3/Sample_Game_3_tracking.txt",
+            ),
             sample_rate=sample_rate,
             limit=limit,
             coordinates=coordinates,

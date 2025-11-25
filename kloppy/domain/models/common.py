@@ -115,7 +115,9 @@ class Provider(Enum):
         KLOPPY (Provider):
         DATAFACTORY (Provider):
         STATSPERFORM (Provider):
+        HAWEKEYE (Provider):
         SPORTVU (Provider):
+        IMPECT (Provider):
         OTHER (Provider):
     """
 
@@ -134,6 +136,7 @@ class Provider(Enum):
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
     SIGNALITY = "signality"
+    IMPECT = "impect"
     OTHER = "other"
 
     def __str__(self):
@@ -238,6 +241,9 @@ class Player:
 
     def __str__(self):
         return self.full_name
+
+    def __repr__(self):
+        return f"<Player name='{self.full_name}' player_id='{self.player_id}'>"
 
     def __hash__(self):
         return hash(self.player_id)
@@ -1343,6 +1349,30 @@ class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
+class ImpectCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.IMPECT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(-52.5, 52.5),
+            y_dim=Dimension(-34, 34),
+            pitch_length=105,
+            pitch_width=68,
+            standardized=True,
+        )
+
+
 class DatasetType(Enum):
     """
     Dataset types.
@@ -1396,6 +1426,7 @@ def build_coordinate_system(
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
     }
 
     if provider in coordinate_systems:
@@ -1804,8 +1835,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> List[Dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1813,8 +1843,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[Dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1859,7 +1888,7 @@ class Dataset(ABC, Generic[T]):
                 f"Orient {orient} is not supported. Only orient='list' is supported"
             )
 
-    def to_dict_rowwise(
+    def to_dict_long(
         self,
         *columns: Unpack[tuple[Column]],
         **named_columns: NamedColumns,
@@ -1870,9 +1899,11 @@ class Dataset(ABC, Generic[T]):
                 f"got {self.dataset_type}"
             )
 
-        from ..services.transformers.data_record import RowWiseFrameTransformer
+        from ..services.transformers.data_record import (
+            LongLayoutFrameTransformer,
+        )
 
-        transformer = RowWiseFrameTransformer(*columns, **named_columns)
+        transformer = LongLayoutFrameTransformer(*columns, **named_columns)
 
         all_rows = []
         for record in self.records:
@@ -1891,7 +1922,7 @@ class Dataset(ABC, Generic[T]):
                 Literal["pandas[pyarrow]"],
             ]
         ] = None,
-        orient: Literal["columns", "rows"] = "columns",
+        layout: Literal["wide", "long"] = "wide",
         **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config
@@ -1899,7 +1930,7 @@ class Dataset(ABC, Generic[T]):
         if not engine:
             engine = get_config("dataframe.engine")
 
-        if orient == "columns":
+        if layout == "wide":
             # Original column-wise behavior using to_dict
             if engine == "pandas[pyarrow]":
                 try:
@@ -1957,9 +1988,8 @@ class Dataset(ABC, Generic[T]):
             else:
                 raise KloppyParameterError(f"Engine {engine} is not valid")
 
-        elif orient == "rows":
-            # Row-wise behavior using to_dict_rowwise
-            all_rows = self.to_dict_rowwise(*columns, **named_columns)
+        elif layout == "long":
+            all_rows = self.to_dict_long(*columns, **named_columns)
 
             if engine == "pandas[pyarrow]":
                 try:
@@ -2010,7 +2040,7 @@ class Dataset(ABC, Generic[T]):
 
         else:
             raise KloppyParameterError(
-                f"Orient '{orient}' is not valid. Must be 'columns' or 'rows'"
+                f"layout '{layout}' is not valid. Must be 'wide' or 'long'"
             )
 
     def __repr__(self):

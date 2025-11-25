@@ -185,6 +185,20 @@ class TestStatsBombMetadata:
         )
         assert away_starting_gk.player_id == "5205"  # Rui Patricio
 
+        assert (
+            PositionType.Goalkeeper.position_group == PositionType.Goalkeeper
+        )
+        assert (
+            PositionType.CenterDefensiveMidfield.position_group
+            == PositionType.Midfielder
+        )
+        assert (
+            PositionType.AttackingMidfield.position_group
+            == PositionType.Midfielder
+        )
+        assert PositionType.CenterBack.position_group == PositionType.Defender
+        assert PositionType.Striker.position_group == PositionType.Attacker
+
     def test_periods(self, dataset):
         """It should create the periods"""
         assert len(dataset.metadata.periods) == 2
@@ -1271,15 +1285,15 @@ class TestStatsBombAsTrackingDataset:
             AttributeError,
             match=r"'NoneType' object has no attribute 'player_id'",
         ):
-            sb_tracking.to_df(orient="columns")
+            sb_tracking.to_df(layout="wide")
 
         with pytest.raises(
             KloppyParameterError,
             match=r"Row-wise format is only supported for tracking datasets, got DatasetType.EVENT",
         ):
-            dataset.to_df(orient="rows")
+            dataset.to_df(layout="long")
 
-        df = sb_tracking.to_df(orient="rows")
+        df = sb_tracking.to_df(layout="long")
         assert list(df.columns) == [
             "period_id",
             "timestamp",

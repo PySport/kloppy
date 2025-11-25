@@ -363,7 +363,7 @@ class DefaultFrameTransformer:
             return row
 
 
-class RowWiseFrameTransformer:
+class LongLayoutFrameTransformer:
     def __init__(
         self,
         *include: str,

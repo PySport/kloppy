@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -1427,19 +1428,25 @@ class EventDataset(Dataset[Event]):
 
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
-                if event.replacement_player.starting_position:
-                    replacement_player_position = (
-                        event.replacement_player.starting_position
+                if event.replacement_player:
+                    # Prefer explicit position on the substitution event when available.
+                    if event.position is not None:
+                        replacement_player_position = event.position
+                    else:
+                        replacement_player_position = (
+                            event.player.positions.last(
+                                default=PositionType.Unknown
+                            )
+                        )
+                    event.replacement_player.set_position(
+                        event.time,
+                        replacement_player_position,
                     )
+                    event.player.set_position(event.time, None)
                 else:
-                    replacement_player_position = event.player.positions.last(
-                        default=PositionType.Unknown
+                    warnings.warn(
+                        f"No replacement player for substitution event: {event}"
                     )
-                event.replacement_player.set_position(
-                    event.time,
-                    replacement_player_position,
-                )
-                event.player.set_position(event.time, None)
 
             elif isinstance(event, FormationChangeEvent):
                 if event.player_positions:

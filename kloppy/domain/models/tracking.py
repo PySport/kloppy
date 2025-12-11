@@ -176,22 +176,26 @@ class TrackingDataset(Dataset[Frame]):
             CDFTrackingDataSerializer,
             CDFOutputs,
         )
+        from kloppy.io import FileLike, open_as_file
 
         serializer = CDFTrackingDataSerializer()
 
         # TODO: write files but also support non-local files, similar to how open_as_file supports non-local files
 
-        # with write_as_file(metadata_output_file) as metadata_fp, \
-        #     write_as_file(tracking_output_file) as tracking_fp:
+        # Use open_as_file with mode="wb" for writing
+        with open_as_file(
+            metadata_output_file, mode="wb"
+        ) as metadata_fp, open_as_file(
+            tracking_output_file, mode="wb"
+        ) as tracking_fp:
 
-        #     serializer.serialize(
-        #         dataset=self,
-        #         outputs=CDFOutputs(
-        #             meta_data=metadata_fp,
-        #             tracking_data=tracking_fp
-        #         ),
-        #         additional_metadata=additional_metadata
-        #     )
+            serializer.serialize(
+                dataset=self,
+                outputs=CDFOutputs(
+                    meta_data=metadata_fp, tracking_data=tracking_fp
+                ),
+                additional_metadata=additional_metadata,
+            )
 
 
 __all__ = ["Frame", "TrackingDataset", "PlayerData"]

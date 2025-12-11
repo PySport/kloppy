@@ -1,4 +1,4 @@
-from kloppy.domain import PositionType, Ground
+from kloppy.domain import PositionType, Ground, Point3D
 
 PERIODS_MAP = {
     1: "first_half",
@@ -32,12 +32,17 @@ def get_player_coordinates(frame, ground: Ground):
 
 def get_ball_coordinates(frame):
     if frame.ball_coordinates is not None:
-        return {
-            "x": round(frame.ball_coordinates.x, 3),
-            "y": round(frame.ball_coordinates.y, 3),
-            "z": round(frame.ball_coordinates.z, 3),
-        }
-
+        if isinstance(frame.ball_coordinates, Point3D):
+            return {
+                "x": round(frame.ball_coordinates.x, 3),
+                "y": round(frame.ball_coordinates.y, 3),
+                "z": round(frame.ball_coordinates.z, 3),
+            }
+        else:
+            return {
+                "x": round(frame.ball_coordinates.x, 3),
+                "y": round(frame.ball_coordinates.y, 3),
+            }
     # TODO: set to None after new CDF validator update
     return {"x": None, "y": None, "z": None}
 

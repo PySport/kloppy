@@ -76,7 +76,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         Returns:
             bool: True if serialization was successful
         """
-        if all([True for x in dataset if x.ball_state == BallState.ALIVE]):
+        if all(
+            True if x.ball_state == BallState.ALIVE else False for x in dataset
+        ):
             warnings.warn(
                 "All frames in 'tracking_dataset' are 'ALIVE', the Common Data Format expects 'DEAD' frames as well. Set `only_alive=False` in your kloppy `.load_tracking()` call to include 'DEAD' frames.",
                 UserWarning,

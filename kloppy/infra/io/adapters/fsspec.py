@@ -7,6 +7,8 @@ import fsspec
 from kloppy.config import get_config
 from kloppy.exceptions import InputNotFoundError
 
+from kloppy.infra.io.buffered_stream import BufferedStream
+
 from .adapter import Adapter
 
 
@@ -30,7 +32,6 @@ class FSSpecAdapter(Adapter, ABC):
         Get the appropriate fsspec filesystem for the given URL, with caching enabled.
         """
         protocol = self._infer_protocol(url)
-
         if no_cache:
             return fsspec.filesystem(protocol)
 
@@ -62,19 +63,35 @@ class FSSpecAdapter(Adapter, ABC):
         Check if the adapter can handle the URL.
         """
 
-    def read_to_stream(self, url: str, output: BinaryIO):
+    def read_to_stream(self, url: str, output: BufferedStream):
         """
-        Reads content from the given URL and writes it to the provided binary stream.
-        Uses caching for remote files.
+        Reads content from the given URL and writes it to the provided BufferedStream.
+        Uses caching for remote files. Copies data in chunks.
         """
         fs = self._get_filesystem(url)
         compression = self._detect_compression(url)
 
         try:
             with fs.open(url, "rb", compression=compression) as source_file:
-                output.write(source_file.read())
+                output.read_from(source_file)
         except FileNotFoundError as e:
             raise InputNotFoundError(f"Input file not found: {url}") from e
+
+    def write_from_stream(self, url: str, input: BufferedStream, mode: str):
+        """
+        Writes content from BufferedStream to the given URL.
+        Does not use caching for writes. Copies data in chunks.
+
+        Args:
+            url: The destination URL
+            input: BufferedStream to read from
+            mode: Write mode ('wb' for write/overwrite or 'ab' for append)
+        """
+        fs = self._get_filesystem(url, no_cache=True)
+        compression = self._detect_compression(url)
+
+        with fs.open(url, mode, compression=compression) as dest_file:
+            input.write_to(dest_file)
 
     def list_directory(self, url: str, recursive: bool = True) -> List[str]:
         """

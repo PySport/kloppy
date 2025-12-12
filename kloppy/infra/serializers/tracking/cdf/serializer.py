@@ -208,7 +208,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             },
             "teams": {
                 "home": {
-                    "id": self._home_team.team_id,
+                    "id": str(self._home_team.team_id),
                     "players": build_team_players_metadata(
                         self._home_team, home_starters
                     ),
@@ -216,7 +216,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                     "formation": home_formation,
                 },
                 "away": {
-                    "id": self._away_team.team_id,
+                    "id": str(self._away_team.team_id),
                     "players": build_team_players_metadata(
                         self._away_team, away_starters
                     ),

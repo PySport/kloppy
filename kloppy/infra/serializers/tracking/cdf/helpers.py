@@ -202,8 +202,8 @@ def build_periods_info(dataset, period_tracking, home_team, away_team):
                 "end_frame_id": period_tracking["normalized_end_frame_id"][
                     period.id
                 ],
-                "left_team_id": home_team.team_id,
-                "right_team_id": away_team.team_id,
+                "left_team_id": str(home_team.team_id),
+                "right_team_id": str(away_team.team_id),
             }
         )
     return periods_info
@@ -258,8 +258,8 @@ def build_team_players_metadata(team, starters):
     for player in team.players:
         players.append(
             {
-                "id": player.player_id,
-                "team_id": team.team_id,
+                "id": str(player.player_id),
+                "team_id": str(team.team_id),
                 "jersey_number": player.jersey_no,
                 "is_starter": player.player_id in starters,
             }

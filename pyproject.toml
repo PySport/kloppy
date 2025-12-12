@@ -21,7 +21,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -31,13 +30,12 @@ classifiers = [
 
 # ━━━━━━━━━━━━━━━━━━━━━━ Primary Dependencies ━━━━━━━━━━━━━━━━━━━━━━ #
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "lxml>=4.4.0",
     "typing_extensions; python_version < '3.11'",
     "sortedcontainers>=2",
     "fsspec[http]>=2024.12.0",
-    "fsspec[http]<=2025.3.0; python_version <= '3.8'",  # see https://github.com/fsspec/filesystem_spec/issues/1816
     "pytz>=2025.2",
     "python-dateutil>=2.9.0.post0",
 ]
@@ -96,10 +94,6 @@ nb = [
 [tool.uv]
 package = true
 default-groups = ["dev", "docs", "nb"]
-
-[tool.uv.dependency-groups]
-dev = {requires-python = ">=3.9"}
-docs = {requires-python = ">=3.9"}
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Black ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 

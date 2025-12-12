@@ -1,10 +1,10 @@
-import json
-import logging
-import warnings
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Dict, List, Optional
+import json
+import logging
+from typing import Optional
+import warnings
 
 from kloppy.domain import (
     BodyPart,
@@ -75,7 +75,7 @@ formations = {
     "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
 }
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "GK": PositionType.Goalkeeper,
     "LB": PositionType.LeftBack,
     "LWB": PositionType.LeftWingBack,
@@ -229,7 +229,7 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     return team
 
 
-def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+def _create_shot_result_coordinates(raw_event: dict) -> Optional[Point]:
     """Estimate the shot end location from the Wyscout tags."""
     if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED.code:
         return Point(
@@ -244,8 +244,8 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
         return result_coordinates
 
 
-def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
-    qualifiers: List[Qualifier] = []
+def _generic_qualifiers(raw_event: dict) -> list[Qualifier]:
+    qualifiers: list[Qualifier] = []
 
     counter_attack_qualifier = CounterAttackQualifier(False)
     if raw_event["possession"]:
@@ -256,7 +256,7 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_shot(raw_event: Dict) -> Dict:
+def _parse_shot(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     if raw_event["type"]["primary"] == "own_goal":
         result = ShotResult.OWN_GOAL
@@ -299,7 +299,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
 
 
 def _check_secondary_event_types(
-    raw_event, secondary_event_types_values: List[str]
+    raw_event, secondary_event_types_values: list[str]
 ) -> bool:
     return any(
         secondary_event_types in secondary_event_types_values
@@ -307,7 +307,7 @@ def _check_secondary_event_types(
     )
 
 
-def _pass_qualifiers(raw_event) -> List[Qualifier]:
+def _pass_qualifiers(raw_event) -> list[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
 
     qualifier_mapping = {
@@ -332,7 +332,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
+def _parse_pass(raw_event: dict, next_event: dict, team: Team) -> dict:
     pass_result = None
     receiver_player = None
     if len(raw_event["pass"]["endLocation"]) > 1:
@@ -380,7 +380,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     }
 
 
-def _parse_foul(raw_event: Dict) -> Dict:
+def _parse_foul(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -388,7 +388,7 @@ def _parse_foul(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_card(raw_event: Dict) -> Dict:
+def _parse_card(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     card_type = None
     if _check_secondary_event_types(raw_event, ["yellow_card"]):
@@ -399,7 +399,7 @@ def _parse_card(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
 
-def _parse_recovery(raw_event: Dict) -> Dict:
+def _parse_recovery(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -407,7 +407,7 @@ def _parse_recovery(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict) -> Dict:
+def _parse_clearance(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -415,7 +415,7 @@ def _parse_clearance(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_interception(raw_event: dict, next_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = InterceptionResult.SUCCESS
 
@@ -446,7 +446,7 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
-def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
+def _parse_carry(raw_event: dict, next_event: dict, start_ts: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     carry_info = raw_event["carry"]
     end_coordinates = Point(
@@ -473,7 +473,7 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     }
 
 
-def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
+def _parse_goalkeeper_save(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
 
     goalkeeper_qualifiers = []
@@ -491,12 +491,12 @@ def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_ball_out(raw_event: Dict) -> Dict:
+def _parse_ball_out(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
+def _parse_set_piece(raw_event: dict, next_event: dict, team: Team) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = {}
 
@@ -513,9 +513,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_pass(raw_event, next_event, team)
-    elif (
-        raw_event["type"]["primary"] == "corner"
-    ) and "shot" not in raw_event["type"]["secondary"]:
+    elif (raw_event["type"]["primary"] == "corner") and "shot" not in raw_event[
+        "type"
+    ]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
@@ -537,7 +537,7 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_take_on(raw_event: Dict) -> Dict:
+def _parse_take_on(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = None
     if "offensive_duel" in raw_event["type"]["secondary"]:
@@ -559,7 +559,7 @@ def _parse_take_on(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
-def _parse_duel(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     duel_qualifiers = []
     secondary_types = raw_event["type"]["secondary"]
@@ -624,12 +624,10 @@ def _parse_duel(raw_event: Dict) -> Dict:
 
 
 def _create_timestamp_timedelta(
-    raw_event: Dict, start_ts: Dict, period_id: int
+    raw_event: dict, start_ts: dict, period_id: int
 ) -> timedelta:
     time_delta = (
-        timedelta(
-            seconds=float(raw_event["second"] + raw_event["minute"] * 60)
-        )
+        timedelta(seconds=float(raw_event["second"] + raw_event["minute"] * 60))
         - start_ts[period_id]
     )
 
@@ -654,9 +652,9 @@ def _get_team_formation(team_formation):
 
 def get_home_away_team_formation(event, team):
     team_formation = event["team"]["formation"]
-    team_id = str(event["team"]["id"])
+    str(event["team"]["id"])
     opponent_formation = event["opponentTeam"]["formation"]
-    opponent_team_id = str(event["opponentTeam"]["id"])
+    str(event["opponentTeam"]["id"])
 
     if team.ground == Ground.HOME:
         home_team_formation = _get_team_formation(team_formation)
@@ -697,7 +695,7 @@ def identify_synthetic_formation_change_event(
     return event_formation_change_info
 
 
-def _players_to_dict(players: List[Player]):
+def _players_to_dict(players: list[Player]):
     return {player.player_id: player for player in players}
 
 
@@ -803,20 +801,10 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_coach = None
             coaches = raw_events.get("coaches")
             if coaches:
-                if (
-                    home_team_id in coaches
-                    and "coach" in coaches[home_team_id]
-                ):
-                    home_coach = coaches[home_team_id]["coach"].get(
-                        "shortName"
-                    )
-                if (
-                    away_team_id in coaches
-                    and "coach" in coaches[away_team_id]
-                ):
-                    away_coach = coaches[away_team_id]["coach"].get(
-                        "shortName"
-                    )
+                if home_team_id in coaches and "coach" in coaches[home_team_id]:
+                    home_coach = coaches[home_team_id]["coach"].get("shortName")
+                if away_team_id in coaches and "coach" in coaches[away_team_id]:
+                    away_coach = coaches[away_team_id]["coach"].get("shortName")
 
             periods = create_periods(raw_events, start_ts)
 

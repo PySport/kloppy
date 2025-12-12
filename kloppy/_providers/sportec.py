@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
@@ -17,7 +17,7 @@ from kloppy.utils import deprecated
 def load_event(
     event_data: FileLike,
     meta_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -39,9 +39,10 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return serializer.deserialize(
             SportecEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp
@@ -77,9 +78,10 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=SportecTrackingDataInputs(
                 meta_data=meta_data_fp, raw_data=raw_data_fp
@@ -91,7 +93,7 @@ def load_tracking(
 def load(
     event_data: FileLike,
     meta_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -113,9 +115,7 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
         "J03WR9": {"meta": 51643490, "event": 51643511, "tracking": 51643532},
     }
     # URL constant
-    DATA_URL = (
-        "https://springernature.figshare.com/ndownloader/files/{file_id}"
-    )
+    DATA_URL = "https://springernature.figshare.com/ndownloader/files/{file_id}"
 
     if data_type not in ["meta", "event", "tracking"]:
         raise ValueError(
@@ -130,7 +130,7 @@ def get_IDSSE_url(match_id: str, data_type: str) -> str:
 
 def load_open_event_data(
     match_id: str = "J03WPY",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:

@@ -1,6 +1,6 @@
-import html
 from datetime import timedelta
-from typing import Dict, Optional
+import html
+from typing import Optional
 
 from kloppy.domain import (
     Period,
@@ -9,7 +9,7 @@ from kloppy.domain import (
     Team,
 )
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "G": PositionType.Goalkeeper,
     "D": PositionType.Defender,
     "M": PositionType.Midfielder,

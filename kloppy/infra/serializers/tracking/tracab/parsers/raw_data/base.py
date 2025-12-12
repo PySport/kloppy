@@ -5,7 +5,8 @@ class to extract the tracking data frames.
 """
 
 from abc import ABC, abstractmethod
-from typing import IO, Iterator, List, Tuple
+from collections.abc import Iterator
+from typing import IO
 
 from kloppy.domain import Frame, Period, Team
 
@@ -16,8 +17,8 @@ class TracabDataParser(ABC):
     def __init__(
         self,
         feed: IO[bytes],
-        periods: List[Period],
-        teams: Tuple[Team, Team],
+        periods: list[Period],
+        teams: tuple[Team, Team],
         frame_rate: int,
     ) -> None:
         """Initialize the parser with the data stream and metadata.

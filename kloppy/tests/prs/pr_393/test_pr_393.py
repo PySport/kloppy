@@ -1,8 +1,5 @@
-import pytest
-
 from kloppy import wyscout
 from kloppy.domain import EventType, ShotResult
-from kloppy.exceptions import DeserializationWarning
 
 
 def test_recognition_of_own_goal(base_dir):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -9,15 +8,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    List,
     Optional,
-    Type,
     TypeVar,
     Union,
     cast,
 )
+import warnings
 
 from kloppy.domain.models.common import (
     AttackingDirection,
@@ -40,6 +37,8 @@ from .formation import FormationType
 from .pitch import Point
 
 if TYPE_CHECKING:
+    from pandas import DataFrame
+
     from ..services.transformers.data_record import NamedColumns
     from .tracking import Frame
 
@@ -206,9 +205,7 @@ class NoResultMixin:
 
     result: None
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: str | Callable[[Event], bool] | None) -> bool:
         return super().matches(filter_)  # type: ignore
 
 
@@ -220,9 +217,7 @@ class ResultMixin(Generic[ResultT]):
 
     result: ResultT
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: str | Callable[[Event], bool] | None) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -349,7 +344,7 @@ class Qualifier(Generic[QualifierValueType], ABC):
     value: QualifierValueType
 
     @abstractmethod
-    def to_dict(self) -> Dict[str, QualifierValueType]:
+    def to_dict(self) -> dict[str, QualifierValueType]:
         """
         Return the qualifier as a dict.
         """
@@ -367,7 +362,7 @@ class BoolQualifier(Qualifier[bool], ABC):
     An event qualifier with a true/false value.
     """
 
-    def to_dict(self) -> Dict[str, bool]:
+    def to_dict(self) -> dict[str, bool]:
         return {f"is_{self.name}": self.value}
 
 
@@ -376,7 +371,7 @@ class EnumQualifier(Qualifier[EnumQualifierType], ABC):
     An event qualifier with a set of possible values.
     """
 
-    def to_dict(self) -> Dict[str, EnumQualifierType]:
+    def to_dict(self) -> dict[str, EnumQualifierType]:
         return {f"{self.name}_type": self.value.value}
 
 
@@ -627,10 +622,10 @@ class NoQualifierMixin:
 
     qualifiers: None
 
-    def get_qualifier_value(self, qualifier_type: Type[Qualifier]) -> None:
+    def get_qualifier_value(self, qualifier_type: type[Qualifier]) -> None:
         return None
 
-    def get_qualifier_values(self, qualifier_type: Type[Qualifier]) -> List:
+    def get_qualifier_values(self, qualifier_type: type[Qualifier]) -> list:
         return []
 
 
@@ -640,9 +635,9 @@ class QualifierMixin(Generic[QualifierT]):
     Mixin for event types that can have additional qualifiers.
     """
 
-    qualifiers: List[QualifierT]
+    qualifiers: list[QualifierT]
 
-    def get_qualifier_value(self, qualifier_type: Type[QualifierT]):
+    def get_qualifier_value(self, qualifier_type: type[QualifierT]):
         """
         Returns the Qualifier of a certain type, or None if qualifier is not present.
 
@@ -663,7 +658,7 @@ class QualifierMixin(Generic[QualifierT]):
                 return qualifier.value
         return None
 
-    def get_qualifier_values(self, qualifier_type: Type[QualifierT]):
+    def get_qualifier_values(self, qualifier_type: type[QualifierT]):
         """
         Returns all Qualifiers of a certain type, or None if qualifier is not present.
 
@@ -720,10 +715,10 @@ class Event(DataRecord, ABC):
     coordinates: Point
 
     raw_event: object
-    state: Dict[str, Any]
-    related_event_ids: List[str]
+    state: dict[str, Any]
+    related_event_ids: list[str]
 
-    freeze_frame: Optional["Frame"]
+    freeze_frame: Frame | None
 
     @property
     def record_id(self) -> str:
@@ -757,7 +752,7 @@ class Event(DataRecord, ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def get_related_events(self) -> List[Event]:
+    def get_related_events(self) -> list[Event]:
         if not self.dataset:
             raise OrphanedRecordError()
 
@@ -767,9 +762,7 @@ class Event(DataRecord, ABC):
             if (event := self.dataset.get_record_by_id(event_id)) is not None
         ]
 
-    def get_related_event(
-        self, type_: Union[str, EventType]
-    ) -> Optional[Event]:
+    def get_related_event(self, type_: str | EventType) -> Event | None:
         event_type = (
             EventType[type_.upper()] if isinstance(type_, str) else type_
         )
@@ -780,74 +773,66 @@ class Event(DataRecord, ABC):
 
     """Define all related events for easy access"""
 
-    def related_pass(self) -> Optional[PassEvent]:
-        return cast(
-            Optional[PassEvent], self.get_related_event(EventType.PASS)
-        )
+    def related_pass(self) -> PassEvent | None:
+        return cast(Optional[PassEvent], self.get_related_event(EventType.PASS))
 
-    def related_shot(self) -> Optional[ShotEvent]:
-        return cast(
-            Optional[ShotEvent], self.get_related_event(EventType.SHOT)
-        )
+    def related_shot(self) -> ShotEvent | None:
+        return cast(Optional[ShotEvent], self.get_related_event(EventType.SHOT))
 
-    def related_take_on(self) -> Optional[TakeOnEvent]:
+    def related_take_on(self) -> TakeOnEvent | None:
         return cast(
             Optional[TakeOnEvent], self.get_related_event(EventType.TAKE_ON)
         )
 
-    def related_carry(self) -> Optional[CarryEvent]:
+    def related_carry(self) -> CarryEvent | None:
         return cast(
             Optional[CarryEvent], self.get_related_event(EventType.CARRY)
         )
 
-    def related_substitution(self) -> Optional[SubstitutionEvent]:
+    def related_substitution(self) -> SubstitutionEvent | None:
         return cast(
             Optional[SubstitutionEvent],
             self.get_related_event(EventType.SUBSTITUTION),
         )
 
-    def related_card(self) -> Optional[CardEvent]:
-        return cast(
-            Optional[CardEvent], self.get_related_event(EventType.CARD)
-        )
+    def related_card(self) -> CardEvent | None:
+        return cast(Optional[CardEvent], self.get_related_event(EventType.CARD))
 
-    def related_player_on(self) -> Optional[PlayerOnEvent]:
+    def related_player_on(self) -> PlayerOnEvent | None:
         return cast(
             Optional[PlayerOnEvent],
             self.get_related_event(EventType.PLAYER_ON),
         )
 
-    def related_player_off(self) -> Optional[PlayerOffEvent]:
+    def related_player_off(self) -> PlayerOffEvent | None:
         return cast(
             Optional[PlayerOffEvent],
             self.get_related_event(EventType.PLAYER_OFF),
         )
 
-    def related_recovery(self) -> Optional[RecoveryEvent]:
+    def related_recovery(self) -> RecoveryEvent | None:
         return cast(
             Optional[RecoveryEvent], self.get_related_event(EventType.RECOVERY)
         )
 
-    def related_ball_out(self) -> Optional[BallOutEvent]:
+    def related_ball_out(self) -> BallOutEvent | None:
         return cast(
             Optional[BallOutEvent], self.get_related_event(EventType.BALL_OUT)
         )
 
-    def related_foul_committed(self) -> Optional[FoulCommittedEvent]:
+    def related_foul_committed(self) -> FoulCommittedEvent | None:
         return cast(
             Optional[FoulCommittedEvent],
             self.get_related_event(EventType.FOUL_COMMITTED),
         )
 
-    def related_formation_change(self) -> Optional[FormationChangeEvent]:
+    def related_formation_change(self) -> FormationChangeEvent | None:
         return cast(
             Optional[FormationChangeEvent],
             self.get_related_event(EventType.FORMATION_CHANGE),
         )
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Event], bool]]]
-    ) -> bool:
+    def matches(self, filter_: str | Callable[[Event], bool] | None) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -947,7 +932,7 @@ class ShotEvent(
         qualifiers: A list of qualifiers providing additional information about the shot.
     """
 
-    result_coordinates: Optional[Point] = None
+    result_coordinates: Point | None = None
 
     @property
     def event_type(self) -> EventType:
@@ -985,9 +970,9 @@ class PassEvent(
         qualifiers: A list of qualifiers providing additional information about the pass.
     """
 
-    receive_timestamp: Optional[Time] = None
-    receiver_player: Optional[Player] = None
-    receiver_coordinates: Optional[Point] = None
+    receive_timestamp: Time | None = None
+    receiver_player: Player | None = None
+    receiver_coordinates: Point | None = None
 
     @property
     def event_type(self) -> EventType:
@@ -1150,7 +1135,7 @@ class SubstitutionEvent(NoQualifierMixin, NoResultMixin, Event):
     """
 
     replacement_player: Player
-    position: Optional[PositionType] = None
+    position: PositionType | None = None
 
     @property
     def event_type(self) -> EventType:
@@ -1238,7 +1223,7 @@ class FormationChangeEvent(NoQualifierMixin, NoResultMixin, Event):
     """
 
     formation_type: FormationType
-    player_positions: Optional[Dict[Player, PositionType]] = None
+    player_positions: dict[Player, PositionType] | None = None
 
     @property
     def event_type(self) -> EventType:
@@ -1486,7 +1471,7 @@ class EventDataset(Dataset[Event]):
     def events(self):
         return self.records
 
-    def get_event_by_id(self, event_id: str) -> Optional[Event]:
+    def get_event_by_id(self, event_id: str) -> Event | None:
         return self.get_record_by_id(event_id)
 
     def add_state(self, *builder_keys):
@@ -1502,9 +1487,9 @@ class EventDataset(Dataset[Event]):
     )
     def to_pandas(
         self,
-        record_converter: Optional[Callable[[Event], Dict]] = None,
-        additional_columns: Optional[NamedColumns] = None,
-    ) -> "DataFrame":
+        record_converter: Callable[[Event], dict] | None = None,
+        additional_columns: NamedColumns | None = None,
+    ) -> "DataFrame":  # noqa F821
         try:
             import pandas as pd
         except ImportError:
@@ -1535,7 +1520,7 @@ class EventDataset(Dataset[Event]):
             map(generic_record_converter, self.records)
         )
 
-    def aggregate(self, type_: str, **aggregator_kwargs) -> List[Any]:
+    def aggregate(self, type_: str, **aggregator_kwargs) -> list[Any]:
         if type_ == "minutes_played":
             from kloppy.domain.services.aggregators.minutes_played import (
                 MinutesPlayedAggregator,

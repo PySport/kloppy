@@ -1,4 +1,4 @@
-from typing import IO, List, Optional, Tuple
+from typing import IO, Optional
 
 from lxml import objectify
 
@@ -41,8 +41,8 @@ def get_metadata_parser(
 
 def get_raw_data_parser(
     feed: IO[bytes],
-    periods: List[Period],
-    teams: Tuple[Team, Team],
+    periods: list[Period],
+    teams: tuple[Team, Team],
     frame_rate: int,
     feed_format: Optional[str] = None,
 ) -> TracabDataParser:

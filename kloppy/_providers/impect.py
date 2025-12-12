@@ -1,13 +1,13 @@
+from typing import Optional, Union
 import warnings
-from typing import Union
 
 from kloppy.config import get_config
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.infra.serializers.event.impect import (
     ImpectDeserializer,
     ImpectInputs,
 )
-from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike, Source
+from kloppy.io import FileLike, Source, open_as_file
 
 
 def load(
@@ -15,7 +15,7 @@ def load(
     lineup_data: FileLike,
     squads_data: Optional[FileLike] = None,
     players_data: Optional[FileLike] = None,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -39,13 +39,16 @@ def load(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(squads_data, optional=True)
-    ) as squads_data_fp, open_as_file(
-        Source.create(players_data, optional=True)
-    ) as players_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(squads_data, optional=True)
+        ) as squads_data_fp,
+        open_as_file(
+            Source.create(players_data, optional=True)
+        ) as players_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=ImpectInputs(
                 event_data=event_data_fp,
@@ -59,7 +62,7 @@ def load(
 def load_open_data(
     match_id: Union[str, int] = "122838",
     competition_id: Union[str, int] = "743",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -92,9 +95,7 @@ def load_open_data(
         "\n"
     )
 
-    base_url = (
-        "https://raw.githubusercontent.com/ImpectAPI/open-data/main/data"
-    )
+    base_url = "https://raw.githubusercontent.com/ImpectAPI/open-data/main/data"
 
     return load(
         event_data=f"{base_url}/events/events_{match_id}.json",

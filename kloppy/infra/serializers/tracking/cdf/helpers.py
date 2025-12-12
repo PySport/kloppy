@@ -1,5 +1,7 @@
 from kloppy.domain import PositionType, Ground, Point3D
 
+import warnings
+
 PERIODS_MAP = {
     1: "first_half",
     2: "second_half",
@@ -9,6 +11,56 @@ PERIODS_MAP = {
 }
 
 
+def is_valid_cdf_position_code(x):
+    from cdf.validators.common import POSITION_GROUPS
+
+    return any(x in positions for positions in POSITION_GROUPS.values())
+
+
+def map_position_type_code_to_cdf(position_code):
+    """
+    Docstring for map_position_type_code_to_cdf
+
+    :param position_code: Description
+    """
+    if is_valid_cdf_position_code(position_code):
+        return position_code
+    else:
+        if position_code == "UNK":
+            warnings.warn(
+                f"""position_code '{position_code}' identified within dataset.
+                \nThis means there is no appropriate mapping from the original position type (as provided by your data provider) to a kloppy.domain.PositionType.
+                \nTo resolve this, please open an issue at https://github.com/PySport/kloppy/issues""",
+                UserWarning,
+            )
+            return None
+        elif position_code in ["DEF", "FB", "MID", "WM", "ATT"]:
+            warnings.warn(
+                f"""position_code '{position_code}' identified within dataset.
+                \nThere is no appropriate mapping for this position to Common Data Format.""",
+                UserWarning,
+            )
+            return None
+        elif position_code == "LWB":
+            return "LB"
+        elif position_code == "RWB":
+            return "RB"
+        elif position_code == "DM":
+            return "CDM"
+        elif position_code == "AM":
+            return "CAM"
+        elif position_code == "LF":
+            return "LCF"
+        elif position_code == "ST":
+            return "CF"
+        elif position_code == "RF":
+            return "RCF"
+        else:
+            raise ValueError(
+                f"position.code '{position_code}' cannot be converted to CDF, because there is no appropriate mapping."
+            )
+
+
 def extract_team_players(team):
     """Extract player IDs from a team."""
     return [player.player_id for player in team.players]
@@ -16,15 +68,18 @@ def extract_team_players(team):
 
 def get_player_coordinates(frame, ground: Ground):
     """Create player data list for a team from frame coordinates."""
+
     players = []
     for player, coordinates in frame.players_coordinates.items():
         if player.team.ground == ground:
             players.append(
                 {
-                    "id": player.player_id,
+                    "id": str(player.player_id),
                     "x": round(coordinates.x, 3),
                     "y": round(coordinates.y, 3),
-                    "position": player.starting_position.code,
+                    "position": map_position_type_code_to_cdf(
+                        player.starting_position.code
+                    ),
                 }
             )
     return players
@@ -43,7 +98,7 @@ def get_ball_coordinates(frame):
                 "x": round(frame.ball_coordinates.x, 3),
                 "y": round(frame.ball_coordinates.y, 3),
             }
-    # TODO: set to None after new CDF validator update
+
     return {"x": None, "y": None, "z": None}
 
 
@@ -77,9 +132,9 @@ def update_period_tracking(period_tracking, period_id, original_frame_id):
                 period_tracking["offset"][period_id - 1] + prev_period_length
             )
 
-        period_tracking["normalized_start_frame_id"][period_id] = (
-            period_tracking["offset"][period_id]
-        )
+        period_tracking["normalized_start_frame_id"][
+            period_id
+        ] = period_tracking["offset"][period_id]
 
     period_tracking["end_frame_id"][period_id] = original_frame_id
 

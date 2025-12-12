@@ -146,12 +146,12 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "ball_status": ball_status,
                 "teams": {
                     "home": {
-                        "id": self._home_team.team_id,
+                        "id": str(self._home_team.team_id),
                         "players": home_players,
                         "name": self._home_team.name,
                     },
                     "away": {
-                        "id": self._away_team.team_id,
+                        "id": str(self._away_team.team_id),
                         "players": away_players,
                         "name": self._away_team.name,
                     },
@@ -231,6 +231,7 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                 "ball": None,
                 "meta": None,
                 "cdf": None,
+                "event": None,
             },
         }
 

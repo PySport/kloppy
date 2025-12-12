@@ -7,11 +7,14 @@ import cdf
 import json
 import warnings
 
-from kloppy import sportec
-from kloppy.domain import TrackingDataset
+from kloppy import sportec, skillcorner
+from kloppy.domain import TrackingDataset, PositionType
 from kloppy.infra.serializers.tracking.cdf.serializer import (
     CDFTrackingDataSerializer,
     CDFOutputs,
+)
+from kloppy.infra.serializers.tracking.cdf.helpers import (
+    is_valid_cdf_position_code,
 )
 
 
@@ -25,6 +28,14 @@ class TestCDFSerializer:
         return base_dir / "files/sportec_meta.xml"
 
     @pytest.fixture
+    def meta_data_v3(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_meta_data.json"
+
+    @pytest.fixture
+    def raw_data_v3(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_v3_raw_data.jsonl"
+
+    @pytest.fixture
     def dataset(self, raw_data: Path, meta_data: Path) -> TrackingDataset:
         """Load a small Sportec tracking data snippet for testing CDF serialization."""
         return sportec.load_tracking(
@@ -32,6 +43,18 @@ class TestCDFSerializer:
             meta_data=meta_data,
             coordinates="sportec",
             limit=None,
+            only_alive=False,
+        )
+
+    @pytest.fixture
+    def test_correct_deserialization_v3(
+        self, raw_data_v3: Path, meta_data_v3: Path
+    ):
+        return skillcorner.load(
+            meta_data=meta_data_v3,
+            raw_data=raw_data_v3,
+            coordinates="skillcorner",
+            include_empty_frames=True,
             only_alive=False,
         )
 
@@ -285,3 +308,35 @@ class TestCDFSerializer:
         # Clean up
         Path(meta_path).unlink()
         Path(tracking_path).unlink()
+
+    def test_cdf_positions(self):
+        """
+        Make sure we have not introduced any non-cdf supported positions to kloppy PositionType.
+        If we did, update map_position_type_code_to_cdf
+        """
+
+        test_list = []
+
+        for position in PositionType:
+            if is_valid_cdf_position_code(position.code):
+                pass
+            else:
+                test_list.append(position.code)
+
+        assert set(test_list) == set(
+            [
+                "UNK",
+                "DEF",
+                "FB",
+                "LWB",
+                "RWB",
+                "MID",
+                "DM",
+                "AM",
+                "WM",
+                "ATT",
+                "LF",
+                "ST",
+                "RF",
+            ]
+        )

@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 frame_rate = 10
 
 position_types_mapping: dict[int, PositionType] = {
-    1: PositionType.Unknown,
+    0: PositionType.Goalkeeper,
+    1: PositionType.Unknown,  # Does not exist
     2: PositionType.CenterBack,  # Provider: CB
     3: PositionType.LeftCenterBack,  # Provider: LCB
     4: PositionType.RightCenterBack,  # Provider: RCB
@@ -52,6 +53,11 @@ position_types_mapping: dict[int, PositionType] = {
     15: PositionType.Striker,  # Provider: CF (mapped to Striker)
     16: PositionType.RightForward,  # Provider: RF
     17: PositionType.Unknown,  # Provider: SUB (mapped to Unknown)
+    18: PositionType.Unknown,  # Does not exist
+    19: PositionType.LeftBack,
+    20: PositionType.RightBack,
+    21: PositionType.LeftDefensiveMidfield,
+    22: PositionType.RightDefensiveMidfield,
 }
 
 

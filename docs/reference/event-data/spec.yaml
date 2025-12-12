@@ -15,6 +15,8 @@ event_types:
         status: parsed
       metrica_json:
         status: parsed
+      impect:
+        status: parsed
     attributes:
       time:
         providers:
@@ -80,6 +82,9 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 1/'PASS'
+      impect:
+        status: parsed
+        implementation: event type 'PASS', 'KICK_OFF', 'THROW_IN', 'FREE_KICK', 'PENALTY_KICK', 'GOAL_KICK', or 'CORNER'
     attributes:
       receive_timestamp:
         providers:
@@ -187,6 +192,9 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 2/'SHOT'
+      impect:
+        status: parsed
+        implementation: event type 'SHOT'
     attributes:
       result_coordinates:
         providers:
@@ -339,6 +347,9 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 10/'CARRY'
+      impect:
+        status: parsed
+        implementation: event type 'DRIBBLE'
     attributes:
       end_timestamp:
         providers:
@@ -397,6 +408,9 @@ event_types:
       metrica_json:
         status: not implemented
         implementation: null
+      impect:
+        status: parsed
+        implementation: event type 'CLEARANCE'
   kloppy.domain.InterceptionEvent:
     providers:
       statsbomb:
@@ -417,6 +431,9 @@ event_types:
       metrica_json:
         status: not implemented
         implementation: null
+      impect:
+        status: parsed
+        implementation: event type 'INTERCEPTION'
     attributes:
       result:
         providers:
@@ -458,6 +475,9 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      impect:
+        status: parsed
+        implementation: event type 'GROUND_DUEL' or 'AERIAL_DUEL'
     attributes:
       result:
         providers:
@@ -498,6 +518,9 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      impect:
+        status: parsed
+        implementation: parsed from metadata
     attributes:
       replacement_player:
         providers:
@@ -524,6 +547,9 @@ event_types:
       metrica_json:
         status: not implemented
         implementation: null
+      impect:
+        status: parsed
+        implementation: event type 'YELLOW_CARD', 'SECOND_YELLOW_CARD', or 'RED_CARD'
     attributes:
       card_type:
         providers:
@@ -597,6 +623,9 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 3/'RECOVERY'
+      impect:
+        status: parsed
+        implementation: event type 'LOOSE_BALL_REGAIN'
   kloppy.domain.MiscontrolEvent:
     providers:
       statsbomb:
@@ -654,6 +683,9 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 4/'FAULT RECEIVED'
+      impect:
+        status: parsed
+        implementation: event type 'FOUL'
   kloppy.domain.GoalkeeperEvent:
     providers:
       statsbomb:
@@ -674,6 +706,9 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      impect:
+        status: parsed
+        implementation: event type 'GK_SAVE' or 'GK_CATCH'
   kloppy.domain.PressureEvent:
     providers:
       statsbomb:

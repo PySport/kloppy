@@ -8,6 +8,7 @@ from kloppy.infra.serializers.tracking.skillcorner import (
     SkillCornerInputs,
 )
 from kloppy.io import FileLike, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
@@ -18,6 +19,7 @@ def load(
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
     data_version: Optional[str] = None,
+    only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
     """
     Load SkillCorner broadcast tracking data.
@@ -29,6 +31,7 @@ def load(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         include_empty_frames: Include frames in which no objects were tracked.
+        only_alive: Only include frames in which the game is not paused.
         data_version: Specify the input data version.
 
     Returns:
@@ -46,6 +49,7 @@ def load(
         coordinate_system=coordinates,
         include_empty_frames=include_empty_frames,
         data_version=data_version,
+        only_alive=only_alive,
     )
     with open_as_file(meta_data) as meta_data_fp, open_as_file(
         raw_data
@@ -58,11 +62,12 @@ def load(
 
 
 def load_open_data(
-    match_id: Union[str, int] = "4039",
+    match_id: Union[str, int] = "1925299",
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
+    only_alive: Optional[bool] = True,
 ) -> TrackingDataset:
     """
     Load SkillCorner open data.
@@ -76,17 +81,27 @@ def load_open_data(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         include_empty_frames: Include frames in which no objects were tracked.
+        only_alive: Only include frames in which the game is not dead.
 
     Returns:
         The parsed tracking data.
     """
     return load(
-        meta_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/match_data.json",
-        raw_data=f"https://raw.githubusercontent.com/SkillCorner/opendata/master/data/matches/{match_id}/structured_data.json",
+        meta_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/{match_id}_match.json",
+        ),
+        raw_data=github_resolve_raw_data_url(
+            repository="SkillCorner/opendata",
+            branch="master",
+            file=f"data/matches/{match_id}/{match_id}_tracking_extrapolated.jsonl",
+        ),
         sample_rate=sample_rate,
         limit=limit,
         coordinates=coordinates,
         include_empty_frames=include_empty_frames,
+        only_alive=only_alive,
     )
 
 

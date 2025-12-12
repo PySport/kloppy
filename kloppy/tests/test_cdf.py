@@ -30,9 +30,6 @@ def mimimum_valid_cdf_output(
             additional_metadata={},
         )
 
-    with pytest.raises(Exception, match="'version' is a required property"):
-        meta_data_validator.validate_schema(sample=meta_path)
-
     dataset.to_cdf(
         metadata_output_file=str(meta_path),
         tracking_output_file=str(tracking_path),

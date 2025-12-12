@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 import warnings
 
-MISSING_MANDATORY_ID = "MISSING_MANDATORY_ID"
+MISSING_MANDATORY_VALUE = "MISSING_MANDATORY_VALUE"
 
 
 class CDFOutputs(NamedTuple):
@@ -195,13 +195,13 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
 
         return {
             "competition": {
-                "id": MISSING_MANDATORY_ID,
+                "id": MISSING_MANDATORY_VALUE,
             },
             "season": {
-                "id": MISSING_MANDATORY_ID,
+                "id": MISSING_MANDATORY_VALUE,
             },
             "stadium": {
-                "id": MISSING_MANDATORY_ID,
+                "id": MISSING_MANDATORY_VALUE,
                 "pitch_length": dataset.metadata.pitch_dimensions.pitch_length,
                 "pitch_width": dataset.metadata.pitch_dimensions.pitch_width,
             },
@@ -239,6 +239,8 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
                     "fps": dataset.metadata.frame_rate,
                     "name": dataset.metadata.provider.name.lower(),
                     "converted_by": f"kloppy-cdf-converter-{__version__}",
+                    "version": MISSING_MANDATORY_VALUE,
+                    "collection_timing": MISSING_MANDATORY_VALUE,
                 },
                 "landmarks": None,
                 "ball": None,
@@ -286,9 +288,9 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         for key, value in metadata.items():
             current_path = f"{path}.{key}" if path else key
 
-            if value == MISSING_MANDATORY_ID:
+            if value == MISSING_MANDATORY_VALUE:
                 warnings.warn(
-                    f"Missing mandatory ID at '{current_path}'. Currently replaced with the value '{MISSING_MANDATORY_ID}'. "
+                    f"Missing mandatory ID at '{current_path}'. Currently replaced with the value '{MISSING_MANDATORY_VALUE}'. "
                     f"Please provide the correct value to 'additional_metadata' to completely adhere to the CDF specification.",
                     UserWarning,
                 )

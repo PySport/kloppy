@@ -130,7 +130,8 @@ def serializer_handles_invalid_metadata_types(dataset):
             "meta": {
                 "tracking": {
                     "fps": "25",  # Should be int
-                    "version": 1.0,  # Should be string
+                    "version": 1.0,  # Should be string,
+                    "collection_timing": "Nothing",
                 }
             },
         }

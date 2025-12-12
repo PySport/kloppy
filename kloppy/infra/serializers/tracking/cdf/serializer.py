@@ -11,6 +11,7 @@ from kloppy.domain import (
     Ground,
 )
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
+from kloppy import __version__
 
 from .helpers import (
     PERIODS_MAP,
@@ -169,6 +170,14 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
         period_tracking,
     ) -> "CdfMetaDataSchema":
         """Build default CDF metadata structure from dataset."""
+        try:
+            from cdf import VERSION
+        except ImportError:
+            raise ImportError(
+                "Seems like you don't have common-data-format-validator installed. Please"
+                " install it using: pip install common-data-format-validator"
+            )
+
         first_frame = dataset[0]
 
         home_starters, home_formation = get_starters_and_formation(
@@ -226,11 +235,15 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             },
             "meta": {
                 "video": None,
-                "tracking": None,
+                "tracking": {
+                    "fps": dataset.metadata.frame_rate,
+                    "name": dataset.metadata.provider.name.lower(),
+                    "converted_by": f"kloppy-cdf-converter-{__version__}",
+                },
                 "landmarks": None,
                 "ball": None,
                 "meta": None,
-                "cdf": None,
+                "cdf": {"version": VERSION},
                 "event": None,
             },
         }

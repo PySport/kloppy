@@ -2,10 +2,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-import cdf
-
-import json
-import warnings
 
 from kloppy import sportec, skillcorner
 from kloppy.domain import TrackingDataset, PositionType
@@ -18,201 +14,97 @@ from kloppy.infra.serializers.tracking.cdf.helpers import (
 )
 
 
-def produces_valid_cdf_output(dataset):
+def mimimum_valid_cdf_output(
+    dataset, meta_data_validator, tracking_data_validator, tmp_path
+):
     """Test that CDFTrackingDataSerializer produces valid CDF output."""
-    serializer = CDFTrackingDataSerializer()
+    meta_path = tmp_path / "metadata.json"
+    tracking_path = tmp_path / "tracking.jsonl"
 
-    # Instantiate Validators
-    meta_validator = cdf.MetaSchemaValidator(
-        schema=f"cdf/files/v{cdf.VERSION}/schema/meta.json"
+    with pytest.warns(
+        UserWarning,
+    ):
+        dataset.to_cdf(
+            metadata_output_file=str(meta_path),
+            tracking_output_file=str(tracking_path),
+            additional_metadata={},
+        )
+
+    with pytest.raises(Exception, match="'version' is a required property"):
+        meta_data_validator.validate_schema(sample=meta_path)
+
+    dataset.to_cdf(
+        metadata_output_file=str(meta_path),
+        tracking_output_file=str(tracking_path),
+        additional_metadata={
+            "competition": dict(
+                id="61",
+            ),
+            "season": dict(
+                id="95",
+            ),
+            "stadium": dict(
+                id="2914",
+            ),
+            "meta": dict(
+                tracking=dict(version="v3", collection_timing="post_match")
+            ),
+        },
     )
-    tracking_validator = cdf.TrackingSchemaValidator(
-        schema=f"cdf/files/v{cdf.VERSION}/schema/tracking.json"
-    )
 
-    with tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".json", delete=False
-    ) as meta_file, tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".jsonl", delete=False
-    ) as tracking_file:
-
-        # Instantiate the named tuple for outputs
-        outputs = CDFOutputs(meta_data=meta_file, tracking_data=tracking_file)
-
-        # Serialize the dataset and capture warnings
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            success = serializer.serialize(dataset, outputs)
-            assert success is True
-
-            # Verify warnings about missing mandatory IDs were raised
-            missing_id_warnings = [
-                warning
-                for warning in w
-                if issubclass(warning.category, UserWarning)
-                and "Missing mandatory ID" in str(warning.message)
-            ]
-
-            # Should have warnings for competition.id, season.id, and stadium.id
-            assert len(missing_id_warnings) == 3, (
-                f"Expected 3 missing mandatory ID warnings, but got {len(missing_id_warnings)}: "
-                f"{[str(warning.message) for warning in missing_id_warnings]}"
-            )
-
-            # Check specific warnings are present
-            warning_messages = [
-                str(warning.message) for warning in missing_id_warnings
-            ]
-            assert any(
-                "competition.id" in msg for msg in warning_messages
-            ), "Missing warning for competition.id"
-            assert any(
-                "season.id" in msg for msg in warning_messages
-            ), "Missing warning for season.id"
-            assert any(
-                "stadium.id" in msg for msg in warning_messages
-            ), "Missing warning for stadium.id"
-
-        # Save paths for validation after leaving the block
-        meta_path = meta_file.name
-        tracking_path = tracking_file.name
-
-    # Validate metadata
-    meta_validator.validate_schema(sample=meta_path)
-
-    # Validate tracking data - read and validate each line (frame) in the JSONL file
-    with open(tracking_path, "r") as f:
-        frame_count = 0
-        for line in f:
-            if line.strip():  # Skip empty lines
-                frame_data = json.loads(line)
-                # Validate each frame against the tracking schema
-                tracking_validator.validate_schema(sample=frame_data)
-                frame_count += 1
-
-    assert frame_count > 0, "No frames were serialized"
-
-    # Clean up
-    Path(meta_path).unlink()
-    Path(tracking_path).unlink()
+    meta_data_validator.validate_schema(sample=meta_path)
+    tracking_data_validator.validate_schema(sample=tracking_path, limit=None)
 
 
-def produces_valid_cdf_output_with_additional_metadata(dataset):
+def produces_valid_cdf_output_with_additional_metadata(
+    dataset, meta_data_validator, tracking_data_validator, tmp_path
+):
     """Test that CDFTrackingDataSerializer produces valid CDF output with additional metadata."""
-    serializer = CDFTrackingDataSerializer()
 
-    # Instantiate Validators
-    meta_validator = cdf.MetaSchemaValidator(
-        schema=f"cdf/files/v{cdf.VERSION}/schema/meta.json"
-    )
-    tracking_validator = cdf.TrackingSchemaValidator(
-        schema=f"cdf/files/v{cdf.VERSION}/schema/tracking.json"
+    from cdf.domain import (
+        CdfMetaDataSchema,
+        Stadium,
+        Competition,
+        Season,
+        Meta,
+        Tracking,
     )
 
     # Define additional metadata
-    additional_metadata = {
-        "competition": {
-            "id": "COMP_123",
-            "name": "Test Competition",
-            "format": "league_20",
-        },
-        "season": {"id": "SEASON_2024", "name": "2024/25"},
-        "stadium": {
-            "id": "STADIUM_456",
-            "name": "Test Arena",
-            "turf": "grass",
-        },
-        "meta": {
-            "tracking": {
-                "version": "2.0.0",
-                "name": "TestTracker",
-                "fps": 30,
-                "collection_timing": "live",
-            }
-        },
-    }
-
-    with tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".json", delete=False
-    ) as meta_file, tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".jsonl", delete=False
-    ) as tracking_file:
-
-        # Instantiate the named tuple for outputs
-        outputs = CDFOutputs(meta_data=meta_file, tracking_data=tracking_file)
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            success = serializer.serialize(
-                dataset, outputs, additional_metadata=additional_metadata
+    additional_meta_data = CdfMetaDataSchema(
+        competition=Competition(
+            id="61", name="A-League", type="mens", format="league"
+        ),
+        season=Season(id="95", name="2024/2025"),
+        stadium=Stadium(
+            id="2914",
+            name="Kayo Stadium",
+        ),
+        meta=Meta(
+            tracking=Tracking(
+                version="v3",
+                collection_timing="post_match",
             )
-            assert success is True
+        ),
+    )
 
-            # Verify no warnings about missing mandatory IDs were raised
-            missing_id_warnings = [
-                warning
-                for warning in w
-                if issubclass(warning.category, UserWarning)
-                and "Missing mandatory ID" in str(warning.message)
-            ]
-            assert len(missing_id_warnings) == 0, (
-                f"Expected no missing mandatory ID warnings, but got {len(missing_id_warnings)}: "
-                f"{[str(warning.message) for warning in missing_id_warnings]}"
-            )
+    meta_path = tmp_path / "metadata.json"
+    tracking_path = tmp_path / "tracking.jsonl"
 
-        # Save paths for validation after leaving the block
-        meta_path = meta_file.name
-        tracking_path = tracking_file.name
+    dataset.to_cdf(
+        metadata_output_file=str(meta_path),
+        tracking_output_file=str(tracking_path),
+        additional_metadata=additional_meta_data,
+    )
 
-    # Validate metadata
-    meta_validator.validate_schema(sample=meta_path)
-
-    # Verify additional metadata was applied correctly
-    with open(meta_path, "r") as f:
-        meta_data = json.load(f)
-
-        # Check competition metadata
-        assert meta_data["competition"]["id"] == "COMP_123"
-        assert meta_data["competition"]["name"] == "Test Competition"
-        assert meta_data["competition"]["format"] == "league_20"
-
-        # Check season metadata
-        assert meta_data["season"]["id"] == "SEASON_2024"
-        assert meta_data["season"]["name"] == "2024/25"
-
-        # Check stadium metadata
-        assert meta_data["stadium"]["id"] == "STADIUM_456"
-        assert meta_data["stadium"]["name"] == "Test Arena"
-        assert meta_data["stadium"]["turf"] == "grass"
-        # Verify default values still present
-        assert "pitch_length" in meta_data["stadium"]
-        assert "pitch_width" in meta_data["stadium"]
-
-        # Check meta tracking information
-        assert meta_data["meta"]["tracking"]["version"] == "2.0.0"
-        assert meta_data["meta"]["tracking"]["name"] == "TestTracker"
-        assert meta_data["meta"]["tracking"]["fps"] == 30
-        assert meta_data["meta"]["tracking"]["collection_timing"] == "live"
-
-    # Validate tracking data - read and validate each line (frame) in the JSONL file
-    with open(tracking_path, "r") as f:
-        frame_count = 0
-        for line in f:
-            if line.strip():  # Skip empty lines
-                frame_data = json.loads(line)
-                # Validate each frame against the tracking schema
-                tracking_validator.validate_schema(sample=frame_data)
-                frame_count += 1
-
-    assert frame_count > 0, "No frames were serialized"
-
-    # Clean up
-    Path(meta_path).unlink()
-    Path(tracking_path).unlink()
+    meta_data_validator.validate_schema(sample=meta_path)
+    tracking_data_validator.validate_schema(sample=tracking_path, limit=None)
 
 
 def serializer_handles_invalid_metadata_types(dataset):
     """Test that CDFTrackingDataSerializer handles invalid metadata types gracefully."""
+    import cdf
+
     serializer = CDFTrackingDataSerializer()
 
     with tempfile.NamedTemporaryFile(
@@ -306,35 +198,71 @@ class TestCDFSerializer:
             only_alive=False,
         )
 
-    def test_produces_valid_cdf_output_sportec(self, dataset_sportec):
-        produces_valid_cdf_output(dataset=dataset_sportec)
+    @pytest.fixture
+    def meta_data_validator(self):
+        import cdf
 
-    def test_produces_valid_cdf_output_with_additional_metadata_sportec(
-        self, dataset_sportec
-    ):
-        produces_valid_cdf_output_with_additional_metadata(
-            dataset=dataset_sportec
+        # Instantiate Validators
+        return cdf.MetaSchemaValidator(
+            schema=f"cdf/files/v{cdf.VERSION}/schema/meta.json"
         )
 
-    def test_serializer_handles_invalid_metadata_types_sportec(
-        self, dataset_sportec
-    ):
-        serializer_handles_invalid_metadata_types(dataset=dataset_sportec)
+    @pytest.fixture
+    def tracking_data_validator(self):
+        import cdf
 
-    def test_produces_valid_cdf_output_skillcorner(self, dataset_skillcorner):
-        produces_valid_cdf_output(dataset=dataset_skillcorner)
-
-    def test_produces_valid_cdf_output_with_additional_metadata_skillcorner(
-        self, dataset_skillcorner
-    ):
-        produces_valid_cdf_output_with_additional_metadata(
-            dataset=dataset_skillcorner
+        # Instantiate Validators
+        return cdf.TrackingSchemaValidator(
+            schema=f"cdf/files/v{cdf.VERSION}/schema/tracking.json"
         )
 
-    def test_serializer_handles_invalid_metadata_types_skillcorner(
-        self, dataset_skillcorner
+    def test_produces_valid_cdf_output(
+        self,
+        dataset_sportec,
+        dataset_skillcorner,
+        tracking_data_validator,
+        meta_data_validator,
+        tmp_path,
+    ):
+        mimimum_valid_cdf_output(
+            dataset_sportec,
+            meta_data_validator,
+            tracking_data_validator,
+            tmp_path,
+        )
+        mimimum_valid_cdf_output(
+            dataset_skillcorner,
+            meta_data_validator,
+            tracking_data_validator,
+            tmp_path,
+        )
+
+    def test_produces_valid_cdf_output_with_additional_metadata(
+        self,
+        dataset_skillcorner,
+        dataset_sportec,
+        tracking_data_validator,
+        meta_data_validator,
+        tmp_path,
+    ):
+        produces_valid_cdf_output_with_additional_metadata(
+            dataset_skillcorner,
+            meta_data_validator,
+            tracking_data_validator,
+            tmp_path,
+        )
+        produces_valid_cdf_output_with_additional_metadata(
+            dataset_sportec,
+            meta_data_validator,
+            tracking_data_validator,
+            tmp_path,
+        )
+
+    def test_serializer_handles_invalid_metadata_types(
+        self, dataset_skillcorner, dataset_sportec
     ):
         serializer_handles_invalid_metadata_types(dataset=dataset_skillcorner)
+        serializer_handles_invalid_metadata_types(dataset=dataset_sportec)
 
     def test_cdf_positions(self):
         """

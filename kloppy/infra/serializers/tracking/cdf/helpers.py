@@ -12,7 +12,13 @@ PERIODS_MAP = {
 
 
 def is_valid_cdf_position_code(x):
-    from cdf.validators.common import POSITION_GROUPS
+    try:
+        from cdf.validators.common import POSITION_GROUPS
+    except ImportError:
+        raise ImportError(
+            "Seems like you don't have common-data-format-validator installed. Please"
+            " install it using: pip install common-data-format-validator"
+        )
 
     return any(x in positions for positions in POSITION_GROUPS.values())
 

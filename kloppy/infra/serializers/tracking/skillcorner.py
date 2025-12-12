@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 frame_rate = 10
 
-position_types_mapping: Dict[int, PositionType] = {
+position_types_mapping: dict[int, PositionType] = {
     0: PositionType.Goalkeeper,
     1: PositionType.Unknown,  # Does not exist
     2: PositionType.CenterBack,  # Provider: CB

@@ -1,8 +1,8 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import Dict, List, NamedTuple, IO, Optional
+import json
+import logging
+from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (
     BodyPart,
@@ -10,13 +10,13 @@ from kloppy.domain import (
     CardQualifier,
     CardType,
     CounterAttackQualifier,
-    DuelResult,
     DuelQualifier,
+    DuelResult,
     DuelType,
     EventDataset,
     EventType,
-    GoalkeeperQualifier,
     GoalkeeperActionType,
+    GoalkeeperQualifier,
     Ground,
     InterceptionResult,
     Metadata,
@@ -36,8 +36,8 @@ from kloppy.domain import (
 )
 from kloppy.utils import performance_logging
 
-from . import wyscout_events, wyscout_tags
 from ..deserializer import EventDataDeserializer
+from . import wyscout_events, wyscout_tags
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,8 @@ def _has_tag(raw_event, tag_id) -> bool:
     return False
 
 
-def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
-    qualifiers: List[Qualifier] = []
+def _generic_qualifiers(raw_event: dict) -> list[Qualifier]:
+    qualifiers: list[Qualifier] = []
 
     if _has_tag(raw_event, wyscout_tags.COUNTER_ATTACK):
         qualifiers.append(CounterAttackQualifier(True))
@@ -82,7 +82,7 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
-def _bodypart_qualifiers(raw_event: Dict) -> List[Qualifier]:
+def _bodypart_qualifiers(raw_event: dict) -> list[Qualifier]:
     qualifiers = []
     if _has_tag(raw_event, wyscout_tags.LEFT_FOOT):
         qualifiers.append(BodyPartQualifier(BodyPart.LEFT_FOOT))
@@ -93,7 +93,7 @@ def _bodypart_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
-def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
+def _create_shot_result_coordinates(raw_event: dict) -> Optional[Point]:
     """Estimate the shot end location from the Wyscout tags.
 
     Wyscout does not provide end-coordinates of shots. Instead shots on goal
@@ -168,7 +168,7 @@ def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
     return None
 
 
-def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_shot(raw_event: dict, next_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     qualifiers.extend(_bodypart_qualifiers(raw_event))
 
@@ -199,7 +199,7 @@ def _parse_shot(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
-def _pass_qualifiers(raw_event) -> List[Qualifier]:
+def _pass_qualifiers(raw_event) -> list[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
 
     if raw_event["subEventId"] == wyscout_events.PASS.CROSS:
@@ -233,7 +233,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_pass(raw_event: dict, next_event: dict) -> dict:
     pass_result = None
     if _has_tag(raw_event, wyscout_tags.ACCURATE):
         pass_result = PassResult.COMPLETE
@@ -258,10 +258,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
         if next_event["eventId"] == wyscout_events.OFFSIDE.EVENT:
             pass_result = PassResult.OFFSIDE
         if next_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
-            if (
-                next_event["subEventId"]
-                == wyscout_events.INTERRUPTION.BALL_OUT
-            ):
+            if next_event["subEventId"] == wyscout_events.INTERRUPTION.BALL_OUT:
                 pass_result = PassResult.OUT
 
     return {
@@ -273,12 +270,12 @@ def _parse_pass(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict) -> Dict:
+def _parse_clearance(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
+def _parse_goalkeeper_save(raw_event) -> list[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
     goalkeeper_qualifiers = []
     if not _has_tag(raw_event, wyscout_tags.GOAL):
@@ -305,7 +302,7 @@ def _parse_goalkeeper_save(raw_event) -> List[Qualifier]:
     }
 
 
-def _parse_foul(raw_event: Dict) -> Dict:
+def _parse_foul(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
 
     if _has_tag(raw_event, wyscout_tags.RED_CARD):
@@ -321,7 +318,7 @@ def _parse_foul(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_card(raw_event: Dict) -> Dict:
+def _parse_card(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     card_type = None
     if _has_tag(raw_event, wyscout_tags.RED_CARD):
@@ -334,7 +331,7 @@ def _parse_card(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
 
-def _parse_recovery(raw_event: Dict) -> Dict:
+def _parse_recovery(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -342,12 +339,12 @@ def _parse_recovery(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_ball_out(raw_event: Dict) -> Dict:
+def _parse_ball_out(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_set_piece(raw_event: dict, next_event: dict) -> dict:
     result = {}
     if raw_event["subEventId"] in wyscout_events.FREE_KICK.PASS_TYPES:
         result = _parse_pass(raw_event, next_event)
@@ -378,15 +375,13 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict) -> Dict:
                 SetPieceQualifier(SetPieceType.FREE_KICK)
             )
         elif raw_event["subEventId"] == wyscout_events.FREE_KICK.PENALTY:
-            result["qualifiers"].append(
-                SetPieceQualifier(SetPieceType.PENALTY)
-            )
+            result["qualifiers"].append(SetPieceQualifier(SetPieceType.PENALTY))
     else:
         result["qualifiers"] = _generic_qualifiers(raw_event)
     return result
 
 
-def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_interception(raw_event: dict, next_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = InterceptionResult.SUCCESS
     ball_owning_events = (
@@ -396,10 +391,7 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
 
     if next_event is not None:
         if next_event["eventId"] == wyscout_events.INTERRUPTION.EVENT:
-            if (
-                next_event["subEventId"]
-                == wyscout_events.INTERRUPTION.BALL_OUT
-            ):
+            if next_event["subEventId"] == wyscout_events.INTERRUPTION.BALL_OUT:
                 result = InterceptionResult.OUT
         elif raw_event["eventId"] == wyscout_events.PASS.EVENT:
             result = (
@@ -418,7 +410,7 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
-def _parse_duel(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     duel_qualifiers = []
 
@@ -460,7 +452,7 @@ def _parse_duel(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
-def _players_to_dict(players: List[Player]):
+def _players_to_dict(players: list[Player]):
     return {player.player_id: player for player in players}
 
 
@@ -575,9 +567,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         _has_tag(raw_event, tag) for tag in wyscout_tags.CARD
                     ):
                         card_event_args = _parse_card(raw_event)
-                        card_event_id = (
-                            f"card-{generic_event_args['event_id']}"
-                        )
+                        card_event_id = f"card-{generic_event_args['event_id']}"
                         card_event = self.event_factory.build_card(
                             **card_event_args,
                             **{
@@ -686,31 +676,31 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             # when DuelEvent is interception, we need to
                             # overwrite this and the previous DuelEvent
                             events = events[:-1]
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
-                                **interception_event_args,
-                                **generic_event_args,
+                            new_events[i] = (
+                                self.event_factory.build_interception(
+                                    **interception_event_args,
+                                    **generic_event_args,
+                                )
                             )
                         elif new_event.event_type in [
                             EventType.RECOVERY,
                             EventType.MISCONTROL,
                         ]:
                             # replace touch events
-                            new_events[
-                                i
-                            ] = self.event_factory.build_interception(
-                                **interception_event_args,
-                                **generic_event_args,
+                            new_events[i] = (
+                                self.event_factory.build_interception(
+                                    **interception_event_args,
+                                    **generic_event_args,
+                                )
                             )
                         elif new_event.event_type in [
                             EventType.PASS,
                             EventType.CLEARANCE,
                         ]:
                             # insert an interception event before interception passes
-                            generic_event_args[
-                                "event_id"
-                            ] = f"interception-{generic_event_args['event_id']}"
+                            generic_event_args["event_id"] = (
+                                f"interception-{generic_event_args['event_id']}"
+                            )
                             interception_event = (
                                 self.event_factory.build_interception(
                                     **interception_event_args,

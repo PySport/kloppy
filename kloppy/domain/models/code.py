@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any, Callable, Dict, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -9,6 +9,9 @@ from kloppy.utils import (
 )
 
 from .common import DataRecord, Dataset
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 
 @dataclass
@@ -27,7 +30,7 @@ class Code(DataRecord):
     code_id: str
     code: str
     end_timestamp: timedelta
-    labels: Dict[str, Union[bool, str]] = field(default_factory=dict)
+    labels: dict[str, Union[bool, str]] = field(default_factory=dict)
 
     @property
     def record_id(self) -> str:
@@ -60,9 +63,9 @@ class CodeDataset(Dataset[Code]):
     )
     def to_pandas(
         self,
-        record_converter: Optional[Callable[[Code], Dict]] = None,
+        record_converter: Optional[Callable[[Code], dict]] = None,
         additional_columns=None,
-    ) -> "DataFrame":
+    ) -> DataFrame:  # noqa: F821
         try:
             import pandas as pd
         except ImportError:

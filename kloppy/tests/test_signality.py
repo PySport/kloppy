@@ -1,20 +1,18 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List
 
 import pytest
 
+from kloppy import signality
 from kloppy.domain import (
-    Provider,
+    BallState,
+    DatasetType,
+    Ground,
     Orientation,
     Point,
     Point3D,
-    DatasetType,
-    Ground,
-    BallState,
+    Provider,
 )
-
-from kloppy import signality
 
 
 class TestSignalityTracking:
@@ -27,7 +25,7 @@ class TestSignalityTracking:
         return base_dir / "files/signality_venue_information.json"
 
     @pytest.fixture
-    def raw_data_feeds(self, base_dir) -> List[Path]:
+    def raw_data_feeds(self, base_dir) -> list[Path]:
         return [
             base_dir / "files/signality_p1_raw_data_subset.json",
             base_dir / "files/signality_p2_raw_data_subset.json",
@@ -35,7 +33,7 @@ class TestSignalityTracking:
 
     def test_correct_deserialization(
         self,
-        raw_data_feeds: List[Path],
+        raw_data_feeds: list[Path],
         meta_data: Path,
         venue_information: Path,
     ):

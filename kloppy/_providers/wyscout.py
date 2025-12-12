@@ -1,5 +1,5 @@
 import json
-from typing import Type, Union
+from typing import Union
 
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, List, Optional
@@ -92,7 +92,7 @@ def load_open_data(
 
 def identify_deserializer(
     event_data: FileLike,
-) -> Union[Type[WyscoutDeserializerV3], Type[WyscoutDeserializerV2]]:
+) -> Union[type[WyscoutDeserializerV3], type[WyscoutDeserializerV2]]:
     with open_as_file(event_data) as event_data_fp:
         events_with_meta = json.load(event_data_fp)
 

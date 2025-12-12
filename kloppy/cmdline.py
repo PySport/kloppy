@@ -1,12 +1,12 @@
 import argparse
+from collections import Counter
 import logging
 import sys
 import textwrap
-from collections import Counter
 
-from kloppy import datafactory, opta, statsbomb, wyscout, sportscode
+from kloppy import datafactory, opta, sportscode, statsbomb, wyscout
 from kloppy import event_pattern_matching as pm
-from kloppy.domain import CodeDataset, Code
+from kloppy.domain import Code, CodeDataset
 from kloppy.utils import performance_logging
 
 sys.path.append(".")

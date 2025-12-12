@@ -1,5 +1,5 @@
-import warnings
 from typing import Union
+import warnings
 
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, List, Optional
@@ -45,11 +45,13 @@ def load(
         or get_config("event_factory")
         or StatsBombEventFactory(),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(three_sixty_data, optional=True)
-    ) as three_sixty_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(three_sixty_data, optional=True)
+        ) as three_sixty_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=StatsBombInputs(
                 event_data=event_data_fp,

@@ -1,19 +1,18 @@
-import logging
 from datetime import timedelta
-from typing import Union, IO, NamedTuple
+import logging
+from typing import IO, NamedTuple, Union
 
-from lxml import objectify, etree
-
+from lxml import etree, objectify
 
 from kloppy.domain import (
-    CodeDataset,
     Code,
-    Period,
-    Metadata,
-    Provider,
+    CodeDataset,
     DatasetFlag,
-    Score,
+    Metadata,
     Orientation,
+    Period,
+    Provider,
+    Score,
 )
 from kloppy.exceptions import SerializationError
 

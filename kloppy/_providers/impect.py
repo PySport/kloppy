@@ -1,13 +1,13 @@
-import warnings
 from typing import Union
+import warnings
 
 from kloppy.config import get_config
+from kloppy.domain import EventDataset, EventFactory, List, Optional
 from kloppy.infra.serializers.event.impect import (
     ImpectDeserializer,
     ImpectInputs,
 )
-from kloppy.domain import EventDataset, Optional, List, EventFactory
-from kloppy.io import open_as_file, FileLike, Source
+from kloppy.io import FileLike, Source, open_as_file
 
 
 def load(
@@ -39,13 +39,16 @@ def load(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(squads_data, optional=True)
-    ) as squads_data_fp, open_as_file(
-        Source.create(players_data, optional=True)
-    ) as players_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(squads_data, optional=True)
+        ) as squads_data_fp,
+        open_as_file(
+            Source.create(players_data, optional=True)
+        ) as players_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=ImpectInputs(
                 event_data=event_data_fp,
@@ -92,9 +95,7 @@ def load_open_data(
         "\n"
     )
 
-    base_url = (
-        "https://raw.githubusercontent.com/ImpectAPI/open-data/main/data"
-    )
+    base_url = "https://raw.githubusercontent.com/ImpectAPI/open-data/main/data"
 
     return load(
         event_data=f"{base_url}/events/events_{match_id}.json",

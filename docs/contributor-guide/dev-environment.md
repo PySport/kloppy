@@ -89,7 +89,7 @@ python -m pip install -r requirements-dev.txt
 ## Install pre-commit hooks
 
 Additionally, Continuous Integration will run code formatting checks like
-`black` using [pre-commit hooks](https://pre-commit.com/). Any warnings from
+`ruff` using [pre-commit hooks](https://pre-commit.com/). Any warnings from
 these checks will cause the Continuous Integration to fail; therefore, it is
 helpful to run the check yourself before submitting code. This can be done by
 installing `pre-commit` (which should already have happened if you followed

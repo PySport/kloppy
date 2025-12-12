@@ -1,6 +1,6 @@
+from itertools import zip_longest
 import json
 import logging
-from itertools import zip_longest
 from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (

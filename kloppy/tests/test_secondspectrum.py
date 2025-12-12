@@ -3,15 +3,14 @@ from pathlib import Path
 
 import pytest
 
+from kloppy import secondspectrum
 from kloppy.domain import (
+    DatasetType,
     Orientation,
-    Provider,
     Point,
     Point3D,
-    DatasetType,
+    Provider,
 )
-
-from kloppy import secondspectrum
 
 
 class TestSecondSpectrumTracking:
@@ -30,7 +29,6 @@ class TestSecondSpectrumTracking:
     def test_correct_deserialization_limit_sample(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
-
         dataset = secondspectrum.load(
             meta_data=meta_data,
             raw_data=raw_data,

@@ -1,6 +1,6 @@
-import os
 from contextlib import contextmanager
 from copy import copy
+import os
 from typing import Any, Optional, TypedDict, Union
 
 from kloppy.domain import EventFactory

@@ -13,11 +13,14 @@ default_install_hook_types:
 repos:
   # -------------------------- 🔍 Code Quality Tools ------------------------- #
 
-  - repo: https://github.com/ambv/black
-    rev: 22.3.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.11
     hooks:
-      - id: black
-        language_version: python3
+      - id: ruff-format
+        name: "🐍 python · Format with Ruff"
+      - id: ruff
+        name: "🐍 python · Lint and perform safe auto-fixes with Ruff"
+        args: [--fix]
 
   # ---------------------------- ⚡️ uv Build Tools --------------------------- #
 

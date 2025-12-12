@@ -63,7 +63,7 @@ Documentation = "https://kloppy.pysport.org/"
 
 [dependency-groups]
 dev = [
-    "black",                             # Python formatter
+    "ruff",                              # Python formatter
     "pytest>=6.2.5,<8",                  # Testing framework
     "pytest-lazy-fixture>=0.6.3",        # Use fixtures as parameters in pytest
     "pytest-httpserver",                 # Mock HTTP server for testing
@@ -96,24 +96,48 @@ nb = [
 package = true
 default-groups = ["dev", "docs", "nb"]
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Black ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Ruff ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 
-[tool.black]
-line-length = 79
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+[tool.ruff]
+target-version = "py39"
+line-length = 80  # use whatever number makes you happy
+format = { quote-style = "double", indent-style = "space" }
+exclude = [
+    "examples",
+    "docs/presentations",
+]
+
+[tool.ruff.lint]
+# TODO: starting with a limited set of rules, but we'll probably add more later
+# you can see the looong list of rules here: https://docs.astral.sh/ruff/rules/
+# select = ["ALL"]
+select = [
+    "A",    # warn about shadowing built-ins
+    "E",    # style stuff, whitespaces
+    "F",    # important pyflakes lints
+    "I",    # import sorting
+    "UP",   # pyupgrade
+    "T100", # breakpoints (probably don't want these in prod!)
+]
+ignore = [
+    "E501",  # line too long
+    "E731",  # do not assign a lambda expression, use a def
+    "A005",  # do not shadow a Python standard library module
+]
+
+mccabe.max-complexity = 10
+pycodestyle.max-doc-length = 99
+pydocstyle.convention = "google"
+isort = { known-first-party = ["kloppy"], force-sort-within-sections = true }
+
+[tool.ruff.lint.per-file-ignores]
+"kloppy/**/__init__.py" = [
+    "F401",  # Allow unused imports in __init__.py
+    "F403",  # Allow redefinition of 'from ... import *' in __init__.py
+]
+"kloppy/event_pattern_matching.py" = [
+    "F403",  # Allow redefinition of 'from ... import *' in event_pattern_matching.py
+]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Pytest ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 

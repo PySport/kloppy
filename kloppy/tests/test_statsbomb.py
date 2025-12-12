@@ -1,12 +1,11 @@
-import os
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+import os
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-import kloppy.infra.serializers.event.statsbomb.specification as SB
 from kloppy import statsbomb
 from kloppy.domain import (
     BallState,
@@ -38,7 +37,6 @@ from kloppy.domain import (
     Time,
     build_coordinate_system,
 )
-from kloppy.domain.models import PositionType
 from kloppy.domain.models.event import (
     CardType,
     CounterAttackQualifier,
@@ -51,6 +49,7 @@ from kloppy.domain.models.event import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
+import kloppy.infra.serializers.event.statsbomb.specification as SB
 
 ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -116,9 +115,7 @@ class TestStatsBombMetadata:
 
     def test_orientation(self, dataset):
         """It should set the action-executing-team orientation"""
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
 
     def test_framerate(self, dataset):
         """It should set the frame rate to None"""
@@ -184,9 +181,7 @@ class TestStatsBombMetadata:
         )
         assert away_starting_gk.player_id == "5205"  # Rui Patricio
 
-        assert (
-            PositionType.Goalkeeper.position_group == PositionType.Goalkeeper
-        )
+        assert PositionType.Goalkeeper.position_group == PositionType.Goalkeeper
         assert (
             PositionType.CenterDefensiveMidfield.position_group
             == PositionType.Midfielder
@@ -604,12 +599,12 @@ class TestStatsBombEvent:
         )
         freeze_frame = shot_event.freeze_frame
         player_3089 = dataset.metadata.teams[0].get_player_by_id("3089")
-        assert freeze_frame.players_coordinates[
-            player_3089
-        ].x == pytest.approx(0.756, abs=1e-2)
-        assert freeze_frame.players_coordinates[
-            player_3089
-        ].y == pytest.approx(0.340, abs=1e-2)
+        assert freeze_frame.players_coordinates[player_3089].x == pytest.approx(
+            0.756, abs=1e-2
+        )
+        assert freeze_frame.players_coordinates[player_3089].y == pytest.approx(
+            0.340, abs=1e-2
+        )
 
         # The 360 freeze-frame should have standardized coordinates
         pass_event = dataset.get_event_by_id(
@@ -765,9 +760,7 @@ class TestStatsBombShotEvent:
         # A shot event should have end coordinates
         assert shot.result_coordinates == Point3D(119.95, 48.35, 0.45)
         # A shot event should have a body part
-        assert (
-            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
-        )
+        assert shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
         # An open play shot should not have a set piece qualifier
         assert shot.get_qualifier_value(SetPieceQualifier) is None
         # A shot event should have a xG value
@@ -877,9 +870,7 @@ class TestStatsBombClearanceEvent:
         # A clearance has no result
         assert clearance.result is None
         # A clearance should have a bodypart (if data version >= 1.1)
-        assert (
-            clearance.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
-        )
+        assert clearance.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
 
     def test_aerial_duel(self, dataset: EventDataset):
         """It should split clearances that follow an aerial duel into two events"""
@@ -914,7 +905,9 @@ class TestStatsBombMiscontrolEvent:
 
     def test_aerial_duel(self, dataset: EventDataset):
         """It should split clearances that follow an aerial duel into two events"""
-        assert True  # can happen according to the documentation, but not in the dataset
+        assert (
+            True
+        )  # can happen according to the documentation, but not in the dataset
 
 
 class TestStatsBombDribbleEvent:

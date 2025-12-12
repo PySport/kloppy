@@ -4,18 +4,16 @@ A parser reads a single data file and should extend the 'OptaParser' class to
 extract data about players, teams and events that is encoded in the file.
 """
 
+from dataclasses import dataclass, field
+from datetime import datetime
 import json
-from typing import Tuple, List, Optional, IO, Dict
+from typing import IO, Optional
 
 from lxml import objectify
 
-from kloppy.domain import Team, Score, Period, PositionType
+from kloppy.domain import Period, PositionType, Score, Team
 
-from datetime import datetime
-from dataclasses import dataclass, field
-
-
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "Goalkeeper": PositionType.Goalkeeper,
     "Defender": PositionType.Defender,
     "Midfielder": PositionType.Midfielder,
@@ -41,7 +39,7 @@ class OptaEvent:
     contestant_id: Optional[str] = None
     player_id: Optional[str] = None
     outcome: Optional[int] = None
-    qualifiers: Dict[int, str] = field(default_factory=dict)
+    qualifiers: dict[int, str] = field(default_factory=dict)
 
 
 class OptaParser:
@@ -54,7 +52,7 @@ class OptaParser:
     def __init__(self, feed: IO[bytes]) -> None:
         raise NotImplementedError
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         """Return the periods of the game."""
         raise NotImplementedError
 
@@ -74,11 +72,11 @@ class OptaParser:
         """Return the game_id of the game."""
         return None
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         """Return the home and away team."""
         raise NotImplementedError
 
-    def extract_events(self) -> List[OptaEvent]:
+    def extract_events(self) -> list[OptaEvent]:
         """Return all events."""
         raise NotImplementedError
 

@@ -1,7 +1,7 @@
 """XML parser for Stats Perform MA1 feeds."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from kloppy.domain import Ground, Period, Player, PositionType, Score, Team
 from kloppy.exceptions import DeserializationError
@@ -17,7 +17,7 @@ from .base import OptaXMLParser
 class MA1XMLParser(OptaXMLParser):
     """Extract data from a Stats Perform MA1 data stream."""
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         parsed_periods = []
         live_data = self.root.liveData
         match_details = live_data.matchDetails
@@ -39,7 +39,7 @@ class MA1XMLParser(OptaXMLParser):
     def extract_score(self) -> Optional[Score]:
         return None
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         teams = {}
         for parsed_team in self._parse_teams():
             team_id = parsed_team["team_id"]
@@ -85,7 +85,7 @@ class MA1XMLParser(OptaXMLParser):
             raise DeserializationError("Lineup incomplete")
         return home_team, away_team
 
-    def _parse_teams(self) -> List[Dict[str, Any]]:
+    def _parse_teams(self) -> list[dict[str, Any]]:
         parsed_teams = []
         match_info = self.root.matchInfo
         teams = match_info.contestants.iterchildren(tag="contestant")
@@ -114,7 +114,7 @@ class MA1XMLParser(OptaXMLParser):
             )
         return parsed_teams
 
-    def _parse_players(self) -> List[Dict[str, Any]]:
+    def _parse_players(self) -> list[dict[str, Any]]:
         parsed_players = []
         live_data = self.root.liveData
         line_ups = live_data.iterchildren(tag="lineUp")

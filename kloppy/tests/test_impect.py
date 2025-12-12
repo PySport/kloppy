@@ -101,9 +101,9 @@ class TestImpectHelpers:
                 timestamp, parsed_period_id = parse_timestamp(
                     event.raw_event["gameTime"]["gameTime"]
                 )
-                assert (
-                    period_id == parsed_period_id
-                ), f"Event {event.event_id} has periodId {period_id} but parsed periodId is {parsed_period_id}"
+                assert period_id == parsed_period_id, (
+                    f"Event {event.event_id} has periodId {period_id} but parsed periodId is {parsed_period_id}"
+                )
 
 
 class TestImpectMetadata:
@@ -115,9 +115,7 @@ class TestImpectMetadata:
 
     def test_orientation(self, dataset):
         """It should set the action-executing-team orientation"""
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
 
     def test_framerate(self, dataset):
         """It should set the frame rate to None"""
@@ -240,15 +238,11 @@ class TestImpectMetadata:
         period_1_duration = period_1.end_timestamp - period_1.start_timestamp
         period_2_duration = period_2.end_timestamp - period_2.start_timestamp
 
-        assert period_1_duration >= timedelta(
-            minutes=45
-        )  # At least 45 minutes
+        assert period_1_duration >= timedelta(minutes=45)  # At least 45 minutes
         assert period_1_duration <= timedelta(
             minutes=60
         )  # At most 60 minutes (allows for extra time)
-        assert period_2_duration >= timedelta(
-            minutes=45
-        )  # At least 45 minutes
+        assert period_2_duration >= timedelta(minutes=45)  # At least 45 minutes
         assert period_2_duration <= timedelta(
             minutes=100
         )  # At most 100 minutes (allows for extra time)
@@ -262,9 +256,9 @@ class TestImpectEvent:
         event_ids = defaultdict(int)
         for event in dataset.events:
             event_ids[event.event_id] += 1
-        assert all(
-            v == 1 for v in event_ids.values()
-        ), "Event IDs are not unique"
+        assert all(v == 1 for v in event_ids.values()), (
+            "Event IDs are not unique"
+        )
 
     def test_generic_attributes(self, dataset: EventDataset):
         """Test generic event attributes"""
@@ -296,9 +290,7 @@ class TestImpectEvent:
         # Verify that kickoffs are in different periods but both start at 0
         assert kickoff_p1.period.id == 1
         assert kick_off_p2.period.id == 2
-        assert (
-            kickoff_p1.timestamp == kick_off_p2.timestamp
-        )  # Both should be 0
+        assert kickoff_p1.timestamp == kick_off_p2.timestamp  # Both should be 0
 
         # Verify that events within each period have timestamps relative to that period
         period_1_events = [e for e in dataset.events if e.period.id == 1]
@@ -313,15 +305,13 @@ class TestImpectEvent:
             1, min(10, len(period_1_events))
         ):  # Check first 10 events
             assert (
-                period_1_events[i].timestamp
-                >= period_1_events[i - 1].timestamp
+                period_1_events[i].timestamp >= period_1_events[i - 1].timestamp
             )
         for i in range(
             1, min(10, len(period_2_events))
         ):  # Check first 10 events
             assert (
-                period_2_events[i].timestamp
-                >= period_2_events[i - 1].timestamp
+                period_2_events[i].timestamp >= period_2_events[i - 1].timestamp
             )
 
 
@@ -554,17 +544,17 @@ class TestImpectSubstitutionEvent:
         # Player 14 goes OUT at 85:00 with no matching IN (added to test data)
         player_off_events = dataset.find_all("player_off")
 
-        assert (
-            len(player_off_events) >= 1
-        ), "Should have at least one PlayerOff event"
+        assert len(player_off_events) >= 1, (
+            "Should have at least one PlayerOff event"
+        )
 
         # Find PlayerOff event for player 14
         player_14_offs = [
             e for e in player_off_events if e.player.player_id == "14"
         ]
-        assert (
-            len(player_14_offs) == 1
-        ), "Player 14 should have exactly one PlayerOff event"
+        assert len(player_14_offs) == 1, (
+            "Player 14 should have exactly one PlayerOff event"
+        )
 
         player_off = player_14_offs[0]
         assert player_off.player.player_id == "14"

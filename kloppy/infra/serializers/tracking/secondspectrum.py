@@ -1,32 +1,31 @@
+from datetime import datetime, timedelta, timezone
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from typing import IO, NamedTuple, Optional, Union
 import warnings
-from typing import Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    PlayerData,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
-    Ground,
-    Player,
-    Provider,
-    PlayerData,
-    Score,
     PositionType,
+    Provider,
+    Score,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-
 from kloppy.utils import Readable, performance_logging
 
 from .deserializer import TrackingDataDeserializer
@@ -137,7 +136,7 @@ class SecondSpectrumDeserializer(
         return frame
 
     @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
+    def __validate_inputs(inputs: dict[str, Readable]):
         if "xml_metadata" not in inputs:
             raise ValueError("Please specify a value for 'xml_metadata'")
         if "raw_data" not in inputs:
@@ -229,7 +228,7 @@ class SecondSpectrumDeserializer(
                             .split(":")[0]
                             .strip()
                         )
-                    except:
+                    except:  # noqa: E722, TODO: More specific exception
                         home_name, away_name = "home", "away"
 
                     teams[0].team_id = home_team_id
@@ -264,7 +263,7 @@ class SecondSpectrumDeserializer(
                             )
                             team.players.append(player)
 
-                except:  # TODO: More specific exception
+                except:  # noqa: E722, TODO: More specific exception
                     logging.warning(
                         "Optional JSON Metadata is malformed. Continuing without"
                     )

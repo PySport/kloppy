@@ -20,6 +20,8 @@ from typing import (
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
+    from pandas import DataFrame
+
     from ..services.transformers.data_record import (
         Column,
         NamedColumns,

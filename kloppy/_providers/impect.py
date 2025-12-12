@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Optional, Union
 import warnings
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, List, Optional
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.infra.serializers.event.impect import (
     ImpectDeserializer,
     ImpectInputs,
@@ -15,7 +15,7 @@ def load(
     lineup_data: FileLike,
     squads_data: Optional[FileLike] = None,
     players_data: Optional[FileLike] = None,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -62,7 +62,7 @@ def load(
 def load_open_data(
     match_id: Union[str, int] = "122838",
     competition_id: Union[str, int] = "743",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:

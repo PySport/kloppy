@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -9,6 +9,9 @@ from kloppy.utils import (
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
 
 
 @dataclass
@@ -87,7 +90,7 @@ class TrackingDataset(Dataset[Frame]):
         self,
         record_converter: Optional[Callable[[Frame], dict]] = None,
         additional_columns=None,
-    ) -> DataFrame:  # noqa: F821
+    ) -> "DataFrame":  # noqa: F821
         try:
             import pandas as pd
         except ImportError:

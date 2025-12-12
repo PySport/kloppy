@@ -37,6 +37,8 @@ from .formation import FormationType
 from .pitch import Point
 
 if TYPE_CHECKING:
+    from pandas import DataFrame
+
     from ..services.transformers.data_record import NamedColumns
     from .tracking import Frame
 
@@ -1487,7 +1489,7 @@ class EventDataset(Dataset[Event]):
         self,
         record_converter: Callable[[Event], dict] | None = None,
         additional_columns: NamedColumns | None = None,
-    ) -> DataFrame:  # noqa F821
+    ) -> "DataFrame":  # noqa F821
         try:
             import pandas as pd
         except ImportError:

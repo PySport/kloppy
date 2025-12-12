@@ -65,7 +65,7 @@ class CodeDataset(Dataset[Code]):
         self,
         record_converter: Optional[Callable[[Code], dict]] = None,
         additional_columns=None,
-    ) -> DataFrame:  # noqa: F821
+    ) -> "DataFrame":  # noqa: F821
         try:
             import pandas as pd
         except ImportError:

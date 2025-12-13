@@ -1,8 +1,8 @@
 import json
-from typing import Type, Union
+from typing import Optional, Union
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, List, Optional
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.infra.serializers.event.wyscout import (
     WyscoutDeserializerV2,
     WyscoutDeserializerV3,
@@ -14,7 +14,7 @@ from kloppy.utils import github_resolve_raw_data_url
 
 def load(
     event_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     data_version: Optional[str] = None,
@@ -53,7 +53,7 @@ def load(
 
 def load_open_data(
     match_id: Union[str, int] = "2499841",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -92,7 +92,7 @@ def load_open_data(
 
 def identify_deserializer(
     event_data: FileLike,
-) -> Union[Type[WyscoutDeserializerV3], Type[WyscoutDeserializerV2]]:
+) -> Union[type[WyscoutDeserializerV3], type[WyscoutDeserializerV2]]:
     with open_as_file(event_data) as event_data_fp:
         events_with_meta = json.load(event_data_fp)
 

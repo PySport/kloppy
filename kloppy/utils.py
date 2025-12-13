@@ -1,14 +1,14 @@
+from contextlib import contextmanager
 import functools
 import inspect
-import re
-import time
-import warnings
-from contextlib import contextmanager
 from io import BytesIO
 from logging import Logger
+import re
+import time
 from typing import BinaryIO, Optional, Union
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+import warnings
 
 Readable = Union[bytes, BinaryIO]
 
@@ -182,9 +182,7 @@ def snake_case(s: str) -> str:
     return re.sub(r"[\s\-]+", "_", s.strip()).lower()
 
 
-def github_resolve_raw_data_url(
-    repository: str, branch: str, file: str
-) -> str:
+def github_resolve_raw_data_url(repository: str, branch: str, file: str) -> str:
     """
     Resolve a GitHub repository file to its actual raw data URL.
 
@@ -223,7 +221,7 @@ def github_resolve_raw_data_url(
         with urlopen(req) as response:
             # The final URL after following redirects
             return response.url
-    except Exception as e:
+    except Exception:
         # If there's an error, fall back to the standard raw.githubusercontent.com URL
         # This ensures backwards compatibility
         return f"https://raw.githubusercontent.com/{repository}/{branch}/{encoded_file}"

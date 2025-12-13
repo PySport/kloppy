@@ -1,11 +1,12 @@
-from typing import Optional, Iterable
+from collections.abc import Iterable
+from typing import Optional
 
-from kloppy.domain import TrackingDataset, CoordinateSystem
+from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.signality import (
     SignalityDeserializer,
     SignalityInputs,
 )
-from kloppy.io import FileLike, open_as_file, expand_inputs
+from kloppy.io import FileLike, expand_inputs, open_as_file
 
 
 def load(
@@ -39,9 +40,10 @@ def load(
         coordinate_system=coordinates,
     )
 
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        venue_information
-    ) as venue_information_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(venue_information) as venue_information_fp,
+    ):
         return deserializer.deserialize(
             inputs=SignalityInputs(
                 meta_data=meta_data_fp,

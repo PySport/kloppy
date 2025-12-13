@@ -13,13 +13,16 @@ if TYPE_CHECKING:
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D
 
+if TYPE_CHECKING:
+    from pandas import DataFrame
+
 
 @dataclass
 class PlayerData:
     coordinates: Point
     distance: Optional[float] = None
     speed: Optional[float] = None
-    other_data: Dict[str, Any] = field(default_factory=dict)
+    other_data: dict[str, Any] = field(default_factory=dict)
 
 
 @docstring_inherit_attributes(DataRecord)
@@ -37,8 +40,8 @@ class Frame(DataRecord):
     """
 
     frame_id: int
-    players_data: Dict[Player, PlayerData]
-    other_data: Dict[str, Any]
+    players_data: dict[Player, PlayerData]
+    other_data: dict[str, Any]
     ball_coordinates: Point3D
     ball_speed: Optional[float] = None
 
@@ -88,9 +91,9 @@ class TrackingDataset(Dataset[Frame]):
     )
     def to_pandas(
         self,
-        record_converter: Optional[Callable[[Frame], Dict]] = None,
+        record_converter: Optional[Callable[[Frame], dict]] = None,
         additional_columns=None,
-    ) -> "DataFrame":
+    ) -> "DataFrame":  # noqa: F821
         try:
             import pandas as pd
         except ImportError:

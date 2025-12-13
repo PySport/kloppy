@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import BinaryIO, List
+from typing import BinaryIO
 
 from kloppy.infra.io.buffered_stream import BufferedStream
 
@@ -39,7 +39,7 @@ class Adapter(ABC):
         )
 
     @abstractmethod
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         pass
 
 

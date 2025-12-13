@@ -12,8 +12,6 @@ aws-sam-translator==1.105.0
     # via cfn-lint
 aws-xray-sdk==2.15.0
     # via moto
-black==25.11.0 ; python_full_version < '3.10'
-black==25.12.0 ; python_full_version >= '3.10'
 blinker==1.9.0
     # via flask
 boto3==1.41.5
@@ -39,13 +37,9 @@ cfn-lint==1.42.1
 charset-normalizer==3.4.4
     # via requests
 click==8.1.8 ; python_full_version < '3.10'
-    # via
-    #   black
-    #   flask
+    # via flask
 click==8.3.1 ; python_full_version >= '3.10'
-    # via
-    #   black
-    #   flask
+    # via flask
 colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
@@ -121,8 +115,6 @@ markupsafe==3.0.3
 moto==5.1.18
 mpmath==1.3.0
     # via sympy
-mypy-extensions==1.1.0
-    # via black
 networkx==2.8.8
     # via cfn-lint
 nodeenv==1.9.1
@@ -132,21 +124,13 @@ openapi-schema-validator==0.6.3
 openapi-spec-validator==0.7.2
     # via moto
 packaging==25.0
-    # via
-    #   black
-    #   pytest
+    # via pytest
 pathable==0.4.4
     # via jsonschema-path
-pathspec==0.12.1
-    # via black
 platformdirs==4.4.0 ; python_full_version < '3.10'
-    # via
-    #   black
-    #   virtualenv
+    # via virtualenv
 platformdirs==4.5.1 ; python_full_version >= '3.10'
-    # via
-    #   black
-    #   virtualenv
+    # via virtualenv
 pluggy==1.6.0
     # via pytest
 ply==3.11
@@ -171,8 +155,6 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   moto
-pytokens==0.3.0
-    # via black
 pywin32==311 ; sys_platform == 'win32'
     # via docker
 pyyaml==6.0.3
@@ -207,6 +189,7 @@ rpds-py==0.30.0 ; python_full_version >= '3.10'
     # via
     #   jsonschema
     #   referencing
+ruff==0.14.9
 s3transfer==0.15.0
     # via boto3
 setuptools==80.9.0
@@ -218,13 +201,10 @@ six==1.17.0
 sympy==1.14.0
     # via cfn-lint
 tomli==2.3.0 ; python_full_version < '3.11'
-    # via
-    #   black
-    #   pytest
+    # via pytest
 typing-extensions==4.15.0
     # via
     #   aws-sam-translator
-    #   black
     #   cfn-lint
     #   cryptography
     #   exceptiongroup

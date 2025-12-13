@@ -1,5 +1,7 @@
+from typing import Optional
+
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, List, Optional
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.infra.serializers.event.statsperform import (
     StatsPerformDeserializer,
     StatsPerformInputs,
@@ -10,7 +12,7 @@ from kloppy.io import FileLike, open_as_file
 def load(
     f7_data: FileLike,
     f24_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -32,9 +34,10 @@ def load(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(f7_data) as f7_data_fp, open_as_file(
-        f24_data
-    ) as f24_data_fp:
+    with (
+        open_as_file(f7_data) as f7_data_fp,
+        open_as_file(f24_data) as f24_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=StatsPerformInputs(
                 meta_data=f7_data_fp,

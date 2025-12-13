@@ -1,8 +1,8 @@
+from datetime import datetime, timedelta, timezone
 import json
 import logging
+from typing import IO, NamedTuple, Optional, Union
 import warnings
-from datetime import datetime, timedelta, timezone
-from typing import IO, Dict, NamedTuple, Optional, Union, List
 
 from kloppy.domain import (
     AttackingDirection,
@@ -100,9 +100,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         frame,
         only_alive,
     ):
-        ball_owning_team = cls._get_ball_owning_team(
-            frame["possession"], teams
-        )
+        ball_owning_team = cls._get_ball_owning_team(frame["possession"], teams)
         ball_state = (
             BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
         )
@@ -200,9 +198,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         frame,
         only_alive,
     ):
-        ball_owning_team = cls._get_ball_owning_team(
-            frame["possession"], teams
-        )
+        ball_owning_team = cls._get_ball_owning_team(frame["possession"], teams)
         ball_state = (
             BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
         )
@@ -245,7 +241,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
     @classmethod
     def _raw_coordinates_to_point(
-        cls, raw_coordinates: Dict
+        cls, raw_coordinates: dict
     ) -> Optional[Union[Point, Point3D]]:
         """
         Converts raw coordinates to a Point or Point3D object.
@@ -280,7 +276,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
     @classmethod
     def _get_ball_owning_team(
-        cls, possession: Dict, teams: List[Team]
+        cls, possession: dict, teams: list[Team]
     ) -> Optional[Team]:
         ball_owning_team = possession.get("group")
 
@@ -298,9 +294,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             return timedelta(seconds=60 * float(m) + float(s))
         elif len(parts) == 3:
             h, m, s = parts
-            return timedelta(
-                seconds=3600 * float(h) + 60 * float(m) + float(s)
-            )
+            return timedelta(seconds=3600 * float(h) + 60 * float(m) + float(s))
         else:
             raise ValueError("Invalid timestring format")
 
@@ -346,9 +340,7 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         # Extract unique periods while filtering out None values
         unique_periods = {
-            frame["period"]
-            for frame in tracking
-            if frame["period"] is not None
+            frame["period"] for frame in tracking if frame["period"] is not None
         }
 
         for period in unique_periods:

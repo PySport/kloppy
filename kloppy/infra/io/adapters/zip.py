@@ -1,5 +1,3 @@
-from typing import List
-
 import fsspec
 
 from kloppy.config import get_config
@@ -32,7 +30,7 @@ class ZipAdapter(FSSpecAdapter):
             fo=fo,
         )
 
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         """
         Lists the contents of a directory.
         """

@@ -1,7 +1,7 @@
+from datetime import datetime, timedelta
 import logging
 import math
-from datetime import datetime, timedelta
-from typing import IO, Dict, List, NamedTuple, Optional
+from typing import IO, NamedTuple, Optional
 
 import pytz
 
@@ -254,10 +254,8 @@ def _parse_pass(
     next_next_event: OptaEvent,
     team: Team,
     period: Period,
-) -> Dict:
-    result = (
-        PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
-    )
+) -> dict:
+    result = PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
     qualifiers = _get_pass_qualifiers(
         raw_event.qualifiers
@@ -318,7 +316,7 @@ def _parse_pass(
     )
 
 
-def _parse_offside_pass(raw_event: OptaEvent) -> Dict:
+def _parse_offside_pass(raw_event: OptaEvent) -> dict:
     pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
@@ -333,7 +331,7 @@ def _parse_offside_pass(raw_event: OptaEvent) -> Dict:
     )
 
 
-def _parse_take_on(raw_event: OptaEvent) -> Dict:
+def _parse_take_on(raw_event: OptaEvent) -> dict:
     if raw_event.outcome == 1:
         result = TakeOnResult.COMPLETE
     else:
@@ -341,11 +339,11 @@ def _parse_take_on(raw_event: OptaEvent) -> Dict:
     return dict(result=result)
 
 
-def _parse_clearance(raw_event: OptaEvent) -> Dict:
+def _parse_clearance(raw_event: OptaEvent) -> dict:
     return dict(qualifiers=_get_event_qualifiers(raw_event.qualifiers))
 
 
-def _parse_card(raw_event: OptaEvent) -> Dict:
+def _parse_card(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
     card_type = None
@@ -373,7 +371,7 @@ def _parse_lineup_qualifiers(raw_event: OptaEvent):
     return formation, player_ids, position_ids, positions_mapping
 
 
-def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
+def _parse_formation_change(raw_event: OptaEvent, team: Team) -> dict:
     (
         formation,
         player_ids,
@@ -390,7 +388,7 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     return dict(formation_type=formation, player_positions=player_positions)
 
 
-def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
+def _parse_substitution(next_event: OptaEvent, team: Team) -> dict:
     replacement_player = None
     position = None
     if next_event.type_id == EVENT_TYPE_PLAYER_ON:
@@ -405,7 +403,7 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
     return dict(replacement_player=replacement_player, position=position)
 
 
-def _parse_shot(raw_event: OptaEvent) -> Dict:
+def _parse_shot(raw_event: OptaEvent) -> dict:
     coordinates = Point(x=raw_event.x, y=raw_event.y)
     if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
         if 28 in raw_event.qualifiers:
@@ -471,7 +469,7 @@ def _parse_shot(raw_event: OptaEvent) -> Dict:
     return event_info
 
 
-def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:
+def _parse_goalkeeper_events(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     goalkeeper_qualifiers = _get_goalkeeper_qualifiers(raw_event.type_id)
     qualifiers.extend(goalkeeper_qualifiers)
@@ -479,7 +477,7 @@ def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:
     return dict(result=None, qualifiers=qualifiers)
 
 
-def _parse_duel(raw_event: OptaEvent) -> Dict:
+def _parse_duel(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     if raw_event.type_id == EVENT_TYPE_TACKLE:
         qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
@@ -508,7 +506,7 @@ def _parse_duel(raw_event: OptaEvent) -> Dict:
 
 def _parse_interception(
     raw_event: OptaEvent, team: Team, next_event: OptaEvent
-) -> Dict:
+) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     result = InterceptionResult.SUCCESS
 
@@ -528,7 +526,7 @@ def _parse_interception(
 
 
 def _get_end_coordinates(
-    raw_qualifiers: Dict[int, str], start_coordinates: Optional[Point] = None
+    raw_qualifiers: dict[int, str], start_coordinates: Optional[Point] = None
 ) -> Optional[Point]:
     x, y, z = None, None, None
 
@@ -568,7 +566,7 @@ def _get_end_coordinates(
     return None
 
 
-def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
+def _get_event_qualifiers(raw_qualifiers: dict[int, str]) -> list[Qualifier]:
     qualifiers = []
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
@@ -577,7 +575,7 @@ def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
+def _get_pass_qualifiers(raw_qualifiers: dict[int, str]) -> list[Qualifier]:
     qualifiers = []
     pass_qualifier_mapping = {
         EVENT_QUALIFIER_CROSS: PassType.CROSS,
@@ -609,8 +607,8 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
 
 
 def _get_event_setpiece_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
@@ -631,8 +629,8 @@ def _get_event_setpiece_qualifiers(
 
 
 def _get_event_bodypart_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -650,8 +648,8 @@ def _get_event_bodypart_qualifiers(
 
 
 def _get_event_card_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.RED))
@@ -663,7 +661,7 @@ def _get_event_card_qualifiers(
     return qualifiers
 
 
-def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
+def _get_goalkeeper_qualifiers(type_id: int) -> list[Qualifier]:
     qualifiers = []
     goalkeeper_qualifier = None
     if type_id == EVENT_TYPE_SAVE:
@@ -684,8 +682,8 @@ def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
 
 
 def _get_event_counter_attack_qualifiers(
-    raw_qualifiers: Dict[int, str],
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_COUNTER_ATTACK in raw_qualifiers:
         qualifiers.append(CounterAttackQualifier(True))
@@ -752,14 +750,10 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     )
 
                 next_event = (
-                    raw_events[idx + 1]
-                    if (idx + 1) < len(raw_events)
-                    else None
+                    raw_events[idx + 1] if (idx + 1) < len(raw_events) else None
                 )
                 next_next_event = (
-                    raw_events[idx + 2]
-                    if (idx + 2) < len(raw_events)
-                    else None
+                    raw_events[idx + 2] if (idx + 2) < len(raw_events) else None
                 )
                 period = next(
                     (
@@ -952,8 +946,8 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         generic_event_kwargs["timestamp"] = max(
                             timedelta(0), generic_event_kwargs["timestamp"]
                         )
-                        formation_change_event_kwargs = (
-                            _parse_formation_change(raw_event, team)
+                        formation_change_event_kwargs = _parse_formation_change(
+                            raw_event, team
                         )
                         event = self.event_factory.build_formation_change(
                             result=None,

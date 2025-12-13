@@ -1,79 +1,90 @@
 import json
 import tempfile
-from typing import IO, NamedTuple
+from typing import IO, NamedTuple, Optional, Union, TYPE_CHECKING
 
-from kloppy.domain import Provider, TrackingDataset, PositionType
+from kloppy.domain import (
+    Provider,
+    TrackingDataset,
+    Orientation,
+    BallState,
+    CDFCoordinateSystem,
+    Ground,
+)
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
+from kloppy import __version__
+
+from .helpers import (
+    PERIODS_MAP,
+    get_player_coordinates,
+    get_ball_coordinates,
+    initialize_period_tracking,
+    update_period_tracking,
+    get_starters_and_formation,
+    build_periods_info,
+    build_whistles,
+    build_team_players_metadata,
+)
+
+if TYPE_CHECKING:
+    from cdf.domain.latest.meta import (
+        CdfMetaDataSchema,
+        Stadium,
+        Competition,
+        Season,
+        Meta,
+        Misc,
+    )
+
+import warnings
+
+MISSING_MANDATORY_VALUE = "MISSING_MANDATORY_VALUE"
 
 
 class CDFOutputs(NamedTuple):
     meta_data: IO[bytes]
-    tracking_data: list[IO[bytes]]
+    tracking_data: IO[bytes]
 
 
 class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
     provider = Provider.CDF
 
-    # to infer the starting formation if not given
-    @staticmethod
-    def get_starting_formation(team_players) -> str:
-        """
-        determine the starting formation if not define.
-
-        Args:
-            team: The team on which we want to infer the formation.
-
-        Returns:
-            formation: the infered formation.
-        """
-        formation = ""
-        default_formation = "4-3-3"
-        defender = midfielder = attacker = 0
-        for player in team_players:
-            if player.starting_position.position_group == None:
-                continue
-            elif (
-                player.starting_position.position_group
-                == PositionType.Attacker
-            ):
-                attacker += 1
-            elif (
-                player.starting_position.position_group
-                == PositionType.Midfielder
-            ):
-                midfielder += 1
-            elif (
-                player.starting_position.position_group
-                == PositionType.Defender
-            ):
-                defender += 1
-        if defender + midfielder + attacker == 10:
-            formation = f"{defender}-{midfielder}-{attacker}"
-        elif defender + midfielder + attacker != 10:
-            formation = default_formation
-        return formation
-
-    def serialize(self, dataset: TrackingDataset, outputs: CDFOutputs) -> bool:
+    def serialize(
+        self,
+        dataset: TrackingDataset,
+        outputs: CDFOutputs,
+        additional_metadata: Optional[
+            Union[
+                "CdfMetaDataSchema",
+                "Stadium",
+                "Competition",
+                "Season",
+                "Meta",
+                "Misc",
+                dict,
+            ]
+        ] = None,
+    ) -> bool:
         """
         Serialize a TrackingDataset to Common Data Format.
 
         Args:
             dataset: The tracking dataset to serialize
             outputs: CDFOutputs containing file handles for metadata and tracking data
+            additional_metadata: Either a complete CdfMetaDataSchema or partial metadata
+                dict containing any of: 'competition', 'season', 'stadium', 'meta', 'misc'.
+                Can also contain direct field updates like {'stadium': {'id': '123'}}.
 
         Returns:
-            bool: True if serialization was successful, False otherwise
+            bool: True if serialization was successful
         """
+        if all(
+            True if x.ball_state == BallState.ALIVE else False for x in dataset
+        ):
+            warnings.warn(
+                "All frames in 'tracking_dataset' are 'ALIVE', the Common Data Format expects 'DEAD' frames as well. Set `only_alive=False` in your kloppy `.load_tracking()` call to include 'DEAD' frames.",
+                UserWarning,
+            )
 
-        from kloppy.domain import (
-            Orientation,
-            BallState,
-        )
-
-        # builded coordinateSystem class.
-        from kloppy.domain.models.common import CDFCoordinateSystem
-
-        # setting it as coordinate system of the imported data
         dataset = dataset.transform(
             to_coordinate_system=CDFCoordinateSystem(
                 dataset.metadata.coordinate_system
@@ -81,379 +92,248 @@ class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
             to_orientation=Orientation.STATIC_HOME_AWAY,
         )
 
-        ## building Tracking jsonl
-        # list of different periods within a game define by the cdf
-        periods = {
-            1: "first_half",
-            2: "second_half",
-            3: "first_half_extratime",
-            4: "second_half_extratime",
-            5: "shootout",
-        }
+        period_tracking = initialize_period_tracking(dataset.metadata.periods)
+        self._home_team, self._away_team = dataset.metadata.teams
 
-        # container for start and end frame_id
-        period_start_frame_id = {
-            period.id: None for period in dataset.metadata.periods
-        }
-        period_end_frame_id = {
-            period.id: None for period in dataset.metadata.periods
-        }
-
-        # container for start and end normalized frame_id
-        normalized_period_start_frame_id = {
-            period.id: None for period in dataset.metadata.periods
-        }
-        normalized_period_end_frame_id = {
-            period.id: None for period in dataset.metadata.periods
-        }
-
-        # diffence of ids between frame_ids
-        period_offset = {period.id: 0 for period in dataset.metadata.periods}
-
-        # Get home and away team data
-        home_team, away_team = dataset.metadata.teams
-
-        # Get the players Id.
-        home_player_ids, away_player_ids = (
-            [player.player_id for player in home_team.players],
-            [player.player_id for player in away_team.players],
+        self._serialize_tracking_frames(
+            dataset,
+            outputs,
+            period_tracking,
         )
 
-        frame_id = 0  # Use for the cdf_frame_ids..
+        self._serialize_metadata(
+            dataset,
+            outputs,
+            period_tracking,
+            additional_metadata or {},
+        )
+
+        return True
+
+    def _serialize_tracking_frames(self, dataset, outputs, period_tracking):
+        """Serialize tracking data frames to JSONL format.
+
+        Iterates through all frames in the dataset and writes each frame's tracking
+        data (player positions, ball coordinates, timestamps) directly to the output
+        JSONL file.
+
+        Args:
+            dataset: The kloppy tracking dataset containing frames to serialize.
+            outputs: CDFOutputs object containing the tracking data file handle.
+            period_tracking: Dictionary containing period frame ID tracking information.
+        """
         for frame in dataset.frames:
-            frame_data = {}
-            # Frame ID specified by the CDF
-            frame_data["frame_id"] = frame_id
-            # Original frame_id
-            frame_data["original_frame_id"] = frame.frame_id
-            # Timestamp
-            frame_data["timestamp"] = str(
-                dataset.metadata.date + frame.timestamp
-            )
-            # Period
-            frame_data["period"] = periods.get(frame.period.id, "unknownn")
             period_id = frame.period.id
-            # Update the start and end id for this period
-            if period_start_frame_id[period_id] is None:
-                period_start_frame_id[period_id] = frame_data[
-                    "original_frame_id"
-                ]
+            ball_status = frame.ball_state == BallState.ALIVE
 
-                if (
-                    period_id > 1
-                    and period_end_frame_id[period_id - 1] is not None
-                ):
-                    prev_period_length = (
-                        period_end_frame_id[period_id - 1]
-                        - period_start_frame_id[period_id - 1]
-                        + 1
-                    )
-                    period_offset[period_id] = (
-                        period_offset[period_id - 1] + prev_period_length
-                    )
+            normalized_frame_id = update_period_tracking(
+                period_tracking, period_id, frame.frame_id
+            )
 
-                # Set normalized start frame id
-                normalized_period_start_frame_id[period_id] = period_offset[
-                    period_id
-                ]
+            home_players = get_player_coordinates(frame, Ground.HOME)
+            away_players = get_player_coordinates(frame, Ground.AWAY)
 
-            period_end_frame_id[period_id] = frame_data["original_frame_id"]
+            if period_id not in PERIODS_MAP:
+                raise ValueError(
+                    f"Incorrect period_id {period_id}. Period ID {period_id} this is not supported by the Common Data Format"
+                )
 
-            normalized_frame_id = (
-                frame_data["original_frame_id"]
-                - period_start_frame_id[period_id]
-            ) + period_offset[period_id]
+            frame_data = {
+                "frame_id": normalized_frame_id,
+                "original_frame_id": frame.frame_id,
+                "timestamp": str(dataset.metadata.date + frame.timestamp),
+                "period": PERIODS_MAP[period_id],
+                "match": {"id": str(dataset.metadata.game_id)},
+                "ball_status": ball_status,
+                "teams": {
+                    "home": {
+                        "id": str(self._home_team.team_id),
+                        "players": home_players,
+                        "name": self._home_team.name,
+                    },
+                    "away": {
+                        "id": str(self._away_team.team_id),
+                        "players": away_players,
+                        "name": self._away_team.name,
+                    },
+                },
+                "ball": get_ball_coordinates(frame),
+            }
 
-            # Update normalized end frame id
-            normalized_period_end_frame_id[period_id] = normalized_frame_id
+            outputs.tracking_data.write(
+                (json.dumps(frame_data) + "\n").encode("utf-8")
+            )
 
-            # Match ID
-            frame_data["match"] = {"id": str(dataset.metadata.game_id)}
-            # Ball status
-            frame_data["ball_status"] = frame.ball_state == BallState.ALIVE
+    def _build_default_metadata_structure(
+        self,
+        dataset,
+        period_tracking,
+    ) -> "CdfMetaDataSchema":
+        """Build default CDF metadata structure from dataset."""
+        try:
+            from cdf import VERSION
+        except ImportError:
+            raise ImportError(
+                "Seems like you don't have common-data-format-validator installed. Please"
+                " install it using: pip install common-data-format-validator"
+            )
 
-            # Teams and players
-            home_players = []
-            for player, coordinates in frame.players_coordinates.items():
-                if player.player_id in home_player_ids:
-                    try:
-                        x = coordinates.x
-                        y = coordinates.x
-                        home_players.append(
-                            {
-                                "id": player.player_id,
-                                "x": round(x, 3),
-                                "y": round(y, 3),
-                                "position": player.starting_position.code,
-                            }
-                        )
-                    except KeyError:
-                        continue
+        first_frame = dataset[0]
 
-            away_players = []
-            for player, coordinates in frame.players_coordinates.items():
-                if player.player_id in away_player_ids:
-                    try:
-                        x = coordinates.x
-                        y = coordinates.x
-                        away_players.append(
-                            {
-                                "id": player.player_id,
-                                "x": round(x, 3),
-                                "y": round(y, 3),
-                                "position": player.starting_position.code,
-                            }
-                        )
-                    except KeyError:
-                        continue
+        home_starters, home_formation = get_starters_and_formation(
+            self._home_team, first_frame
+        )
+        away_starters, away_formation = get_starters_and_formation(
+            self._away_team, first_frame
+        )
 
-            # teams within the tracking data.
+        periods_info = build_periods_info(
+            dataset, period_tracking, self._home_team, self._away_team
+        )
 
-            home_players_id = []
-            away_players_id = []
-            for player, _ in frame.players_coordinates.items():
-                if player.team == home_team:
-                    home_players_id.append(player.player_id)
-                if player.team == away_team:
-                    away_players_id.append(player.player_id)
-            set_of_home_players_id_in_the_frame = set(home_players_id)
-            set_of_away_players_id_in_the_frame = set(away_players_id)
+        whistles = build_whistles(periods_info)
 
-            frame_data["teams"] = {
+        return {
+            "competition": {
+                "id": MISSING_MANDATORY_VALUE,
+            },
+            "season": {
+                "id": MISSING_MANDATORY_VALUE,
+            },
+            "stadium": {
+                "id": MISSING_MANDATORY_VALUE,
+                "pitch_length": dataset.metadata.pitch_dimensions.pitch_length,
+                "pitch_width": dataset.metadata.pitch_dimensions.pitch_width,
+            },
+            "match": {
+                "id": str(dataset.metadata.game_id),
+                "kickoff_time": str(
+                    dataset.metadata.date
+                    + dataset.metadata.periods[0].start_timestamp
+                ),
+                "periods": periods_info,
+                "whistles": whistles,
+                "scheduled_kickoff_time": str(dataset.metadata.date),
+            },
+            "teams": {
                 "home": {
-                    "id": home_team.team_id,
-                    "players": home_players,
-                    "jersey_color": " ",  #
-                    "name": home_team.name,
-                    "formation": (
-                        home_team.formations.at_start()
-                        if home_team.formations.items
-                        else self.get_starting_formation(
-                            [
-                                p
-                                for p in home_team.players
-                                if p.player_id
-                                in set_of_home_players_id_in_the_frame
-                            ]
-                        )
+                    "id": str(self._home_team.team_id),
+                    "players": build_team_players_metadata(
+                        self._home_team, home_starters
                     ),
+                    "name": self._home_team.name,
+                    "formation": home_formation,
                 },
                 "away": {
-                    "id": away_team.team_id,
-                    "players": away_players,
-                    "jersey_color": " ",
-                    "name": away_team.name,
-                    "formation": (
-                        away_team.formations.at_start()
-                        if away_team.formations.items
-                        else self.get_starting_formation(
-                            [
-                                p
-                                for p in away_team.players
-                                if p.player_id
-                                in set_of_away_players_id_in_the_frame
-                            ]
-                        )
+                    "id": str(self._away_team.team_id),
+                    "players": build_team_players_metadata(
+                        self._away_team, away_starters
                     ),
+                    "name": self._away_team.name,
+                    "formation": away_formation,
                 },
-            }
+            },
+            "meta": {
+                "video": None,
+                "tracking": {
+                    "fps": dataset.metadata.frame_rate,
+                    "name": dataset.metadata.provider.name.lower(),
+                    "converted_by": f"kloppy-cdf-converter-{__version__}",
+                    "version": MISSING_MANDATORY_VALUE,
+                    "collection_timing": MISSING_MANDATORY_VALUE,
+                },
+                "landmarks": None,
+                "ball": None,
+                "meta": None,
+                "cdf": {"version": VERSION},
+                "event": None,
+            },
+        }
 
-            # Ball
+    def _deep_merge_metadata(self, base: dict, updates: dict) -> dict:
+        """
+        Deep merge metadata updates into base metadata.
+
+        Args:
+            base: Base metadata dictionary
+            updates: Updates to apply (can be nested)
+
+        Returns:
+            Merged metadata dictionary
+        """
+        result = base.copy()
+
+        for key, value in updates.items():
             if (
-                frame_data["ball_status"] == True
-                and frame.ball_coordinates is not None
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
             ):
-                try:
-                    ball_x = round(frame.ball_coordinates.x, 3)
-                    ball_y = round(frame.ball_coordinates.y, 3)
-                    ball_z = round(frame.ball_coordinates.z, 3)
-                except KeyError:
-                    ball_x = ball_y = ball_z = None
+                result[key] = self._deep_merge_metadata(result[key], value)
             else:
-                ball_x = (
-                    ball_y
-                ) = ball_z = 404  # default missing value for ball coordinates
+                result[key] = value
 
-            frame_data["ball"] = {"x": ball_x, "y": ball_y, "z": ball_z}
+        return result
 
-            # update the frame_id
-            frame_id += 1
+    def _internal_validation_metadata(
+        self, metadata: dict, path: str = ""
+    ) -> None:
+        """
+        Validate metadata and warn about missing mandatory IDs.
 
-            # build a temporary jsonl for each frame
-            frame_file = tempfile.NamedTemporaryFile(
-                mode="w+b", suffix=".jsonl", delete=False
+        Args:
+            metadata: Metadata dictionary to validate
+            path: Current path in the metadata structure (for nested dicts)
+        """
+        for key, value in metadata.items():
+            current_path = f"{path}.{key}" if path else key
+
+            if value == MISSING_MANDATORY_VALUE:
+                warnings.warn(
+                    f"Missing mandatory ID at '{current_path}'. Currently replaced with the value '{MISSING_MANDATORY_VALUE}'. "
+                    f"Please provide the correct value to 'additional_metadata' to completely adhere to the CDF specification.",
+                    UserWarning,
+                )
+            elif isinstance(value, dict):
+                self._internal_validation_metadata(value, current_path)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        self._internal_validation_metadata(
+                            item, f"{current_path}[{i}]"
+                        )
+
+    def _serialize_metadata(
+        self,
+        dataset,
+        outputs,
+        period_tracking,
+        additional_metadata: dict,
+    ):
+        """
+        Serialize metadata to JSON format.
+
+        Builds and writes the complete metadata JSON including competition, season,
+        match information, periods, whistles, team rosters with formations, and
+        stadium dimensions. Accepts additional metadata for overrides.
+
+        Args:
+            dataset: The tracking dataset containing metadata to serialize.
+            outputs: CDFOutputs object containing the metadata file handle.
+            period_tracking: Dictionary containing normalized period frame IDs.
+            additional_metadata: Additional or override metadata following CdfMetaDataSchema.
+        """
+        metadata_json = self._build_default_metadata_structure(
+            dataset, period_tracking
+        )
+
+        if additional_metadata:
+            metadata_json = self._deep_merge_metadata(
+                metadata_json, additional_metadata
             )
-            frame_file.write((json.dumps(frame_data) + "\n").encode("utf-8"))
-            frame_file.flush()  # make sure data is written
 
-            # Add to tracking list
-            outputs.tracking_data.append(frame_file)
-
-        ###################### build now the metadata.
-        # Output containers
-        metadata_json = {}
-        # Competition infos.
-        metadata_json["competition"] = {
-            "id": "MISSING_MANDATORY_COMPETITION_ID",
-            "name": "",
-            "format": "",
-            "age_restriction": "",
-            "type": "",
-        }
-
-        # season infos.
-        metadata_json["season"] = {
-            "id": "MISSING_MANDATORY_SEASON_ID",
-            "name": "",
-        }
-
-        # match infos.
-        periods_info = []
-        for period in dataset.metadata.periods:
-            curent_period = {
-                "period": periods[period.id],
-                "play_direction": "left_right",
-                "start_time": str(
-                    dataset.metadata.date + period.start_timestamp
-                ),
-                "end_time": str(dataset.metadata.date + period.end_timestamp),
-                "start_frame_id": normalized_period_start_frame_id[period.id],
-                "end_frame_id": normalized_period_end_frame_id[period.id],
-                "left_team_id": home_team.team_id,
-                "right_team_id": away_team.team_id,
-            }
-            periods_info.append(curent_period)
-
-        ## building team_players for metadata
-        meta_home_players = []
-        starters_ids = []
-        for player, coordinates in dataset[0].players_coordinates.items():
-            starters_ids.append(player.player_id)
-
-        for player in home_team.players:
-            try:
-                meta_home_players.append(
-                    {
-                        "id": player.player_id,
-                        "team_id": home_team.team_id,
-                        "jersey_number": player.jersey_no,
-                        "is_starter": player.player_id in starters_ids,
-                    }
-                )
-            except KeyError:
-                continue
-
-        meta_away_players = []
-        for player in away_team.players:
-            try:
-                meta_away_players.append(
-                    {
-                        "id": player.player_id,
-                        "team_id": away_team.team_id,
-                        "jersey_number": player.jersey_no,
-                        "is_starter": player.player_id in starters_ids,
-                    }
-                )
-            except KeyError:
-                continue
-
-        # get whistles related to period directly from them.
-        whistles = []
-        for period in periods_info:
-            whistle_start = {}
-            whistle_end = {}
-            # type
-            whistle_start["type"] = period["period"]
-            whistle_end["type"] = period["period"]
-            # sub_type
-            whistle_start["sub_type"] = "start"
-            whistle_end["sub_type"] = "end"
-            # time
-            whistle_start["time"] = period["start_time"]
-            whistle_end["time"] = period["end_time"]
-            whistles.append(whistle_start)
-            whistles.append(whistle_end)
-
-        metadata_json["match"] = {
-            "id": str(dataset.metadata.game_id),
-            "kickoff_time": str(
-                dataset.metadata.date
-                + dataset.metadata.periods[0].start_timestamp
-            ),
-            "periods": periods_info,
-            "whistles": whistles,
-            "round": "",
-            "scheduled_kickoff_time": str(dataset.metadata.date),
-            "local_kickoff_time": "",
-            "misc": {
-                "country": "",
-                "city": "",
-                "percipitation": 0,
-                "is_open_roof": True,  # Asume as default value
-            },
-        }
-
-        home_players_id_in_meta = []
-        away_players_id_in_meta = []
-        for player, _ in dataset[0].players_coordinates.items():
-            if player.team == home_team:
-                home_players_id_in_meta.append(player.player_id)
-            if player.team == away_team:
-                away_players_id_in_meta.append(player.player_id)
-        meta_set_of_home_players_id_in_the_frame = set(home_players_id_in_meta)
-        meta_set_of_away_players_id_in_the_frame = set(away_players_id_in_meta)
-
-        metadata_json["teams"] = {
-            "home": {
-                "id": home_team.team_id,
-                "players": meta_home_players,
-                "jersey_color": " ",
-                "name": home_team.name,
-                "formation": home_team.starting_formation
-                or self.get_starting_formation(
-                    [
-                        p
-                        for p in home_team.players
-                        if p.player_id
-                        in meta_set_of_home_players_id_in_the_frame
-                    ]
-                ),
-            },
-            "away": {
-                "id": away_team.team_id,
-                "players": meta_away_players,
-                "jersey_color": " ",
-                "name": away_team.name,
-                "formation": away_team.starting_formation
-                or self.get_starting_formation(
-                    [
-                        p
-                        for p in away_team.players
-                        if p.player_id
-                        in meta_set_of_away_players_id_in_the_frame
-                    ]
-                ),
-            },
-        }
-
-        metadata_json["stadium"] = {
-            "id": "MISSING_MANDATORY_STADIUM_ID",
-            "pitch_length": dataset.metadata.pitch_dimensions.pitch_length,
-            "pitch_width": dataset.metadata.pitch_dimensions.pitch_width,
-            "name": "",
-            "turf": "",
-        }
-
-        metadata_json["meta"] = {
-            "video": None,
-            "tracking": None,
-            "landmarks": None,
-            "meta": None,
-            "cdf": None,
-        }
+        self._internal_validation_metadata(metadata_json)
 
         outputs.meta_data.write(
             (json.dumps(metadata_json) + "\n").encode("utf-8")
         )
-
-        return True

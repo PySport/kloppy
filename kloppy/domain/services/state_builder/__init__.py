@@ -1,5 +1,4 @@
 from dataclasses import replace
-from typing import List
 
 from kloppy.domain import EventDataset
 
@@ -8,7 +7,7 @@ from . import builders as _builders  # noqa: F401
 from .registered import create_state_builder
 
 
-def add_state(dataset: EventDataset, *builder_keys: List[str]) -> EventDataset:
+def add_state(dataset: EventDataset, *builder_keys: list[str]) -> EventDataset:
     """
     Add state
 

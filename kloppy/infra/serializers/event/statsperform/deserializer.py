@@ -1,49 +1,50 @@
-import math
-from typing import Dict, List, NamedTuple, IO, Optional
-import logging
 from datetime import datetime, timedelta
+import logging
+import math
+from typing import IO, NamedTuple, Optional
 
 import pytz
 
 from kloppy.domain import (
-    EventDataset,
-    Team,
-    Point,
-    Point3D,
     BallState,
+    BodyPart,
+    BodyPartQualifier,
+    CardQualifier,
+    CardType,
+    CounterAttackQualifier,
     DatasetFlag,
-    Orientation,
-    PassResult,
-    ShotResult,
-    TakeOnResult,
+    DuelQualifier,
     DuelResult,
     DuelType,
-    DuelQualifier,
-    Provider,
-    Metadata,
+    EventDataset,
+    ExpectedGoals,
+    GoalkeeperActionType,
+    GoalkeeperQualifier,
     InterceptionResult,
-    CardType,
-    CardQualifier,
+    Metadata,
+    Orientation,
+    PassQualifier,
+    PassResult,
+    PassType,
+    Period,
+    Point,
+    Point3D,
+    PositionType,
+    PostShotExpectedGoals,
+    Provider,
     Qualifier,
     SetPieceQualifier,
     SetPieceType,
-    BodyPartQualifier,
-    BodyPart,
-    PassType,
-    PassQualifier,
-    GoalkeeperQualifier,
-    GoalkeeperActionType,
-    CounterAttackQualifier,
-    PositionType,
-    ExpectedGoals,
-    PostShotExpectedGoals,
+    ShotResult,
+    TakeOnResult,
+    Team,
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
-from .parsers import get_parser, OptaEvent
-from .formation_mapping import formation_position_mapping, formation_id_mapping
+from .formation_mapping import formation_id_mapping, formation_position_mapping
+from .parsers import OptaEvent, get_parser
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,8 @@ EVENT_QUALIFIER_FORMATION_PLAYER_POSITIONS = 131
 EVENT_QUALIFIER_XG = 321
 EVENT_QUALIFIER_POST_SHOT_XG = 322
 
+EVENT_TYPE_CHALLENGE = 45
+
 event_type_names = {
     1: "pass",
     2: "offside pass",
@@ -246,43 +249,74 @@ position_line_mapping = {
 
 
 def _parse_pass(
-    raw_event: OptaEvent, next_event: OptaEvent, next_next_event: OptaEvent
-) -> Dict:
-    if raw_event.outcome:
-        result = PassResult.COMPLETE
-    else:
-        result = PassResult.INCOMPLETE
+    raw_event: OptaEvent,
+    next_event: OptaEvent,
+    next_next_event: OptaEvent,
+    team: Team,
+    period: Period,
+) -> dict:
+    result = PassResult.COMPLETE if raw_event.outcome else PassResult.INCOMPLETE
     receiver_coordinates = _get_end_coordinates(raw_event.qualifiers)
-    pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
-    overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
+    qualifiers = _get_pass_qualifiers(
+        raw_event.qualifiers
+    ) + _get_event_qualifiers(raw_event.qualifiers)
 
-    qualifiers = pass_qualifiers + overall_qualifiers
+    # Look for a ball receipt event based on the result and sequence of events
+    ball_receipt_event = None
+    if result == PassResult.COMPLETE and next_event is not None:
+        if (
+            next_event.contestant_id == team.team_id
+            and next_event.type_id in BALL_OWNING_EVENTS
+        ):
+            ball_receipt_event = next_event
+        elif (
+            next_event.type_id == EVENT_TYPE_CHALLENGE
+            and next_next_event is not None
+            and next_next_event.contestant_id == team.team_id
+            and next_next_event.type_id in BALL_OWNING_EVENTS
+        ):
+            ball_receipt_event = next_next_event
+    # Assign the receiver_player and receive_timestamp
+    # if a ball_receipt_event was found
+    if (
+        ball_receipt_event is not None
+        and ball_receipt_event.player_id is not None
+    ):
+        receiver_player = team.get_player_by_id(ball_receipt_event.player_id)
+        receive_timestamp = (
+            ball_receipt_event.timestamp - period.start_timestamp
+        )
+    else:
+        receiver_player = None
+        receive_timestamp = None
 
     # Set the end location of a deflected pass to the start location
     # of the next action and the outcome to "success" if the deflected
     # pass reached a teammate
-    if next_event is not None and next_next_event is not None:
-        if (
-            next_event.type_id == EVENT_TYPE_BALL_TOUCH
-            and next_event.outcome == 1
-            and next_next_event.contestant_id == raw_event.contestant_id
-        ):
-            result = PassResult.COMPLETE
-            receiver_coordinates = Point(
-                x=next_next_event.x,
-                y=next_next_event.y,
-            )
+    if (
+        next_event is not None
+        and next_next_event is not None
+        and next_event.type_id == EVENT_TYPE_BALL_TOUCH
+        and next_event.outcome == 1
+        and next_next_event.contestant_id == raw_event.contestant_id
+    ):
+        result = PassResult.COMPLETE
+        receiver_coordinates = Point(
+            x=next_next_event.x,
+            y=next_next_event.y,
+        )
+        receive_timestamp = next_next_event.timestamp - period.start_timestamp
 
     return dict(
         result=result,
         receiver_coordinates=receiver_coordinates,
-        receiver_player=None,
-        receive_timestamp=None,
+        receiver_player=receiver_player,
+        receive_timestamp=receive_timestamp,
         qualifiers=qualifiers,
     )
 
 
-def _parse_offside_pass(raw_event: OptaEvent) -> Dict:
+def _parse_offside_pass(raw_event: OptaEvent) -> dict:
     pass_qualifiers = _get_pass_qualifiers(raw_event.qualifiers)
     overall_qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
@@ -297,7 +331,7 @@ def _parse_offside_pass(raw_event: OptaEvent) -> Dict:
     )
 
 
-def _parse_take_on(raw_event: OptaEvent) -> Dict:
+def _parse_take_on(raw_event: OptaEvent) -> dict:
     if raw_event.outcome == 1:
         result = TakeOnResult.COMPLETE
     else:
@@ -305,23 +339,20 @@ def _parse_take_on(raw_event: OptaEvent) -> Dict:
     return dict(result=result)
 
 
-def _parse_clearance(raw_event: OptaEvent) -> Dict:
+def _parse_clearance(raw_event: OptaEvent) -> dict:
     return dict(qualifiers=_get_event_qualifiers(raw_event.qualifiers))
 
 
-def _parse_card(raw_event: OptaEvent) -> Dict:
+def _parse_card(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
 
-    if EVENT_QUALIFIER_RED_CARD in qualifiers:
-        card_type = CardType.RED
-    elif EVENT_QUALIFIER_FIRST_YELLOW_CARD in qualifiers:
-        card_type = CardType.FIRST_YELLOW
-    elif EVENT_QUALIFIER_SECOND_YELLOW_CARD in qualifiers:
-        card_type = CardType.SECOND_YELLOW
-    else:
-        card_type = None
+    card_type = None
+    for q in qualifiers:
+        if isinstance(q, CardQualifier):
+            card_type = q.value
+            break
 
-    return dict(result=None, qualifiers=qualifiers, card_type=card_type)
+    return dict(result=None, qualifiers=None, card_type=card_type)
 
 
 def _parse_lineup_qualifiers(raw_event: OptaEvent):
@@ -340,7 +371,7 @@ def _parse_lineup_qualifiers(raw_event: OptaEvent):
     return formation, player_ids, position_ids, positions_mapping
 
 
-def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
+def _parse_formation_change(raw_event: OptaEvent, team: Team) -> dict:
     (
         formation,
         player_ids,
@@ -357,7 +388,7 @@ def _parse_formation_change(raw_event: OptaEvent, team: Team) -> Dict:
     return dict(formation_type=formation, player_positions=player_positions)
 
 
-def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
+def _parse_substitution(next_event: OptaEvent, team: Team) -> dict:
     replacement_player = None
     position = None
     if next_event.type_id == EVENT_TYPE_PLAYER_ON:
@@ -365,12 +396,14 @@ def _parse_substitution(next_event: OptaEvent, team: Team) -> Dict:
 
     raw_position_line = next_event.qualifiers.get(44)
     if raw_position_line:
-        position = position_line_mapping[raw_position_line]
+        position = position_line_mapping.get(
+            raw_position_line, PositionType.Unknown
+        )
 
     return dict(replacement_player=replacement_player, position=position)
 
 
-def _parse_shot(raw_event: OptaEvent) -> Dict:
+def _parse_shot(raw_event: OptaEvent) -> dict:
     coordinates = Point(x=raw_event.x, y=raw_event.y)
     if raw_event.type_id == EVENT_TYPE_SHOT_GOAL:
         if 28 in raw_event.qualifiers:
@@ -436,7 +469,7 @@ def _parse_shot(raw_event: OptaEvent) -> Dict:
     return event_info
 
 
-def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:
+def _parse_goalkeeper_events(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     goalkeeper_qualifiers = _get_goalkeeper_qualifiers(raw_event.type_id)
     qualifiers.extend(goalkeeper_qualifiers)
@@ -444,7 +477,7 @@ def _parse_goalkeeper_events(raw_event: OptaEvent) -> Dict:
     return dict(result=None, qualifiers=qualifiers)
 
 
-def _parse_duel(raw_event: OptaEvent) -> Dict:
+def _parse_duel(raw_event: OptaEvent) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     if raw_event.type_id == EVENT_TYPE_TACKLE:
         qualifiers.extend([DuelQualifier(value=DuelType.GROUND)])
@@ -473,7 +506,7 @@ def _parse_duel(raw_event: OptaEvent) -> Dict:
 
 def _parse_interception(
     raw_event: OptaEvent, team: Team, next_event: OptaEvent
-) -> Dict:
+) -> dict:
     qualifiers = _get_event_qualifiers(raw_event.qualifiers)
     result = InterceptionResult.SUCCESS
 
@@ -493,7 +526,7 @@ def _parse_interception(
 
 
 def _get_end_coordinates(
-    raw_qualifiers: Dict[int, str], start_coordinates: Optional[Point] = None
+    raw_qualifiers: dict[int, str], start_coordinates: Optional[Point] = None
 ) -> Optional[Point]:
     x, y, z = None, None, None
 
@@ -533,7 +566,7 @@ def _get_end_coordinates(
     return None
 
 
-def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
+def _get_event_qualifiers(raw_qualifiers: dict[int, str]) -> list[Qualifier]:
     qualifiers = []
     qualifiers.extend(_get_event_setpiece_qualifiers(raw_qualifiers))
     qualifiers.extend(_get_event_bodypart_qualifiers(raw_qualifiers))
@@ -542,7 +575,7 @@ def _get_event_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
     return qualifiers
 
 
-def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
+def _get_pass_qualifiers(raw_qualifiers: dict[int, str]) -> list[Qualifier]:
     qualifiers = []
     pass_qualifier_mapping = {
         EVENT_QUALIFIER_CROSS: PassType.CROSS,
@@ -574,8 +607,8 @@ def _get_pass_qualifiers(raw_qualifiers: Dict[int, str]) -> List[Qualifier]:
 
 
 def _get_event_setpiece_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_CORNER_KICK in raw_qualifiers:
         qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
@@ -596,8 +629,8 @@ def _get_event_setpiece_qualifiers(
 
 
 def _get_event_bodypart_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_HEAD_PASS in raw_qualifiers:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -615,8 +648,8 @@ def _get_event_bodypart_qualifiers(
 
 
 def _get_event_card_qualifiers(
-    raw_qualifiers: Dict[int, str]
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_RED_CARD in raw_qualifiers:
         qualifiers.append(CardQualifier(value=CardType.RED))
@@ -628,7 +661,7 @@ def _get_event_card_qualifiers(
     return qualifiers
 
 
-def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
+def _get_goalkeeper_qualifiers(type_id: int) -> list[Qualifier]:
     qualifiers = []
     goalkeeper_qualifier = None
     if type_id == EVENT_TYPE_SAVE:
@@ -649,8 +682,8 @@ def _get_goalkeeper_qualifiers(type_id: int) -> List[Qualifier]:
 
 
 def _get_event_counter_attack_qualifiers(
-    raw_qualifiers: Dict[int, str],
-) -> List[Qualifier]:
+    raw_qualifiers: dict[int, str],
+) -> list[Qualifier]:
     qualifiers = []
     if EVENT_QUALIFIER_COUNTER_ATTACK in raw_qualifiers:
         qualifiers.append(CounterAttackQualifier(True))
@@ -695,9 +728,9 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             periods = metadata_parser.extract_periods()
             score = metadata_parser.extract_score()
             teams = metadata_parser.extract_lineups()
-            date = events_parser.extract_date()
-            game_week = events_parser.extract_game_week()
-            game_id = events_parser.extract_game_id()
+            date = metadata_parser.extract_date()
+            game_week = metadata_parser.extract_game_week()
+            game_id = metadata_parser.extract_game_id()
             raw_events = [
                 event
                 for event in events_parser.extract_events()
@@ -717,14 +750,10 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                     )
 
                 next_event = (
-                    raw_events[idx + 1]
-                    if (idx + 1) < len(raw_events)
-                    else None
+                    raw_events[idx + 1] if (idx + 1) < len(raw_events) else None
                 )
                 next_next_event = (
-                    raw_events[idx + 2]
-                    if (idx + 2) < len(raw_events)
-                    else None
+                    raw_events[idx + 2] if (idx + 2) < len(raw_events) else None
                 )
                 period = next(
                     (
@@ -785,7 +814,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         ball_owning_team=possession_team,
                         ball_state=ball_state,
                         # from Event
-                        event_id=raw_event.id,
+                        event_id=str(raw_event.id),
                         team=team,
                         player=player,
                         coordinates=Point(x=raw_event.x, y=raw_event.y),
@@ -794,7 +823,11 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
 
                     if raw_event.type_id == EVENT_TYPE_PASS:
                         pass_event_kwargs = _parse_pass(
-                            raw_event, next_event, next_next_event
+                            raw_event,
+                            next_event,
+                            next_next_event,
+                            team,
+                            period,
                         )
                         event = self.event_factory.build_pass(
                             **pass_event_kwargs,
@@ -913,8 +946,8 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                         generic_event_kwargs["timestamp"] = max(
                             timedelta(0), generic_event_kwargs["timestamp"]
                         )
-                        formation_change_event_kwargs = (
-                            _parse_formation_change(raw_event, team)
+                        formation_change_event_kwargs = _parse_formation_change(
+                            raw_event, team
                         )
                         event = self.event_factory.build_formation_change(
                             result=None,
@@ -962,9 +995,11 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             frame_rate=None,
             orientation=Orientation.ACTION_EXECUTING_TEAM,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
-            provider=Provider.OPTA
-            if inputs.event_feed.upper() == "F24"
-            else Provider.STATSPERFORM,
+            provider=(
+                Provider.OPTA
+                if inputs.event_feed.upper() == "F24"
+                else Provider.STATSPERFORM
+            ),
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_week=game_week,

@@ -1,36 +1,52 @@
 from abc import ABC, abstractmethod
 import math
-from typing import Dict, Any, Set, Type, Union, List, Optional
+import sys
+from typing import Any, Optional, Union
 
 from kloppy.domain import (
-    Event,
     BodyPartQualifier,
-    Orientation,
-    Frame,
     Code,
+    Event,
+    Frame,
+    Orientation,
+    Point,
+    QualifierMixin,
+    ResultMixin,
 )
 from kloppy.domain.models.event import (
-    EnumQualifier,
-    CarryEvent,
-    PassEvent,
-    EventType,
-    ShotEvent,
     CardEvent,
+    CarryEvent,
+    EnumQualifier,
+    EventType,
+    PassEvent,
+    ShotEvent,
 )
 from kloppy.exceptions import (
-    UnknownEncoderError,
-    OrientationError,
     KloppyParameterError,
+    OrientationError,
+    UnknownEncoderError,
 )
 from kloppy.utils import camelcase_to_snakecase
 
+py_version = sys.version_info
+if py_version >= (3, 8):
+    from typing import get_args
+
+
+def _get_generic_type_arg(cls):
+    t = cls.__orig_bases__[0]
+    if py_version >= (3, 8):
+        return get_args(t)[0]
+    else:
+        return t.__args__[0]
+
 
 class OneHotEncoder:
-    def __init__(self, name: str, options: List[str]):
+    def __init__(self, name: str, options: list[str]):
         self.options = options
         self.name = name
 
-    def encode(self, value: Union[Set, str]) -> Dict[str, bool]:
+    def encode(self, value: Union[set, str]) -> dict[str, bool]:
         if isinstance(value, str):
             value = [value]
 
@@ -42,12 +58,12 @@ class OneHotEncoder:
 
 class EventAttributeTransformer(ABC):
     @abstractmethod
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         pass
 
 
 class AngleToGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
         if metadata.orientation != Orientation.ACTION_EXECUTING_TEAM:
             raise OrientationError(
@@ -56,31 +72,27 @@ class AngleToGoalTransformer(EventAttributeTransformer):
 
         if not event.coordinates:
             return {"angle_to_goal": None}
+        delta_x = metadata.pitch_dimensions.distance_between(
+            Point(event.coordinates.x, 0),
+            Point(metadata.pitch_dimensions.x_dim.max, 0),
+        )
+        delta_y = metadata.pitch_dimensions.distance_between(
+            Point(0, event.coordinates.y),
+            Point(
+                0,
+                (
+                    metadata.pitch_dimensions.y_dim.max
+                    + metadata.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            ),
+        )
 
-        if metadata.pitch_dimensions.width:
-            # Calculate in metric system
-            event_x = event.coordinates.x * metadata.pitch_dimensions.length
-            event_y = event.coordinates.y * metadata.pitch_dimensions.width
-            goal_x = metadata.pitch_dimensions.length
-            goal_y = metadata.pitch_dimensions.width / 2
-        else:
-            event_x = event.coordinates.x
-            event_y = event.coordinates.y
-            goal_x = metadata.pitch_dimensions.x_dim.max
-            goal_y = (
-                metadata.pitch_dimensions.y_dim.max
-                + metadata.pitch_dimensions.y_dim.min
-            ) / 2
-
-        return {
-            "angle_to_goal": math.atan2(goal_x - event_x, goal_y - event_y)
-            / math.pi
-            * 180
-        }
+        return {"angle_to_goal": math.atan2(delta_x, delta_y) / math.pi * 180}
 
 
 class DistanceToGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
         if not event.coordinates:
             return {"distance_to_goal": None}
@@ -101,7 +113,7 @@ class DistanceToGoalTransformer(EventAttributeTransformer):
 
 
 class DistanceToOwnGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
 
         if not event.coordinates:
@@ -123,9 +135,9 @@ class DistanceToOwnGoalTransformer(EventAttributeTransformer):
 
 
 def create_transformer_from_qualifier(
-    qualifier_type: Type[EnumQualifier],
-) -> Type[EventAttributeTransformer]:
-    enum_ = qualifier_type.__annotations__["value"]
+    qualifier_type: type[EnumQualifier],
+) -> type[EventAttributeTransformer]:
+    enum_ = _get_generic_type_arg(qualifier_type)
     name = camelcase_to_snakecase(enum_.__name__)
     options = [e.value for e in enum_]
 
@@ -136,7 +148,7 @@ def create_transformer_from_qualifier(
             else:
                 raise UnknownEncoderError(f"Don't know {encoding} encoding")
 
-        def __call__(self, event: Event) -> Dict[str, Any]:
+        def __call__(self, event: Event) -> dict[str, Any]:
             values = {
                 qualifier.value.value
                 for qualifier in event.qualifiers
@@ -151,17 +163,15 @@ class DefaultEventTransformer(EventAttributeTransformer):
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         row = dict(
             event_id=event.event_id,
             event_type=(
@@ -169,15 +179,15 @@ class DefaultEventTransformer(EventAttributeTransformer):
                 if event.event_type != EventType.GENERIC
                 else f"GENERIC:{event.event_name}"
             ),
-            result=event.result.value if event.result else None,
-            success=event.result.is_success if event.result else None,
             period_id=event.period.id,
             timestamp=event.timestamp,
             end_timestamp=None,
             ball_state=event.ball_state.value if event.ball_state else None,
-            ball_owning_team=event.ball_owning_team.team_id
-            if event.ball_owning_team
-            else None,
+            ball_owning_team=(
+                event.ball_owning_team.team_id
+                if event.ball_owning_team
+                else None
+            ),
             team_id=event.team.team_id if event.team else None,
             player_id=event.player.player_id if event.player else None,
             coordinates_x=event.coordinates.x if event.coordinates else None,
@@ -187,52 +197,81 @@ class DefaultEventTransformer(EventAttributeTransformer):
             row.update(
                 {
                     "end_timestamp": event.receive_timestamp,
-                    "end_coordinates_x": event.receiver_coordinates.x
-                    if event.receiver_coordinates
-                    else None,
-                    "end_coordinates_y": event.receiver_coordinates.y
-                    if event.receiver_coordinates
-                    else None,
-                    "receiver_player_id": event.receiver_player.player_id
-                    if event.receiver_player
-                    else None,
+                    "end_coordinates_x": (
+                        event.receiver_coordinates.x
+                        if event.receiver_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.receiver_coordinates.y
+                        if event.receiver_coordinates
+                        else None
+                    ),
+                    "receiver_player_id": (
+                        event.receiver_player.player_id
+                        if event.receiver_player
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, CarryEvent):
             row.update(
                 {
                     "end_timestamp": event.end_timestamp,
-                    "end_coordinates_x": event.end_coordinates.x
-                    if event.end_coordinates
-                    else None,
-                    "end_coordinates_y": event.end_coordinates.y
-                    if event.end_coordinates
-                    else None,
+                    "end_coordinates_x": (
+                        event.end_coordinates.x
+                        if event.end_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.end_coordinates.y
+                        if event.end_coordinates
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, ShotEvent):
             row.update(
                 {
-                    "end_coordinates_x": event.result_coordinates.x
-                    if event.result_coordinates
-                    else None,
-                    "end_coordinates_y": event.result_coordinates.y
-                    if event.result_coordinates
-                    else None,
+                    "end_coordinates_x": (
+                        event.result_coordinates.x
+                        if event.result_coordinates
+                        else None
+                    ),
+                    "end_coordinates_y": (
+                        event.result_coordinates.y
+                        if event.result_coordinates
+                        else None
+                    ),
                 }
             )
         elif isinstance(event, CardEvent):
             row.update(
                 {
-                    "card_type": event.card_type.value
-                    if event.card_type
-                    else None
+                    "card_type": (
+                        event.card_type.value if event.card_type else None
+                    )
                 }
             )
 
-        if event.qualifiers:
+        if isinstance(event, QualifierMixin) and event.qualifiers:
             for qualifier in event.qualifiers:
                 row.update(qualifier.to_dict())
+
+        if isinstance(event, ResultMixin) and event.result is not None:
+            row.update(
+                {
+                    "result": event.result.value,
+                    "success": event.result.is_success,
+                }
+            )
+        else:
+            row.update(
+                {
+                    "result": None,
+                    "success": None,
+                }
+            )
 
         if self.include:
             return {k: row[k] for k in self.include}
@@ -246,45 +285,51 @@ class DefaultFrameTransformer:
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, frame: Frame) -> Dict[str, Any]:
+    def __call__(self, frame: Frame) -> dict[str, Any]:
         row = dict(
             period_id=frame.period.id if frame.period else None,
             timestamp=frame.timestamp,
             frame_id=frame.frame_id,
             ball_state=frame.ball_state.value if frame.ball_state else None,
-            ball_owning_team_id=frame.ball_owning_team.team_id
-            if frame.ball_owning_team
-            else None,
-            ball_x=frame.ball_coordinates.x
-            if frame.ball_coordinates
-            else None,
-            ball_y=frame.ball_coordinates.y
-            if frame.ball_coordinates
-            else None,
-            ball_z=getattr(frame.ball_coordinates, "z", None)
-            if frame.ball_coordinates
-            else None,
+            ball_owning_team_id=(
+                frame.ball_owning_team.team_id
+                if frame.ball_owning_team
+                else None
+            ),
+            ball_x=(
+                frame.ball_coordinates.x if frame.ball_coordinates else None
+            ),
+            ball_y=(
+                frame.ball_coordinates.y if frame.ball_coordinates else None
+            ),
+            ball_z=(
+                getattr(frame.ball_coordinates, "z", None)
+                if frame.ball_coordinates
+                else None
+            ),
             ball_speed=frame.ball_speed,
         )
         for player, player_data in frame.players_data.items():
             row.update(
                 {
-                    f"{player.player_id}_x": player_data.coordinates.x
-                    if player_data.coordinates
-                    else None,
-                    f"{player.player_id}_y": player_data.coordinates.y
-                    if player_data.coordinates
-                    else None,
+                    f"{player.player_id}_x": (
+                        player_data.coordinates.x
+                        if player_data.coordinates
+                        else None
+                    ),
+                    f"{player.player_id}_y": (
+                        player_data.coordinates.y
+                        if player_data.coordinates
+                        else None
+                    ),
                     f"{player.player_id}_d": player_data.distance,
                     f"{player.player_id}_s": player_data.speed,
                 }
@@ -318,17 +363,15 @@ class DefaultCodeTransformer:
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, code: Code) -> Dict[str, Any]:
+    def __call__(self, code: Code) -> dict[str, Any]:
         row = dict(
             code_id=code.code_id,
             period_id=code.period.id if code.period else None,

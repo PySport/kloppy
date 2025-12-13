@@ -1,7 +1,7 @@
 """XML parser for Opta F7 feeds."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from lxml import objectify
 
@@ -10,16 +10,17 @@ from kloppy.domain import (
     Ground,
     Period,
     Player,
+    PositionType,
     Score,
     Team,
 )
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser
 from ..formation_mapping import (
-    formation_position_mapping,
     formation_name_mapping,
+    formation_position_mapping,
 )
+from .base import OptaXMLParser
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
@@ -38,7 +39,7 @@ class F7XMLParser(OptaXMLParser):
         Path of the data file.
     """
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         periods = {
             i: Period(id=i, start_timestamp=None, end_timestamp=None)
             for i in range(1, 5)
@@ -98,7 +99,7 @@ class F7XMLParser(OptaXMLParser):
             return None
         return Score(home=home_score, away=away_score)
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -144,31 +145,48 @@ class F7XMLParser(OptaXMLParser):
                 "-".join(list(team_elm.attrib["Formation"]))
             ),
         )
-        team.players = [
-            Player(
-                player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
-                team=team,
-                jersey_no=int(player_elm.attrib["ShirtNumber"]),
-                first_name=team_players[player_elm.attrib["PlayerRef"]][
-                    "first_name"
-                ],
-                last_name=team_players[player_elm.attrib["PlayerRef"]][
-                    "last_name"
-                ],
-                starting=(player_elm.attrib["Status"] == "Start"),
-                starting_position=formation_position_mapping[
-                    formation_name_mapping[team_elm.attrib["Formation"]]
-                ][int(player_elm.attrib["Formation_Place"])],
+        players = []
+
+        formation = (
+            formation_name_mapping.get(
+                team_elm.attrib["Formation"], FormationType.UNKNOWN
             )
-            for player_elm in team_elm.find("PlayerLineUp").iterchildren(
-                "MatchPlayer"
+            if "Formation" in team_elm.attrib
+            else FormationType.UNKNOWN
+        )
+
+        for player_elm in team_elm.find("PlayerLineUp").iterchildren(
+            "MatchPlayer"
+        ):
+            starting_position = (
+                formation_position_mapping[formation][
+                    int(player_elm.attrib["Formation_Place"])
+                ]
+                if formation != FormationType.UNKNOWN
+                else PositionType.Unknown
             )
-        ]
+            players.append(
+                Player(
+                    player_id=player_elm.attrib["PlayerRef"].lstrip("p"),
+                    team=team,
+                    jersey_no=int(player_elm.attrib["ShirtNumber"]),
+                    first_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "first_name"
+                    ],
+                    last_name=team_players[player_elm.attrib["PlayerRef"]][
+                        "last_name"
+                    ],
+                    starting=(player_elm.attrib["Status"] == "Start"),
+                    starting_position=starting_position,
+                )
+            )
+
+        team.players = players
         return team
 
     def _parse_team_players(
         self, team_ref: str
-    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
+    ) -> tuple[str, dict[str, dict[str, str]]]:
         team_elms = list(document_path.find(self.root).iterchildren("Team"))
         for team_elm in team_elms:
             if team_elm.attrib["uID"] == team_ref:

@@ -1,9 +1,6 @@
-from .common import TRACABInputs
-from .tracab_dat import TRACABDatDeserializer
-from .tracab_json import TRACABJSONDeserializer
+from .deserializer import TRACABDeserializer, TRACABInputs
 
 __all__ = [
-    "TRACABDatDeserializer",
-    "TRACABJSONDeserializer",
+    "TRACABDeserializer",
     "TRACABInputs",
 ]

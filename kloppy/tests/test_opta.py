@@ -1,13 +1,14 @@
+from datetime import datetime, timedelta, timezone
 import math
-from datetime import datetime, timezone, timedelta
 
 import pytest
 
+from kloppy import opta
 from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
-    CardQualifier,
+    CardEvent,
     CardType,
     CounterAttackQualifier,
     DatasetFlag,
@@ -19,10 +20,11 @@ from kloppy.domain import (
     FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
+    OptaPitchDimensions,
     Orientation,
     PassQualifier,
+    PassResult,
     PassType,
-    OptaPitchDimensions,
     Point,
     Point3D,
     PositionType,
@@ -32,9 +34,7 @@ from kloppy.domain import (
     SetPieceType,
     ShotResult,
     build_coordinate_system,
-    PassResult,
 )
-from kloppy import opta
 from kloppy.infra.serializers.event.statsperform.deserializer import (
     _get_end_coordinates,
 )
@@ -88,9 +88,7 @@ class TestOptaMetadata:
 
     def test_orientation(self, dataset):
         """It should set the action-executing-team orientation"""
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
 
     def test_framerate(self, dataset):
         """It should set the frame rate to None"""
@@ -236,10 +234,11 @@ class TestOptaEvent:
         header = dataset.get_event_by_id("1101592119")
         assert BodyPart.HEAD in header.get_qualifier_values(BodyPartQualifier)
 
-    def test_card_qualifiers(self, dataset: EventDataset):
+    def test_card_event(self, dataset: EventDataset):
         """Test if the card qualifiers are correctly deserialized"""
         red_card = dataset.get_event_by_id("2318454729")
-        assert red_card.get_qualifier_value(CardQualifier) == CardType.RED
+        assert isinstance(red_card, CardEvent)
+        assert red_card.card_type == CardType.RED
 
     def test_counter_attack_qualifiers(self, dataset: EventDataset):
         """Test if the counter attack qualifiers are correctly deserialized"""
@@ -295,9 +294,9 @@ class TestOptaPassEvent:
     def test_ball_state(self, dataset: EventDataset):
         """Test if the ball state is correctly set"""
         events = dataset.find_all("pass")
-        assert all(
-            event.ball_state == BallState.ALIVE for event in events
-        ), "Not all pass ball states are ALIVE"
+        assert all(event.ball_state == BallState.ALIVE for event in events), (
+            "Not all pass ball states are ALIVE"
+        )
 
 
 class TestOptaClearanceEvent:
@@ -330,9 +329,7 @@ class TestOptaShotEvent:
         # A shot event should have end coordinates
         assert shot.result_coordinates == Point3D(100.0, 47.8, 2.5)
         # A shot event should have a body part
-        assert (
-            shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
-        )
+        assert shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
 
     def test_timestamp_goal(self, dataset: EventDataset):
         """Check timestamp from qualifier 374 in case of goal"""
@@ -400,8 +397,7 @@ class TestOptaShotEvent:
         # triangle. Therefore, we compute:
         #   - the length of the adjacent side of the large triangle
         adj_large = math.sqrt(
-            (100 - start_coordinates.x) ** 2
-            + (52.1 - start_coordinates.y) ** 2
+            (100 - start_coordinates.x) ** 2 + (52.1 - start_coordinates.y) ** 2
         )
         #   - the length of the adjacent side of the small triangle
         adj_small = math.sqrt(
@@ -550,6 +546,6 @@ class TestOptaCardEvent:
         """It should deserialize all card events"""
         events = dataset.find_all("card")
         assert len(events) == 1
-        assert all(
-            event.ball_state == BallState.DEAD for event in events
-        ), "Not all card ball states are ALIVE"
+        assert all(event.ball_state == BallState.DEAD for event in events), (
+            "Not all card ball states are ALIVE"
+        )

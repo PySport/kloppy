@@ -1,8 +1,8 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
-from typing import IO, Dict, List, NamedTuple, Tuple
+import json
+import logging
+from typing import IO, NamedTuple
 
 from kloppy.domain import (
     BallState,
@@ -147,13 +147,13 @@ DF_EVENT_TYPE_PENALTY_SHOOTOUT_OFF_TARGET = 57
 DF_EVENT_TYPE_PENALTY_SHOOTOUT_POST = 183
 
 
-def parse_str_ts(raw_event: Dict) -> timedelta:
+def parse_str_ts(raw_event: dict) -> timedelta:
     return timedelta(
         seconds=raw_event["t"]["m"] * 60 + (raw_event["t"]["s"] or 0)
     )
 
 
-def _parse_coordinates(coordinates: Dict[str, float]) -> Point:
+def _parse_coordinates(coordinates: dict[str, float]) -> Point:
     # location is cell based
     # +-------+-------+
     # | -1,-1 |  1,-1 |
@@ -164,8 +164,8 @@ def _parse_coordinates(coordinates: Dict[str, float]) -> Point:
 
 
 def _get_team_and_player(
-    raw_event: Dict, home_team: Team, away_team: Team
-) -> Tuple[Team, Player]:
+    raw_event: dict, home_team: Team, away_team: Team
+) -> tuple[Team, Player]:
     team = None
     player = None
 
@@ -188,8 +188,8 @@ def _get_team_and_player(
 
 
 def _get_event_qualifiers(
-    raw_event: Dict, previous_event: Dict = None
-) -> List[Qualifier]:
+    raw_event: dict, previous_event: dict = None
+) -> list[Qualifier]:
     qualifiers = []
 
     if raw_event["type"] == DF_EVENT_TYPE_THROW_IN:
@@ -224,11 +224,11 @@ def _get_event_qualifiers(
 
 
 def _parse_pass(
-    raw_event: Dict,
+    raw_event: dict,
     team: Team,
-    previous_event: Dict = None,
-    next_event: Dict = None,
-) -> Dict:
+    previous_event: dict = None,
+    next_event: dict = None,
+) -> dict:
     if next_event is not None and next_event["type"] == DF_EVENT_TYPE_OFFSIDE:
         result = PassResult.OFFSIDE
     elif raw_event["type"] == DF_EVENT_TYPE_PASS_CORRECT:
@@ -282,7 +282,7 @@ def _parse_pass(
     )
 
 
-def _parse_shot(raw_event: Dict, previous_event: Dict = None) -> Dict:
+def _parse_shot(raw_event: dict, previous_event: dict = None) -> dict:
     outcome_id = raw_event["type"]
     if outcome_id in GOAL_EVENTS:
         result = ShotResult.GOAL
@@ -312,7 +312,7 @@ def _parse_shot(raw_event: Dict, previous_event: Dict = None) -> Dict:
     )
 
 
-def _parse_card(raw_event: Dict) -> Dict:
+def _parse_card(raw_event: dict) -> dict:
     card_id = raw_event["type"]
     if card_id == DF_EVENT_TYPE_RED_CARD:
         card_type = CardType.RED
@@ -326,14 +326,14 @@ def _parse_card(raw_event: Dict) -> Dict:
     return dict(card_type=card_type)
 
 
-def _parse_substitution(raw_event: Dict, team: Team) -> Dict:
+def _parse_substitution(raw_event: dict, team: Team) -> dict:
     player = team.get_player_by_id(raw_event["offId"])
     replacement_player = team.get_player_by_id(raw_event["inId"])
 
     return dict(player=player, replacement_player=replacement_player)
 
 
-def _include_event(event: Event, wanted_event_types: List) -> bool:
+def _include_event(event: Event, wanted_event_types: list) -> bool:
     return not wanted_event_types or event.event_type in wanted_event_types
 
 
@@ -420,9 +420,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                 ):
                     continue
                 timestamp = datetime.strptime(
-                    match["date"]
-                    + status_update["time"]
-                    + match["stadiumGMT"],
+                    match["date"] + status_update["time"] + match["stadiumGMT"],
                     "%Y%m%d%H:%M:%S%z",
                 )
                 half = status_update["t"]["half"]

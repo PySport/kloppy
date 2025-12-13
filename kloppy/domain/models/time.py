@@ -2,10 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import (
     Generic,
-    List,
     Literal,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     overload,
@@ -27,18 +25,33 @@ class Period:
         start_timestamp: The UTC datetime of the kick-off or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's kick-off
+        start_time: Same as `start_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
         end_timestamp: The UTC datetime of the final whistle or, if the
             absolute datetime is not available, the offset between the start
             of the data feed and the period's final whistle
-        attacking_direction: See [`AttackingDirection`][kloppy.domain.models.common.AttackingDirection]
+        end_time: Same as `end_timestamp`, but as a [`Time`][kloppy.domain.Time] object.
+        duration: The length of the period.
+        prev_period: Period before this period.
+        next_period: Period after this period.
     """
 
     id: int
     start_timestamp: Union[datetime, timedelta]
-    end_timestamp: Union[datetime, timedelta]
+    end_timestamp: Optional[Union[datetime, timedelta]]
 
     prev_period: Optional["Period"] = field(init=False)
     next_period: Optional["Period"] = field(init=False)
+
+    def __post_init__(self):
+        if (
+            self.end_timestamp is not None
+            and self.start_timestamp.__class__ != self.end_timestamp.__class__
+        ):
+            raise ValueError(
+                "'start_timestamp' and 'end_timestamp' must both be of type datetime or timedelta,"
+                + f" but got start_timestamp={self.start_timestamp.__class__}"
+                + f" and end_timestamp={self.end_timestamp.__class__}"
+            )
 
     def contains(self, timestamp: datetime):
         if isinstance(self.start_timestamp, datetime) and isinstance(
@@ -57,11 +70,11 @@ class Period:
     def end_time(self) -> "Time":
         return Time(
             period=self, timestamp=self.end_timestamp - self.start_timestamp
-        )
+        )  # type: ignore
 
     @property
     def duration(self) -> timedelta:
-        return self.end_timestamp - self.start_timestamp
+        return self.end_timestamp - self.start_timestamp  # type: ignore
 
     def __eq__(self, other):
         return isinstance(other, Period) and other.id == self.id
@@ -93,6 +106,17 @@ class Period:
 
 @dataclass
 class Time:
+    """
+    A point in time during a match.
+
+    A time is defined by a period and a timestamp. The timestamp is the time
+    elapsed since the start of the period.
+
+    Attributes:
+        period: A period in a match.
+        timestamp: The time elapsed since the start of the period.
+    """
+
     period: "Period"
     timestamp: timedelta
 
@@ -108,12 +132,10 @@ class Time:
         )
 
     @overload
-    def __sub__(self, other: timedelta) -> "Time":
-        ...
+    def __sub__(self, other: timedelta) -> "Time": ...
 
     @overload
-    def __sub__(self, other: "Time") -> timedelta:
-        ...
+    def __sub__(self, other: "Time") -> timedelta: ...
 
     def __sub__(
         self, other: Union["Time", timedelta]
@@ -132,7 +154,7 @@ class Time:
             while other > current_timestamp:
                 other -= current_timestamp
                 if not current_period.prev_period:
-                    # We reached start of the match, lets just return start itself
+                    # We reached start of the match, let's just return start itself
                     return Time(period=current_period, timestamp=timedelta(0))
 
                 current_period = current_period.prev_period
@@ -165,7 +187,7 @@ class Time:
 
             other -= current_period.duration - current_timestamp
             if not current_period.next_period:
-                # We reached start of the match, lets just return start itself
+                # We reached start of the match, let's just return start itself
                 return Time(
                     period=current_period, timestamp=current_period.duration
                 )
@@ -219,7 +241,7 @@ class TimeContainer(Generic[T]):
     def __setitem__(self, key: Time, value: Optional[T]):
         self.set(key, value)
 
-    def ranges(self) -> List[Tuple[Time, Time, T]]:
+    def ranges(self) -> list[tuple[Time, Time, T]]:
         items = list(self.items)
         if not items:
             return []

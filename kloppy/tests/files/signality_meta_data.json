@@ -1,0 +1,207 @@
+{
+  "id": "0",
+  "_created": "2024-09-30T00:00:25.394Z",
+  "_modified": "2024-10-06T14:07:03.203Z",
+  "competition": "Competition",
+  "activity": "soccer",
+  "deployment_state": "Destroyed",
+  "status_code": 0,
+  "data_level": 1,
+  "team_home_name": "Home Team",
+  "team_home_lineup": {
+    "1": 45,
+    "2": 18,
+    "3": 4,
+    "4": 3,
+    "5": 27,
+    "6": 14,
+    "7": 6,
+    "8": 29,
+    "9": 20,
+    "10": 23,
+    "11": 11
+  },
+  "team_home_players": [
+    {
+      "name": "Home Team Player 1",
+      "jersey_number": 15
+    },
+    {
+      "name": "Home Team Player 2",
+      "jersey_number": 35
+    },
+    {
+      "name": "Home Team Player 3",
+      "jersey_number": 5
+    },
+    {
+      "name": "Home Team Player 4",
+      "jersey_number": 7
+    },
+    {
+      "name": "Home Team Player 5",
+      "jersey_number": 9
+    },
+    {
+      "name": "Home Team Player 6",
+      "jersey_number": 13
+    },
+    {
+      "name": "Home Team Player 7",
+      "jersey_number": 16
+    },
+    {
+      "name": "Home Team Player 8",
+      "jersey_number": 19
+    },
+    {
+      "name": "Home Team Player 9",
+      "jersey_number": 26
+    },
+    {
+      "name": "Home Team Player 10",
+      "jersey_number": 45
+    },
+    {
+      "name": "Home Team Player 11",
+      "jersey_number": 18
+    },
+    {
+      "name": "Home Team Player 12",
+      "jersey_number": 4
+    },
+    {
+      "name": "Home Team Player 13",
+      "jersey_number": 3
+    },
+    {
+      "name": "Home Team Player 14",
+      "jersey_number": 27
+    },
+    {
+      "name": "Home Team Player 15",
+      "jersey_number": 14
+    },
+    {
+      "name": "Home Team Player 16",
+      "jersey_number": 6
+    },
+    {
+      "name": "Home Team Player 17",
+      "jersey_number": 29
+    },
+    {
+      "name": "Home Team Player 18",
+      "jersey_number": 20
+    },
+    {
+      "name": "Home Team Player 19",
+      "jersey_number": 23
+    },
+    {
+      "name": "Home Team Player 20",
+      "jersey_number": 11
+    }
+  ],
+  "team_home_colors": [],
+  "team_away_name": "Away Team",
+  "team_away_lineup": {
+    "1": 1,
+    "2": 13,
+    "3": 39,
+    "4": 4,
+    "5": 3,
+    "6": 23,
+    "7": 29,
+    "8": 11,
+    "9": 10,
+    "10": 5,
+    "11": 9
+  },
+  "team_away_players": [
+    {
+      "name": "Away Team Player 1",
+      "jersey_number": 30
+    },
+    {
+      "name": "Away Team Player 2",
+      "jersey_number": 6
+    },
+    {
+      "name": "Away Team Player 3",
+      "jersey_number": 7
+    },
+    {
+      "name": "Away Team Player 4",
+      "jersey_number": 20
+    },
+    {
+      "name": "Away Team Player 5",
+      "jersey_number": 21
+    },
+    {
+      "name": "Away Team Player 6",
+      "jersey_number": 25
+    },
+    {
+      "name": "Away Team Player 7",
+      "jersey_number": 26
+    },
+    {
+      "name": "Away Team Player 8",
+      "jersey_number": 28
+    },
+    {
+      "name": "Away Team Player 9",
+      "jersey_number": 12
+    },
+    {
+      "name": "Away Team Player 10",
+      "jersey_number": 1
+    },
+    {
+      "name": "Away Team Player 11",
+      "jersey_number": 13
+    },
+    {
+      "name": "Away Team Player 12",
+      "jersey_number": 39
+    },
+    {
+      "name": "Away Team Player 13",
+      "jersey_number": 4
+    },
+    {
+      "name": "Away Team Player 14",
+      "jersey_number": 3
+    },
+    {
+      "name": "Away Team Player 15",
+      "jersey_number": 23
+    },
+    {
+      "name": "Away Team Player 16",
+      "jersey_number": 29
+    },
+    {
+      "name": "Away Team Player 17",
+      "jersey_number": 11
+    },
+    {
+      "name": "Away Team Player 18",
+      "jersey_number": 10
+    },
+    {
+      "name": "Away Team Player 19",
+      "jersey_number": 5
+    },
+    {
+      "name": "Away Team Player 20",
+      "jersey_number": 9
+    }
+  ],
+  "team_away_colors": [],
+  "time_start": "2024-10-06T12:00:00.000Z",
+  "venueId": "0",
+  "calibrationId": 4439
+}

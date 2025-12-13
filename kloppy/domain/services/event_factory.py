@@ -1,34 +1,34 @@
 import dataclasses
-import warnings
 from dataclasses import fields
-from typing import TypeVar, Type
+from typing import TypeVar
+import warnings
 
 from kloppy.domain import (
-    PassEvent,
-    ShotEvent,
-    GenericEvent,
-    TakeOnEvent,
-    RecoveryEvent,
-    MiscontrolEvent,
-    CarryEvent,
-    DuelEvent,
-    InterceptionEvent,
-    ClearanceEvent,
-    FormationChangeEvent,
     BallOutEvent,
-    PlayerOnEvent,
-    PlayerOffEvent,
-    FoulCommittedEvent,
     CardEvent,
-    SubstitutionEvent,
+    CarryEvent,
+    ClearanceEvent,
+    DuelEvent,
+    FormationChangeEvent,
+    FoulCommittedEvent,
+    GenericEvent,
     GoalkeeperEvent,
+    InterceptionEvent,
+    MiscontrolEvent,
+    PassEvent,
+    PlayerOffEvent,
+    PlayerOnEvent,
+    RecoveryEvent,
+    ShotEvent,
+    SubstitutionEvent,
+    TakeOnEvent,
 )
 from kloppy.domain.models.event import PressureEvent
 
 T = TypeVar("T")
 
 
-def create_event(event_cls: Type[T], **kwargs) -> T:
+def create_event(event_cls: type[T], **kwargs) -> T:
     """
     Do the actual construction of an event.
 
@@ -65,9 +65,7 @@ def create_event(event_cls: Type[T], **kwargs) -> T:
 
     if len(relevant_kwargs) < len(all_kwargs):
         skipped_kwargs = set(all_kwargs.keys()) - set(relevant_kwargs.keys())
-        warnings.warn(
-            f"The following arguments were skipped: {skipped_kwargs}"
-        )
+        warnings.warn(f"The following arguments were skipped: {skipped_kwargs}")
 
     event = event_cls(**relevant_kwargs)
 

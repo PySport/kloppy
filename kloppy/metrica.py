@@ -1,3 +1,5 @@
+"""Functions for loading Metrica Sports event and tracking data."""
+
 from ._providers.metrica import (
     load_event,
     load_open_data,

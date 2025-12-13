@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "Home Team FC",
+    "countryId": 466,
+    "type": "CLUB",
+    "gender": "MALE",
+    "access": true
+  },
+  {
+    "id": 2,
+    "name": "Away Team United",
+    "countryId": 466,
+    "type": "CLUB",
+    "gender": "MALE",
+    "access": true
+  }
+]

@@ -1,17 +1,18 @@
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
 import pytest
 
 from kloppy import metrica
 from kloppy.domain import (
-    Orientation,
-    Provider,
-    SetPieceType,
     BodyPart,
-    EventDataset,
-    Point,
-    SetPieceQualifier,
     BodyPartQualifier,
+    EventDataset,
+    Orientation,
+    Point,
+    Provider,
+    SetPieceQualifier,
+    SetPieceType,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -65,14 +66,10 @@ class TestMetricaEvents:
         # are from different matches
         assert dataset.events[0].timestamp == timedelta(
             seconds=14.44
-        ) - timedelta(
-            seconds=450 / 25
-        )  # kickoff first half
+        ) - timedelta(seconds=450 / 25)  # kickoff first half
         assert dataset.events[1749].timestamp == timedelta(
             seconds=2803.6
-        ) - timedelta(
-            seconds=650 / 25
-        )  # kickoff second half
+        ) - timedelta(seconds=650 / 25)  # kickoff second half
 
     def test_coordinates(self, dataset: EventDataset):
         """It should parse the coordinates of events correctly."""

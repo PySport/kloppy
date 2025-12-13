@@ -1,8 +1,8 @@
 import sys
 
-import pytest
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
+import pytest
 
 from kloppy import opta, statsbomb, tracab
 from kloppy.config import config_context
@@ -121,9 +121,7 @@ class TestHelpers:
         assert transformed_dataset.frames[1].ball_coordinates == Point3D(
             x=1, y=0, z=1
         )
-        assert (
-            transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
-        )
+        assert transformed_dataset.metadata.orientation == Orientation.AWAY_HOME
         assert transformed_dataset.metadata.coordinate_system is None
         assert (
             transformed_dataset.metadata.pitch_dimensions
@@ -236,8 +234,7 @@ class TestHelpers:
             to_pitch_dimensions=to_pitch_dimensions,
         )
         assert (
-            transform4.metadata.orientation
-            == Orientation.ACTION_EXECUTING_TEAM
+            transform4.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         )
         assert transform4.frames[1].ball_coordinates == Point3D(x=0, y=1, z=1)
         for frame_t3, frame_t4 in zip(transform3.frames, transform4.frames):
@@ -262,9 +259,7 @@ class TestHelpers:
             coordinates="tracab",
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=5270.0, y=27.0)
@@ -291,6 +286,52 @@ class TestHelpers:
         assert (
             transformed_dataset.metadata.pitch_dimensions
             == transformerd_coordinate_system.pitch_dimensions
+        )
+
+    def test_transform_to_pitch_dimensions_with_coordinate_system(
+        self, base_dir
+    ):
+        dataset = tracab.load(
+            meta_data=base_dir / "files/tracab_meta.xml",
+            raw_data=base_dir / "files/tracab_raw.dat",
+            only_alive=False,
+            coordinates="tracab",
+        )
+
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
+        assert dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=5270.0, y=27.0)
+
+        transformed_dataset = dataset.transform(
+            to_pitch_dimensions=NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            ),
+        )
+        assert transformed_dataset.records[0].players_data[
+            player_home_1
+        ].coordinates == Point(x=1.0019047619047619, y=0.5039705882352942)
+
+        assert (
+            transformed_dataset.metadata.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
+        )
+        assert (
+            transformed_dataset.metadata.coordinate_system.pitch_dimensions
+            == NormalizedPitchDimensions(
+                x_dim=Dimension(min=0, max=1),
+                y_dim=Dimension(min=0, max=1),
+                pitch_length=105,
+                pitch_width=68,
+            )
         )
 
     def test_transform_event_data(self, base_dir):

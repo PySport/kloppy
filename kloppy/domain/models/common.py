@@ -1,39 +1,49 @@
-import sys
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
+import sys
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    Iterable,
-    List,
     Literal,
-    NewType,
-    Optional,
     TypeVar,
-    Union,
     overload,
 )
 
-from ...utils import deprecated, snake_case
+from kloppy.utils import deprecated, snake_case
+
+if TYPE_CHECKING:
+    from pandas import DataFrame
+
+    from ..services.transformers.data_record import (
+        Column,
+        NamedColumns,
+    )
+
 from .position import PositionType
 
 if sys.version_info >= (3, 11):
-    from typing import Self
+    from typing import Self, Unpack
 else:
-    from typing_extensions import Self
+    from typing_extensions import Self, Unpack
 
-from ...exceptions import (
+from kloppy.exceptions import (
     InvalidFilterError,
     KloppyParameterError,
     OrientationError,
 )
+
 from .formation import FormationType
 from .pitch import (
+    DEFAULT_PITCH_LENGTH,
+    DEFAULT_PITCH_WIDTH,
     Dimension,
     ImperialPitchDimensions,
     MetricPitchDimensions,
@@ -49,11 +59,11 @@ from .time import Period, Time, TimeContainer
 @dataclass
 class Score:
     """
-    Score
+    The scoreline of a match.
 
     Attributes:
-        home:
-        away:
+        home: Goals scored by the home team.
+        away: Goals scored by the away team.
     """
 
     home: int
@@ -62,10 +72,12 @@ class Score:
 
 class Ground(Enum):
     """
+    Whether a team is playing at home or away.
+
     Attributes:
-        HOME: home playing team
-        AWAY: away playing team
-        REFEREE: Referee (could be used in tracking data)
+        HOME (Ground): The team is playing at home.
+        AWAY (Ground): The team is playing away.
+        REFEREE (Ground): Referee (could be used in tracking data).
     """
 
     HOME = "home"
@@ -81,25 +93,32 @@ class Ground(Enum):
 
 class Provider(Enum):
     """
+    Data providers.
+
     Attributes:
-        METRICA:
-        TRACAB:
-        SECONDSPECTRUM:
-        OPTA:
-        SKILLCORNER:
-        STATSBOMB:
-        SPORTEC:
-        WYSCOUT:
-        KLOPPY:
-        DATAFACTORY:
-        STATSPERFORM:
-        SPORTVU:
+        METRICA (Provider):
+        TRACAB (Provider):
+        SECONDSPECTRUM (Provider):
+        OPTA (Provider):
+        PFF (Provider):
+        SKILLCORNER (Provider):
+        STATSBOMB (Provider):
+        SPORTEC (Provider):
+        WYSCOUT (Provider):
+        KLOPPY (Provider):
+        DATAFACTORY (Provider):
+        STATSPERFORM (Provider):
+        HAWEKEYE (Provider):
+        SPORTVU (Provider):
+        IMPECT (Provider):
+        OTHER (Provider):
     """
 
     METRICA = "metrica"
     TRACAB = "tracab"
     SECONDSPECTRUM = "second_spectrum"
     OPTA = "opta"
+    PFF = "pff"
     SKILLCORNER = "skillcorner"
     STATSBOMB = "statsbomb"
     SPORTEC = "sportec"
@@ -107,7 +126,10 @@ class Provider(Enum):
     KLOPPY = "kloppy"
     DATAFACTORY = "datafactory"
     STATSPERFORM = "statsperform"
+    HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
+    SIGNALITY = "signality"
+    IMPECT = "impect"
     OTHER = "other"
 
     def __str__(self):
@@ -118,9 +140,11 @@ class OfficialType(Enum):
     """Enumeration for types of officials (referees)."""
 
     VideoAssistantReferee = "Video Assistant Referee"
+    AssistantVideoAssistantReferee = "Assistant Video Assistant Referee"
     MainReferee = "Main Referee"
     AssistantReferee = "Assistant Referee"
     FourthOfficial = "Fourth Official"
+    Unknown = "Unknown"
 
     def __str__(self):
         return self.value
@@ -133,10 +157,10 @@ class Official:
     """
 
     official_id: str
-    name: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    role: Optional[OfficialType] = None
+    name: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    role: OfficialType | None = None
 
     @property
     def full_name(self):
@@ -157,33 +181,40 @@ class Official:
 @dataclass(frozen=True)
 class Player:
     """
+    A player in a team.
+
     Attributes:
-        player_id: identifier given by the provider
-        team: See [`Team`][kloppy.domain.models.common.Team]
-        jersey_no: Jersey number
-        name: Full name of the player
-        first_name: First name
-        last_name: Last name
-        starting: `True` when player is part of the starting 11
-        position: See [`Position][kloppy.domain.models.common.Position]
-        attributes: attributes given by the provider
+        player_id (str): Identifier given by the provider.
+        team (team): The player's team.
+        jersey_no (int): The player's jersey number.
+        first_name (str, optional): The player's first name.
+        last_name (str, optional): The player's last name.
+        name (str, optional): Full name of the player.
+        full_name (str): If `name` is not set, this will be the concatenation
+            of `first_name` and `last_name` or if these are also not set,
+            the concatenation of the team's ground and the jersey number.
+        starting (bool): `True` when player is part of the starting XI.
+        starting_position (Position, optional): The player's starting position
+            or `None` if the player is not starting.
+        poisitions (TimeContainer[Position]): The player's positions over time.
+        attributes (dict): Additional attributes given by the provider.
     """
 
     player_id: str
-    team: "Team"
+    team: Team
     jersey_no: int
-    name: str = None
-    first_name: str = None
-    last_name: str = None
+    first_name: str | None = None
+    last_name: str | None = None
+    name: str | None = None
 
     # match specific
     starting: bool = False
-    starting_position: Optional[PositionType] = None
+    starting_position: PositionType | None = None
     positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
 
-    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+    attributes: dict = field(default_factory=dict, compare=False)
 
     @property
     def full_name(self):
@@ -195,7 +226,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> Optional[PositionType]:
+    def position(self) -> PositionType | None:
         try:
             return self.positions.last()
         except KeyError:
@@ -203,6 +234,9 @@ class Player:
 
     def __str__(self):
         return self.full_name
+
+    def __repr__(self):
+        return f"<Player name='{self.full_name}' player_id='{self.player_id}'>"
 
     def __hash__(self):
         return hash(self.player_id)
@@ -212,30 +246,31 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: Optional[PositionType]):
+    def set_position(self, time: Time, position: PositionType | None):
         self.positions.set(time, position)
 
 
 @dataclass
 class Team:
     """
+    A team in a match.
 
     Attributes:
-        team_id: id of the team, given by the provider
-        name: readable name of the team
-        ground: See [`Ground`][kloppy.domain.models.common.Ground]
-        players: See [`Player`][kloppy.domain.models.common.Player]
-        starting_formation: See ['FormationType']
+        team_id (str): Identifier given by the provider.
+        name (str): Readable name of the team.
+        ground (Ground): The team's ground (home or away).
+        players (List[Player]): The team's players.
+        starting_formation (FormationType, optional): The team's starting formation.
     """
 
     team_id: str
     name: str
     ground: Ground
-    starting_formation: Optional[FormationType] = None
+    starting_formation: FormationType | None = None
     formations: TimeContainer[FormationType] = field(
         default_factory=TimeContainer, compare=False
     )
-    players: List[Player] = field(default_factory=list)
+    players: list[Player] = field(default_factory=list)
 
     def __str__(self):
         return self.name
@@ -248,7 +283,16 @@ class Team:
             return False
         return self.team_id == other.team_id
 
-    def get_player_by_jersey_number(self, jersey_no: int):
+    def get_player_by_jersey_number(self, jersey_no: int) -> Player | None:
+        """Get a player by their jersey number.
+
+        Args:
+            jersey_no (int): The jersey number of the player.
+
+        Returns:
+            Player: The player with the given jersey number or `None` if no
+                    player with that jersey number is found.
+        """
         jersey_no = int(jersey_no)
         for player in self.players:
             if player.jersey_no == jersey_no:
@@ -256,7 +300,19 @@ class Team:
 
         return None
 
-    def get_player_by_position(self, position: PositionType, time: Time):
+    def get_player_by_position(
+        self, position: PositionType, time: Time
+    ) -> Player | None:
+        """Get a player by their position at a given time.
+
+        Args:
+            position (PositionType): The position.
+            time (Time): The time for which the position should be retrieved.
+
+        Returns:
+            Player: The player with the given position or `None` if no player
+                    with that position is found.
+        """
         for player in self.players:
             if player.positions.items:
                 try:
@@ -268,7 +324,16 @@ class Team:
 
         return None
 
-    def get_player_by_id(self, player_id: Union[int, str]):
+    def get_player_by_id(self, player_id: int | str) -> Player | None:
+        """Get a player by their identifier.
+
+        Args:
+            player_id (int or str): The identifier of the player.
+
+        Returns:
+            Player: The player with the given identifier or `None` if no player
+                    with that identifier is found.
+        """
         player_id = str(player_id)
 
         for player in self.players:
@@ -277,17 +342,17 @@ class Team:
 
         return None
 
-    def set_formation(self, time: Time, formation: Optional[FormationType]):
+    def set_formation(self, time: Time, formation: FormationType | None):
         self.formations.set(time, formation)
 
 
 class BallState(Enum):
     """
-    BallState
+    Whether the ball is in play or not.
 
     Attributes:
-        ALIVE (BallState): Ball is in play
-        DEAD (BallState): Ball is not in play
+        ALIVE (BallState): Ball is in play.
+        DEAD (BallState): Ball is not in play.
     """
 
     ALIVE = "alive"
@@ -346,7 +411,7 @@ class Orientation(Enum):
 
 class AttackingDirection(Enum):
     """
-    AttackingDirection
+    The direction of play for the home team.
 
     Attributes:
         LTR (AttackingDirection): Home team is playing from left to right
@@ -361,10 +426,10 @@ class AttackingDirection(Enum):
     @staticmethod
     def from_orientation(
         orientation: Orientation,
-        period: Optional[Period] = None,
-        ball_owning_team: Optional[Team] = None,
-        action_executing_team: Optional[Team] = None,
-    ) -> "AttackingDirection":
+        period: Period | None = None,
+        ball_owning_team: Team | None = None,
+        action_executing_team: Team | None = None,
+    ) -> AttackingDirection:
         """Determines the attacking direction for a specific data record.
 
         Args:
@@ -398,7 +463,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.AWAY_HOME:
             if period is None:
@@ -414,7 +479,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team is None:
@@ -449,18 +514,27 @@ class AttackingDirection(Enum):
 
 
 class VerticalOrientation(Enum):
-    # the y axis increases as you go from top to bottom of the pitch
-    TOP_TO_BOTTOM = "top-to-bottom"
+    """
+    The orientation of the y-axis in a [`CoordinateSystem`][kloppy.domain.CoordinateSystem].
 
-    # the y axis decreases as you go from top to bottom of the pitch
+    Attributes:
+        TOP_TO_BOTTOM: The y coordinate increases from top to bottom of the pitch.
+        BOTTOM_TO_TOP: The y coordinate decreases from top to bottom of the pitch.
+    """
+
+    TOP_TO_BOTTOM = "top-to-bottom"
     BOTTOM_TO_TOP = "bottom-to-top"
 
 
 class Origin(Enum):
     """
+    The location of the origin in a [`CoordinateSystem`][kloppy.domain.CoordinateSystem].
+
+    Defines where the (0, 0) point is located on the field.
+
     Attributes:
         TOP_LEFT: Origin at the top left of the field
-        BOTTOM_RIGHT: Origin at the bottom left of the field
+        BOTTOM_LEFT: Origin at the bottom left of the field
         CENTER: Origin at the center of the field
     """
 
@@ -472,25 +546,23 @@ class Origin(Enum):
         return self.value
 
 
-@dataclass
 class CoordinateSystem(ABC):
-    pitch_length: Optional[float] = None
-    pitch_width: Optional[float] = None
+    """
+    Base class for coordinate systems.
 
-    def __eq__(self, other):
-        if isinstance(other, CoordinateSystem):
-            return (
-                self.origin == other.origin
-                and self.vertical_orientation == other.vertical_orientation
-                and self.pitch_dimensions == other.pitch_dimensions
-            )
+    A coordinate system defines how coordinates are represented in a dataset.
 
-        return False
-
-    @property
-    @abstractmethod
-    def provider(self) -> Provider:
-        raise NotImplementedError
+    Attributes:
+        origin (Origin): The location of the origin.
+        vertical_orientation (VerticalOrientation): The orientation of the y-axis.
+        pitch_dimensions (PitchDimensions): The dimensions of the pitch.
+        normalized (bool): Whether the pitch dimensions are normalized. This
+            means that the coordinates are mapped to a fixed range, e.g. from
+            0 to 1. In contrast, non-normalized coordinates correspond to the
+            real-world dimensions of the pitch.
+        pitch_length (float, optional): The real length of the pitch.
+        pitch_width (float, optional): The real width of the pitch.
+    """
 
     @property
     @abstractmethod
@@ -511,9 +583,218 @@ class CoordinateSystem(ABC):
     def normalized(self) -> bool:
         return isinstance(self.pitch_dimensions, NormalizedPitchDimensions)
 
+    @property
+    def pitch_length(self) -> float | None:
+        return self.pitch_dimensions.pitch_length
 
-@dataclass
-class KloppyCoordinateSystem(CoordinateSystem):
+    @property
+    def pitch_width(self) -> float | None:
+        return self.pitch_dimensions.pitch_width
+
+    def __eq__(self, other):
+        if isinstance(other, CoordinateSystem):
+            return (
+                self.origin == other.origin
+                and self.vertical_orientation == other.vertical_orientation
+                and self.pitch_dimensions == other.pitch_dimensions
+            )
+
+        return False
+
+    def to_mplsoccer(self):
+        """ "Convert the coordinate system to a mplsoccer BaseDims object.
+
+        Example:
+        >>> from kloppy.domain import KloppyCoordinateSystem
+        >>> from mplsoccer import Pitch
+        >>> coordinate_system = KloppyCoordinateSystem()
+        >>> pitch = Pitch(dimensions=coordinate_system.to_mplsoccer())
+
+        Note:
+            This method is experimental and may change in the future.
+        """
+        try:
+            from mplsoccer.dimensions import BaseDims
+        except ImportError:
+            raise ImportError(
+                "Seems like you don't have `mplsoccer` installed. "
+                "Please install it using: pip install mplsoccer"
+            )
+
+        if (
+            self.pitch_dimensions.x_dim.min is None
+            or self.pitch_dimensions.x_dim.max is None
+        ):
+            raise ValueError(
+                "The x-dimensions of the pitch must be fully defined."
+            )
+        if (
+            self.pitch_dimensions.y_dim.min is None
+            or self.pitch_dimensions.y_dim.max is None
+        ):
+            raise ValueError(
+                "The y-dimensions of the pitch must be fully defined."
+            )
+
+        pitch_length = (
+            self.pitch_dimensions.pitch_length or DEFAULT_PITCH_LENGTH
+        )
+        pitch_width = self.pitch_dimensions.pitch_width or DEFAULT_PITCH_WIDTH
+
+        invert_y = (
+            self.vertical_orientation == VerticalOrientation.TOP_TO_BOTTOM
+        )
+        origin_center = self.origin == Origin.CENTER
+
+        neg_if_inverted = -1 if invert_y else 1
+        center = (0, 0)
+        if self.origin == Origin.BOTTOM_LEFT:
+            center = (
+                (
+                    self.pitch_dimensions.x_dim.max
+                    - self.pitch_dimensions.x_dim.min
+                )
+                / 2,
+                (
+                    self.pitch_dimensions.y_dim.max
+                    - self.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            )
+        elif self.origin == Origin.TOP_LEFT:
+            neg_if_inverted = -1
+            center = (
+                (
+                    self.pitch_dimensions.x_dim.max
+                    - self.pitch_dimensions.x_dim.min
+                )
+                / 2,
+                (
+                    self.pitch_dimensions.y_dim.max
+                    - self.pitch_dimensions.y_dim.min
+                )
+                / 2,
+            )
+
+        dim = BaseDims(
+            left=self.pitch_dimensions.x_dim.min,
+            right=self.pitch_dimensions.x_dim.max,
+            bottom=self.pitch_dimensions.y_dim.min
+            if not invert_y
+            else self.pitch_dimensions.y_dim.max,
+            top=self.pitch_dimensions.y_dim.max
+            if not invert_y
+            else self.pitch_dimensions.y_dim.min,
+            width=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.x_dim.min,
+            length=self.pitch_dimensions.y_dim.max
+            - self.pitch_dimensions.y_dim.min,
+            goal_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            goal_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.goal_width),
+            six_yard_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.six_yard_length,
+            six_yard_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.six_yard_length,
+            six_yard_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            six_yard_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.six_yard_width),
+            penalty_spot_distance=self.pitch_dimensions.penalty_spot_distance,
+            penalty_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.penalty_spot_distance,
+            penalty_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.penalty_spot_distance,
+            penalty_area_left=self.pitch_dimensions.x_dim.min
+            + self.pitch_dimensions.penalty_area_length,
+            penalty_area_right=self.pitch_dimensions.x_dim.max
+            - self.pitch_dimensions.penalty_area_length,
+            penalty_area_bottom=center[1]
+            - (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            penalty_area_top=center[1]
+            + (neg_if_inverted / 2 * self.pitch_dimensions.penalty_area_width),
+            center_width=center[1],
+            center_length=center[0],
+            goal_width=self.pitch_dimensions.goal_width,
+            goal_length=self.pitch_dimensions.goal_height,
+            six_yard_width=self.pitch_dimensions.six_yard_width,
+            six_yard_length=self.pitch_dimensions.six_yard_length,
+            penalty_area_width=self.pitch_dimensions.penalty_area_width,
+            penalty_area_length=self.pitch_dimensions.penalty_area_length,
+            circle_diameter=self.pitch_dimensions.circle_radius * 2,
+            corner_diameter=self.pitch_dimensions.corner_radius * 2,
+            arc=0,
+            invert_y=invert_y,
+            origin_center=origin_center,
+            pad_default=0.02
+            * (
+                self.pitch_dimensions.x_dim.max
+                - self.pitch_dimensions.x_dim.min
+            ),
+            pad_multiplier=1,
+            aspect_equal=False
+            if self.pitch_dimensions.unit == Unit.NORMED
+            else True,
+            pitch_width=pitch_width,
+            pitch_length=pitch_length,
+            aspect=pitch_width / pitch_length
+            if self.pitch_dimensions.unit == Unit.NORMED
+            else 1.0,
+        )
+        return dim
+
+
+class ProviderCoordinateSystem(CoordinateSystem):
+    def __init__(
+        self,
+        pitch_length: float | None = None,
+        pitch_width: float | None = None,
+    ):
+        self._pitch_length = pitch_length
+        self._pitch_width = pitch_width
+
+    @property
+    @abstractmethod
+    def provider(self) -> Provider:
+        raise NotImplementedError
+
+
+class CustomCoordinateSystem(CoordinateSystem):
+    def __init__(
+        self,
+        origin: Origin,
+        vertical_orientation: VerticalOrientation,
+        pitch_dimensions: PitchDimensions,
+    ):
+        self._origin = origin
+        self._vertical_orientation = vertical_orientation
+        self._pitch_dimensions = pitch_dimensions
+
+    @property
+    def origin(self) -> Origin:
+        return self._origin
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return self._vertical_orientation
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return self._pitch_dimensions
+
+
+class KloppyCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Kloppy's default coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The coordinates range from 0 to 1.
+
+    If no pitch length and width are provided, the default pitch dimensions
+    are 105m x 68m.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.KLOPPY
@@ -528,12 +809,12 @@ class KloppyCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return NormalizedPitchDimensions(
                 x_dim=Dimension(0, 1),
                 y_dim=Dimension(0, 1),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:
@@ -546,15 +827,34 @@ class KloppyCoordinateSystem(CoordinateSystem):
             )
 
 
-@dataclass
 class MetricaCoordinateSystem(KloppyCoordinateSystem):
+    """
+    Metrica coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The coordinates range from 0 to 1.
+
+    If no pitch length and width are provided, the default pitch dimensions
+    are 105m x 68m.
+
+    Notes:
+        The Metrica coordinate system is the same as the
+        [`KloppyCoordinateSystem`][kloppy.domain.KloppyCoordinateSystem].
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.METRICA
 
 
-@dataclass
-class TracabCoordinateSystem(CoordinateSystem):
+class TracabCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Tracab coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented from
+    bottom to top. The coordinates are in centimeters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.TRACAB
@@ -569,16 +869,16 @@ class TracabCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
                 x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
                 ),
                 y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             ).convert(to_unit=Unit.CENTIMETERS)
         else:
@@ -591,8 +891,14 @@ class TracabCoordinateSystem(CoordinateSystem):
             ).convert(to_unit=Unit.CENTIMETERS)
 
 
-@dataclass
-class SecondSpectrumCoordinateSystem(CoordinateSystem):
+class SecondSpectrumCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Second Spectrum coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented from
+    bottom to top. The coordinates are in meters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.SECONDSPECTRUM
@@ -607,16 +913,16 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
                 x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
                 ),
                 y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:
@@ -629,8 +935,14 @@ class SecondSpectrumCoordinateSystem(CoordinateSystem):
             )
 
 
-@dataclass
-class OptaCoordinateSystem(CoordinateSystem):
+class OptaCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Opta coordinate system.
+
+    Uses a normalized pitch with the origin at the bottom left and the y-axis
+    oriented from bottom to top. The coordinates range from 0 to 100.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.OPTA
@@ -646,12 +958,18 @@ class OptaCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return OptaPitchDimensions(
-            pitch_length=self.pitch_length, pitch_width=self.pitch_width
+            pitch_length=self._pitch_length, pitch_width=self._pitch_width
         )
 
 
-@dataclass
-class SportecEventDataCoordinateSystem(CoordinateSystem):
+class SportecEventDataCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Sportec event data coordinate system.
+
+    Uses a pitch with the origin at the bottom left and the y-axis oriented
+    from top to bottom. The coordinates are in meters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -662,21 +980,27 @@ class SportecEventDataCoordinateSystem(CoordinateSystem):
 
     @property
     def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.TOP_TO_BOTTOM
+        return VerticalOrientation.BOTTOM_TO_TOP
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return MetricPitchDimensions(
-            x_dim=Dimension(0, self.pitch_length),
-            y_dim=Dimension(0, self.pitch_width),
-            pitch_length=self.pitch_length,
-            pitch_width=self.pitch_width,
+            x_dim=Dimension(0, self._pitch_length),
+            y_dim=Dimension(0, self._pitch_width),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
             standardized=False,
         )
 
 
-@dataclass
-class SportecTrackingDataCoordinateSystem(CoordinateSystem):
+class SportecTrackingDataCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Sportec tracking data coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTEC
@@ -691,16 +1015,16 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
                 x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
                 ),
                 y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:
@@ -713,8 +1037,15 @@ class SportecTrackingDataCoordinateSystem(CoordinateSystem):
             )
 
 
-@dataclass
-class StatsBombCoordinateSystem(CoordinateSystem):
+class StatsBombCoordinateSystem(ProviderCoordinateSystem):
+    """
+    StatsBomb coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The x-coordinates range from 0 to 120 and
+    the y-coordinates range from 0 to 80.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.STATSBOMB
@@ -732,13 +1063,64 @@ class StatsBombCoordinateSystem(CoordinateSystem):
         return ImperialPitchDimensions(
             x_dim=Dimension(0, 120),
             y_dim=Dimension(0, 80),
-            pitch_length=self.pitch_length,
-            pitch_width=self.pitch_width,
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
             standardized=True,
         )
 
 
-class WyscoutCoordinateSystem(CoordinateSystem):
+class PFFCoordinateSystem(ProviderCoordinateSystem):
+    """
+    PFF coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.PFF
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
+class WyscoutCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Wyscout coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The coordinates range from 0 to 100.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.WYSCOUT
@@ -754,12 +1136,18 @@ class WyscoutCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return WyscoutPitchDimensions(
-            pitch_length=self.pitch_length, pitch_width=self.pitch_width
+            pitch_length=self._pitch_length, pitch_width=self._pitch_width
         )
 
 
-@dataclass
-class SkillCornerCoordinateSystem(CoordinateSystem):
+class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
+    """
+    SkillCorner coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.SKILLCORNER
@@ -774,16 +1162,16 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return MetricPitchDimensions(
                 x_dim=Dimension(
-                    -1 * self.pitch_length / 2, self.pitch_length / 2
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
                 ),
                 y_dim=Dimension(
-                    -1 * self.pitch_width / 2, self.pitch_width / 2
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
                 ),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:
@@ -796,8 +1184,51 @@ class SkillCornerCoordinateSystem(CoordinateSystem):
             )
 
 
-@dataclass
-class DatafactoryCoordinateSystem(CoordinateSystem):
+class SignalityCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.SIGNALITY
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
+class DatafactoryCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Datafactory coordinate system.
+
+    Uses a normalized pitch with the origin at the top left and the y-axis
+    oriented from top to bottom. The coordinates range from -1 to 1.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.DATAFACTORY
@@ -812,12 +1243,12 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
 
     @property
     def pitch_dimensions(self) -> PitchDimensions:
-        if self.pitch_length is not None and self.pitch_width is not None:
+        if self._pitch_length is not None and self._pitch_width is not None:
             return NormalizedPitchDimensions(
                 x_dim=Dimension(-1, 1),
                 y_dim=Dimension(-1, 1),
-                pitch_length=self.pitch_length,
-                pitch_width=self.pitch_width,
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
                 standardized=False,
             )
         else:
@@ -830,8 +1261,14 @@ class DatafactoryCoordinateSystem(CoordinateSystem):
             )
 
 
-@dataclass
-class SportVUCoordinateSystem(CoordinateSystem):
+class SportVUCoordinateSystem(ProviderCoordinateSystem):
+    """
+    StatsPerform SportVU coordinate system.
+
+    Uses a pitch with the origin at the top left and the y-axis oriented
+    from top to bottom. The coordinates are in meters.
+    """
+
     @property
     def provider(self) -> Provider:
         return Provider.SPORTVU
@@ -847,22 +1284,90 @@ class SportVUCoordinateSystem(CoordinateSystem):
     @property
     def pitch_dimensions(self) -> PitchDimensions:
         return MetricPitchDimensions(
-            x_dim=Dimension(0, self.pitch_length),
-            y_dim=Dimension(0, self.pitch_width),
-            pitch_length=self.pitch_length,
-            pitch_width=self.pitch_width,
+            x_dim=Dimension(0, self._pitch_length),
+            y_dim=Dimension(0, self._pitch_width),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
             standardized=False,
+        )
+
+
+class HawkEyeCoordinateSystem(ProviderCoordinateSystem):
+    """
+    HawkEye coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.HAWKEYE
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
+class ImpectCoordinateSystem(ProviderCoordinateSystem):
+    @property
+    def provider(self) -> Provider:
+        return Provider.IMPECT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return MetricPitchDimensions(
+            x_dim=Dimension(-52.5, 52.5),
+            y_dim=Dimension(-34, 34),
+            pitch_length=105,
+            pitch_width=68,
+            standardized=True,
         )
 
 
 class DatasetType(Enum):
     """
-    DatasetType
+    Dataset types.
 
     Attributes:
-        TRACKING (DatasetType):
-        EVENT (DatasetType):
-        CODE (DatasetType):
+        TRACKING (DatasetType): A dataset containing tracking data.
+        EVENT (DatasetType): A dataset containing event data.
+        CODE (DatasetType): A dataset containing SportsCode annotations.
     """
 
     TRACKING = "TRACKING"
@@ -876,8 +1381,8 @@ class DatasetType(Enum):
 def build_coordinate_system(
     provider: Provider,
     dataset_type: DatasetType = DatasetType.EVENT,
-    pitch_length: Optional[float] = None,
-    pitch_width: Optional[float] = None,
+    pitch_length: float | None = None,
+    pitch_width: float | None = None,
 ) -> CoordinateSystem:
     """Build a coordinate system for a given provider and dataset type.
 
@@ -900,11 +1405,15 @@ def build_coordinate_system(
             DatasetType.TRACKING: SportecTrackingDataCoordinateSystem,
         },
         Provider.STATSBOMB: StatsBombCoordinateSystem,
+        Provider.PFF: PFFCoordinateSystem,
         Provider.WYSCOUT: WyscoutCoordinateSystem,
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,
+        Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
+        Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
     }
 
     if provider in coordinate_systems:
@@ -957,78 +1466,71 @@ class ActionValue(Statistic):
     """Action value"""
 
     name: str
-    action_value_scoring_before: Optional[float] = field(default=None)
-    action_value_scoring_after: Optional[float] = field(default=None)
-    action_value_conceding_before: Optional[float] = field(default=None)
-    action_value_conceding_after: Optional[float] = field(default=None)
+    action_value_scoring_before: float | None = field(default=None)
+    action_value_scoring_after: float | None = field(default=None)
+    action_value_conceding_before: float | None = field(default=None)
+    action_value_conceding_after: float | None = field(default=None)
 
     @property
-    def offensive_value(self) -> Optional[float]:
-        return (
-            None
-            if None
-            in (
-                self.action_value_scoring_before,
-                self.action_value_scoring_after,
-            )
-            else self.action_value_scoring_after
-            - self.action_value_scoring_before
-        )
-
-    @property
-    def defensive_value(self) -> Optional[float]:
-        return (
-            None
-            if None
-            in (
-                self.action_value_conceding_before,
-                self.action_value_conceding_after,
-            )
-            else self.action_value_conceding_after
-            - self.action_value_conceding_before
-        )
-
-    @property
-    def value(self) -> Optional[float]:
-        if None in (
-            self.action_value_scoring_before,
-            self.action_value_scoring_after,
-            self.action_value_conceding_before,
-            self.action_value_conceding_after,
+    def offensive_value(self) -> float | None:
+        if (
+            self.action_value_scoring_before is None
+            or self.action_value_scoring_after is None
         ):
             return None
         return (
             self.action_value_scoring_after - self.action_value_scoring_before
-        ) - (
+        )
+
+    @property
+    def defensive_value(self) -> float | None:
+        if (
+            self.action_value_conceding_before is None
+            or self.action_value_conceding_after is None
+        ):
+            return None
+        return (
             self.action_value_conceding_after
             - self.action_value_conceding_before
         )
+
+    @property
+    def value(self) -> float | None:
+        if self.offensive_value is None or self.defensive_value is None:
+            return None
+        return self.offensive_value - self.defensive_value
 
 
 @dataclass
 class DataRecord(ABC):
     """
-    DataRecord
+    Base class for a data record in a dataset.
 
     Attributes:
-        period: See [`Period`][kloppy.domain.models.common.Period]
-        timestamp: Timestamp of occurrence, relative to the period kick-off
-        ball_owning_team: See [`Team`][kloppy.domain.models.common.Team]
-        ball_state: See [`Team`][kloppy.domain.models.common.BallState]
+        dataset: The dataset to which the record belongs.
+        prev_record: The previous record in the dataset.
+        next_record: The next record in the dataset.
+        record_id: The unique identifier of the record. Given by the provider.
+        period: The match period in which the observation occurred.
+        timestamp: Timestamp of occurrence, relative to the period kick-off.
+        time: The time of the observation. Combines `period` and `timestamp`.
+        attacking_direction: The attacking direction of the home team.
+        ball_owning_team: The team that had possession of the ball.
+        ball_state: The state of the ball at the time of the observation.
     """
 
-    dataset: "Dataset" = field(init=False)
-    prev_record: Optional["DataRecord"] = field(init=False)
-    next_record: Optional["DataRecord"] = field(init=False)
+    dataset: Dataset = field(init=False)
+    prev_record: Self | None = field(init=False)
+    next_record: Self | None = field(init=False)
     period: Period
     timestamp: timedelta
-    statistics: List[Statistic]
-    ball_owning_team: Optional[Team]
-    ball_state: Optional[BallState]
+    statistics: list[Statistic]
+    ball_owning_team: Team | None
+    ball_state: BallState | None
 
     @property
     @abstractmethod
-    def record_id(self) -> Union[int, str]:
+    def record_id(self) -> int | str:
         pass
 
     @property
@@ -1037,9 +1539,9 @@ class DataRecord(ABC):
 
     def set_refs(
         self,
-        dataset: "Dataset",
-        prev: Optional["DataRecord"],
-        next_: Optional["DataRecord"],
+        dataset: Dataset,
+        prev: Self | None,
+        next_: Self | None,
     ):
         if hasattr(self, "dataset"):
             # TODO: determine if next/prev record should be affected
@@ -1067,7 +1569,7 @@ class DataRecord(ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def matches(self, filter_) -> bool:
+    def matches(self, filter_: str | Callable[[Self], bool] | None) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -1075,7 +1577,9 @@ class DataRecord(ABC):
         else:
             raise InvalidFilterError()
 
-    def prev(self, filter_=None) -> Optional[Self]:
+    def prev(
+        self, filter_: str | Callable[[Self], bool] | None = None
+    ) -> Self | None:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -1083,7 +1587,9 @@ class DataRecord(ABC):
                     return prev_record
                 prev_record = prev_record.prev_record
 
-    def next(self, filter_=None) -> Optional[Self]:
+    def next(
+        self, filter_: str | Callable[[Self], bool] | None = None
+    ) -> Self | None:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -1103,39 +1609,46 @@ class DataRecord(ABC):
 @dataclass
 class Metadata:
     """
-    Metadata
+    Metadata for a dataset.
+
+    Metadata is additional information about the dataset that is not part of
+    the actual data. It includes information about the teams, the pitch
+    dimensions, the orientation, the provider, and more.
 
     Attributes:
-        teams: `[home_team, away_team]`. See [`Team`][kloppy.domain.models.common.Team]
-        periods: See [`Period`][kloppy.domain.models.common.Period]
-        pitch_dimensions: See [`PitchDimensions`][kloppy.domain.models.pitch.PitchDimensions]
-        score: See [`Score`][kloppy.domain.models.common.Score]
-        frame_rate:
-        orientation: See [`Orientation`][kloppy.domain.models.common.Orientation]
-        flags:
-        provider: See [`Provider`][kloppy.domain.models.common.Provider]
+        game_id: Game id of the game from the provider.
         date: Date of the game.
         game_week: Game week (or match day) of the game. It can also be the stage
-        (ex: "8th Finals"), if the game is happening during a cup or a play-off.
-        game_id: Game id of the game from the provider.
+            (ex: "8th Finals"), if the game is happening during a cup or a play-off.
+        periods: List of [`Period`][kloppy.domain.models.common.Period] entities.
+        teams: `[home_team, away_team]`.
+        coordinate_system: The coordinate system in which the data is provided.
+        pitch_dimensions: The dimensions of the pitch.
+        orientation: The attacking direction of each team.
+        flags: Flags describing what optional data is available in the dataset.
+        provider: The provider of the dataset.
+        score: The final score of the match.
+        frame_rate: The frame rate (in Hertz) at which the data was recorded.
+            Only for tracking data.
+        attributes: Additional metadata.
     """
 
-    teams: List[Team]
-    periods: List[Period]
+    periods: list[Period]
+    teams: list[Team]
+    coordinate_system: CoordinateSystem
     pitch_dimensions: PitchDimensions
     orientation: Orientation
     flags: DatasetFlag
     provider: Provider
-    coordinate_system: CoordinateSystem
-    score: Optional[Score] = None
-    frame_rate: Optional[float] = None
-    date: Optional[datetime] = None
-    game_week: Optional[str] = None
-    game_id: Optional[str] = None
-    home_coach: Optional[str] = None
-    away_coach: Optional[str] = None
-    officials: Optional[List] = field(default_factory=list)
-    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+    score: Score | None = None
+    frame_rate: float | None = None
+    date: datetime | None = None
+    game_week: str | None = None
+    game_id: str | None = None
+    home_coach: str | None = None
+    away_coach: str | None = None
+    officials: list | None = field(default_factory=list)
+    attributes: dict | None = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
         if self.coordinate_system is not None:
@@ -1145,9 +1658,9 @@ class Metadata:
         for i, period in enumerate(self.periods):
             period.set_refs(
                 prev=self.periods[i - 1] if i > 0 else None,
-                next_=self.periods[i + 1]
-                if i + 1 < len(self.periods)
-                else None,
+                next_=(
+                    self.periods[i + 1] if i + 1 < len(self.periods) else None
+                ),
             )
 
 
@@ -1157,17 +1670,18 @@ T = TypeVar("T", bound="DataRecord")
 @dataclass
 class Dataset(ABC, Generic[T]):
     """
-    Dataset
+    Base class for datasets.
+
+    A dataset describes specific aspects of what happened during a single
+    match as a sequence of [`DataRecord`][kloppy.domain.DataRecord] entities.
 
     Attributes:
-        records:
-        metadata: Metadata for this Dataset
-
+        dataset_type: The type of the dataset.
+        records: List of records in the dataset.
+        metadata: Metadata for the dataset.
     """
 
-    Column = NewType("Column", Union[str, Callable[[T], Any]])
-
-    records: List[T]
+    records: list[T]
     metadata: Metadata
 
     def __iter__(self):
@@ -1184,9 +1698,9 @@ class Dataset(ABC, Generic[T]):
             record.set_refs(
                 dataset=self,
                 prev=self.records[i - 1] if i > 0 else None,
-                next_=self.records[i + 1]
-                if i + 1 < len(self.records)
-                else None,
+                next_=(
+                    self.records[i + 1] if i + 1 < len(self.records) else None
+                ),
             )
 
         self._init_player_positions()
@@ -1215,9 +1729,9 @@ class Dataset(ABC, Generic[T]):
     @abstractmethod
     def to_pandas(
         self,
-        record_converter: Callable[[T], Dict] = None,
-        additional_columns: Dict[str, Union[Callable[[T], Any], Any]] = None,
-    ) -> "DataFrame":
+        record_converter: Callable[[T], dict] | None = None,
+        additional_columns: NamedColumns | None = None,
+    ) -> DataFrame:  # noqa: F821
         pass
 
     def transform(self, *args, **kwargs):
@@ -1228,14 +1742,17 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_):
+    def filter(self, filter_: str | Callable[[T], bool]):
         """
         Filter all records used `filter_`
 
-        Arguments:
-            - filter_:
+        Args:
+            filter_: The filter to be used to filter the records. It can be a
+                callable that takes a record and returns a boolean, or a string
+                representing a css-like selector.
 
         Examples:
+
             >>> from kloppy.domain import EventType
             >>> dataset = dataset.filter(lambda event: event.event_type == EventType.PASS)
             >>> dataset = dataset.filter('pass')
@@ -1250,23 +1767,21 @@ class Dataset(ABC, Generic[T]):
             self, records=[mapper(record) for record in self.records]
         )
 
-    def find_all(self, filter_) -> List[T]:
+    def find_all(self, filter_) -> list[T]:
         return [record for record in self.records if record.matches(filter_)]
 
-    def find(self, filter_) -> Optional[T]:
+    def find(self, filter_) -> T | None:
         for record in self.records:
             if record.matches(filter_):
                 return record
 
     @classmethod
-    def from_dataset(
-        cls, dataset: "Dataset", mapper_fn: Callable[[DataRecord], DataRecord]
-    ):
+    def from_dataset(cls, dataset: Dataset, mapper_fn: Callable[[Self], Self]):
         """
         Create a new Dataset from other dataset
 
         Arguments:
-            - mapper_fn:
+            mapper_fn:
 
         Examples:
             >>> from kloppy.domain import Code,     CodeDataset
@@ -1294,7 +1809,7 @@ class Dataset(ABC, Generic[T]):
             records=[mapper_fn(record) for record in dataset.records],
         )
 
-    def get_record_by_id(self, record_id: Union[int, str]) -> Optional[T]:
+    def get_record_by_id(self, record_id: int | str) -> T | None:
         for record in self.records:
             if record.record_id == record_id:
                 return record
@@ -1302,27 +1817,25 @@ class Dataset(ABC, Generic[T]):
     @overload
     def to_records(
         self,
-        *columns: "Column",
+        *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
-        **named_columns: "Column",
-    ) -> List[Dict[str, Any]]:
-        ...
+        **named_columns: NamedColumns,
+    ) -> list[dict[str, Any]]: ...
 
     @overload
     def to_records(
         self,
-        *columns: "Column",
+        *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
-        **named_columns: "Column",
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+        **named_columns: NamedColumns,
+    ) -> Iterable[dict[str, Any]]: ...
 
     def to_records(
         self,
-        *columns: "Column",
+        *columns: Unpack[tuple[Column]],
         as_list: bool = True,
-        **named_columns: "Column",
-    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
+        **named_columns: NamedColumns,
+    ) -> list[dict[str, Any]] | Iterable[dict[str, Any]]:
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -1336,10 +1849,10 @@ class Dataset(ABC, Generic[T]):
 
     def to_dict(
         self,
-        *columns: "Column",
+        *columns: Unpack[tuple[Column]],
         orient: Literal["list"] = "list",
-        **named_columns: "Column",
-    ) -> Dict[str, List[Any]]:
+        **named_columns: NamedColumns,
+    ) -> dict[str, list[Any]]:
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 
@@ -1362,15 +1875,12 @@ class Dataset(ABC, Generic[T]):
 
     def to_df(
         self,
-        *columns: "Column",
-        engine: Optional[
-            Union[
-                Literal["polars"],
-                Literal["pandas"],
-                Literal["pandas[pyarrow]"],
-            ]
-        ] = None,
-        **named_columns: "Column",
+        *columns: Unpack[tuple[Column]],
+        engine: Literal["polars"]
+        | Literal["pandas"]
+        | Literal["pandas[pyarrow]"]
+        | None = None,
+        **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config
 
@@ -1402,7 +1912,7 @@ class Dataset(ABC, Generic[T]):
                 )
 
             table = pa.Table.from_pydict(
-                self.to_dict(*columns, **named_columns)
+                self.to_dict(*columns, orient="list", **named_columns)
             )
             return table.to_pandas(types_mapper=types_mapper)
 
@@ -1415,7 +1925,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install pandas"
                 )
 
-            return DataFrame.from_dict(self.to_dict(*columns, **named_columns))
+            return DataFrame.from_dict(
+                self.to_dict(*columns, orient="list", **named_columns)
+            )
         elif engine == "polars":
             try:
                 from polars import from_dict
@@ -1425,7 +1937,9 @@ class Dataset(ABC, Generic[T]):
                     " install it using: pip install polars"
                 )
 
-            return from_dict(self.to_dict(*columns, **named_columns))
+            return from_dict(
+                self.to_dict(*columns, orient="list", **named_columns)
+            )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
 

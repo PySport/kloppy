@@ -1,0 +1,122 @@
+.md-grid {
+    max-width: 65rem;
+}
+
+table.dataframe {
+	    border-collapse: initial;
+    border-spacing: 0;
+	background-color: var(--md-default-bg-color);
+	border: .05rem solid var(--md-typeset-table-color);
+	border-radius: .1rem;
+	display: inline-block;
+	font-size: .64rem;
+	max-width: 100%;
+	overflow: auto;
+	touch-action: auto;
+}
+table.dataframe td:not([align]), table.dataset th:not([align]) {
+    text-align: left;
+}
+table.dataframe th {
+    font-weight: 700;
+    min-width: 5rem;
+    padding: .9375em 1.25em;
+    vertical-align: top;
+}
+table.dataframe tbody tr {
+    transition: background-color 125ms;
+}
+table.dataframe td {
+    border-top: .05rem solid var(--md-typeset-table-color);
+    padding: .9375em 1.25em;
+    vertical-align: top;
+}
+
+table.dataframe td>:last-child, table.dataframe th>:last-child {
+    margin-bottom: 0;
+}
+table.dataframe td>:first-child, table.dataframe th>:first-child {
+    margin-top: 0;
+}
+
+.table-control-panel {
+  position: relative;
+  width: 300px;
+	float: right;
+	z-index: 0;
+}
+
+/* Style the details element to float above other content */
+.multi-select {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1000; /* Ensure it's above other elements */
+  background-color: white; /* Add a background color */
+  border: 1px solid #ccc; /* Optional: Add a border */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for better visibility */
+  width: 100%; /* Adjust width as needed */
+}
+
+/* Style the summary element */
+.multi-select summary {
+  cursor: pointer;
+  padding: 8px;
+  background-color: #f0f0f0; /* Optional: Add a background color */
+  border-bottom: 1px solid #ccc; /* Optional: Add a border */
+}
+
+/* Style the form inside the details element */
+.multi-select form {
+  padding: 8px;
+}
+
+details.multi-select {
+  display: inline-flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+details.multi-select form {
+  display: flex;
+}
+
+details.multi-select fieldset {
+  border: 0;
+  padding: 0;
+  width: 100%;
+}
+
+details.multi-select fieldset legend {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+details.multi-select ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+details.multi-select ul li {
+  border-radius: 3px;
+  margin: 0;
+  padding: 4px 2px;
+}
+
+details.multi-select ul li:hover {
+  background: #eee;
+}
+
+details.multi-select ul li label {
+  display: flex;
+  flex-grow: 1;
+  justify-content: space-between;
+}

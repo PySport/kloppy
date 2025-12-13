@@ -1,20 +1,23 @@
-import json
-import logging
-import warnings
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Dict, List, Optional
+import json
+import logging
+from typing import Optional
+import warnings
 
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     CardType,
+    CarryResult,
     CounterAttackQualifier,
     DuelQualifier,
     DuelResult,
     DuelType,
     EventDataset,
+    ExpectedGoals,
+    FormationType,
     GoalkeeperActionType,
     GoalkeeperQualifier,
     Ground,
@@ -27,7 +30,9 @@ from kloppy.domain import (
     Period,
     Player,
     Point,
+    Point3D,
     PositionType,
+    PostShotExpectedGoals,
     Provider,
     Qualifier,
     SetPieceQualifier,
@@ -35,10 +40,6 @@ from kloppy.domain import (
     ShotResult,
     TakeOnResult,
     Team,
-    FormationType,
-    CarryResult,
-    ExpectedGoals,
-    PostShotExpectedGoals,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.utils import performance_logging
@@ -74,7 +75,7 @@ formations = {
     "3-2-3-2": FormationType.THREE_TWO_THREE_TWO,
 }
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "GK": PositionType.Goalkeeper,
     "LB": PositionType.LeftBack,
     "LWB": PositionType.LeftWingBack,
@@ -110,24 +111,68 @@ def _flip_point(point: Point) -> Point:
     return Point(x=100 - point.x, y=100 - point.y)
 
 
-class ShotZoneResults(str, Enum):
-    GOAL_BOTTOM_LEFT = "glb"
-    GOAL_BOTTOM_RIGHT = "grb"
-    GOAL_BOTTOM_CENTER = "gb"
-    GOAL_CENTER_LEFT = "gl"
-    GOAL_CENTER = "gc"
-    GOAL_CENTER_RIGHT = "gr"
-    GOAL_TOP_LEFT = "glt"
-    GOAL_TOP_RIGHT = "grt"
-    GOAL_TOP_CENTER = "gt"
-    OUT_BOTTOM_RIGHT = "obr"
-    OUT_BOTTOM_LEFT = "olb"
-    OUT_RIGHT = "or"
-    OUT_LEFT = "ol"
-    OUT_LEFT_TOP = "olt"
-    OUT_TOP = "ot"
-    OUT_RIGHT_TOP = "ort"
-    BLOCKED = "bc"
+class ShotZoneResults(Enum):
+    """
+     Wyscout does not provide end-coordinates of shots. Instead shots on goal
+     are tagged with a zone. The zones and corresponding y and z-coordinates are depicted below.
+
+                                        (z-coordinate of zone or post)
+
+         olt      | ot |      otr          3.5
+      --------------------------------
+           ||=================||           2.77
+      -------------------------------
+           || gtl | gt | gtr ||            2
+      --------------------------------
+       ol || gl | gc  | gr || or           1
+      --------------------------------
+       olb || glb  | gb | gbr || orb       0
+
+       40     45    50    55     60    (y-coordinate of zone)
+         44.62               55.38     (y-coordinate of post)
+
+    Attributes:
+       code (str): The string identifier of the shot result.
+       point (Point3D): The predefined Point3D associated with the shot result.
+    """
+
+    GOAL_BOTTOM_LEFT = ("glb", Point3D(100, 45, 0))
+    GOAL_BOTTOM_CENTER = ("gb", Point3D(100, 50, 0))
+    GOAL_BOTTOM_RIGHT = ("gbr", Point3D(100, 55, 0))
+    GOAL_CENTER_LEFT = ("gl", Point3D(100, 45, 1))
+    GOAL_CENTER = ("gc", Point3D(100, 50, 1))
+    GOAL_CENTER_RIGHT = ("gr", Point3D(100, 55, 1))
+    GOAL_TOP_LEFT = ("gtl", Point3D(100, 45, 2))
+    GOAL_TOP_CENTER = ("gt", Point3D(100, 50, 2))
+    GOAL_TOP_RIGHT = ("gtr", Point3D(100, 55, 2))
+    POST_BOTTOM_LEFT = ("plb", Point3D(100, 44.62, 0))
+    POST_BOTTOM_RIGHT = ("pbr", Point3D(100, 55.38, 0))
+    OUT_BOTTOM_LEFT = ("olb", Point3D(100, 40, 0))
+    OUT_BOTTOM_RIGHT = ("obr", Point3D(100, 60, 0))
+    POST_LEFT = ("pl", Point3D(100, 44.62, 1))
+    POST_RIGHT = ("pr", Point3D(100, 55.38, 1))
+    OUT_LEFT = ("ol", Point3D(100, 40, 1))
+    OUT_RIGHT = ("or", Point3D(100, 60, 1))
+    POST_TOP_LEFT = ("ptl", Point3D(100, 44.62, 2))
+    POST_TOP_RIGHT = ("ptr", Point3D(100, 55.38, 2))
+    OUT_TOP_LEFT = ("otl", Point3D(100, 40, 3.5))
+    OUT_TOP_RIGHT = ("otr", Point3D(100, 60, 3.5))
+    POST_TOP = ("pt", Point3D(100, 50, 2.77))
+    OUT_TOP = ("ot", Point3D(100, 50, 3.5))
+    BLOCKED = ("bc", None)
+
+    def __init__(self, code: str, point: Point3D):
+        self.code = code
+        self.point = point
+
+    @classmethod
+    def point_from_code(cls, code: str) -> Optional[Point3D]:
+        """Retrieves the enum member from a string code."""
+        for zone in cls:
+            if zone.code == code:
+                return zone.point
+
+        warnings.warn(f"Invalid shot zone code: {code}")
 
 
 def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
@@ -153,16 +198,29 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
         starting_formation=starting_formation,
     )
 
+    players_info = {}
     for player in raw_events["players"][wyId]:
         player_id = str(player["player"]["wyId"])
+        player_first_name = player["player"]["firstName"]
+        player_last_name = player["player"]["lastName"]
+        players_info[player_id] = {
+            "first_name": player_first_name,
+            "last_name": player_last_name,
+        }
+
+    team_formation = raw_events["match"]["teamsData"][wyId]["formation"]
+    team_players = team_formation["lineup"] + team_formation["bench"]
+    for player in team_players:
+        player_id = str(player["playerId"])
         starting_position = starting_players_positions.get(player_id)
+        player_info = players_info[player_id]
         team.players.append(
             Player(
                 player_id=player_id,
                 team=team,
-                jersey_no=None,
-                first_name=player["player"]["firstName"],
-                last_name=player["player"]["lastName"],
+                jersey_no=player["shirtNumber"],
+                first_name=player_info["first_name"],
+                last_name=player_info["last_name"],
                 starting=starting_position is not None,
                 starting_position=starting_position,
             )
@@ -171,78 +229,23 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
     return team
 
 
-def _create_shot_result_coordinates(raw_event: Dict) -> Optional[Point]:
-    """Estimate the shot end location from the Wyscout tags.
-
-    Wyscout does not provide end-coordinates of shots. Instead shots on goal
-    are tagged with a zone. This function maps each of these zones to
-    a coordinate. The zones and corresponding y-coordinate are depicted below.
-
-
-        olt      | ot |      ort
-     --------------------------------
-          ||=================||
-     -------------------------------
-          || glt | gt | grt ||
-     --------------------------------
-      ol || gl | gc  | gr || or
-     --------------------------------
-      olb || glb  | gb | grb || orb
-
-      40     45    50    55     60    (y-coordinate of zone)
-        44.62               55.38     (y-coordiante of post)
-    """
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_CENTER
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_CENTER
-    ):
-        return Point(100.0, 50.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_RIGHT
-    ):
-        return Point(100.0, 55.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_BOTTOM_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_CENTER_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.GOAL_TOP_LEFT
-    ):
-        return Point(100.0, 45.0)
-
-    if raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_TOP:
-        return Point(100.0, 50.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT_TOP
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_RIGHT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_RIGHT
-    ):
-        return Point(100.0, 60.0)
-
-    if (
-        raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT_TOP
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_LEFT
-        or raw_event["shot"]["goalZone"] == ShotZoneResults.OUT_BOTTOM_LEFT
-    ):
-        return Point(100.0, 40.0)
-
-    # If the shot is blocked, the start location is the best possible estimate
-    # for the shot's end location
-    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED:
+def _create_shot_result_coordinates(raw_event: dict) -> Optional[Point]:
+    """Estimate the shot end location from the Wyscout tags."""
+    if raw_event["shot"]["goalZone"] == ShotZoneResults.BLOCKED.code:
         return Point(
             x=float(raw_event["location"]["x"]),
             y=float(raw_event["location"]["y"]),
         )
 
-    return None
+    else:
+        result_coordinates = ShotZoneResults.point_from_code(
+            raw_event["shot"]["goalZone"]
+        )
+        return result_coordinates
 
 
-def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
-    qualifiers: List[Qualifier] = []
+def _generic_qualifiers(raw_event: dict) -> list[Qualifier]:
+    qualifiers: list[Qualifier] = []
 
     counter_attack_qualifier = CounterAttackQualifier(False)
     if raw_event["possession"]:
@@ -253,7 +256,7 @@ def _generic_qualifiers(raw_event: Dict) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_shot(raw_event: Dict) -> Dict:
+def _parse_shot(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     if raw_event["type"]["primary"] == "own_goal":
         result = ShotResult.OWN_GOAL
@@ -296,7 +299,7 @@ def _parse_shot(raw_event: Dict) -> Dict:
 
 
 def _check_secondary_event_types(
-    raw_event, secondary_event_types_values: List[str]
+    raw_event, secondary_event_types_values: list[str]
 ) -> bool:
     return any(
         secondary_event_types in secondary_event_types_values
@@ -304,7 +307,7 @@ def _check_secondary_event_types(
     )
 
 
-def _pass_qualifiers(raw_event) -> List[Qualifier]:
+def _pass_qualifiers(raw_event) -> list[Qualifier]:
     qualifiers = _generic_qualifiers(raw_event)
 
     qualifier_mapping = {
@@ -314,6 +317,7 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         PassType.SMART_PASS: ["smart_pass"],
         PassType.SHOT_ASSIST: ["shot_assist"],
         PassType.ASSIST: ["assist"],
+        PassType.THROUGH_BALL: ["through_pass"],
     }
 
     for pass_type, secondary_event_types_values in qualifier_mapping.items():
@@ -322,10 +326,13 @@ def _pass_qualifiers(raw_event) -> List[Qualifier]:
         ):
             qualifiers.append(PassQualifier(pass_type))
 
+    if raw_event["pass"].get("height") == "high":
+        qualifiers.append(PassQualifier(PassType.HIGH_PASS))
+
     return qualifiers
 
 
-def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
+def _parse_pass(raw_event: dict, next_event: dict, team: Team) -> dict:
     pass_result = None
     receiver_player = None
     if len(raw_event["pass"]["endLocation"]) > 1:
@@ -373,7 +380,7 @@ def _parse_pass(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     }
 
 
-def _parse_foul(raw_event: Dict) -> Dict:
+def _parse_foul(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -381,7 +388,7 @@ def _parse_foul(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_card(raw_event: Dict) -> Dict:
+def _parse_card(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     card_type = None
     if _check_secondary_event_types(raw_event, ["yellow_card"]):
@@ -392,7 +399,7 @@ def _parse_card(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers, "card_type": card_type}
 
 
-def _parse_recovery(raw_event: Dict) -> Dict:
+def _parse_recovery(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -400,7 +407,7 @@ def _parse_recovery(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_clearance(raw_event: Dict) -> Dict:
+def _parse_clearance(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {
         "result": None,
@@ -408,7 +415,7 @@ def _parse_clearance(raw_event: Dict) -> Dict:
     }
 
 
-def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
+def _parse_interception(raw_event: dict, next_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = InterceptionResult.SUCCESS
 
@@ -439,7 +446,7 @@ def _parse_interception(raw_event: Dict, next_event: Dict) -> Dict:
     }
 
 
-def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
+def _parse_carry(raw_event: dict, next_event: dict, start_ts: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     carry_info = raw_event["carry"]
     end_coordinates = Point(
@@ -466,7 +473,7 @@ def _parse_carry(raw_event: Dict, next_event: Dict, start_ts: Dict) -> Dict:
     }
 
 
-def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
+def _parse_goalkeeper_save(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
 
     goalkeeper_qualifiers = []
@@ -484,12 +491,12 @@ def _parse_goalkeeper_save(raw_event: Dict) -> Dict:
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_ball_out(raw_event: Dict) -> Dict:
+def _parse_ball_out(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     return {"result": None, "qualifiers": qualifiers}
 
 
-def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
+def _parse_set_piece(raw_event: dict, next_event: dict, team: Team) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = {}
 
@@ -506,9 +513,9 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     ) and "free_kick_shot" not in raw_event["type"]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.FREE_KICK))
         result = _parse_pass(raw_event, next_event, team)
-    elif (
-        raw_event["type"]["primary"] == "corner"
-    ) and "shot" not in raw_event["type"]["secondary"]:
+    elif (raw_event["type"]["primary"] == "corner") and "shot" not in raw_event[
+        "type"
+    ]["secondary"]:
         qualifiers.append(SetPieceQualifier(SetPieceType.CORNER_KICK))
         result = _parse_pass(raw_event, next_event, team)
     # Shot set pieces
@@ -530,7 +537,7 @@ def _parse_set_piece(raw_event: Dict, next_event: Dict, team: Team) -> Dict:
     return result
 
 
-def _parse_take_on(raw_event: Dict) -> Dict:
+def _parse_take_on(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     result = None
     if "offensive_duel" in raw_event["type"]["secondary"]:
@@ -552,7 +559,7 @@ def _parse_take_on(raw_event: Dict) -> Dict:
     return {"result": result, "qualifiers": qualifiers}
 
 
-def _parse_duel(raw_event: Dict) -> Dict:
+def _parse_duel(raw_event: dict) -> dict:
     qualifiers = _generic_qualifiers(raw_event)
     duel_qualifiers = []
     secondary_types = raw_event["type"]["secondary"]
@@ -617,12 +624,10 @@ def _parse_duel(raw_event: Dict) -> Dict:
 
 
 def _create_timestamp_timedelta(
-    raw_event: Dict, start_ts: Dict, period_id: int
+    raw_event: dict, start_ts: dict, period_id: int
 ) -> timedelta:
     time_delta = (
-        timedelta(
-            seconds=float(raw_event["second"] + raw_event["minute"] * 60)
-        )
+        timedelta(seconds=float(raw_event["second"] + raw_event["minute"] * 60))
         - start_ts[period_id]
     )
 
@@ -647,9 +652,9 @@ def _get_team_formation(team_formation):
 
 def get_home_away_team_formation(event, team):
     team_formation = event["team"]["formation"]
-    team_id = str(event["team"]["id"])
+    str(event["team"]["id"])
     opponent_formation = event["opponentTeam"]["formation"]
-    opponent_team_id = str(event["opponentTeam"]["id"])
+    str(event["opponentTeam"]["id"])
 
     if team.ground == Ground.HOME:
         home_team_formation = _get_team_formation(team_formation)
@@ -690,7 +695,7 @@ def identify_synthetic_formation_change_event(
     return event_formation_change_info
 
 
-def _players_to_dict(players: List[Player]):
+def _players_to_dict(players: list[Player]):
     return {player.player_id: player for player in players}
 
 
@@ -707,6 +712,48 @@ def _parse_period_id(raw_period: str) -> int:
     return period_id
 
 
+def create_periods(raw_events, period_minutes_offset_mapping):
+    periods = []
+
+    for idx, raw_event in enumerate(raw_events["events"]):
+        next_period_id = None
+        if (idx + 1) < len(raw_events["events"]):
+            next_event = raw_events["events"][idx + 1]
+            next_period_id = _parse_period_id(next_event["matchPeriod"])
+
+        period_id = _parse_period_id(raw_event["matchPeriod"])
+
+        if len(periods) == 0 or periods[-1].id != period_id:
+            periods.append(
+                Period(
+                    id=period_id,
+                    start_timestamp=(
+                        timedelta(seconds=0)
+                        if len(periods) == 0
+                        else periods[-1].end_timestamp
+                    ),
+                    end_timestamp=None,
+                )
+            )
+
+        if next_period_id != period_id:
+            period_start_timestamp = periods[period_id - 1].start_timestamp
+            period_offset = (
+                period_start_timestamp
+                - period_minutes_offset_mapping[period_id]
+            )
+            periods[-1] = replace(
+                periods[-1],
+                end_timestamp=period_offset
+                + timedelta(
+                    seconds=float(
+                        raw_event["second"] + raw_event["minute"] * 60
+                    )
+                ),
+            )
+    return periods
+
+
 class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     @property
     def provider(self) -> Provider:
@@ -721,7 +768,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if "id" not in event:
                     event["id"] = event["type"]["primary"]
 
-        periods = []
         # start timestamps are fixed
         start_ts = {
             1: timedelta(minutes=0),
@@ -755,33 +801,26 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             away_coach = None
             coaches = raw_events.get("coaches")
             if coaches:
-                if (
-                    home_team_id in coaches
-                    and "coach" in coaches[home_team_id]
-                ):
-                    home_coach = coaches[home_team_id]["coach"].get(
-                        "shortName"
-                    )
-                if (
-                    away_team_id in coaches
-                    and "coach" in coaches[away_team_id]
-                ):
-                    away_coach = coaches[away_team_id]["coach"].get(
-                        "shortName"
-                    )
+                if home_team_id in coaches and "coach" in coaches[home_team_id]:
+                    home_coach = coaches[home_team_id]["coach"].get("shortName")
+                if away_team_id in coaches and "coach" in coaches[away_team_id]:
+                    away_coach = coaches[away_team_id]["coach"].get("shortName")
+
+            periods = create_periods(raw_events, start_ts)
 
             events = []
 
             next_pass_is_kickoff = False
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
-                next_period_id = None
+                ball_owning_team = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = _parse_period_id(
-                        next_event["matchPeriod"]
-                    )
 
+                if raw_event["possession"]:
+                    ball_owning_team = teams[
+                        str(raw_event["possession"]["team"]["id"])
+                    ]
                 if (
                     idx == 0
                     or raw_event["matchPeriod"]
@@ -794,35 +833,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
                 period_id = _parse_period_id(raw_event["matchPeriod"])
-
-                if len(periods) == 0 or periods[-1].id != period_id:
-                    periods.append(
-                        Period(
-                            id=period_id,
-                            start_timestamp=(
-                                timedelta(seconds=0)
-                                if len(periods) == 0
-                                else periods[-1].end_timestamp
-                            ),
-                            end_timestamp=None,
-                        )
-                    )
-
-                if next_period_id != period_id:
-                    periods[-1] = replace(
-                        periods[-1],
-                        end_timestamp=timedelta(
-                            seconds=float(
-                                raw_event["second"] + raw_event["minute"] * 60
-                            )
-                        ),
-                    )
-
-                ball_owning_team = None
-                if raw_event["possession"]:
-                    ball_owning_team = teams[
-                        str(raw_event["possession"]["team"]["id"])
-                    ]
 
                 if player_id == INVALID_PLAYER:
                     player = None
@@ -852,7 +862,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                     "player": player,
                     "ball_owning_team": ball_owning_team,
                     "ball_state": None,
-                    "period": periods[-1],
+                    "period": periods[period_id - 1],
                     "timestamp": _create_timestamp_timedelta(
                         raw_event, start_ts, period_id
                     ),

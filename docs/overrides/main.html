@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ 'assets/javascripts/custom.js' | url }}"></script>
+{% endblock %}
+
 {% block analytics %}
 <script async defer data-domain="kloppy.pysport.org" src="https://plausible.io/js/plausible.js"></script>
 {% endblock analytics %}

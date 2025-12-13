@@ -1,36 +1,61 @@
+from datetime import datetime, timedelta, timezone
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from typing import IO, NamedTuple, Optional, Union
 import warnings
-from typing import Dict, Optional, Union, NamedTuple, IO
 
 from lxml import objectify
 
 from kloppy.domain import (
-    TrackingDataset,
-    DatasetFlag,
     AttackingDirection,
+    BallState,
+    DatasetFlag,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    PlayerData,
     Point,
     Point3D,
-    Team,
-    BallState,
-    Period,
-    Orientation,
-    attacking_direction_from_frame,
-    Metadata,
-    Ground,
-    Player,
+    PositionType,
     Provider,
-    PlayerData,
     Score,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-
 from kloppy.utils import Readable, performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
 logger = logging.getLogger(__name__)
+
+
+position_mapping = {
+    "GK": PositionType.Goalkeeper,
+    "RB": PositionType.RightBack,
+    "LB": PositionType.LeftBack,
+    "DM": PositionType.DefensiveMidfield,
+    "RCB": PositionType.RightCenterBack,
+    "LCB": PositionType.LeftCenterBack,
+    "CF": PositionType.Striker,
+    "AM": PositionType.AttackingMidfield,
+    "RW": PositionType.RightWing,
+    "LW": PositionType.LeftWing,
+    "CMR": PositionType.RightCentralMidfield,
+    "CML": PositionType.LeftCentralMidfield,
+    "CB": PositionType.CenterBack,
+    "WBR": PositionType.RightWingBack,
+    "WBL": PositionType.LeftWingBack,
+    "CM": PositionType.CentralMidfield,
+    "SS": PositionType.CenterAttackingMidfield,
+    "AMR": PositionType.RightAttackingMidfield,
+    "AML": PositionType.LeftAttackingMidfield,
+    "RWB": PositionType.RightWingBack,
+    "LWB": PositionType.LeftWingBack,
+}
 
 
 class SecondSpectrumInputs(NamedTuple):
@@ -111,7 +136,7 @@ class SecondSpectrumDeserializer(
         return frame
 
     @staticmethod
-    def __validate_inputs(inputs: Dict[str, Readable]):
+    def __validate_inputs(inputs: dict[str, Readable]):
         if "xml_metadata" not in inputs:
             raise ValueError("Please specify a value for 'xml_metadata'")
         if "raw_data" not in inputs:
@@ -203,7 +228,7 @@ class SecondSpectrumDeserializer(
                             .split(":")[0]
                             .strip()
                         )
-                    except:
+                    except:  # noqa: E722, TODO: More specific exception
                         home_name, away_name = "home", "away"
 
                     teams[0].team_id = home_team_id
@@ -228,14 +253,17 @@ class SecondSpectrumDeserializer(
                                 player_id=player_data["optaId"],
                                 name=player_data["name"],
                                 starting=player_data["position"] != "SUB",
-                                starting_position=player_data["position"],
+                                starting_position=position_mapping.get(
+                                    player_data["position"],
+                                    PositionType.Unknown,
+                                ),
                                 team=team,
                                 jersey_no=int(player_data["number"]),
                                 attributes=player_attributes,
                             )
                             team.players.append(player)
 
-                except:  # TODO: More specific exception
+                except:  # noqa: E722, TODO: More specific exception
                     logging.warning(
                         "Optional JSON Metadata is malformed. Continuing without"
                     )
@@ -267,14 +295,17 @@ class SecondSpectrumDeserializer(
                     n += 1
 
             frames = []
-            for n, frame_data in enumerate(_iter()):
+            n_frames = 0
+            for frame_data in _iter():
                 period = periods[frame_data["period"] - 1]
 
                 frame = self._frame_from_framedata(teams, period, frame_data)
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 
-                if self.limit and n + 1 >= self.limit:
+                n_frames += 1
+
+                if self.limit and n_frames >= self.limit:
                     break
 
         try:

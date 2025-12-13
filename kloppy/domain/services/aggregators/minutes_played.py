@@ -1,7 +1,7 @@
 from datetime import timedelta
-from typing import List, NamedTuple, Union
+from typing import NamedTuple, Union
 
-from kloppy.domain import EventDataset, Player, Time, PositionType
+from kloppy.domain import EventDataset, Player, PositionType, Time
 from kloppy.domain.services.aggregators.aggregator import (
     EventDatasetAggregator,
 )
@@ -28,7 +28,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
 
     def aggregate(
         self, dataset: EventDataset
-    ) -> List[Union[MinutesPlayedPerPosition, MinutesPlayed]]:
+    ) -> list[Union[MinutesPlayedPerPosition, MinutesPlayed]]:
         items = []
 
         for team in dataset.metadata.teams:
@@ -49,7 +49,7 @@ class MinutesPlayedAggregator(EventDatasetAggregator):
                             MinutesPlayed(
                                 player=player,
                                 start_time=_start_time,
-                                end_time=_start_time,
+                                end_time=end_time,
                                 duration=end_time - _start_time,
                             )
                         )

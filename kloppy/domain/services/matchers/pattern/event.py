@@ -1,7 +1,8 @@
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Iterator, List, Tuple
+from typing import Callable
 
 from kloppy.domain import (
     CarryEvent,
@@ -26,16 +27,16 @@ from .regexp.regexp import _Match
 
 
 class WithCaptureMatcher(Matcher):
-    def __init__(self, matcher: Callable[[Tok, Dict[str, List[Tok]]], bool]):
+    def __init__(self, matcher: Callable[[Tok, dict[str, list[Tok]]], bool]):
         self.matcher = matcher
 
-    def _add_captures(self, captures: Dict[str, List[Tok]], match: _Match):
+    def _add_captures(self, captures: dict[str, list[Tok]], match: _Match):
         for name, capture in match.children.items():
             captures[name] = capture[0].trail
             self._add_captures(captures, capture[0])
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         match = _make_match(trail)
         captures = {}
@@ -45,7 +46,7 @@ class WithCaptureMatcher(Matcher):
 
 
 def match_generic(event_cls, capture=None, **kwargs):
-    def _matcher_fn(event: Event, captures: Dict[str, List[Event]]) -> bool:
+    def _matcher_fn(event: Event, captures: dict[str, list[Event]]) -> bool:
         if not isinstance(event, event_cls):
             return False
 
@@ -117,8 +118,8 @@ def function(fn):
 
 @dataclass
 class Match:
-    events: List[Event]
-    captures: Dict[str, List[Event]]
+    events: list[Event]
+    captures: dict[str, list[Event]]
 
 
 def search(dataset: EventDataset, pattern: Node[Tok, Out]):
@@ -136,7 +137,7 @@ def search(dataset: EventDataset, pattern: Node[Tok, Out]):
     return results
 
 
-def _search(events: List[Event], re: RegExp[Tok, Out]):
+def _search(events: list[Event], re: RegExp[Tok, Out]):
     i = 0
     results = []
     for i in range(len(events)):
@@ -161,7 +162,7 @@ def _search(events: List[Event], re: RegExp[Tok, Out]):
 
 @dataclass
 class Query:
-    event_types: List[str]
+    event_types: list[str]
     pattern: Node[Tok, Out]
 
 

@@ -1,14 +1,9 @@
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import product
 from types import MappingProxyType
 from typing import (
-    Dict,
     Generic,
-    Iterator,
-    List,
-    Mapping,
-    Sequence,
-    Tuple,
 )
 
 import networkx as nx
@@ -302,10 +297,10 @@ class Explorer(Generic[Tok, Out]):
 
     re: "RegExp[Tok, Out]"
     node: Node[Tok, Out]
-    trail: Tuple[_TrailItem[Out], ...]
+    trail: tuple[_TrailItem[Out], ...]
 
     @property
-    def signature(self) -> Tuple[Node, Tuple[_TrailItem, ...]]:
+    def signature(self) -> tuple[Node, tuple[_TrailItem, ...]]:
         """
         Sortable signature for this explorer, used for de-duplication
         """
@@ -354,9 +349,9 @@ class _Match(Generic[Out]):
 
     def __init__(self, start_pos: int):
         self.start_pos = start_pos
-        self.children: Dict[str, List[_Match]] = {}
-        self.trail: List[Out] = []
-        self._stack: List[Capture] = []
+        self.children: dict[str, list[_Match]] = {}
+        self.trail: list[Out] = []
+        self._stack: list[Capture] = []
 
     def _deep_get(self, keys: Sequence[Capture]) -> "_Match":
         """
@@ -471,7 +466,7 @@ class Match(Generic[Out]):
 
     # Sub-groups that matched. As several groups could be matching, a list
     # is returned so you can access each one of them.
-    children: Mapping[str, List["Match"]]
+    children: Mapping[str, list["Match"]]
 
     # Trail of matched items. It's the output of the matcher, not the input
     # tokens.
@@ -494,7 +489,7 @@ class MatchList(tuple, Generic[Out]):
             return super().__getitem__(item)
 
 
-def _make_match(trail: Tuple[_TrailItem, ...]) -> _Match[Out]:
+def _make_match(trail: tuple[_TrailItem, ...]) -> _Match[Out]:
     """
     Transforms an explorer into a Match object using its trail
 
@@ -598,7 +593,7 @@ class RegExp(Generic[Tok, Out]):
             them being character lists.
         """
 
-        stack: List[Explorer[Tok, Out]] = [Explorer(self, _Initial(), tuple())]
+        stack: list[Explorer[Tok, Out]] = [Explorer(self, _Initial(), tuple())]
 
         stacks = []
         for token in seq:

@@ -3,15 +3,15 @@ from pathlib import Path
 
 import pytest
 
+from kloppy import skillcorner
 from kloppy.domain import (
-    Provider,
+    BallState,
+    DatasetType,
     Orientation,
     Point,
     Point3D,
-    DatasetType,
+    Provider,
 )
-
-from kloppy import skillcorner
 
 
 class TestSkillCornerTracking:
@@ -22,6 +22,14 @@ class TestSkillCornerTracking:
     @pytest.fixture
     def raw_data(self, base_dir) -> str:
         return base_dir / "files/skillcorner_structured_data.json"
+
+    @pytest.fixture
+    def meta_data_v3(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_meta_data.json"
+
+    @pytest.fixture
+    def raw_data_v3(self, base_dir) -> str:
+        return base_dir / "files/skillcorner_v3_raw_data.jsonl"
 
     @pytest.fixture
     def raw_data_timestamp(self, base_dir) -> str:
@@ -43,6 +51,7 @@ class TestSkillCornerTracking:
             raw_data=raw_data,
             coordinates="skillcorner",
             include_empty_frames=True,
+            only_alive=False,
         )
 
         assert dataset.metadata.provider == Provider.SKILLCORNER
@@ -131,9 +140,7 @@ class TestSkillCornerTracking:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(
-                2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc
-            )
+            assert date == datetime(2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc)
 
         game_id = dataset.metadata.game_id
         if game_id:
@@ -153,7 +160,9 @@ class TestSkillCornerTracking:
     def test_correct_normalized_deserialization(
         self, meta_data: str, raw_data: str
     ):
-        dataset = skillcorner.load(meta_data=meta_data, raw_data=raw_data)
+        dataset = skillcorner.load(
+            meta_data=meta_data, raw_data=raw_data, only_alive=False
+        )
 
         home_player = dataset.metadata.teams[0].players[2]
         assert dataset.records[0].players_data[
@@ -162,8 +171,84 @@ class TestSkillCornerTracking:
 
     def test_skip_empty_frames(self, meta_data: str, raw_data: str):
         dataset = skillcorner.load(
-            meta_data=meta_data, raw_data=raw_data, include_empty_frames=False
+            meta_data=meta_data,
+            raw_data=raw_data,
+            include_empty_frames=False,
+            only_alive=False,
         )
 
         assert len(dataset.records) == 34783
         assert dataset.records[0].timestamp == timedelta(seconds=11.2)
+        assert dataset.records[-1].ball_state == BallState.ALIVE
+
+    def test_skip_dead_frames(self, meta_data: str, raw_data: str):
+        dataset = skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=False,
+        )
+
+        assert len(dataset.records) == 55632
+
+        dataset = skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=True,
+        )
+
+        assert len(dataset.records) == 40069
+        assert all([True for x in dataset if x.ball_state == BallState.ALIVE])
+
+    def test_correct_deserialization_v3(
+        self, raw_data_v3: Path, meta_data_v3: Path
+    ):
+        dataset = skillcorner.load(
+            meta_data=meta_data_v3,
+            raw_data=raw_data_v3,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=False,
+        )
+
+        assert dataset.metadata.provider == Provider.SKILLCORNER
+        assert dataset.dataset_type == DatasetType.TRACKING
+        assert len(dataset.records) == 27
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].start_timestamp == timedelta(
+            seconds=1
+        )
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            seconds=2, microseconds=200000
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].start_timestamp == timedelta(
+            seconds=6097, microseconds=700000
+        )
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            seconds=6099
+        )
+
+        assert dataset.records[0].frame_id == 10
+        assert dataset.records[0].timestamp == timedelta(seconds=0)
+        assert dataset.records[-1].frame_id == 60990
+        assert dataset.records[-1].timestamp == timedelta(seconds=3256)
+
+        home_team_gk = dataset.metadata.teams[0].get_player_by_id("133")
+        assert home_team_gk.player_id == "133"
+        assert dataset.records[10].players_data[
+            home_team_gk
+        ].coordinates == Point(x=40.46, y=-0.58)
+
+        away_team_gk = dataset.metadata.teams[1].get_player_by_id("76")
+        assert away_team_gk.player_id == "76"
+        assert dataset.records[10].players_data[
+            away_team_gk
+        ].coordinates == Point(x=-41.97, y=-0.61)
+
+        assert dataset.records[-1].ball_state == BallState.ALIVE
+        assert dataset.records[-2].ball_state == BallState.DEAD

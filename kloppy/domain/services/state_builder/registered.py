@@ -1,10 +1,9 @@
 import abc
 import inspect
-from typing import Dict, Type
 
 from kloppy.utils import camelcase_to_snakecase
 
-_STATE_BUILDER_REGISTRY: Dict[str, Type["StateBuilder"]] = {}
+_STATE_BUILDER_REGISTRY: dict[str, type["StateBuilder"]] = {}  # noqa: F821
 
 
 class RegisteredStateBuilder(abc.ABCMeta):
@@ -13,9 +12,9 @@ class RegisteredStateBuilder(abc.ABCMeta):
         class_dict["name"] = name
         builder_cls = super().__new__(mcs, cls_name, bases, class_dict)
         if not inspect.isabstract(builder_cls):
-            _STATE_BUILDER_REGISTRY[
-                name.replace("_state_builder", "")
-            ] = builder_cls
+            _STATE_BUILDER_REGISTRY[name.replace("_state_builder", "")] = (
+                builder_cls
+            )
         return builder_cls
 
 

@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Generic, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
 from kloppy.domain import (
-    EventDataset,
-    Event,
-    EventType,
     DatasetTransformer,
-    Provider,
-    EventFactory,
-    DatasetType,
     DatasetTransformerBuilder,
+    DatasetType,
+    Event,
+    EventDataset,
+    EventFactory,
+    EventType,
+    Provider,
 )
 
 T = TypeVar("T")
@@ -18,7 +18,7 @@ T = TypeVar("T")
 class EventDataDeserializer(ABC, Generic[T]):
     def __init__(
         self,
-        event_types: Optional[List[Union[EventType, str]]] = None,
+        event_types: Optional[list[Union[EventType, str]]] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         event_factory: Optional[EventFactory] = None,
     ):
@@ -26,9 +26,11 @@ class EventDataDeserializer(ABC, Generic[T]):
             event_types = []
 
         self.event_types = [
-            EventType[event_type.upper()]
-            if isinstance(event_type, str)
-            else event_type
+            (
+                EventType[event_type.upper()]
+                if isinstance(event_type, str)
+                else event_type
+            )
             for event_type in event_types
         ]
 

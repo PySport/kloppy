@@ -1,30 +1,31 @@
-import logging
-import warnings
 from collections import namedtuple
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import Iterator, IO, NamedTuple
+import logging
+from typing import IO, NamedTuple
+import warnings
 
 from kloppy.domain import (
-    attacking_direction_from_frame,
-    TrackingDataset,
     AttackingDirection,
-    Point,
-    Period,
-    Orientation,
-    Provider,
     DatasetFlag,
-    Metadata,
-    Team,
     Ground,
+    Metadata,
+    Orientation,
+    Period,
     Player,
     PlayerData,
+    Point,
+    PositionType,
+    Provider,
+    Team,
+    TrackingDataset,
+    attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
 from kloppy.utils import performance_logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,7 @@ class MetricaCSVTrackingDataDeserializer(
                         player_id=f"{team.ground}_{jersey_number}",
                         jersey_no=int(jersey_number),
                         team=team,
+                        starting_position=PositionType.Unknown,
                     )
                     for jersey_number in player_jersey_numbers
                 ]
@@ -117,11 +119,13 @@ class MetricaCSVTrackingDataDeserializer(
                             for i, player in enumerate(players)
                             if columns[3 + i * 2] != "NaN"
                         },
-                        ball_coordinates=Point(
-                            x=float(columns[-2]), y=1 - float(columns[-1])
-                        )
-                        if columns[-2] != "NaN"
-                        else None,
+                        ball_coordinates=(
+                            Point(
+                                x=float(columns[-2]), y=1 - float(columns[-1])
+                            )
+                            if columns[-2] != "NaN"
+                            else None
+                        ),
                     )
                 frame_idx += 1
 
@@ -176,9 +180,7 @@ class MetricaCSVTrackingDataDeserializer(
             for n, (home_partial_frame, away_partial_frame) in enumerate(
                 partial_frames
             ):
-                self.__validate_partials(
-                    home_partial_frame, away_partial_frame
-                )
+                self.__validate_partials(home_partial_frame, away_partial_frame)
 
                 period: Period = home_partial_frame.period
                 frame_id: int = home_partial_frame.frame_id
@@ -211,7 +213,7 @@ class MetricaCSVTrackingDataDeserializer(
                     teams = [home_partial_frame.team, away_partial_frame.team]
 
                 n += 1
-                if self.limit and n >= self.limit:
+                if self.limit and n + 1 >= (self.limit / self.sample_rate):
                     break
 
         try:

@@ -1,14 +1,13 @@
 from datetime import timedelta
-from typing import Tuple
 
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import Time, Period, TimeContainer
+from kloppy.domain import Period, Time, TimeContainer
 
 
 @pytest.fixture
-def periods() -> Tuple[Period, Period, Period]:
+def periods() -> tuple[Period, Period, Period]:
     period1 = Period(
         id=1,
         start_timestamp=timedelta(seconds=0),
@@ -139,6 +138,13 @@ class TestAbsTime:
         assert diff == timedelta(seconds=5067.367)
 
     def test_statsbomb_minuted_played(self, base_dir):
+        def __period_offset(period_id, dataset):
+            for period in dataset.metadata.periods:
+                if period.id == period_id - 1:
+                    return period.end_time.timestamp.total_seconds()
+                else:
+                    return 0
+
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
@@ -182,7 +188,26 @@ class TestAbsTime:
             + dataset.metadata.periods[1].duration
         )
 
-        # assert
+        # Check if total difference between start and end time equal minutes played
+        for item in minutes_played:
+            assert item.duration.total_seconds() == pytest.approx(
+                (
+                    (
+                        item.end_time.timestamp.total_seconds()
+                        + __period_offset(
+                            period_id=item.end_time.period.id, dataset=dataset
+                        )
+                    )
+                    - (
+                        item.start_time.timestamp.total_seconds()
+                        + __period_offset(
+                            period_id=item.start_time.period.id,
+                            dataset=dataset,
+                        )
+                    )
+                ),
+                0.001,
+            )
 
 
 class TestAbsTimeContainer:

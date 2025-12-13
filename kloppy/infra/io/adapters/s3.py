@@ -1,19 +1,18 @@
-import shutil
-from typing import BinaryIO
+import fsspec
 
 from kloppy.config import get_config
 from kloppy.exceptions import AdapterError
-from .adapter import Adapter
+
+from .fsspec import FSSpecAdapter
 
 
-class S3Adapter(Adapter):
-    def __init__(self):
-        self.s3_fs = None
-
+class S3Adapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("s3://")
 
-    def _get_s3fs(self):
+    def _get_filesystem(
+        self, url: str, no_cache: bool = False
+    ) -> fsspec.AbstractFileSystem:
         try:
             import s3fs
         except ImportError:
@@ -22,16 +21,12 @@ class S3Adapter(Adapter):
                 " install it using: pip install s3fs"
             )
 
-        s3_fs = get_config("adapters.s3.s3fs")
-        if not s3_fs:
-            if not self.s3_fs:
-                s3_fs = s3fs.S3FileSystem()
-            else:
-                s3_fs = self.s3_fs
-        return s3_fs
+        s3_fs = get_config("adapters.s3.s3fs") or s3fs.S3FileSystem()
 
-    def read_to_stream(self, url: str, output: BinaryIO):
-        s3_fs = self._get_s3fs()
-
-        with s3_fs.open(url, "rb") as fp:
-            shutil.copyfileobj(fp, output)
+        if no_cache:
+            return s3_fs
+        return fsspec.filesystem(
+            "simplecache",
+            fs=s3_fs,
+            cache_storage=get_config("cache"),
+        )

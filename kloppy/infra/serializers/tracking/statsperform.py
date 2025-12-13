@@ -1,8 +1,7 @@
-import logging
 from datetime import timedelta
-import warnings
+import logging
 from typing import IO, NamedTuple, Optional, Union
-
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
@@ -14,14 +13,15 @@ from kloppy.domain import (
     PlayerData,
     Point,
     Point3D,
+    PositionType,
     Provider,
     TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
+from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
@@ -124,6 +124,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                         player_id=player_id,
                         team=team,
                         jersey_no=jersey_no,
+                        starting_position=PositionType.Unknown,
                     )
                     team.players.append(player)
 
@@ -178,7 +179,8 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     n += 1
 
             frames = []
-            for n, frame_data in enumerate(_iter(), start=1):
+            n_frames = 0
+            for frame_data in _iter():
                 period = frame_data[0]
                 frame = self._frame_from_framedata(
                     teams_list, period, frame_data
@@ -190,7 +192,9 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                     continue
                 frames.append(frame)
 
-                if self.limit and n >= self.limit:
+                n_frames += 1
+
+                if self.limit and n_frames >= self.limit:
                     break
 
         try:

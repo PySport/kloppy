@@ -20,8 +20,6 @@ from typing import (
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
-    from pandas import DataFrame
-
     from ..services.transformers.data_record import (
         Column,
         NamedColumns,
@@ -1725,14 +1723,6 @@ class Dataset(ABC, Generic[T]):
     @abstractmethod
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
-
-    @abstractmethod
-    def to_pandas(
-        self,
-        record_converter: Callable[[T], dict] | None = None,
-        additional_columns: NamedColumns | None = None,
-    ) -> DataFrame:  # noqa: F821
-        pass
 
     def transform(self, *args, **kwargs):
         """

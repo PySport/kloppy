@@ -696,7 +696,7 @@ class SportecEventDataDeserializer(
             score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag(0),
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,

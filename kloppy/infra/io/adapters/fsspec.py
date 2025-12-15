@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import re
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Optional, List
 
 import fsspec
 

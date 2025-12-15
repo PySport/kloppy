@@ -1,12 +1,8 @@
 """I/O utilities for reading raw data."""
 
 import bz2
-from collections.abc import Generator, Iterable, Iterator
 import contextlib
-from contextlib import AbstractContextManager
-from dataclasses import dataclass, replace
 import gzip
-from io import BufferedWriter, BytesIO, TextIOWrapper
 import logging
 import lzma
 import os
@@ -20,7 +16,13 @@ from typing import (
     Any,
     BinaryIO,
     Callable,
+    ContextManager,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
     Optional,
+    Tuple,
     Union,
 )
 
@@ -69,7 +71,7 @@ FileLike = Union[FileOrPath, Source]
 
 def _file_or_path_to_binary_stream(
     file_or_path: FileOrPath, binary_mode: str
-) -> tuple[BinaryIO, bool]:
+) -> Tuple[BinaryIO, bool]:
     """
     Converts a file path or a file-like object to a binary stream.
 
@@ -83,9 +85,7 @@ def _file_or_path_to_binary_stream(
     """
     assert binary_mode in ("rb", "wb", "ab")
 
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         # If file_or_path is a path-like object, open it and return the binary stream
         return open(os.fspath(file_or_path), binary_mode), True  # type: ignore
 
@@ -178,7 +178,7 @@ def _open(
     filename: FileOrPath,
     mode: str = "rb",
     compresslevel: Optional[int] = None,
-    format: Optional[str] = None,  # noqa: A002
+    format: Optional[str] = None,
 ) -> BinaryIO:
     """
         A replacement for the "open" function that can also read and write
@@ -273,9 +273,7 @@ def _open_gz(
 
     if "r" in mode:
         return gzip.open(filename, mode)  # type: ignore
-    return BufferedWriter(
-        gzip.open(filename, mode, compresslevel=compresslevel)
-    )  # type: ignore
+    return BufferedWriter(gzip.open(filename, mode, compresslevel=compresslevel))  # type: ignore
 
 
 def get_file_extension(file_or_path: FileLike) -> str:
@@ -302,9 +300,7 @@ def get_file_extension(file_or_path: FileLike) -> str:
         >>> get_file_extension(Source(data="example.csv"))
         '.csv'
     """
-    if isinstance(file_or_path, (str, bytes)) or hasattr(
-        file_or_path, "__fspath__"
-    ):
+    if isinstance(file_or_path, (str, bytes)) or hasattr(file_or_path, "__fspath__"):
         path = os.fspath(file_or_path)  # type: ignore
         for ext in [".gz", ".xz", ".bz2"]:
             if path.endswith(ext):
@@ -325,9 +321,7 @@ def dummy_context_mgr() -> Generator[None, None, None]:
 
 
 @contextlib.contextmanager
-def _write_context_manager(
-    uri: str, mode: str
-) -> Generator[BinaryIO, None, None]:
+def _write_context_manager(uri: str, mode: str) -> Generator[BinaryIO, None, None]:
     """
     Context manager for write operations that buffers writes and flushes to adapter on exit.
 
@@ -405,9 +399,7 @@ def open_as_file(
     """
     # Validate mode
     if mode not in ("rb", "wb", "ab"):
-        raise ValueError(
-            f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'."
-        )
+        raise ValueError(f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'.")
 
     # Handle Source wrapper
     if isinstance(input_, Source):
@@ -430,9 +422,7 @@ def open_as_file(
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
             raise TypeError("Cannot write to inline JSON/XML string.")
         if isinstance(input_, bytes):
-            raise TypeError(
-                "Cannot write to bytes object. Use BytesIO instead."
-            )
+            raise TypeError("Cannot write to bytes object. Use BytesIO instead.")
 
     # Read modes: Handle inline data
     if mode == "rb":
@@ -481,7 +471,7 @@ def open_as_file(
     raise TypeError(f"Unsupported input type: {type(input_)}")
 
 
-def _natural_sort_key(path: str) -> list[Union[int, str]]:
+def _natural_sort_key(path: str) -> List[Union[int, str]]:
     # Split string into list of chunks for natural sorting
     return [
         int(text) if text.isdigit() else text.lower()

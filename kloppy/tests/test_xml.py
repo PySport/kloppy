@@ -1,11 +1,15 @@
 from datetime import timedelta
+from io import BytesIO
 
 from pandas import DataFrame
 from pandas._testing import assert_frame_equal
 
 from kloppy import sportscode
 from kloppy.domain import Period
-from kloppy.infra.serializers.code.sportscode import SportsCodeSerializer
+from kloppy.infra.serializers.code.sportscode import (
+    SportsCodeSerializer,
+    SportsCodeOutputs,
+)
 
 
 class TestXMLCodeTracking:
@@ -80,7 +84,10 @@ class TestXMLCodeTracking:
         dataset.codes[1].period = dataset.metadata.periods[1]
 
         serializer = SportsCodeSerializer()
-        output = serializer.serialize(dataset)
+        with BytesIO() as buffer:
+            serializer.serialize(dataset, SportsCodeOutputs(data=buffer))
+            buffer.seek(0)
+            output = buffer.read()
 
         expected_output = """<?xml version='1.0' encoding='utf-8'?>
 <file>

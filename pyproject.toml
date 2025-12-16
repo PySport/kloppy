@@ -63,12 +63,13 @@ Documentation = "https://kloppy.pysport.org/"
 
 [dependency-groups]
 dev = [
-    "ruff",                              # Python formatter
-    "pytest>=6.2.5,<8",                  # Testing framework
-    "pytest-lazy-fixture>=0.6.3",        # Use fixtures as parameters in pytest
-    "pytest-httpserver",                 # Mock HTTP server for testing
-    "moto[s3,server]",                   # Mock AWS S3 for testing
-    "pre-commit>=4.2.0",                 # Git hooks for code quality checks
+    "ruff", # Python formatter
+    "pytest>=6.2.5,<8", # Testing framework
+    "pytest-lazy-fixture>=0.6.3", # Use fixtures as parameters in pytest
+    "pytest-httpserver", # Mock HTTP server for testing
+    "moto[s3,server]", # Mock AWS S3 for testing
+    "pre-commit>=4.2.0", # Git hooks for code quality checks
+    "common-data-format-validator==0.0.13",
 ]
 
 docs = [

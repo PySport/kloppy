@@ -176,12 +176,12 @@ class TrackingDataset(Dataset[Frame]):
         from kloppy.domain import DatasetType
         from kloppy.exceptions import KloppyError
         from kloppy.infra.serializers.tracking.cdf import (
-            CDFTrackingDataSerializer,
+            CDFTrackingSerializer,
             CDFOutputs,
         )
         from kloppy.io import FileLike, open_as_file
 
-        serializer = CDFTrackingDataSerializer()
+        serializer = CDFTrackingSerializer()
 
         # TODO: write files but also support non-local files, similar to how open_as_file supports non-local files
 
@@ -191,11 +191,10 @@ class TrackingDataset(Dataset[Frame]):
         ) as metadata_fp, open_as_file(
             tracking_output_file, mode="wb"
         ) as tracking_fp:
-
             serializer.serialize(
                 dataset=self,
                 outputs=CDFOutputs(
-                    meta_data=metadata_fp, tracking_data=tracking_fp
+                    meta_data=metadata_fp, raw_data=tracking_fp
                 ),
                 additional_metadata=additional_metadata,
             )

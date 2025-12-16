@@ -42,10 +42,10 @@ MISSING_MANDATORY_VALUE = "MISSING_MANDATORY_VALUE"
 
 class CDFOutputs(NamedTuple):
     meta_data: IO[bytes]
-    tracking_data: IO[bytes]
+    raw_data: IO[bytes]
 
 
-class CDFTrackingDataSerializer(TrackingDataSerializer[CDFOutputs]):
+class CDFTrackingSerializer(TrackingDataSerializer[CDFOutputs]):
     provider = Provider.CDF
 
     def serialize(

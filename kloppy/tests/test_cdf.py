@@ -6,7 +6,7 @@ import pytest
 from kloppy import sportec, skillcorner
 from kloppy.domain import TrackingDataset, PositionType
 from kloppy.infra.serializers.tracking.cdf.serializer import (
-    CDFTrackingDataSerializer,
+    CDFTrackingSerializer,
     CDFOutputs,
 )
 from kloppy.infra.serializers.tracking.cdf.helpers import (
@@ -102,7 +102,7 @@ def serializer_handles_invalid_metadata_types(dataset):
     """Test that CDFTrackingDataSerializer handles invalid metadata types gracefully."""
     import cdf
 
-    serializer = CDFTrackingDataSerializer()
+    serializer = CDFTrackingSerializer()
 
     with tempfile.NamedTemporaryFile(
         mode="w+b", suffix=".json", delete=False
@@ -113,7 +113,7 @@ def serializer_handles_invalid_metadata_types(dataset):
         meta_path = meta_file.name
         tracking_path = tracking_file.name
 
-        outputs = CDFOutputs(meta_data=meta_file, tracking_data=tracking_file)
+        outputs = CDFOutputs(meta_data=meta_file, raw_data=tracking_file)
 
         # Test with invalid metadata types - should still serialize but may fail validation
         invalid_metadata = {

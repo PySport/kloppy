@@ -1,6 +1,7 @@
-import json
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import IO, Iterator, List, Tuple
+import json
+from typing import IO
 
 from kloppy.domain import (
     BallState,
@@ -21,8 +22,8 @@ class TracabJSONParser(TracabDataParser):
     def __init__(
         self,
         feed: IO[bytes],
-        periods: List[Period],
-        teams: Tuple[Team, Team],
+        periods: list[Period],
+        teams: tuple[Team, Team],
         frame_rate: int,
     ) -> None:
         self.root = json.load(feed)
@@ -44,12 +45,12 @@ class TracabJSONParser(TracabDataParser):
 
             frame_id = frame["FrameCount"]
             for period in self.periods:
-                assert isinstance(
-                    period.start_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
-                assert isinstance(
-                    period.end_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                assert isinstance(period.start_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
+                assert isinstance(period.end_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
 
                 if (
                     period.start_timestamp

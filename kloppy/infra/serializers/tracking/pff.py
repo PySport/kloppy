@@ -1,13 +1,13 @@
-import json
-import logging
 from collections import defaultdict
 from datetime import timedelta, timezone
-from typing import IO, Dict, NamedTuple, Optional, Union, List
-import warnings
+import json
+import logging
+from typing import IO, NamedTuple, Optional, Union
 
 from dateutil.parser import parse
 
 from kloppy.domain import (
+    AttackingDirection,
     BallState,
     DatasetFlag,
     Ground,
@@ -22,12 +22,9 @@ from kloppy.domain import (
     Provider,
     Team,
     TrackingDataset,
-    AttackingDirection,
-    Frame,
 )
-
-from kloppy.domain.services.frame_factory import create_frame
 from kloppy.domain.services import attacking_direction_from_frame
+from kloppy.domain.services.frame_factory import create_frame
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
@@ -37,7 +34,7 @@ from kloppy.utils import performance_logging
 logger = logging.getLogger(__name__)
 
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "CB": PositionType.CenterBack,
     "LCB": PositionType.LeftCenterBack,
     "RCB": PositionType.RightCenterBack,
@@ -275,7 +272,6 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             teams = [home_team, away_team]
 
             for player in roster_meta_data:
-
                 team_id = player["team"]["id"]
                 player_col = player["player"]
 
@@ -386,9 +382,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             if self.limit and n_frames >= self.limit:
                 break
 
-        first_frame_p1 = next(
-            frame for frame in frames if frame.period.id == 1
-        )
+        first_frame_p1 = next(frame for frame in frames if frame.period.id == 1)
         is_home_team_left = (
             True
             if attacking_direction_from_frame(first_frame_p1)

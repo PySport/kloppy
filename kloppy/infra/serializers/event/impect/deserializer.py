@@ -1,10 +1,10 @@
+from dataclasses import replace
+from datetime import timedelta
 import json
 import logging
 import re
+from typing import IO, NamedTuple, Optional, Union
 import warnings
-from dataclasses import replace
-from datetime import timedelta
-from typing import IO, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from kloppy.domain import (
     BallState,
@@ -42,7 +42,7 @@ from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
-position_types_mapping: Dict[Tuple[str, str], PositionType] = {
+position_types_mapping: dict[tuple[str, str], PositionType] = {
     ("GOALKEEPER", "CENTRE"): PositionType.Goalkeeper,
     ("LEFT_WINGBACK_DEFENDER", "LEFT"): PositionType.LeftWingBack,
     ("CENTRAL_DEFENDER", "CENTRE_LEFT"): PositionType.LeftCenterBack,
@@ -161,11 +161,11 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
     @staticmethod
     def create_teams_and_players(
-        metadata: Dict,
-        squads_lookup: Optional[Dict] = None,
-        players_lookup: Optional[Dict] = None,
-    ) -> List[Team]:
-        def create_team(team_info: Dict, ground: Ground) -> Team:
+        metadata: dict,
+        squads_lookup: Optional[dict] = None,
+        players_lookup: Optional[dict] = None,
+    ) -> list[Team]:
+        def create_team(team_info: dict, ground: Ground) -> Team:
             starting_formation_stripped = re.sub(
                 r"[^0-9-]", "", team_info["startingFormation"]
             )
@@ -202,9 +202,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                         f"Unknown position {position_key}, defaulting to Unknown"
                     )
                     position = PositionType.Unknown
-                player_starting_positions[
-                    player_starting_info["playerId"]
-                ] = position
+                player_starting_positions[player_starting_info["playerId"]] = (
+                    position
+                )
 
             players = []
             for player in team_info["players"]:
@@ -241,7 +241,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         return [home_team, away_team]
 
     @staticmethod
-    def create_periods(raw_events: List[Dict]) -> List[Period]:
+    def create_periods(raw_events: list[dict]) -> list[Period]:
         periods = []
 
         for idx, raw_event in enumerate(raw_events):
@@ -279,12 +279,12 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
 
     def parse_substitutions(
         self,
-        teams: List[Team],
-        periods: List[Period],
-        metadata: Dict,
-        events: List[Event],
-    ) -> List[Union[SubstitutionEvent, PlayerOffEvent]]:
-        substitutions: List[Union[SubstitutionEvent, PlayerOffEvent]] = []
+        teams: list[Team],
+        periods: list[Period],
+        metadata: dict,
+        events: list[Event],
+    ) -> list[Union[SubstitutionEvent, PlayerOffEvent]]:
+        substitutions: list[Union[SubstitutionEvent, PlayerOffEvent]] = []
         squads = [metadata["squadHome"], metadata["squadAway"]]
 
         SUB_WINDOW = timedelta(seconds=30)
@@ -407,7 +407,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
         return substitutions
 
     @staticmethod
-    def mark_events_as_assists(events: List[Event]):
+    def mark_events_as_assists(events: list[Event]):
         for ix, event in enumerate(events):
             for i in range(1, 3):
                 if event.event_type == EventType.SHOT and ix > i - 1:

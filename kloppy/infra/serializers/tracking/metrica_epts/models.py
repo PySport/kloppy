@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Union
+from typing import Union
 
-from kloppy.domain import Player, Metadata
-
+from kloppy.domain import Metadata, Player
 
 # TODO: fill this with from SplitRegisters
 from kloppy.exceptions import DeserializationError
@@ -38,7 +37,7 @@ class PlayerChannel:
 class Sensor:
     sensor_id: str
     name: str
-    channels: List[Channel]
+    channels: list[Channel]
 
     @classmethod
     def from_xml_element(cls, elm) -> "Sensor":
@@ -75,7 +74,7 @@ class PlayerChannelRef:
     player_channel_id: str
 
     def to_regex(
-        self, player_channel_map: Dict[str, PlayerChannel], **kwargs
+        self, player_channel_map: dict[str, PlayerChannel], **kwargs
     ) -> str:
         if self.player_channel_id in player_channel_map:
             player_channel = player_channel_map[self.player_channel_id]
@@ -92,7 +91,7 @@ class PlayerChannelRef:
 class BallChannelRef:
     channel_id: str
 
-    def to_regex(self, ball_channel_map: Dict[str, Channel], **kwargs) -> str:
+    def to_regex(self, ball_channel_map: dict[str, Channel], **kwargs) -> str:
         if self.channel_id in ball_channel_map:
             return f"(?P<ball_{self.channel_id}>{NON_SPLIT_CHAR_REGEX})"
         else:
@@ -106,10 +105,8 @@ class BallChannelRef:
 @dataclass
 class SplitRegister:
     separator: str
-    children: List[
-        Union[
-            BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"
-        ]
+    children: list[
+        Union[BallChannelRef, PlayerChannelRef, StringRegister, "SplitRegister"]
     ]
 
     def to_regex(self, **kwargs) -> str:
@@ -160,8 +157,8 @@ class DataFormatSpecification:
 
 @dataclass
 class EPTSMetadata(Metadata):
-    player_channels: List[PlayerChannel] = field(default_factory=list)
-    data_format_specifications: List[DataFormatSpecification] = field(
+    player_channels: list[PlayerChannel] = field(default_factory=list)
+    data_format_specifications: list[DataFormatSpecification] = field(
         default_factory=list
     )
-    sensors: List[Sensor] = field(default_factory=list)
+    sensors: list[Sensor] = field(default_factory=list)

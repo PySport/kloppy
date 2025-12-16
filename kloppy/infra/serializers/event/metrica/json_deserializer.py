@@ -1,8 +1,8 @@
-import json
-import logging
 from dataclasses import replace
 from datetime import timedelta
-from typing import IO, Dict, List, NamedTuple, Optional
+import json
+import logging
+from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (
     BallState,
@@ -99,7 +99,7 @@ def _parse_coordinates(event_start_or_end: dict) -> Optional[Point]:
     )
 
 
-def _parse_subtypes(event: dict) -> List:
+def _parse_subtypes(event: dict) -> list:
     if event["subtypes"] is None:
         return []
     elif isinstance(event["subtypes"], list):
@@ -109,11 +109,11 @@ def _parse_subtypes(event: dict) -> List:
 
 def _parse_pass(
     period: Period,
-    event: Dict,
-    previous_event: Dict,
-    subtypes: List,
+    event: dict,
+    previous_event: dict,
+    subtypes: list,
     team: Team,
-) -> Dict:
+) -> dict:
     event_type_id = event["type"]["id"]
 
     if event_type_id == MS_PASS_OUTCOME_COMPLETE:
@@ -132,9 +132,7 @@ def _parse_pass(
             else:
                 result = PassResult.INCOMPLETE
         else:
-            raise DeserializationError(
-                f"Unknown pass outcome: {event_type_id}"
-            )
+            raise DeserializationError(f"Unknown pass outcome: {event_type_id}")
 
         receiver_player = None
         receiver_coordinates = None
@@ -152,8 +150,8 @@ def _parse_pass(
 
 
 def _get_event_qualifiers(
-    event: Dict, previous_event: Dict, subtypes: List
-) -> List[Qualifier]:
+    event: dict, previous_event: dict, subtypes: list
+) -> list[Qualifier]:
     qualifiers = []
 
     qualifiers.extend(_get_event_setpiece_qualifiers(previous_event, subtypes))
@@ -163,16 +161,14 @@ def _get_event_qualifiers(
 
 
 def _get_event_setpiece_qualifiers(
-    previous_event: Dict, subtypes: List
-) -> List[Qualifier]:
+    previous_event: dict, subtypes: list
+) -> list[Qualifier]:
     qualifiers = []
     previous_event_type_id = previous_event["type"]["id"]
     if previous_event_type_id == MS_SET_PIECE:
         set_piece_subtypes = _parse_subtypes(previous_event)
         if MS_SET_PIECE_CORNER_KICK in set_piece_subtypes:
-            qualifiers.append(
-                SetPieceQualifier(value=SetPieceType.CORNER_KICK)
-            )
+            qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
         elif MS_SET_PIECE_FREE_KICK in set_piece_subtypes:
             qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
         elif MS_SET_PIECE_PENALTY in set_piece_subtypes:
@@ -187,7 +183,7 @@ def _get_event_setpiece_qualifiers(
     return qualifiers
 
 
-def _get_event_bodypart_qualifiers(subtypes: List) -> List[Qualifier]:
+def _get_event_bodypart_qualifiers(subtypes: list) -> list[Qualifier]:
     qualifiers = []
     if subtypes and MS_BODY_PART_HEAD in subtypes:
         qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
@@ -195,7 +191,7 @@ def _get_event_bodypart_qualifiers(subtypes: List) -> List[Qualifier]:
     return qualifiers
 
 
-def _parse_shot(event: Dict, previous_event: Dict, subtypes: List) -> Dict:
+def _parse_shot(event: dict, previous_event: dict, subtypes: list) -> dict:
     if MS_SHOT_OUTCOME_OFF_TARGET in subtypes:
         result = ShotResult.OFF_TARGET
     elif MS_SHOT_OUTCOME_SAVED in subtypes:
@@ -216,7 +212,7 @@ def _parse_shot(event: Dict, previous_event: Dict, subtypes: List) -> Dict:
     return dict(result=result, qualifiers=qualifiers)
 
 
-def _parse_carry(period: Period, event: Dict) -> Dict:
+def _parse_carry(period: Period, event: dict) -> dict:
     return dict(
         result=CarryResult.COMPLETE,
         end_coordinates=_parse_coordinates(event["end"]),
@@ -225,7 +221,7 @@ def _parse_carry(period: Period, event: Dict) -> Dict:
     )
 
 
-def _parse_take_on(subtypes: List) -> Dict:
+def _parse_take_on(subtypes: list) -> dict:
     if MS_WON in subtypes:
         result = TakeOnResult.COMPLETE
     else:
@@ -384,9 +380,9 @@ class MetricaJsonEventDataDeserializer(
                 ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
-                        generic_event_kwargs[
-                            "coordinates"
-                        ] = _parse_coordinates(raw_event["end"])
+                        generic_event_kwargs["coordinates"] = (
+                            _parse_coordinates(raw_event["end"])
+                        )
                         generic_event_kwargs["timestamp"] = (
                             timedelta(seconds=raw_event["end"]["time"])
                             - period.start_timestamp

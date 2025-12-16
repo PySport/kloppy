@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import IO, Iterator, List, Tuple
+from typing import IO
 
 from kloppy.domain import (
     BallState,
@@ -21,8 +22,8 @@ class TracabDatParser(TracabDataParser):
     def __init__(
         self,
         feed: IO[bytes],
-        periods: List[Period],
-        teams: Tuple[Team, Team],
+        periods: list[Period],
+        teams: tuple[Team, Team],
         frame_rate: int,
     ) -> None:
         self.root = feed.readlines()
@@ -46,12 +47,12 @@ class TracabDatParser(TracabDataParser):
                 continue
 
             for period in self.periods:
-                assert isinstance(
-                    period.start_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
-                assert isinstance(
-                    period.end_timestamp, timedelta
-                ), "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                assert isinstance(period.start_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
+                assert isinstance(period.end_timestamp, timedelta), (
+                    "The period's start_timestamp should be a relative time (i.e., a timedelta object)"
+                )
 
                 if (
                     period.start_timestamp
@@ -80,9 +81,7 @@ class TracabDatParser(TracabDataParser):
             elif team_id in (-1, 3, 4):
                 continue
             else:
-                raise DeserializationError(
-                    f"Unknown Player Team ID: {team_id}"
-                )
+                raise DeserializationError(f"Unknown Player Team ID: {team_id}")
 
             player = team.get_player_by_jersey_number(jersey_no)
 

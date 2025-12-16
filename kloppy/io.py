@@ -1,26 +1,22 @@
 """I/O utilities for reading raw data."""
 
 import bz2
+from collections.abc import Generator, Iterable, Iterator
 import contextlib
+from contextlib import AbstractContextManager
+from dataclasses import dataclass, replace
 import gzip
+from io import BufferedWriter, BytesIO, TextIOWrapper
 import logging
 import lzma
 import os
 import re
-from dataclasses import dataclass, replace
-from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
     IO,
     Any,
     BinaryIO,
     Callable,
-    ContextManager,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -68,7 +64,7 @@ FileLike = Union[FileOrPath, Source]
 
 def _file_or_path_to_binary_stream(
     file_or_path: FileOrPath, binary_mode: str
-) -> Tuple[BinaryIO, bool]:
+) -> tuple[BinaryIO, bool]:
     """
     Converts a file path or a file-like object to a binary stream.
 
@@ -177,7 +173,7 @@ def _open(
     filename: FileOrPath,
     mode: str = "rb",
     compresslevel: Optional[int] = None,
-    format: Optional[str] = None,
+    format: Optional[str] = None,  # noqa: A002
 ) -> BinaryIO:
     """
         A replacement for the "open" function that can also read and write
@@ -272,7 +268,9 @@ def _open_gz(
 
     if "r" in mode:
         return gzip.open(filename, mode)  # type: ignore
-    return BufferedWriter(gzip.open(filename, mode, compresslevel=compresslevel))  # type: ignore
+    return BufferedWriter(
+        gzip.open(filename, mode, compresslevel=compresslevel)
+    )  # type: ignore
 
 
 def get_file_extension(file_or_path: FileLike) -> str:
@@ -321,7 +319,9 @@ def dummy_context_mgr() -> Generator[None, None, None]:
     yield
 
 
-def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
+def open_as_file(
+    input_: FileLike,
+) -> AbstractContextManager[Optional[BinaryIO]]:
     """Open a byte stream to the given input object.
 
     The following input types are supported:
@@ -408,7 +408,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
     raise TypeError(f"Unsupported input type: {type(input_)}")
 
 
-def _natural_sort_key(path: str) -> List[Union[int, str]]:
+def _natural_sort_key(path: str) -> list[Union[int, str]]:
     # Split string into list of chunks for natural sorting
     return [
         int(text) if text.isdigit() else text.lower()

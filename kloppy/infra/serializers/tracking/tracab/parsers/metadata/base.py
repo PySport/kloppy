@@ -6,7 +6,7 @@ class to extract the data about periods, lineups, pitch dimensions, etc.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import IO, List, Optional, Tuple
+from typing import IO, Optional
 
 from kloppy.domain import Orientation, Period, Score, Team
 
@@ -22,7 +22,7 @@ class TracabMetadataParser(ABC):
         """
 
     @abstractmethod
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         """Extract the periods of the game."""
 
     def extract_score(self) -> Optional[Score]:
@@ -42,11 +42,11 @@ class TracabMetadataParser(ABC):
         return None
 
     @abstractmethod
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         """Extract the home and away team."""
 
     @abstractmethod
-    def extract_pitch_dimensions(self) -> Tuple[float, float]:
+    def extract_pitch_dimensions(self) -> tuple[float, float]:
         """Extract the pitch size as (length, width)."""
 
     @abstractmethod

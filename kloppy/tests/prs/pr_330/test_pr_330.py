@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
-
-from kloppy import statsperform, wyscout
+from kloppy import wyscout
 from kloppy.domain import EventType, FormationType
 
 

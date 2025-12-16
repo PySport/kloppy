@@ -102,9 +102,7 @@ class TestSportecEventData:
     def test_correct_normalized_event_data_deserialization(
         self, event_data: Path, meta_data: Path
     ):
-        dataset = sportec.load_event(
-            event_data=event_data, meta_data=meta_data
-        )
+        dataset = sportec.load_event(event_data=event_data, meta_data=meta_data)
 
         assert dataset.events[0].coordinates == Point(0.5641, 0.0)
 

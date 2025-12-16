@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import IO, List, Optional, Tuple
+from typing import IO, Optional
 
 from lxml import objectify
 
@@ -29,7 +29,7 @@ class TracabHierarchicalXMLMetadataParser(TracabMetadataParser):
     def __init__(self, feed: IO[bytes]) -> None:
         self.root = objectify.fromstring(feed.read())
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         frame_rate = self.extract_frame_rate()
         periods = []
         for period in self.root.match.iterchildren(tag="period"):
@@ -55,7 +55,7 @@ class TracabHierarchicalXMLMetadataParser(TracabMetadataParser):
         game_id = self.root.match.attrib["iId"]
         return game_id
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         start_frame_id = 0
         for period in self.root.match.iterchildren(tag="period"):
             start_frame_id = int(period.attrib["iStartFrame"])
@@ -81,7 +81,7 @@ class TracabHierarchicalXMLMetadataParser(TracabMetadataParser):
 
         return (home_team, away_team)
 
-    def extract_pitch_dimensions(self) -> Tuple[float, float]:
+    def extract_pitch_dimensions(self) -> tuple[float, float]:
         pitch_size_width = float(
             self.root.match.attrib["fPitchXSizeMeters"].replace(",", ".")
         )

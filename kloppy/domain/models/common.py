@@ -1,40 +1,33 @@
 from __future__ import annotations
 
-import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    Iterable,
-    List,
     Literal,
-    Optional,
     TypeVar,
-    Union,
     overload,
 )
 
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
+    from pandas import DataFrame
+
     from ..services.transformers.data_record import (
         Column,
         NamedColumns,
     )
 
 from .position import PositionType
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self, Unpack
@@ -164,10 +157,10 @@ class Official:
     """
 
     official_id: str
-    name: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    role: Optional[OfficialType] = None
+    name: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    role: OfficialType | None = None
 
     @property
     def full_name(self):
@@ -208,20 +201,20 @@ class Player:
     """
 
     player_id: str
-    team: "Team"
+    team: Team
     jersey_no: int
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    name: Optional[str] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    name: str | None = None
 
     # match specific
     starting: bool = False
-    starting_position: Optional[PositionType] = None
+    starting_position: PositionType | None = None
     positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
 
-    attributes: Dict = field(default_factory=dict, compare=False)
+    attributes: dict = field(default_factory=dict, compare=False)
 
     @property
     def full_name(self):
@@ -233,7 +226,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> Optional[PositionType]:
+    def position(self) -> PositionType | None:
         try:
             return self.positions.last()
         except KeyError:
@@ -253,7 +246,7 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: Optional[PositionType]):
+    def set_position(self, time: Time, position: PositionType | None):
         self.positions.set(time, position)
 
 
@@ -273,11 +266,11 @@ class Team:
     team_id: str
     name: str
     ground: Ground
-    starting_formation: Optional[FormationType] = None
+    starting_formation: FormationType | None = None
     formations: TimeContainer[FormationType] = field(
         default_factory=TimeContainer, compare=False
     )
-    players: List[Player] = field(default_factory=list)
+    players: list[Player] = field(default_factory=list)
 
     def __str__(self):
         return self.name
@@ -290,7 +283,7 @@ class Team:
             return False
         return self.team_id == other.team_id
 
-    def get_player_by_jersey_number(self, jersey_no: int) -> Optional[Player]:
+    def get_player_by_jersey_number(self, jersey_no: int) -> Player | None:
         """Get a player by their jersey number.
 
         Args:
@@ -309,7 +302,7 @@ class Team:
 
     def get_player_by_position(
         self, position: PositionType, time: Time
-    ) -> Optional[Player]:
+    ) -> Player | None:
         """Get a player by their position at a given time.
 
         Args:
@@ -331,7 +324,7 @@ class Team:
 
         return None
 
-    def get_player_by_id(self, player_id: Union[int, str]) -> Optional[Player]:
+    def get_player_by_id(self, player_id: int | str) -> Player | None:
         """Get a player by their identifier.
 
         Args:
@@ -349,7 +342,7 @@ class Team:
 
         return None
 
-    def set_formation(self, time: Time, formation: Optional[FormationType]):
+    def set_formation(self, time: Time, formation: FormationType | None):
         self.formations.set(time, formation)
 
 
@@ -433,10 +426,10 @@ class AttackingDirection(Enum):
     @staticmethod
     def from_orientation(
         orientation: Orientation,
-        period: Optional[Period] = None,
-        ball_owning_team: Optional[Team] = None,
-        action_executing_team: Optional[Team] = None,
-    ) -> "AttackingDirection":
+        period: Period | None = None,
+        ball_owning_team: Team | None = None,
+        action_executing_team: Team | None = None,
+    ) -> AttackingDirection:
         """Determines the attacking direction for a specific data record.
 
         Args:
@@ -470,7 +463,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.AWAY_HOME:
             if period is None:
@@ -486,7 +479,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team is None:
@@ -591,11 +584,11 @@ class CoordinateSystem(ABC):
         return isinstance(self.pitch_dimensions, NormalizedPitchDimensions)
 
     @property
-    def pitch_length(self) -> Optional[float]:
+    def pitch_length(self) -> float | None:
         return self.pitch_dimensions.pitch_length
 
     @property
-    def pitch_width(self) -> Optional[float]:
+    def pitch_width(self) -> float | None:
         return self.pitch_dimensions.pitch_width
 
     def __eq__(self, other):
@@ -761,8 +754,8 @@ class CoordinateSystem(ABC):
 class ProviderCoordinateSystem(CoordinateSystem):
     def __init__(
         self,
-        pitch_length: Optional[float] = None,
-        pitch_width: Optional[float] = None,
+        pitch_length: float | None = None,
+        pitch_width: float | None = None,
     ):
         self._pitch_length = pitch_length
         self._pitch_width = pitch_width
@@ -1394,8 +1387,8 @@ class DatasetType(Enum):
 def build_coordinate_system(
     provider: Provider,
     dataset_type: DatasetType = DatasetType.EVENT,
-    pitch_length: Optional[float] = None,
-    pitch_width: Optional[float] = None,
+    pitch_length: float | None = None,
+    pitch_width: float | None = None,
 ) -> CoordinateSystem:
     """Build a coordinate system for a given provider and dataset type.
 
@@ -1479,13 +1472,13 @@ class ActionValue(Statistic):
     """Action value"""
 
     name: str
-    action_value_scoring_before: Optional[float] = field(default=None)
-    action_value_scoring_after: Optional[float] = field(default=None)
-    action_value_conceding_before: Optional[float] = field(default=None)
-    action_value_conceding_after: Optional[float] = field(default=None)
+    action_value_scoring_before: float | None = field(default=None)
+    action_value_scoring_after: float | None = field(default=None)
+    action_value_conceding_before: float | None = field(default=None)
+    action_value_conceding_after: float | None = field(default=None)
 
     @property
-    def offensive_value(self) -> Optional[float]:
+    def offensive_value(self) -> float | None:
         if (
             self.action_value_scoring_before is None
             or self.action_value_scoring_after is None
@@ -1496,7 +1489,7 @@ class ActionValue(Statistic):
         )
 
     @property
-    def defensive_value(self) -> Optional[float]:
+    def defensive_value(self) -> float | None:
         if (
             self.action_value_conceding_before is None
             or self.action_value_conceding_after is None
@@ -1508,7 +1501,7 @@ class ActionValue(Statistic):
         )
 
     @property
-    def value(self) -> Optional[float]:
+    def value(self) -> float | None:
         if self.offensive_value is None or self.defensive_value is None:
             return None
         return self.offensive_value - self.defensive_value
@@ -1533,17 +1526,17 @@ class DataRecord(ABC):
     """
 
     dataset: Dataset = field(init=False)
-    prev_record: Optional[Self] = field(init=False)
-    next_record: Optional[Self] = field(init=False)
+    prev_record: Self | None = field(init=False)
+    next_record: Self | None = field(init=False)
     period: Period
     timestamp: timedelta
-    statistics: List[Statistic]
-    ball_owning_team: Optional[Team]
-    ball_state: Optional[BallState]
+    statistics: list[Statistic]
+    ball_owning_team: Team | None
+    ball_state: BallState | None
 
     @property
     @abstractmethod
-    def record_id(self) -> Union[int, str]:
+    def record_id(self) -> int | str:
         pass
 
     @property
@@ -1553,8 +1546,8 @@ class DataRecord(ABC):
     def set_refs(
         self,
         dataset: Dataset,
-        prev: Optional[Self],
-        next_: Optional[Self],
+        prev: Self | None,
+        next_: Self | None,
     ):
         if hasattr(self, "dataset"):
             # TODO: determine if next/prev record should be affected
@@ -1582,9 +1575,7 @@ class DataRecord(ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def matches(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]]
-    ) -> bool:
+    def matches(self, filter_: str | Callable[[Self], bool] | None) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -1593,8 +1584,8 @@ class DataRecord(ABC):
             raise InvalidFilterError()
 
     def prev(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
-    ) -> Optional[Self]:
+        self, filter_: str | Callable[[Self], bool] | None = None
+    ) -> Self | None:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -1603,8 +1594,8 @@ class DataRecord(ABC):
                 prev_record = prev_record.prev_record
 
     def next(
-        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
-    ) -> Optional[Self]:
+        self, filter_: str | Callable[[Self], bool] | None = None
+    ) -> Self | None:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -1648,22 +1639,22 @@ class Metadata:
         attributes: Additional metadata.
     """
 
-    periods: List[Period]
-    teams: List[Team]
+    periods: list[Period]
+    teams: list[Team]
     coordinate_system: CoordinateSystem
     pitch_dimensions: PitchDimensions
     orientation: Orientation
     flags: DatasetFlag
     provider: Provider
-    score: Optional[Score] = None
-    frame_rate: Optional[float] = None
-    date: Optional[datetime] = None
-    game_week: Optional[str] = None
-    game_id: Optional[str] = None
-    home_coach: Optional[str] = None
-    away_coach: Optional[str] = None
-    officials: Optional[List] = field(default_factory=list)
-    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+    score: Score | None = None
+    frame_rate: float | None = None
+    date: datetime | None = None
+    game_week: str | None = None
+    game_id: str | None = None
+    home_coach: str | None = None
+    away_coach: str | None = None
+    officials: list | None = field(default_factory=list)
+    attributes: dict | None = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
         if self.coordinate_system is not None:
@@ -1696,7 +1687,7 @@ class Dataset(ABC, Generic[T]):
         metadata: Metadata for the dataset.
     """
 
-    records: List[T]
+    records: list[T]
     metadata: Metadata
 
     def __iter__(self):
@@ -1744,9 +1735,9 @@ class Dataset(ABC, Generic[T]):
     @abstractmethod
     def to_pandas(
         self,
-        record_converter: Optional[Callable[[T], Dict]] = None,
-        additional_columns: Optional[NamedColumns] = None,
-    ) -> "DataFrame":
+        record_converter: Callable[[T], dict] | None = None,
+        additional_columns: NamedColumns | None = None,
+    ) -> DataFrame:  # noqa: F821
         pass
 
     def transform(self, *args, **kwargs):
@@ -1757,7 +1748,7 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_: Union[str, Callable[[T], bool]]):
+    def filter(self, filter_: str | Callable[[T], bool]):
         """
         Filter all records used `filter_`
 
@@ -1782,10 +1773,10 @@ class Dataset(ABC, Generic[T]):
             self, records=[mapper(record) for record in self.records]
         )
 
-    def find_all(self, filter_) -> List[T]:
+    def find_all(self, filter_) -> list[T]:
         return [record for record in self.records if record.matches(filter_)]
 
-    def find(self, filter_) -> Optional[T]:
+    def find(self, filter_) -> T | None:
         for record in self.records:
             if record.matches(filter_):
                 return record
@@ -1824,7 +1815,7 @@ class Dataset(ABC, Generic[T]):
             records=[mapper_fn(record) for record in dataset.records],
         )
 
-    def get_record_by_id(self, record_id: Union[int, str]) -> Optional[T]:
+    def get_record_by_id(self, record_id: int | str) -> T | None:
         for record in self.records:
             if record.record_id == record_id:
                 return record
@@ -1835,8 +1826,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+    ) -> list[dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1844,15 +1834,14 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+    ) -> Iterable[dict[str, Any]]: ...
 
     def to_records(
         self,
         *columns: Unpack[tuple[Column]],
         as_list: bool = True,
         **named_columns: NamedColumns,
-    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
+    ) -> list[dict[str, Any]] | Iterable[dict[str, Any]]:
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -1869,7 +1858,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         orient: Literal["list"] = "list",
         **named_columns: NamedColumns,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 

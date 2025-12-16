@@ -1,8 +1,8 @@
+from typing import Optional, Union
 import warnings
-from typing import Union
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, List, Optional
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
 from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
@@ -16,7 +16,7 @@ def load(
     event_data: FileLike,
     lineup_data: FileLike,
     three_sixty_data: Optional[FileLike] = None,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
@@ -44,11 +44,13 @@ def load(
         or get_config("event_factory")
         or StatsBombEventFactory(),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(three_sixty_data, optional=True)
-    ) as three_sixty_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(three_sixty_data, optional=True)
+        ) as three_sixty_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=StatsBombInputs(
                 event_data=event_data_fp,
@@ -61,7 +63,7 @@ def load(
 
 def load_open_data(
     match_id: Union[str, int] = "15946",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:

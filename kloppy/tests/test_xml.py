@@ -7,8 +7,8 @@ from pandas._testing import assert_frame_equal
 from kloppy import sportscode
 from kloppy.domain import Period
 from kloppy.infra.serializers.code.sportscode import (
-    SportsCodeSerializer,
     SportsCodeOutputs,
+    SportsCodeSerializer,
 )
 
 

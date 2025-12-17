@@ -2,8 +2,8 @@ from kloppy.domain import CodeDataset
 from kloppy.infra.serializers.code.sportscode import (
     SportsCodeDeserializer,
     SportsCodeInputs,
-    SportsCodeSerializer,
     SportsCodeOutputs,
+    SportsCodeSerializer,
 )
 from kloppy.io import FileLike, open_as_file
 

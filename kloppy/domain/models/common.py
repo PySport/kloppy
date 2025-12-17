@@ -1866,7 +1866,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[True] = True,
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]: ...
+    ) -> list[dict[str, Any]]: ...
 
     @overload
     def to_records(
@@ -1874,7 +1874,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple[Column]],
         as_list: Literal[False] = False,
         **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]: ...
+    ) -> Iterable[dict[str, Any]]: ...
 
     def to_records(
         self,
@@ -1991,7 +1991,7 @@ class Dataset(ABC, Generic[T]):
 
     def to_cdf(self):
         if self.dataset_type != DatasetType.TRACKING:
-            raise ValueError(f"to_cdf() is only supported for TrackingDataset")
+            raise ValueError("to_cdf() is only supported for TrackingDataset")
 
     def __repr__(self):
         return f"<{self.__class__.__name__} record_count={len(self.records)}>"

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import json
 import logging
-from typing import IO, NamedTuple, Optional, Union, Dict
+from typing import IO, NamedTuple, Optional, Union
 import warnings
 
 from kloppy.domain import (
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 frame_rate = 10
 
-position_types_mapping: Dict[int, PositionType] = {
+position_types_mapping: dict[int, PositionType] = {
     0: PositionType.Goalkeeper,
     1: PositionType.Unknown,  # Does not exist
     2: PositionType.CenterBack,  # Provider: CB
@@ -101,7 +101,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         only_alive,
     ):
         ball_owning_team = cls._get_ball_owning_team(frame["possession"], teams)
-        ball_state = BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
+        ball_state = (
+            BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
+        )
         if ball_state == BallState.DEAD and only_alive:
             return None
 
@@ -129,12 +131,17 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 ball_coordinates = Point3D(x=float(x), y=float(y), z=z)
                 continue
 
-            elif trackable_object in referee_dict.keys() or group_name == "referee":
+            elif (
+                trackable_object in referee_dict.keys()
+                or group_name == "referee"
+            ):
                 group_name = "referee"
                 continue  # Skip Referee Coords
 
             if group_name is None:
-                group_name = teamdict.get(player_id_to_team_dict.get(trackable_object))
+                group_name = teamdict.get(
+                    player_id_to_team_dict.get(trackable_object)
+                )
 
                 if group_name == "home_team":
                     player = players["HOME"][trackable_object]
@@ -166,7 +173,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             players_data=players_data,
             period=periods[frame["period"]],
             ball_state=(
-                BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
+                BallState.ALIVE
+                if ball_owning_team is not None
+                else BallState.DEAD
             ),
             ball_owning_team=ball_owning_team,
             other_data={},
@@ -190,7 +199,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         only_alive,
     ):
         ball_owning_team = cls._get_ball_owning_team(frame["possession"], teams)
-        ball_state = BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
+        ball_state = (
+            BallState.ALIVE if ball_owning_team is not None else BallState.DEAD
+        )
         if ball_state == BallState.DEAD and only_alive:
             return None
 
@@ -211,7 +222,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             player = all_players_mapping[str(raw_player_data["player_id"])]
             player_coordinates = cls._raw_coordinates_to_point(raw_player_data)
             if player_coordinates:
-                players_data[player] = PlayerData(coordinates=player_coordinates)
+                players_data[player] = PlayerData(
+                    coordinates=player_coordinates
+                )
 
         frame = create_frame(
             frame_id=frame_id,
@@ -342,8 +355,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             if _frames:
                 periods[period] = Period(
                     id=period,
-                    start_timestamp=timedelta(seconds=_frames[0]["frame"] / frame_rate),
-                    end_timestamp=timedelta(seconds=_frames[-1]["frame"] / frame_rate),
+                    start_timestamp=timedelta(
+                        seconds=_frames[0]["frame"] / frame_rate
+                    ),
+                    end_timestamp=timedelta(
+                        seconds=_frames[-1]["frame"] / frame_rate
+                    ),
                 )
 
         return periods
@@ -402,11 +419,13 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             }
 
             player_dict = {
-                player["trackable_object"]: player for player in metadata["players"]
+                player["trackable_object"]: player
+                for player in metadata["players"]
             }
 
             referee_dict = {
-                ref["trackable_object"]: "referee" for ref in metadata["referees"]
+                ref["trackable_object"]: "referee"
+                for ref in metadata["referees"]
             }
             ball_id = metadata["ball"]["trackable_object"]
 
@@ -543,7 +562,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 frames.append(frame)
                 n_frames += 1
 
-                if self.limit and n_frames + 1 >= (self.limit / self.sample_rate):
+                if self.limit and n_frames + 1 >= (
+                    self.limit / self.sample_rate
+                ):
                     break
 
         attacking_directions = attacking_directions_from_multi_frames(

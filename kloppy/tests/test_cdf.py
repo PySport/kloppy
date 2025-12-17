@@ -1,16 +1,16 @@
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pytest
 
-from kloppy import sportec, skillcorner
-from kloppy.domain import TrackingDataset, PositionType
-from kloppy.infra.serializers.tracking.cdf.serializer import (
-    CDFTrackingSerializer,
-    CDFOutputs,
-)
+from kloppy import skillcorner, sportec
+from kloppy.domain import PositionType, TrackingDataset
 from kloppy.infra.serializers.tracking.cdf.helpers import (
     is_valid_cdf_position_code,
+)
+from kloppy.infra.serializers.tracking.cdf.serializer import (
+    CDFOutputs,
+    CDFTrackingSerializer,
 )
 
 
@@ -60,10 +60,10 @@ def produces_valid_cdf_output_with_additional_metadata(
 
     from cdf.domain import (
         CdfMetaDataSchema,
-        Stadium,
         Competition,
-        Season,
         Meta,
+        Season,
+        Stadium,
         Tracking,
     )
 
@@ -104,12 +104,14 @@ def serializer_handles_invalid_metadata_types(dataset):
 
     serializer = CDFTrackingSerializer()
 
-    with tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".json", delete=False
-    ) as meta_file, tempfile.NamedTemporaryFile(
-        mode="w+b", suffix=".jsonl", delete=False
-    ) as tracking_file:
-
+    with (
+        tempfile.NamedTemporaryFile(
+            mode="w+b", suffix=".json", delete=False
+        ) as meta_file,
+        tempfile.NamedTemporaryFile(
+            mode="w+b", suffix=".jsonl", delete=False
+        ) as tracking_file,
+    ):
         meta_path = meta_file.name
         tracking_path = tracking_file.name
 

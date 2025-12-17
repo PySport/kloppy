@@ -1,6 +1,6 @@
-from kloppy.domain import PositionType, Ground, Point3D
-
 import warnings
+
+from kloppy.domain import Ground, Point3D, PositionType
 
 PERIODS_MAP = {
     1: "first_half",
@@ -138,9 +138,9 @@ def update_period_tracking(period_tracking, period_id, original_frame_id):
                 period_tracking["offset"][period_id - 1] + prev_period_length
             )
 
-        period_tracking["normalized_start_frame_id"][
-            period_id
-        ] = period_tracking["offset"][period_id]
+        period_tracking["normalized_start_frame_id"][period_id] = (
+            period_tracking["offset"][period_id]
+        )
 
     period_tracking["end_frame_id"][period_id] = original_frame_id
 
@@ -167,13 +167,11 @@ def get_starting_formation(team_players) -> str:
 
     defender = midfielder = attacker = 0
     for player in team_players:
-        if player.starting_position.position_group == None:
+        if player.starting_position.position_group is None:
             continue
         elif player.starting_position.position_group == PositionType.Attacker:
             attacker += 1
-        elif (
-            player.starting_position.position_group == PositionType.Midfielder
-        ):
+        elif player.starting_position.position_group == PositionType.Midfielder:
             midfielder += 1
         elif player.starting_position.position_group == PositionType.Defender:
             defender += 1
@@ -245,9 +243,7 @@ def get_starters_and_formation(team, first_frame):
 
     starters_list = [p for p in team.players if p.player_id in team_starters]
 
-    formation = team.starting_formation or get_starting_formation(
-        starters_list
-    )
+    formation = team.starting_formation or get_starting_formation(starters_list)
 
     return team_starters, formation
 

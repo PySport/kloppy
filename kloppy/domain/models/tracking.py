@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
@@ -8,12 +8,13 @@ from kloppy.utils import (
 )
 
 if TYPE_CHECKING:
-    from kloppy.io import FileLike, open_as_file
+    from kloppy.io import FileLike
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D
 
 if TYPE_CHECKING:
+    from cdf.domain import CdfMetaDataSchema
     from pandas import DataFrame
 
 
@@ -173,29 +174,24 @@ class TrackingDataset(Dataset[Frame]):
             ...     }
             ... )
         """
-        from kloppy.domain import DatasetType
-        from kloppy.exceptions import KloppyError
         from kloppy.infra.serializers.tracking.cdf import (
-            CDFTrackingSerializer,
             CDFOutputs,
+            CDFTrackingSerializer,
         )
-        from kloppy.io import FileLike, open_as_file
+        from kloppy.io import open_as_file
 
         serializer = CDFTrackingSerializer()
 
         # TODO: write files but also support non-local files, similar to how open_as_file supports non-local files
 
         # Use open_as_file with mode="wb" for writing
-        with open_as_file(
-            metadata_output_file, mode="wb"
-        ) as metadata_fp, open_as_file(
-            tracking_output_file, mode="wb"
-        ) as tracking_fp:
+        with (
+            open_as_file(metadata_output_file, mode="wb") as metadata_fp,
+            open_as_file(tracking_output_file, mode="wb") as tracking_fp,
+        ):
             serializer.serialize(
                 dataset=self,
-                outputs=CDFOutputs(
-                    meta_data=metadata_fp, raw_data=tracking_fp
-                ),
+                outputs=CDFOutputs(meta_data=metadata_fp, raw_data=tracking_fp),
                 additional_metadata=additional_metadata,
             )
 

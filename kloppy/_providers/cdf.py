@@ -1,12 +1,9 @@
-from typing import Optional, Union
+from typing import Optional
 
-from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, TrackingDataset
-from kloppy.exceptions import KloppyError
-
+from kloppy.domain import TrackingDataset
 from kloppy.infra.serializers.tracking.cdf import (
-    CDFTrackingDeserializer,
     CDFTrackingDataInputs,
+    CDFTrackingDeserializer,
 )
 from kloppy.io import FileLike, open_as_file
 

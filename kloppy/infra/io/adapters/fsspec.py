@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 import re
-from typing import BinaryIO, Optional, List
+from typing import Optional
 
 import fsspec
 
 from kloppy.config import get_config
 from kloppy.exceptions import InputNotFoundError
-
 from kloppy.infra.io.buffered_stream import BufferedStream
 
 from .adapter import Adapter
@@ -75,7 +74,7 @@ class FSSpecAdapter(Adapter, ABC):
         except FileNotFoundError as e:
             raise InputNotFoundError(f"Input file not found: {url}") from e
 
-    def write_from_stream(self, url: str, input: BufferedStream, mode: str):
+    def write_from_stream(self, url: str, input: BufferedStream, mode: str):  # noqa: A002
         """
         Writes content from BufferedStream to the given URL.
         Does not use caching for writes. Copies data in chunks.
@@ -91,7 +90,7 @@ class FSSpecAdapter(Adapter, ABC):
         with fs.open(url, mode, compression=compression) as dest_file:
             input.write_to(dest_file)
 
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         """
         Lists the contents of a directory.
         """

@@ -1,38 +1,37 @@
 import json
-import tempfile
-from typing import IO, NamedTuple, Optional, Union, TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, NamedTuple, Optional, Union
 
+from kloppy import __version__
 from kloppy.domain import (
-    Provider,
-    TrackingDataset,
-    Orientation,
     BallState,
     CDFCoordinateSystem,
     Ground,
+    Orientation,
+    Provider,
+    TrackingDataset,
 )
 from kloppy.infra.serializers.tracking.serializer import TrackingDataSerializer
-from kloppy import __version__
 
 from .helpers import (
     PERIODS_MAP,
-    get_player_coordinates,
+    build_periods_info,
+    build_team_players_metadata,
+    build_whistles,
     get_ball_coordinates,
+    get_player_coordinates,
+    get_starters_and_formation,
     initialize_period_tracking,
     update_period_tracking,
-    get_starters_and_formation,
-    build_periods_info,
-    build_whistles,
-    build_team_players_metadata,
 )
 
 if TYPE_CHECKING:
     from cdf.domain.latest.meta import (
         CdfMetaDataSchema,
-        Stadium,
         Competition,
-        Season,
         Meta,
         Misc,
+        Season,
+        Stadium,
     )
 
 import warnings

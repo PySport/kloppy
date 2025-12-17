@@ -108,9 +108,9 @@ jinja2==3.1.6
     #   mkdocstrings
     #   nbconvert
     #   pandas
-jsonschema==4.25.1
+jsonschema==4.23.0
     # via nbformat
-jsonschema-specifications==2025.9.1
+jsonschema-specifications==2024.10.1
     # via jsonschema
 jupyter-client==8.6.3 ; python_full_version < '3.10'
     # via
@@ -352,7 +352,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.32.3
     # via
     #   mkdocs-material
     #   mplsoccer

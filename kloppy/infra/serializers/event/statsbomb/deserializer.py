@@ -37,9 +37,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(
-        self, inputs: StatsBombInputs, additional_metadata
-    ) -> EventDataset:
+    def _deserialize(self, inputs: StatsBombInputs) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 
@@ -76,10 +74,9 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     .deserialize(self.event_factory)
                 )
                 for event in new_events:
-                    if self.should_include_event(event):
-                        # Transform event to the coordinate system
-                        event = self.transformer.transform_event(event)
-                        events.append(event)
+                    # Transform event to the coordinate system
+                    event = self.transformer.transform_event(event)
+                    events.append(event)
 
         metadata = Metadata(
             teams=teams,
@@ -91,7 +88,6 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             score=None,
             provider=Provider.STATSBOMB,
             coordinate_system=self.transformer.get_to_coordinate_system(),
-            **additional_metadata,
         )
         dataset = EventDataset(metadata=metadata, records=events)
         for event in dataset:

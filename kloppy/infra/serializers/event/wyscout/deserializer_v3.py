@@ -759,7 +759,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     def provider(self) -> Provider:
         return Provider.WYSCOUT
 
-    def deserialize(self, inputs: WyscoutInputs) -> EventDataset:
+    def _deserialize(self, inputs: WyscoutInputs) -> EventDataset:
         transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
@@ -811,6 +811,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             events = []
 
             next_pass_is_kickoff = False
+            event = None
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
                 ball_owning_team = None
@@ -961,7 +962,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         )
                         # We already append event to events
                         # as we potentially have a card and foul event for one raw event
-                        if event and self.should_include_event(event):
+                        if event:
                             events.append(transformer.transform_event(event))
                         continue
                     if (
@@ -972,7 +973,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         event = self.event_factory.build_card(
                             **card_event_args, **generic_event_args
                         )
-                        if event and self.should_include_event(event):
+                        if event:
                             events.append(transformer.transform_event(event))
                         continue
                 elif "carry" in secondary_event_types:
@@ -991,7 +992,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                         **generic_event_args,
                     )
 
-                if event and self.should_include_event(event):
+                if event:
                     events.append(transformer.transform_event(event))
 
                 if next_event:
@@ -1023,7 +1024,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                             **formation_change_event_kwargs,
                             **generic_event_args,
                         )
-                        if event and self.should_include_event(event):
+                        if event:
                             events.append(transformer.transform_event(event))
 
         metadata = Metadata(

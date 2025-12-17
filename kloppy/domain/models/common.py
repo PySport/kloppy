@@ -261,6 +261,7 @@ class Team:
         ground (Ground): The team's ground (home or away).
         players (List[Player]): The team's players.
         starting_formation (FormationType, optional): The team's starting formation.
+        coach (str, optional): The team's coach.
     """
 
     team_id: str
@@ -271,6 +272,7 @@ class Team:
         default_factory=TimeContainer, compare=False
     )
     players: list[Player] = field(default_factory=list)
+    coach: str | None = None
 
     def __str__(self):
         return self.name
@@ -1645,8 +1647,6 @@ class Metadata:
     date: datetime | None = None
     game_week: str | None = None
     game_id: str | None = None
-    home_coach: str | None = None
-    away_coach: str | None = None
     officials: list | None = field(default_factory=list)
     attributes: dict | None = field(default_factory=dict, compare=False)
 

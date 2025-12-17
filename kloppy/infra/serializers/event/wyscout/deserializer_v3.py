@@ -806,6 +806,9 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 if away_team_id in coaches and "coach" in coaches[away_team_id]:
                     away_coach = coaches[away_team_id]["coach"].get("shortName")
 
+            home_team.coach = home_coach
+            away_team.coach = away_coach
+
             periods = create_periods(raw_events, start_ts)
 
             events = []
@@ -1039,8 +1042,6 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
             date=date,
             game_week=game_week,
             game_id=game_id,
-            home_coach=home_coach,
-            away_coach=away_coach,
         )
 
         return EventDataset(metadata=metadata, records=events)

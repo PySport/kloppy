@@ -35,7 +35,6 @@ from kloppy.domain import (
     SubstitutionEvent,
     TakeOnResult,
     Time,
-    TrackingDataset,
     build_coordinate_system,
 )
 from kloppy.domain.models.event import (

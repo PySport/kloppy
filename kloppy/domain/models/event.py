@@ -14,6 +14,8 @@ from typing import (
     Union,
     cast,
 )
+import warnings
+
 from kloppy.domain.models.common import (
     AttackingDirection,
     DatasetType,
@@ -1531,7 +1533,7 @@ class EventDataset(Dataset[Event]):
 
         return aggregator.aggregate(self)
 
-    def to_tracking_data(self) -> "TrackingDataset":
+    def to_tracking_data(self) -> TrackingDataset:
         from .tracking import TrackingDataset
 
         freeze_frames = self.filter(

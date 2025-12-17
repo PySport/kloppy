@@ -1,15 +1,12 @@
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
+import sys
 from typing import (
     Any,
     Callable,
-    Dict,
     Generic,
-    Tuple,
-    Type,
     TypeVar,
     Union,
-    List,
 )
 
 if sys.version_info >= (3, 11):
@@ -106,7 +103,7 @@ class CodeToDictTransformer(DataRecordToDictTransformer[Code]):
 
 
 class LongLayoutFrameToDictTransformer(DataRecordToDictTransformer[Frame]):
-    def default_transformer(self) -> Callable[[Frame], List[Dict]]:
+    def default_transformer(self) -> Callable[[Frame], list[dict]]:
         return LongLayoutFrameTransformer()
 
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import math
 import sys
-from typing import Any, Optional, Union, List, Dict
+from typing import Any, Optional, Union
 
 from kloppy.domain import (
     BodyPartQualifier,
@@ -363,7 +363,7 @@ class LongLayoutFrameTransformer:
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
             raise KloppyParameterError("Cannot specify both include as exclude")
@@ -371,7 +371,7 @@ class LongLayoutFrameTransformer:
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, frame: Frame) -> List[Dict[str, Any]]:
+    def __call__(self, frame: Frame) -> list[dict[str, Any]]:
         rows = []
 
         base_data = {

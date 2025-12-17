@@ -1883,7 +1883,7 @@ class Dataset(ABC, Generic[T]):
         self,
         *columns: Unpack[tuple[Column]],
         **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         if self.dataset_type != DatasetType.TRACKING:
             raise KloppyParameterError(
                 f"Row-wise format is only supported for tracking datasets, "
@@ -1906,14 +1906,11 @@ class Dataset(ABC, Generic[T]):
     def to_df(
         self,
         *columns: Unpack[tuple[Column]],
-        engine: Optional[
-            Union[
-                Literal["polars"],
-                Literal["pandas"],
-                Literal["pandas[pyarrow]"],
-            ]
-        ] = None,
-        layout: Literal["wide", "long"] = "wide",
+        engine: Literal["polars"]
+        | Literal["pandas"]
+        | Literal["pandas[pyarrow]"]
+        | None = None,
+        layout: Literal["wide"] | Literal["long"] = "wide",
         **named_columns: NamedColumns,
     ):
         from kloppy.config import get_config

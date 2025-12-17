@@ -1460,6 +1460,8 @@ def build_coordinate_system(
         Provider.HAWKEYE: HawkEyeCoordinateSystem,
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
+        Provider.IMPECT: ImpectCoordinateSystem,
+        Provider.CDF: CDFCoordinateSystem,
     }
 
     if provider in coordinate_systems:

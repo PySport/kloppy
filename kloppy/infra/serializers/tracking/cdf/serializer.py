@@ -159,7 +159,7 @@ class CDFTrackingSerializer(TrackingDataSerializer[CDFOutputs]):
                 "ball": get_ball_coordinates(frame),
             }
 
-            outputs.tracking_data.write(
+            outputs.raw_data.write(
                 (json.dumps(frame_data) + "\n").encode("utf-8")
             )
 

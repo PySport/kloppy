@@ -1663,6 +1663,16 @@ class Metadata:
                 ),
             )
 
+    @property
+    @deprecated("Use teams[0].coach instead")
+    def home_coach(self) -> str | None:
+        return self.teams[0].coach if self.teams else None
+
+    @property
+    @deprecated("Use teams[1].coach instead")
+    def away_coach(self) -> str | None:
+        return self.teams[1].coach if self.teams else None
+
 
 T = TypeVar("T", bound="DataRecord")
 

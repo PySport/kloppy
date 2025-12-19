@@ -279,7 +279,8 @@ class SecondSpectrumDeserializer(
                 sample = 1 / self.sample_rate
 
                 for line_ in inputs.raw_data.readlines():
-                    line_ = line_.strip().decode("ascii")
+                    line_ = line_.strip().decode("ascii", errors="ignore")
+
                     if not line_:
                         continue
 

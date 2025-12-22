@@ -10,4 +10,4 @@ pip install .
 pip install -r requirements-docs.txt
 
 # Build MkDocs site
-mkdocs build -d site
+mkdocs build --strict -d site

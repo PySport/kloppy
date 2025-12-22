@@ -764,7 +764,9 @@ class Event(DataRecord, ABC):
             if (event := self.dataset.get_record_by_id(event_id)) is not None
         ]
 
-    def get_related_event(self, type_: str | EventType) -> Optional["Event"]:
+    def get_related_event(
+        self, type_: Union[str, EventType]
+    ) -> Optional["Event"]:
         event_type = (
             EventType[type_.upper()] if isinstance(type_, str) else type_
         )

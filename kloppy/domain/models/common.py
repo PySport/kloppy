@@ -1530,7 +1530,7 @@ class DataRecord(ABC):
 
     @property
     @abstractmethod
-    def record_id(self) -> int | str:
+    def record_id(self) -> Union[int, str]:
         pass
 
     @property
@@ -1744,7 +1744,7 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_: str | Callable[[T], bool]):
+    def filter(self, filter_: Union[str, Callable[[T], bool]]):
         """
         Filter all records used `filter_`
 
@@ -1813,7 +1813,7 @@ class Dataset(ABC, Generic[T]):
             records=[mapper_fn(record) for record in dataset.records],
         )
 
-    def get_record_by_id(self, record_id: int | str) -> Optional[T]:
+    def get_record_by_id(self, record_id: Union[int, str]) -> Optional[T]:
         for record in self.records:
             if record.record_id == record_id:
                 return record
@@ -1839,7 +1839,7 @@ class Dataset(ABC, Generic[T]):
         *columns: Unpack[tuple["Column"]],
         as_list: bool = True,
         **named_columns: "NamedColumns",
-    ) -> list[dict[str, Any]] | Iterable[dict[str, Any]]:
+    ) -> Union[list[dict[str, Any]], Iterable[dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(

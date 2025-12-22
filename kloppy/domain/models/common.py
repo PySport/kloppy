@@ -324,7 +324,7 @@ class Team:
 
         return None
 
-    def get_player_by_id(self, player_id: int | str) -> Optional[Player]:
+    def get_player_by_id(self, player_id: Union[int, str]) -> Optional[Player]:
         """Get a player by their identifier.
 
         Args:

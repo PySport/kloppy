@@ -272,7 +272,7 @@ class Team:
         default_factory=TimeContainer, compare=False
     )
     players: list[Player] = field(default_factory=list)
-    coach: str | None = None
+    coach: Optional[str] = None
 
     def __str__(self):
         return self.name
@@ -1667,12 +1667,12 @@ class Metadata:
 
     @property
     @deprecated("Use teams[0].coach instead")
-    def home_coach(self) -> str | None:
+    def home_coach(self) -> Optional[str]:
         return self.teams[0].coach if self.teams else None
 
     @property
     @deprecated("Use teams[1].coach instead")
-    def away_coach(self) -> str | None:
+    def away_coach(self) -> Optional[str]:
         return self.teams[1].coach if self.teams else None
 
 

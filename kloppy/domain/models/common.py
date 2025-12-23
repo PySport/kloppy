@@ -1930,9 +1930,6 @@ class Dataset(ABC, Generic[T]):
                 column name and the value is a literal or a callable applied to
                 each record.
 
-        Returns:
-            The dataset as a DataFrame.
-
         Examples:
             Basic conversion to Pandas:
             >>> df = dataset.to_df()

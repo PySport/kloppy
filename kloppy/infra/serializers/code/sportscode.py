@@ -120,21 +120,31 @@ class SportsCodeSerializer(CodeDataSerializer):
             code_.text = code.code
 
             for group, text in code.labels.items():
-                # Labels can be in two formats:
-                # {"name": "value"} or {"name": True}
-                label = etree.SubElement(instance, "label")
-                if isinstance(text, bool):
+                # Labels can be in three formats:
+                # {"name": "value"} or {"name": True} or {"name": ["value1", "value2"]}
+
+                # Handle lists of values (multiple labels for same group)
+                if isinstance(text, list):
+                    for text_item in text:
+                        # Skip boolean values in lists
+                        if not isinstance(text_item, bool):
+                            label = etree.SubElement(instance, "label")
+                            group_ = etree.SubElement(label, "group")
+                            group_.text = str(group)
+                            text_ = etree.SubElement(label, "text")
+                            text_.text = str(text_item)
+                elif isinstance(text, bool):
                     if not text:
                         raise SerializationError(
                             f"You are not allowed to pass a False value for {group}"
                         )
-
+                    label = etree.SubElement(instance, "label")
                     text_ = etree.SubElement(label, "text")
                     text_.text = group
                 else:
+                    label = etree.SubElement(instance, "label")
                     group_ = etree.SubElement(label, "group")
                     group_.text = str(group)
-
                     text_ = etree.SubElement(label, "text")
                     text_.text = str(text)
 

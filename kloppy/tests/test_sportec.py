@@ -8,25 +8,210 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
+    DatasetFlag,
     DatasetType,
+    Dimension,
     EventDataset,
+    FormationType,
+    MetricPitchDimensions,
     Official,
     OfficialType,
     Orientation,
+    Origin,
     Point,
     Point3D,
     PositionType,
     Provider,
+    Score,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
+    SportecEventDataCoordinateSystem,
+    Time,
     TrackingDataset,
+    VerticalOrientation,
 )
 from kloppy.domain.models.event import EventType
 
 
-class TestSportecEventData:
-    """"""
+@pytest.fixture(scope="module")
+def event_data(base_dir) -> str:
+    return base_dir / "files/sportec_events_J03WPY.xml"
+
+
+@pytest.fixture(scope="module")
+def meta_data(base_dir) -> str:
+    return base_dir / "files/sportec_meta_J03WPY.xml"
+
+
+@pytest.fixture(scope="module")
+def dataset(event_data: Path, meta_data: Path):
+    return sportec.load_event(
+        event_data=event_data, meta_data=meta_data, coordinates="sportec"
+    )
+
+
+class TestSportecMetadata:
+    """Tests related to deserializing metadata"""
+
+    def test_provider(self, dataset):
+        """It should set the Sportec provider"""
+        assert dataset.metadata.provider == Provider.SPORTEC
+
+    def test_date(self, dataset):
+        """It should set the correct match date"""
+        assert dataset.metadata.date == datetime.fromisoformat(
+            "2022-10-15T11:01:28.300+00:00"
+        )
+
+    def test_orientation(self, dataset):
+        """It should set the action-executing-team orientation"""
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
+
+    def test_frame_rate(self, dataset):
+        """It should set the frame rate to None"""
+        assert dataset.metadata.frame_rate is None
+
+    def test_teams(self, dataset):
+        """It should create the teams and player objects"""
+        # There should be two teams with the correct names and starting formations
+        assert dataset.metadata.teams[0].name == "Fortuna Düsseldorf"
+        assert dataset.metadata.teams[0].coach == "Daniel Thioune"
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-2-3-1"
+        )
+        assert dataset.metadata.teams[1].name == "1. FC Nürnberg"
+        assert dataset.metadata.teams[1].coach == "M. Weinzierl"
+        assert dataset.metadata.teams[1].starting_formation == FormationType(
+            "4-1-3-2"
+        )
+        # The teams should have the correct players
+        player = dataset.metadata.teams[0].get_player_by_id("DFL-OBJ-0000NZ")
+        assert player.player_id == "DFL-OBJ-0000NZ"
+        assert player.jersey_no == 25
+        assert player.full_name == "Matthias Zimmermann"
+
+    def test_player_position(self, dataset):
+        """It should set the correct player position from the events"""
+        # Starting players get their position from the STARTING_XI event
+        player = dataset.metadata.teams[0].get_player_by_id("DFL-OBJ-0000NZ")
+
+        assert player.starting_position == PositionType.RightBack
+        assert player.starting
+
+        # Substituted players have a position
+        sub_player = dataset.metadata.teams[0].get_player_by_id(
+            "DFL-OBJ-00008K"
+        )
+        assert sub_player.starting_position is None
+        assert sub_player.positions.last() is not None
+        assert not sub_player.starting
+
+        # Get player by position and time
+        periods = dataset.metadata.periods
+        period_1 = periods[0]
+        period_2 = periods[1]
+
+        home_starting_gk = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_gk.player_id == "DFL-OBJ-0028FW"  # Kastenmeier
+
+        home_starting_cam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.CenterAttackingMidfield,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_cam.player_id == "DFL-OBJ-002G5J"  # Appelkamp
+
+        home_ending_cam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.CenterAttackingMidfield,
+            time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
+        )
+        assert home_ending_cam.player_id == "DFL-OBJ-00008K"  # Hennings
+
+        away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=92)),
+        )
+        assert away_starting_gk.player_id == "DFL-OBJ-0001HW"  # Mathenia
+
+    def test_periods(self, dataset):
+        """It should create the periods"""
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[
+            0
+        ].start_timestamp == datetime.fromisoformat(
+            "2022-10-15T13:01:28.310+02:00"
+        )
+        assert dataset.metadata.periods[
+            0
+        ].end_timestamp == datetime.fromisoformat(
+            "2022-10-15T13:47:31.000+02:00"
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[
+            1
+        ].start_timestamp == datetime.fromisoformat(
+            "2022-10-15T14:03:29.010+02:00"
+        )
+        assert dataset.metadata.periods[
+            1
+        ].end_timestamp == datetime.fromisoformat(
+            "2022-10-15T14:54:41.000+02:00"
+        )
+
+    def test_pitch_dimensions(self, dataset):
+        """It should set the correct pitch dimensions"""
+        assert dataset.metadata.pitch_dimensions == MetricPitchDimensions(
+            x_dim=Dimension(0, 105),
+            y_dim=Dimension(0, 68),
+            standardized=False,
+            pitch_length=105,
+            pitch_width=68,
+        )
+
+    def test_coordinate_system(self, dataset):
+        """It should set the correct coordinate system"""
+        coordinate_system = dataset.metadata.coordinate_system
+        assert isinstance(coordinate_system, SportecEventDataCoordinateSystem)
+        assert coordinate_system.origin == Origin.BOTTOM_LEFT
+        assert (
+            coordinate_system.vertical_orientation
+            == VerticalOrientation.BOTTOM_TO_TOP
+        )
+        assert coordinate_system.normalized is False
+
+    def test_score(self, dataset):
+        """It should set the correct score"""
+        assert dataset.metadata.score == Score(0, 1)
+
+    def test_officials(self, dataset):
+        """It should set the correct officials"""
+        referees = {role: list() for role in OfficialType}
+        for referee in dataset.metadata.officials:
+            referees[referee.role].append(referee)
+        # main referee
+        assert referees[OfficialType.MainReferee][0].name == "W. Haslberger"
+        assert referees[OfficialType.MainReferee][0].first_name == "Wolfgang"
+        assert referees[OfficialType.MainReferee][0].last_name == "Haslberger"
+        # assistants
+        assert referees[OfficialType.AssistantReferee][0].name == "D. Riehl"
+        assert referees[OfficialType.AssistantReferee][1].name == "L. Erbst"
+        assert referees[OfficialType.FourthOfficial][0].name == "N. Fuchs"
+        assert (
+            referees[OfficialType.VideoAssistantReferee][0].name
+            == "D. Schlager"
+        )
+
+    def test_flags(self, dataset):
+        """It should set the correct flags"""
+        assert dataset.metadata.flags == DatasetFlag(0)
+
+
+class TestSportecLegacyEventData:
+    """Tests on some old private Sportec event data."""
 
     @pytest.fixture
     def event_data(self, base_dir) -> str:
@@ -35,14 +220,6 @@ class TestSportecEventData:
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
         return base_dir / "files/sportec_meta.xml"
-
-    @pytest.fixture
-    def event_data_new(self, base_dir) -> str:
-        return base_dir / "files/sportec_events_J03WPY.xml"
-
-    @pytest.fixture
-    def meta_data_new(self, base_dir) -> str:
-        return base_dir / "files/sportec_meta_J03WPY.xml"
 
     @pytest.fixture
     def dataset(self, event_data: Path, meta_data: Path):
@@ -121,17 +298,28 @@ class TestSportecEventData:
         assert first_pass.receiver_coordinates != first_pass.next().coordinates
         assert first_pass.receiver_coordinates == Point(x=77.75, y=38.71)
 
-    def test_correct_event_data_deserialization_new(
-        self, event_data_new: Path, meta_data_new: Path
-    ):
-        """A basic version of the event data deserialization test, for a newer event data file."""
 
-        dataset = sportec.load_event(
-            event_data=event_data_new,
-            meta_data=meta_data_new,
-            coordinates="sportec",
+class TestSportecPublicEventData:
+    """"""
+
+    @pytest.fixture
+    def event_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_events_J03WPY.xml"
+
+    @pytest.fixture
+    def meta_data(self, base_dir) -> str:
+        return base_dir / "files/sportec_meta_J03WPY.xml"
+
+    @pytest.fixture
+    def dataset(self, event_data: Path, meta_data: Path):
+        return sportec.load_event(
+            event_data=event_data, meta_data=meta_data, coordinates="sportec"
         )
 
+    def test_correct_event_data_deserialization_new(
+        self, dataset: EventDataset
+    ):
+        """A basic version of the event data deserialization test, for a newer event data file."""
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.metadata.periods) == 2

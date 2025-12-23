@@ -13,6 +13,7 @@ from kloppy.domain import (
     DatasetFlag,
     EventDataset,
     EventType,
+    FormationType,
     Ground,
     Metadata,
     Official,
@@ -68,13 +69,34 @@ referee_types_mapping: dict[str, OfficialType] = {
 logger = logging.getLogger(__name__)
 
 
-def _team_from_xml_elm(team_elm) -> Team:
+def _parse_name(elem) -> str:
+    """Parse a full name from a Sportec XML element."""
+    if elem.attrib.get("Shortname"):
+        return elem.attrib.get("Shortname")
+    elif elem.attrib.get("FirstName") and elem.attrib.get("LastName"):
+        return f"{elem.attrib.get('FirstName')} {elem.attrib.get('LastName')}"
+    else:
+        raise DeserializationError("Could not parse name")
+
+
+def _extract_team_and_players(team_elm) -> Team:
+    """Extract a Team and its Players from a Sportec XML team element."""
+    head_coach = [
+        _parse_name(trainer)
+        for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
+        if trainer.attrib["Role"] == "headcoach"
+    ]
+    formation_string = team_elm.attrib.get("LineUp", "").split()[0]
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
         ground=(
             Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
         ),
+        coach=head_coach[0] if len(head_coach) else None,
+        starting_formation=FormationType(formation_string)
+        if formation_string
+        else FormationType.UNKNOWN,
     )
     team.players = [
         Player(
@@ -86,7 +108,9 @@ def _team_from_xml_elm(team_elm) -> Team:
             last_name=player_elm.attrib["LastName"],
             starting_position=position_types_mapping.get(
                 player_elm.attrib.get("PlayingPosition"), PositionType.Unknown
-            ),
+            )
+            if player_elm.attrib["Starting"] == "true"
+            else None,
             starting=player_elm.attrib["Starting"] == "true",
         )
         for player_elm in team_elm.Players.iterchildren("Player")
@@ -122,45 +146,38 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
     y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
 
+    # Parse teams
     team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
     team_elms = list(team_path.find(match_root).iterchildren("Team"))
 
-    home_team = away_team = None
+    home_team, away_team = None, None
     for team_elm in team_elms:
-        head_coach = [
-            trainer.attrib["Shortname"]
-            for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
-            if trainer.attrib["Role"] == "headcoach"
-        ]
         if team_elm.attrib["Role"] == "home":
-            home_team = _team_from_xml_elm(team_elm)
-            home_coach = head_coach[0] if len(head_coach) else None
+            home_team = _extract_team_and_players(team_elm)
         elif team_elm.attrib["Role"] == "guest":
-            away_team = _team_from_xml_elm(team_elm)
-            away_coach = head_coach[0] if len(head_coach) else None
+            away_team = _extract_team_and_players(team_elm)
         else:
             raise DeserializationError(
                 f"Unknown side: {team_elm.attrib['Role']}"
             )
 
-    if not home_team:
+    if home_team is None:
         raise DeserializationError("Home team is missing from metadata")
-    if not away_team:
+    if away_team is None:
         raise DeserializationError("Away team is missing from metadata")
+    if len(home_team.players) == 0 or len(away_team.players) == 0:
+        raise DeserializationError("Line-up incomplete")
 
+    teams = [home_team, away_team]
+
+    # Parse scoreline
     (
         home_score,
         away_score,
     ) = match_root.MatchInformation.General.attrib["Result"].split(":")
     score = Score(home=int(home_score), away=int(away_score))
 
-    home_team.coach = home_coach
-    away_team.coach = away_coach
-    teams = [home_team, away_team]
-
-    if len(home_team.players) == 0 or len(away_team.players) == 0:
-        raise DeserializationError("LineUp incomplete")
-
+    # Parse periods
     # The periods can be rebuild from event data. Therefore, the periods attribute
     # from the metadata can be ignored. It is required for tracking data.
     other_game_information = (
@@ -226,6 +243,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             ]
         )
 
+    # Parse referees
     if hasattr(match_root, "MatchInformation") and hasattr(
         match_root.MatchInformation, "Referees"
     ):
@@ -824,7 +842,7 @@ class SportecEventDataDeserializer(
             score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag(0),
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,

@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, TypeVar, Union
+from dataclasses import fields, replace
+from typing import Any, Generic, Optional, TypeVar, Union
+import warnings
 
 from kloppy.domain import (
     DatasetTransformer,
@@ -64,5 +66,51 @@ class EventDataDeserializer(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def deserialize(self, inputs: T) -> EventDataset:
+    def _deserialize(self, inputs: T) -> EventDataset:
         raise NotImplementedError
+
+    def deserialize(
+        self, inputs: T, additional_metadata: Optional[dict[str, Any]] = None
+    ) -> EventDataset:
+        dataset = self._deserialize(inputs)
+
+        # Check for additional metadata to merge
+        if additional_metadata:
+            # Identify valid fields in the Metadata class
+            valid_fields = {f.name for f in fields(dataset.metadata)}
+
+            # Split additional_metadata into known and unknown keys
+            known_updates = {}
+            unknown_updates = {}
+
+            for key, value in additional_metadata.items():
+                if key in valid_fields:
+                    known_updates[key] = value
+                else:
+                    unknown_updates[key] = value
+
+            # Handle unknown keys (put them into 'attributes' and warn)
+            if unknown_updates:
+                warnings.warn(
+                    f"The following metadata keys are not supported fields and will be "
+                    f"added to 'attributes': {list(unknown_updates.keys())}"
+                )
+
+                # specific logic to merge with existing attributes safely
+                current_attributes = dataset.metadata.attributes or {}
+                # Create a new dict to avoid mutating the original if it's shared
+                new_attributes = current_attributes.copy()
+                new_attributes.update(unknown_updates)
+
+                known_updates["attributes"] = new_attributes
+
+            #  Apply updates
+            if known_updates:
+                updated_metadata = replace(dataset.metadata, **known_updates)
+                dataset = replace(dataset, metadata=updated_metadata)
+
+        # Check if we need to return a FilteredEventDataset
+        if self.event_types:
+            return dataset.filter(self.should_include_event)
+
+        return dataset

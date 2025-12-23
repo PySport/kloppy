@@ -94,7 +94,7 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
     def provider(self) -> Provider:
         return Provider.IMPECT
 
-    def deserialize(self, inputs: ImpectInputs) -> EventDataset:
+    def _deserialize(self, inputs: ImpectInputs) -> EventDataset:
         # Initialize coordinate system transformer
         self.transformer = self.get_transformer()
 
@@ -134,10 +134,9 @@ class ImpectDeserializer(EventDataDeserializer[ImpectInputs]):
                     periods, teams, impect_events
                 ).deserialize(self.event_factory, teams)
                 for event in new_events:
-                    if self.should_include_event(event):
-                        # Transform event to the coordinate system
-                        event = self.transformer.transform_event(event)
-                        events.append(event)
+                    # Transform event to the coordinate system
+                    event = self.transformer.transform_event(event)
+                    events.append(event)
 
         self.mark_events_as_assists(events)
         substitution_events = self.parse_substitutions(

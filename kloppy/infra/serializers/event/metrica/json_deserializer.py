@@ -252,7 +252,7 @@ class MetricaJsonEventDataDeserializer(
     def provider(self) -> Provider:
         return Provider.METRICA
 
-    def deserialize(self, inputs: MetricaJsonEventDataInputs) -> EventDataset:
+    def _deserialize(self, inputs: MetricaJsonEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             raw_events = json.load(inputs.event_data)
             metadata = load_metadata(
@@ -370,8 +370,7 @@ class MetricaJsonEventDataDeserializer(
                         **generic_event_kwargs,
                     )
 
-                if self.should_include_event(event):
-                    events.append(transformer.transform_event(event))
+                events.append(transformer.transform_event(event))
 
                 # Checks if the event ended out of the field and adds a synthetic out event
                 if (
@@ -393,9 +392,7 @@ class MetricaJsonEventDataDeserializer(
                             qualifiers=None,
                             **generic_event_kwargs,
                         )
-
-                        if self.should_include_event(event):
-                            events.append(transformer.transform_event(event))
+                        events.append(transformer.transform_event(event))
 
         return EventDataset(
             metadata=replace(

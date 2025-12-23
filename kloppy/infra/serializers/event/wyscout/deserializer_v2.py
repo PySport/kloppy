@@ -465,7 +465,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
     def provider(self) -> Provider:
         return Provider.WYSCOUT
 
-    def deserialize(self, inputs: WyscoutInputs) -> EventDataset:
+    def _deserialize(self, inputs: WyscoutInputs) -> EventDataset:
         transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
@@ -710,8 +710,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                             new_events.insert(i, interception_event)
 
                 for new_event in new_events:
-                    if self.should_include_event(new_event):
-                        events.append(transformer.transform_event(new_event))
+                    events.append(transformer.transform_event(new_event))
 
         metadata = Metadata(
             teams=[home_team, away_team],

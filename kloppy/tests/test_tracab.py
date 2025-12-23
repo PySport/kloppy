@@ -76,9 +76,9 @@ def meta_tracking_assertions(dataset):
     )
 
     player_away_12 = dataset.metadata.teams[1].get_player_by_jersey_number(12)
-    assert dataset.records[0].players_data[
-        player_away_12
-    ].coordinates == Point(x=-4722.0, y=28.0)
+    assert dataset.records[0].players_data[player_away_12].coordinates == Point(
+        x=-4722.0, y=28.0
+    )
     assert dataset.records[0].ball_state == BallState.DEAD
     assert dataset.records[1].ball_state == BallState.ALIVE
     # Shouldn't this be closer to (0,0,0)?
@@ -93,6 +93,10 @@ def meta_tracking_assertions(dataset):
     assert "12170" not in [
         player.player_id for player in dataset.records[6].players_data.keys()
     ]
+
+    assert player_home_1.first_name == "Player"
+    assert player_home_1.last_name == "One"
+    assert player_home_1.name == "Player One"
 
 
 class TestTracabJSONTracking:
@@ -136,9 +140,7 @@ class TestTracabJSONTracking:
         dataset = tracab.load(
             meta_data=json_meta_data, raw_data=json_raw_data, only_alive=False
         )
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
         assert dataset.records[0].players_data[
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
@@ -164,9 +166,7 @@ class TestTracabDATTracking:
             meta_data=xml_meta_data, raw_data=dat_raw_data, only_alive=False
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
 
         assert dataset.records[0].players_data[
             player_home_1
@@ -241,9 +241,7 @@ class TestTracabMeta2:
             meta_data=xml_meta2_data, raw_data=dat_raw_data, only_alive=False
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
 
         assert dataset.records[0].players_data[
             player_home_1
@@ -302,9 +300,7 @@ class TestTracabMeta3:
             meta_data=xml_meta3_data, raw_data=dat_raw_data, only_alive=False
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
 
         assert dataset.records[0].players_data[
             player_home_1
@@ -363,9 +359,7 @@ class TestTracabMeta4:
             meta_data=xml_meta4_data, raw_data=dat_raw_data, only_alive=False
         )
 
-        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(
-            1
-        )
+        player_home_1 = dataset.metadata.teams[0].get_player_by_jersey_number(1)
 
         assert dataset.records[0].players_data[
             player_home_1

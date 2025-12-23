@@ -1,21 +1,22 @@
+from typing import Optional, Union
 import warnings
-from typing import Union
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory, List, Optional
+from kloppy.domain import EventDataset, EventFactory
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
 from kloppy.infra.serializers.event.statsbomb import (
     StatsBombDeserializer,
     StatsBombInputs,
 )
 from kloppy.io import FileLike, Source, open_as_file
+from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(
     event_data: FileLike,
     lineup_data: FileLike,
     three_sixty_data: Optional[FileLike] = None,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
@@ -44,11 +45,13 @@ def load(
         or get_config("event_factory")
         or StatsBombEventFactory(),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        lineup_data
-    ) as lineup_data_fp, open_as_file(
-        Source.create(three_sixty_data, optional=True)
-    ) as three_sixty_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(lineup_data) as lineup_data_fp,
+        open_as_file(
+            Source.create(three_sixty_data, optional=True)
+        ) as three_sixty_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=StatsBombInputs(
                 event_data=event_data_fp,
@@ -61,7 +64,7 @@ def load(
 
 def load_open_data(
     match_id: Union[str, int] = "15946",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -88,10 +91,22 @@ def load_open_data(
     )
 
     return load(
-        event_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/{match_id}.json",
-        lineup_data=f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/{match_id}.json",
+        event_data=github_resolve_raw_data_url(
+            repository="statsbomb/open-data",
+            branch="master",
+            file=f"data/events/{match_id}.json",
+        ),
+        lineup_data=github_resolve_raw_data_url(
+            repository="statsbomb/open-data",
+            branch="master",
+            file=f"data/lineups/{match_id}.json",
+        ),
         three_sixty_data=Source(
-            f"https://raw.githubusercontent.com/statsbomb/open-data/master/data/three-sixty/{match_id}.json",
+            github_resolve_raw_data_url(
+                repository="statsbomb/open-data",
+                branch="master",
+                file=f"data/three-sixty/{match_id}.json",
+            ),
             skip_if_missing=True,
         ),
         event_types=event_types,

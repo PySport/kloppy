@@ -1,7 +1,7 @@
-import logging
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from typing import IO, Dict, List, NamedTuple
+import logging
+from typing import IO, NamedTuple
 
 from lxml import objectify
 
@@ -36,7 +36,7 @@ from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "TW": PositionType.Goalkeeper,
     "IVR": PositionType.RightCenterBack,
     "IVL": PositionType.LeftCenterBack,
@@ -56,7 +56,7 @@ position_types_mapping: Dict[str, PositionType] = {
     "LA": PositionType.LeftWing,
 }
 
-referee_types_mapping: Dict[str, OfficialType] = {
+referee_types_mapping: dict[str, OfficialType] = {
     "referee": OfficialType.MainReferee,
     "firstAssistant": OfficialType.AssistantReferee,
     "videoReferee": OfficialType.VideoAssistantReferee,
@@ -105,14 +105,12 @@ SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID = 250_000
 
 class SportecMetadata(NamedTuple):
     score: Score
-    teams: List[Team]
-    periods: List[Period]
+    teams: list[Team]
+    periods: list[Period]
     x_max: float
     y_max: float
     fps: int
-    home_coach: str
-    away_coach: str
-    officials: List[Official]
+    officials: list[Official]
 
 
 def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
@@ -150,10 +148,14 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     if not away_team:
         raise DeserializationError("Away team is missing from metadata")
 
-    (home_score, away_score,) = match_root.MatchInformation.General.attrib[
-        "Result"
-    ].split(":")
+    (
+        home_score,
+        away_score,
+    ) = match_root.MatchInformation.General.attrib["Result"].split(":")
     score = Score(home=int(home_score), away=int(away_score))
+
+    home_team.coach = home_coach
+    away_team.coach = away_coach
     teams = [home_team, away_team]
 
     if len(home_team.players) == 0 or len(away_team.players) == 0:
@@ -231,9 +233,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         referee_path = objectify.ObjectPath(
             "PutDataRequest.MatchInformation.Referees"
         )
-        referee_elms = referee_path.find(match_root).iterchildren(
-            tag="Referee"
-        )
+        referee_elms = referee_path.find(match_root).iterchildren(tag="Referee")
 
         for referee in referee_elms:
             ref_attrib = referee.attrib
@@ -258,8 +258,6 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         x_max=x_max,
         y_max=y_max,
         fps=SPORTEC_FPS,
-        home_coach=home_coach,
-        away_coach=away_coach,
         officials=officials,
     )
 
@@ -321,7 +319,7 @@ def _parse_datetime(dt_str: str) -> datetime:
     return datetime.fromisoformat(dt_str)
 
 
-def _get_event_qualifiers(event_chain: Dict) -> List[Qualifier]:
+def _get_event_qualifiers(event_chain: dict) -> list[Qualifier]:
     qualifiers = []
 
     qualifiers.extend(_get_event_setpiece_qualifiers(event_chain))
@@ -368,7 +366,7 @@ def _get_event_bodypart_qualifiers(event_chain):
     return qualifiers
 
 
-def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
+def _parse_shot(event_name: str, event_chain: OrderedDict) -> dict:
     if event_name == SPORTEC_EVENT_NAME_SHOT_WIDE:
         result = ShotResult.OFF_TARGET
     elif event_name == SPORTEC_EVENT_NAME_SHOT_SAVED:
@@ -389,7 +387,7 @@ def _parse_shot(event_name: str, event_chain: OrderedDict) -> Dict:
     return dict(result=result, qualifiers=_get_event_qualifiers(event_chain))
 
 
-def _parse_pass(event_chain: OrderedDict, team: Team) -> Dict:
+def _parse_pass(event_chain: OrderedDict, team: Team) -> dict:
     if event_chain["Play"]["Evaluation"] in (
         "successfullyCompleted",
         "successful",
@@ -413,14 +411,14 @@ def _parse_pass(event_chain: OrderedDict, team: Team) -> Dict:
     )
 
 
-def _parse_substitution(event_attributes: Dict, team: Team) -> Dict:
+def _parse_substitution(event_attributes: dict, team: Team) -> dict:
     return dict(
         player=team.get_player_by_id(event_attributes["PlayerOut"]),
         replacement_player=team.get_player_by_id(event_attributes["PlayerIn"]),
     )
 
 
-def _parse_caution(event_attributes: Dict) -> Dict:
+def _parse_caution(event_attributes: dict) -> dict:
     if event_attributes["CardColor"] == "yellow":
         card_type = CardType.FIRST_YELLOW
     elif event_attributes["CardColor"] == "yellowRed":
@@ -428,14 +426,12 @@ def _parse_caution(event_attributes: Dict) -> Dict:
     elif event_attributes["CardColor"] == "red":
         card_type = CardType.RED
     else:
-        raise ValueError(
-            f"Unknown card color: {event_attributes['CardColor']}"
-        )
+        raise ValueError(f"Unknown card color: {event_attributes['CardColor']}")
 
     return dict(card_type=card_type)
 
 
-def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
+def _parse_foul(event_attributes: dict, teams: list[Team]) -> dict:
     team = (
         teams[0]
         if event_attributes["TeamFouler"] == teams[0].team_id
@@ -446,7 +442,7 @@ def _parse_foul(event_attributes: Dict, teams: List[Team]) -> Dict:
     return dict(team=team, player=player)
 
 
-def _parse_successful_tackling_game(event_attributes: Dict) -> Dict:
+def _parse_successful_tackling_game(event_attributes: dict) -> dict:
     """Parsing the appropriate player and team of successful TacklingGame events"""
     return dict(
         team=event_attributes["WinnerTeam"],
@@ -454,7 +450,7 @@ def _parse_successful_tackling_game(event_attributes: Dict) -> Dict:
     )
 
 
-def _parse_unsuccessful_tackling_game(event_attributes: Dict) -> Dict:
+def _parse_unsuccessful_tackling_game(event_attributes: dict) -> dict:
     """Parsing the appropriate player and team of unsuccessful TacklingGame events"""
     return dict(
         team=event_attributes["LoserTeam"],
@@ -462,7 +458,7 @@ def _parse_unsuccessful_tackling_game(event_attributes: Dict) -> Dict:
     )
 
 
-def _parse_coordinates(event_attributes: Dict) -> Point:
+def _parse_coordinates(event_attributes: dict) -> Point:
     if "X-Position" not in event_attributes:
         return None
     return Point(
@@ -501,8 +497,6 @@ class SportecEventDataDeserializer(
                 pitch_length=sportec_metadata.x_max,
                 pitch_width=sportec_metadata.y_max,
             )
-            home_coach = sportec_metadata.home_coach
-            away_coach = sportec_metadata.away_coach
 
             periods = []
             period_id = 0
@@ -525,8 +519,7 @@ class SportecEventDataDeserializer(
 
                 if (
                     SPORTEC_EVENT_NAME_KICKOFF in event_chain
-                    and "GameSection"
-                    in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
+                    and "GameSection" in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
                 ):
                     period_id += 1
                     period = Period(
@@ -568,9 +561,7 @@ class SportecEventDataDeserializer(
                 if "Player" in flatten_attributes:
                     if not team:
                         raise ValueError("Player set while team is not set")
-                    player = team.get_player_by_id(
-                        flatten_attributes["Player"]
-                    )
+                    player = team.get_player_by_id(flatten_attributes["Player"])
 
                 generic_event_kwargs = dict(
                     # from DataRecord
@@ -807,14 +798,10 @@ class SportecEventDataDeserializer(
                         events[i + 1].replace(
                             coordinates=Point(
                                 x=float(
-                                    events[i + 1].raw_event[
-                                        "X-Source-Position"
-                                    ]
+                                    events[i + 1].raw_event["X-Source-Position"]
                                 ),
                                 y=float(
-                                    events[i + 1].raw_event[
-                                        "Y-Source-Position"
-                                    ]
+                                    events[i + 1].raw_event["Y-Source-Position"]
                                 ),
                             )
                         )
@@ -843,8 +830,6 @@ class SportecEventDataDeserializer(
             date=date,
             game_week=game_week,
             game_id=game_id,
-            home_coach=home_coach,
-            away_coach=away_coach,
             officials=sportec_metadata.officials,
         )
 

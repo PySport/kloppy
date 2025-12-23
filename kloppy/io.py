@@ -1,26 +1,23 @@
 """I/O utilities for reading raw data."""
 
 import bz2
+from collections.abc import Generator, Iterable, Iterator
 import contextlib
+from contextlib import AbstractContextManager
+from dataclasses import dataclass, replace
 import gzip
+from io import BufferedWriter, BytesIO, TextIOWrapper
 import logging
 import lzma
 import os
 import re
-from dataclasses import dataclass, replace
-from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
     IO,
     Any,
     BinaryIO,
     Callable,
-    ContextManager,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
     Optional,
-    Tuple,
+    TextIO,
     Union,
 )
 
@@ -68,7 +65,7 @@ FileLike = Union[FileOrPath, Source]
 
 def _file_or_path_to_binary_stream(
     file_or_path: FileOrPath, binary_mode: str
-) -> Tuple[BinaryIO, bool]:
+) -> tuple[BinaryIO, bool]:
     """
     Converts a file path or a file-like object to a binary stream.
 
@@ -177,7 +174,7 @@ def _open(
     filename: FileOrPath,
     mode: str = "rb",
     compresslevel: Optional[int] = None,
-    format: Optional[str] = None,
+    format: Optional[str] = None,  # noqa: A002
 ) -> BinaryIO:
     """
         A replacement for the "open" function that can also read and write
@@ -272,7 +269,9 @@ def _open_gz(
 
     if "r" in mode:
         return gzip.open(filename, mode)  # type: ignore
-    return BufferedWriter(gzip.open(filename, mode, compresslevel=compresslevel))  # type: ignore
+    return BufferedWriter(
+        gzip.open(filename, mode, compresslevel=compresslevel)
+    )  # type: ignore
 
 
 def get_file_extension(file_or_path: FileLike) -> str:
@@ -321,7 +320,10 @@ def dummy_context_mgr() -> Generator[None, None, None]:
     yield
 
 
-def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
+def open_as_file(
+    input_: FileLike,
+    encoding: Optional[str] = None,
+) -> AbstractContextManager[Union[BinaryIO, TextIO, None]]:
     """Open a byte stream to the given input object.
 
     The following input types are supported:
@@ -339,9 +341,11 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
 
     Args:
         input_ (FileLike): The input object to be opened.
+        encoding (str, optional): The name of the encoding used to decode or encode the
+            file. This should only be used in text mode.
 
     Returns:
-        BinaryIO: A binary stream to the input object.
+        Union[BinaryIO, TextIO]: A stream to the input object.
 
     Raises:
         ValueError: If the input is required but not provided.
@@ -368,7 +372,7 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
             raise ValueError("Input required but not provided.")
         else:
             try:
-                return open_as_file(input_.data)
+                return open_as_file(input_.data, encoding=encoding)
             except InputNotFoundError as exc:
                 if input_.skip_if_missing:
                     logging.info(f"Input {input_.data} not found. Skipping")
@@ -376,15 +380,17 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
                 else:
                     raise exc
 
+    stream: Union[BinaryIO, TextIO]
+
     if isinstance(input_, str) and ("{" in input_ or "<" in input_):
         # If input_ is a JSON or XML string, return it as a binary stream
-        return BytesIO(input_.encode("utf8"))
+        stream = BytesIO(input_.encode("utf8"))
 
-    if isinstance(input_, bytes):
+    elif isinstance(input_, bytes):
         # If input_ is a bytes object, return it as a binary stream
-        return BytesIO(input_)
+        stream = BytesIO(input_)
 
-    if isinstance(input_, str) or hasattr(input_, "__fspath__"):
+    elif isinstance(input_, str) or hasattr(input_, "__fspath__"):
         # If input_ is a path-like object, open it and return the binary stream
         uri = _filepath_from_path_or_filelike(input_)
 
@@ -395,20 +401,25 @@ def open_as_file(input_: FileLike) -> ContextManager[Optional[BinaryIO]]:
             stream.seek(0)
         else:
             raise AdapterError(f"No adapter found for {uri}")
-        return stream
 
-    if isinstance(input_, TextIOWrapper):
+    elif isinstance(input_, TextIOWrapper):
         # If file_or_path is a TextIOWrapper, return its underlying binary buffer
-        return input_.buffer
+        stream = input_.buffer
 
-    if hasattr(input_, "readinto"):
+    elif hasattr(input_, "readinto"):
         # If file_or_path is a file-like object, return it as is
-        return _open(input_)  # type: ignore
+        stream = _open(input_)  # type: ignore
 
-    raise TypeError(f"Unsupported input type: {type(input_)}")
+    else:
+        raise TypeError(f"Unsupported input type: {type(input_)}")
+
+    if encoding is not None:
+        stream = TextIOWrapper(stream, encoding=encoding)
+
+    return stream
 
 
-def _natural_sort_key(path: str) -> List[Union[int, str]]:
+def _natural_sort_key(path: str) -> list[Union[int, str]]:
     # Split string into list of chunks for natural sorting
     return [
         int(text) if text.isdigit() else text.lower()

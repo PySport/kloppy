@@ -1,11 +1,8 @@
-from typing import BinaryIO, List
-
 import fsspec
 
 from kloppy.config import get_config
-from kloppy.exceptions import AdapterError, InputNotFoundError
+from kloppy.exceptions import AdapterError
 
-from .adapter import Adapter
 from .fsspec import FSSpecAdapter
 
 try:

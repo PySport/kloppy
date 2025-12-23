@@ -1,6 +1,6 @@
-import re
 from abc import ABC, abstractmethod
-from typing import BinaryIO, List, Optional
+import re
+from typing import BinaryIO, Optional
 
 import fsspec
 
@@ -18,9 +18,7 @@ class FSSpecAdapter(Adapter, ABC):
         protocol_pattern = re.compile(r"^[a-zA-Z\d]+://")
         match = protocol_pattern.match(url)
         if match:
-            return match.group(0)[
-                :-3
-            ]  # Remove '://' from the matched protocol
+            return match.group(0)[:-3]  # Remove '://' from the matched protocol
         return "file"  # Default to 'file' for local paths
 
     def _get_filesystem(
@@ -76,7 +74,7 @@ class FSSpecAdapter(Adapter, ABC):
         except FileNotFoundError as e:
             raise InputNotFoundError(f"Input file not found: {url}") from e
 
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         """
         Lists the contents of a directory.
         """

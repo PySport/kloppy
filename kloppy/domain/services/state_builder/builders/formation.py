@@ -1,13 +1,14 @@
-from dataclasses import replace, dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
 
 from kloppy.domain import (
-    FormationChangeEvent,
     Event,
-    Ground,
     EventDataset,
+    FormationChangeEvent,
     FormationType,
+    Ground,
 )
+
 from ..builder import StateBuilder
 
 

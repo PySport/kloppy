@@ -1,6 +1,6 @@
-import html
 from datetime import timedelta
-from typing import Dict, Optional
+import html
+from typing import Optional
 
 from kloppy.domain import (
     Period,
@@ -9,7 +9,7 @@ from kloppy.domain import (
     Team,
 )
 
-position_types_mapping: Dict[str, PositionType] = {
+position_types_mapping: dict[str, PositionType] = {
     "G": PositionType.Goalkeeper,
     "D": PositionType.Defender,
     "M": PositionType.Midfielder,
@@ -38,8 +38,8 @@ def create_team(
         Player(
             player_id=str(player[f"Player{id_suffix}"]),
             team=team,
-            first_name=html.unescape(player["FirstName"]),
-            last_name=html.unescape(player["LastName"]),
+            first_name=str(html.unescape(player["FirstName"])),
+            last_name=str(html.unescape(player["LastName"])),
             name=html.unescape(player["FirstName"] + " " + player["LastName"]),
             jersey_no=int(player["JerseyNo"]),
             starting=player["StartFrameCount"] == start_frame_id,

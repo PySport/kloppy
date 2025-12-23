@@ -478,6 +478,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 else None
             )
 
+            home_team.coach = home_coach
+            away_team.coach = away_coach
+
             if game_id:
                 game_id = str(game_id)
 
@@ -595,8 +598,6 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,
             game_id=game_id,
-            home_coach=home_coach,
-            away_coach=away_coach,
         )
 
         return TrackingDataset(

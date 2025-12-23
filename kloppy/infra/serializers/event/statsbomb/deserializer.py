@@ -81,6 +81,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         event = self.transformer.transform_event(event)
                         events.append(event)
 
+        if "home_coach" in additional_metadata:
+            home_coach = additional_metadata.pop("home_coach")
+            teams[0].coach = home_coach
+
+        if "away_coach" in additional_metadata:
+            away_coach = additional_metadata.pop("away_coach")
+            teams[1].coach = away_coach
+
         metadata = Metadata(
             teams=teams,
             periods=periods,

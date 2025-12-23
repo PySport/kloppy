@@ -261,6 +261,7 @@ class Team:
         ground (Ground): The team's ground (home or away).
         players (List[Player]): The team's players.
         starting_formation (FormationType, optional): The team's starting formation.
+        coach (str, optional): The team's coach.
     """
 
     team_id: str
@@ -271,6 +272,7 @@ class Team:
         default_factory=TimeContainer, compare=False
     )
     players: list[Player] = field(default_factory=list)
+    coach: Optional[str] = None
 
     def __str__(self):
         return self.name
@@ -1647,8 +1649,6 @@ class Metadata:
     date: Optional[datetime] = None
     game_week: Optional[str] = None
     game_id: Optional[str] = None
-    home_coach: Optional[str] = None
-    away_coach: Optional[str] = None
     officials: Optional[list] = field(default_factory=list)
     attributes: Optional[dict] = field(default_factory=dict, compare=False)
 
@@ -1664,6 +1664,16 @@ class Metadata:
                     self.periods[i + 1] if i + 1 < len(self.periods) else None
                 ),
             )
+
+    @property
+    @deprecated("Use teams[0].coach instead")
+    def home_coach(self) -> Optional[str]:
+        return self.teams[0].coach if self.teams else None
+
+    @property
+    @deprecated("Use teams[1].coach instead")
+    def away_coach(self) -> Optional[str]:
+        return self.teams[1].coach if self.teams else None
 
 
 T = TypeVar("T", bound="DataRecord")

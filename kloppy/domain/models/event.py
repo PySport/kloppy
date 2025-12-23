@@ -34,7 +34,7 @@ from .formation import FormationType
 from .pitch import Point
 
 if TYPE_CHECKING:
-    from .tracking import Frame
+    from .tracking import Frame, TrackingDataset
 
 QualifierValueType = TypeVar("QualifierValueType")
 EnumQualifierType = TypeVar("EnumQualifierType", bound=Enum)
@@ -1495,6 +1495,22 @@ class EventDataset(Dataset[Event]):
             raise KloppyError(f"No aggregator {type_} not found")
 
         return aggregator.aggregate(self)
+
+    def to_tracking_data(self) -> "TrackingDataset":
+        from .tracking import TrackingDataset
+
+        freeze_frames = self.filter(
+            lambda event: event.freeze_frame is not None
+        )
+        if len(freeze_frames.records) == 0:
+            raise ValueError(
+                "EventDataset has 0 freeze frame records making it impossible to convert to a TrackingDataset"
+            )
+
+        return TrackingDataset.from_dataset(
+            freeze_frames,
+            lambda event: event.freeze_frame,
+        )
 
 
 __all__ = [

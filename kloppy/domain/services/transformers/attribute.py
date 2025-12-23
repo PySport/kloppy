@@ -1,28 +1,51 @@
+"""Event Attribute Transformation.
+
+This module provides tools to extract, calculate, and encode features from
+individual `Event` objects. These transformers are designed to enrich event data
+with derived metrics (like distance to goal) or categorical encodings (like
+one-hot encoded body parts) for downstream analysis or machine learning tasks.
+
+Examples:
+    **1. Calculating Distances and Angles**
+    Compute spatial metrics for an event relative to the goal.
+
+    >>> from kloppy.domain.models.event import ShotEvent
+    >>> # event is a ShotEvent derived from a dataset with ACTION_EXECUTING_TEAM orientation
+    >>>
+    >>> dist_transformer = DistanceToGoalTransformer()
+    >>> angle_transformer = AngleToGoalTransformer()
+    >>>
+    >>> features = {}
+    >>> features.update(dist_transformer(event))
+    >>> features.update(angle_transformer(event))
+    >>> # features: {'distance_to_goal': 16.5, 'angle_to_goal': 25.4}
+
+    **2. Encoding Qualifiers (Body Parts)**
+    Convert categorical body part qualifiers into one-hot encoded columns.
+
+    >>> from kloppy.domain import BodyPartQualifier
+    >>> # event has a qualifier BodyPartQualifier(value=BodyPart.HEAD)
+    >>>
+    >>> transformer = BodyPartTransformer()
+    >>> encoded = transformer(event)
+    >>> # encoded: {'is_body_part_head': True, 'is_body_part_foot_right': False, ...}
+"""
+
 from abc import ABC, abstractmethod
 import math
 import sys
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from kloppy.domain import (
     BodyPartQualifier,
-    Code,
     Event,
-    Frame,
     Orientation,
     Point,
-    QualifierMixin,
-    ResultMixin,
 )
 from kloppy.domain.models.event import (
-    CardEvent,
-    CarryEvent,
     EnumQualifier,
-    EventType,
-    PassEvent,
-    ShotEvent,
 )
 from kloppy.exceptions import (
-    KloppyParameterError,
     OrientationError,
     UnknownEncoderError,
 )
@@ -157,331 +180,6 @@ def create_transformer_from_qualifier(
             return self.encoder.encode(values)
 
     return _Transformer
-
-
-class DefaultEventTransformer(EventAttributeTransformer):
-    def __init__(
-        self,
-        *include: str,
-        exclude: Optional[list[str]] = None,
-    ):
-        if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
-
-        self.exclude = exclude or []
-        self.include = include or []
-
-    def __call__(self, event: Event) -> dict[str, Any]:
-        row = dict(
-            event_id=event.event_id,
-            event_type=(
-                event.event_type.value
-                if event.event_type != EventType.GENERIC
-                else f"GENERIC:{event.event_name}"
-            ),
-            period_id=event.period.id,
-            timestamp=event.timestamp,
-            end_timestamp=None,
-            ball_state=event.ball_state.value if event.ball_state else None,
-            ball_owning_team=(
-                event.ball_owning_team.team_id
-                if event.ball_owning_team
-                else None
-            ),
-            team_id=event.team.team_id if event.team else None,
-            player_id=event.player.player_id if event.player else None,
-            coordinates_x=event.coordinates.x if event.coordinates else None,
-            coordinates_y=event.coordinates.y if event.coordinates else None,
-        )
-        if isinstance(event, PassEvent):
-            row.update(
-                {
-                    "end_timestamp": event.receive_timestamp,
-                    "end_coordinates_x": (
-                        event.receiver_coordinates.x
-                        if event.receiver_coordinates
-                        else None
-                    ),
-                    "end_coordinates_y": (
-                        event.receiver_coordinates.y
-                        if event.receiver_coordinates
-                        else None
-                    ),
-                    "receiver_player_id": (
-                        event.receiver_player.player_id
-                        if event.receiver_player
-                        else None
-                    ),
-                }
-            )
-        elif isinstance(event, CarryEvent):
-            row.update(
-                {
-                    "end_timestamp": event.end_timestamp,
-                    "end_coordinates_x": (
-                        event.end_coordinates.x
-                        if event.end_coordinates
-                        else None
-                    ),
-                    "end_coordinates_y": (
-                        event.end_coordinates.y
-                        if event.end_coordinates
-                        else None
-                    ),
-                }
-            )
-        elif isinstance(event, ShotEvent):
-            row.update(
-                {
-                    "end_coordinates_x": (
-                        event.result_coordinates.x
-                        if event.result_coordinates
-                        else None
-                    ),
-                    "end_coordinates_y": (
-                        event.result_coordinates.y
-                        if event.result_coordinates
-                        else None
-                    ),
-                }
-            )
-        elif isinstance(event, CardEvent):
-            row.update(
-                {
-                    "card_type": (
-                        event.card_type.value if event.card_type else None
-                    )
-                }
-            )
-
-        if isinstance(event, QualifierMixin) and event.qualifiers:
-            for qualifier in event.qualifiers:
-                row.update(qualifier.to_dict())
-
-        if isinstance(event, ResultMixin) and event.result is not None:
-            row.update(
-                {
-                    "result": event.result.value,
-                    "success": event.result.is_success,
-                }
-            )
-        else:
-            row.update(
-                {
-                    "result": None,
-                    "success": None,
-                }
-            )
-
-        if self.include:
-            return {k: row[k] for k in self.include}
-        elif self.exclude:
-            return {k: v for k, v in row.items() if k not in self.exclude}
-        else:
-            return row
-
-
-class DefaultFrameTransformer:
-    def __init__(
-        self,
-        *include: str,
-        exclude: Optional[list[str]] = None,
-    ):
-        if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
-
-        self.exclude = exclude or []
-        self.include = include or []
-
-    def __call__(self, frame: Frame) -> dict[str, Any]:
-        row = dict(
-            period_id=frame.period.id if frame.period else None,
-            timestamp=frame.timestamp,
-            frame_id=frame.frame_id,
-            ball_state=frame.ball_state.value if frame.ball_state else None,
-            ball_owning_team_id=(
-                frame.ball_owning_team.team_id
-                if frame.ball_owning_team
-                else None
-            ),
-            ball_x=(
-                frame.ball_coordinates.x if frame.ball_coordinates else None
-            ),
-            ball_y=(
-                frame.ball_coordinates.y if frame.ball_coordinates else None
-            ),
-            ball_z=(
-                getattr(frame.ball_coordinates, "z", None)
-                if frame.ball_coordinates
-                else None
-            ),
-            ball_speed=frame.ball_speed,
-        )
-        for player, player_data in frame.players_data.items():
-            row.update(
-                {
-                    f"{player.player_id}_x": (
-                        player_data.coordinates.x
-                        if player_data.coordinates
-                        else None
-                    ),
-                    f"{player.player_id}_y": (
-                        player_data.coordinates.y
-                        if player_data.coordinates
-                        else None
-                    ),
-                    f"{player.player_id}_d": player_data.distance,
-                    f"{player.player_id}_s": player_data.speed,
-                }
-            )
-
-            if player_data.other_data:
-                for name, value in player_data.other_data.items():
-                    row.update(
-                        {
-                            f"{player.player_id}_{name}": value,
-                        }
-                    )
-
-        if frame.other_data:
-            for name, value in frame.other_data.items():
-                row.update(
-                    {
-                        name: value,
-                    }
-                )
-
-        if self.include:
-            return {k: row[k] for k in self.include}
-        elif self.exclude:
-            return {k: v for k, v in row.items() if k not in self.exclude}
-        else:
-            return row
-
-
-class LongLayoutFrameTransformer:
-    def __init__(
-        self,
-        *include: str,
-        exclude: Optional[list[str]] = None,
-    ):
-        if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
-
-        self.exclude = exclude or []
-        self.include = include or []
-
-    def __call__(self, frame: Frame) -> list[dict[str, Any]]:
-        rows = []
-
-        base_data = {
-            "period_id": frame.period.id if frame.period else None,
-            "timestamp": frame.timestamp,
-            "frame_id": frame.frame_id,
-            "ball_state": frame.ball_state.value if frame.ball_state else None,
-            "ball_owning_team_id": (
-                frame.ball_owning_team.team_id
-                if frame.ball_owning_team
-                else None
-            ),
-        }
-
-        if frame.other_data:
-            base_data.update(frame.other_data)
-
-        ball_row = base_data.copy()
-        ball_row.update(
-            {
-                "team_id": "ball",
-                "player_id": "ball",
-                "x": (
-                    frame.ball_coordinates.x if frame.ball_coordinates else None
-                ),
-                "y": (
-                    frame.ball_coordinates.y if frame.ball_coordinates else None
-                ),
-                "z": (
-                    getattr(frame.ball_coordinates, "z", None)
-                    if frame.ball_coordinates
-                    else None
-                ),
-                "d": None,
-                "s": frame.ball_speed,
-            }
-        )
-        rows.append(ball_row)
-
-        for player, player_data in frame.players_data.items():
-            player_row = base_data.copy()
-            player_row.update(
-                {
-                    "team_id": player.team.team_id if player else None,
-                    "player_id": player.player_id if player else None,
-                    "x": (
-                        player_data.coordinates.x
-                        if player_data.coordinates
-                        else None
-                    ),
-                    "y": (
-                        player_data.coordinates.y
-                        if player_data.coordinates
-                        else None
-                    ),
-                    "z": (
-                        getattr(player_data.coordinates, "z", None)
-                        if player_data.coordinates
-                        else None
-                    ),
-                    "d": player_data.distance,
-                    "s": player_data.speed,
-                }
-            )
-
-            if player_data.other_data:
-                player_row.update(player_data.other_data)
-
-            rows.append(player_row)
-
-        if self.include:
-            rows = [
-                {k: row[k] for k in self.include if k in row} for row in rows
-            ]
-        elif self.exclude:
-            rows = [
-                {k: v for k, v in row.items() if k not in self.exclude}
-                for row in rows
-            ]
-        return rows
-
-
-class DefaultCodeTransformer:
-    def __init__(
-        self,
-        *include: str,
-        exclude: Optional[list[str]] = None,
-    ):
-        if include and exclude:
-            raise KloppyParameterError("Cannot specify both include as exclude")
-
-        self.exclude = exclude or []
-        self.include = include or []
-
-    def __call__(self, code: Code) -> dict[str, Any]:
-        row = dict(
-            code_id=code.code_id,
-            period_id=code.period.id if code.period else None,
-            timestamp=code.timestamp,
-            end_timestamp=code.end_timestamp,
-            code=code.code,
-        )
-        row.update(code.labels)
-
-        if self.include:
-            return {k: row[k] for k in self.include}
-        elif self.exclude:
-            return {k: v for k, v in row.items() if k not in self.exclude}
-        else:
-            return row
 
 
 BodyPartTransformer = create_transformer_from_qualifier(BodyPartQualifier)

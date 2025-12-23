@@ -25,6 +25,7 @@ from kloppy.domain import (
     TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.exceptions import KloppyError
 
 
 class TestHelpers:
@@ -411,7 +412,7 @@ class TestHelpers:
         assert coordinates.x == 1 - coordinates_transformed.x
         assert coordinates.y == 1 - coordinates_transformed.y
 
-    def test_to_pandas(self):
+    def test_to_pandas_wide_layout(self):
         tracking_data = self._get_tracking_dataset()
 
         data_frame = tracking_data.to_df(engine="pandas")
@@ -436,6 +437,48 @@ class TestHelpers:
             }
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
+
+    def test_to_pandas_long_layout(self):
+        tracking_data = self._get_tracking_dataset()
+
+        # Specify layout="long"
+        data_frame = tracking_data.to_df(engine="pandas", layout="long")
+
+        expected_data_frame = DataFrame.from_dict(
+            {
+                # Row 0: Frame 1 - Ball
+                # Row 1: Frame 2 - Ball
+                # Row 2: Frame 2 - Player 'home_1'
+                "frame_id": [1, 2, 2],
+                "period_id": [1, 2, 2],
+                "timestamp": [0.1, 0.2, 0.2],
+                "ball_state": [None, None, None],
+                "ball_owning_team_id": ["home", "away", "away"],
+                # Identifiers
+                "team_id": ["ball", "ball", "home"],
+                "player_id": ["ball", "ball", "home_1"],
+                # Coordinates & Metrics (Unified columns)
+                "x": [100.0, 0.0, 15.0],
+                "y": [-50.0, 50.0, 35.0],
+                "z": [0.0, 1.0, None],  # Player has no Z in wide test
+                "d": [None, None, 0.03],
+                "s": [None, None, 10.5],
+                # Metadata
+                # Note: Frame-level 'extra_data' (value 1 in frame 2) propagates to all rows in that frame
+                "extra_data": [None, 1, 1],
+            }
+        )
+
+        # check_like=True ignores column order
+        assert_frame_equal(
+            data_frame, expected_data_frame, check_like=True, check_dtype=False
+        )
+
+    def test_to_pandas_invalid_layout(self):
+        tracking_data = self._get_tracking_dataset()
+
+        with pytest.raises(KloppyError, match="Layout 'wrong' not found"):
+            tracking_data.to_df(engine="pandas", layout="wrong")
 
     def test_to_pandas_generic_events(self, base_dir):
         dataset = opta.load(

@@ -452,26 +452,40 @@ def _parse_caution(event_attributes: dict) -> dict:
 def _parse_foul(event_attributes: dict, teams: list[Team]) -> dict:
     team = (
         teams[0]
-        if event_attributes["TeamFouler"] == teams[0].team_id
+        if event_attributes["teamfouler"] == teams[0].team_id
         else teams[1]
     )
-    player = team.get_player_by_id(event_attributes["Fouler"])
+    player = team.get_player_by_id(event_attributes["fouler"])
 
     return dict(team=team, player=player)
 
 
-def _parse_successful_tackling_game(event_attributes: dict) -> dict:
+def _parse_successful_tackling_game(
+    event_attributes: dict, teams: list[Team]
+) -> dict:
     """Parsing the appropriate player and team of successful TacklingGame events"""
+    team = (
+        teams[0]
+        if event_attributes["WinnerTeam"] == teams[0].team_id
+        else teams[1]
+    )
     return dict(
-        team=event_attributes["WinnerTeam"],
+        team=team,
         player=event_attributes["Winner"],
     )
 
 
-def _parse_unsuccessful_tackling_game(event_attributes: dict) -> dict:
+def _parse_unsuccessful_tackling_game(
+    event_attributes: dict, teams: list[Team]
+) -> dict:
     """Parsing the appropriate player and team of unsuccessful TacklingGame events"""
+    team = (
+        teams[0]
+        if event_attributes["LoserTeam"] == teams[0].team_id
+        else teams[1]
+    )
     return dict(
-        team=event_attributes["LoserTeam"],
+        team=team,
         player=event_attributes["Loser"],
     )
 
@@ -681,7 +695,7 @@ class SportecEventDataDeserializer(
                         == "dribbledAround"
                     ):
                         tackling_game_kwargs = _parse_successful_tackling_game(
-                            event_attributes
+                            event_attributes, teams
                         )
                         generic_event_kwargs.update(tackling_game_kwargs)
                         event = self.event_factory.build_take_on(
@@ -698,7 +712,7 @@ class SportecEventDataDeserializer(
                         "ballContactSucceeded",
                     ]:
                         tackling_game_kwargs = _parse_successful_tackling_game(
-                            event_attributes
+                            event_attributes, teams
                         )
                         generic_event_kwargs.update(tackling_game_kwargs)
                         event = self.event_factory.build_duel(
@@ -715,7 +729,9 @@ class SportecEventDataDeserializer(
                         "ballControlRetained",
                     ]:
                         tackling_game_kwargs = (
-                            _parse_unsuccessful_tackling_game(event_attributes)
+                            _parse_unsuccessful_tackling_game(
+                                event_attributes, teams
+                            )
                         )
                         generic_event_kwargs.update(tackling_game_kwargs)
                         event = self.event_factory.build_duel(

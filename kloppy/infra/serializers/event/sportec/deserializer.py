@@ -452,10 +452,10 @@ def _parse_caution(event_attributes: dict) -> dict:
 def _parse_foul(event_attributes: dict, teams: list[Team]) -> dict:
     team = (
         teams[0]
-        if event_attributes["teamfouler"] == teams[0].team_id
+        if event_attributes["TeamFouler"] == teams[0].team_id
         else teams[1]
     )
-    player = team.get_player_by_id(event_attributes["fouler"])
+    player = team.get_player_by_id(event_attributes["Fouler"])
 
     return dict(team=team, player=player)
 
@@ -741,7 +741,9 @@ class SportecEventDataDeserializer(
                         )
                     elif event_attributes.get("WinnerResult") == "fouled":
                         tackle_game_foul_kwargs = (
-                            _parse_unsuccessful_tackling_game(event_attributes)
+                            _parse_unsuccessful_tackling_game(
+                                event_attributes, teams
+                            )
                         )
                         generic_event_kwargs.update(tackle_game_foul_kwargs)
                         event = self.event_factory.build_foul_committed(

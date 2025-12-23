@@ -1906,6 +1906,43 @@ class Dataset(ABC, Generic[T]):
         layout: Optional[str] = None,
         **named_columns: "NamedColumns",
     ):
+        """Converts the dataset's records into a DataFrame.
+
+        This method extracts data from the internal records and formats them into
+        a tabular structure using the specified dataframe engine (Pandas or Polars).
+
+        Args:
+            *columns: Column names to include in the output.
+                - If not provided, a default set of columns is returned.
+                - Supports wildcards (e.g., "*coordinates*").
+                - Supports callables for custom extraction logic.
+            engine: The dataframe engine to use.
+                - 'pandas': Returns a standard pandas DataFrame.
+                - 'pandas[pyarrow]': Returns a pandas DataFrame backed by PyArrow.
+                - 'polars': Returns a Polars DataFrame.
+                - None: Defaults to the `dataframe.enging` configuration value.
+            layout: The layout structure of the output.
+                - For Event data: Default is a flat list of events.
+                - For Tracking data:
+                    - 'wide' (default): One row per frame, with players as columns.
+                    - 'long': One row per entity (player/ball) per frame ("tidy" data).
+            **named_columns: Additional columns to create, where the key is the
+                column name and the value is a literal or a callable applied to
+                each record.
+
+        Returns:
+            The dataset as a DataFrame.
+
+        Examples:
+            Basic conversion to Pandas:
+            >>> df = dataset.to_df()
+
+            Using Polars and selecting specific columns:
+            >>> df = dataset.to_df("period_id", "timestamp", "player_id", "coordinates_*", engine="polars")
+
+            Tracking data in long format:
+            >>> df = tracking_dataset.to_df(layout="long")
+        """
         from kloppy.config import get_config
 
         if not engine:

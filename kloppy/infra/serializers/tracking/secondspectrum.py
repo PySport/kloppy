@@ -73,21 +73,24 @@ class SecondSpectrumDeserializer(
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = True,
+        include_missing_ball_frames: Optional[bool] = True,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
+        self.include_missing_ball_frames = include_missing_ball_frames
 
     @property
     def provider(self) -> Provider:
         return Provider.SECONDSPECTRUM
 
-    @classmethod
-    def _frame_from_framedata(cls, teams, period, frame_data):
+    def _frame_from_framedata(self, teams, period, frame_data):
         frame_id = frame_data["frameIdx"]
         frame_timestamp = timedelta(seconds=frame_data["gameClock"])
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
+            if not self.include_missing_ball_frames and ball_z == -10:
+                return
             ball_coordinates = Point3D(
                 float(ball_x), float(ball_y), float(ball_z)
             )
@@ -301,6 +304,8 @@ class SecondSpectrumDeserializer(
                 period = periods[frame_data["period"] - 1]
 
                 frame = self._frame_from_framedata(teams, period, frame_data)
+                if not frame:
+                    continue
                 frame = transformer.transform_frame(frame)
                 frames.append(frame)
 

@@ -54,6 +54,35 @@ class TestSecondSpectrumTracking:
         )
         assert len(dataset.records) == 100
 
+    def test_correct_deserialization_remove_missing_ball_frames(
+        self, meta_data: Path, raw_data: Path, additional_meta_data: Path
+    ):
+        d1 = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+            limit=100,
+            sample_rate=(1 / 2),
+            include_missing_ball_frames=False,
+        )
+        assert len(d1.records) == 100
+
+        d2 = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+            limit=100,
+            sample_rate=(1 / 2),
+        )
+        assert (
+            d1[-1].frame_id == 80000
+        )  # skip 2 frames with ball_z == -10, but still get 100 records
+        assert d2[-1].frame_id == 79200
+
     def test_correct_deserialization(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):

@@ -1006,7 +1006,12 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
             game_id=game_id,
         )
 
-        return EventDataset(
+        dataset = EventDataset(
             metadata=metadata,
             records=events,
         )
+
+        # Remove penalty shootout data if requested
+        dataset = self.remove_penalty_shootout_data(dataset)
+
+        return dataset

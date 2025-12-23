@@ -397,7 +397,7 @@ class MetricaJsonEventDataDeserializer(
                         if self.should_include_event(event):
                             events.append(transformer.transform_event(event))
 
-        return EventDataset(
+        dataset = EventDataset(
             metadata=replace(
                 metadata,
                 pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
@@ -405,3 +405,8 @@ class MetricaJsonEventDataDeserializer(
             ),
             records=events,
         )
+
+        # Remove penalty shootout data if requested
+        dataset = self.remove_penalty_shootout_data(dataset)
+
+        return dataset

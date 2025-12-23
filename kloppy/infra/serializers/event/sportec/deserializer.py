@@ -702,7 +702,12 @@ class SportecEventDataDeserializer(
             officials=sportec_metadata.officials,
         )
 
-        return EventDataset(
+        dataset = EventDataset(
             metadata=metadata,
             records=events,
         )
+
+        # Remove penalty shootout data if requested
+        dataset = self.remove_penalty_shootout_data(dataset)
+
+        return dataset

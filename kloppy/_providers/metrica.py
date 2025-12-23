@@ -93,6 +93,7 @@ def load_event(
     event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
+    exclude_penalty_shootouts: bool = False,
 ) -> EventDataset:
     """Load Metrica Sports JSON event data.
 
@@ -102,6 +103,7 @@ def load_event(
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
+        exclude_penalty_shootouts: If True, excludes events from penalty shootouts (period 5).
 
     Returns:
         The parsed event data.
@@ -110,6 +112,7 @@ def load_event(
         event_types=event_types,
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
+        exclude_penalty_shootouts=exclude_penalty_shootouts,
     )
 
     with (

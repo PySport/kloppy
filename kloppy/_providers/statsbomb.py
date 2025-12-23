@@ -20,6 +20,7 @@ def load(
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
+    exclude_penalty_shootouts: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb event data.
@@ -34,6 +35,7 @@ def load(
         additional_metadata: A dict with additional data that will be added to
             the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
             for a list of possible keys.
+        exclude_penalty_shootouts: If True, excludes events from penalty shootouts (period 5).
 
     Returns:
         The parsed event data.
@@ -44,6 +46,7 @@ def load(
         event_factory=event_factory
         or get_config("event_factory")
         or StatsBombEventFactory(),
+        exclude_penalty_shootouts=exclude_penalty_shootouts,
     )
     with (
         open_as_file(event_data) as event_data_fp,
@@ -67,6 +70,7 @@ def load_open_data(
     event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
+    exclude_penalty_shootouts: bool = False,
 ) -> EventDataset:
     """
     Load StatsBomb open data.
@@ -79,6 +83,7 @@ def load_open_data(
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
+        exclude_penalty_shootouts: If True, excludes events from penalty shootouts (period 5).
 
     Returns:
         The parsed event data.
@@ -112,4 +117,5 @@ def load_open_data(
         event_types=event_types,
         coordinates=coordinates,
         event_factory=event_factory,
+        exclude_penalty_shootouts=exclude_penalty_shootouts,
     )

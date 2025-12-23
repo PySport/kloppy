@@ -24,7 +24,6 @@ from kloppy.domain.models.time import Time
 from kloppy.utils import (
     DeprecatedEnumValue,
     camelcase_to_snakecase,
-    deprecated,
     docstring_inherit_attributes,
     removes_suffix,
 )
@@ -35,9 +34,6 @@ from .formation import FormationType
 from .pitch import Point
 
 if TYPE_CHECKING:
-    from pandas import DataFrame
-
-    from ..services.transformers.data_record import NamedColumns
     from .tracking import Frame
 
 QualifierValueType = TypeVar("QualifierValueType")
@@ -1487,44 +1483,6 @@ class EventDataset(Dataset[Event]):
         from kloppy.domain.services.state_builder import add_state
 
         return add_state(self, *builder_keys)
-
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
-    def to_pandas(
-        self,
-        record_converter: Optional[Callable[[Event], dict]] = None,
-        additional_columns: Optional["NamedColumns"] = None,
-    ) -> "DataFrame":  # noqa F821
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
-
-        if not record_converter:
-            from ..services.transformers.attribute import (
-                DefaultEventTransformer,
-            )
-
-            record_converter = DefaultEventTransformer()
-
-        def generic_record_converter(event: Event):
-            row = record_converter(event)
-            if additional_columns:
-                for k, v in additional_columns.items():
-                    if callable(v):
-                        value = v(event)
-                    else:
-                        value = v
-                    row.update({k: value})
-            return row
-
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
 
     def aggregate(self, type_: str, **aggregator_kwargs) -> list[Any]:
         if type_ == "minutes_played":

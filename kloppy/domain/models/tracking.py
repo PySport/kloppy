@@ -1,17 +1,13 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import Any, Optional
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
-    deprecated,
     docstring_inherit_attributes,
 )
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D
-
-if TYPE_CHECKING:
-    from pandas import DataFrame
 
 
 @dataclass
@@ -82,45 +78,6 @@ class TrackingDataset(Dataset[Frame]):
     @property
     def frame_rate(self):
         return self.metadata.frame_rate
-
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
-    def to_pandas(
-        self,
-        record_converter: Optional[Callable[[Frame], dict]] = None,
-        additional_columns=None,
-    ) -> "DataFrame":  # noqa: F821
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
-
-        if not record_converter:
-            from ..services.transformers.attribute import (
-                DefaultFrameTransformer,
-            )
-
-            record_converter = DefaultFrameTransformer()
-
-        def generic_record_converter(frame: Frame):
-            row = record_converter(frame)
-            if additional_columns:
-                for k, v in additional_columns.items():
-                    if callable(v):
-                        value = v(frame)
-                    else:
-                        value = v
-                    row.update({k: value})
-
-            return row
-
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
 
 
 __all__ = ["Frame", "TrackingDataset", "PlayerData"]

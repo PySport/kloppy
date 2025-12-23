@@ -1,17 +1,13 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import Union
 
 from kloppy.domain.models.common import DatasetType
 from kloppy.utils import (
-    deprecated,
     docstring_inherit_attributes,
 )
 
 from .common import DataRecord, Dataset
-
-if TYPE_CHECKING:
-    from pandas import DataFrame
 
 
 @dataclass
@@ -57,45 +53,6 @@ class CodeDataset(Dataset[Code]):
     @property
     def codes(self):
         return self.records
-
-    @deprecated(
-        "to_pandas will be removed in the future. Please use to_df instead."
-    )
-    def to_pandas(
-        self,
-        record_converter: Optional[Callable[[Code], dict]] = None,
-        additional_columns=None,
-    ) -> "DataFrame":  # noqa: F821
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ImportError(
-                "Seems like you don't have pandas installed. Please"
-                " install it using: pip install pandas"
-            )
-
-        if not record_converter:
-            from ..services.transformers.attribute import (
-                DefaultCodeTransformer,
-            )
-
-            record_converter = DefaultCodeTransformer()
-
-        def generic_record_converter(code: Code):
-            row = record_converter(code)
-            if additional_columns:
-                for k, v in additional_columns.items():
-                    if callable(v):
-                        value = v(code)
-                    else:
-                        value = v
-                    row.update({k: value})
-
-            return row
-
-        return pd.DataFrame.from_records(
-            map(generic_record_converter, self.records)
-        )
 
 
 __all__ = ["Code", "CodeDataset"]

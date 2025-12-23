@@ -8,6 +8,8 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
+    CardQualifier,
+    CardType,
     DatasetFlag,
     DatasetType,
     Dimension,
@@ -208,6 +210,26 @@ class TestSportecMetadata:
     def test_flags(self, dataset):
         """It should set the correct flags"""
         assert dataset.metadata.flags == DatasetFlag(0)
+
+
+class TestsSportecCautionEvent:
+    """Tests related to deserializing Caution events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should create a card event for each Caution event."""
+        events = dataset.find_all("card")
+        assert len(events) == 9
+
+        for event in events:
+            assert event.card_type == CardType.FIRST_YELLOW
+
+    def test_attributes(self, dataset: EventDataset):
+        """Verify specific attributes of cards"""
+        card = dataset.get_event_by_id("18237400001225")
+        # A card should have a card type
+        assert card.card_type == CardType.FIRST_YELLOW
+        # Card qualifiers should not be added
+        assert card.get_qualifier_value(CardQualifier) is None
 
 
 class TestSportecLegacyEventData:

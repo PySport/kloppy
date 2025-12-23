@@ -13,6 +13,7 @@ from kloppy.domain import (
     DatasetFlag,
     EventDataset,
     EventType,
+    FormationType,
     Ground,
     Metadata,
     Official,
@@ -31,6 +32,7 @@ from kloppy.domain import (
     ShotResult,
     Team,
 )
+from kloppy.domain.models.event import DuelResult, DuelType, TakeOnResult
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
@@ -67,13 +69,34 @@ referee_types_mapping: dict[str, OfficialType] = {
 logger = logging.getLogger(__name__)
 
 
-def _team_from_xml_elm(team_elm) -> Team:
+def _parse_name(elem) -> str:
+    """Parse a full name from a Sportec XML element."""
+    if elem.attrib.get("Shortname"):
+        return elem.attrib.get("Shortname")
+    elif elem.attrib.get("FirstName") and elem.attrib.get("LastName"):
+        return f"{elem.attrib.get('FirstName')} {elem.attrib.get('LastName')}"
+    else:
+        raise DeserializationError("Could not parse name")
+
+
+def _extract_team_and_players(team_elm) -> Team:
+    """Extract a Team and its Players from a Sportec XML team element."""
+    head_coach = [
+        _parse_name(trainer)
+        for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
+        if trainer.attrib["Role"] == "headcoach"
+    ]
+    formation_string = team_elm.attrib.get("LineUp", "").split()[0]
     team = Team(
         team_id=team_elm.attrib["TeamId"],
         name=team_elm.attrib["TeamName"],
         ground=(
             Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
         ),
+        coach=head_coach[0] if len(head_coach) else None,
+        starting_formation=FormationType(formation_string)
+        if formation_string
+        else FormationType.UNKNOWN,
     )
     team.players = [
         Player(
@@ -85,7 +108,9 @@ def _team_from_xml_elm(team_elm) -> Team:
             last_name=player_elm.attrib["LastName"],
             starting_position=position_types_mapping.get(
                 player_elm.attrib.get("PlayingPosition"), PositionType.Unknown
-            ),
+            )
+            if player_elm.attrib["Starting"] == "true"
+            else None,
             starting=player_elm.attrib["Starting"] == "true",
         )
         for player_elm in team_elm.Players.iterchildren("Player")
@@ -121,45 +146,38 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
     x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
     y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
 
+    # Parse teams
     team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
     team_elms = list(team_path.find(match_root).iterchildren("Team"))
 
-    home_team = away_team = None
+    home_team, away_team = None, None
     for team_elm in team_elms:
-        head_coach = [
-            trainer.attrib["Shortname"]
-            for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
-            if trainer.attrib["Role"] == "headcoach"
-        ]
         if team_elm.attrib["Role"] == "home":
-            home_team = _team_from_xml_elm(team_elm)
-            home_coach = head_coach[0] if len(head_coach) else None
+            home_team = _extract_team_and_players(team_elm)
         elif team_elm.attrib["Role"] == "guest":
-            away_team = _team_from_xml_elm(team_elm)
-            away_coach = head_coach[0] if len(head_coach) else None
+            away_team = _extract_team_and_players(team_elm)
         else:
             raise DeserializationError(
                 f"Unknown side: {team_elm.attrib['Role']}"
             )
 
-    if not home_team:
+    if home_team is None:
         raise DeserializationError("Home team is missing from metadata")
-    if not away_team:
+    if away_team is None:
         raise DeserializationError("Away team is missing from metadata")
+    if len(home_team.players) == 0 or len(away_team.players) == 0:
+        raise DeserializationError("Line-up incomplete")
 
+    teams = [home_team, away_team]
+
+    # Parse scoreline
     (
         home_score,
         away_score,
     ) = match_root.MatchInformation.General.attrib["Result"].split(":")
     score = Score(home=int(home_score), away=int(away_score))
 
-    home_team.coach = home_coach
-    away_team.coach = away_coach
-    teams = [home_team, away_team]
-
-    if len(home_team.players) == 0 or len(away_team.players) == 0:
-        raise DeserializationError("LineUp incomplete")
-
+    # Parse periods
     # The periods can be rebuild from event data. Therefore, the periods attribute
     # from the metadata can be ignored. It is required for tracking data.
     other_game_information = (
@@ -225,6 +243,7 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
             ]
         )
 
+    # Parse referees
     if hasattr(match_root, "MatchInformation") and hasattr(
         match_root.MatchInformation, "Referees"
     ):
@@ -305,6 +324,8 @@ SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
 SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
 SPORTEC_EVENT_NAME_CAUTION = "Caution"
 SPORTEC_EVENT_NAME_FOUL = "Foul"
+SPORTEC_EVENT_NAME_TACKLING_GAME = "TacklingGame"
+SPORTEC_EVENT_NAME_OTHER = "OtherBallAction"
 
 SPORTEC_EVENT_TYPE_OF_SHOT = "TypeOfShot"
 SPORTEC_EVENT_BODY_PART_HEAD = "head"
@@ -439,6 +460,36 @@ def _parse_foul(event_attributes: dict, teams: list[Team]) -> dict:
     return dict(team=team, player=player)
 
 
+def _parse_successful_tackling_game(
+    event_attributes: dict, teams: list[Team]
+) -> dict:
+    """Parsing the appropriate player and team of successful TacklingGame events"""
+    team = (
+        teams[0]
+        if event_attributes["WinnerTeam"] == teams[0].team_id
+        else teams[1]
+    )
+    return dict(
+        team=team,
+        player=event_attributes["Winner"],
+    )
+
+
+def _parse_unsuccessful_tackling_game(
+    event_attributes: dict, teams: list[Team]
+) -> dict:
+    """Parsing the appropriate player and team of unsuccessful TacklingGame events"""
+    team = (
+        teams[0]
+        if event_attributes["LoserTeam"] == teams[0].team_id
+        else teams[1]
+    )
+    return dict(
+        team=team,
+        player=event_attributes["Loser"],
+    )
+
+
 def _parse_coordinates(event_attributes: dict) -> Point:
     if "X-Position" not in event_attributes:
         return None
@@ -483,8 +534,19 @@ class SportecEventDataDeserializer(
             period_id = 0
             events = []
 
+            # We need to re-order the event_elm objects by EventTime, because
+            # certain types of events are all positioned at the end of the files
+            event_chains = []
             for event_elm in event_root.iterchildren("Event"):
                 event_chain = _event_chain_from_xml_elm(event_elm)
+                event_chains.append(event_chain)
+
+            sorted_event_chains = sorted(
+                event_chains,
+                key=lambda x: _parse_datetime(x["Event"]["EventTime"]),
+            )
+
+            for event_chain in sorted_event_chains:
                 timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
 
                 if (
@@ -567,11 +629,18 @@ class SportecEventDataDeserializer(
                         receiver_coordinates=None,
                     )
                 elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
-                    event = self.event_factory.build_recovery(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
+                    if event_attributes.get("Type") == "BallClaimed":
+                        event = self.event_factory.build_recovery(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get("Type") == "InterceptedBall":
+                        event = self.event_factory.build_interception(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
                 elif event_name == SPORTEC_EVENT_NAME_SUBSTITUTION:
                     substitution_event_kwargs = _parse_substitution(
                         event_attributes=event_attributes, team=team
@@ -598,6 +667,104 @@ class SportecEventDataDeserializer(
                     foul_kwargs = _parse_foul(event_attributes, teams=teams)
                     generic_event_kwargs.update(foul_kwargs)
                     event = self.event_factory.build_foul_committed(
+                        result=None,
+                        qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+                elif event_name == SPORTEC_EVENT_NAME_TACKLING_GAME:
+                    # Different combinations of TacklingGame winnerRole and winnerResult identified in file J03WPY
+                    # [X] WinnerRole='withBallControl', WinnerResult='dribbledAround' -- this seems like a Take On
+                    # [X] WinnerRole='withBallControl', WinnerResult='fouled'  -- this is obviously a foul
+                    # [X] WinnerRole='withBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like an 'unsuccessful tackle', in Opta speak
+                    # [X] WinnerRole='withBallControl', WinnerResult='ballControlRetained'  -- this seems like a failed tackle
+                    # WinnerRole='withBallControl', WinnerResult='layoff' -- *might* be loose ball duels
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like a 'successful tackle', in Opta speak
+                    # WinnerRole='withoutBallControl', WinnerResult='layoff' -- *might* be loose ball duels
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='fouled'  -- this is obviously a foul
+                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballClaimed'  -- this seems like a tackle
+                    duel_type = event_attributes.get("Type", "ground")
+                    kloppy_duel_type = (
+                        DuelType.AERIAL
+                        if duel_type == "air"
+                        else DuelType.GROUND
+                    )
+
+                    if (
+                        event_attributes.get("WinnerRole") == "withBallControl"
+                        and event_attributes.get("WinnerResult")
+                        == "dribbledAround"
+                    ):
+                        tackling_game_kwargs = _parse_successful_tackling_game(
+                            event_attributes, teams
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_take_on(
+                            result=TakeOnResult.COMPLETE,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get(
+                        "WinnerRole"
+                    ) == "withoutBallControl" and event_attributes.get(
+                        "WinnerResult"
+                    ) in [
+                        "ballClaimed",
+                        "ballContactSucceeded",
+                    ]:
+                        tackling_game_kwargs = _parse_successful_tackling_game(
+                            event_attributes, teams
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_duel(
+                            qualifiers=[kloppy_duel_type, DuelType.TACKLE],
+                            result=DuelResult.WON,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get(
+                        "WinnerRole"
+                    ) == "withBallControl" and event_attributes.get(
+                        "WinnerResult"
+                    ) in [
+                        "ballcontactSucceeded",
+                        "ballControlRetained",
+                    ]:
+                        tackling_game_kwargs = (
+                            _parse_unsuccessful_tackling_game(
+                                event_attributes, teams
+                            )
+                        )
+                        generic_event_kwargs.update(tackling_game_kwargs)
+                        event = self.event_factory.build_duel(
+                            qualifiers=[kloppy_duel_type],
+                            result=DuelResult.LOST,
+                            **generic_event_kwargs,
+                        )
+                    elif event_attributes.get("WinnerResult") == "fouled":
+                        tackle_game_foul_kwargs = (
+                            _parse_unsuccessful_tackling_game(
+                                event_attributes, teams
+                            )
+                        )
+                        generic_event_kwargs.update(tackle_game_foul_kwargs)
+                        event = self.event_factory.build_foul_committed(
+                            result=None,
+                            qualifiers=None,
+                            **generic_event_kwargs,
+                        )
+                    # Some 'TacklingGame' events are still not parsed
+                    else:
+                        event = self.event_factory.build_generic(
+                            result=None,
+                            qualifiers=None,
+                            event_name=event_name,
+                            **generic_event_kwargs,
+                        )
+
+                elif (
+                    event_name == SPORTEC_EVENT_NAME_OTHER
+                    and event_attributes.get("DefensiveClearance") == "true"
+                ):
+                    event = self.event_factory.build_clearance(
                         result=None,
                         qualifiers=None,
                         **generic_event_kwargs,
@@ -693,7 +860,7 @@ class SportecEventDataDeserializer(
             score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
-            flags=~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM),
+            flags=DatasetFlag(0),
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
             date=date,

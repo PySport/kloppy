@@ -8,24 +8,396 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
+    CardQualifier,
+    CardType,
+    DatasetFlag,
     DatasetType,
+    Dimension,
     EventDataset,
+    FormationType,
+    MetricPitchDimensions,
     Official,
     OfficialType,
     Orientation,
+    Origin,
+    PassQualifier,
+    PassResult,
+    PassType,
     Point,
     Point3D,
     PositionType,
     Provider,
+    Score,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
+    SportecEventDataCoordinateSystem,
+    Time,
     TrackingDataset,
+    VerticalOrientation,
 )
+from kloppy.domain.models.event import EventType
+
+
+@pytest.fixture(scope="module")
+def event_data(base_dir) -> str:
+    return base_dir / "files/sportec_events_J03WPY.xml"
+
+
+@pytest.fixture(scope="module")
+def meta_data(base_dir) -> str:
+    return base_dir / "files/sportec_meta_J03WPY.xml"
+
+
+@pytest.fixture(scope="module")
+def dataset(event_data: Path, meta_data: Path):
+    return sportec.load_event(
+        event_data=event_data, meta_data=meta_data, coordinates="sportec"
+    )
+
+
+class TestSportecMetadata:
+    """Tests related to deserializing metadata"""
+
+    def test_provider(self, dataset):
+        """It should set the Sportec provider"""
+        assert dataset.metadata.provider == Provider.SPORTEC
+
+    def test_date(self, dataset):
+        """It should set the correct match date"""
+        assert dataset.metadata.date == datetime.fromisoformat(
+            "2022-10-15T11:01:28.300+00:00"
+        )
+
+    def test_orientation(self, dataset):
+        """It should set the action-executing-team orientation"""
+        assert dataset.metadata.orientation == Orientation.AWAY_HOME
+
+    def test_frame_rate(self, dataset):
+        """It should set the frame rate to None"""
+        assert dataset.metadata.frame_rate is None
+
+    def test_teams(self, dataset):
+        """It should create the teams and player objects"""
+        # There should be two teams with the correct names and starting formations
+        assert dataset.metadata.teams[0].name == "Fortuna Düsseldorf"
+        assert dataset.metadata.teams[0].coach == "Daniel Thioune"
+        assert dataset.metadata.teams[0].starting_formation == FormationType(
+            "4-2-3-1"
+        )
+        assert dataset.metadata.teams[1].name == "1. FC Nürnberg"
+        assert dataset.metadata.teams[1].coach == "M. Weinzierl"
+        assert dataset.metadata.teams[1].starting_formation == FormationType(
+            "4-1-3-2"
+        )
+        # The teams should have the correct players
+        player = dataset.metadata.teams[0].get_player_by_id("DFL-OBJ-0000NZ")
+        assert player.player_id == "DFL-OBJ-0000NZ"
+        assert player.jersey_no == 25
+        assert player.full_name == "Matthias Zimmermann"
+
+    def test_player_position(self, dataset):
+        """It should set the correct player position from the events"""
+        # Starting players get their position from the STARTING_XI event
+        player = dataset.metadata.teams[0].get_player_by_id("DFL-OBJ-0000NZ")
+
+        assert player.starting_position == PositionType.RightBack
+        assert player.starting
+
+        # Substituted players have a position
+        sub_player = dataset.metadata.teams[0].get_player_by_id(
+            "DFL-OBJ-00008K"
+        )
+        assert sub_player.starting_position is None
+        assert sub_player.positions.last() is not None
+        assert not sub_player.starting
+
+        # Get player by position and time
+        periods = dataset.metadata.periods
+        period_1 = periods[0]
+        period_2 = periods[1]
+
+        home_starting_gk = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_gk.player_id == "DFL-OBJ-0028FW"  # Kastenmeier
+
+        home_starting_cam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.CenterAttackingMidfield,
+            time=Time(period=period_1, timestamp=timedelta(seconds=0)),
+        )
+        assert home_starting_cam.player_id == "DFL-OBJ-002G5J"  # Appelkamp
+
+        home_ending_cam = dataset.metadata.teams[0].get_player_by_position(
+            PositionType.CenterAttackingMidfield,
+            time=Time(period=period_2, timestamp=timedelta(seconds=45 * 60)),
+        )
+        assert home_ending_cam.player_id == "DFL-OBJ-00008K"  # Hennings
+
+        away_starting_gk = dataset.metadata.teams[1].get_player_by_position(
+            PositionType.Goalkeeper,
+            time=Time(period=period_1, timestamp=timedelta(seconds=92)),
+        )
+        assert away_starting_gk.player_id == "DFL-OBJ-0001HW"  # Mathenia
+
+    def test_periods(self, dataset):
+        """It should create the periods"""
+        assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[
+            0
+        ].start_timestamp == datetime.fromisoformat(
+            "2022-10-15T13:01:28.310+02:00"
+        )
+        assert dataset.metadata.periods[
+            0
+        ].end_timestamp == datetime.fromisoformat(
+            "2022-10-15T13:47:31.000+02:00"
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[
+            1
+        ].start_timestamp == datetime.fromisoformat(
+            "2022-10-15T14:03:29.010+02:00"
+        )
+        assert dataset.metadata.periods[
+            1
+        ].end_timestamp == datetime.fromisoformat(
+            "2022-10-15T14:54:41.000+02:00"
+        )
+
+    def test_pitch_dimensions(self, dataset):
+        """It should set the correct pitch dimensions"""
+        assert dataset.metadata.pitch_dimensions == MetricPitchDimensions(
+            x_dim=Dimension(0, 105),
+            y_dim=Dimension(0, 68),
+            standardized=False,
+            pitch_length=105,
+            pitch_width=68,
+        )
+
+    def test_coordinate_system(self, dataset):
+        """It should set the correct coordinate system"""
+        coordinate_system = dataset.metadata.coordinate_system
+        assert isinstance(coordinate_system, SportecEventDataCoordinateSystem)
+        assert coordinate_system.origin == Origin.BOTTOM_LEFT
+        assert (
+            coordinate_system.vertical_orientation
+            == VerticalOrientation.BOTTOM_TO_TOP
+        )
+        assert coordinate_system.normalized is False
+
+    def test_score(self, dataset):
+        """It should set the correct score"""
+        assert dataset.metadata.score == Score(0, 1)
+
+    def test_officials(self, dataset):
+        """It should set the correct officials"""
+        referees = {role: list() for role in OfficialType}
+        for referee in dataset.metadata.officials:
+            referees[referee.role].append(referee)
+        # main referee
+        assert referees[OfficialType.MainReferee][0].name == "W. Haslberger"
+        assert referees[OfficialType.MainReferee][0].first_name == "Wolfgang"
+        assert referees[OfficialType.MainReferee][0].last_name == "Haslberger"
+        # assistants
+        assert referees[OfficialType.AssistantReferee][0].name == "D. Riehl"
+        assert referees[OfficialType.AssistantReferee][1].name == "L. Erbst"
+        assert referees[OfficialType.FourthOfficial][0].name == "N. Fuchs"
+        assert (
+            referees[OfficialType.VideoAssistantReferee][0].name
+            == "D. Schlager"
+        )
+
+    def test_flags(self, dataset):
+        """It should set the correct flags"""
+        assert dataset.metadata.flags == DatasetFlag(0)
 
 
 class TestSportecEventData:
-    """"""
+    """Generic tests related to deserializing events"""
+
+    def test_generic_attributes(self, dataset: EventDataset):
+        """Test generic event attributes"""
+        event = dataset.get_event_by_id("18237400000011")
+        assert event.event_id == "18237400000011"
+        assert event.team.name == "1. FC Nürnberg"
+        assert event.ball_owning_team is None
+        assert event.player.name == "James Lawrence"
+        assert event.coordinates == Point(11.72, 50.25)
+        # raw_event must be flattened dict
+        assert isinstance(dataset.events[0].raw_event, dict)
+        assert event.raw_event["EventId"] == "18237400000011"
+        assert event.related_event_ids == []
+        assert event.period.id == 1
+        assert event.timestamp == (
+            datetime.fromisoformat(
+                "2022-10-15T13:01:43.407+02:00"
+            )  # event timestamp
+            - datetime.fromisoformat(
+                "2022-10-15T13:01:28.310+02:00"
+            )  # period start
+        )
+        assert event.ball_state == BallState.ALIVE
+
+    def test_timestamp(self, dataset):
+        """It should set the correct timestamp, reset to zero after each period"""
+        kickoff_p1 = dataset.get_event_by_id("18237400000006")
+        assert kickoff_p1.timestamp == timedelta(seconds=0)
+        kickoff_p2 = dataset.get_event_by_id("18237400000772")
+        assert kickoff_p2.timestamp == timedelta(seconds=0)
+
+    def test_correct_normalized_deserialization(
+        self, event_data: Path, meta_data: Path
+    ):
+        """Test if the normalized deserialization is correct"""
+        dataset = sportec.load_event(
+            event_data=event_data, meta_data=meta_data, coordinates="kloppy"
+        )
+
+        # The events should have standardized coordinates
+        kickoff = dataset.get_event_by_id("18237400000006")
+        assert kickoff.coordinates.x == pytest.approx(0.5, abs=1e-2)
+        assert kickoff.coordinates.y == pytest.approx(0.5, abs=1e-2)
+
+    def test_supported_events(self, dataset: EventDataset):
+        """It should parse all supported event types"""
+        # Test the kloppy event types that are being parsed
+        event_types_set = set(event.event_type for event in dataset.events)
+
+        assert EventType.PASS in event_types_set
+        assert EventType.SHOT in event_types_set
+        assert EventType.RECOVERY in event_types_set
+        assert EventType.SUBSTITUTION in event_types_set
+        assert EventType.CARD in event_types_set
+        assert EventType.FOUL_COMMITTED in event_types_set
+        assert EventType.GENERIC in event_types_set
+        assert EventType.CLEARANCE in event_types_set
+        assert EventType.INTERCEPTION in event_types_set
+        assert EventType.DUEL in event_types_set
+        assert EventType.TAKE_ON in event_types_set
+
+
+class TestSportecPassEvent:
+    """Tests related to deserializing Pass and Cross events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all pass events"""
+        events = dataset.find_all("pass")
+        assert len(events) == 858 + 33  # pass 858 + cross 33
+
+    def test_open_play_pass(self, dataset: EventDataset):
+        """Verify specific attributes of simple open play pass"""
+        pass_event = dataset.get_event_by_id("18237400000007")
+        # A pass should have a result
+        assert pass_event.result == PassResult.COMPLETE
+        # A pass should have end coordinates
+        assert pass_event.receiver_coordinates == Point(35.27, 5.89)
+        # Sportec does not provide the end timestamp
+        assert pass_event.receive_timestamp is None
+        # A pass should have a receiver
+        assert pass_event.receiver_player.name == "Dawid Kownacki"
+        # Sportec only sets the bodypart for shots
+        assert pass_event.get_qualifier_value(BodyPartQualifier) is None
+        # A pass can have set piece qualifiers
+        assert pass_event.get_qualifier_value(SetPieceQualifier) is None
+
+    @pytest.mark.xfail(reason="Not yet implemented")
+    def test_pass_qualifiers(self, dataset: EventDataset):
+        """It should add pass qualifiers"""
+        pass_event = dataset.get_event_by_id("18237400000007")
+        assert pass_event.get_qualifier_value(PassQualifier) == [
+            PassType.LONG_BALL
+        ]
+
+    def test_set_piece(self, dataset: EventDataset):
+        """It should add set piece qualifiers to free kick passes"""
+        pass_event = dataset.get_event_by_id("18237400000006")
+        assert (
+            pass_event.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.KICK_OFF
+        )
+
+
+class TestSportecShotEvent:
+    """Tests related to deserializing Shot events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should deserialize all shot events"""
+        events = dataset.find_all("shot")
+        assert len(events) == 27
+
+    def test_open_play(self, dataset: EventDataset):
+        """Verify specific attributes of simple open play shot"""
+        shot = dataset.get_event_by_id("18237400000125")
+        # A shot event should have a result
+        assert shot.result == ShotResult.SAVED
+        # Not implemented or not supported?
+        assert shot.result_coordinates is None
+        # A shot event should have a body part
+        assert shot.get_qualifier_value(BodyPartQualifier) == BodyPart.LEFT_FOOT
+        # An open play shot should not have a set piece qualifier
+        assert shot.get_qualifier_value(SetPieceQualifier) is None
+        # A shot event should have a xG value (TODO)
+        # assert (
+        #     next(
+        #         statistic
+        #         for statistic in shot.statistics
+        #         if statistic.name == "xG"
+        #     ).value
+        #     == 0.5062
+        # )
+
+    # def test_free_kick(self, dataset: EventDataset):
+    #     """It should add set piece qualifiers to free kick shots"""
+    #     shot = dataset.get_event_by_id("???")
+    #     assert (
+    #         shot.get_qualifier_value(SetPieceQualifier)
+    #         == SetPieceType.FREE_KICK
+    #     )
+
+
+class TestsSportecCautionEvent:
+    """Tests related to deserializing Caution events"""
+
+    def test_deserialize_all(self, dataset: EventDataset):
+        """It should create a card event for each Caution event."""
+        events = dataset.find_all("card")
+        assert len(events) == 9
+
+        for event in events:
+            assert event.card_type == CardType.FIRST_YELLOW
+
+    def test_attributes(self, dataset: EventDataset):
+        """Verify specific attributes of cards"""
+        card = dataset.get_event_by_id("18237400001225")
+        # A card should have a card type
+        assert card.card_type == CardType.FIRST_YELLOW
+        # Card qualifiers should not be added
+        assert card.get_qualifier_value(CardQualifier) is None
+
+
+class TestSportecBallClaimingEvent:
+    """Tests related to deserializing BallClaiming events"""
+
+    def test_deserialize_ball_claimed(self, dataset: EventDataset):
+        """It should deserialize all Type='BallClaimed' events as recoveries"""
+        events = dataset.find_all("recovery")
+        assert len(events) == 7
+
+    def test_deserialize_intercepted_ball(self, dataset: EventDataset):
+        """It should deserialize all Type='InterceptedBall' events as interceptions"""
+        events = dataset.find_all("interception")
+        assert len(events) == 4
+
+        interception = dataset.get_event_by_id("18237403501368")
+        assert interception.result is None
+        assert interception.get_qualifier_value(BodyPartQualifier) is None
+
+
+class TestSportecLegacyEventData:
+    """Tests on some old private Sportec event data."""
 
     @pytest.fixture
     def event_data(self, base_dir) -> str:

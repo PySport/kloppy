@@ -3,7 +3,7 @@ from collections import Counter, defaultdict
 from kloppy.domain import AttackingDirection, Frame, Ground, Period
 
 from .event_factory import EventFactory, create_event
-from .transformers import DatasetTransformer, DatasetTransformerBuilder
+from .transformers.dataset import DatasetTransformer, DatasetTransformerBuilder
 
 # NOT YET: from .enrichers import TrackingPossessionEnricher
 

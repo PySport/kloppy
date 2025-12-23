@@ -86,24 +86,63 @@ print(f"""
 
 ### Tracking data
 
-For a [`TrackingDataset`][kloppy.domain.TrackingDataset], the output columns include:
+The [`TrackingDataset`][kloppy.domain.TrackingDataset] supports two different layouts: **Wide** (default) and **Long**.
 
-| Column                                          | Description                           |
-|-------------------------------------------------|---------------------------------------|
-| frame_id                                        | Frame number                          |
-| period_id                                       | Match period                          |
-| timestamp                                       | Frame timestamp                       |
-| ball_x, ball_y, ball_z, ball_speed               | Ball position and speed               |
-| <player_id\>_x, <player_id\>_y, <player_id\>_d, <player_id\>_s | Player coordinates, distance (since previous frame), and speed |
-| ball_state       | Current state of the ball                   |
-| ball_owning_team | Which team owns the ball                    |
+#### Wide layout
+
+In the wide layout, each row represents a single frame. Player data is flattened into columns, with a specific column for each player's x/y coordinates, speed, etc. 
+
+**Common Columns:**
+
+| Column | Description |
+| :--- | :--- |
+| `frame_id` | Frame number |
+| `period_id` | Match period |
+| `timestamp` | Frame timestamp |
+| `ball_state` | Current state of the ball |
+| `ball_owning_team` | Which team owns the ball |
+| `ball_x`, `ball_y`, `ball_z` | Ball coordinates |
+| `ball_speed` | Ball speed |
+| `<player_id>_x`, `<player_id>_y` | Player coordinates |
+| `<player_id>_d` | Player distance covered (since previous frame) |
+| `<player_id>_s` | Player speed |
+
+**Example:**
+
+```python exec="true" html="true" session="export-df"
+# Default is layout="wide"
+print(f"""
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table">
+{tracking_dataset.to_df(layout="wide").head(n=3).to_html(index=False, border="0")}
+</div></div>
+""")
+```
+
+#### Long layout
+
+In the long layout, each frame is "melted" into multiple rows: one for the ball and one for each player present in that frame. 
+
+**Common Columns:**
+
+| Column | Description |
+| :--- | :--- |
+| `frame_id` | Frame number |
+| `period_id` | Match period |
+| `timestamp` | Frame timestamp |
+| `team_id` | Team identifier (or "ball") |
+| `player_id` | Player identifier (or "ball") |
+| `x`, `y`, `z` | Entity coordinates |
+| `d` | Entity distance covered (since previous frame) |
+| `s` | Entity speed |
+| `ball_state` | Current state of the ball (repeated for all rows in frame) |
+| `ball_owning_team` | Which team owns the ball (repeated for all rows in frame) |
 
 **Example:**
 
 ```python exec="true" html="true" session="export-df"
 print(f"""
 <div class="md-typeset__scrollwrap"><div class="md-typeset__table">
-{tracking_dataset.to_df().head(n=3).to_html(index=False, border="0")}
+{tracking_dataset.to_df(layout="long").head(n=6).to_html(index=False, border="0")}
 </div></div>
 """)
 ```

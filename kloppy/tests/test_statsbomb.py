@@ -616,7 +616,7 @@ class TestStatsBombEvent:
             coordinates,
         ) in pass_event.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
-        print(coordinates_per_team)
+
         assert coordinates_per_team == {
             "Belgium": [
                 Point(x=0.30230680550305883, y=0.5224074534269804),

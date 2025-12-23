@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
+from itertools import chain
 import sys
 from typing import (
     TYPE_CHECKING,
@@ -679,12 +679,16 @@ class CoordinateSystem(ABC):
         dim = BaseDims(
             left=self.pitch_dimensions.x_dim.min,
             right=self.pitch_dimensions.x_dim.max,
-            bottom=self.pitch_dimensions.y_dim.min
-            if not invert_y
-            else self.pitch_dimensions.y_dim.max,
-            top=self.pitch_dimensions.y_dim.max
-            if not invert_y
-            else self.pitch_dimensions.y_dim.min,
+            bottom=(
+                self.pitch_dimensions.y_dim.min
+                if not invert_y
+                else self.pitch_dimensions.y_dim.max
+            ),
+            top=(
+                self.pitch_dimensions.y_dim.max
+                if not invert_y
+                else self.pitch_dimensions.y_dim.min
+            ),
             width=self.pitch_dimensions.x_dim.max
             - self.pitch_dimensions.x_dim.min,
             length=self.pitch_dimensions.y_dim.max
@@ -733,14 +737,16 @@ class CoordinateSystem(ABC):
                 - self.pitch_dimensions.x_dim.min
             ),
             pad_multiplier=1,
-            aspect_equal=False
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else True,
+            aspect_equal=(
+                False if self.pitch_dimensions.unit == Unit.NORMED else True
+            ),
             pitch_width=pitch_width,
             pitch_length=pitch_length,
-            aspect=pitch_width / pitch_length
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else 1.0,
+            aspect=(
+                pitch_width / pitch_length
+                if self.pitch_dimensions.unit == Unit.NORMED
+                else 1.0
+            ),
         )
         return dim
 
@@ -1823,6 +1829,7 @@ class Dataset(ABC, Generic[T]):
         self,
         *columns: Unpack[tuple["Column"]],
         as_list: Literal[True] = True,
+        layout: Optional[str] = None,
         **named_columns: "NamedColumns",
     ) -> list[dict[str, Any]]: ...
 
@@ -1830,6 +1837,7 @@ class Dataset(ABC, Generic[T]):
     def to_records(
         self,
         *columns: Unpack[tuple["Column"]],
+        layout: Optional[str] = None,
         as_list: Literal[False] = False,
         **named_columns: "NamedColumns",
     ) -> Iterable[dict[str, Any]]: ...
@@ -1837,15 +1845,16 @@ class Dataset(ABC, Generic[T]):
     def to_records(
         self,
         *columns: Unpack[tuple["Column"]],
+        layout: Optional[str] = None,
         as_list: bool = True,
         **named_columns: "NamedColumns",
     ) -> Union[list[dict[str, Any]], Iterable[dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
-        transformer = get_transformer_cls(self.dataset_type)(
+        transformer = get_transformer_cls(self.dataset_type, layout=layout)(
             *columns, **named_columns
         )
-        iterator = map(transformer, self.records)
+        iterator = chain.from_iterable(map(transformer, self.records))
         if as_list:
             return list(iterator)
         else:
@@ -1855,23 +1864,36 @@ class Dataset(ABC, Generic[T]):
         self,
         *columns: Unpack[tuple["Column"]],
         orient: Literal["list"] = "list",
+        layout: Optional[str] = None,
         **named_columns: "NamedColumns",
     ) -> dict[str, list[Any]]:
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 
-            transformer = get_transformer_cls(self.dataset_type)(
+            transformer = get_transformer_cls(self.dataset_type, layout=layout)(
                 *columns, **named_columns
             )
 
-            c = len(self.records)
-            items = defaultdict(lambda: [None] * c)
-            for i, record in enumerate(self.records):
-                item = transformer(record)
-                for k, v in item.items():
-                    items[k][i] = v
+            result = {}
+            for record_idx, record in enumerate(self.records):
+                items = transformer(record)
 
-            return items
+                for item_idx, item in enumerate(items):
+                    seen_keys = set()
+                    for k, v in item.items():
+                        # If this is a new key, backfill previous records
+                        if k not in result:
+                            result[k] = [None] * (record_idx + item_idx)
+
+                        result[k].append(v)
+                        seen_keys.add(k)
+
+                    # Pad keys that were not seen in this record
+                    for k in result:
+                        if k not in seen_keys:
+                            result[k].append(None)
+
+            return dict(result)
         else:
             raise KloppyParameterError(
                 f"Orient {orient} is not supported. Only orient='list' is supported"
@@ -1881,8 +1903,43 @@ class Dataset(ABC, Generic[T]):
         self,
         *columns: Unpack[tuple["Column"]],
         engine: Optional[Literal["polars", "pandas", "pandas[pyarrow]"]] = None,
+        layout: Optional[str] = None,
         **named_columns: "NamedColumns",
     ):
+        """Converts the dataset's records into a DataFrame.
+
+        This method extracts data from the internal records and formats them into
+        a tabular structure using the specified dataframe engine (Pandas or Polars).
+
+        Args:
+            *columns: Column names to include in the output.
+                - If not provided, a default set of columns is returned.
+                - Supports wildcards (e.g., "*coordinates*").
+                - Supports callables for custom extraction logic.
+            engine: The dataframe engine to use.
+                - 'pandas': Returns a standard pandas DataFrame.
+                - 'pandas[pyarrow]': Returns a pandas DataFrame backed by PyArrow.
+                - 'polars': Returns a Polars DataFrame.
+                - None: Defaults to the `dataframe.enging` configuration value.
+            layout: The layout structure of the output.
+                - For Event data: Default is a flat list of events.
+                - For Tracking data:
+                    - 'wide' (default): One row per frame, with players as columns.
+                    - 'long': One row per entity (player/ball) per frame ("tidy" data).
+            **named_columns: Additional columns to create, where the key is the
+                column name and the value is a literal or a callable applied to
+                each record.
+
+        Examples:
+            Basic conversion to Pandas:
+            >>> df = dataset.to_df()
+
+            Using Polars and selecting specific columns:
+            >>> df = dataset.to_df("period_id", "timestamp", "player_id", "coordinates_*", engine="polars")
+
+            Tracking data in long format:
+            >>> df = tracking_dataset.to_df(layout="long")
+        """
         from kloppy.config import get_config
 
         if not engine:
@@ -1913,7 +1970,9 @@ class Dataset(ABC, Generic[T]):
                 )
 
             table = pa.Table.from_pydict(
-                self.to_dict(*columns, orient="list", **named_columns)
+                self.to_dict(
+                    *columns, orient="list", layout=layout, **named_columns
+                )
             )
             return table.to_pandas(types_mapper=types_mapper)
 
@@ -1927,7 +1986,9 @@ class Dataset(ABC, Generic[T]):
                 )
 
             return DataFrame.from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
+                self.to_dict(
+                    *columns, orient="list", layout=layout, **named_columns
+                )
             )
         elif engine == "polars":
             try:
@@ -1939,7 +2000,9 @@ class Dataset(ABC, Generic[T]):
                 )
 
             return from_dict(
-                self.to_dict(*columns, orient="list", **named_columns)
+                self.to_dict(
+                    *columns, orient="list", layout=layout, **named_columns
+                )
             )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")

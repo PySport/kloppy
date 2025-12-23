@@ -36,6 +36,7 @@ from .pitch import Point
 if TYPE_CHECKING:
     from .tracking import Frame
 
+
 QualifierValueType = TypeVar("QualifierValueType")
 EnumQualifierType = TypeVar("EnumQualifierType", bound=Enum)
 

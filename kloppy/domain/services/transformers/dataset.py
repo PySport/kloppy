@@ -1,3 +1,63 @@
+"""Dataset Transformation.
+
+This module provides the machinery for transforming the spatial representation of
+kloppy datasets (`EventDataset` and `TrackingDataset`). It addresses three key
+aspects of spatial data normalization:
+
+1.  **Coordinate Systems**: Converting data from a provider-specific system
+    (e.g., Opta, Wyscout) to a standardized system (e.g., Kloppy Standard,
+    Metric).
+2.  **Pitch Dimensions**: Scaling coordinates from normalized (0-1) ranges to
+    metric values (meters), or vice-versa, based on specific pitch dimensions.
+3.  **Orientation**: Flipping coordinates to ensure a consistent attacking
+    direction (e.g., ensuring the Home team always attacks to the right).
+
+Key Components:
+    DatasetTransformer: The core class capable of transforming entire datasets,
+        individual frames, or specific events.
+    DatasetTransformerBuilder: A helper factory to construct transformers based
+        on configuration or provider names.
+
+Examples:
+    **1. Standardizing a Dataset**
+    Convert a dataset to the standard Kloppy coordinate system (Metric, origin
+    at center, x pointing to opposition goal).
+
+    >>> from kloppy.domain import KloppyCoordinateSystem
+    >>> # dataset is an EventDataset or TrackingDataset
+    >>> new_dataset = DatasetTransformer.transform_dataset(
+    ...     dataset,
+    ...     to_coordinate_system=KloppyCoordinateSystem()
+    ... )
+
+    **2. Enforcing Orientation**
+    Force the dataset orientation so the Home team always attacks to the Right
+    (and the Away team attacks Left), flipping coordinates for the second half
+    if necessary.
+
+    >>> from kloppy.domain import Orientation
+    >>> new_dataset = DatasetTransformer.transform_dataset(
+    ...     dataset,
+    ...     to_orientation=Orientation.HOME_AWAY
+    ... )
+
+    **3. Scaling to Specific Pitch Dimensions**
+    If the source data is normalized (0-1), you can project it onto a real pitch size.
+
+    >>> from kloppy.domain import MetricPitchDimensions, Dimension
+    >>> dims = MetricPitchDimensions(
+    ...     x_dim=Dimension(0, 105),
+    ...     y_dim=Dimension(0, 68),
+    ...     pitch_length=105,
+    ...     pitch_width=68,
+    ...     standardized=False,
+    ...)
+    >>> new_dataset = DatasetTransformer.transform_dataset(
+    ...     dataset,
+    ...     to_pitch_dimensions=dims
+    ... )
+"""
+
 from dataclasses import fields, replace
 from typing import Optional, Union
 import warnings

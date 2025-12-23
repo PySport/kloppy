@@ -11,7 +11,7 @@ from kloppy.domain import (
     Point3D,
     Unit,
 )
-from kloppy.domain.services.transformers import DatasetTransformer
+from kloppy.domain.services.transformers.dataset import DatasetTransformer
 
 
 class TestPitchdimensions:

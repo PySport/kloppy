@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from pandas import DataFrame
 
     from ..services.transformers.data_record import NamedColumns
-    from .tracking import Frame, TrackingDataset
+    from .tracking import Frame
 
 
 QualifierValueType = TypeVar("QualifierValueType")
@@ -1538,22 +1538,6 @@ class EventDataset(Dataset[Event]):
             raise KloppyError(f"No aggregator {type_} not found")
 
         return aggregator.aggregate(self)
-
-    def to_tracking_data(self) -> "TrackingDataset":
-        from .tracking import TrackingDataset
-
-        freeze_frames = self.filter(
-            lambda event: event.freeze_frame is not None
-        )
-        if len(freeze_frames.records) == 0:
-            raise ValueError(
-                "EventDataset has 0 freeze frame records making it impossible to convert to a TrackingDataset"
-            )
-
-        return TrackingDataset.from_dataset(
-            freeze_frames,
-            lambda event: event.freeze_frame,
-        )
 
 
 __all__ = [

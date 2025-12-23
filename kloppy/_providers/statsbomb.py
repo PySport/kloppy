@@ -34,6 +34,7 @@ def load(
         additional_metadata: A dict with additional data that will be added to
             the metadata. See the [`Metadata`][kloppy.domain.Metadata] entity
             for a list of possible keys.
+
     Returns:
         The parsed event data.
     """

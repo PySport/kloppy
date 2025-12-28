@@ -1,502 +1,29 @@
-from collections import OrderedDict
-from datetime import datetime, timedelta
+from copy import copy
 import logging
 from typing import IO, NamedTuple
 
 from lxml import objectify
 
 from kloppy.domain import (
-    BallState,
-    BodyPart,
-    BodyPartQualifier,
-    CardType,
     DatasetFlag,
     EventDataset,
     EventType,
-    FormationType,
-    Ground,
     Metadata,
-    Official,
-    OfficialType,
     Orientation,
     PassResult,
     Period,
-    Player,
     Point,
-    PositionType,
     Provider,
-    Qualifier,
-    Score,
-    SetPieceQualifier,
-    SetPieceType,
-    ShotResult,
-    Team,
 )
-from kloppy.domain.models.event import DuelResult, DuelType, TakeOnResult
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.utils import performance_logging
 
-position_types_mapping: dict[str, PositionType] = {
-    "TW": PositionType.Goalkeeper,
-    "IVR": PositionType.RightCenterBack,
-    "IVL": PositionType.LeftCenterBack,
-    "STR": PositionType.Striker,
-    "STL": PositionType.LeftForward,
-    "STZ": PositionType.Striker,
-    "ZO": PositionType.CenterAttackingMidfield,
-    "LV": PositionType.LeftBack,
-    "RV": PositionType.RightBack,
-    "DMR": PositionType.RightDefensiveMidfield,
-    "DRM": PositionType.RightDefensiveMidfield,
-    "DML": PositionType.LeftDefensiveMidfield,
-    "DLM": PositionType.LeftDefensiveMidfield,
-    "ORM": PositionType.RightMidfield,
-    "OLM": PositionType.LeftMidfield,
-    "RA": PositionType.RightWing,
-    "LA": PositionType.LeftWing,
-}
-
-referee_types_mapping: dict[str, OfficialType] = {
-    "referee": OfficialType.MainReferee,
-    "firstAssistant": OfficialType.AssistantReferee,
-    "videoReferee": OfficialType.VideoAssistantReferee,
-    "videoRefereeAssistant": OfficialType.AssistantVideoAssistantReferee,
-    "secondAssistant": OfficialType.AssistantReferee,
-    "fourthOfficial": OfficialType.FourthOfficial,
-}
+from . import specification as SPORTEC
+from .helpers import parse_datetime
+from .metadata import SportecMetadata, load_metadata
 
 logger = logging.getLogger(__name__)
-
-
-def _parse_name(elem) -> str:
-    """Parse a full name from a Sportec XML element."""
-    if elem.attrib.get("Shortname"):
-        return elem.attrib.get("Shortname")
-    elif elem.attrib.get("FirstName") and elem.attrib.get("LastName"):
-        return f"{elem.attrib.get('FirstName')} {elem.attrib.get('LastName')}"
-    else:
-        raise DeserializationError("Could not parse name")
-
-
-def _extract_team_and_players(team_elm) -> Team:
-    """Extract a Team and its Players from a Sportec XML team element."""
-    head_coach = [
-        _parse_name(trainer)
-        for trainer in team_elm.TrainerStaff.iterchildren("Trainer")
-        if trainer.attrib["Role"] == "headcoach"
-    ]
-    formation_string = team_elm.attrib.get("LineUp", "").split()[0]
-    team = Team(
-        team_id=team_elm.attrib["TeamId"],
-        name=team_elm.attrib["TeamName"],
-        ground=(
-            Ground.HOME if team_elm.attrib["Role"] == "home" else Ground.AWAY
-        ),
-        coach=head_coach[0] if len(head_coach) else None,
-        starting_formation=FormationType(formation_string)
-        if formation_string
-        else FormationType.UNKNOWN,
-    )
-    team.players = [
-        Player(
-            player_id=player_elm.attrib["PersonId"],
-            team=team,
-            jersey_no=int(player_elm.attrib["ShirtNumber"]),
-            name=player_elm.attrib["Shortname"],
-            first_name=player_elm.attrib["FirstName"],
-            last_name=player_elm.attrib["LastName"],
-            starting_position=position_types_mapping.get(
-                player_elm.attrib.get("PlayingPosition"), PositionType.Unknown
-            )
-            if player_elm.attrib["Starting"] == "true"
-            else None,
-            starting=player_elm.attrib["Starting"] == "true",
-        )
-        for player_elm in team_elm.Players.iterchildren("Player")
-    ]
-    return team
-
-
-SPORTEC_FPS = 25
-
-"""Sportec uses fixed starting frame ids for each half"""
-SPORTEC_FIRST_HALF_STARTING_FRAME_ID = 10_000
-SPORTEC_SECOND_HALF_STARTING_FRAME_ID = 100_000
-SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID = 200_000
-SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID = 250_000
-
-
-class SportecMetadata(NamedTuple):
-    score: Score
-    teams: list[Team]
-    periods: list[Period]
-    x_max: float
-    y_max: float
-    fps: int
-    officials: list[Official]
-
-
-def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
-    """
-    Load metadata from Sportec XML element. This part is shared between event- and tracking data.
-    In the future this might move to a common.sportec package that provides functionality for both
-    deserializers.
-    """
-    x_max = float(match_root.MatchInformation.Environment.attrib["PitchX"])
-    y_max = float(match_root.MatchInformation.Environment.attrib["PitchY"])
-
-    # Parse teams
-    team_path = objectify.ObjectPath("PutDataRequest.MatchInformation.Teams")
-    team_elms = list(team_path.find(match_root).iterchildren("Team"))
-
-    home_team, away_team = None, None
-    for team_elm in team_elms:
-        if team_elm.attrib["Role"] == "home":
-            home_team = _extract_team_and_players(team_elm)
-        elif team_elm.attrib["Role"] == "guest":
-            away_team = _extract_team_and_players(team_elm)
-        else:
-            raise DeserializationError(
-                f"Unknown side: {team_elm.attrib['Role']}"
-            )
-
-    if home_team is None:
-        raise DeserializationError("Home team is missing from metadata")
-    if away_team is None:
-        raise DeserializationError("Away team is missing from metadata")
-    if len(home_team.players) == 0 or len(away_team.players) == 0:
-        raise DeserializationError("Line-up incomplete")
-
-    teams = [home_team, away_team]
-
-    # Parse scoreline
-    (
-        home_score,
-        away_score,
-    ) = match_root.MatchInformation.General.attrib["Result"].split(":")
-    score = Score(home=int(home_score), away=int(away_score))
-
-    # Parse periods
-    # The periods can be rebuild from event data. Therefore, the periods attribute
-    # from the metadata can be ignored. It is required for tracking data.
-    other_game_information = (
-        match_root.MatchInformation.OtherGameInformation.attrib
-    )
-    periods = [
-        Period(
-            id=1,
-            start_timestamp=timedelta(
-                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-            ),
-            end_timestamp=timedelta(
-                seconds=SPORTEC_FIRST_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-                + float(other_game_information["TotalTimeFirstHalf"]) / 1000
-            ),
-        ),
-        Period(
-            id=2,
-            start_timestamp=timedelta(
-                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-            ),
-            end_timestamp=timedelta(
-                seconds=SPORTEC_SECOND_HALF_STARTING_FRAME_ID / SPORTEC_FPS
-                + float(other_game_information["TotalTimeSecondHalf"]) / 1000
-            ),
-        ),
-    ]
-
-    if "TotalTimeFirstHalfExtra" in other_game_information:
-        # Add two periods for extra time.
-        periods.extend(
-            [
-                Period(
-                    id=3,
-                    start_timestamp=timedelta(
-                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
-                        / SPORTEC_FPS
-                    ),
-                    end_timestamp=timedelta(
-                        seconds=SPORTEC_FIRST_EXTRA_HALF_STARTING_FRAME_ID
-                        / SPORTEC_FPS
-                        + float(
-                            other_game_information["TotalTimeFirstHalfExtra"]
-                        )
-                        / 1000
-                    ),
-                ),
-                Period(
-                    id=4,
-                    start_timestamp=timedelta(
-                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
-                        / SPORTEC_FPS
-                    ),
-                    end_timestamp=timedelta(
-                        seconds=SPORTEC_SECOND_EXTRA_HALF_STARTING_FRAME_ID
-                        / SPORTEC_FPS
-                        + float(
-                            other_game_information["TotalTimeSecondHalfExtra"]
-                        )
-                        / 1000
-                    ),
-                ),
-            ]
-        )
-
-    # Parse referees
-    if hasattr(match_root, "MatchInformation") and hasattr(
-        match_root.MatchInformation, "Referees"
-    ):
-        officials = []
-        referee_path = objectify.ObjectPath(
-            "PutDataRequest.MatchInformation.Referees"
-        )
-        referee_elms = referee_path.find(match_root).iterchildren(tag="Referee")
-
-        for referee in referee_elms:
-            ref_attrib = referee.attrib
-            officials.append(
-                Official(
-                    official_id=ref_attrib["PersonId"],
-                    name=ref_attrib["Shortname"],
-                    first_name=ref_attrib["FirstName"],
-                    last_name=ref_attrib["LastName"],
-                    role=referee_types_mapping.get(
-                        ref_attrib["Role"], OfficialType.Unknown
-                    ),
-                )
-            )
-    else:
-        officials = []
-
-    return SportecMetadata(
-        score=score,
-        teams=teams,
-        periods=periods,
-        x_max=x_max,
-        y_max=y_max,
-        fps=SPORTEC_FPS,
-        officials=officials,
-    )
-
-
-def _event_chain_from_xml_elm(event_elm):
-    chain = OrderedDict()
-    current_elm = event_elm
-    while True:
-        chain[current_elm.tag] = dict(current_elm.attrib)
-        if not current_elm.countchildren():
-            break
-        current_elm = current_elm.getchildren()[0]
-    return chain
-
-
-SPORTEC_EVENT_NAME_KICKOFF = "KickOff"
-SPORTEC_EVENT_NAME_FINAL_WHISTLE = "FinalWhistle"
-
-SPORTEC_EVENT_NAME_SHOT_WIDE = "ShotWide"
-SPORTEC_EVENT_NAME_SHOT_SAVED = "SavedShot"
-SPORTEC_EVENT_NAME_SHOT_BLOCKED = "BlockedShot"
-SPORTEC_EVENT_NAME_SHOT_WOODWORK = "ShotWoodWork"
-SPORTEC_EVENT_NAME_SHOT_OTHER = "OtherShot"
-SPORTEC_EVENT_NAME_SHOT_GOAL = "SuccessfulShot"
-SPORTEC_EVENT_NAME_OWN_GOAL = "OwnGoal"
-SPORTEC_SHOT_EVENT_NAMES = (
-    SPORTEC_EVENT_NAME_SHOT_WIDE,
-    SPORTEC_EVENT_NAME_SHOT_SAVED,
-    SPORTEC_EVENT_NAME_SHOT_BLOCKED,
-    SPORTEC_EVENT_NAME_SHOT_WOODWORK,
-    SPORTEC_EVENT_NAME_SHOT_OTHER,
-    SPORTEC_EVENT_NAME_SHOT_GOAL,
-    SPORTEC_EVENT_NAME_OWN_GOAL,
-)
-
-SPORTEC_EVENT_NAME_PASS = "Pass"
-SPORTEC_EVENT_NAME_CROSS = "Cross"
-SPORTEC_EVENT_NAME_THROW_IN = "ThrowIn"
-SPORTEC_EVENT_NAME_GOAL_KICK = "GoalKick"
-SPORTEC_EVENT_NAME_PENALTY = "Penalty"
-SPORTEC_EVENT_NAME_CORNER_KICK = "CornerKick"
-SPORTEC_EVENT_NAME_FREE_KICK = "FreeKick"
-SPORTEC_PASS_EVENT_NAMES = (SPORTEC_EVENT_NAME_PASS, SPORTEC_EVENT_NAME_CROSS)
-
-SPORTEC_EVENT_NAME_BALL_CLAIMING = "BallClaiming"
-SPORTEC_EVENT_NAME_SUBSTITUTION = "Substitution"
-SPORTEC_EVENT_NAME_CAUTION = "Caution"
-SPORTEC_EVENT_NAME_FOUL = "Foul"
-SPORTEC_EVENT_NAME_TACKLING_GAME = "TacklingGame"
-SPORTEC_EVENT_NAME_OTHER = "OtherBallAction"
-
-SPORTEC_EVENT_TYPE_OF_SHOT = "TypeOfShot"
-SPORTEC_EVENT_BODY_PART_HEAD = "head"
-SPORTEC_EVENT_BODY_PART_LEFT_FOOT = "leftLeg"
-SPORTEC_EVENT_BODY_PART_RIGHT_FOOT = "rightLeg"
-
-
-def _parse_datetime(dt_str: str) -> datetime:
-    return datetime.fromisoformat(dt_str)
-
-
-def _get_event_qualifiers(event_chain: dict) -> list[Qualifier]:
-    qualifiers = []
-
-    qualifiers.extend(_get_event_setpiece_qualifiers(event_chain))
-    qualifiers.extend(_get_event_bodypart_qualifiers(event_chain))
-
-    return qualifiers
-
-
-def _get_event_setpiece_qualifiers(event_chain):
-    qualifiers = []
-
-    if SPORTEC_EVENT_NAME_THROW_IN in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.THROW_IN))
-    elif SPORTEC_EVENT_NAME_GOAL_KICK in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.GOAL_KICK))
-    elif SPORTEC_EVENT_NAME_PENALTY in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.PENALTY))
-    elif SPORTEC_EVENT_NAME_CORNER_KICK in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.CORNER_KICK))
-    elif SPORTEC_EVENT_NAME_KICKOFF in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.KICK_OFF))
-    elif SPORTEC_EVENT_NAME_FREE_KICK in event_chain:
-        qualifiers.append(SetPieceQualifier(value=SetPieceType.FREE_KICK))
-
-    return qualifiers
-
-
-def _get_event_bodypart_qualifiers(event_chain):
-    qualifiers = []
-
-    if SPORTEC_EVENT_BODY_PART_HEAD in [
-        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
-    ]:
-        qualifiers.append(BodyPartQualifier(value=BodyPart.HEAD))
-    elif SPORTEC_EVENT_BODY_PART_LEFT_FOOT in [
-        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
-    ]:
-        qualifiers.append(BodyPartQualifier(value=BodyPart.LEFT_FOOT))
-    elif SPORTEC_EVENT_BODY_PART_RIGHT_FOOT in [
-        item.get(SPORTEC_EVENT_TYPE_OF_SHOT) for item in event_chain.values()
-    ]:
-        qualifiers.append(BodyPartQualifier(value=BodyPart.RIGHT_FOOT))
-
-    return qualifiers
-
-
-def _parse_shot(event_name: str, event_chain: OrderedDict) -> dict:
-    if event_name == SPORTEC_EVENT_NAME_SHOT_WIDE:
-        result = ShotResult.OFF_TARGET
-    elif event_name == SPORTEC_EVENT_NAME_SHOT_SAVED:
-        result = ShotResult.SAVED
-    elif event_name == SPORTEC_EVENT_NAME_SHOT_BLOCKED:
-        result = ShotResult.BLOCKED
-    elif event_name == SPORTEC_EVENT_NAME_SHOT_WOODWORK:
-        result = ShotResult.POST
-    elif event_name == SPORTEC_EVENT_NAME_SHOT_GOAL:
-        result = ShotResult.GOAL
-    elif event_name == SPORTEC_EVENT_NAME_OWN_GOAL:
-        result = ShotResult.OWN_GOAL
-    elif event_name == SPORTEC_EVENT_NAME_SHOT_OTHER:
-        result = None
-    else:
-        raise ValueError(f"Unknown shot type {event_name}")
-
-    return dict(result=result, qualifiers=_get_event_qualifiers(event_chain))
-
-
-def _parse_pass(event_chain: OrderedDict, team: Team) -> dict:
-    if event_chain["Play"]["Evaluation"] in (
-        "successfullyCompleted",
-        "successful",
-    ):
-        result = PassResult.COMPLETE
-        if "Recipient" in event_chain["Play"]:
-            receiver_player = team.get_player_by_id(
-                event_chain["Play"]["Recipient"]
-            )
-        else:
-            # this attribute can be missing according to docs
-            receiver_player = None
-    else:
-        result = PassResult.INCOMPLETE
-        receiver_player = None
-
-    return dict(
-        result=result,
-        receiver_player=receiver_player,
-        qualifiers=_get_event_qualifiers(event_chain),
-    )
-
-
-def _parse_substitution(event_attributes: dict, team: Team) -> dict:
-    return dict(
-        player=team.get_player_by_id(event_attributes["PlayerOut"]),
-        replacement_player=team.get_player_by_id(event_attributes["PlayerIn"]),
-    )
-
-
-def _parse_caution(event_attributes: dict) -> dict:
-    if event_attributes["CardColor"] == "yellow":
-        card_type = CardType.FIRST_YELLOW
-    elif event_attributes["CardColor"] == "yellowRed":
-        card_type = CardType.SECOND_YELLOW
-    elif event_attributes["CardColor"] == "red":
-        card_type = CardType.RED
-    else:
-        raise ValueError(f"Unknown card color: {event_attributes['CardColor']}")
-
-    return dict(card_type=card_type)
-
-
-def _parse_foul(event_attributes: dict, teams: list[Team]) -> dict:
-    team = (
-        teams[0]
-        if event_attributes["TeamFouler"] == teams[0].team_id
-        else teams[1]
-    )
-    player = team.get_player_by_id(event_attributes["Fouler"])
-
-    return dict(team=team, player=player)
-
-
-def _parse_successful_tackling_game(
-    event_attributes: dict, teams: list[Team]
-) -> dict:
-    """Parsing the appropriate player and team of successful TacklingGame events"""
-    team = (
-        teams[0]
-        if event_attributes["WinnerTeam"] == teams[0].team_id
-        else teams[1]
-    )
-    return dict(
-        team=team,
-        player=event_attributes["Winner"],
-    )
-
-
-def _parse_unsuccessful_tackling_game(
-    event_attributes: dict, teams: list[Team]
-) -> dict:
-    """Parsing the appropriate player and team of unsuccessful TacklingGame events"""
-    team = (
-        teams[0]
-        if event_attributes["LoserTeam"] == teams[0].team_id
-        else teams[1]
-    )
-    return dict(
-        team=team,
-        player=event_attributes["Loser"],
-    )
-
-
-def _parse_coordinates(event_attributes: dict) -> Point:
-    if "X-Position" not in event_attributes:
-        return None
-    return Point(
-        x=float(event_attributes["X-Position"]),
-        y=float(event_attributes["Y-Position"]),
-    )
 
 
 class SportecEventDataInputs(NamedTuple):
@@ -512,364 +39,265 @@ class SportecEventDataDeserializer(
         return Provider.SPORTEC
 
     def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
+        # Load data from XML files
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())
 
-        with performance_logging("parse data", logger=logger):
-            date = datetime.fromisoformat(
-                match_root.MatchInformation.General.attrib["KickoffTime"]
-            )
-            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
-            game_id = match_root.MatchInformation.General.attrib["MatchId"]
-
-            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
-            teams = home_team, away_team = sportec_metadata.teams
-            transformer = self.get_transformer(
-                pitch_length=sportec_metadata.x_max,
-                pitch_width=sportec_metadata.y_max,
+            # Flatten XML structure
+            raw_events = []
+            for event_elm in parse_sportec_xml(event_root):
+                raw_events.append(SPORTEC.event_decoder(event_elm))
+            # Sort events
+            raw_events.sort(
+                key=lambda x: parse_datetime(x.raw_event["EventTime"])
             )
 
-            periods = []
-            period_id = 0
-            events = []
+        # Parse metadata
+        with performance_logging("parse metadata", logger=logger):
+            meta: SportecMetadata = load_metadata(match_root)
 
-            # We need to re-order the event_elm objects by EventTime, because
-            # certain types of events are all positioned at the end of the files
-            event_chains = []
-            for event_elm in event_root.iterchildren("Event"):
-                event_chain = _event_chain_from_xml_elm(event_elm)
-                event_chains.append(event_chain)
-
-            sorted_event_chains = sorted(
-                event_chains,
-                key=lambda x: _parse_datetime(x["Event"]["EventTime"]),
-            )
-
-            for event_chain in sorted_event_chains:
-                timestamp = _parse_datetime(event_chain["Event"]["EventTime"])
-
-                if (
-                    SPORTEC_EVENT_NAME_KICKOFF in event_chain
-                    and "GameSection" in event_chain[SPORTEC_EVENT_NAME_KICKOFF]
-                ):
-                    period_id += 1
-                    period = Period(
-                        id=period_id,
-                        start_timestamp=timestamp,
-                        end_timestamp=None,
-                    )
-                    if period_id == 1:
-                        team_left = event_chain[SPORTEC_EVENT_NAME_KICKOFF][
-                            "TeamLeft"
-                        ]
-                        orientation = (
-                            Orientation.HOME_AWAY
-                            if team_left == home_team.team_id
-                            else Orientation.AWAY_HOME
-                        )
-
-                    periods.append(period)
-                elif SPORTEC_EVENT_NAME_FINAL_WHISTLE in event_chain:
-                    period.end_timestamp = timestamp
-                    continue
-                elif period_id == 0:
-                    # Skip any events that happened before the first kick off
-                    continue
-
-                team = None
-                player = None
-                flatten_attributes = dict()
-                # reverse because top levels are more important
-                for event_attributes in reversed(event_chain.values()):
-                    flatten_attributes.update(event_attributes)
-
-                if "Team" in flatten_attributes:
-                    team = (
-                        home_team
-                        if flatten_attributes["Team"] == home_team.team_id
-                        else away_team
-                    )
-                if "Player" in flatten_attributes:
-                    if not team:
-                        raise ValueError("Player set while team is not set")
-                    player = team.get_player_by_id(flatten_attributes["Player"])
-
-                generic_event_kwargs = dict(
-                    # from DataRecord
-                    period=period,
-                    timestamp=timestamp - period.start_timestamp,
-                    ball_owning_team=None,
-                    ball_state=BallState.ALIVE,
-                    # from Event
-                    event_id=event_chain["Event"]["EventId"],
-                    coordinates=_parse_coordinates(event_chain["Event"]),
-                    raw_event=flatten_attributes,
-                    team=team,
-                    player=player,
-                )
-
-                event_name, event_attributes = event_chain.popitem()
-                if event_name in SPORTEC_SHOT_EVENT_NAMES:
-                    shot_event_kwargs = _parse_shot(
-                        event_name=event_name, event_chain=event_chain
-                    )
-                    event = self.event_factory.build_shot(
-                        **shot_event_kwargs,
-                        **generic_event_kwargs,
-                    )
-                elif event_name in SPORTEC_PASS_EVENT_NAMES:
-                    pass_event_kwargs = _parse_pass(
-                        event_chain=event_chain, team=team
-                    )
-                    event = self.event_factory.build_pass(
-                        **pass_event_kwargs,
-                        **generic_event_kwargs,
-                        receive_timestamp=None,
-                        receiver_coordinates=None,
-                    )
-                elif event_name == SPORTEC_EVENT_NAME_BALL_CLAIMING:
-                    if event_attributes.get("Type") == "BallClaimed":
-                        event = self.event_factory.build_recovery(
-                            result=None,
-                            qualifiers=None,
-                            **generic_event_kwargs,
-                        )
-                    elif event_attributes.get("Type") == "InterceptedBall":
-                        event = self.event_factory.build_interception(
-                            result=None,
-                            qualifiers=None,
-                            **generic_event_kwargs,
-                        )
-                elif event_name == SPORTEC_EVENT_NAME_SUBSTITUTION:
-                    substitution_event_kwargs = _parse_substitution(
-                        event_attributes=event_attributes, team=team
-                    )
-                    generic_event_kwargs["player"] = substitution_event_kwargs[
-                        "player"
-                    ]
-                    del substitution_event_kwargs["player"]
-                    event = self.event_factory.build_substitution(
-                        result=None,
-                        qualifiers=None,
-                        **substitution_event_kwargs,
-                        **generic_event_kwargs,
-                    )
-                elif event_name == SPORTEC_EVENT_NAME_CAUTION:
-                    card_kwargs = _parse_caution(event_attributes)
-                    event = self.event_factory.build_card(
-                        result=None,
-                        qualifiers=None,
-                        **card_kwargs,
-                        **generic_event_kwargs,
-                    )
-                elif event_name == SPORTEC_EVENT_NAME_FOUL:
-                    foul_kwargs = _parse_foul(event_attributes, teams=teams)
-                    generic_event_kwargs.update(foul_kwargs)
-                    event = self.event_factory.build_foul_committed(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
-                elif event_name == SPORTEC_EVENT_NAME_TACKLING_GAME:
-                    # Different combinations of TacklingGame winnerRole and winnerResult identified in file J03WPY
-                    # [X] WinnerRole='withBallControl', WinnerResult='dribbledAround' -- this seems like a Take On
-                    # [X] WinnerRole='withBallControl', WinnerResult='fouled'  -- this is obviously a foul
-                    # [X] WinnerRole='withBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like an 'unsuccessful tackle', in Opta speak
-                    # [X] WinnerRole='withBallControl', WinnerResult='ballControlRetained'  -- this seems like a failed tackle
-                    # WinnerRole='withBallControl', WinnerResult='layoff' -- *might* be loose ball duels
-                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballcontactSucceeded'  -- this seems like a 'successful tackle', in Opta speak
-                    # WinnerRole='withoutBallControl', WinnerResult='layoff' -- *might* be loose ball duels
-                    # [X] WinnerRole='withoutBallControl', WinnerResult='fouled'  -- this is obviously a foul
-                    # [X] WinnerRole='withoutBallControl', WinnerResult='ballClaimed'  -- this seems like a tackle
-                    duel_type = event_attributes.get("Type", "ground")
-                    kloppy_duel_type = (
-                        DuelType.AERIAL
-                        if duel_type == "air"
-                        else DuelType.GROUND
-                    )
-
-                    if (
-                        event_attributes.get("WinnerRole") == "withBallControl"
-                        and event_attributes.get("WinnerResult")
-                        == "dribbledAround"
-                    ):
-                        tackling_game_kwargs = _parse_successful_tackling_game(
-                            event_attributes, teams
-                        )
-                        generic_event_kwargs.update(tackling_game_kwargs)
-                        event = self.event_factory.build_take_on(
-                            result=TakeOnResult.COMPLETE,
-                            qualifiers=None,
-                            **generic_event_kwargs,
-                        )
-                    elif event_attributes.get(
-                        "WinnerRole"
-                    ) == "withoutBallControl" and event_attributes.get(
-                        "WinnerResult"
-                    ) in [
-                        "ballClaimed",
-                        "ballContactSucceeded",
-                    ]:
-                        tackling_game_kwargs = _parse_successful_tackling_game(
-                            event_attributes, teams
-                        )
-                        generic_event_kwargs.update(tackling_game_kwargs)
-                        event = self.event_factory.build_duel(
-                            qualifiers=[kloppy_duel_type, DuelType.TACKLE],
-                            result=DuelResult.WON,
-                            **generic_event_kwargs,
-                        )
-                    elif event_attributes.get(
-                        "WinnerRole"
-                    ) == "withBallControl" and event_attributes.get(
-                        "WinnerResult"
-                    ) in [
-                        "ballcontactSucceeded",
-                        "ballControlRetained",
-                    ]:
-                        tackling_game_kwargs = (
-                            _parse_unsuccessful_tackling_game(
-                                event_attributes, teams
-                            )
-                        )
-                        generic_event_kwargs.update(tackling_game_kwargs)
-                        event = self.event_factory.build_duel(
-                            qualifiers=[kloppy_duel_type],
-                            result=DuelResult.LOST,
-                            **generic_event_kwargs,
-                        )
-                    elif event_attributes.get("WinnerResult") == "fouled":
-                        tackle_game_foul_kwargs = (
-                            _parse_unsuccessful_tackling_game(
-                                event_attributes, teams
-                            )
-                        )
-                        generic_event_kwargs.update(tackle_game_foul_kwargs)
-                        event = self.event_factory.build_foul_committed(
-                            result=None,
-                            qualifiers=None,
-                            **generic_event_kwargs,
-                        )
-                    # Some 'TacklingGame' events are still not parsed
-                    else:
-                        event = self.event_factory.build_generic(
-                            result=None,
-                            qualifiers=None,
-                            event_name=event_name,
-                            **generic_event_kwargs,
-                        )
-
-                elif (
-                    event_name == SPORTEC_EVENT_NAME_OTHER
-                    and event_attributes.get("DefensiveClearance") == "true"
-                ):
-                    event = self.event_factory.build_clearance(
-                        result=None,
-                        qualifiers=None,
-                        **generic_event_kwargs,
-                    )
-                else:
-                    event = self.event_factory.build_generic(
-                        result=None,
-                        qualifiers=None,
-                        event_name=event_name,
-                        **generic_event_kwargs,
-                    )
-
-                if (
-                    event.event_type == EventType.PASS
-                    and event.get_qualifier_value(SetPieceQualifier)
-                    in (
-                        SetPieceType.THROW_IN,
-                        SetPieceType.GOAL_KICK,
-                        SetPieceType.CORNER_KICK,
-                    )
-                ):
-                    # 1. update previous pass
-                    if events[-1].event_type == EventType.PASS:
-                        events[-1].result = PassResult.OUT
-
-                    # 2. add synthetic out event
-                    decision_timestamp = _parse_datetime(
-                        event_chain[list(event_chain.keys())[1]][
-                            "DecisionTimestamp"
-                        ]
-                    )
-                    out_event = self.event_factory.build_ball_out(
-                        period=period,
-                        timestamp=decision_timestamp - period.start_timestamp,
-                        ball_owning_team=None,
-                        ball_state=BallState.DEAD,
-                        # from Event
-                        event_id=event_chain["Event"]["EventId"] + "-ball-out",
-                        team=events[-1].team,
-                        player=events[-1].player,
-                        coordinates=None,
-                        raw_event={},
-                        result=None,
-                        qualifiers=None,
-                    )
-                    events.append(transformer.transform_event(out_event))
-
-                events.append(transformer.transform_event(event))
-
-        for i, event in enumerate(events[:-1]):
-            if (
-                event.event_type == EventType.PASS
-                and event.result == PassResult.COMPLETE
-            ):
-                # Sportec uses X/Y-Source-Position to define the start coordinates of
-                # an event and X/Y-Position to define the end of an event. There can/will
-                # be quite a distance between the start and the end of an event.
-                # When we want to set the receiver_coordinates we need to use
-                # the start of the event.
-                # How to solve this:
-                # 1. Create a copy of an event
-                # 2. Set the coordinates based on X/Y-Source-Position
-                # 3. Pass through the transformer
-                # 4. Update the receiver coordinates
-                if "X-Source-Position" in events[i + 1].raw_event:
-                    updated_event = transformer.transform_event(
-                        events[i + 1].replace(
-                            coordinates=Point(
-                                x=float(
-                                    events[i + 1].raw_event["X-Source-Position"]
-                                ),
-                                y=float(
-                                    events[i + 1].raw_event["Y-Source-Position"]
-                                ),
-                            )
-                        )
-                    )
-                    event.receiver_coordinates = updated_event.coordinates
-                else:
-                    event.receiver_coordinates = events[i + 1].coordinates
-
-        events = list(
-            filter(
-                self.should_include_event,
-                events,
-            )
+        # Initialize coordinate system transformer
+        transformer = self.get_transformer(
+            pitch_length=meta.x_max, pitch_width=meta.y_max
         )
+
+        # Create periods
+        # We extract periods from the events, as the start/end times are
+        # more accurate there than in the metadata.
+        with performance_logging("parse periods", logger=logger):
+            periods, orientation = self._parse_periods_and_orientation(
+                raw_events, meta.teams
+            )
+
+        # Create events
+        with performance_logging("parse events", logger=logger):
+            events = []
+            for i, raw_event in enumerate(raw_events):
+                new_events = raw_event.set_refs(
+                    periods,
+                    meta.teams,
+                    prev_events=(raw_events[max(0, i - 5) : i]),
+                    next_events=(
+                        raw_events[i + 1 : min(i + 6, len(raw_events) - 1)]
+                    ),
+                ).deserialize(self.event_factory)
+                for event in new_events:
+                    if self.should_include_event(event):
+                        # Transform event to the coordinate system
+                        event = transformer.transform_event(event)
+                        events.append(event)
+
+            # Post-process events
+            self._update_pass_receiver_coordinates(events, transformer)
 
         metadata = Metadata(
-            teams=teams,
+            date=meta.date,
+            game_week=int(meta.game_week),
+            game_id=meta.game_id,
+            officials=meta.officials,
+            teams=meta.teams,
             periods=periods,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
-            score=sportec_metadata.score,
             frame_rate=None,
             orientation=orientation,
-            flags=DatasetFlag(0),
+            flags=DatasetFlag.BALL_STATE,
+            score=meta.score,
             provider=Provider.SPORTEC,
             coordinate_system=transformer.get_to_coordinate_system(),
-            date=date,
-            game_week=game_week,
-            game_id=game_id,
-            officials=sportec_metadata.officials,
+        )
+        return EventDataset(metadata=metadata, records=events)
+
+    def _parse_periods_and_orientation(self, raw_events, teams):
+        # Collect kick-off and final whistle events
+        half_start_events = {}
+        half_end_events = {}
+        for event in raw_events:
+            set_piece_type = event.raw_event["SetPieceType"]
+            event_type = event.raw_event["EventType"]
+            # Kick-off
+            if (
+                set_piece_type is not None
+                and SPORTEC.SET_PIECE_TYPE(set_piece_type)
+                == SPORTEC.SET_PIECE_TYPE.KICK_OFF
+            ):
+                set_piece_attr = event.raw_event["extra"][set_piece_type]
+                if "GameSection" in set_piece_attr:
+                    period = SPORTEC.PERIOD(set_piece_attr["GameSection"])
+                    half_start_events[period] = {
+                        "EventTime": event.raw_event["EventTime"],
+                        "TeamLeft": set_piece_attr.get("TeamLeft"),
+                    }
+                else:
+                    # This is a kick-off after a goal was scored
+                    pass
+            # Final whistle
+            elif (
+                event_type is not None
+                and SPORTEC.EVENT_TYPE(event_type)
+                == SPORTEC.EVENT_TYPE.FINAL_WHISTLE
+            ):
+                event_attr = event.raw_event["extra"][event_type]
+                period = SPORTEC.PERIOD(event_attr["GameSection"])
+                half_end_events[period] = {
+                    "EventTime": event.raw_event["EventTime"],
+                }
+
+        # Create periods
+        periods = []
+        for period_id, period_name in enumerate(SPORTEC.PERIOD, start=1):
+            start_event = half_start_events.get(period_name, None)
+            end_event = half_end_events.get(period_name, None)
+            if (start_event is None) ^ (end_event is None):
+                raise DeserializationError(
+                    f"Failed to determine start and end time of period {period_id}."
+                )
+            if (start_event is None) and (end_event is None):
+                continue
+            start_timestamp = parse_datetime(start_event["EventTime"])
+            end_timestamp = parse_datetime(end_event["EventTime"])
+            period = Period(
+                id=period_id,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+            )
+            periods.append(period)
+
+        # Determine orientation from first half kick-off
+        team_left = half_start_events[SPORTEC.PERIOD.FIRST_HALF]["TeamLeft"]
+        orientation = (
+            Orientation.HOME_AWAY
+            if team_left == teams[0].team_id
+            else Orientation.AWAY_HOME
+        )
+        return periods, orientation
+
+    def _update_pass_receiver_coordinates(self, events, transformer):
+        pass_events = [
+            (i, e)
+            for i, e in enumerate(events[:-1])
+            if e.event_type == EventType.PASS
+            and e.result == PassResult.COMPLETE
+        ]
+
+        for i, pass_event in pass_events:
+            candidates = events[i + 1 : min(i + 5, len(events))]
+            receiver = next(
+                (
+                    e
+                    for e in candidates
+                    if (e.player == pass_event.receiver_player)
+                    and (e.coordinates is not None)
+                ),
+                None,
+            )
+
+            if receiver:
+                coords = copy(receiver.coordinates)
+                if (
+                    "X-Source-Position" in receiver.raw_event
+                    and "Y-Source-Position" in receiver.raw_event
+                ):
+                    raw = receiver.raw_event
+                    temp = receiver.replace(
+                        coordinates=Point(
+                            x=float(raw["X-Source-Position"]),
+                            y=float(raw["Y-Source-Position"]),
+                        )
+                    )
+                    coords = transformer.transform_event(temp).coordinates
+
+                pass_event.receiver_coordinates = coords
+
+
+def parse_sportec_xml(root: objectify.ObjectifiedElement) -> list[dict]:
+    """Parses Sportec XML content into a structured list of event dictionaries.
+
+    This function iterates through 'Event' elements in the provided XML. For each event,
+    it extracts top-level attributes and recursively traverses child elements to
+    categorize the event hierarchy and collect nested attributes into a specific format.
+
+    The resulting dictionary for each event follows this structure:
+        - Root keys: Attributes from the <Event> tag (e.g., 'EventId', 'EventTime', 'X-Position').
+        - 'SetPieceType': The specific set piece context (e.g., 'KickOff', 'CornerKick'), if present.
+        - 'EventType': The primary action type (e.g., 'Play', 'TacklingGame').
+        - 'SubEventType': The specific action detail (e.g., 'Pass', 'Cross'), if present.
+        - 'extra': A nested dictionary containing attributes of all child tags, keyed by
+          the tag name (e.g., {'Play': {...}, 'Pass': {...}}).
+
+    Args:
+        root (objectify.ObjectifiedElement): The root element of the Sportec XML data.
+
+    Returns:
+        list[dict]: A list of dictionaries, where each dictionary represents a single
+            parsed event.
+    """
+    # Define tags that indicate a set piece context
+    SET_PIECE_TAGS = {sp.value for sp in SPORTEC.SET_PIECE_TYPE}
+
+    # Helper to convert "true"/"false" strings to actual booleans
+    def convert_value(val):
+        if val.lower() == "true":
+            return True
+        elif val.lower() == "false":
+            return False
+        return val
+
+    events_list = []
+
+    # Iterate over each <Event> element
+    for event in root.Event:
+        # 1. Initialize the root dict with <Event> attributes
+        event_data = {k: convert_value(v) for k, v in event.attrib.items()}
+
+        # Initialize hierarchy placeholders
+        event_data.update(
+            {
+                "SetPieceType": None,
+                "EventType": None,
+                "SubEventType": None,
+                "extra": {},
+            }
         )
 
-        return EventDataset(
-            metadata=metadata,
-            records=events,
-        )
+        # Track the sequence of tags found to determine hierarchy later
+        hierarchy_tags = []
+
+        # 2. Recursive function to traverse children
+        def traverse(element):
+            # iterchildren() iterates over direct children in document order
+            for child in element.iterchildren():
+                tag = child.tag
+                hierarchy_tags.append(tag)
+
+                # Store attributes in 'extra' keyed by the tag name
+                converted_attrs = {
+                    k: convert_value(v) for k, v in child.attrib.items()
+                }
+                event_data["extra"][child.tag] = converted_attrs
+
+                # Go deeper
+                traverse(child)
+
+        traverse(event)
+
+        # 3. Map the tags to the Type fields
+        if hierarchy_tags:
+            first_tag = hierarchy_tags[0]
+
+            if first_tag in SET_PIECE_TAGS:
+                # Structure: [SetPiece] -> [Event] -> [SubEvent]
+                event_data["SetPieceType"] = first_tag
+                if len(hierarchy_tags) > 1:
+                    event_data["EventType"] = hierarchy_tags[1]
+                if len(hierarchy_tags) > 2:
+                    event_data["SubEventType"] = hierarchy_tags[2]
+            else:
+                # Structure: [Event] -> [SubEvent]
+                event_data["EventType"] = first_tag
+                if len(hierarchy_tags) > 1:
+                    event_data["SubEventType"] = hierarchy_tags[1]
+
+        events_list.append(event_data)
+
+    return events_list

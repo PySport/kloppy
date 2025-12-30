@@ -610,13 +610,20 @@ class TestStatsBombEvent:
         pass_event = dataset.get_event_by_id(
             "8022c113-e349-4b0b-b4a7-a3bb662535f8"
         )
+        assert (
+            pass_event.coordinates.x
+            == pass_event.freeze_frame.ball_coordinates.x
+        )
+        assert (
+            pass_event.coordinates.y
+            == pass_event.freeze_frame.ball_coordinates.y
+        )
         coordinates_per_team = defaultdict(list)
         for (
             player,
             coordinates,
         ) in pass_event.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
-        print(coordinates_per_team)
         assert coordinates_per_team == {
             "Belgium": [
                 Point(x=0.30230680550305883, y=0.5224074534269804),
@@ -1232,11 +1239,6 @@ class TestStatsBombTacticalShiftEvent:
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
         )
-
-        for item in dataset.aggregate("minutes_played", include_position=True):
-            print(
-                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
-            )
 
         home_team, away_team = dataset.metadata.teams
         period1, period2 = dataset.metadata.periods

@@ -65,7 +65,7 @@ class TestSecondSpectrumTracking:
             coordinates="secondspectrum",
             limit=100,
             sample_rate=(1 / 2),
-            include_missing_ball_frames=False,
+            exclude_missing_ball_frames=True,
         )
         assert len(d1.records) == 100
 
@@ -78,6 +78,7 @@ class TestSecondSpectrumTracking:
             limit=100,
             sample_rate=(1 / 2),
         )
+        print(len(d2))
         assert (
             d1[-1].frame_id == 80000
         )  # skip 2 frames with ball_z == -10, but still get 100 records

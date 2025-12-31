@@ -73,11 +73,11 @@ class SecondSpectrumDeserializer(
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = True,
-        include_missing_ball_frames: Optional[bool] = True,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
-        self.include_missing_ball_frames = include_missing_ball_frames
+        self.exclude_missing_ball_frames = exclude_missing_ball_frames
 
     @property
     def provider(self) -> Provider:
@@ -89,7 +89,7 @@ class SecondSpectrumDeserializer(
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
-            if not self.include_missing_ball_frames and ball_z == -10:
+            if self.exclude_missing_ball_frames and ball_z == -10:
                 return
             ball_coordinates = Point3D(
                 float(ball_x), float(ball_y), float(ball_z)

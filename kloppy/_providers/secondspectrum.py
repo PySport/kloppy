@@ -16,7 +16,7 @@ def load(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
-    include_missing_ball_frames: Optional[bool] = True,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load SecondSpectrum tracking data.
@@ -31,7 +31,7 @@ def load(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         only_alive: Only include frames in which the game is not paused.
-        include_missing_ball_frames: SecondSpectrum sets ball_z to -10 when ball is missing / out of frame. True includes these frames, False removes them.
+        exclude_missing_ball_frames: SecondSpectrum sets ball_z to -10 when ball is missing / out of frame. True excludes these frames, False includes them.
 
     Returns:
         The parsed tracking data.
@@ -41,7 +41,7 @@ def load(
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
-        include_missing_ball_frames=include_missing_ball_frames,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(meta_data) as meta_data_fp,

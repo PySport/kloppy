@@ -458,8 +458,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             date=date,
             game_week=game_week,
             game_id=game_id,
-            home_coach=sportec_metadata.home_coach,
-            away_coach=sportec_metadata.away_coach,
             officials=sportec_metadata.officials,
         )
 

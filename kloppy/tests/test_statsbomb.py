@@ -253,12 +253,12 @@ class TestStatsBombMetadata:
             assert isinstance(game_id, str)
             assert game_id == "3888787"
 
-        home_coach = dataset.metadata.home_coach
+        home_coach = dataset.metadata.teams[0].coach
         if home_coach:
             assert isinstance(home_coach, str)
             assert home_coach == "R. Martínez Montoliù"
 
-        away_coach = dataset.metadata.away_coach
+        away_coach = dataset.metadata.teams[1].coach
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "F. Fernandes da Costa Santos"

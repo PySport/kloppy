@@ -1,7 +1,7 @@
-import sys
 from abc import ABC, abstractmethod
 from fnmatch import fnmatch
-from typing import Any, Callable, Dict, Generic, Tuple, Type, TypeVar, Union
+import sys
+from typing import Any, Callable, Generic, TypeVar, Union
 
 if sys.version_info >= (3, 11):
     from typing import Unpack
@@ -18,28 +18,25 @@ from kloppy.exceptions import KloppyError
 
 T = TypeVar("T", bound=DataRecord)
 Column = Union[str, Callable[[T], Any]]
-NamedColumns = Dict[str, Column]
+NamedColumns = dict[str, Column]
 
 
 class DataRecordToDictTransformer(ABC, Generic[T]):
     @abstractmethod
-    def default_transformer(self) -> Callable[[T], Dict]:
-        ...
+    def default_transformer(self) -> Callable[[T], dict]: ...
 
     def __init__(
         self,
-        *columns: Unpack[Tuple[Column]],
+        *columns: Unpack[tuple[Column]],
         **named_columns: NamedColumns,
     ):
         if not columns and not named_columns:
             converter = self.default_transformer()
         else:
             default = self.default_transformer()
-            has_string_columns = any(
-                not callable(column) for column in columns
-            )
+            has_string_columns = any(not callable(column) for column in columns)
 
-            def converter(data_record: T) -> Dict[str, Any]:
+            def converter(data_record: T) -> dict[str, Any]:
                 if has_string_columns:
                     default_row = default(data_record)
                 else:
@@ -79,28 +76,28 @@ class DataRecordToDictTransformer(ABC, Generic[T]):
 
         self.converter = converter
 
-    def __call__(self, data_record: T) -> Dict[str, Any]:
+    def __call__(self, data_record: T) -> dict[str, Any]:
         return self.converter(data_record)
 
 
 class EventToDictTransformer(DataRecordToDictTransformer[Event]):
-    def default_transformer(self) -> Callable[[Event], Dict]:
+    def default_transformer(self) -> Callable[[Event], dict]:
         return DefaultEventTransformer()
 
 
 class FrameToDictTransformer(DataRecordToDictTransformer[Frame]):
-    def default_transformer(self) -> Callable[[Frame], Dict]:
+    def default_transformer(self) -> Callable[[Frame], dict]:
         return DefaultFrameTransformer()
 
 
 class CodeToDictTransformer(DataRecordToDictTransformer[Code]):
-    def default_transformer(self) -> Callable[[Code], Dict]:
+    def default_transformer(self) -> Callable[[Code], dict]:
         return DefaultCodeTransformer()
 
 
 def get_transformer_cls(
     dataset_type: DatasetType,
-) -> Type[DataRecordToDictTransformer]:
+) -> type[DataRecordToDictTransformer]:
     if dataset_type == DatasetType.EVENT:
         return EventToDictTransformer
     elif dataset_type == DatasetType.TRACKING:

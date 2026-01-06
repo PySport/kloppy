@@ -2,16 +2,16 @@ from dataclasses import replace, dataclass
 from typing import Optional, List
 
 from kloppy.domain import (
-    Event,
-    Team,
-    EventDataset,
-    PassEvent,
-    CarryEvent,
-    RecoveryEvent,
     BallOutEvent,
+    CarryEvent,
+    Event,
+    EventDataset,
     FoulCommittedEvent,
-    ShotEvent,
+    PassEvent,
+    RecoveryEvent,
     SetPieceQualifier,
+    ShotEvent,
+    Team,
     GoalkeeperEvent,
     GoalkeeperActionType,
     TakeOnEvent,
@@ -28,6 +28,7 @@ from kloppy.domain import (
     FormationChangeEvent,
     ClearanceEvent,
 )
+
 from ..builder import StateBuilder
 
 
@@ -115,9 +116,7 @@ class SequenceStateBuilder(StateBuilder):
 
     def reduce_after(self, state: Sequence, event: Event) -> Sequence:
         if isinstance(event, CLOSE_SEQUENCE):
-            state = replace(
-                state, sequence_id=state.sequence_id + 1, team=None
-            )
+            state = replace(state, sequence_id=state.sequence_id + 1, team=None)
 
         return state
 

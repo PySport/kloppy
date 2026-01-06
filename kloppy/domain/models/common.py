@@ -1224,11 +1224,24 @@ class CDFCoordinateSystem(ProviderCoordinateSystem):
             standardized=False,
         )
 
-    def __init__(self, base_coordinate_system: ProviderCoordinateSystem):
-        self._pitch_length = (
-            base_coordinate_system.pitch_dimensions.pitch_length
-        )
-        self._pitch_width = base_coordinate_system.pitch_dimensions.pitch_width
+    def __init__(
+        self,
+        base_coordinate_system: ProviderCoordinateSystem | None = None,
+        pitch_length: float | None = None,
+        pitch_width: float | None = None,
+    ):
+        if base_coordinate_system is not None:
+            # Used by serializer - derive dimensions from source coordinate system
+            self._pitch_length = (
+                base_coordinate_system.pitch_dimensions.pitch_length
+            )
+            self._pitch_width = (
+                base_coordinate_system.pitch_dimensions.pitch_width
+            )
+        else:
+            # Used by deserializer - direct pitch dimensions
+            self._pitch_length = pitch_length
+            self._pitch_width = pitch_width
 
 
 class SignalityCoordinateSystem(ProviderCoordinateSystem):

@@ -1,32 +1,32 @@
-from dataclasses import replace, dataclass
-from typing import Optional, List
+from dataclasses import dataclass, replace
+from typing import Optional
 
 from kloppy.domain import (
     BallOutEvent,
+    CardEvent,
     CarryEvent,
+    ClearanceEvent,
+    DuelEvent,
+    DuelResult,
     Event,
     EventDataset,
+    FormationChangeEvent,
     FoulCommittedEvent,
+    GenericEvent,
+    GoalkeeperActionType,
+    GoalkeeperEvent,
+    GoalkeeperQualifier,
+    InterceptionEvent,
+    InterceptionResult,
     PassEvent,
+    PlayerOffEvent,
+    PlayerOnEvent,
     RecoveryEvent,
     SetPieceQualifier,
     ShotEvent,
-    Team,
-    GoalkeeperEvent,
-    GoalkeeperActionType,
-    TakeOnEvent,
-    InterceptionEvent,
-    InterceptionResult,
-    GoalkeeperQualifier,
-    DuelEvent,
-    DuelResult,
-    GenericEvent,
-    PlayerOnEvent,
-    CardEvent,
     SubstitutionEvent,
-    PlayerOffEvent,
-    FormationChangeEvent,
-    ClearanceEvent,
+    TakeOnEvent,
+    Team,
 )
 
 from ..builder import StateBuilder
@@ -120,7 +120,7 @@ class SequenceStateBuilder(StateBuilder):
 
         return state
 
-    def post_process(self, events: List[Event]):
+    def post_process(self, events: list[Event]):
         current_sequence_id = 1
         sequence_id_mapping = {}
 

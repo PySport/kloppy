@@ -51,7 +51,6 @@ from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
-ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
 
 
@@ -359,7 +358,10 @@ class TestStatsBombEvent:
             def get_color(player):
                 if player.team == shot_event.player.team:
                     return "#b94b75"
-                elif player.starting_position.position_id == "1":
+                elif (
+                    player.starting_position.position_group
+                    == PositionType.Goalkeeper
+                ):
                     return "#c15ca5"
                 else:
                     return "#7f63b8"

@@ -1,7 +1,7 @@
-import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import IO, Callable, Dict, NamedTuple, Optional, Set, Union
+import logging
+from typing import IO, Callable, NamedTuple, Optional, Union
 
 from lxml import etree, objectify
 
@@ -70,8 +70,8 @@ def _unstack_framesets(
     raw_data: IO[bytes],
     limit: Optional[int] = None,
     only_alive: bool = True,
-    objects_to_skip: Optional[Set[str]] = None,
-) -> Dict[int, Dict[int, Dict]]:
+    objects_to_skip: Optional[set[str]] = None,
+) -> dict[int, dict[int, dict]]:
     """Unstack framesets.
 
     Sportec groups frames per period and object in a frameset. This function
@@ -93,17 +93,15 @@ def _unstack_framesets(
         that the frames in each frameset are ordered.
     """
     objects_to_skip = objects_to_skip or set()
-    frames: Dict[int, Dict[int, Dict[str, Dict[str, str]]]] = defaultdict(
+    frames: dict[int, dict[int, dict[str, dict[str, str]]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    frames_per_obj: Dict[str, int] = defaultdict(int)
+    frames_per_obj: dict[str, int] = defaultdict(int)
 
     def _make_pass(
         skip_frameset: Optional[Callable[[int, str], bool]] = None,
         end_frameset: Optional[Callable[[int, str], bool]] = None,
-        skip_frame: Optional[
-            Callable[[int, str, Dict[str, str]], bool]
-        ] = None,
+        skip_frame: Optional[Callable[[int, str, dict[str, str]], bool]] = None,
     ) -> None:
         """Generic pass over the XML to collect frames.
 
@@ -185,7 +183,7 @@ def _unstack_framesets(
                     del elem.getparent()[0]
 
     def make_object_filter(
-        objects: Set[str],
+        objects: set[str],
         include: bool = True,
     ) -> Callable[[int, str], bool]:
         """
@@ -231,7 +229,7 @@ def _unstack_framesets(
         return skip
 
     def check_only_alive(
-        current_period: int, current_obj: str, frame_data: Dict[str, str]
+        current_period: int, current_obj: str, frame_data: dict[str, str]
     ) -> bool:
         """
         Check if the ball is out of play in the current frame.
@@ -314,9 +312,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
 
-    def deserialize(
-        self, inputs: SportecTrackingDataInputs
-    ) -> TrackingDataset:
+    def deserialize(self, inputs: SportecTrackingDataInputs) -> TrackingDataset:
         with performance_logging("parse metadata", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             sportec_metadata = sportec_metadata_from_xml_elm(match_root)
@@ -462,8 +458,6 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             date=date,
             game_week=game_week,
             game_id=game_id,
-            home_coach=sportec_metadata.home_coach,
-            away_coach=sportec_metadata.away_coach,
             officials=sportec_metadata.officials,
         )
 

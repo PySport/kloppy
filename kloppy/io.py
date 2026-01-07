@@ -1,28 +1,22 @@
 """I/O utilities for reading raw data."""
 
 import bz2
+from collections.abc import Generator, Iterable, Iterator
 import contextlib
+from contextlib import AbstractContextManager
+from dataclasses import dataclass, replace
 import gzip
+from io import BufferedWriter, BytesIO, TextIOWrapper
 import logging
 import lzma
 import os
 import re
-import shutil
-import tempfile
-from dataclasses import dataclass, replace
-from io import BufferedWriter, BytesIO, TextIOWrapper
 from typing import (
     IO,
     Any,
     BinaryIO,
     Callable,
-    ContextManager,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -71,7 +65,7 @@ FileLike = Union[FileOrPath, Source]
 
 def _file_or_path_to_binary_stream(
     file_or_path: FileOrPath, binary_mode: str
-) -> Tuple[BinaryIO, bool]:
+) -> tuple[BinaryIO, bool]:
     """
     Converts a file path or a file-like object to a binary stream.
 
@@ -180,7 +174,7 @@ def _open(
     filename: FileOrPath,
     mode: str = "rb",
     compresslevel: Optional[int] = None,
-    format: Optional[str] = None,
+    format: Optional[str] = None,  # noqa: A002
 ) -> BinaryIO:
     """
         A replacement for the "open" function that can also read and write
@@ -275,7 +269,9 @@ def _open_gz(
 
     if "r" in mode:
         return gzip.open(filename, mode)  # type: ignore
-    return BufferedWriter(gzip.open(filename, mode, compresslevel=compresslevel))  # type: ignore
+    return BufferedWriter(
+        gzip.open(filename, mode, compresslevel=compresslevel)
+    )  # type: ignore
 
 
 def get_file_extension(file_or_path: FileLike) -> str:
@@ -350,8 +346,10 @@ def _write_context_manager(
 
 
 def open_as_file(
-    input_: FileLike, mode: str = "rb"
-) -> ContextManager[Optional[BinaryIO]]:
+    input_: FileLike,
+    mode: str = "rb",
+    encoding: Optional[str] = None,
+) -> AbstractContextManager[Optional[BinaryIO]]:
     """Open a byte stream to/from the given input object.
 
     The following input types are supported:
@@ -371,6 +369,8 @@ def open_as_file(
         input_ (FileLike): The input/output object to be opened.
         mode (str): File mode - 'rb' (read), 'wb' (write), or 'ab' (append).
             Defaults to 'rb'.
+        encoding (str, optional): The name of the encoding used to decode or encode the
+            file. This should only be used in text mode.
 
     Returns:
         BinaryIO: A binary stream to/from the input object.
@@ -417,7 +417,7 @@ def open_as_file(
             raise ValueError("Input required but not provided.")
         else:
             try:
-                return open_as_file(input_.data, mode=mode)
+                return open_as_file(input_.data, mode=mode, encoding=encoding)
             except InputNotFoundError as exc:
                 if input_.skip_if_missing:
                     logging.info(f"Input {input_.data} not found. Skipping")
@@ -469,7 +469,9 @@ def open_as_file(
         # File-like object (BytesIO, file handles, etc.)
         if hasattr(input_, "mode") and input_.mode != mode:  # type: ignore
             # If it's a real file with a mode, check compatibility
-            raise ValueError(f"File opened in mode '{input_.mode}' but '{mode}' requested")  # type: ignore
+            raise ValueError(
+                f"File opened in mode '{input_.mode}' but '{mode}' requested"
+            )  # type: ignore
 
         # Use _open to handle potential compression detection
         if mode == "rb":
@@ -478,10 +480,16 @@ def open_as_file(
             # For write modes, return file-like object directly with nullcontext
             return contextlib.nullcontext(input_)  # type: ignore
 
-    raise TypeError(f"Unsupported input type: {type(input_)}")
+    else:
+        raise TypeError(f"Unsupported input type: {type(input_)}")
+
+    if encoding is not None:
+        stream = TextIOWrapper(stream, encoding=encoding)
+
+    return stream
 
 
-def _natural_sort_key(path: str) -> List[Union[int, str]]:
+def _natural_sort_key(path: str) -> list[Union[int, str]]:
     # Split string into list of chunks for natural sorting
     return [
         int(text) if text.isdigit() else text.lower()

@@ -1,19 +1,15 @@
-from __future__ import annotations
-
-import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
-    Iterable,
-    List,
     Literal,
     Optional,
     TypeVar,
@@ -30,11 +26,6 @@ if TYPE_CHECKING:
     )
 
 from .position import PositionType
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
 
 if sys.version_info >= (3, 11):
     from typing import Self, Unpack
@@ -221,7 +212,7 @@ class Player:
         default_factory=TimeContainer, compare=False
     )
 
-    attributes: Dict = field(default_factory=dict, compare=False)
+    attributes: dict = field(default_factory=dict, compare=False)
 
     @property
     def full_name(self):
@@ -268,6 +259,7 @@ class Team:
         ground (Ground): The team's ground (home or away).
         players (List[Player]): The team's players.
         starting_formation (FormationType, optional): The team's starting formation.
+        coach (str, optional): The team's coach.
     """
 
     team_id: str
@@ -277,7 +269,8 @@ class Team:
     formations: TimeContainer[FormationType] = field(
         default_factory=TimeContainer, compare=False
     )
-    players: List[Player] = field(default_factory=list)
+    players: list[Player] = field(default_factory=list)
+    coach: Optional[str] = None
 
     def __str__(self):
         return self.name
@@ -470,7 +463,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.AWAY_HOME:
             if period is None:
@@ -486,7 +479,7 @@ class AttackingDirection(Enum):
             if period.id in dirmap:
                 return dirmap[period.id]
             raise OrientationError(
-                "This orientation is not defined for period %s" % period.id
+                f"This orientation is not defined for period {period.id}"
             )
         if orientation == Orientation.BALL_OWNING_TEAM:
             if ball_owning_team is None:
@@ -1526,12 +1519,12 @@ class DataRecord(ABC):
         ball_state: The state of the ball at the time of the observation.
     """
 
-    dataset: Dataset = field(init=False)
+    dataset: "Dataset" = field(init=False)
     prev_record: Optional[Self] = field(init=False)
     next_record: Optional[Self] = field(init=False)
     period: Period
     timestamp: timedelta
-    statistics: List[Statistic]
+    statistics: list[Statistic]
     ball_owning_team: Optional[Team]
     ball_state: Optional[BallState]
 
@@ -1546,7 +1539,7 @@ class DataRecord(ABC):
 
     def set_refs(
         self,
-        dataset: Dataset,
+        dataset: "Dataset",
         prev: Optional[Self],
         next_: Optional[Self],
     ):
@@ -1642,8 +1635,8 @@ class Metadata:
         attributes: Additional metadata.
     """
 
-    periods: List[Period]
-    teams: List[Team]
+    periods: list[Period]
+    teams: list[Team]
     coordinate_system: CoordinateSystem
     pitch_dimensions: PitchDimensions
     orientation: Orientation
@@ -1654,10 +1647,8 @@ class Metadata:
     date: Optional[datetime] = None
     game_week: Optional[str] = None
     game_id: Optional[str] = None
-    home_coach: Optional[str] = None
-    away_coach: Optional[str] = None
-    officials: Optional[List] = field(default_factory=list)
-    attributes: Optional[Dict] = field(default_factory=dict, compare=False)
+    officials: Optional[list] = field(default_factory=list)
+    attributes: Optional[dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
         if self.coordinate_system is not None:
@@ -1671,6 +1662,16 @@ class Metadata:
                     self.periods[i + 1] if i + 1 < len(self.periods) else None
                 ),
             )
+
+    @property
+    @deprecated("Use teams[0].coach instead")
+    def home_coach(self) -> Optional[str]:
+        return self.teams[0].coach if self.teams else None
+
+    @property
+    @deprecated("Use teams[1].coach instead")
+    def away_coach(self) -> Optional[str]:
+        return self.teams[1].coach if self.teams else None
 
 
 T = TypeVar("T", bound="DataRecord")
@@ -1690,7 +1691,7 @@ class Dataset(ABC, Generic[T]):
         metadata: Metadata for the dataset.
     """
 
-    records: List[T]
+    records: list[T]
     metadata: Metadata
 
     def __iter__(self):
@@ -1735,14 +1736,6 @@ class Dataset(ABC, Generic[T]):
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
 
-    @abstractmethod
-    def to_pandas(
-        self,
-        record_converter: Optional[Callable[[T], Dict]] = None,
-        additional_columns: Optional[NamedColumns] = None,
-    ) -> "DataFrame":
-        pass
-
     def transform(self, *args, **kwargs):
         """
         See [transform][kloppy.helpers.transform]
@@ -1776,7 +1769,7 @@ class Dataset(ABC, Generic[T]):
             self, records=[mapper(record) for record in self.records]
         )
 
-    def find_all(self, filter_) -> List[T]:
+    def find_all(self, filter_) -> list[T]:
         return [record for record in self.records if record.matches(filter_)]
 
     def find(self, filter_) -> Optional[T]:
@@ -1785,7 +1778,9 @@ class Dataset(ABC, Generic[T]):
                 return record
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, mapper_fn: Callable[[Self], Self]):
+    def from_dataset(
+        cls, dataset: "Dataset", mapper_fn: Callable[[Self], Self]
+    ):
         """
         Create a new Dataset from other dataset
 
@@ -1826,27 +1821,25 @@ class Dataset(ABC, Generic[T]):
     @overload
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: Literal[True] = True,
-        **named_columns: NamedColumns,
-    ) -> List[Dict[str, Any]]:
-        ...
+        **named_columns: "NamedColumns",
+    ) -> list[dict[str, Any]]: ...
 
     @overload
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: Literal[False] = False,
-        **named_columns: NamedColumns,
-    ) -> Iterable[Dict[str, Any]]:
-        ...
+        **named_columns: "NamedColumns",
+    ) -> Iterable[dict[str, Any]]: ...
 
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: bool = True,
-        **named_columns: NamedColumns,
-    ) -> Union[List[Dict[str, Any]], Iterable[Dict[str, Any]]]:
+        **named_columns: "NamedColumns",
+    ) -> Union[list[dict[str, Any]], Iterable[dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -1860,10 +1853,10 @@ class Dataset(ABC, Generic[T]):
 
     def to_dict(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         orient: Literal["list"] = "list",
-        **named_columns: NamedColumns,
-    ) -> Dict[str, List[Any]]:
+        **named_columns: "NamedColumns",
+    ) -> dict[str, list[Any]]:
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
 
@@ -1886,15 +1879,9 @@ class Dataset(ABC, Generic[T]):
 
     def to_df(
         self,
-        *columns: Unpack[tuple[Column]],
-        engine: Optional[
-            Union[
-                Literal["polars"],
-                Literal["pandas"],
-                Literal["pandas[pyarrow]"],
-            ]
-        ] = None,
-        **named_columns: NamedColumns,
+        *columns: Unpack[tuple["Column"]],
+        engine: Optional[Literal["polars", "pandas", "pandas[pyarrow]"]] = None,
+        **named_columns: "NamedColumns",
     ):
         from kloppy.config import get_config
 

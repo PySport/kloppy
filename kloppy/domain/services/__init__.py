@@ -1,5 +1,4 @@
-from collections import defaultdict, Counter
-from typing import List, Dict
+from collections import Counter, defaultdict
 
 from kloppy.domain import AttackingDirection, Frame, Ground, Period
 
@@ -9,7 +8,7 @@ from .transformers import DatasetTransformer, DatasetTransformerBuilder
 # NOT YET: from .enrichers import TrackingPossessionEnricher
 
 
-def avg(items: List[float]) -> float:
+def avg(items: list[float]) -> float:
     if not items:
         return 0
     return sum(items) / len(items)
@@ -39,8 +38,8 @@ def attacking_direction_from_frame(frame: Frame) -> AttackingDirection:
 
 
 def attacking_directions_from_multi_frames(
-    frames: List[Frame], periods: List[Period]
-) -> Dict[int, AttackingDirection]:
+    frames: list[Frame], periods: list[Period]
+) -> dict[int, AttackingDirection]:
     """
     with only partial tracking data we cannot rely on a single frame to
     infer the attacking directions as a simple average of only some players

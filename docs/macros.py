@@ -3,15 +3,15 @@ Mkdocs-macros module
 """
 
 import copy
-import re
 from pathlib import Path
+import re
 from typing import Any
 
 import griffe
-import pandas as pd
-import yaml
 from griffe import Docstring
 from griffe_generics import GenericsExtension
+import pandas as pd
+import yaml
 
 extensions = griffe.load_extensions(GenericsExtension)
 kloppy = griffe.load(
@@ -115,7 +115,9 @@ def render_provider_spec(spec, provider_key):
         if status == "parsed":
             return f':material-check:{{ title="{implementation}" }}'
         if status == "inferred":
-            return f':material-check-circle-outline:{{ title="{implementation}" }}'
+            return (
+                f':material-check-circle-outline:{{ title="{implementation}" }}'
+            )
         elif status == "not implemented":
             return ':material-progress-helper:{ title="Not implemented" }'
         elif status == "not supported":
@@ -207,7 +209,7 @@ def define_env(env):
         used to perform a transformation
     """
 
-    with open(_EVENT_SPEC_FILE, "r") as file:
+    with open(_EVENT_SPEC_FILE) as file:
         event_spec = yaml.safe_load(file)
 
     @env.macro
@@ -329,9 +331,7 @@ def define_env(env):
                     attr_value.name
                 ]
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
-                    row += [
-                        render_provider_spec(attr_value_spec, provider_key)
-                    ]
+                    row += [render_provider_spec(attr_value_spec, provider_key)]
             else:
                 for provider_key in _EVENT_DATA_PROVIDERS.keys():
                     row += ["-"]
@@ -574,8 +574,8 @@ def define_env(env):
 
     @env.macro
     def plot_coordinate_systems(providers=None, cols=3):
-        import math
         from io import StringIO
+        import math
 
         import matplotlib.pyplot as plt
         from mplsoccer import Pitch
@@ -699,10 +699,6 @@ def define_env(env):
             x_axis_length = 0.1 * (
                 coordinate_system.pitch_dimensions.x_dim.max
                 - coordinate_system.pitch_dimensions.x_dim.min
-            )
-            y_axis_length = 0.1 * (
-                coordinate_system.pitch_dimensions.y_dim.max
-                - coordinate_system.pitch_dimensions.y_dim.min
             )
             ax.annotate(
                 "",

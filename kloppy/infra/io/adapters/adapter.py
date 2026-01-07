@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import BinaryIO, List
 
 from kloppy.infra.io.buffered_stream import BufferedStream
 
@@ -21,7 +20,7 @@ class Adapter(ABC):
     def read_to_stream(self, url: str, output: BufferedStream):
         pass
 
-    def write_from_stream(self, url: str, input: BufferedStream, mode: str):
+    def write_from_stream(self, url: str, input: BufferedStream, mode: str):  # noqa: A002
         """
         Write content from BufferedStream to the given URL.
 
@@ -39,7 +38,7 @@ class Adapter(ABC):
         )
 
     @abstractmethod
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         pass
 
 

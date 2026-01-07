@@ -10,15 +10,13 @@ DEFAULT_BUFFER_SIZE = 5 * 1024 * 1024  # 5MB before spilling to disk
 class SupportsWrite(Protocol):
     """Protocol for objects that support write operations."""
 
-    def write(self, data: bytes) -> int:
-        ...
+    def write(self, data: bytes) -> int: ...
 
 
 class SupportsRead(Protocol):
     """Protocol for objects that support read operations."""
 
-    def read(self, n: int) -> bytes:
-        ...
+    def read(self, n: int) -> bytes: ...
 
 
 class BufferedStream(tempfile.SpooledTemporaryFile):

@@ -1,15 +1,13 @@
 import bz2
 import gzip
-import lzma
 from io import BytesIO
+import lzma
 from pathlib import Path
-from typing import BinaryIO, List
+from typing import BinaryIO
 
-import pytest
-
-from kloppy.io import open_as_file
-from kloppy.infra.io.buffered_stream import BufferedStream
 from kloppy.infra.io.adapters import Adapter
+from kloppy.infra.io.buffered_stream import BufferedStream
+from kloppy.io import open_as_file
 
 
 class TestBufferedStream:
@@ -55,12 +53,12 @@ class MockWriteAdapter(Adapter):
         else:
             raise FileNotFoundError(f"Mock file not found: {url}")
 
-    def write_from_stream(self, url: str, input: BinaryIO, mode: str):
+    def write_from_stream(self, url: str, input: BinaryIO, mode: str):  # noqa: A002
         """Write data from input stream to mock storage."""
         input.seek(0)
         self.written_data[url] = input.read()
 
-    def list_directory(self, url: str, recursive: bool = True) -> List[str]:
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         return []
 
 

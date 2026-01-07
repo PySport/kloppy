@@ -1,7 +1,7 @@
 import bisect
-import re
 from datetime import timedelta
-from typing import Dict, List, Optional, Tuple
+import re
+from typing import Optional
 
 from kloppy.domain import (
     Period,
@@ -13,7 +13,7 @@ from kloppy.domain import (
 from kloppy.exceptions import DeserializationError
 
 
-def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
+def get_team_by_id(team_id: int, teams: list[Team]) -> Team:
     """Get a team by its id."""
     if str(team_id) == teams[0].team_id:
         return teams[0]
@@ -23,7 +23,7 @@ def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
         raise DeserializationError(f"Unknown team_id {team_id}")
 
 
-def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
+def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
     """Get a period by its id."""
     for period in periods:
         if period.id == period_id:
@@ -31,7 +31,7 @@ def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
     raise DeserializationError(f"Unknown period_id {period_id}")
 
 
-def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
+def parse_timestamp(ts_str: str) -> tuple[timedelta, int]:
     """
     Parse a football clock timestamp into:
       - elapsed time within the period (timedelta) - period-relative for events
@@ -114,7 +114,7 @@ def parse_timestamp(ts_str: str) -> Tuple[timedelta, int]:
     return timedelta(seconds=whole, microseconds=micros), period_id
 
 
-def parse_cumulative_timestamp(ts_str: str) -> Tuple[timedelta, int]:
+def parse_cumulative_timestamp(ts_str: str) -> tuple[timedelta, int]:
     """
     Parse a football clock timestamp into:
       - cumulative elapsed time (timedelta) - for period creation
@@ -184,7 +184,7 @@ def parse_cumulative_timestamp(ts_str: str) -> Tuple[timedelta, int]:
     return timedelta(seconds=whole, microseconds=micros), period_id
 
 
-def parse_coordinates(raw_coordinates: Dict[str, float]) -> Point:
+def parse_coordinates(raw_coordinates: dict[str, float]) -> Point:
     return Point(
         x=float(raw_coordinates["x"]),
         y=float(raw_coordinates["y"]),
@@ -192,9 +192,9 @@ def parse_coordinates(raw_coordinates: Dict[str, float]) -> Point:
 
 
 def parse_shot_end_coordinates(
-    shot_info: Dict,
+    shot_info: dict,
     shot_result,
-) -> Tuple[Optional[Point], ShotResult]:
+) -> tuple[Optional[Point], ShotResult]:
     """Parse coordinates into a kloppy Point."""
     from kloppy.infra.serializers.event.impect.specification import SHOT
 

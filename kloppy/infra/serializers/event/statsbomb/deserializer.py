@@ -1,6 +1,6 @@
+from itertools import zip_longest
 import json
 import logging
-from itertools import zip_longest
 from typing import IO, NamedTuple, Optional
 
 from kloppy.domain import (
@@ -80,6 +80,14 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                         # Transform event to the coordinate system
                         event = self.transformer.transform_event(event)
                         events.append(event)
+
+        if "home_coach" in additional_metadata:
+            home_coach = additional_metadata.pop("home_coach")
+            teams[0].coach = home_coach
+
+        if "away_coach" in additional_metadata:
+            away_coach = additional_metadata.pop("away_coach")
+            teams[1].coach = away_coach
 
         metadata = Metadata(
             teams=teams,

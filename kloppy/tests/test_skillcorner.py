@@ -3,16 +3,15 @@ from pathlib import Path
 
 import pytest
 
+from kloppy import skillcorner
 from kloppy.domain import (
-    Provider,
     BallState,
+    DatasetType,
     Orientation,
     Point,
     Point3D,
-    DatasetType,
+    Provider,
 )
-
-from kloppy import skillcorner
 
 
 class TestSkillCornerTracking:
@@ -141,21 +140,19 @@ class TestSkillCornerTracking:
         date = dataset.metadata.date
         if date:
             assert isinstance(date, datetime)
-            assert date == datetime(
-                2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc
-            )
+            assert date == datetime(2019, 11, 9, 17, 30, 0, tzinfo=timezone.utc)
 
         game_id = dataset.metadata.game_id
         if game_id:
             assert isinstance(game_id, str)
             assert game_id == "2417"
 
-        home_coach = dataset.metadata.home_coach
+        home_coach = dataset.metadata.teams[0].coach
         if home_coach:
             assert isinstance(home_coach, str)
             assert home_coach == "Hans-Dieter Flick"
 
-        away_coach = dataset.metadata.away_coach
+        away_coach = dataset.metadata.teams[1].coach
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "Lucien Favre"

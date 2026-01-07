@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import os
 import re
 from typing import Optional
 
@@ -113,7 +114,7 @@ class FSSpecAdapter(Adapter, ABC):
         return [
             f"{protocol}://{fp}"
             if protocol != "file" and not fp.startswith(protocol)
-            else fp
+            else os.fspath(fp)
             for fp in files
         ]
 

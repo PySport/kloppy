@@ -11,14 +11,7 @@ import logging
 import lzma
 import os
 import re
-from typing import (
-    IO,
-    Any,
-    BinaryIO,
-    Callable,
-    Optional,
-    Union,
-)
+from typing import IO, Any, BinaryIO, Callable, Optional, Union, cast
 
 from kloppy.exceptions import AdapterError, InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
@@ -316,11 +309,6 @@ def get_file_extension(file_or_path: FileLike) -> str:
 
 
 @contextlib.contextmanager
-def dummy_context_mgr() -> Generator[None, None, None]:
-    yield
-
-
-@contextlib.contextmanager
 def _write_context_manager(
     uri: str, mode: str
 ) -> Generator[BinaryIO, None, None]:
@@ -400,32 +388,24 @@ def open_as_file(
 
         Write mode limitations:
             - HTTP/HTTPS URLs: Not supported
-            - Zip archives: Not supported
             - Inline strings/bytes: Not supported (invalid output destination)
     """
-    # Validate mode
-    if mode not in ("rb", "wb", "ab"):
-        raise ValueError(
-            f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'."
-        )
-
-    # Handle Source wrapper
+    # 1. Handle Source wrapper logic first
     if isinstance(input_, Source):
-        if input_.data is None and input_.optional:
-            return dummy_context_mgr()
-        elif input_.data is None:
+        if input_.data is None:
+            if input_.optional:
+                return contextlib.nullcontext(None)
             raise ValueError("Input required but not provided.")
-        else:
-            try:
-                return open_as_file(input_.data, mode=mode, encoding=encoding)
-            except InputNotFoundError as exc:
-                if input_.skip_if_missing:
-                    logging.info(f"Input {input_.data} not found. Skipping")
-                    return dummy_context_mgr()
-                else:
-                    raise exc
 
-    # Write modes: Cannot write to inline data
+        try:
+            return open_as_file(input_.data, mode=mode, encoding=encoding)
+        except InputNotFoundError:
+            if input_.skip_if_missing:
+                logger.info(f"Input {input_.data} not found. Skipping")
+                return contextlib.nullcontext(None)
+            raise
+
+    # 2. Validate input for Write Modes
     if mode in ("wb", "ab"):
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
             raise TypeError("Cannot write to inline JSON/XML string.")
@@ -434,59 +414,75 @@ def open_as_file(
                 "Cannot write to bytes object. Use BytesIO instead."
             )
 
-    # Read modes: Handle inline data
+    # 3. Handle Inline Data (Read Mode)
     if mode == "rb":
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
-            return BytesIO(input_.encode("utf8"))
+            return contextlib.nullcontext(BytesIO(input_.encode("utf8")))
         if isinstance(input_, bytes):
-            return BytesIO(input_)
+            return contextlib.nullcontext(BytesIO(input_))
 
-    # Handle paths (local files, URLs, S3, etc.)
-    if isinstance(input_, str) or hasattr(input_, "__fspath__"):
+    # 4. Handle Adapter-based URIs/Paths
+    # Check if input looks like a path or string URI
+    if isinstance(input_, (str, os.PathLike)):
         uri = _filepath_from_path_or_filelike(input_)
-
         adapter = get_adapter(uri)
-        if not adapter:
-            raise AdapterError(f"No adapter found for {uri}")
 
-        if mode == "rb":
-            # Read mode: buffer data from adapter
-            stream = BufferedStream()
-            adapter.read_to_stream(uri, stream)
-            stream.seek(0)
-            return stream
-        else:
-            # Write mode: return context manager that flushes on exit
-            return _write_context_manager(uri, mode)
+        if adapter:
+            if mode == "rb":
+                stream = BufferedStream()
+                adapter.read_to_stream(uri, stream)
+                stream.seek(0)
+                if encoding:
+                    return contextlib.nullcontext(
+                        TextIOWrapper(stream, encoding=encoding)
+                    )  # type: ignore
+                return contextlib.nullcontext(stream)
+            else:
+                return _write_context_manager(uri, mode)
 
-    # Handle file-like objects
-    if isinstance(input_, TextIOWrapper):
-        return input_.buffer
+        # check if the uri is a string with adapter prefix
+        elif isinstance(input_, str):
+            prefix_match = re.match(r"^([a-zA-Z0-9+.-]+)://", input_)
+            raise AdapterError(
+                f"No adapter found for {prefix_match.group(1)}://"
+            )
 
-    if hasattr(input_, "readinto") or (
-        mode in ("wb", "ab") and hasattr(input_, "write")
+        # If no adapter found, fall through to standard _open (local file handling)
+
+    # 5. Handle File Objects or Standard Local Files
+    if (
+        hasattr(input_, "readinto")
+        or hasattr(input_, "write")
+        or isinstance(
+            input_, (str, os.PathLike)
+        )  # only used if the FileAdapter is disabled
     ):
-        # File-like object (BytesIO, file handles, etc.)
-        if hasattr(input_, "mode") and input_.mode != mode:  # type: ignore
+        # Check mode compatibility for existing file objects
+        if hasattr(input_, "mode") and "b" not in input_.mode and "b" in mode:
             # If it's a real file with a mode, check compatibility
             raise ValueError(
                 f"File opened in mode '{input_.mode}' but '{mode}' requested"
-            )  # type: ignore
+            )
 
-        # Use _open to handle potential compression detection
         if mode == "rb":
-            return _open(input_, mode)  # type: ignore
+            f_obj = _open(input_, mode)  # type: ignore
+            if encoding:
+                return contextlib.nullcontext(
+                    TextIOWrapper(f_obj, encoding=encoding)
+                )
+
+            # This is tricky with the current helper structure.
+            # The cleanest way is to rely on the fact that open() returns a context manager.
+            if isinstance(input_, (str, os.PathLike)):
+                # Re-implement context safety for paths
+                return cast(AbstractContextManager, _open(input_, mode))
+            else:
+                return contextlib.nullcontext(f_obj)
         else:
-            # For write modes, return file-like object directly with nullcontext
-            return contextlib.nullcontext(input_)  # type: ignore
+            # Write mode for local files/objects
+            return contextlib.nullcontext(_open(input_, mode))
 
-    else:
-        raise TypeError(f"Unsupported input type: {type(input_)}")
-
-    if encoding is not None:
-        stream = TextIOWrapper(stream, encoding=encoding)
-
-    return stream
+    raise TypeError(f"Unsupported input type: {type(input_)}")
 
 
 def _natural_sort_key(path: str) -> list[Union[int, str]]:

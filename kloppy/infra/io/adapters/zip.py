@@ -16,8 +16,8 @@ class ZipAdapter(FSSpecAdapter):
     def supports(self, url: str) -> bool:
         return url.startswith("zip://")
 
-    def _get_filesystem(
-        self, url: str, no_cache: bool = False
+    def _get_filesystem_for_reading(
+        self, url: str
     ) -> fsspec.AbstractFileSystem:
         fo = get_config("adapters.zip.fo")
         if fo is None:
@@ -25,10 +25,23 @@ class ZipAdapter(FSSpecAdapter):
                 "No zip archive provided for the zip adapter."
                 " Please provide one using the 'adapters.zip.fo' config."
             )
-        return fsspec.filesystem(
-            protocol="zip",
-            fo=fo,
-        )
+        return fsspec.filesystem(protocol="zip", fo=fo, mode="r")
+
+    def _get_filesystem_for_writing(
+        self, url: str
+    ) -> fsspec.AbstractFileSystem:
+        fo = get_config("adapters.zip.fo")
+        if fo is None:
+            raise AdapterError(
+                "No zip archive provided for the zip adapter."
+                " Please provide one using the 'adapters.zip.fo' config."
+            )
+        return fsspec.filesystem(protocol="zip", fo=fo, mode="a")
+
+    def _get_filesystem(
+        self, url: str, no_cache: bool = False
+    ) -> fsspec.AbstractFileSystem:
+        return self._get_filesystem_for_reading(url)
 
     def list_directory(self, url: str, recursive: bool = True) -> list[str]:
         """

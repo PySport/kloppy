@@ -6,6 +6,7 @@ import lzma
 import os
 from pathlib import Path
 import sys
+from typing import BinaryIO, Optional
 import zipfile
 
 from botocore.session import Session
@@ -14,174 +15,201 @@ import pytest
 
 from kloppy.config import set_config
 from kloppy.exceptions import InputNotFoundError
+from kloppy.infra.io.adapters import Adapter
+from kloppy.infra.io.buffered_stream import BufferedStream
 from kloppy.io import expand_inputs, get_file_extension, open_as_file
 
+# --- Shared Helpers ---
 
-@pytest.fixture()
-def filesystem_content(tmp_path: Path) -> Path:
-    """Set up the content to be read from a local filesystem."""
-    content = "Hello, world!"
-    content_bytes = content.encode("utf-8")
 
-    # Create a regular text file
-    text_file = tmp_path / "testfile.txt"
-    text_file.write_text(content)
+def create_test_files(base_path: Path, content: str = "Hello, world!"):
+    """Helper to generate standard test files (plain and compressed)."""
+    # Plain text
+    (base_path / "testfile.txt").write_text(content)
 
-    # Create a gzip-compressed file
-    gz_file = tmp_path / "testfile.txt.gz"
-    with gzip.open(gz_file, "wb") as f_out:
-        f_out.write(content_bytes)
+    # Compressed formats
+    compressors = {
+        ".gz": gzip.open,
+        ".xz": lzma.open,
+        ".bz2": bz2.open,
+    }
 
-    # Create a xz-compressed file
-    xz_file = tmp_path / "testfile.txt.xz"
-    with lzma.open(xz_file, "wb") as f_out:
-        f_out.write(content_bytes)
+    for ext, opener in compressors.items():
+        with opener(base_path / f"testfile.txt{ext}", "wb") as f:
+            f.write(content.encode("utf-8"))
 
-    # Create a bzip2-compressed file
-    bz2_file = tmp_path / "testfile.txt.bz2"
-    with bz2.open(bz2_file, "wb") as f_out:
-        f_out.write(content_bytes)
 
+@pytest.fixture
+def populated_dir(tmp_path: Path) -> Path:
+    """Fixture that returns a directory populated with standard test files."""
+    create_test_files(tmp_path)
     return tmp_path
 
 
-class TestOpenAsFile:
-    """Tests for the open_as_file function."""
+# --- Core IO Unit Tests ---
 
-    def test_bytes(self):
+
+class TestBufferedStream:
+    """Tests for BufferedStream chunked copying."""
+
+    def test_from_stream_small_data(self):
+        """It should copy small data in chunks and keep in memory."""
+        source = BytesIO(b"Small data content")
+        buffer = BufferedStream.from_stream(source, chunk_size=8)
+
+        assert buffer.read() == b"Small data content"
+        assert buffer._rolled is False  # Still in memory
+
+    def test_from_stream_large_data(self):
+        """It should spill large data to disk."""
+        buffer_size = 5 * 1024 * 1024  # 5MB
+        large_data = b"x" * (buffer_size + 1000)
+        source = BytesIO(large_data)
+        buffer = BufferedStream.from_stream(source, max_size=buffer_size)
+
+        assert buffer._rolled is True  # Spilled to disk
+        assert buffer.read() == large_data
+
+
+class TestOpenAsFile:
+    """Tests for core open_as_file read/write functionality."""
+
+    # --- Read Tests ---
+
+    def test_read_bytes(self):
         """It should be able to open a bytes object as a file."""
         with open_as_file(b"Hello, world!") as fp:
-            assert fp is not None
             assert fp.read() == b"Hello, world!"
 
-    def test_data_string(self):
+    def test_read_data_string(self):
         """It should be able to open a json/xml string as a file."""
         with open_as_file('{"msg": "Hello, world!"}') as fp:
-            assert fp is not None
             assert json.load(fp) == {"msg": "Hello, world!"}
 
-    def test_stream(self):
+    def test_read_stream(self):
         """It should be able to open a byte stream as a file."""
         data = b"Hello, world!"
         with open_as_file(BytesIO(data)) as fp:
-            assert fp is not None
             assert fp.read() == data
 
     @pytest.mark.parametrize(
         "compress_func",
-        [
-            gzip.compress,
-            bz2.compress,
-            lzma.compress,
-        ],
+        [gzip.compress, bz2.compress, lzma.compress],
         ids=["gzip", "bz2", "xz"],
     )
-    def test_compressed_stream(self, compress_func):
+    def test_read_compressed_stream(self, compress_func):
         """It should be able to open a compressed byte stream as a file."""
         data = compress_func(b"Hello, world!")
         with open_as_file(BytesIO(data)) as fp:
-            assert fp is not None
             assert fp.read() == b"Hello, world!"
 
-    def test_path_str(self, filesystem_content: Path):
-        """It should be able to open a file from a string path."""
-        path = str(filesystem_content / "testfile.txt")
+    @pytest.mark.parametrize(
+        "path_type", [str, Path], ids=["str_path", "Path_obj"]
+    )
+    def test_read_local_file_paths(self, populated_dir, path_type):
+        """It should be able to open a local file."""
+        path = path_type(populated_dir / "testfile.txt")
         with open_as_file(path) as fp:
-            assert fp is not None
-            assert fp.read() == b"Hello, world!"
-
-    def test_path_obj(self, filesystem_content: Path):
-        """It should be able to open a file from a Path object."""
-        path = filesystem_content / "testfile.txt"
-        with open_as_file(path) as fp:
-            assert fp is not None
             assert fp.read() == b"Hello, world!"
 
     @pytest.mark.parametrize("ext", ["gz", "xz", "bz2"])
-    def test_path_compressed(self, filesystem_content: Path, ext: str):
+    def test_read_compressed_local_file(self, populated_dir, ext):
         """It should be able to open a compressed local file."""
-        path = filesystem_content / f"testfile.txt.{ext}"
+        path = populated_dir / f"testfile.txt.{ext}"
         with open_as_file(path) as fp:
-            assert fp is not None
             assert fp.read() == b"Hello, world!"
 
-    def test_path_missing(self, filesystem_content: Path):
+    def test_read_missing_file(self, tmp_path):
         """It should raise an error if the file is not found."""
-        path = filesystem_content / "missing.txt"
         with pytest.raises(InputNotFoundError):
-            with open_as_file(path) as _:
-                pass
+            open_as_file(tmp_path / "missing.txt")
+
+    # --- Write Tests ---
+
+    def test_write_stream(self):
+        """It should be able to write to a byte stream."""
+        buffer = BytesIO()
+        with open_as_file(buffer, mode="wb") as fp:
+            fp.write(b"In-memory write")
+
+        buffer.seek(0)
+        assert buffer.read() == b"In-memory write"
+
+    @pytest.mark.parametrize(
+        "path_type", [str, Path], ids=["str_path", "Path_obj"]
+    )
+    def test_write_local_file(self, tmp_path, path_type):
+        """It should be able to write to a local file."""
+        output_path = path_type(tmp_path / "output.txt")
+        with open_as_file(output_path, mode="wb") as fp:
+            fp.write(b"Hello, write!")
+
+        assert (tmp_path / "output.txt").read_bytes() == b"Hello, write!"
+
+    @pytest.mark.parametrize(
+        "ext, opener",
+        [("gz", gzip.open), ("bz2", bz2.open), ("xz", lzma.open)],
+        ids=["gzip", "bz2", "xz"],
+    )
+    def test_write_compressed_file(self, tmp_path, ext, opener):
+        """It should be able to write compressed files."""
+        output_path = tmp_path / f"output.txt.{ext}"
+        content = b"Compressed content"
+
+        with open_as_file(output_path, mode="wb") as fp:
+            fp.write(content)
+
+        # Verify by reading back
+        with opener(output_path, "rb") as f:
+            assert f.read() == content
 
 
 class TestExpandInputs:
     @pytest.fixture
-    def mock_filesystem(self, tmp_path):
+    def mock_fs(self, tmp_path):
         # Create a temporary directory structure
-        file1 = tmp_path / "file1.txt"
-        file2 = tmp_path / "file2.log"
-        subdir = tmp_path / "subdir"
-        subdir.mkdir()
-        file3 = subdir / "file3.txt"
+        (tmp_path / "file1.txt").touch()
+        (tmp_path / "file2.log").touch()
+        (tmp_path / "subdir").mkdir()
+        (tmp_path / "subdir" / "file3.txt").touch()
 
-        file1.write_text("Content of file1")
-        file2.write_text("Content of file2")
-        file3.write_text("Content of file3")
-
+        # Return dict mapping keys to absolute string paths
         return {
-            "root": str(tmp_path.as_posix()),
-            "file1": str(file1.as_posix()),
-            "file2": str(file2.as_posix()),
-            "subdir": str(subdir.as_posix()),
-            "file3": str(file3.as_posix()),
+            "root": str(tmp_path),
+            "file1": str(tmp_path / "file1.txt"),
+            "file2": str(tmp_path / "file2.log"),
+            "file3": str(tmp_path / "subdir" / "file3.txt"),
         }
 
-    def test_single_file(self, mock_filesystem):
-        files = list(expand_inputs(mock_filesystem["file1"]))
-        assert files == [mock_filesystem["file1"]]
+    def test_single_file(self, mock_fs):
+        assert list(expand_inputs(mock_fs["file1"])) == [mock_fs["file1"]]
 
-    def test_directory_expansion(self, mock_filesystem):
-        files = sorted(expand_inputs(mock_filesystem["root"]))
-        expected_files = sorted(
-            [
-                mock_filesystem["file1"],
-                mock_filesystem["file2"],
-                mock_filesystem["file3"],
-            ]
+    def test_directory_expansion(self, mock_fs):
+        expected = sorted(
+            [mock_fs["file1"], mock_fs["file2"], mock_fs["file3"]]
         )
-        assert files == expected_files
+        assert sorted(expand_inputs(mock_fs["root"])) == expected
 
-    def test_regex_filter(self, mock_filesystem):
-        files = list(
-            expand_inputs(mock_filesystem["root"], regex_filter=r".*.txt$")
-        )
-        expected_files = [
-            mock_filesystem["file1"],
-            mock_filesystem["file3"],
-        ]
-        assert sorted(files) == sorted(expected_files)
+    def test_regex_filter(self, mock_fs):
+        expected = sorted([mock_fs["file1"], mock_fs["file3"]])
+        files = list(expand_inputs(mock_fs["root"], regex_filter=r".*.txt$"))
+        assert sorted(files) == expected
 
-    def test_sort_key(self, mock_filesystem):
-        files = list(
-            expand_inputs(mock_filesystem["root"], sort_key=lambda x: x[::-1])
-        )
-        expected_files = sorted(
-            [
-                mock_filesystem["file1"],
-                mock_filesystem["file2"],
-                mock_filesystem["file3"],
-            ],
+    def test_sort_key(self, mock_fs):
+        expected = sorted(
+            [mock_fs["file1"], mock_fs["file2"], mock_fs["file3"]],
             key=lambda x: x[::-1],
         )
-        assert files == expected_files
+        files = list(expand_inputs(mock_fs["root"], sort_key=lambda x: x[::-1]))
+        assert files == expected
 
-    def test_list_of_files(self, mock_filesystem):
-        input_list = [mock_filesystem["file1"], mock_filesystem["file2"]]
-        files = list(expand_inputs(input_list))
-        assert files == input_list
+    def test_list_of_files(self, mock_fs):
+        inputs = [mock_fs["file1"], mock_fs["file2"]]
+        assert list(expand_inputs(inputs)) == inputs
 
     def test_invalid_path(self):
         with pytest.raises(InputNotFoundError):
-            list(expand_inputs("nonexistent_file.txt"))
+            list(expand_inputs("nonexistent.txt"))
 
 
 def test_get_file_extension():
@@ -191,185 +219,325 @@ def test_get_file_extension():
     assert get_file_extension("data") == ""
 
 
-class TestHTTPAdapter:
+# --- Adapter Integration Tests ---
+
+
+class MockAdapter(Adapter):
+    """
+    Generic Mock adapter storing data in memory.
+    Supports both read and write testing.
+    """
+
+    def __init__(self, initial_data: Optional[dict[str, bytes]] = None):
+        self.storage = initial_data if initial_data else {}
+
+    def supports(self, url: str) -> bool:
+        return url.startswith("mock://")
+
+    def is_directory(self, url: str) -> bool:
+        return url not in self.storage and url.endswith("/")
+
+    def is_file(self, url: str) -> bool:
+        return url in self.storage
+
+    def read_to_stream(self, url: str, output: BinaryIO):
+        if url in self.storage:
+            output.write(self.storage[url])
+        else:
+            raise FileNotFoundError(f"Mock file not found: {url}")
+
+    def write_from_stream(self, url: str, input: BinaryIO, mode: str):  # noqa: A002
+        input.seek(0)
+        self.storage[url] = input.read()
+
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
+        return [k for k in self.storage.keys() if k.startswith(url)]
+
+
+class TestMockAdapter:
+    """Tests for generic Adapter logic using the in-memory MockAdapter."""
+
+    @pytest.fixture
+    def adapter_setup(self, monkeypatch):
+        # Pre-seed some data
+        mock_adapter = MockAdapter(
+            {
+                "mock://read/data.txt": b"Pre-existing content",
+                "mock://read/config.json": b'{"foo": "bar"}',
+            }
+        )
+
+        # Inject adapter
+        from kloppy.infra.io import adapters
+
+        monkeypatch.setattr(
+            adapters, "adapters", [mock_adapter] + adapters.adapters
+        )
+        return mock_adapter
+
+    def test_expand_inputs(self, adapter_setup):
+        expected = {"mock://read/data.txt", "mock://read/config.json"}
+        assert set(expand_inputs("mock://read/")) == expected
+
+    def test_read_via_adapter(self, adapter_setup):
+        with open_as_file("mock://read/data.txt") as fp:
+            assert fp.read() == b"Pre-existing content"
+
+    def test_write_via_adapter(self, adapter_setup):
+        with open_as_file("mock://write/new.txt", mode="wb") as fp:
+            fp.write(b"New data")
+
+        # Verify directly in storage
+        assert adapter_setup.storage["mock://write/new.txt"] == b"New data"
+
+        # Verify via read
+        with open_as_file("mock://write/new.txt") as fp:
+            assert fp.read() == b"New data"
+
+
+class TestFileAdapter:
+    """Tests for FileAdapter."""
+
     @pytest.fixture(autouse=True)
-    def httpserver_content(self, httpserver):
+    def setup_files(self, populated_dir):
+        self.root_dir = populated_dir
+
+    def test_list_directory(self):
+        """It should be able to list the contents of a local directory."""
+        found = set(expand_inputs(str(self.root_dir)))
+        assert found == {
+            str(self.root_dir / f)
+            for f in [
+                "testfile.txt",
+                "testfile.txt.gz",
+                "testfile.txt.bz2",
+                "testfile.txt.xz",
+            ]
+        }
+
+    def test_read_via_adapter(self):
+        """It should be able to open a file from the local filesystem."""
+        path = self.root_dir / "testfile.txt"
+        with open_as_file(str(path)) as fp:
+            assert fp.read() == b"Hello, world!"
+
+    def test_read_compressed_via_adapter(self):
+        """It should be able to open and decompress a file from the local filesystem."""
+        path = self.root_dir / "testfile.txt.gz"
+        with open_as_file(str(path)) as fp:
+            assert fp.read() == b"Hello, world!"
+
+    def test_write_via_adapter(self):
+        """It should be able to write a file to the local filesystem."""
+        path = self.root_dir / "new_file.txt"
+        with open_as_file(str(path), mode="wb") as fp:
+            fp.write(b"New written data")
+
+        assert path.exists()
+        with open(path, "rb") as f:
+            assert f.read() == b"New written data"
+
+    def test_write_compressed_via_adapter(self):
+        """It should be able to write a compressed file to the local filesystem."""
+        path = self.root_dir / "new_file.txt.gz"
+        with open_as_file(str(path), mode="wb") as fp:
+            fp.write(b"New compressed data")
+
+        assert path.exists()
+        with gzip.open(path, "rb") as f:
+            assert f.read() == b"New compressed data"
+
+
+class TestHTTPAdapter:
+    """Tests for HTTPAdapter."""
+
+    @pytest.fixture(autouse=True)
+    def httpserver_content(self, httpserver, tmp_path):
         """Set up the content to be read from an HTTP server."""
-        # Define the content
-        content = "Hello, world!"
-        compressed_content = gzip.compress(b"Hello, world!")
+        # 1. Generate standard files
+        create_test_files(tmp_path)
 
-        # Serve the plain text file
-        httpserver.expect_request("/testfile.txt").respond_with_data(content)
+        # 2. Read binaries to serve
+        txt_content = (tmp_path / "testfile.txt").read_bytes()
+        gz_content = (tmp_path / "testfile.txt.gz").read_bytes()
 
-        # Serve the compressed text file with Content-Encoding header
-        httpserver.expect_request("/compressed_testfile.txt").respond_with_data(
-            compressed_content,
+        # 3. Configure Server
+        httpserver.expect_request("/testfile.txt").respond_with_data(
+            txt_content
+        )
+
+        # Serve compressed content with explicit headers
+        httpserver.expect_request("/compressed_endpoint").respond_with_data(
+            gz_content,
             headers={"Content-Encoding": "gzip", "Content-Type": "text/plain"},
         )
 
-        # Serve the gzip file with application/x-gzip content type
+        # Serve generic .gz file
         httpserver.expect_request("/testfile.txt.gz").respond_with_data(
-            compressed_content,
-            headers={"Content-Type": "application/x-gzip"},
+            gz_content, headers={"Content-Type": "application/x-gzip"}
         )
 
-        # Generate the index.html content with links to all resources
-        index_html = f"""
-        <html>
-            <head><title>Test Content</title></head>
-            <body>
-                <h1>Available Data</h1>
-                <ul>
-                    <li><a href="/testfile.txt">Plain Text File</a></li>
-                    <li><a href="/compressed_testfile.txt">Compressed Text File (gzip)</a></li>
-                    <li><a href="{httpserver.url_for("/testfile.txt.gz")}">Gzip File</a></li>
-                </ul>
-            </body>
-        </html>
-        """
+        index = f"""<html><body><ul>
+            <li><a href="/testfile.txt">Txt</a></li>
+            <li><a href="/compressed_endpoint">Comp</a></li>
+            <li><a href="{httpserver.url_for("/testfile.txt.gz")}">Gz</a></li>
+        </ul></body></html>"""
 
-        # Serve the index.html page
         httpserver.expect_request("/").respond_with_data(
-            index_html, headers={"Content-Type": "text/html"}
+            index, headers={"Content-Type": "text/html"}
         )
-
         return httpserver
 
     def test_expand_inputs(self, httpserver):
         """It should be able to list the contents of an HTTP server."""
         url = httpserver.url_for("/")
-        assert list(expand_inputs(url)) == [
-            httpserver.url_for("/compressed_testfile.txt"),
+        expected = {
             httpserver.url_for("/testfile.txt"),
+            httpserver.url_for("/compressed_endpoint"),
             httpserver.url_for("/testfile.txt.gz"),
-        ]
+        }
+        assert set(expand_inputs(url)) == expected
 
-    def test_open_as_file(self, httpserver):
+    def test_read_via_adapter(self, httpserver):
         """It should be able to open a file from a URL."""
-        url = httpserver.url_for("/testfile.txt")
-        with open_as_file(url) as fp:
-            assert fp is not None
+        with open_as_file(httpserver.url_for("/testfile.txt")) as fp:
             assert fp.read() == b"Hello, world!"
 
-    def test_open_as_file_compressed(self, httpserver):
-        """It should be able to open a compressed file from a URL."""
-        # If the server returns a content-encoding header, the file should be
-        # decompressed by the request library
-        url = httpserver.url_for("/compressed_testfile.txt")
-        with open_as_file(url) as fp:
-            assert fp is not None
+    def test_read_compressed_auto_decompress(self, httpserver):
+        """It should decompress files based on Content-Encoding header."""
+        with open_as_file(httpserver.url_for("/compressed_endpoint")) as fp:
             assert fp.read() == b"Hello, world!"
 
-        # If the server does not set a content-type header, but the URL ends
-        # with .gz, the file should be decompressed by kloppy
-        url = httpserver.url_for("/testfile.txt.gz")
-        with open_as_file(url) as fp:
-            assert fp is not None
+    def test_read_compressed_extension_handling(self, httpserver):
+        """It should decompress files based on file extension."""
+        with open_as_file(httpserver.url_for("/testfile.txt.gz")) as fp:
             assert fp.read() == b"Hello, world!"
+
+    def test_write_unsupported(self, httpserver):
+        """Writing data via the HTTP server is not supported."""
+        with pytest.raises(NotImplementedError):
+            with open_as_file(httpserver.url_for("/new.txt"), mode="wb") as fp:
+                fp.write(b"Fail")
+
+
+class TestZipAdapter:
+    """Tests for ZipAdapter."""
+
+    @pytest.fixture(autouse=True)
+    def zip_config(self, tmp_path):
+        """Creates a zip and sets it as the default zip adapter target."""
+        zip_path = tmp_path / "archive.zip"
+        create_test_files(tmp_path)
+
+        # Create a zip containing two files
+        with zipfile.ZipFile(zip_path, "w") as z:
+            z.write(tmp_path / "testfile.txt", arcname="testfile.txt")
+            z.write(tmp_path / "testfile.txt", arcname="other.txt")
+
+        # Set config for test
+        set_config("adapters.zip.fo", str(zip_path))
+        yield
+        # Reset config to avoid side effects on other tests
+        set_config("adapters.zip.fo", None)
+
+    def test_list_directory(self):
+        """It should be able to list the contents of a zip archive."""
+        expected = ["zip://other.txt", "zip://testfile.txt"]
+        assert sorted(expand_inputs("zip:///")) == expected
+
+    def test_read_via_adapter(self):
+        """It should be able to open a file from a zip archive."""
+        with open_as_file("zip://testfile.txt") as fp:
+            assert fp.read() == b"Hello, world!"
+
+    def test_write_via_adapter(self):
+        """It should be able to add a file to a zip archive."""
+        with open_as_file("zip://new_file.txt", mode="wb") as fp:
+            fp.write(b"New written data")
+
+        with open_as_file("zip://new_file.txt") as fp:
+            assert fp.read() == b"New written data"
 
 
 @pytest.mark.skipif(
     sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
 )
 class TestS3Adapter:
+    """Tests for S3Adapter using moto."""
+
     endpoint_uri = "http://127.0.0.1:5555"
-    test_bucket_name = "test-bucket"
-    files = {
-        "testfile.txt": b"Hello, world!",
-        "testfile.txt.gz": gzip.compress(b"Hello, world!"),
-    }
+    bucket = "test-bucket"
 
     @pytest.fixture(scope="class", autouse=True)
-    def s3_content(self):
-        """Set up the content to be read from a S3 bucket."""
+    def s3_env(self, tmp_path_factory):
+        # 1. Setup Moto Server
         server = ThreadedMotoServer(ip_address="127.0.0.1", port=5555)
         server.start()
-        if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-        if "AWS_ACCESS_KEY_ID" not in os.environ:
-            os.environ["AWS_ACCESS_KEY_ID"] = "foo"
 
+        # 2. Setup Env
+        os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "foo")
+        os.environ.setdefault("AWS_ACCESS_KEY_ID", "foo")
+
+        # 3. Create generic test files locally first
+        local_dir = tmp_path_factory.mktemp("s3_data")
+        create_test_files(local_dir)
+
+        # 4. Upload to Mock S3
         session = Session()
         client = session.create_client(
             "s3", endpoint_url=self.endpoint_uri, region_name="us-east-1"
         )
-        client.create_bucket(Bucket=self.test_bucket_name, ACL="public-read")
+        client.create_bucket(Bucket=self.bucket, ACL="public-read")
 
-        for f, data in self.files.items():
-            client.put_object(Bucket=self.test_bucket_name, Key=f, Body=data)
+        for file_path in local_dir.iterdir():
+            client.put_object(
+                Bucket=self.bucket,
+                Key=file_path.name,
+                Body=file_path.read_bytes(),
+            )
 
         yield
-
         server.stop()
 
     @pytest.fixture(scope="class", autouse=True)
-    def s3fs(self):
-        """Set up the S3FileSystem."""
+    def configure_kloppy_s3(self):
         from s3fs import S3FileSystem
 
         s3 = S3FileSystem(
             anon=False, client_kwargs={"endpoint_url": self.endpoint_uri}
         )
         set_config("adapters.s3.s3fs", s3)
+        yield
+        set_config("adapters.s3.s3fs", None)
 
     def test_list_directory(self):
         """It should be able to list the contents of an S3 bucket."""
-        assert set(expand_inputs("s3://test-bucket/")) == {
-            "s3://test-bucket/testfile.txt",
-            "s3://test-bucket/testfile.txt.gz",
+        found = set(expand_inputs(f"s3://{self.bucket}/"))
+        assert found == {
+            f"s3://{self.bucket}/{f}"
+            for f in [
+                "testfile.txt",
+                "testfile.txt.gz",
+                "testfile.txt.bz2",
+                "testfile.txt.xz",
+            ]
         }
 
-    def test_open_as_file(self):
+    def test_read_via_adapter(self):
         """It should be able to open a file from an S3 bucket."""
-        with open_as_file("s3://test-bucket/testfile.txt") as fp:
-            assert fp is not None
+        with open_as_file(f"s3://{self.bucket}/testfile.txt") as fp:
             assert fp.read() == b"Hello, world!"
 
-    def test_open_as_file_compressed(self):
-        """It should be able to open a file from an S3 bucket."""
-        with open_as_file("s3://test-bucket/testfile.txt.gz") as fp:
-            assert fp is not None
+    def test_read_compressed_via_adapter(self):
+        """It should be able to open a compressed file from an S3 bucket."""
+        with open_as_file(f"s3://{self.bucket}/testfile.txt.gz") as fp:
             assert fp.read() == b"Hello, world!"
 
+    def test_write_via_adapter(self):
+        """It should be able to write a file to an S3 bucket."""
+        path = f"s3://{self.bucket}/new_s3_file.txt"
+        with open_as_file(path, mode="wb") as fp:
+            fp.write(b"New data")
 
-class TestZipAdapter:
-    @pytest.fixture()
-    def zip_archive_content(self, tmp_path: Path) -> Path:
-        """
-        Set up a ZIP archive containing test files.
-        """
-        zip_path = tmp_path / "archive.zip"
-
-        # Create a text file to include in the ZIP archive
-        text_file_path = tmp_path / "testfile.txt"
-        with open(text_file_path, "w") as f:
-            f.write("Hello, world!")
-
-        # Create a ZIP archive and add the text file to it
-        with zipfile.ZipFile(zip_path, "w") as zipf:
-            zipf.write(text_file_path, arcname="testfile.txt")
-
-        # Optionally, add more files to the ZIP archive
-        another_file_path = tmp_path / "anothertestfile.txt"
-        with open(another_file_path, "w") as f:
-            f.write("Another file content")
-
-        with zipfile.ZipFile(zip_path, "a") as zipf:
-            zipf.write(another_file_path, arcname="anothertestfile.txt")
-
-        set_config("adapters.zip.fo", str(zip_path))
-        return zip_path
-
-    def test_list_directory(self, zip_archive_content):
-        """It should be able to list the contents of a zip archive."""
-        assert list(expand_inputs("zip:///")) == [
-            "zip://anothertestfile.txt",
-            "zip://testfile.txt",
-        ]
-
-    def test_open_as_file(self, zip_archive_content):
-        """It should be able to open a file from a URL."""
-        with open_as_file("zip://testfile.txt") as fp:
-            assert fp is not None
-            assert fp.read() == b"Hello, world!"
+        with open_as_file(path) as fp:
+            assert fp.read() == b"New data"

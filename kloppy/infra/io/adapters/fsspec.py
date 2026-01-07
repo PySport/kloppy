@@ -38,6 +38,16 @@ class FSSpecAdapter(Adapter, ABC):
             cache_storage=get_config("cache"),
         )
 
+    def _get_filesystem_for_reading(
+        self, url: str
+    ) -> fsspec.AbstractFileSystem:
+        return self._get_filesystem(url, no_cache=False)
+
+    def _get_filesystem_for_writing(
+        self, url: str
+    ) -> fsspec.AbstractFileSystem:
+        return self._get_filesystem(url, no_cache=True)
+
     def _detect_compression(self, url: str) -> Optional[str]:
         """
         Detect the compression type based on the file extension.
@@ -65,7 +75,7 @@ class FSSpecAdapter(Adapter, ABC):
         Reads content from the given URL and writes it to the provided BufferedStream.
         Uses caching for remote files. Copies data in chunks.
         """
-        fs = self._get_filesystem(url)
+        fs = self._get_filesystem_for_reading(url)
         compression = self._detect_compression(url)
 
         try:
@@ -84,7 +94,7 @@ class FSSpecAdapter(Adapter, ABC):
             input: BufferedStream to read from
             mode: Write mode ('wb' for write/overwrite or 'ab' for append)
         """
-        fs = self._get_filesystem(url, no_cache=True)
+        fs = self._get_filesystem_for_writing(url)
         compression = self._detect_compression(url)
 
         with fs.open(url, mode, compression=compression) as dest_file:

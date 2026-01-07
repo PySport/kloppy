@@ -175,10 +175,10 @@ class TestExpandInputs:
 
         # Return dict mapping keys to absolute string paths
         return {
-            "root": str(tmp_path),
-            "file1": str(tmp_path / "file1.txt"),
-            "file2": str(tmp_path / "file2.log"),
-            "file3": str(tmp_path / "subdir" / "file3.txt"),
+            "root": os.fspath(tmp_path),
+            "file1": os.fspath(tmp_path / "file1.txt"),
+            "file2": os.fspath(tmp_path / "file2.log"),
+            "file3": os.fspath(tmp_path / "subdir" / "file3.txt"),
         }
 
     def test_single_file(self, mock_fs):

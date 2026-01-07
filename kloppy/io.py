@@ -522,71 +522,41 @@ def expand_inputs(
         An iterator over the resolved file paths or stream content.
     """
 
-    def is_file(uri):
+    def _get_adapter_safe(uri):
         adapter = get_adapter(uri)
-        if adapter:
-            return adapter.is_file(uri)
-        raise AdapterError(f"No adapter found for {uri}")
+        if not adapter:
+            raise AdapterError(f"No adapter found for {uri}")
+        return adapter
 
-    def is_directory(uri):
-        adapter = get_adapter(uri)
-        if adapter:
-            return adapter.is_directory(uri)
-        raise AdapterError(f"No adapter found for {uri}")
-
-    def process_expansion(files):
-        """
-        Process a list of files by filtering and sorting them.
-
-        Args:
-            files: List of file URIs to process.
-
-        Returns:
-            A sorted and filtered list of file URIs.
-        """
-        files = [f for f in files if not is_directory(f)]
-
-        if regex_filter:
-            pattern = re.compile(regex_filter)
-            files = [f for f in files if pattern.search(f)]
-
-        files.sort(key=sort_key or _natural_sort_key)
-        return files
-
+    # 1. Handle Single String/Path Input
     if isinstance(inputs, (str, os.PathLike)):
         uri = _filepath_from_path_or_filelike(inputs)
+        adapter = _get_adapter_safe(uri)
 
-        if is_directory(uri):
-            adapter = get_adapter(uri)
-            if adapter:
-                yield from process_expansion(
-                    adapter.list_directory(uri, recursive=True)
-                )
-            else:
-                raise AdapterError(f"No adapter found for {uri}")
-        elif is_file(uri):
+        if adapter.is_directory(uri):
+            # Recursively expand directory contents
+            all_files = adapter.list_directory(uri, recursive=True)
+
+            # Apply Filter
+            if regex_filter:
+                pattern = re.compile(regex_filter)
+                all_files = [f for f in all_files if pattern.search(f)]
+
+            # Apply Sort
+            all_files.sort(key=sort_key or _natural_sort_key)
+
+            yield from all_files
+        elif adapter.is_file(uri):
             yield uri
         else:
             raise InputNotFoundError(f"Invalid path or file: {inputs}")
 
-    elif isinstance(inputs, Iterable):
+    # 2. Handle Iterable Input
+    elif isinstance(inputs, Iterable) and not isinstance(inputs, (str, bytes)):
         for item in inputs:
-            if isinstance(item, (str, os.PathLike)):
-                uri = _filepath_from_path_or_filelike(item)
-                if is_file(uri):
-                    yield uri
-                elif is_directory(uri):
-                    adapter = get_adapter(uri)
-                    if adapter:
-                        yield from process_expansion(
-                            adapter.list_directory(uri, recursive=True)
-                        )
-                    else:
-                        raise AdapterError(f"No adapter found for {uri}")
-                else:
-                    raise InputNotFoundError(f"Invalid path or file: {item}")
-            else:
-                yield item
+            # Recursive call allows mixed lists of directories and files
+            yield from expand_inputs(item, regex_filter, sort_key)
 
+    # 3. Handle Single Object Input (BytesIO, etc)
     else:
         yield inputs

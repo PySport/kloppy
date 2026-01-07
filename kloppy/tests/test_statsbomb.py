@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-import os
 from pathlib import Path
 from typing import cast
 
@@ -52,15 +51,6 @@ from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
-
-
-def test_with_visualization():
-    if (
-        "KLOPPY_TESTWITHVIZ" in os.environ
-        and os.environ["KLOPPY_TESTWITHVIZ"] == "1"
-    ):
-        return True
-    return False
 
 
 @pytest.fixture(scope="module")
@@ -317,7 +307,9 @@ class TestStatsBombEvent:
 
         assert ball_out_events[0].ball_state == BallState.DEAD
 
-    def test_freeze_frame_shot(self, dataset: EventDataset, base_dir: Path):
+    def test_freeze_frame_shot(
+        self, dataset: EventDataset, base_dir: Path, with_visualization: bool
+    ):
         """Test if shot freeze-frame is properly parsed and attached to shot events"""
         shot_event = dataset.get_event_by_id(
             "a5c60797-631e-418a-9f24-1e9779cb2b42"
@@ -343,7 +335,7 @@ class TestStatsBombEvent:
             91.45, 28.15
         )
 
-        if test_with_visualization():
+        if with_visualization:
             import matplotlib.pyplot as plt
             from mplsoccer import VerticalPitch
 
@@ -428,7 +420,9 @@ class TestStatsBombEvent:
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_shot.png"
             )
 
-    def test_freeze_frame_360(self, dataset: EventDataset, base_dir: Path):
+    def test_freeze_frame_360(
+        self, dataset: EventDataset, base_dir: Path, with_visualization: bool
+    ):
         """Test if 360 freeze-frame is properly parsed and attached to shot events"""
         pass_event = dataset.get_event_by_id(
             "8022c113-e349-4b0b-b4a7-a3bb662535f8"
@@ -504,7 +498,7 @@ class TestStatsBombEvent:
             abs=1e-2,
         )
 
-        if test_with_visualization():
+        if with_visualization:
             import matplotlib.pyplot as plt
             from mplsoccer import Pitch
 

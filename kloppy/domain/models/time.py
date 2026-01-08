@@ -261,14 +261,29 @@ class TimeContainer(Generic[T]):
             ranges_.append((start_time, end_time, self.items[start_time]))
         return ranges_
 
-    def last(self, include_time: bool = False, default=SENTINEL):
+    def last(
+        self,
+        include_time: bool = False,
+        include_none: bool = True,
+        default=SENTINEL,
+    ):
+        def __get_last_non_none_key(items):
+            for key, value in reversed(items.items()):
+                if value is not None:
+                    return key
+            return None
+
         if not len(self.items):
             if default == SENTINEL:
                 raise KeyError
             else:
                 return default
 
-        time = self.items.keys()[-1]
+        if include_none:
+            time = self.items.keys()[-1]
+        else:
+            time = __get_last_non_none_key(self.items)
+
         if include_time:
             return time, self.items[time]
         else:

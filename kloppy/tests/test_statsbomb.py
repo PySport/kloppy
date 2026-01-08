@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-import os
 from pathlib import Path
 from typing import cast
 
@@ -51,17 +50,7 @@ from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
-ENABLE_PLOTTING = True
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
-
-
-def test_with_visualization():
-    if (
-        "KLOPPY_TESTWITHVIZ" in os.environ
-        and os.environ["KLOPPY_TESTWITHVIZ"] == "1"
-    ):
-        return True
-    return False
 
 
 @pytest.fixture(scope="module")
@@ -253,12 +242,12 @@ class TestStatsBombMetadata:
             assert isinstance(game_id, str)
             assert game_id == "3888787"
 
-        home_coach = dataset.metadata.home_coach
+        home_coach = dataset.metadata.teams[0].coach
         if home_coach:
             assert isinstance(home_coach, str)
             assert home_coach == "R. Martínez Montoliù"
 
-        away_coach = dataset.metadata.away_coach
+        away_coach = dataset.metadata.teams[1].coach
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "F. Fernandes da Costa Santos"
@@ -318,7 +307,9 @@ class TestStatsBombEvent:
 
         assert ball_out_events[0].ball_state == BallState.DEAD
 
-    def test_freeze_frame_shot(self, dataset: EventDataset, base_dir: Path):
+    def test_freeze_frame_shot(
+        self, dataset: EventDataset, base_dir: Path, with_visualization: bool
+    ):
         """Test if shot freeze-frame is properly parsed and attached to shot events"""
         shot_event = dataset.get_event_by_id(
             "a5c60797-631e-418a-9f24-1e9779cb2b42"
@@ -344,7 +335,7 @@ class TestStatsBombEvent:
             91.45, 28.15
         )
 
-        if test_with_visualization():
+        if with_visualization:
             import matplotlib.pyplot as plt
             from mplsoccer import VerticalPitch
 
@@ -359,7 +350,10 @@ class TestStatsBombEvent:
             def get_color(player):
                 if player.team == shot_event.player.team:
                     return "#b94b75"
-                elif player.starting_position.position_id == "1":
+                elif (
+                    player.starting_position.position_group
+                    == PositionType.Goalkeeper
+                ):
                     return "#c15ca5"
                 else:
                     return "#7f63b8"
@@ -426,7 +420,9 @@ class TestStatsBombEvent:
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_shot.png"
             )
 
-    def test_freeze_frame_360(self, dataset: EventDataset, base_dir: Path):
+    def test_freeze_frame_360(
+        self, dataset: EventDataset, base_dir: Path, with_visualization: bool
+    ):
         """Test if 360 freeze-frame is properly parsed and attached to shot events"""
         pass_event = dataset.get_event_by_id(
             "8022c113-e349-4b0b-b4a7-a3bb662535f8"
@@ -502,7 +498,7 @@ class TestStatsBombEvent:
             abs=1e-2,
         )
 
-        if test_with_visualization():
+        if with_visualization:
             import matplotlib.pyplot as plt
             from mplsoccer import Pitch
 
@@ -610,13 +606,20 @@ class TestStatsBombEvent:
         pass_event = dataset.get_event_by_id(
             "8022c113-e349-4b0b-b4a7-a3bb662535f8"
         )
+        assert (
+            pass_event.coordinates.x
+            == pass_event.freeze_frame.ball_coordinates.x
+        )
+        assert (
+            pass_event.coordinates.y
+            == pass_event.freeze_frame.ball_coordinates.y
+        )
         coordinates_per_team = defaultdict(list)
         for (
             player,
             coordinates,
         ) in pass_event.freeze_frame.players_coordinates.items():
             coordinates_per_team[player.team.name].append(coordinates)
-        print(coordinates_per_team)
         assert coordinates_per_team == {
             "Belgium": [
                 Point(x=0.30230680550305883, y=0.5224074534269804),
@@ -1232,11 +1235,6 @@ class TestStatsBombTacticalShiftEvent:
             lineup_data=base_dir / "files/statsbomb_lineup.json",
             event_data=base_dir / "files/statsbomb_event.json",
         )
-
-        for item in dataset.aggregate("minutes_played", include_position=True):
-            print(
-                f"{item.player} {item.player.player_id}- {item.start_time} - {item.end_time} - {item.duration} - {item.position}"
-            )
 
         home_team, away_team = dataset.metadata.teams
         period1, period2 = dataset.metadata.periods

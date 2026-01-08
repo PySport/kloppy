@@ -115,8 +115,6 @@ class DatasetTransformer:
         point_base = self._from_pitch_dimensions.to_metric_base(
             point, pitch_length=base_pitch_length, pitch_width=base_pitch_width
         )
-        print(point_base)
-        print(self._to_pitch_dimensions.from_metric_base)
         point_to = self._to_pitch_dimensions.from_metric_base(
             point=point_base,
             pitch_length=base_pitch_length,
@@ -329,8 +327,8 @@ class DatasetTransformer:
             ):
                 event = self.__flip_event(event)
 
-            if event.freeze_frame:
-                event.freeze_frame = self.transform_frame(event.freeze_frame)
+        if event.freeze_frame:
+            event.freeze_frame = self.transform_frame(event.freeze_frame)
 
         return event
 

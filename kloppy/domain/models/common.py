@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Iterable
@@ -13,15 +11,15 @@ from typing import (
     Callable,
     Generic,
     Literal,
+    Optional,
     TypeVar,
+    Union,
     overload,
 )
 
 from kloppy.utils import deprecated, snake_case
 
 if TYPE_CHECKING:
-    from pandas import DataFrame
-
     from ..services.transformers.data_record import (
         Column,
         NamedColumns,
@@ -159,10 +157,10 @@ class Official:
     """
 
     official_id: str
-    name: str | None = None
-    first_name: str | None = None
-    last_name: str | None = None
-    role: OfficialType | None = None
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[OfficialType] = None
 
     @property
     def full_name(self):
@@ -203,15 +201,15 @@ class Player:
     """
 
     player_id: str
-    team: Team
+    team: "Team"
     jersey_no: int
-    first_name: str | None = None
-    last_name: str | None = None
-    name: str | None = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    name: Optional[str] = None
 
     # match specific
     starting: bool = False
-    starting_position: PositionType | None = None
+    starting_position: Optional[PositionType] = None
     positions: TimeContainer[PositionType] = field(
         default_factory=TimeContainer, compare=False
     )
@@ -228,7 +226,7 @@ class Player:
 
     @property
     @deprecated("starting_position or positions should be used")
-    def position(self) -> PositionType | None:
+    def position(self) -> Optional[PositionType]:
         try:
             return self.positions.last()
         except KeyError:
@@ -248,7 +246,7 @@ class Player:
             return False
         return self.player_id == other.player_id
 
-    def set_position(self, time: Time, position: PositionType | None):
+    def set_position(self, time: Time, position: Optional[PositionType]):
         self.positions.set(time, position)
 
 
@@ -263,16 +261,18 @@ class Team:
         ground (Ground): The team's ground (home or away).
         players (List[Player]): The team's players.
         starting_formation (FormationType, optional): The team's starting formation.
+        coach (str, optional): The team's coach.
     """
 
     team_id: str
     name: str
     ground: Ground
-    starting_formation: FormationType | None = None
+    starting_formation: Optional[FormationType] = None
     formations: TimeContainer[FormationType] = field(
         default_factory=TimeContainer, compare=False
     )
     players: list[Player] = field(default_factory=list)
+    coach: Optional[str] = None
 
     def __str__(self):
         return self.name
@@ -285,7 +285,7 @@ class Team:
             return False
         return self.team_id == other.team_id
 
-    def get_player_by_jersey_number(self, jersey_no: int) -> Player | None:
+    def get_player_by_jersey_number(self, jersey_no: int) -> Optional[Player]:
         """Get a player by their jersey number.
 
         Args:
@@ -304,7 +304,7 @@ class Team:
 
     def get_player_by_position(
         self, position: PositionType, time: Time
-    ) -> Player | None:
+    ) -> Optional[Player]:
         """Get a player by their position at a given time.
 
         Args:
@@ -326,7 +326,7 @@ class Team:
 
         return None
 
-    def get_player_by_id(self, player_id: int | str) -> Player | None:
+    def get_player_by_id(self, player_id: Union[int, str]) -> Optional[Player]:
         """Get a player by their identifier.
 
         Args:
@@ -344,7 +344,7 @@ class Team:
 
         return None
 
-    def set_formation(self, time: Time, formation: FormationType | None):
+    def set_formation(self, time: Time, formation: Optional[FormationType]):
         self.formations.set(time, formation)
 
 
@@ -428,10 +428,10 @@ class AttackingDirection(Enum):
     @staticmethod
     def from_orientation(
         orientation: Orientation,
-        period: Period | None = None,
-        ball_owning_team: Team | None = None,
-        action_executing_team: Team | None = None,
-    ) -> AttackingDirection:
+        period: Optional[Period] = None,
+        ball_owning_team: Optional[Team] = None,
+        action_executing_team: Optional[Team] = None,
+    ) -> "AttackingDirection":
         """Determines the attacking direction for a specific data record.
 
         Args:
@@ -586,11 +586,11 @@ class CoordinateSystem(ABC):
         return isinstance(self.pitch_dimensions, NormalizedPitchDimensions)
 
     @property
-    def pitch_length(self) -> float | None:
+    def pitch_length(self) -> Optional[float]:
         return self.pitch_dimensions.pitch_length
 
     @property
-    def pitch_width(self) -> float | None:
+    def pitch_width(self) -> Optional[float]:
         return self.pitch_dimensions.pitch_width
 
     def __eq__(self, other):
@@ -756,8 +756,8 @@ class CoordinateSystem(ABC):
 class ProviderCoordinateSystem(CoordinateSystem):
     def __init__(
         self,
-        pitch_length: float | None = None,
-        pitch_width: float | None = None,
+        pitch_length: Optional[float] = None,
+        pitch_width: Optional[float] = None,
     ):
         self._pitch_length = pitch_length
         self._pitch_width = pitch_width
@@ -1441,8 +1441,8 @@ class DatasetType(Enum):
 def build_coordinate_system(
     provider: Provider,
     dataset_type: DatasetType = DatasetType.EVENT,
-    pitch_length: float | None = None,
-    pitch_width: float | None = None,
+    pitch_length: Optional[float] = None,
+    pitch_width: Optional[float] = None,
 ) -> CoordinateSystem:
     """Build a coordinate system for a given provider and dataset type.
 
@@ -1527,13 +1527,13 @@ class ActionValue(Statistic):
     """Action value"""
 
     name: str
-    action_value_scoring_before: float | None = field(default=None)
-    action_value_scoring_after: float | None = field(default=None)
-    action_value_conceding_before: float | None = field(default=None)
-    action_value_conceding_after: float | None = field(default=None)
+    action_value_scoring_before: Optional[float] = field(default=None)
+    action_value_scoring_after: Optional[float] = field(default=None)
+    action_value_conceding_before: Optional[float] = field(default=None)
+    action_value_conceding_after: Optional[float] = field(default=None)
 
     @property
-    def offensive_value(self) -> float | None:
+    def offensive_value(self) -> Optional[float]:
         if (
             self.action_value_scoring_before is None
             or self.action_value_scoring_after is None
@@ -1544,7 +1544,7 @@ class ActionValue(Statistic):
         )
 
     @property
-    def defensive_value(self) -> float | None:
+    def defensive_value(self) -> Optional[float]:
         if (
             self.action_value_conceding_before is None
             or self.action_value_conceding_after is None
@@ -1556,7 +1556,7 @@ class ActionValue(Statistic):
         )
 
     @property
-    def value(self) -> float | None:
+    def value(self) -> Optional[float]:
         if self.offensive_value is None or self.defensive_value is None:
             return None
         return self.offensive_value - self.defensive_value
@@ -1580,18 +1580,18 @@ class DataRecord(ABC):
         ball_state: The state of the ball at the time of the observation.
     """
 
-    dataset: Dataset = field(init=False)
-    prev_record: Self | None = field(init=False)
-    next_record: Self | None = field(init=False)
+    dataset: "Dataset" = field(init=False)
+    prev_record: Optional[Self] = field(init=False)
+    next_record: Optional[Self] = field(init=False)
     period: Period
     timestamp: timedelta
     statistics: list[Statistic]
-    ball_owning_team: Team | None
-    ball_state: BallState | None
+    ball_owning_team: Optional[Team]
+    ball_state: Optional[BallState]
 
     @property
     @abstractmethod
-    def record_id(self) -> int | str:
+    def record_id(self) -> Union[int, str]:
         pass
 
     @property
@@ -1600,9 +1600,9 @@ class DataRecord(ABC):
 
     def set_refs(
         self,
-        dataset: Dataset,
-        prev: Self | None,
-        next_: Self | None,
+        dataset: "Dataset",
+        prev: Optional[Self],
+        next_: Optional[Self],
     ):
         if hasattr(self, "dataset"):
             # TODO: determine if next/prev record should be affected
@@ -1630,7 +1630,9 @@ class DataRecord(ABC):
                 return AttackingDirection.NOT_SET
         return AttackingDirection.NOT_SET
 
-    def matches(self, filter_: str | Callable[[Self], bool] | None) -> bool:
+    def matches(
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]]
+    ) -> bool:
         if filter_ is None:
             return True
         elif callable(filter_):
@@ -1639,8 +1641,8 @@ class DataRecord(ABC):
             raise InvalidFilterError()
 
     def prev(
-        self, filter_: str | Callable[[Self], bool] | None = None
-    ) -> Self | None:
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
+    ) -> Optional[Self]:
         if self.prev_record:
             prev_record = self.prev_record
             while prev_record:
@@ -1649,8 +1651,8 @@ class DataRecord(ABC):
                 prev_record = prev_record.prev_record
 
     def next(
-        self, filter_: str | Callable[[Self], bool] | None = None
-    ) -> Self | None:
+        self, filter_: Optional[Union[str, Callable[[Self], bool]]] = None
+    ) -> Optional[Self]:
         if self.next_record:
             next_record = self.next_record
             while next_record:
@@ -1701,15 +1703,13 @@ class Metadata:
     orientation: Orientation
     flags: DatasetFlag
     provider: Provider
-    score: Score | None = None
-    frame_rate: float | None = None
-    date: datetime | None = None
-    game_week: str | None = None
-    game_id: str | None = None
-    home_coach: str | None = None
-    away_coach: str | None = None
-    officials: list | None = field(default_factory=list)
-    attributes: dict | None = field(default_factory=dict, compare=False)
+    score: Optional[Score] = None
+    frame_rate: Optional[float] = None
+    date: Optional[datetime] = None
+    game_week: Optional[str] = None
+    game_id: Optional[str] = None
+    officials: Optional[list] = field(default_factory=list)
+    attributes: Optional[dict] = field(default_factory=dict, compare=False)
 
     def __post_init__(self):
         if self.coordinate_system is not None:
@@ -1723,6 +1723,16 @@ class Metadata:
                     self.periods[i + 1] if i + 1 < len(self.periods) else None
                 ),
             )
+
+    @property
+    @deprecated("Use teams[0].coach instead")
+    def home_coach(self) -> Optional[str]:
+        return self.teams[0].coach if self.teams else None
+
+    @property
+    @deprecated("Use teams[1].coach instead")
+    def away_coach(self) -> Optional[str]:
+        return self.teams[1].coach if self.teams else None
 
 
 T = TypeVar("T", bound="DataRecord")
@@ -1787,14 +1797,6 @@ class Dataset(ABC, Generic[T]):
     def dataset_type(self) -> DatasetType:
         raise NotImplementedError
 
-    @abstractmethod
-    def to_pandas(
-        self,
-        record_converter: Callable[[T], dict] | None = None,
-        additional_columns: NamedColumns | None = None,
-    ) -> DataFrame:  # noqa: F821
-        pass
-
     def transform(self, *args, **kwargs):
         """
         See [transform][kloppy.helpers.transform]
@@ -1803,7 +1805,7 @@ class Dataset(ABC, Generic[T]):
 
         return transform(self, *args, **kwargs)
 
-    def filter(self, filter_: str | Callable[[T], bool]):
+    def filter(self, filter_: Union[str, Callable[[T], bool]]):
         """
         Filter all records used `filter_`
 
@@ -1831,13 +1833,15 @@ class Dataset(ABC, Generic[T]):
     def find_all(self, filter_) -> list[T]:
         return [record for record in self.records if record.matches(filter_)]
 
-    def find(self, filter_) -> T | None:
+    def find(self, filter_) -> Optional[T]:
         for record in self.records:
             if record.matches(filter_):
                 return record
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, mapper_fn: Callable[[Self], Self]):
+    def from_dataset(
+        cls, dataset: "Dataset", mapper_fn: Callable[[Self], Self]
+    ):
         """
         Create a new Dataset from other dataset
 
@@ -1870,7 +1874,7 @@ class Dataset(ABC, Generic[T]):
             records=[mapper_fn(record) for record in dataset.records],
         )
 
-    def get_record_by_id(self, record_id: int | str) -> T | None:
+    def get_record_by_id(self, record_id: Union[int, str]) -> Optional[T]:
         for record in self.records:
             if record.record_id == record_id:
                 return record
@@ -1878,25 +1882,25 @@ class Dataset(ABC, Generic[T]):
     @overload
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: Literal[True] = True,
-        **named_columns: NamedColumns,
+        **named_columns: "NamedColumns",
     ) -> list[dict[str, Any]]: ...
 
     @overload
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: Literal[False] = False,
-        **named_columns: NamedColumns,
+        **named_columns: "NamedColumns",
     ) -> Iterable[dict[str, Any]]: ...
 
     def to_records(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         as_list: bool = True,
-        **named_columns: NamedColumns,
-    ) -> list[dict[str, Any]] | Iterable[dict[str, Any]]:
+        **named_columns: "NamedColumns",
+    ) -> Union[list[dict[str, Any]], Iterable[dict[str, Any]]]:
         from ..services.transformers.data_record import get_transformer_cls
 
         transformer = get_transformer_cls(self.dataset_type)(
@@ -1910,9 +1914,9 @@ class Dataset(ABC, Generic[T]):
 
     def to_dict(
         self,
-        *columns: Unpack[tuple[Column]],
+        *columns: Unpack[tuple["Column"]],
         orient: Literal["list"] = "list",
-        **named_columns: NamedColumns,
+        **named_columns: "NamedColumns",
     ) -> dict[str, list[Any]]:
         if orient == "list":
             from ..services.transformers.data_record import get_transformer_cls
@@ -1936,12 +1940,9 @@ class Dataset(ABC, Generic[T]):
 
     def to_df(
         self,
-        *columns: Unpack[tuple[Column]],
-        engine: Literal["polars"]
-        | Literal["pandas"]
-        | Literal["pandas[pyarrow]"]
-        | None = None,
-        **named_columns: NamedColumns,
+        *columns: Unpack[tuple["Column"]],
+        engine: Optional[Literal["polars", "pandas", "pandas[pyarrow]"]] = None,
+        **named_columns: "NamedColumns",
     ):
         from kloppy.config import get_config
 

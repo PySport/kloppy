@@ -11,14 +11,7 @@ import logging
 import lzma
 import os
 import re
-from typing import (
-    IO,
-    Any,
-    BinaryIO,
-    Callable,
-    Optional,
-    Union,
-)
+from typing import IO, Any, BinaryIO, Callable, Optional, Union, cast
 
 from kloppy.exceptions import AdapterError, InputNotFoundError
 from kloppy.infra.io.adapters import get_adapter
@@ -316,8 +309,28 @@ def get_file_extension(file_or_path: FileLike) -> str:
 
 
 @contextlib.contextmanager
-def dummy_context_mgr() -> Generator[None, None, None]:
-    yield
+def _write_context_manager(
+    uri: str, mode: str
+) -> Generator[BinaryIO, None, None]:
+    """
+    Context manager for write operations that buffers writes and flushes to adapter on exit.
+
+    Args:
+        uri: The destination URI
+        mode: Write mode ('wb' or 'ab')
+
+    Yields:
+        A BufferedStream for writing
+    """
+    buffer = BufferedStream()
+    try:
+        yield buffer
+    finally:
+        adapter = get_adapter(uri)
+        if adapter:
+            adapter.write_from_stream(uri, buffer, mode)
+        else:
+            raise AdapterError(f"No adapter found for {uri}")
 
 
 @contextlib.contextmanager
@@ -396,32 +409,24 @@ def open_as_file(
 
         Write mode limitations:
             - HTTP/HTTPS URLs: Not supported
-            - Zip archives: Not supported
             - Inline strings/bytes: Not supported (invalid output destination)
     """
-    # Validate mode
-    if mode not in ("rb", "wb", "ab"):
-        raise ValueError(
-            f"Mode '{mode}' not supported. Use 'rb', 'wb', or 'ab'."
-        )
-
-    # Handle Source wrapper
+    # 1. Handle Source wrapper logic first
     if isinstance(input_, Source):
-        if input_.data is None and input_.optional:
-            return dummy_context_mgr()
-        elif input_.data is None:
+        if input_.data is None:
+            if input_.optional:
+                return contextlib.nullcontext(None)
             raise ValueError("Input required but not provided.")
-        else:
-            try:
-                return open_as_file(input_.data, mode=mode)
-            except InputNotFoundError as exc:
-                if input_.skip_if_missing:
-                    logging.info(f"Input {input_.data} not found. Skipping")
-                    return dummy_context_mgr()
-                else:
-                    raise exc
 
-    # Write modes: Cannot write to inline data
+        try:
+            return open_as_file(input_.data, mode=mode)
+        except InputNotFoundError:
+            if input_.skip_if_missing:
+                logger.info(f"Input {input_.data} not found. Skipping")
+                return contextlib.nullcontext(None)
+            raise
+
+    # 2. Validate input for Write Modes
     if mode in ("wb", "ab"):
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
             raise TypeError("Cannot write to inline JSON/XML string.")
@@ -430,51 +435,78 @@ def open_as_file(
                 "Cannot write to bytes object. Use BytesIO instead."
             )
 
-    # Read modes: Handle inline data
+    # 3. Handle Inline Data (Read Mode)
     if mode == "rb":
         if isinstance(input_, str) and ("{" in input_ or "<" in input_):
-            return BytesIO(input_.encode("utf8"))
+            return contextlib.nullcontext(BytesIO(input_.encode("utf8")))
         if isinstance(input_, bytes):
-            return BytesIO(input_)
+            return contextlib.nullcontext(BytesIO(input_))
 
-    # Handle paths (local files, URLs, S3, etc.)
-    if isinstance(input_, str) or hasattr(input_, "__fspath__"):
+    # 4. Handle Adapter-based URIs/Paths
+    # Check if input looks like a path or string URI
+    if isinstance(input_, (str, os.PathLike)):
         uri = _filepath_from_path_or_filelike(input_)
-
         adapter = get_adapter(uri)
-        if not adapter:
-            raise AdapterError(f"No adapter found for {uri}")
 
-        if mode == "rb":
-            # Read mode: buffer data from adapter
-            stream = BufferedStream()
-            adapter.read_to_stream(uri, stream)
-            stream.seek(0)
-            return stream
-        else:
-            # Write mode: return context manager that flushes on exit
-            return _write_context_manager(uri, mode)
+        if adapter:
+            if mode == "rb":
+                stream = BufferedStream()
+                adapter.read_to_stream(uri, stream)
+                stream.seek(0)
+                return contextlib.nullcontext(stream)
+            else:
+                return _write_context_manager(uri, mode)
 
-    # Handle file-like objects
-    if isinstance(input_, TextIOWrapper):
-        return input_.buffer
+        # check if the uri is a string with adapter prefix
+        elif isinstance(input_, str):
+            prefix_match = re.match(r"^([a-zA-Z0-9+.-]+)://", input_)
+            if prefix_match:
+                raise AdapterError(
+                    f"No adapter found for {prefix_match.group(1)}://"
+                )
 
-    if hasattr(input_, "readinto") or (
-        mode in ("wb", "ab") and hasattr(input_, "write")
+        # If no adapter found, fall through to standard _open (local file handling)
+
+    # 5. Handle File Objects or Standard Local Files
+    if (
+        hasattr(input_, "readinto")
+        or hasattr(input_, "write")
+        or isinstance(input_, (str, os.PathLike))
     ):
-        # File-like object (BytesIO, file handles, etc.)
-        if hasattr(input_, "mode") and input_.mode != mode:  # type: ignore
-            # If it's a real file with a mode, check compatibility
-            raise ValueError(
-                f"File opened in mode '{input_.mode}' but '{mode}' requested"
-            )  # type: ignore
+        # --- Validation: Check mode compatibility for existing file objects ---
+        if not isinstance(input_, (str, os.PathLike)):
+            input_mode = getattr(input_, "mode", None)
+            if input_mode and input_mode != mode:
+                raise ValueError(
+                    f"File opened in mode '{input_mode}' but '{mode}' requested"
+                )
 
-        # Use _open to handle potential compression detection
-        if mode == "rb":
-            return _open(input_, mode)  # type: ignore
-        else:
-            # For write modes, return file-like object directly with nullcontext
-            return contextlib.nullcontext(input_)  # type: ignore
+        # --- Processing: Open or wrap the input ---
+        # _open handles:
+        # 1. Opening paths
+        # 2. Extracting binary buffers from TextIOWrapper
+        # 3. Detecting compression (gzip, etc) and returning a Decompressor wrapper
+        opened = _open(input_, mode)
+
+        # --- Ownership: Decide if we should close the file on exit ---
+
+        # Case A: We created a new wrapper (e.g. opened a path, or wrapped BytesIO in GzipFile)
+        # We return the object directly so its __exit__ cleans up the wrapper.
+        # Note: We check if `opened` is different from `input_` AND different from `input_.buffer`
+        # (the latter handles the TextIOWrapper case where we don't want to close the wrapper).
+        is_transformed = opened is not input_
+        if hasattr(input_, "buffer"):
+            is_transformed = is_transformed and opened is not input_.buffer
+
+        if is_transformed:
+            # Exception: If the original input was a file object, and _open returned a
+            # compression wrapper (like GzipFile), closing GzipFile usually closes the
+            # underlying file.
+            return cast(AbstractContextManager, opened)
+
+        # Case B: It is the exact same raw stream (e.g. plain BytesIO)
+        # We wrap in nullcontext so we don't close the user's object.
+        return contextlib.nullcontext(opened)
 
     raise TypeError(f"Unsupported input type: {type(input_)}")
 
@@ -516,71 +548,41 @@ def expand_inputs(
         An iterator over the resolved file paths or stream content.
     """
 
-    def is_file(uri):
+    def _get_adapter_safe(uri):
         adapter = get_adapter(uri)
-        if adapter:
-            return adapter.is_file(uri)
-        raise AdapterError(f"No adapter found for {uri}")
+        if not adapter:
+            raise AdapterError(f"No adapter found for {uri}")
+        return adapter
 
-    def is_directory(uri):
-        adapter = get_adapter(uri)
-        if adapter:
-            return adapter.is_directory(uri)
-        raise AdapterError(f"No adapter found for {uri}")
-
-    def process_expansion(files):
-        """
-        Process a list of files by filtering and sorting them.
-
-        Args:
-            files: List of file URIs to process.
-
-        Returns:
-            A sorted and filtered list of file URIs.
-        """
-        files = [f for f in files if not is_directory(f)]
-
-        if regex_filter:
-            pattern = re.compile(regex_filter)
-            files = [f for f in files if pattern.search(f)]
-
-        files.sort(key=sort_key or _natural_sort_key)
-        return files
-
+    # 1. Handle Single String/Path Input
     if isinstance(inputs, (str, os.PathLike)):
         uri = _filepath_from_path_or_filelike(inputs)
+        adapter = _get_adapter_safe(uri)
 
-        if is_directory(uri):
-            adapter = get_adapter(uri)
-            if adapter:
-                yield from process_expansion(
-                    adapter.list_directory(uri, recursive=True)
-                )
-            else:
-                raise AdapterError(f"No adapter found for {uri}")
-        elif is_file(uri):
+        if adapter.is_directory(uri):
+            # Recursively expand directory contents
+            all_files = adapter.list_directory(uri, recursive=True)
+
+            # Apply Filter
+            if regex_filter:
+                pattern = re.compile(regex_filter)
+                all_files = [f for f in all_files if pattern.search(f)]
+
+            # Apply Sort
+            all_files.sort(key=sort_key or _natural_sort_key)
+
+            yield from all_files
+        elif adapter.is_file(uri):
             yield uri
         else:
             raise InputNotFoundError(f"Invalid path or file: {inputs}")
 
-    elif isinstance(inputs, Iterable):
+    # 2. Handle Iterable Input
+    elif isinstance(inputs, Iterable) and not isinstance(inputs, (str, bytes)):
         for item in inputs:
-            if isinstance(item, (str, os.PathLike)):
-                uri = _filepath_from_path_or_filelike(item)
-                if is_file(uri):
-                    yield uri
-                elif is_directory(uri):
-                    adapter = get_adapter(uri)
-                    if adapter:
-                        yield from process_expansion(
-                            adapter.list_directory(uri, recursive=True)
-                        )
-                    else:
-                        raise AdapterError(f"No adapter found for {uri}")
-                else:
-                    raise InputNotFoundError(f"Invalid path or file: {item}")
-            else:
-                yield item
+            # Recursive call allows mixed lists of directories and files
+            yield from expand_inputs(item, regex_filter, sort_key)
 
+    # 3. Handle Single Object Input (BytesIO, etc)
     else:
         yield inputs

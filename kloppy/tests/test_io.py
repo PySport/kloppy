@@ -15,6 +15,7 @@ import pytest
 
 from kloppy.config import set_config
 from kloppy.exceptions import InputNotFoundError
+from kloppy.infra.io import adapters
 from kloppy.infra.io.adapters import Adapter
 from kloppy.infra.io.buffered_stream import BufferedStream
 from kloppy.io import expand_inputs, get_file_extension, open_as_file
@@ -74,6 +75,16 @@ class TestBufferedStream:
 class TestOpenAsFile:
     """Tests for core open_as_file read/write functionality."""
 
+    @pytest.fixture(params=[True, False], ids=["with_adapters", "no_adapters"])
+    def setup_adapters(self, request, monkeypatch):
+        """
+        Fixture that runs tests in two states:
+        1. Default state (adapters enabled).
+        2. Patched state (adapters list empty).
+        """
+        if not request.param:
+            monkeypatch.setattr(adapters, "adapters", [])
+
     # --- Read Tests ---
 
     def test_read_bytes(self):
@@ -106,15 +117,19 @@ class TestOpenAsFile:
     @pytest.mark.parametrize(
         "path_type", [str, Path], ids=["str_path", "Path_obj"]
     )
-    def test_read_local_file_paths(self, populated_dir, path_type):
-        """It should be able to open a local file."""
+    def test_read_local_file_paths(
+        self, populated_dir, path_type, setup_adapters
+    ):
+        """It should be able to open a local file (with and without adapters)."""
         path = path_type(populated_dir / "testfile.txt")
         with open_as_file(path) as fp:
             assert fp.read() == b"Hello, world!"
 
     @pytest.mark.parametrize("ext", ["gz", "xz", "bz2"])
-    def test_read_compressed_local_file(self, populated_dir, ext):
-        """It should be able to open a compressed local file."""
+    def test_read_compressed_local_file(
+        self, populated_dir, ext, setup_adapters
+    ):
+        """It should be able to open a compressed local file (with and without adapters)."""
         path = populated_dir / f"testfile.txt.{ext}"
         with open_as_file(path) as fp:
             assert fp.read() == b"Hello, world!"
@@ -123,6 +138,12 @@ class TestOpenAsFile:
         """It should raise an error if the file is not found."""
         with pytest.raises(InputNotFoundError):
             open_as_file(tmp_path / "missing.txt")
+
+    def test_read_opened_file(self, populated_dir):
+        """It should return the same file object if already opened."""
+        path = populated_dir / "testfile.txt"
+        with open_as_file(path.open("rb")) as fp:
+            assert fp.read() == b"Hello, world!"
 
     # --- Write Tests ---
 
@@ -138,8 +159,8 @@ class TestOpenAsFile:
     @pytest.mark.parametrize(
         "path_type", [str, Path], ids=["str_path", "Path_obj"]
     )
-    def test_write_local_file(self, tmp_path, path_type):
-        """It should be able to write to a local file."""
+    def test_write_local_file(self, tmp_path, path_type, setup_adapters):
+        """It should be able to write to a local file (with and without adapters)."""
         output_path = path_type(tmp_path / "output.txt")
         with open_as_file(output_path, mode="wb") as fp:
             fp.write(b"Hello, write!")
@@ -151,8 +172,8 @@ class TestOpenAsFile:
         [("gz", gzip.open), ("bz2", bz2.open), ("xz", lzma.open)],
         ids=["gzip", "bz2", "xz"],
     )
-    def test_write_compressed_file(self, tmp_path, ext, opener):
-        """It should be able to write compressed files."""
+    def test_write_compressed_file(self, tmp_path, ext, opener, setup_adapters):
+        """It should be able to write compressed files (with and without adapters)."""
         output_path = tmp_path / f"output.txt.{ext}"
         content = b"Compressed content"
 
@@ -162,6 +183,26 @@ class TestOpenAsFile:
         # Verify by reading back
         with opener(output_path, "rb") as f:
             assert f.read() == content
+
+    def test_write_opened_file(self, tmp_path):
+        """It should write to the same file object if already opened."""
+        output_path = tmp_path / "output.txt"
+        output_file = output_path.open("wb")
+        with open_as_file(output_file, mode="wb") as fp:
+            fp.write(b"Hello, opened write!")
+        output_file.close()
+
+        assert output_path.read_bytes() == b"Hello, opened write!"
+
+    def test_mode_conflict(self, populated_dir):
+        """It should raise an error if mode conflicts with opened file."""
+        path = populated_dir / "testfile.txt"
+        with pytest.raises(ValueError):
+            open_as_file(path.open("r"), mode="wb")
+        with pytest.raises(ValueError):
+            open_as_file(path.open("wb"), mode="rb")
+        with pytest.raises(ValueError):
+            open_as_file(path.open("rb"), mode="wb")
 
 
 class TestExpandInputs:

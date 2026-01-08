@@ -336,7 +336,6 @@ def _write_context_manager(
 def open_as_file(
     input_: FileLike,
     mode: str = "rb",
-    encoding: Optional[str] = None,
 ) -> AbstractContextManager[Optional[BinaryIO]]:
     """Open a byte stream to/from the given input object.
 
@@ -357,8 +356,6 @@ def open_as_file(
         input_ (FileLike): The input/output object to be opened.
         mode (str): File mode - 'rb' (read), 'wb' (write), or 'ab' (append).
             Defaults to 'rb'.
-        encoding (str, optional): The name of the encoding used to decode or encode the
-            file. This should only be used in text mode.
 
     Returns:
         BinaryIO: A binary stream to/from the input object.
@@ -398,7 +395,7 @@ def open_as_file(
             raise ValueError("Input required but not provided.")
 
         try:
-            return open_as_file(input_.data, mode=mode, encoding=encoding)
+            return open_as_file(input_.data, mode=mode)
         except InputNotFoundError:
             if input_.skip_if_missing:
                 logger.info(f"Input {input_.data} not found. Skipping")
@@ -432,10 +429,6 @@ def open_as_file(
                 stream = BufferedStream()
                 adapter.read_to_stream(uri, stream)
                 stream.seek(0)
-                if encoding:
-                    return contextlib.nullcontext(
-                        TextIOWrapper(stream, encoding=encoding)
-                    )  # type: ignore
                 return contextlib.nullcontext(stream)
             else:
                 return _write_context_manager(uri, mode)
@@ -443,9 +436,10 @@ def open_as_file(
         # check if the uri is a string with adapter prefix
         elif isinstance(input_, str):
             prefix_match = re.match(r"^([a-zA-Z0-9+.-]+)://", input_)
-            raise AdapterError(
-                f"No adapter found for {prefix_match.group(1)}://"
-            )
+            if prefix_match:
+                raise AdapterError(
+                    f"No adapter found for {prefix_match.group(1)}://"
+                )
 
         # If no adapter found, fall through to standard _open (local file handling)
 
@@ -453,34 +447,42 @@ def open_as_file(
     if (
         hasattr(input_, "readinto")
         or hasattr(input_, "write")
-        or isinstance(
-            input_, (str, os.PathLike)
-        )  # only used if the FileAdapter is disabled
+        or isinstance(input_, (str, os.PathLike))
     ):
-        # Check mode compatibility for existing file objects
-        if hasattr(input_, "mode") and "b" not in input_.mode and "b" in mode:
-            # If it's a real file with a mode, check compatibility
-            raise ValueError(
-                f"File opened in mode '{input_.mode}' but '{mode}' requested"
-            )
-
-        if mode == "rb":
-            f_obj = _open(input_, mode)  # type: ignore
-            if encoding:
-                return contextlib.nullcontext(
-                    TextIOWrapper(f_obj, encoding=encoding)
+        # --- Validation: Check mode compatibility for existing file objects ---
+        if not isinstance(input_, (str, os.PathLike)):
+            input_mode = getattr(input_, "mode", None)
+            if input_mode and input_mode != mode:
+                raise ValueError(
+                    f"File opened in mode '{input_mode}' but '{mode}' requested"
                 )
 
-            # This is tricky with the current helper structure.
-            # The cleanest way is to rely on the fact that open() returns a context manager.
-            if isinstance(input_, (str, os.PathLike)):
-                # Re-implement context safety for paths
-                return cast(AbstractContextManager, _open(input_, mode))
-            else:
-                return contextlib.nullcontext(f_obj)
-        else:
-            # Write mode for local files/objects
-            return contextlib.nullcontext(_open(input_, mode))
+        # --- Processing: Open or wrap the input ---
+        # _open handles:
+        # 1. Opening paths
+        # 2. Extracting binary buffers from TextIOWrapper
+        # 3. Detecting compression (gzip, etc) and returning a Decompressor wrapper
+        opened = _open(input_, mode)
+
+        # --- Ownership: Decide if we should close the file on exit ---
+
+        # Case A: We created a new wrapper (e.g. opened a path, or wrapped BytesIO in GzipFile)
+        # We return the object directly so its __exit__ cleans up the wrapper.
+        # Note: We check if `opened` is different from `input_` AND different from `input_.buffer`
+        # (the latter handles the TextIOWrapper case where we don't want to close the wrapper).
+        is_transformed = opened is not input_
+        if hasattr(input_, "buffer"):
+            is_transformed = is_transformed and opened is not input_.buffer
+
+        if is_transformed:
+            # Exception: If the original input was a file object, and _open returned a
+            # compression wrapper (like GzipFile), closing GzipFile usually closes the
+            # underlying file.
+            return cast(AbstractContextManager, opened)
+
+        # Case B: It is the exact same raw stream (e.g. plain BytesIO)
+        # We wrap in nullcontext so we don't close the user's object.
+        return contextlib.nullcontext(opened)
 
     raise TypeError(f"Unsupported input type: {type(input_)}")
 

@@ -302,7 +302,7 @@ class TestFileAdapter:
     def setup_files(self, populated_dir):
         self.root_dir = populated_dir
 
-    def test_list_directory(self):
+    def test_expand_inputs(self):
         """It should be able to list the contents of a local directory."""
         found = set(expand_inputs(str(self.root_dir)))
         assert found == {
@@ -440,7 +440,7 @@ class TestZipAdapter:
         # Reset config to avoid side effects on other tests
         set_config("adapters.zip.fo", None)
 
-    def test_list_directory(self):
+    def test_expand_inputs(self):
         """It should be able to list the contents of a zip archive."""
         expected = ["zip://other.txt", "zip://testfile.txt"]
         assert sorted(expand_inputs("zip:///")) == expected
@@ -510,7 +510,7 @@ class TestS3Adapter:
         yield
         set_config("adapters.s3.s3fs", None)
 
-    def test_list_directory(self):
+    def test_expand_inputs(self):
         """It should be able to list the contents of an S3 bucket."""
         found = set(expand_inputs(f"s3://{self.bucket}/"))
         assert found == {

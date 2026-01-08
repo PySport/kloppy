@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import os
 import re
 from typing import Optional
 
@@ -111,12 +110,7 @@ class FSSpecAdapter(Adapter, ABC):
             files = fs.find(url, detail=False)
         else:
             files = fs.listdir(url, detail=False)
-        return [
-            f"{protocol}://{fp}"
-            if protocol != "file" and not fp.startswith(protocol)
-            else os.fspath(fp)
-            for fp in files
-        ]
+        return [f"{protocol}://{fp}" for fp in files]
 
     def is_directory(self, url: str) -> bool:
         """

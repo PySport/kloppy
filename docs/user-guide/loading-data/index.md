@@ -94,25 +94,25 @@ To load data from a web server, you must provide a string representing a URL. It
 from kloppy import statsbomb
 
 dataset = statsbomb.load(
-    event_data=Path("http://someurl.com/match_3788741/events.json"),
-    lineup_data=Path("htpps://someurl.com/match_3788741/lineups.json"),
+    event_data="http://someurl.com/match_3788741/events.json",
+    lineup_data="htpps://someurl.com/match_3788741/lineups.json",
 )
 ```
 
-You can pass credentials for authentication via [`set_config`][kloppy.config.set_config].
+You can pass credentials for authentication via [`set_config`][kloppy.config.set_config] to allow fetching data from a protected API.
 
 ```python
-from kloppy import statsbomb
+from kloppy import wyscout
 from kloppy.config import set_config
 
 set_config(
     'adapters.http.basic_authentication',
-    { 'user': 'JohnDoe', 'pass': 'asecretkey' }
+    { 'login': 'JohnDoe', 'password': 'asecretkey' }
 )
 
-dataset = statsbomb.load(
-    event_data="http://someurl.com/match_3788741/events.json",
-    lineup_data="htpps://someurl.com/match_3788741/lineups.json",
+dataset = wyscout.load(
+    event_data="https://apirest.wyscout.com/v3/matches/3788741/events",
+    data_version="V3"
 )
 ```
 

@@ -1,7 +1,7 @@
 import fsspec
 
 from kloppy.config import get_config
-from kloppy.exceptions import AdapterError
+from kloppy.exceptions import AdapterError, KloppyError
 
 from .fsspec import FSSpecAdapter
 
@@ -47,7 +47,22 @@ class HTTPAdapter(FSSpecAdapter):
 
         client_kwargs = {}
         if basic_authentication:
-            client_kwargs["auth"] = aiohttp.BasicAuth(*basic_authentication)
+            try:
+                if isinstance(basic_authentication, dict):
+                    # Handle dictionary: unpack as keyword arguments (login=..., password=...)
+                    client_kwargs["auth"] = aiohttp.BasicAuth(
+                        **basic_authentication
+                    )
+                else:
+                    # Handle list/tuple: unpack as positional arguments (login, password)
+                    client_kwargs["auth"] = aiohttp.BasicAuth(
+                        *basic_authentication
+                    )
+            except TypeError as e:
+                raise KloppyError(
+                    "Invalid basic authentication configuration. "
+                    "Provide a dictionary with 'login' and 'password' keys, or tuple."
+                ) from e
 
         if no_cache:
             return fsspec.filesystem("http", client_kwargs=client_kwargs)

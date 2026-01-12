@@ -109,6 +109,7 @@ class Provider(Enum):
         HAWEKEYE (Provider):
         SPORTVU (Provider):
         IMPECT (Provider):
+        CDF (Provider):
         OTHER (Provider):
     """
 
@@ -126,8 +127,9 @@ class Provider(Enum):
     STATSPERFORM = "statsperform"
     HAWKEYE = "hawkeye"
     SPORTVU = "sportvu"
-    SIGNALITY = "signality"
     IMPECT = "impect"
+    CDF = "common_data_format"
+    SIGNALITY = "signality"
     OTHER = "other"
 
     def __str__(self):
@@ -679,12 +681,16 @@ class CoordinateSystem(ABC):
         dim = BaseDims(
             left=self.pitch_dimensions.x_dim.min,
             right=self.pitch_dimensions.x_dim.max,
-            bottom=self.pitch_dimensions.y_dim.min
-            if not invert_y
-            else self.pitch_dimensions.y_dim.max,
-            top=self.pitch_dimensions.y_dim.max
-            if not invert_y
-            else self.pitch_dimensions.y_dim.min,
+            bottom=(
+                self.pitch_dimensions.y_dim.min
+                if not invert_y
+                else self.pitch_dimensions.y_dim.max
+            ),
+            top=(
+                self.pitch_dimensions.y_dim.max
+                if not invert_y
+                else self.pitch_dimensions.y_dim.min
+            ),
             width=self.pitch_dimensions.x_dim.max
             - self.pitch_dimensions.x_dim.min,
             length=self.pitch_dimensions.y_dim.max
@@ -733,14 +739,16 @@ class CoordinateSystem(ABC):
                 - self.pitch_dimensions.x_dim.min
             ),
             pad_multiplier=1,
-            aspect_equal=False
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else True,
+            aspect_equal=(
+                False if self.pitch_dimensions.unit == Unit.NORMED else True
+            ),
             pitch_width=pitch_width,
             pitch_length=pitch_length,
-            aspect=pitch_width / pitch_length
-            if self.pitch_dimensions.unit == Unit.NORMED
-            else 1.0,
+            aspect=(
+                pitch_width / pitch_length
+                if self.pitch_dimensions.unit == Unit.NORMED
+                else 1.0
+            ),
         )
         return dim
 
@@ -1184,6 +1192,58 @@ class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
             )
 
 
+class CDFCoordinateSystem(ProviderCoordinateSystem):
+    """
+    CDFCoordinateSystem coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.CDF
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        return NormalizedPitchDimensions(
+            x_dim=Dimension(
+                -1 * self._pitch_length / 2, self._pitch_length / 2
+            ),
+            y_dim=Dimension(-1 * self._pitch_width / 2, self._pitch_width / 2),
+            pitch_length=self._pitch_length,
+            pitch_width=self._pitch_width,
+            standardized=False,
+        )
+
+    def __init__(
+        self,
+        base_coordinate_system: ProviderCoordinateSystem | None = None,
+        pitch_length: float | None = None,
+        pitch_width: float | None = None,
+    ):
+        if base_coordinate_system is not None:
+            # Used by serializer - derive dimensions from source coordinate system
+            self._pitch_length = (
+                base_coordinate_system.pitch_dimensions.pitch_length
+            )
+            self._pitch_width = (
+                base_coordinate_system.pitch_dimensions.pitch_width
+            )
+        else:
+            # Used by deserializer - direct pitch dimensions
+            self._pitch_length = pitch_length
+            self._pitch_width = pitch_width
+
+
 class SignalityCoordinateSystem(ProviderCoordinateSystem):
     @property
     def provider(self) -> Provider:
@@ -1414,6 +1474,7 @@ def build_coordinate_system(
         Provider.SPORTVU: SportVUCoordinateSystem,
         Provider.SIGNALITY: SignalityCoordinateSystem,
         Provider.IMPECT: ImpectCoordinateSystem,
+        Provider.CDF: CDFCoordinateSystem,
     }
 
     if provider in coordinate_systems:
@@ -1943,6 +2004,10 @@ class Dataset(ABC, Generic[T]):
             )
         else:
             raise KloppyParameterError(f"Engine {engine} is not valid")
+
+    def to_cdf(self):
+        if self.dataset_type != DatasetType.TRACKING:
+            raise ValueError("to_cdf() is only supported for TrackingDataset")
 
     def __repr__(self):
         return f"<{self.__class__.__name__} record_count={len(self.records)}>"

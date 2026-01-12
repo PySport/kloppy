@@ -333,9 +333,33 @@ def _write_context_manager(
             raise AdapterError(f"No adapter found for {uri}")
 
 
+@contextlib.contextmanager
+def _write_context_manager(
+    uri: str, mode: str
+) -> Generator[BinaryIO, None, None]:
+    """
+    Context manager for write operations that buffers writes and flushes to adapter on exit.
+
+    Args:
+        uri: The destination URI
+        mode: Write mode ('wb' or 'ab')
+
+    Yields:
+        A BufferedStream for writing
+    """
+    buffer = BufferedStream()
+    try:
+        yield buffer
+    finally:
+        adapter = get_adapter(uri)
+        if adapter:
+            adapter.write_from_stream(uri, buffer, mode)
+        else:
+            raise AdapterError(f"No adapter found for {uri}")
+
+
 def open_as_file(
-    input_: FileLike,
-    mode: str = "rb",
+    input_: FileLike, mode: str = "rb"
 ) -> AbstractContextManager[Optional[BinaryIO]]:
     """Open a byte stream to/from the given input object.
 

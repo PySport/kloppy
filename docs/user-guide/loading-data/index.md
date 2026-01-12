@@ -99,21 +99,22 @@ dataset = statsbomb.load(
 )
 ```
 
-You can pass credentials for authentication via [`set_config`][kloppy.config.set_config] to allow fetching data from a protected API.
+To fetch data from an API protected with [HTTP Basic Auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication), you can provide your credentials by setting the `adapters.http.basic_authentication` configuration variable.
 
 ```python
 from kloppy import wyscout
-from kloppy.config import set_config
+from kloppy.config import config_context
 
-set_config(
-    'adapters.http.basic_authentication',
-    { 'login': 'JohnDoe', 'password': 'asecretkey' }
-)
+# Use a dictionary or tuple/list: ("JohnDoe", "asecretkey")
+with config_context(
+    "adapters.http.basic_authentication",
+    {"login": "JohnDoe", "password": "asecretkey"}
+):
+    dataset = wyscout.load(
+        event_data="https://apirest.wyscout.com/v3/matches/3788741/events",
+        data_version="V3"
+    )
 
-dataset = wyscout.load(
-    event_data="https://apirest.wyscout.com/v3/matches/3788741/events",
-    data_version="V3"
-)
 ```
 
 #### S3

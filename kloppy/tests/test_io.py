@@ -477,9 +477,18 @@ class TestHTTPAdapter:
 
     def test_read_with_basic_auth(self, httpserver):
         """It should read a file protected with basic authentication."""
+        # It should support a dict
         with config_context(
             "adapters.http.basic_authentication",
             {"login": "Aladdin", "password": "OpenSesame"},
+        ):
+            with open_as_file(httpserver.url_for("/auth.txt")) as fp:
+                assert fp.read() == b"Hello, world!"
+
+        # It should also support a tuple
+        with config_context(
+            "adapters.http.basic_authentication",
+            ("Aladdin", "OpenSesame"),
         ):
             with open_as_file(httpserver.url_for("/auth.txt")) as fp:
                 assert fp.read() == b"Hello, world!"

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import IO, Callable, NamedTuple, Optional, Union
 
@@ -20,7 +20,7 @@ from kloppy.domain import (
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.event.sportec.deserializer import (
-    sportec_metadata_from_xml_elm,
+    load_metadata,
 )
 from kloppy.utils import performance_logging
 
@@ -315,12 +315,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
     def deserialize(self, inputs: SportecTrackingDataInputs) -> TrackingDataset:
         with performance_logging("parse metadata", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
-            sportec_metadata = sportec_metadata_from_xml_elm(match_root)
-            date = datetime.fromisoformat(
-                match_root.MatchInformation.General.attrib["KickoffTime"]
-            )
-            game_week = match_root.MatchInformation.General.attrib["MatchDay"]
-            game_id = match_root.MatchInformation.General.attrib["MatchId"]
+            sportec_metadata = load_metadata(match_root)
             periods = sportec_metadata.periods
             teams = home_team, away_team = sportec_metadata.teams
             player_map = {
@@ -455,9 +450,9 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
             provider=Provider.SPORTEC,
             flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
             coordinate_system=transformer.get_to_coordinate_system(),
-            date=date,
-            game_week=game_week,
-            game_id=game_id,
+            date=sportec_metadata.date,
+            game_week=sportec_metadata.game_week,
+            game_id=sportec_metadata.game_id,
             officials=sportec_metadata.officials,
         )
 

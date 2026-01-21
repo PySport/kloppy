@@ -1,0 +1,172 @@
+from datetime import timedelta
+import json
+import logging
+from itertools import zip_longest
+from typing import IO, NamedTuple
+
+from kloppy.domain import (
+    DatasetFlag,
+    EventDataset,
+    FormationType,
+    Ground,
+    Metadata,
+    Orientation,
+    Period,
+    Player,
+    Provider,
+    Team,
+)
+from kloppy.domain.models.event import Event, EventType
+from kloppy.domain.models.pitch import PitchDimensions, Point
+from kloppy.exceptions import DeserializationError
+from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
+from kloppy.utils import performance_logging
+
+from . import specification as PFF
+
+logger = logging.getLogger(__name__)
+
+
+class PFFEventInputs(NamedTuple):
+    metadata: IO[bytes]
+    players: IO[bytes]
+    raw_event_data: IO[bytes]
+
+
+class PFFEventDeserializer(EventDataDeserializer[PFFEventInputs]):
+    @property
+    def provider(self) -> Provider:
+        return Provider.PFF
+
+    def deserialize(
+        self, inputs: PFFEventInputs, additional_metadata: dict
+    ) -> EventDataset:
+        # Intialize coordinate system transformer
+        self.transformer = self.get_transformer()
+
+        with performance_logging("load data", logger=logger):
+            metadata = json.load(inputs.metadata)
+            players = json.load(inputs.players)
+            raw_events = self.load_raw_events(inputs.raw_event_data)
+
+        with performance_logging("parse teams ans players", logger=logger):
+            teams = self.create_teams_and_players(metadata, players)
+
+        with performance_logging("parse periods", logger=logger):
+            periods = self.create_periods(raw_events)
+
+        with performance_logging("parse events", logger=logger):
+            events = []
+            for raw_event in raw_events.values():
+                new_events = raw_event.set_refs(
+                    periods, teams, raw_events
+                ).deserialize(self.event_factory)
+                for event in new_events:
+                    if self.should_include_event(event):
+                        event = self.transformer.transform_event(event)
+                        events.append(event)
+
+        pff_metadata = Metadata(
+            teams=teams,
+            periods=periods,
+            # TODO: get pitch dimensions from a event
+            pitch_dimensions=self.transformer.get_to_coordinate_system().pitch_dimensions,
+            frame_rate=None,
+            orientation=Orientation.ACTION_EXECUTING_TEAM,
+            flags=DatasetFlag.BALL_OWNING_TEAM | DatasetFlag.BALL_STATE,
+            score=None,
+            provider=Provider.PFF,
+            coordinate_system=self.transformer.get_to_coordinate_system(),
+            **additional_metadata,
+        )
+        dataset = EventDataset(metadata=pff_metadata, records=events)
+
+        # TODO: add freeze frames
+
+        return dataset
+
+    def load_raw_events(
+        self, raw_event_data: IO[bytes]
+    ) -> dict[str, PFF.EVENT]:
+        raw_events = {}
+        events = json.load(raw_event_data)
+        events = sorted(events, key=lambda x: x['eventTime'])
+        for event in events:
+            event_id = (
+                f"{event['gameEventId']}_{event['possessionEventId']}_{event['gameEvents']['gameEventType']}_{event['eventTime']}"
+                if event["possessionEventId"] is not None
+                else f"{event['gameEventId']}"
+            )
+            raw_events[event_id] = PFF.event_decoder(event)
+        return raw_events
+
+    def create_teams_and_players(self, metadata, players):
+        def create_team(team_id, team_name, ground_type):
+            team = Team(
+                team_id=str(team_id),
+                name=team_name,
+                ground=ground_type,
+            )
+
+            team.players = [
+                Player(
+                    player_id=entry["player"]["id"],
+                    team=team,
+                    name=entry["player"]["nickname"],
+                    jersey_no=int(entry["shirtNumber"]),
+                    # started=entry['started'],
+                    starting_position=PFF.position_types_mapping[
+                        entry["positionGroupType"]
+                    ],
+                )
+                for entry in players
+                if entry["team"]["id"] == team_id
+            ]
+
+            return team
+
+        home_team = metadata["homeTeam"]
+        away_team = metadata["awayTeam"]
+
+        home = create_team(home_team["id"], home_team["name"], Ground.HOME)
+        away = create_team(away_team["id"], away_team["name"], Ground.AWAY)
+        return [home, away]
+
+    def create_periods(self, raw_events: dict[str, PFF.EVENT]) -> list[Period]:
+        half_start_events = {}
+        half_end_events = {}
+
+        for event in raw_events.values():
+            event_type = PFF.EVENT_TYPE(
+                event.raw_event["gameEvents"]["gameEventType"]
+            )
+            period = event.raw_event["gameEvents"]["period"]
+
+            if event_type in [
+                PFF.EVENT_TYPE.FIRST_HALF_KICKOFF,
+                PFF.EVENT_TYPE.SECOND_HALF_KICKOFF,
+                PFF.EVENT_TYPE.THIRD_HALF_KICKOFF,
+                PFF.EVENT_TYPE.FOURTH_HALF_KICKOFF,
+            ]:
+                half_start_events[period] = event.raw_event
+            elif event_type == PFF.EVENT_TYPE.END_OF_HALF:
+                half_end_events[period] = event.raw_event
+
+        periods = []
+
+        for start_event, end_event in zip_longest(
+            half_start_events.values(), half_end_events.values()
+        ):
+            if start_event is None or end_event is None:
+                raise DeserializationError(
+                    "Failed to determine start and end time of periods."
+                )
+
+            period = Period(
+                id=int(start_event["gameEvents"]["period"]),
+                start_timestamp=timedelta(seconds=start_event["startTime"]),
+                end_timestamp=timedelta(seconds=end_event["startTime"]),
+            )
+            periods.append(period)
+
+        return periods

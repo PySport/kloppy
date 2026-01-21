@@ -88,13 +88,13 @@ class GameEventType:
     VIDEO_MISSING = "VID"
 
 
-class PFF_TrackingInputs(NamedTuple):
+class PFFTrackingInputs(NamedTuple):
     meta_data: IO[bytes]
     roster_meta_data: IO[bytes]
     raw_data: IO[bytes]
 
 
-class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
+class PFFTrackingDeserializer(TrackingDataDeserializer[PFFTrackingInputs]):
     def __init__(
         self,
         limit: Optional[int] = None,
@@ -215,7 +215,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
 
         return periods
 
-    def deserialize(self, inputs: PFF_TrackingInputs) -> TrackingDataset:
+    def deserialize(self, inputs: PFFTrackingInputs) -> TrackingDataset:
         # Load datasets
         metadata = json.load(inputs.meta_data)[0]
         roster_meta_data = json.load(inputs.roster_meta_data)

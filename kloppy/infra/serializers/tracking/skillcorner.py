@@ -249,9 +249,9 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         x = raw_coordinates["x"]
         y = raw_coordinates["y"]
         z = raw_coordinates.get("z")
-        if x and y and z:
+        if x is not None and y is not None and z is not None:
             return Point3D(x=float(x), y=float(y), z=float(z))
-        elif x and y:
+        elif x is not None and y is not None:
             return Point(x=float(x), y=float(y))
 
     @classmethod

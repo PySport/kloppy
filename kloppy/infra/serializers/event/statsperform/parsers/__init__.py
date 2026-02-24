@@ -17,7 +17,7 @@ def get_parser(
 ) -> OptaParser:
     # infer the data format if not provided
     if feed_format is None:
-        if feed.read(1).decode("utf-8")[0] == "<":
+        if feed.read(10).decode("utf-8").lstrip("\ufeff")[0] == "<":
             feed_format = "XML"
         else:
             feed_format = "JSON"

@@ -18,7 +18,7 @@ def get_metadata_parser(
 ) -> TracabMetadataParser:
     # infer the data format if not provided
     if feed_format is None:
-        if feed.read(10).decode("utf-8").lstrip("\ufeff")[0] == "<":
+        if feed.read(5).decode("utf-8").lstrip("\ufeff")[0] == "<":
             feed.seek(0)
             meta_data = objectify.fromstring(feed.read())
             if hasattr(meta_data, "match"):

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Iterable
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from datetime import datetime, timedelta
 from enum import Enum, Flag
 import sys
@@ -1677,6 +1677,18 @@ class Metadata:
 T = TypeVar("T", bound="DataRecord")
 
 
+class FilteredDataset:
+    """
+    A marker class to identify datasets that have been filtered.
+    """
+
+    pass
+
+
+# Helper to cache dynamic classes so we don't recreate them every time
+_FILTERED_CLASS_CACHE = {}
+
+
 @dataclass
 class Dataset(ABC, Generic[T]):
     """
@@ -1759,10 +1771,39 @@ class Dataset(ABC, Generic[T]):
             >>> dataset = dataset.filter(lambda event: event.event_type == EventType.PASS)
             >>> dataset = dataset.filter('pass')
         """
-        return replace(
-            self,
-            records=self.find_all(filter_),
-        )
+        # 1. Perform filtering
+        filtered_records = self.find_all(filter_)
+
+        # 2. Determine the target class
+        current_class = self.__class__
+
+        if isinstance(self, FilteredDataset):
+            # Already a filtered class, keep using it
+            target_class = current_class
+        else:
+            # Need to create or retrieve the dynamic filtered subclass
+            if current_class not in _FILTERED_CLASS_CACHE:
+                # Dynamically create: class FilteredEventDataset(FilteredDataset, EventDataset)
+                new_cls_name = f"Filtered{current_class.__name__}"
+
+                # We inherit from FilteredDataset first, then the original class
+                _FILTERED_CLASS_CACHE[current_class] = type(
+                    new_cls_name, (FilteredDataset, current_class), {}
+                )
+            target_class = _FILTERED_CLASS_CACHE[current_class]
+
+        # 3. Gather arguments to instantiate the new class
+        # We only want fields that are defined in __init__
+        init_kwargs = {
+            f.name: getattr(self, f.name) for f in fields(self) if f.init
+        }
+
+        # 4. Update the records in the arguments
+        init_kwargs["records"] = filtered_records
+
+        # 5. Instantiate and return the new class
+        # This runs __init__ and __post_init__ of the new class naturally
+        return target_class(**init_kwargs)
 
     def map(self, mapper):
         return replace(

@@ -460,7 +460,7 @@ class SportecEventDataDeserializer(
     def provider(self) -> Provider:
         return Provider.SPORTEC
 
-    def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
+    def _deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())
@@ -678,13 +678,6 @@ class SportecEventDataDeserializer(
                     event.receiver_coordinates = updated_event.coordinates
                 else:
                     event.receiver_coordinates = events[i + 1].coordinates
-
-        events = list(
-            filter(
-                self.should_include_event,
-                events,
-            )
-        )
 
         metadata = Metadata(
             teams=teams,

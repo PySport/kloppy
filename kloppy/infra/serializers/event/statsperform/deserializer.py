@@ -711,7 +711,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
     def provider(self) -> Provider:
         return Provider.OPTA
 
-    def deserialize(self, inputs: StatsPerformInputs) -> EventDataset:
+    def _deserialize(self, inputs: StatsPerformInputs) -> EventDataset:
         transformer = self.get_transformer(
             pitch_length=inputs.pitch_length, pitch_width=inputs.pitch_width
         )
@@ -984,8 +984,7 @@ class StatsPerformDeserializer(EventDataDeserializer[StatsPerformInputs]):
                             event_name=_get_event_type_name(raw_event.type_id),
                         )
 
-                    if self.should_include_event(event):
-                        events.append(transformer.transform_event(event))
+                    events.append(transformer.transform_event(event))
 
         metadata = Metadata(
             teams=list(teams),

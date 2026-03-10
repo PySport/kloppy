@@ -4,11 +4,11 @@ import pytest
 
 from kloppy import statsbomb
 from kloppy.domain import (
-    BallState,
     CarryResult,
     Event,
     EventDataset,
     EventFactory,
+    FilteredDataset,
 )
 
 
@@ -59,14 +59,25 @@ class TestEvent:
         """
         Test filtering allows simple 'css selector' (<event_type>.<result>)
         """
+        # Perform the filter
         goals_dataset = dataset.filter("shot.goal")
 
+        # Assert data correctness
         df = goals_dataset.to_df(engine="pandas")
         assert df["event_id"].to_list() == [
             "4c7c4ab1-6b9f-4504-a237-249c2e0c549f",
             "683c6752-13bc-4892-94ed-22e1c938f1f7",
             "55d71847-9511-4417-aea9-6f415e279011",
         ]
+
+        # Assert type correctness
+        assert isinstance(goals_dataset, FilteredDataset)
+        assert isinstance(goals_dataset, EventDataset)
+        assert type(goals_dataset).__name__ == "FilteredEventDataset"
+
+        # Filtering again should not break the class structure
+        subset = goals_dataset.filter(lambda x: True)
+        assert type(subset).__name__ == "FilteredEventDataset"
 
     def test_map(self, dataset: EventDataset):
         """
@@ -151,9 +162,7 @@ class TestEvent:
         del dataset.events[608]  # Remove by index to restore the dataset
 
         # insert using scoring function
-        def insert_before_scoring_function(
-            event: Event, dataset: EventDataset
-        ):
+        def insert_before_scoring_function(event: Event, dataset: EventDataset):
             if event.ball_owning_team != dataset.metadata.teams[0]:
                 return 0
             if event.period != new_event.period:
@@ -181,13 +190,11 @@ class TestEvent:
         dataset.insert(new_event, position=1)
         assert dataset.events[0].next_record.event_id == "test-insert-1234"
         assert (
-            dataset.events[1].prev_record.event_id
-            == dataset.events[0].event_id
+            dataset.events[1].prev_record.event_id == dataset.events[0].event_id
         )
         assert dataset.events[1].event_id == "test-insert-1234"
         assert (
-            dataset.events[1].next_record.event_id
-            == dataset.events[2].event_id
+            dataset.events[1].next_record.event_id == dataset.events[2].event_id
         )
         assert dataset.events[2].prev_record.event_id == "test-insert-1234"
 
@@ -195,8 +202,7 @@ class TestEvent:
         assert dataset.events[0].prev_record is None
         assert dataset.events[0].event_id == "test-insert-1234"
         assert (
-            dataset.events[0].next_record.event_id
-            == dataset.events[1].event_id
+            dataset.events[0].next_record.event_id == dataset.events[1].event_id
         )
         assert dataset.events[1].prev_record.event_id == "test-insert-1234"
 

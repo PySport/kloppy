@@ -12,6 +12,7 @@ from kloppy.domain import (
     Orientation,
     Period,
     Player,
+    PositionType,
     Provider,
     Team,
 )
@@ -37,9 +38,7 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
     def provider(self) -> Provider:
         return Provider.STATSBOMB
 
-    def deserialize(
-        self, inputs: StatsBombInputs, additional_metadata
-    ) -> EventDataset:
+    def _deserialize(self, inputs: StatsBombInputs) -> EventDataset:
         # Intialize coordinate system transformer
         self.transformer = self.get_transformer()
 
@@ -76,10 +75,32 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
                     .deserialize(self.event_factory)
                 )
                 for event in new_events:
-                    if self.should_include_event(event):
-                        # Transform event to the coordinate system
-                        event = self.transformer.transform_event(event)
-                        events.append(event)
+                    if "freeze_frame" in event.raw_event.get("shot", {}):
+                        event.freeze_frame = parse_freeze_frame(
+                            freeze_frame=event.raw_event["shot"][
+                                "freeze_frame"
+                            ],
+                            home_team=teams[0],
+                            away_team=teams[1],
+                            event=event,
+                            fidelity_version=data_version.shot_fidelity_version,
+                        )
+                    if (
+                        not event.freeze_frame
+                        and event.event_id in three_sixty_data
+                    ):
+                        freeze_frame = three_sixty_data[event.event_id]
+                        event.freeze_frame = parse_freeze_frame(
+                            freeze_frame=freeze_frame["freeze_frame"],
+                            home_team=teams[0],
+                            away_team=teams[1],
+                            event=event,
+                            fidelity_version=data_version.xy_fidelity_version,
+                            visible_area=freeze_frame["visible_area"],
+                        )
+                    # Transform event to the coordinate system
+                    event = self.transformer.transform_event(event)
+                    events.append(event)
 
         metadata = Metadata(
             teams=teams,
@@ -91,32 +112,26 @@ class StatsBombDeserializer(EventDataDeserializer[StatsBombInputs]):
             score=None,
             provider=Provider.STATSBOMB,
             coordinate_system=self.transformer.get_to_coordinate_system(),
-            **additional_metadata,
         )
         dataset = EventDataset(metadata=metadata, records=events)
+        # We can now update GK identities in the freeze frames
+        # because we know the positions of the GKs at the event times
         for event in dataset:
-            if "freeze_frame" in event.raw_event.get("shot", {}):
-                event.freeze_frame = self.transformer.transform_frame(
-                    parse_freeze_frame(
-                        freeze_frame=event.raw_event["shot"]["freeze_frame"],
-                        home_team=teams[0],
-                        away_team=teams[1],
-                        event=event,
-                        fidelity_version=data_version.shot_fidelity_version,
+            if not event.freeze_frame:
+                continue
+
+            new_players_data = {}
+            for player, data in event.freeze_frame.players_data.items():
+                if player.attributes.get("goalkeeper", False):
+                    actual_gk = player.team.get_player_by_position(
+                        position=PositionType.Goalkeeper,
+                        time=event.time,
                     )
-                )
-            if not event.freeze_frame and event.event_id in three_sixty_data:
-                freeze_frame = three_sixty_data[event.event_id]
-                event.freeze_frame = self.transformer.transform_frame(
-                    parse_freeze_frame(
-                        freeze_frame=freeze_frame["freeze_frame"],
-                        home_team=teams[0],
-                        away_team=teams[1],
-                        event=event,
-                        fidelity_version=data_version.xy_fidelity_version,
-                        visible_area=freeze_frame["visible_area"],
-                    )
-                )
+                    new_players_data[actual_gk] = data
+                else:
+                    new_players_data[player] = data
+
+            event.freeze_frame.players_data = new_players_data
         return dataset
 
     def load_data(self, inputs: StatsBombInputs):

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import io
 from pathlib import Path
 
 import pytest
@@ -387,6 +388,26 @@ class TestTracabJSONTrackingXMLNMeta:
         dataset = tracab.load(
             meta_data=xml_meta_data,
             raw_data=json_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+        )
+
+        meta_tracking_assertions(dataset)
+
+
+class TestTracabXMLWithBOM:
+    def test_correct_deserialization(
+        self, xml_meta_data: Path, dat_raw_data: Path
+    ):
+        # Read the original XML and prepend a UTF-8 BOM
+        with open(xml_meta_data, "rb") as f:
+            xml_data = f.read()
+
+        bom_xml = b"\xef\xbb\xbf" + xml_data
+
+        dataset = tracab.load(
+            meta_data=io.BytesIO(bom_xml),
+            raw_data=dat_raw_data,
             coordinates="tracab",
             only_alive=False,
         )

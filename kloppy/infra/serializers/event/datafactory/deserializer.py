@@ -346,7 +346,7 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
     def provider(self) -> Provider:
         return Provider.DATAFACTORY
 
-    def deserialize(self, inputs: DatafactoryInputs) -> EventDataset:
+    def _deserialize(self, inputs: DatafactoryInputs) -> EventDataset:
         transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
@@ -590,13 +590,9 @@ class DatafactoryDeserializer(EventDataDeserializer[DatafactoryInputs]):
                         result=None,
                         qualifiers=None,
                     )
-                    if self.should_include_event(event):
-                        events.append(
-                            transformer.transform_event(ball_out_event)
-                        )
+                    events.append(transformer.transform_event(ball_out_event))
 
-                if self.should_include_event(event):
-                    events.append(transformer.transform_event(event))
+                events.append(transformer.transform_event(event))
 
                 # only consider as a previous_event a ball-in-play event
                 if e_class not in (

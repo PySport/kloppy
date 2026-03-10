@@ -109,8 +109,6 @@ class SportecMetadata(NamedTuple):
     x_max: float
     y_max: float
     fps: int
-    home_coach: str
-    away_coach: str
     officials: list[Official]
 
 
@@ -154,6 +152,9 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         away_score,
     ) = match_root.MatchInformation.General.attrib["Result"].split(":")
     score = Score(home=int(home_score), away=int(away_score))
+
+    home_team.coach = home_coach
+    away_team.coach = away_coach
     teams = [home_team, away_team]
 
     if len(home_team.players) == 0 or len(away_team.players) == 0:
@@ -256,8 +257,6 @@ def sportec_metadata_from_xml_elm(match_root) -> SportecMetadata:
         x_max=x_max,
         y_max=y_max,
         fps=SPORTEC_FPS,
-        home_coach=home_coach,
-        away_coach=away_coach,
         officials=officials,
     )
 
@@ -461,7 +460,7 @@ class SportecEventDataDeserializer(
     def provider(self) -> Provider:
         return Provider.SPORTEC
 
-    def deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
+    def _deserialize(self, inputs: SportecEventDataInputs) -> EventDataset:
         with performance_logging("load data", logger=logger):
             match_root = objectify.fromstring(inputs.meta_data.read())
             event_root = objectify.fromstring(inputs.event_data.read())
@@ -479,8 +478,6 @@ class SportecEventDataDeserializer(
                 pitch_length=sportec_metadata.x_max,
                 pitch_width=sportec_metadata.y_max,
             )
-            home_coach = sportec_metadata.home_coach
-            away_coach = sportec_metadata.away_coach
 
             periods = []
             period_id = 0
@@ -682,13 +679,6 @@ class SportecEventDataDeserializer(
                 else:
                     event.receiver_coordinates = events[i + 1].coordinates
 
-        events = list(
-            filter(
-                self.should_include_event,
-                events,
-            )
-        )
-
         metadata = Metadata(
             teams=teams,
             periods=periods,
@@ -702,8 +692,6 @@ class SportecEventDataDeserializer(
             date=date,
             game_week=game_week,
             game_id=game_id,
-            home_coach=home_coach,
-            away_coach=away_coach,
             officials=sportec_metadata.officials,
         )
 

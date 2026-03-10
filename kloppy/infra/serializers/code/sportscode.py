@@ -45,6 +45,10 @@ class SportsCodeInputs(NamedTuple):
     data: IO[bytes]
 
 
+class SportsCodeOutputs(NamedTuple):
+    data: IO[bytes]
+
+
 class SportsCodeDeserializer(CodeDataDeserializer[SportsCodeInputs]):
     def deserialize(self, inputs: SportsCodeInputs) -> CodeDataset:
         all_instances = objectify.fromstring(inputs.data.read())
@@ -88,8 +92,10 @@ class SportsCodeDeserializer(CodeDataDeserializer[SportsCodeInputs]):
         )
 
 
-class SportsCodeSerializer(CodeDataSerializer):
-    def serialize(self, dataset: CodeDataset) -> bytes:
+class SportsCodeSerializer(CodeDataSerializer[SportsCodeOutputs]):
+    def serialize(
+        self, dataset: CodeDataset, outputs: SportsCodeOutputs
+    ) -> bool:
         root = etree.Element("file")
         all_instances = etree.SubElement(root, "ALL_INSTANCES")
         for i, code in enumerate(dataset.codes):
@@ -138,10 +144,12 @@ class SportsCodeSerializer(CodeDataSerializer):
                     text_ = etree.SubElement(label, "text")
                     text_.text = str(text)
 
-        return etree.tostring(
-            root,
-            pretty_print=True,
-            xml_declaration=True,
-            encoding="utf-8",  # This might not work with some tools because they expected 'ascii'.
-            method="xml",
+        outputs.data.write(
+            etree.tostring(
+                root,
+                pretty_print=True,
+                xml_declaration=True,
+                encoding="utf-8",  # This might not work with some tools because they expected 'ascii'.
+                method="xml",
+            )
         )

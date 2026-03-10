@@ -1,3 +1,4 @@
+import base64
 import bz2
 import gzip
 from io import BytesIO
@@ -13,8 +14,8 @@ from botocore.session import Session
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pytest
 
-from kloppy.config import set_config
-from kloppy.exceptions import InputNotFoundError
+from kloppy.config import config_context
+from kloppy.exceptions import InputNotFoundError, KloppyError
 from kloppy.infra.io import adapters
 from kloppy.infra.io.adapters import Adapter
 from kloppy.infra.io.buffered_stream import BufferedStream
@@ -418,16 +419,29 @@ class TestHTTPAdapter:
             gz_content, headers={"Content-Type": "application/x-gzip"}
         )
 
+        # Serve protected file with basic auth
+        encoded = base64.b64encode(b"Aladdin:OpenSesame").decode("utf-8")
+        httpserver.expect_request(
+            "/auth.txt", headers={"Authorization": f"Basic {encoded}"}
+        ).respond_with_data(txt_content)
+        httpserver.expect_request("/auth.txt").respond_with_data(
+            "Unauthorized", status=401
+        )
+
         index = f"""<html><body><ul>
             <li><a href="/testfile.txt">Txt</a></li>
             <li><a href="/compressed_endpoint">Comp</a></li>
             <li><a href="{httpserver.url_for("/testfile.txt.gz")}">Gz</a></li>
+            <li><a href="/auth.txt">Auth</a></li>
         </ul></body></html>"""
 
         httpserver.expect_request("/").respond_with_data(
             index, headers={"Content-Type": "text/html"}
         )
-        return httpserver
+
+        # make sure cache is reset for each test
+        with config_context("cache", str(tmp_path / "http_cache")):
+            yield httpserver
 
     def test_expand_inputs(self, httpserver):
         """It should be able to list the contents of an HTTP server."""
@@ -436,6 +450,7 @@ class TestHTTPAdapter:
             httpserver.url_for("/testfile.txt"),
             httpserver.url_for("/compressed_endpoint"),
             httpserver.url_for("/testfile.txt.gz"),
+            httpserver.url_for("/auth.txt"),
         }
         assert set(expand_inputs(url)) == expected
 
@@ -460,6 +475,47 @@ class TestHTTPAdapter:
             with open_as_file(httpserver.url_for("/new.txt"), mode="wb") as fp:
                 fp.write(b"Fail")
 
+    def test_read_with_basic_auth(self, httpserver):
+        """It should read a file protected with basic authentication."""
+        # It should support a dict
+        with config_context(
+            "adapters.http.basic_authentication",
+            {"login": "Aladdin", "password": "OpenSesame"},
+        ):
+            with open_as_file(httpserver.url_for("/auth.txt")) as fp:
+                assert fp.read() == b"Hello, world!"
+
+        # It should also support a tuple
+        with config_context(
+            "adapters.http.basic_authentication",
+            ("Aladdin", "OpenSesame"),
+        ):
+            with open_as_file(httpserver.url_for("/auth.txt")) as fp:
+                assert fp.read() == b"Hello, world!"
+
+    def test_read_with_basic_auth_wrong_credentials(self, httpserver):
+        """It should raise an error with incorrect basic authentication."""
+        from aiohttp.client_exceptions import ClientResponseError
+
+        with config_context(
+            "adapters.http.basic_authentication",
+            {"login": "Aladdin", "password": "CloseSesame"},
+        ):
+            with pytest.raises(ClientResponseError):
+                with open_as_file(httpserver.url_for("/auth.txt")) as fp:
+                    fp.read()
+
+    def test_read_with_basic_auth_wrong_config(self, httpserver):
+        """It should raise an error with malformed basic authentication config."""
+        with config_context(
+            "adapters.http.basic_authentication",
+            {"user": "Aladdin", "pass": "OpenSesame"},  # Wrong keys
+        ):
+            with pytest.raises(
+                KloppyError, match="Invalid basic authentication configuration"
+            ):
+                open_as_file(httpserver.url_for("/auth.txt"))
+
 
 class TestZipAdapter:
     """Tests for ZipAdapter."""
@@ -476,10 +532,8 @@ class TestZipAdapter:
             z.write(tmp_path / "testfile.txt", arcname="other.txt")
 
         # Set config for test
-        set_config("adapters.zip.fo", str(zip_path))
-        yield
-        # Reset config to avoid side effects on other tests
-        set_config("adapters.zip.fo", None)
+        with config_context("adapters.zip.fo", str(zip_path)):
+            yield
 
     def test_expand_inputs(self):
         """It should be able to list the contents of a zip archive."""
@@ -547,9 +601,8 @@ class TestS3Adapter:
         s3 = S3FileSystem(
             anon=False, client_kwargs={"endpoint_url": self.endpoint_uri}
         )
-        set_config("adapters.s3.s3fs", s3)
-        yield
-        set_config("adapters.s3.s3fs", None)
+        with config_context("adapters.s3.s3fs", s3):
+            yield
 
     def test_expand_inputs(self):
         """It should be able to list the contents of an S3 bucket."""

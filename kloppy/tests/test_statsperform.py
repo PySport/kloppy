@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import io
 from pathlib import Path
 
 import pytest
@@ -419,3 +420,33 @@ class TestStatsPerformTracking:
                 tracking_system="sportvu",
                 coordinates="kloppy",
             )
+
+
+class TestStatsPerformXMLWithBOM:
+    def test_event_xml_with_bom(
+        self, event_metadata_xml: Path, event_data_xml: Path
+    ):
+        with open(event_metadata_xml, "rb") as f:
+            ma1_data = f.read()
+        with open(event_data_xml, "rb") as f:
+            ma3_data = f.read()
+
+        dataset = statsperform.load_event(
+            ma1_data=io.BytesIO(b"\xef\xbb\xbf" + ma1_data),
+            ma3_data=io.BytesIO(b"\xef\xbb\xbf" + ma3_data),
+        )
+
+        assert len(dataset.records) > 0
+
+    def test_tracking_xml_with_bom(
+        self, tracking_metadata_xml: Path, tracking_data: Path
+    ):
+        with open(tracking_metadata_xml, "rb") as f:
+            ma1_data = f.read()
+
+        dataset = statsperform.load_tracking(
+            ma1_data=io.BytesIO(b"\xef\xbb\xbf" + ma1_data),
+            ma25_data=tracking_data,
+        )
+
+        assert len(dataset.records) > 0

@@ -10,7 +10,6 @@ from kloppy.domain import (
     PlayerData,
     Point,
     Point3D,
-    PositionType,
     Team,
 )
 from kloppy.domain.services.frame_factory import create_frame
@@ -107,18 +106,34 @@ def parse_freeze_frame(
 
     def get_player_from_freeze_frame(player_data, team, i):
         if "player" in player_data:
-            return team.get_player_by_id(player_data["player"]["id"])
-        elif player_data.get("actor"):
+            home_player = home_team.get_player_by_id(
+                player_data["player"]["id"]
+            )
+            if home_player:
+                return home_player
+            away_player = away_team.get_player_by_id(
+                player_data["player"]["id"]
+            )
+            if away_player:
+                return away_player
+
+        if player_data.get("actor"):
             return event.player
         elif player_data.get("keeper"):
-            return team.get_player_by_position(
-                position=PositionType.Goalkeeper, time=event.time
+            # We can later identify the goalkeeper by their position
+            # if we know the formation, but for now we just flag them
+            return Player(
+                player_id=f"T{team.team_id}-E{event.event_id}-{i}",
+                team=team,
+                jersey_no=None,
+                attributes={"goalkeeper": True},
             )
         else:
             return Player(
                 player_id=f"T{team.team_id}-E{event.event_id}-{i}",
                 team=team,
                 jersey_no=None,
+                attributes={"goalkeeper": False},
             )
 
     for i, freeze_frame_player in enumerate(freeze_frame):

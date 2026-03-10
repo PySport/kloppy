@@ -65,3 +65,14 @@ class HTTPAdapter(FSSpecAdapter):
         """
         fs = self._get_filesystem(url, no_cache=True)
         return fs.isdir(url)
+
+    def list_directory(self, url: str, recursive: bool = True) -> list[str]:
+        """
+        Lists the contents of a directory.
+        """
+        fs = self._get_filesystem(url)
+        if recursive:
+            files = fs.find(url, detail=False)
+        else:
+            files = fs.listdir(url, detail=False)
+        return files  # already includes the http(s):// prefix

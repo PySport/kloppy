@@ -3,16 +3,17 @@ from typing import Generic, TypeVar
 
 from kloppy.domain import CodeDataset
 
-T = TypeVar("T")
+T_I = TypeVar("T_I")
+T_O = TypeVar("T_O")
 
 
-class CodeDataDeserializer(ABC, Generic[T]):
+class CodeDataDeserializer(ABC, Generic[T_I]):
     @abstractmethod
-    def deserialize(self, inputs: T) -> CodeDataset:
+    def deserialize(self, inputs: T_I) -> CodeDataset:
         raise NotImplementedError
 
 
-class CodeDataSerializer(ABC):
+class CodeDataSerializer(ABC, Generic[T_O]):
     @abstractmethod
-    def serialize(self, dataset: CodeDataset) -> bytes:
+    def serialize(self, dataset: CodeDataset, outputs: T_O) -> bool:
         raise NotImplementedError

@@ -79,6 +79,7 @@ nav:
       - examples/aggregations.ipynb
       - examples/event_factory.ipynb
       - examples/adapter.ipynb
+      - Enriching with tracking data: examples/enrich_with_tracking.md
   - Reference:
       - reference/index.md
       - Data Loaders:

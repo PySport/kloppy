@@ -214,3 +214,10 @@ class TestEvent:
         )
         assert dataset.events[-1].event_id == "test-insert-1234"
         assert dataset.events[-1].next_record is None
+
+    def test_filtered_insert(self, dataset: EventDataset):
+        goals_dataset = dataset.filter("shot.goal")
+        assert hasattr(goals_dataset, "insert")
+
+        with pytest.raises(NotImplementedError):
+            goals_dataset.insert(dataset.records[0], position=0)

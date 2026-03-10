@@ -1494,20 +1494,30 @@ class EventDataset(Dataset[Event]):
                 its position based on chronological order if no other positional parameters
                 are specified. Defaults to None.
             scoring_function (Optional[Callable[[Event, EventDataset], float]]): A custom
-                function that takes the event and dataset as arguments and returns a score
-                indicating how suitable the position is for insertion. Higher scores indicate
-                better placement. The new event will be inserted before the event that gives
-                the maximum score. If no valid position is found (i.e., all scores are zero),
-                the insertion will fail with a ValueError. Defaults to None.
-            scoring_function (Optional[Callable[[Event, EventDataset], float]]): A custom
-                function that takes the event and dataset as arguments and returns a score
-                indicating how suitable the position is for insertion. Negative scores mean
-                insertion should happen **before** the highest-scoring event, while positive
-                scores mean insertion should happen **after** the highest-scoring event.
-                If all scores are zero, the insertion will fail with a ValueError.
+                function that takes an event from the dataset and the dataset itself as
+                arguments and returns a score. Negative scores mean insertion should happen
+                **before** the highest-scoring event, while positive scores mean insertion
+                should happen **after** the highest-scoring event. If all scores are zero,
+                the insertion will fail with a ValueError.
 
         Raises:
             ValueError: If the insertion position cannot be determined or is invalid.
+
+        Examples:
+            Insert an event at a specific index:
+            >>> dataset.insert(new_event, position=10)
+
+            Insert an event based on its timestamp:
+            >>> dataset.insert(new_event, timestamp=timedelta(seconds=120))
+
+            Insert an event relative to another event:
+            >>> dataset.insert(new_event, after_event_id="event-789")
+
+            Insert an event using a custom scoring function:
+            >>> def score_fn(existing_event, ds):
+            ...     # Score based on proximity to a specific timestamp
+            ...     return 1.0 / (1.0 + abs(existing_event.timestamp - target_ts).total_seconds())
+            >>> dataset.insert(new_event, scoring_function=score_fn)
 
         Notes:
             - If multiple parameters are provided to specify the position, the precedence is:

@@ -1472,12 +1472,13 @@ class EventDataset(Dataset[Event]):
     def insert(
         self,
         event: Event,
-        position: int | None = None,
-        before_event_id: str | None = None,
-        after_event_id: str | None = None,
-        timestamp: timedelta | None = None,
-        scoring_function: Callable[[Event, "EventDataset"], float]
-        | None = None,
+        position: Optional[int] = None,
+        before_event_id: Optional[str] = None,
+        after_event_id: Optional[str] = None,
+        timestamp: Optional[timedelta] = None,
+        scoring_function: Optional[
+            Callable[[Event, "EventDataset"], float]
+        ] = None,
     ):
         """Inserts an event into the dataset at the appropriate position.
 

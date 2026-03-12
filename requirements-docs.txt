@@ -398,7 +398,7 @@ tinycss2==1.4.0
     # via bleach
 tomli==2.3.0 ; python_full_version < '3.11'
     # via jupytext
-tornado==6.5.3
+tornado==6.5.5
     # via
     #   ipykernel
     #   jupyter-client

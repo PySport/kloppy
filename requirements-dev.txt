@@ -6,10 +6,13 @@ antlr4-python3-runtime==4.13.2
     # via moto
 attrs==25.4.0
     # via
+    #   jsonlines
     #   jsonschema
     #   referencing
-aws-sam-translator==1.105.0
-    # via cfn-lint
+aws-sam-translator==1.103.0
+    # via
+    #   cfn-lint
+    #   moto
 aws-xray-sdk==2.15.0
     # via moto
 blinker==1.9.0
@@ -24,7 +27,7 @@ botocore==1.41.5
     #   boto3
     #   moto
     #   s3transfer
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
@@ -32,7 +35,7 @@ cfgv==3.4.0 ; python_full_version < '3.10'
     # via pre-commit
 cfgv==3.5.0 ; python_full_version >= '3.10'
     # via pre-commit
-cfn-lint==1.42.1
+cfn-lint==1.41.0
     # via moto
 charset-normalizer==3.4.4
     # via requests
@@ -44,6 +47,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   pytest
+common-data-format-validator==0.0.13
 cryptography==46.0.3
     # via
     #   joserfc
@@ -56,13 +60,13 @@ exceptiongroup==1.3.1 ; python_full_version < '3.11'
     # via pytest
 filelock==3.19.1 ; python_full_version < '3.10'
     # via virtualenv
-filelock==3.20.0 ; python_full_version >= '3.10'
+filelock==3.20.2 ; python_full_version >= '3.10'
     # via virtualenv
 flask==3.1.2
     # via
     #   flask-cors
     #   moto
-flask-cors==6.0.1
+flask-cors==6.0.2
     # via moto
 graphql-core==3.2.7
     # via moto
@@ -70,7 +74,7 @@ identify==2.6.15
     # via pre-commit
 idna==3.11
     # via requests
-importlib-metadata==8.7.0 ; python_full_version < '3.10'
+importlib-metadata==8.7.1 ; python_full_version < '3.10'
     # via flask
 iniconfig==2.1.0 ; python_full_version < '3.10'
     # via pytest
@@ -86,25 +90,29 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joserfc==1.5.0
+joserfc==1.6.1
     # via moto
+jsonlines==4.0.0
+    # via common-data-format-validator
 jsonpatch==1.33
     # via cfn-lint
 jsonpath-ng==1.7.0
     # via moto
 jsonpointer==3.0.0
     # via jsonpatch
-jsonschema==4.25.1
+jsonschema==4.23.0
     # via
     #   aws-sam-translator
+    #   common-data-format-validator
+    #   jsonschema-spec
     #   openapi-schema-validator
     #   openapi-spec-validator
-jsonschema-path==0.3.4
+jsonschema-spec==0.1.3
     # via openapi-spec-validator
-jsonschema-specifications==2025.9.1
+jsonschema-specifications==2024.10.1
     # via
+    #   common-data-format-validator
     #   jsonschema
-    #   openapi-schema-validator
 lazy-object-proxy==1.12.0
     # via openapi-spec-validator
 markupsafe==3.0.3
@@ -112,21 +120,21 @@ markupsafe==3.0.3
     #   flask
     #   jinja2
     #   werkzeug
-moto==5.1.18
+moto==5.1.19
 mpmath==1.3.0
     # via sympy
 networkx==2.8.8
     # via cfn-lint
-nodeenv==1.9.1
+nodeenv==1.10.0
     # via pre-commit
-openapi-schema-validator==0.6.3
+openapi-schema-validator==0.4.3
     # via openapi-spec-validator
-openapi-spec-validator==0.7.2
+openapi-spec-validator==0.5.5
     # via moto
 packaging==25.0
     # via pytest
 pathable==0.4.4
-    # via jsonschema-path
+    # via jsonschema-spec
 platformdirs==4.4.0 ; python_full_version < '3.10'
     # via virtualenv
 platformdirs==4.5.1 ; python_full_version >= '3.10'
@@ -136,16 +144,18 @@ pluggy==1.6.0
 ply==3.11
     # via jsonpath-ng
 pre-commit==4.3.0 ; python_full_version < '3.10'
-pre-commit==4.5.0 ; python_full_version >= '3.10'
+pre-commit==4.5.1 ; python_full_version >= '3.10'
 py-partiql-parser==0.6.3
     # via moto
 pycparser==2.23 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.12.5
-    # via aws-sam-translator
+pydantic==2.12.4
+    # via
+    #   aws-sam-translator
+    #   moto
 pydantic-core==2.41.5
     # via pydantic
-pyparsing==3.2.5
+pyparsing==3.3.1
     # via moto
 pytest==7.4.4
     # via pytest-lazy-fixture
@@ -160,21 +170,24 @@ pywin32==311 ; sys_platform == 'win32'
 pyyaml==6.0.3
     # via
     #   cfn-lint
-    #   jsonschema-path
+    #   jsonschema-spec
     #   moto
     #   pre-commit
     #   responses
-referencing==0.36.2
+referencing==0.36.2 ; python_full_version < '3.10'
     # via
     #   jsonschema
-    #   jsonschema-path
+    #   jsonschema-specifications
+referencing==0.37.0 ; python_full_version >= '3.10'
+    # via
+    #   jsonschema
     #   jsonschema-specifications
 regex==2025.11.3
     # via cfn-lint
-requests==2.32.5
+requests==2.32.3
     # via
+    #   common-data-format-validator
     #   docker
-    #   jsonschema-path
     #   moto
     #   responses
 responses==0.25.8
@@ -189,7 +202,7 @@ rpds-py==0.30.0 ; python_full_version >= '3.10'
     # via
     #   jsonschema
     #   referencing
-ruff==0.14.9
+ruff==0.14.10
 s3transfer==0.15.0
     # via boto3
 setuptools==80.9.0
@@ -209,6 +222,7 @@ typing-extensions==4.15.0
     #   cryptography
     #   exceptiongroup
     #   graphql-core
+    #   jsonschema-spec
     #   pydantic
     #   pydantic-core
     #   referencing
@@ -222,13 +236,13 @@ urllib3==1.26.20 ; python_full_version < '3.10'
     #   docker
     #   requests
     #   responses
-urllib3==2.6.2 ; python_full_version >= '3.10'
+urllib3==2.6.3 ; python_full_version >= '3.10'
     # via
     #   botocore
     #   docker
     #   requests
     #   responses
-virtualenv==20.35.4
+virtualenv==20.36.0
     # via pre-commit
 werkzeug==3.1.4
     # via

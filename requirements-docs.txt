@@ -18,7 +18,7 @@ bleach==6.2.0 ; python_full_version < '3.10'
     # via nbconvert
 bleach==6.3.0 ; python_full_version >= '3.10'
     # via nbconvert
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 cffi==2.0.0 ; implementation_name == 'pypy'
     # via pyzmq
@@ -49,7 +49,7 @@ contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.18
+debugpy==1.8.19
     # via ipykernel
 decorator==5.2.1
     # via ipython
@@ -63,7 +63,7 @@ fastjsonschema==2.21.2
     # via nbformat
 fonttools==4.60.2 ; python_full_version < '3.10'
     # via matplotlib
-fonttools==4.61.0 ; python_full_version >= '3.10'
+fonttools==4.61.1 ; python_full_version >= '3.10'
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
@@ -82,7 +82,7 @@ hjson==3.1.0
     #   super-collections
 idna==3.11
     # via requests
-importlib-metadata==8.7.0 ; python_full_version < '3.10'
+importlib-metadata==8.7.1 ; python_full_version < '3.10'
     # via
     #   jupyter-client
     #   markdown
@@ -96,9 +96,9 @@ ipykernel==6.31.0
     # via mkdocs-jupyter
 ipython==8.18.1 ; python_full_version < '3.10'
     # via ipykernel
-ipython==8.37.0 ; python_full_version == '3.10.*'
+ipython==8.38.0 ; python_full_version == '3.10.*'
     # via ipykernel
-ipython==9.8.0 ; python_full_version >= '3.11'
+ipython==9.9.0 ; python_full_version >= '3.11'
     # via ipykernel
 ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11'
     # via ipython
@@ -112,9 +112,9 @@ jinja2==3.1.6
     #   mkdocstrings
     #   nbconvert
     #   pandas
-jsonschema==4.25.1
+jsonschema==4.23.0
     # via nbformat
-jsonschema-specifications==2025.9.1
+jsonschema-specifications==2024.10.1
     # via jsonschema
 jupyter-client==8.6.3 ; python_full_version < '3.10'
     # via
@@ -199,7 +199,7 @@ mergedeep==1.3.4
     # via
     #   mkdocs
     #   mkdocs-get-deps
-mistune==3.1.4
+mistune==3.2.0
     # via nbconvert
 mkdocs==1.6.1
     # via
@@ -218,7 +218,7 @@ mkdocs-get-deps==0.2.0
     # via mkdocs
 mkdocs-jupyter==0.24.7
 mkdocs-macros-plugin==1.5.0
-mkdocs-material==9.7.0
+mkdocs-material==9.7.1
     # via mkdocs-jupyter
 mkdocs-material-extensions==1.3.1
     # via mkdocs-material
@@ -226,7 +226,9 @@ mkdocstrings==0.27.0
     # via mkdocstrings-python
 mkdocstrings-python==1.12.2
 mplsoccer==1.3.0
-nbclient==0.10.2
+nbclient==0.10.2 ; python_full_version < '3.10'
+    # via nbconvert
+nbclient==0.10.4 ; python_full_version >= '3.10'
     # via nbconvert
 nbconvert==7.16.6
     # via mkdocs-jupyter
@@ -253,7 +255,7 @@ numpy==2.2.6 ; python_full_version == '3.10.*'
     #   pandas
     #   scipy
     #   seaborn
-numpy==2.3.5 ; python_full_version >= '3.11'
+numpy==2.4.0 ; python_full_version >= '3.11'
     # via
     #   contourpy
     #   matplotlib
@@ -279,7 +281,7 @@ pandocfilters==1.5.1
     # via nbconvert
 parso==0.8.5
     # via jedi
-pathspec==0.12.1
+pathspec==1.0.2
     # via
     #   mkdocs
     #   mkdocs-macros-plugin
@@ -289,7 +291,7 @@ pillow==11.3.0 ; python_full_version < '3.10'
     # via
     #   matplotlib
     #   mplsoccer
-pillow==12.0.0 ; python_full_version >= '3.10'
+pillow==12.1.0 ; python_full_version >= '3.10'
     # via
     #   matplotlib
     #   mplsoccer
@@ -305,7 +307,7 @@ platformdirs==4.5.1 ; python_full_version >= '3.10'
     #   mkdocstrings
 prompt-toolkit==3.0.52
     # via ipython
-psutil==7.1.3
+psutil==7.2.1
     # via ipykernel
 ptyprocess==0.7.0 ; (python_full_version < '3.10' and sys_platform == 'emscripten') or (sys_platform != 'emscripten' and sys_platform != 'win32')
     # via pexpect
@@ -323,12 +325,12 @@ pygments==2.19.2
     #   pygments-ansi-color
 pygments-ansi-color==0.3.0
     # via markdown-exec
-pymdown-extensions==10.19
+pymdown-extensions==10.20
     # via
     #   markdown-exec
     #   mkdocs-material
     #   mkdocstrings
-pyparsing==3.2.5
+pyparsing==3.3.1
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -355,11 +357,15 @@ pyzmq==27.1.0
     # via
     #   ipykernel
     #   jupyter-client
-referencing==0.36.2
+referencing==0.36.2 ; python_full_version < '3.10'
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+referencing==0.37.0 ; python_full_version >= '3.10'
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+requests==2.32.3
     # via
     #   mkdocs-macros-plugin
     #   mkdocs-material
@@ -382,7 +388,7 @@ seaborn==0.13.2
     # via mplsoccer
 six==1.17.0
     # via python-dateutil
-soupsieve==2.8
+soupsieve==2.8.1
     # via beautifulsoup4
 stack-data==0.6.3
     # via ipython
@@ -392,13 +398,13 @@ tabulate==0.9.0
     # via pandas
 termcolor==3.1.0 ; python_full_version < '3.10'
     # via mkdocs-macros-plugin
-termcolor==3.2.0 ; python_full_version >= '3.10'
+termcolor==3.3.0 ; python_full_version >= '3.10'
     # via mkdocs-macros-plugin
 tinycss2==1.4.0
     # via bleach
 tomli==2.3.0 ; python_full_version < '3.11'
     # via jupytext
-tornado==6.5.3
+tornado==6.5.4
     # via
     #   ipykernel
     #   jupyter-client
@@ -421,11 +427,11 @@ typing-extensions==4.15.0
     #   mistune
     #   mkdocstrings
     #   referencing
-tzdata==2025.2
+tzdata==2025.3
     # via pandas
 urllib3==1.26.20 ; python_full_version < '3.10'
     # via requests
-urllib3==2.6.2 ; python_full_version >= '3.10'
+urllib3==2.6.3 ; python_full_version >= '3.10'
     # via requests
 watchdog==6.0.0
     # via mkdocs

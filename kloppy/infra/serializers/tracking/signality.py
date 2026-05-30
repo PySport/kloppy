@@ -8,6 +8,7 @@ import warnings
 from kloppy.domain import (
     AttackingDirection,
     BallState,
+    DatasetFlag,
     DatasetTransformer,
     Ground,
     Metadata,
@@ -264,7 +265,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             orientation=orientation,
             pitch_dimensions=transformer.get_to_coordinate_system().pitch_dimensions,
             coordinate_system=transformer.get_to_coordinate_system(),
-            flags=None,
+            flags=DatasetFlag(0),
             provider=Provider.SIGNALITY,
         )
 

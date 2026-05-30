@@ -1787,8 +1787,29 @@ class Dataset(ABC, Generic[T]):
                 new_cls_name = f"Filtered{current_class.__name__}"
 
                 # We inherit from FilteredDataset first, then the original class
+                disabled_methods_map = {
+                    DatasetType.EVENT: ["insert"],
+                }
+                methods_to_disable = disabled_methods_map.get(
+                    self.dataset_type, []
+                )
+
+                attrs = {}
+                for method_name in methods_to_disable:
+
+                    def make_disabled_method(name):
+                        def disabled_method(self, *args, **kwargs):
+                            raise NotImplementedError(
+                                f"Method '{name}' is not supported on filtered datasets."
+                            )
+
+                        disabled_method.__name__ = name
+                        return disabled_method
+
+                    attrs[method_name] = make_disabled_method(method_name)
+
                 _FILTERED_CLASS_CACHE[current_class] = type(
-                    new_cls_name, (FilteredDataset, current_class), {}
+                    new_cls_name, (FilteredDataset, current_class), attrs
                 )
             target_class = _FILTERED_CLASS_CACHE[current_class]
 

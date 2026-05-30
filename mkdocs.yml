@@ -60,7 +60,9 @@ nav:
       #     - Selections: user-guide/querying-data/selections/index.md
       #     - Pattern matching: user-guide/querying-data/pattern-matching/index.md
       - Transforming data:
-          - user-guide/transformations/coordinates/index.md
+          - user-guide/transformations/index.md
+          - Changing coordinates: user-guide/transformations/coordinates/index.md
+          - Inserting events: user-guide/transformations/insert/index.md
       # - Aggregating data:
       #     - user-guide/aggregating-data/index.md
       # - Enriching data:
@@ -77,6 +79,7 @@ nav:
       - examples/aggregations.ipynb
       - examples/event_factory.ipynb
       - examples/adapter.ipynb
+      - Enriching with tracking data: examples/enrich_with_tracking.md
   - Reference:
       - reference/index.md
       - Data Loaders:

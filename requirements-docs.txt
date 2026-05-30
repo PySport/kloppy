@@ -313,7 +313,7 @@ pure-eval==0.2.3
     # via stack-data
 pycparser==2.23 ; implementation_name == 'pypy'
     # via cffi
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   ipython
     #   ipython-pygments-lexers

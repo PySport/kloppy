@@ -77,6 +77,7 @@ FORMATIONS = {
     32212: FormationType.THREE_TWO_TWO_ONE_TWO,
     32221: FormationType.THREE_TWO_TWO_TWO_ONE,
     3232: FormationType.THREE_TWO_THREE_TWO,
+    3241: FormationType.THREE_TWO_FOUR_ONE,
     3322: FormationType.THREE_THREE_TWO_TWO,
     3412: FormationType.THREE_FOUR_ONE_TWO,
     3421: FormationType.THREE_FOUR_TWO_ONE,

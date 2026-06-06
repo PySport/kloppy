@@ -37,7 +37,10 @@ code_dataset = (
             end_timestamp=event.timestamp + 5,
             labels={
                 'Player': str(event.player),
-                'Team': str(event.team)
+                'Team': str(event.team),
+                # You can also assign multiple elements to the same group 
+                # by providing a list of strings
+                'Qualifiers': [q.name for q in event.qualifiers]
             },
 
             # In the future next two won't be needed anymore
@@ -52,7 +55,7 @@ In this example:
 
 - `code` is based on the event name (e.g., "Shot").
 - `timestamp` and `end_timestamp` define the time window around the shot.
-- `labels` attach important context to each code, making analysis easier in Sportscode.
+- `labels` attach important context to each code, making analysis easier in Sportscode. You can provide single values (strings/booleans) or multiple values as a list of strings.
 
 ## Saving to Sportscode format
 

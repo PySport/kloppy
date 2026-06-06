@@ -1030,8 +1030,8 @@ class CarryEvent(
         qualifiers: A list of qualifiers providing additional information about the carry.
     """
 
-    end_timestamp: Time
-    end_coordinates: Point
+    end_timestamp: Optional[Time] = None
+    end_coordinates: Optional[Point] = None
 
     @property
     def event_type(self) -> EventType:
@@ -1379,7 +1379,7 @@ class PressureEvent(
         qualifiers: A list of qualifiers providing additional information about the pressure event.
     """
 
-    end_timestamp: Time
+    end_timestamp: Optional[Time] = None
 
     @property
     def event_type(self) -> EventType:

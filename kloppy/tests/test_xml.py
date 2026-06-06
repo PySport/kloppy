@@ -152,7 +152,12 @@ class TestXMLCodeTracking:
         modified_dataset = replace(dataset, records=[modified_code])
 
         serializer = SportsCodeSerializer()
-        output = serializer.serialize(modified_dataset)
+        with BytesIO() as buffer:
+            serializer.serialize(
+                modified_dataset, SportsCodeOutputs(data=buffer)
+            )
+            buffer.seek(0)
+            output = buffer.read()
 
         # Verify the output contains multiple label elements for the same group
         output_str = output.decode("utf-8")

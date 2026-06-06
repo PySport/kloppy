@@ -163,3 +163,4 @@ class SportsCodeSerializer(CodeDataSerializer[SportsCodeOutputs]):
                 method="xml",
             )
         )
+        return True

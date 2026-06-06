@@ -6,13 +6,13 @@ This document will outline the basics of how to get started on adding a new Even
 
 ### Deserialization
 
-**Kloppy** has two types of datasets, namely `EventDataset` and `TrackingDataset`. These datasets are generally constructed from two files: a file containing raw (event/tracking) data and a meta data file containing pitch dimensions, squad, match and player information etc.
+**Kloppy** has two types of datasets, namely `EventDataset` and `TrackingDataset`. These datasets are generally constructed from two files: a file containing raw (event/tracking) data and a metadata file containing pitch dimensions, squad, match and player information etc.
 
 The creation of these standardized datasets is called **"deserialization"**.
 
 > "Deserialization is the process of converting a data structure or object state stored in a format like JSON, XML, or a binary format into a usable object in memory." [$^1$](https://www.imperva.com/learn/application-security/deserialization/)
 
-Due to its vast amount of available open data we'll use the [**SportecEventDeserializer**](https://github.com/PySport/kloppy/blob/master/kloppy/infra/serializers/event/sportec/deserializer.py) as our guide for deserializing event data and we'll use the [**SkillCornerDeserializer**](https://github.com/PySport/kloppy/blob/master/kloppy/infra/serializers/tracking/skillcorner.py) as an example of how to deserialize tracking data, because it has open data available and because it is provided in the most common format for tracking data delivery ("json").
+Due to the vast amount of available open data, we'll use the [**SportecEventDeserializer**](https://github.com/PySport/kloppy/blob/master/kloppy/infra/serializers/event/sportec/deserializer.py) as our guide for deserializing event data and we'll use the [**SkillCornerDeserializer**](https://github.com/PySport/kloppy/blob/master/kloppy/infra/serializers/tracking/skillcorner.py) as an example of how to deserialize tracking data, because it has open data available and because it is provided in the most common format for tracking data delivery ("json").
 
 ### File Structure
 
@@ -20,12 +20,12 @@ Adding a new provider requires the creation of _at least_ four files:
 
 - The [**deserializer file**](#deserializer-file), located in `kloppy/kloppy/infra/serializers/{event | tracking}/{provider_name}/deserializer.py`. <small>([Sportec Deserializer File](https://github.com/PySport/kloppy/blob/master/kloppy/infra/serializers/event/sportec/deserializer.py))</small>
 - The [**loader file**](#loader-file), located in `kloppy/_providers/{provider_name}.py`. <small>([Sportec Loader File](https://github.com/PySport/kloppy/blob/master/kloppy/_providers/sportec.py))</small>
-- The [**initialization file**](#initialization-file), located in `kloppy/{provider_name}.py`. <small>([Sportec Initialization File](https://github.com/PySport/kloppy/blob/master/kloppy/sportec.py))</small>
+- The [**Initialization file**](#initialization-file), located in `kloppy/{provider_name}.py`. <small>([Sportec Initialization File](https://github.com/PySport/kloppy/blob/master/kloppy/sportec.py))</small>
 - The [**unit test file**](#unit-tests), located in `kloppy/tests/test_{provider_name}.py`. <small>([Sportec Unit Test File](https://github.com/PySport/kloppy/blob/master/kloppy/tests/test_sportec.py))</small>
 
 #### Deserializer File
 
-The **deserializer file** contains the main `{ProviderName}Deserializer` class and an associated `{ProviderName}Inputs` classes. As examplified below:
+The **deserializer file** contains the main `{ProviderName}Deserializer` class and an associated `{ProviderName}Inputs` class. As exemplified below:
 
 ```python
 class SportecEventDataInputs(NamedTuple):
@@ -74,7 +74,7 @@ def load_event(
 
 #### Initialization File
 
-To easily use kloppy (i.e. `from kloppy import provider_name`) each provider has this file. It should contain the following, for each of loading functions in the **loader file**:
+To easily use kloppy (i.e. `from kloppy import provider_name`) each provider has this file. It should contain the following, for each of the loading functions in the **loader file**:
 
 ```python
 from ._providers.provider_name import (
@@ -98,7 +98,7 @@ __all__ = [
 
 Before finalizing your new provider deserializer, you'll have to add automated tests. These tests are meant to ensure correct behaviour and they should help catch any (breaking) changes in the future.
 
-Kloppy using [_pytest_](https://docs.pytest.org/en/stable/) for their unit testing.
+Kloppy uses [_pytest_](https://docs.pytest.org/en/stable/) for its unit testing.
 
 For example:
 
@@ -148,9 +148,9 @@ follow these instructions:
 
 ### Updating Documentation
 
-**Kloppy** uses [_MkDocs_](https://www.mkdocs.org/) to create documenation. The documentation primarily consists of Markdown files.
+**Kloppy** uses [_MkDocs_](https://www.mkdocs.org/) to create documentation. The documentation primarily consists of Markdown files.
 
-To install all documentation related dependancies run:
+To install all documentation related dependencies run:
 
 ```cmd
 python -m pip install -r docs-requirements.txt
@@ -177,13 +177,13 @@ To cleanly share the additions made to kloppy you need to make what is called a 
    - Run `black <filename>` on all the new files.
    - Run `git add <filename>` on all the new files.
    - Run `git commit -m "<some message>"`
-   - Push the changes to your remote reposity with `git push` or `git push --set-upstream origin` if you're pushing for the first time.
+   - Push the changes to your remote repository with `git push` or `git push --set-upstream origin` if you're pushing for the first time.
 5. Now, go to [kloppy > Pull Requests](https://github.com/PySport/kloppy/pulls) and click the green "New pull request" button.
    - Set base: `master`
    - Set compare: `<branch_name>`
    - Click "Create pull request"
    - Write an exhaustive Pull Request message to inform everything you've contributed.
-6. Finally, after the PR has been completed automated tests will run on GitHub to make sure eveything (still) functions as expected.
+6. Finally, after the PR has been completed automated tests will run on GitHub to make sure everything (still) functions as expected.
 
 ## Event Data
 
@@ -202,7 +202,7 @@ This function takes at least:
 - `coordinates`, an optional string that relates to [`Provider`][kloppy.domain.Provider] and their associated [Coordinate Systems][kloppy.domain.CoordinateSystem]. (e.g. coordinates can be `"secondspectrum"` or `"statsbomb"`).
 - `event_factory`, an optional `EventFactory`.
 
-Within the function we instantiate the `ProviderNameDeserialzer` that we import from `from kloppy.infra.serializers.event.{new_provider}` alongside the `ProviderNameInputs`.
+Within the function we instantiate the `ProviderNameDeserializer` that we import from `from kloppy.infra.serializers.event.{new_provider}` alongside the `ProviderNameInputs`.
 
 Note: The "opening" of the file is handled by `FileLike` and `with open_as_file()` as shown below.
 
@@ -299,7 +299,7 @@ Use the meta data and event data feeds to parse:
 - `flags`. Indicate if our dataset contains information on who the ball owning team is and/or if we know ball state.
   - For example: `flags = DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM` or `flags = ~(DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM`)
 - `provider`. Update the `Provider` enum class and add the new provider.
-- `coordinate_system`. A `CoordinateSystem` object that contains information like `pitch_length`, `vertical_orientation` etc. Create a new `ProviderNameCoordinateSytem` class that inherits from `ProviderCoordinateSystem`.
+- `coordinate_system`. A `CoordinateSystem` object that contains information like `pitch_length`, `vertical_orientation` etc. Create a new `ProviderNameCoordinateSystem` class that inherits from `ProviderCoordinateSystem`.
 - Optional metadata such as:
   - `score` (`Score`)
   - `frame_rate` (`float`)
@@ -312,7 +312,7 @@ Before parsing the events order them by their timestamp to create a chronologica
 
 Now, for each possible `EventType` create an `event` by using the built in event factory. This `EventFactory` is inherited into the `ProviderNameDeserializer` through the `EventDataDeserializer` as described [above](#deserialization-file).
 
-Parsing each individual event type, requires some `generic_events_kwargs` (dict) that contains information such as player, team (of event executing player) etc. Additionally, it also contains the full `raw_event`. This ensure that no information is actually lost while parsing an event.
+Parsing each individual event type, requires some `generic_events_kwargs` (dict) that contains information such as player, team (of event executing player) etc. Additionally, it also contains the full `raw_event`. This ensures that no information is actually lost while parsing an event.
 
 ```python
 generic_event_kwargs = dict(
@@ -330,7 +330,7 @@ generic_event_kwargs = dict(
 )
 ```
 
-Now, we combine these `generic_event_kwargs` and our event specific `{someEvent}_event_kwargs` and use `self.event_factory.build_{someEvent}` to consistantly churn out events of the same structure.
+Now, we combine these `generic_event_kwargs` and our event specific `{someEvent}_event_kwargs` and use `self.event_factory.build_{someEvent}` to consistently churn out events of the same structure.
 
 ```python
 event_name, event_attributes = event_chain.popitem()
@@ -372,7 +372,7 @@ Finally, each `event` is appended to the `events` list.
 - When converting these position labels use `position_types_mapping.get(provider_position_label, PositionType.Unknown)`. This will ensure even if we have a missing position label our newly built deserializer every position will be of type `PositionType`.
 - `deserialize` returns an `EventDataset(metadata=metadata, records=events)`
 - `Period` `start_timestamp` is of type `timedelta`. This time delta relates to the start of a period (i.e. each period starts at `0`)
-- Parse `Substitutions` seperately from `PlayerOn` and `PlayerOff` (if this is provided by the provider).
+- Parse `Substitutions` separately from `PlayerOn` and `PlayerOff` (if this is provided by the provider).
   - Player Off / Player On events represent players (temporarily) leaving the pitch (e.g. injury treatment, red card)
   - Substitutions represent a one for one exchange of two players.
 - Update the `event-spec.yml` file in the Documentation to cover:

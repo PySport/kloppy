@@ -151,7 +151,7 @@ Each frame has a [`.ball_coordinates`][kloppy.domain.Frame.ball_coordinates] att
 ...     print(f"{player} ({player.team}): (x={coordinates.x:.2f}, y={coordinates.y:.2f})")
 ```
 
-A tracking data frame can provide useful context to an event as it shows the locations of all off-the-ball players. For example for a pass event, it can show which alternative passing options a player had. Unfortunately, matching the right tracking frame to an event can be challenging as recorded timestamps in event data are not always very precise. Luckily, Sportec has already done this matching for all shot events. Let's revisit the opening goal that we looked at earlier and see what additional context the tracking data can provide.
+A tracking data frame can provide useful context to an event as it shows the locations of all off-the-ball players. For example, for a pass event, it can show which alternative passing options a player had. Unfortunately, matching the right tracking frame to an event can be challenging as recorded timestamps in event data are not always very precise. Luckily, Sportec has already done this matching for all shot events. Let's revisit the opening goal that we looked at earlier and see what additional context the tracking data can provide.
 
 !!! note "Event-tracking synchronization"
 
@@ -425,7 +425,7 @@ Another aspect of how coordinates are represented is the orientation of the data
 
 This orientation reflects the actual playing direction, which switches at half-time. It aligns with how the match appears on broadcast footage, making it convenient when synchronizing tracking or event data with video.
 
-However, for some types of analysis, it can be more convenient to normalize the orientation so that one team (usually the team of interest) always attacks in the same direction (e.g., left-to-right). One concrete example is creating a heatmap of a player's actions. Let’s look at an example where we visualize the locations of all Florian Wirtz' his passes, first without transforming the orientation.
+However, for some types of analysis, it can be more convenient to normalize the orientation so that one team (usually the team of interest) always attacks in the same direction (e.g., left-to-right). One concrete example is creating a heatmap of a player's actions. Let’s look at an example where we visualize the locations of all Florian Wirtz's passes, first without transforming the orientation.
 
 ```python exec="true" source="tabbed-right" html="true" session="getting-started"
 from mplsoccer import Pitch
@@ -486,7 +486,7 @@ print(buffer.getvalue())  # markdown-exec: hide
 
 ## Exporting data
 
-Until now, we've worked with kloppy's object oriented data model. This format is well-suited to preprocess the data. However, to do some actual analysis of the data, it can often be more convenient and efficient to use dataframes or SportsCode XML.
+Until now, we've worked with kloppy's object-oriented data model. This format is well-suited to preprocess the data. However, to do some actual analysis of the data, it can often be more convenient and efficient to use dataframes or SportsCode XML.
 
 ### To a Polars/Pandas dataframe
 

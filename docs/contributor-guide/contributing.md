@@ -204,8 +204,7 @@ well.
 
 ### Previewing changes
 
-Once, the pull request is submitted, [Netlify](https://www.netlify.com/) will
-automatically build the documentation. To view the built site:
+Once the pull request is submitted, [Netlify](https://www.netlify.com/) will automatically build the documentation. To view the built site:
 
 1. Wait for the "Pages changed" check to complete.
 1. Click "..." → "View details" next to it.

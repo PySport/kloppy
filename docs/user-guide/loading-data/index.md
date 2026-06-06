@@ -1,6 +1,6 @@
 # Loading data
 
-The first step in any data processing workflow is acquiring the data itself. Kloppy supports loading event data, tracking data, and manually tagged code data from the most common data providers. The parsing might work slightly different depending on the provider but in essence, each provider has its own submodule, and each datatype has a corresponding loading function. Below is a quick example of how to load locally-stored event data from StatsBomb to illustrate the general approach.
+The first step in any data processing workflow is acquiring the data itself. Kloppy supports loading event data, tracking data, and manually tagged code data from the most common data providers. The parsing might work slightly differently depending on the provider but in essence, each provider has its own submodule, and each datatype has a corresponding loading function. Below is a quick example of how to load locally-stored event data from StatsBomb to illustrate the general approach.
 
 ```python
 from kloppy import statsbomb
@@ -40,7 +40,7 @@ With kloppy, it doesn't really matter where and how the data is stored. Kloppy c
 
 ### Local input data
 
-The most straightforward option is load the data from files that are stored on your local filesystem. To do so, you must pass a string or `pathlib.Path` object representing a local file path.
+The most straightforward option is to load the data from files that are stored on your local filesystem. To do so, you must pass a string or `pathlib.Path` object representing a local file path.
 
 ```python
 from pathlib import Path
@@ -95,7 +95,7 @@ from kloppy import statsbomb
 
 dataset = statsbomb.load(
     event_data="http://someurl.com/match_3788741/events.json",
-    lineup_data="htpps://someurl.com/match_3788741/lineups.json",
+    lineup_data="https://someurl.com/match_3788741/lineups.json",
 )
 ```
 
@@ -191,7 +191,7 @@ dataset = statsbomb.load(
 
 #### `additional_metadata`
 
-You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadat trough the `additional_metadat` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the [`Metadata`][kloppy.domain.Metadata] entity.
+You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadata through the `additional_metadata` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the [`Metadata`][kloppy.domain.Metadata] entity.
 
 ```python
 from kloppy import statsbomb
@@ -291,7 +291,7 @@ dataset = statsperform.load_tracking(
 
 #### `limit`
 
-With the `limit` parameter, you can limit the number of frames to load to the first `n` frames. This is mainly useful to testing a parser as loading a full game of tracking data can take some time.
+With the `limit` parameter, you can limit the number of frames to load to the first `n` frames. This is mainly useful for testing a parser as loading a full game of tracking data can take some time.
 
 ```python
 from kloppy import statsperform

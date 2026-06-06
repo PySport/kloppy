@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import timedelta
 from io import BytesIO
 
@@ -133,3 +134,45 @@ class TestXMLCodeTracking:
 """
         expected_output = bytes(expected_output, "utf-8")
         assert output == expected_output
+
+    def test_serialization_with_multiple_labels_per_group(self, base_dir):
+        dataset = sportscode.load(base_dir / "files/code_xml.xml")
+
+        # Create a modified code with multiple labels for the same group
+        modified_code = replace(
+            dataset.codes[0],
+            labels={
+                "Team": ["Henkie", "Klaas"],
+                "SCORE": ["5-6", "s-1", "s+1"],
+                "Single": "Value",
+            },
+        )
+
+        # Create a new dataset with only the modified code
+        modified_dataset = replace(dataset, records=[modified_code])
+
+        serializer = SportsCodeSerializer()
+        with BytesIO() as buffer:
+            serializer.serialize(
+                modified_dataset, SportsCodeOutputs(data=buffer)
+            )
+            buffer.seek(0)
+            output = buffer.read()
+
+        # Verify the output contains multiple label elements for the same group
+        output_str = output.decode("utf-8")
+
+        # Should have 2 Team labels
+        assert output_str.count("<group>Team</group>") == 2
+        assert "<text>Henkie</text>" in output_str
+        assert "<text>Klaas</text>" in output_str
+
+        # Should have 3 SCORE labels
+        assert output_str.count("<group>SCORE</group>") == 3
+        assert "<text>5-6</text>" in output_str
+        assert "<text>s-1</text>" in output_str
+        assert "<text>s+1</text>" in output_str
+
+        # Should have 1 Single label
+        assert output_str.count("<group>Single</group>") == 1
+        assert "<text>Value</text>" in output_str

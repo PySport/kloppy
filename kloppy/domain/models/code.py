@@ -26,11 +26,11 @@ class Code(DataRecord):
     code_id: str
     code: str
     end_timestamp: timedelta
-    labels: dict[str, Union[bool, str]] = field(default_factory=dict)
+    labels: dict[str, Union[bool, str, list[str]]] = field(default_factory=dict)
 
     @property
     def record_id(self) -> str:
-        return self.record_id
+        return self.code_id
 
     @property
     def start_timestamp(self):

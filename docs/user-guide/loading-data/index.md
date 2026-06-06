@@ -305,7 +305,7 @@ dataset = statsperform.load_tracking(
 
 #### `only_alive`
 
-By setting the `only_alive` parameter to `True`, only frames in which the game is not paused will be included.
+By setting the `only_alive` parameter to `True`, only frames in which the game is not paused will be included. This parameter defaults to `False`.
 
 ```python
 from kloppy import statsperform

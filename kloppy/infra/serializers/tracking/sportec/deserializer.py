@@ -69,7 +69,7 @@ def all_of(*predicates: Callable[..., bool]) -> Callable[..., bool]:
 def _unstack_framesets(
     raw_data: IO[bytes],
     limit: Optional[int] = None,
-    only_alive: bool = True,
+    only_alive: bool = False,
     objects_to_skip: Optional[set[str]] = None,
 ) -> dict[int, dict[int, dict]]:
     """Unstack framesets.
@@ -307,7 +307,7 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
-        only_alive: bool = True,
+        only_alive: bool = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive

@@ -56,7 +56,7 @@ def load_tracking(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load Sportec Solutions tracking data.
@@ -193,7 +193,7 @@ def load_open_tracking_data(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load tracking data for a game from the IDSSE dataset.

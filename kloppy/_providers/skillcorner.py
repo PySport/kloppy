@@ -19,7 +19,7 @@ def load(
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
     data_version: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load SkillCorner broadcast tracking data.
@@ -68,7 +68,7 @@ def load_open_data(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     include_empty_frames: Optional[bool] = False,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load SkillCorner open data.

@@ -15,7 +15,7 @@ def load(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: bool = True,
+    only_alive: bool = False,
     file_format: Optional[str] = None,
 ) -> TrackingDataset:
     """

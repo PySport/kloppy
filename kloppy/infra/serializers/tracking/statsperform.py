@@ -42,7 +42,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
-        only_alive: Optional[bool] = True,
+        only_alive: Optional[bool] = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive

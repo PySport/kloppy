@@ -68,7 +68,6 @@ class TestPFFTracking:
         meta_data_home_starts_left: Path,
         rosters_meta_data_home_starts_left: Path,
     ):
-
         dataset = pff.load_tracking(
             meta_data=meta_data_home_starts_left,
             roster_meta_data=rosters_meta_data_home_starts_left,

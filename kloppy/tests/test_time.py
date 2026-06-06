@@ -1,14 +1,13 @@
 from datetime import timedelta
-from typing import Tuple
 
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import Time, Period, TimeContainer
+from kloppy.domain import Period, Time, TimeContainer
 
 
 @pytest.fixture
-def periods() -> Tuple[Period, Period, Period]:
+def periods() -> tuple[Period, Period, Period]:
     period1 = Period(
         id=1,
         start_timestamp=timedelta(seconds=0),

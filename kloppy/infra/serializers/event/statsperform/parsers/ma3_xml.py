@@ -1,7 +1,6 @@
 """XML parser for Stats Perform MA3 feeds."""
 
 from datetime import datetime, timezone
-from typing import List
 
 from .base import OptaEvent, OptaXMLParser
 
@@ -20,7 +19,7 @@ def _parse_ma3_datetime(dt_str: str) -> datetime:
 class MA3XMLParser(OptaXMLParser):
     """Extract data from a Stats Perform MA3 data stream."""
 
-    def extract_events(self) -> List[OptaEvent]:
+    def extract_events(self) -> list[OptaEvent]:
         live_data = self.root.liveData
         return [
             OptaEvent(
@@ -33,9 +32,7 @@ class MA3XMLParser(OptaXMLParser):
                 x=float(event.attrib["x"]),
                 y=float(event.attrib["y"]),
                 timestamp=_parse_ma3_datetime(event.attrib["timeStamp"]),
-                last_modified=_parse_ma3_datetime(
-                    event.attrib["lastModified"]
-                ),
+                last_modified=_parse_ma3_datetime(event.attrib["lastModified"]),
                 contestant_id=event.attrib.get("contestantId"),
                 player_id=event.attrib.get("playerId"),
                 outcome=(

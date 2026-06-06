@@ -1,25 +1,26 @@
-import logging
-from datetime import timedelta, datetime, timezone
-import warnings
-from typing import List, Dict, NamedTuple, IO, Optional, Union, Iterable
+from collections.abc import Iterable
+from datetime import datetime, timedelta, timezone
 import json
+import logging
+from typing import IO, NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
+    BallState,
+    DatasetTransformer,
     Ground,
     Metadata,
     Orientation,
     Period,
     Player,
+    PlayerData,
     Point,
     Point3D,
     Provider,
     Team,
     TrackingDataset,
-    PlayerData,
     attacking_directions_from_multi_frames,
-    DatasetTransformer,
-    BallState,
 )
 from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
@@ -53,9 +54,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
     @classmethod
     def _get_frame_data(
         cls,
-        teams: List[Team],
+        teams: list[Team],
         period: Period,
-        frame: Dict,
+        frame: dict,
         frame_id_offset: int,
     ):
         frame_id = frame_id_offset + frame["idx"]
@@ -117,7 +118,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         )
 
     @classmethod
-    def __create_teams(cls, metadata) -> List[Team]:
+    def __create_teams(cls, metadata) -> list[Team]:
         teams = []
         for ground in [Ground.HOME, Ground.AWAY]:
             team = Team(
@@ -138,7 +139,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         return teams
 
     @classmethod
-    def __get_frame_rate(cls, p1_tracking: List[Dict]) -> int:
+    def __get_frame_rate(cls, p1_tracking: list[dict]) -> int:
         """gets the frame rate from the tracking data"""
         first_frame = p1_tracking[0]
         second_frame = p1_tracking[1]
@@ -150,7 +151,7 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
         return frame_rate
 
     @classmethod
-    def __get_periods(cls, raw_data_feeds) -> List[Period]:
+    def __get_periods(cls, raw_data_feeds) -> list[Period]:
         """gets the Periods contained in the tracking data"""
         periods = []
         for period_id, p_tracking in enumerate(raw_data_feeds, 1):
@@ -163,9 +164,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
             start_time = datetime.fromtimestamp(start_ts, tz=timezone.utc)
 
             last_frame = p_tracking[-1]
-            assert (
-                last_frame["state"] == "end"
-            ), "Last frame must have state 'end'"
+            assert last_frame["state"] == "end", (
+                "Last frame must have state 'end'"
+            )
             # compute the seconds since epoch
             end_ts = (last_frame["utc_time"]) / 1000
             # create an aware UTC datetime
@@ -183,9 +184,9 @@ class SignalityDeserializer(TrackingDataDeserializer[SignalityInputs]):
 
     def _load_frames(
         self,
-        periods: List[Period],
-        raw_data_feeds: List[List[Dict]],
-        teams: List[Team],
+        periods: list[Period],
+        raw_data_feeds: list[list[dict]],
+        teams: list[Team],
         transformer: DatasetTransformer,
     ):
         p1_raw_data = raw_data_feeds[0]

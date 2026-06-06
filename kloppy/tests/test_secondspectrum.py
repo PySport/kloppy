@@ -3,15 +3,14 @@ from pathlib import Path
 
 import pytest
 
+from kloppy import secondspectrum
 from kloppy.domain import (
+    DatasetType,
     Orientation,
-    Provider,
     Point,
     Point3D,
-    DatasetType,
+    Provider,
 )
-
-from kloppy import secondspectrum
 
 
 class TestSecondSpectrumTracking:
@@ -24,13 +23,16 @@ class TestSecondSpectrumTracking:
         return base_dir / "files/second_spectrum_fake_data.jsonl"
 
     @pytest.fixture
+    def raw_data_utf8sig(self, base_dir) -> str:
+        return base_dir / "files/second_spectrum_fake_data_utf8sig.jsonl"
+
+    @pytest.fixture
     def additional_meta_data(self, base_dir) -> str:
         return base_dir / "files/second_spectrum_fake_metadata.json"
 
     def test_correct_deserialization_limit_sample(
         self, meta_data: Path, raw_data: Path, additional_meta_data: Path
     ):
-
         dataset = secondspectrum.load(
             meta_data=meta_data,
             raw_data=raw_data,
@@ -164,3 +166,41 @@ class TestSecondSpectrumTracking:
         assert pitch_dimensions.x_dim.max == 1.0
         assert pitch_dimensions.y_dim.min == 0.0
         assert pitch_dimensions.y_dim.max == 1.0
+
+    def test_correct_deserialization_ascii(
+        self,
+        meta_data: Path,
+        raw_data_utf8sig: Path,
+        additional_meta_data: Path,
+    ):
+        dataset = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data_utf8sig,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+        )
+
+        assert len(dataset.records) == 13
+
+    def test_utf8_fails_with_bom_but_utf8sig_works(self, raw_data_utf8sig):
+        import json
+
+        with open(raw_data_utf8sig, "rb") as f:
+            first_line = f.readline().strip()
+            decoded_utf8 = first_line.decode("utf-8")
+
+            with pytest.raises(
+                json.JSONDecodeError, match="Unexpected UTF-8 BOM"
+            ):
+                json.loads(decoded_utf8)
+
+            with pytest.raises(UnicodeDecodeError):
+                first_line.decode("ascii")
+
+        with open(raw_data_utf8sig, "rb") as f:
+            first_line = f.readline().strip()
+            decoded_utf8sig = first_line.decode("utf-8-sig")
+
+            data = json.loads(decoded_utf8sig)
+            assert isinstance(data, dict)

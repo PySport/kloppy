@@ -1,6 +1,7 @@
-import re
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import IO, Iterator, List
+import re
+from typing import IO
 
 from .models import (
     DataFormatSpecification,
@@ -12,8 +13,8 @@ from .models import (
 
 def build_regex(
     data_format_specification: DataFormatSpecification,
-    player_channels: List[PlayerChannel],
-    sensors: List[Sensor],
+    player_channels: list[PlayerChannel],
+    sensors: list[Sensor],
 ) -> str:
     player_channel_map = {
         player_channel.player_channel_id: player_channel
@@ -42,7 +43,7 @@ def build_regex(
 def read_raw_data(
     raw_data: IO[bytes],
     metadata: EPTSMetadata,
-    sensor_ids: List[str] = None,
+    sensor_ids: list[str] = None,
     sample_rate: float = 1.0,
     limit: int = 0,
 ) -> Iterator[dict]:

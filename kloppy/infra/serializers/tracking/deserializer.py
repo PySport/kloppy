@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Optional, Union
+from typing import Generic, Optional, TypeVar, Union
 
 from kloppy.domain import (
-    Provider,
-    TrackingDataset,
     DatasetTransformer,
     DatasetTransformerBuilder,
     DatasetType,
+    Provider,
+    TrackingDataset,
 )
 
 T = TypeVar("T")

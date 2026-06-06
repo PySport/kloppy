@@ -1,9 +1,10 @@
 """create-notebook.py
-   Creates a minimal jupyter notebook (.ipynb)
-   Usage: create-notebook <notebook>
+Creates a minimal jupyter notebook (.ipynb)
+Usage: create-notebook <notebook>
 """
+
 import sys
-from notebook import transutils as _
+
 from notebook.services.contents.filemanager import FileContentsManager as FCM
 
 try:

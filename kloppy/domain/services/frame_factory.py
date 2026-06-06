@@ -1,6 +1,6 @@
 import dataclasses
-import warnings
 from dataclasses import fields
+import warnings
 
 from kloppy.domain import Frame
 
@@ -27,9 +27,7 @@ def create_frame(**kwargs) -> Frame:
 
     if len(relevant_kwargs) < len(kwargs):
         skipped_kwargs = set(kwargs.keys()) - set(relevant_kwargs.keys())
-        warnings.warn(
-            f"The following arguments were skipped: {skipped_kwargs}"
-        )
+        warnings.warn(f"The following arguments were skipped: {skipped_kwargs}")
 
     frame = Frame(**relevant_kwargs)
 

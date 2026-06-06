@@ -102,9 +102,7 @@ class TestSportecEventData:
     def test_correct_normalized_event_data_deserialization(
         self, event_data: Path, meta_data: Path
     ):
-        dataset = sportec.load_event(
-            event_data=event_data, meta_data=meta_data
-        )
+        dataset = sportec.load_event(event_data=event_data, meta_data=meta_data)
 
         assert dataset.events[0].coordinates == Point(0.5641, 0.0)
 
@@ -180,12 +178,12 @@ class TestSportecTrackingData:
             assert isinstance(game_id, str)
             assert game_id == "DFL-MAT-003BN1"
 
-        home_coach = dataset.metadata.home_coach
+        home_coach = dataset.metadata.teams[0].coach
         if home_coach:
             assert isinstance(home_coach, str)
             assert home_coach == "C. Streich"
 
-        away_coach = dataset.metadata.away_coach
+        away_coach = dataset.metadata.teams[1].coach
         if away_coach:
             assert isinstance(away_coach, str)
             assert away_coach == "M. Rose"

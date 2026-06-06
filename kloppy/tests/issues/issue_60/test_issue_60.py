@@ -1,5 +1,6 @@
-from kloppy import opta
 import os
+
+from kloppy import opta
 
 
 class TestIssue60:

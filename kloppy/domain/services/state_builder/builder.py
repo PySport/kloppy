@@ -1,7 +1,8 @@
 from abc import abstractmethod
 from typing import TypeVar
 
-from kloppy.domain import EventDataset, Event
+from kloppy.domain import Event, EventDataset
+
 from .registered import RegisteredStateBuilder
 
 T = TypeVar("T")
@@ -18,4 +19,7 @@ class StateBuilder(metaclass=RegisteredStateBuilder):
 
     @abstractmethod
     def reduce_after(self, state: T, event: Event) -> T:
+        pass
+
+    def post_process(self, events: list[Event]):
         pass

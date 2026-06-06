@@ -1,8 +1,8 @@
-import warnings
 from dataclasses import dataclass
 from enum import Enum
 from math import sqrt
 from typing import Optional
+import warnings
 
 from kloppy.exceptions import MissingDimensionError
 
@@ -50,12 +50,12 @@ class Unit(Enum):
 
         factor_to_meter = conversion_factors.get((Unit.METERS, self))
         factor_from_meter = conversion_factors.get((Unit.METERS, to_unit))
-        assert (
-            factor_to_meter is not None
-        ), f"Conversion factor for {self} is not defined"
-        assert (
-            factor_from_meter is not None
-        ), f"Conversion factor for {to_unit} is not defined"
+        assert factor_to_meter is not None, (
+            f"Conversion factor for {self} is not defined"
+        )
+        assert factor_from_meter is not None, (
+            f"Conversion factor for {to_unit} is not defined"
+        )
         return value / factor_to_meter * factor_from_meter
 
 
@@ -627,15 +627,11 @@ class NormalizedPitchDimensions(MetricPitchDimensions):
             or self.y_dim.min is None
             or self.y_dim.max is None
         ):
-            raise ValueError(
-                "The pitch dimensions need to be fully specified."
-            )
+            raise ValueError("The pitch dimensions need to be fully specified.")
         dim_width = self.y_dim.max - self.y_dim.min
         dim_length = self.x_dim.max - self.x_dim.min
         self.goal_width = self.goal_width / self.pitch_width * dim_width
-        self.six_yard_width = (
-            self.six_yard_width / self.pitch_width * dim_width
-        )
+        self.six_yard_width = self.six_yard_width / self.pitch_width * dim_width
         self.six_yard_length = (
             self.six_yard_length / self.pitch_length * dim_length
         )
@@ -645,12 +641,8 @@ class NormalizedPitchDimensions(MetricPitchDimensions):
         self.penalty_area_length = (
             self.penalty_area_length / self.pitch_length * dim_length
         )
-        self.circle_radius = (
-            self.circle_radius / self.pitch_length * dim_length
-        )
-        self.corner_radius = (
-            self.corner_radius / self.pitch_length * dim_length
-        )
+        self.circle_radius = self.circle_radius / self.pitch_length * dim_length
+        self.corner_radius = self.corner_radius / self.pitch_length * dim_length
         self.penalty_spot_distance = (
             self.penalty_spot_distance / self.pitch_length * dim_length
         )

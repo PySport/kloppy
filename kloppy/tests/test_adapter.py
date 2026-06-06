@@ -1,4 +1,4 @@
-from typing import BinaryIO, List
+from typing import BinaryIO
 
 import pytest
 
@@ -47,7 +47,7 @@ class TestAdapter:
 
             def list_directory(
                 self, url: str, recursive: bool = True
-            ) -> List[str]:
+            ) -> list[str]:
                 return []
 
         with config_context("cache", None):

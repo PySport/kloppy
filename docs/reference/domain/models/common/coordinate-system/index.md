@@ -8,6 +8,7 @@
 ::: kloppy.domain.KloppyCoordinateSystem
 ::: kloppy.domain.DatafactoryCoordinateSystem
 ::: kloppy.domain.HawkEyeCoordinateSystem
+::: kloppy.domain.ImpectCoordinateSystem
 ::: kloppy.domain.MetricaCoordinateSystem
 ::: kloppy.domain.OptaCoordinateSystem
 ::: kloppy.domain.PFFCoordinateSystem

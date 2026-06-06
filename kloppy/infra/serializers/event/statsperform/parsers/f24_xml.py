@@ -1,7 +1,7 @@
 """XML parser for Opta F24 feeds."""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 import pytz
 
@@ -25,7 +25,7 @@ def _parse_f24_datetime(dt_str: str) -> datetime:
 class F24XMLParser(OptaXMLParser):
     """Extract data from a Opta F24 data stream."""
 
-    def extract_events(self) -> List[OptaEvent]:
+    def extract_events(self) -> list[OptaEvent]:
         game_elm = self.root.find("Game")
         return [
             OptaEvent(
@@ -49,9 +49,9 @@ class F24XMLParser(OptaXMLParser):
                     else None
                 ),
                 qualifiers={
-                    int(
-                        qualifier.attrib["qualifier_id"]
-                    ): qualifier.attrib.get("value")
+                    int(qualifier.attrib["qualifier_id"]): qualifier.attrib.get(
+                        "value"
+                    )
                     for qualifier in event.iterchildren("Q")
                 },
             )

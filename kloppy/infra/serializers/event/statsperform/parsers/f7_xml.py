@@ -1,7 +1,7 @@
 """XML parser for Opta F7 feeds."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from lxml import objectify
 
@@ -10,18 +10,17 @@ from kloppy.domain import (
     Ground,
     Period,
     Player,
+    PositionType,
     Score,
     Team,
-    PositionType,
 )
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaXMLParser
 from ..formation_mapping import (
-    formation_position_mapping,
     formation_name_mapping,
-    FormationType,
+    formation_position_mapping,
 )
+from .base import OptaXMLParser
 
 document_path = objectify.ObjectPath("SoccerFeed.SoccerDocument")
 matchdata_path = objectify.ObjectPath("SoccerFeed.SoccerDocument.MatchData")
@@ -40,7 +39,7 @@ class F7XMLParser(OptaXMLParser):
         Path of the data file.
     """
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         periods = {
             i: Period(id=i, start_timestamp=None, end_timestamp=None)
             for i in range(1, 5)
@@ -100,7 +99,7 @@ class F7XMLParser(OptaXMLParser):
             return None
         return Score(home=home_score, away=away_score)
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         """Return a dictionary with all available teams.
 
         Returns
@@ -187,7 +186,7 @@ class F7XMLParser(OptaXMLParser):
 
     def _parse_team_players(
         self, team_ref: str
-    ) -> Tuple[str, Dict[str, Dict[str, str]]]:
+    ) -> tuple[str, dict[str, dict[str, str]]]:
         team_elms = list(document_path.find(self.root).iterchildren("Team"))
         for team_elm in team_elms:
             if team_elm.attrib["uID"] == team_ref:

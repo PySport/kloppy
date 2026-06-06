@@ -1,4 +1,4 @@
-from typing import IO, List, Optional, Tuple
+from typing import IO, Optional
 
 from lxml import objectify
 
@@ -18,7 +18,7 @@ def get_metadata_parser(
 ) -> TracabMetadataParser:
     # infer the data format if not provided
     if feed_format is None:
-        if feed.read(1).decode("utf-8")[0] == "<":
+        if feed.read(4).decode("utf-8-sig")[0] == "<":
             feed.seek(0)
             meta_data = objectify.fromstring(feed.read())
             if hasattr(meta_data, "match"):
@@ -41,8 +41,8 @@ def get_metadata_parser(
 
 def get_raw_data_parser(
     feed: IO[bytes],
-    periods: List[Period],
-    teams: Tuple[Team, Team],
+    periods: list[Period],
+    teams: tuple[Team, Team],
     frame_rate: int,
     feed_format: Optional[str] = None,
 ) -> TracabDataParser:

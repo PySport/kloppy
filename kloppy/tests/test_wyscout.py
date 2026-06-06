@@ -22,13 +22,12 @@ from kloppy.domain import (
     PassResult,
     PassType,
     Point,
+    Point3D,
     PositionType,
-    FormationType,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
     Time,
-    Point3D,
 )
 
 
@@ -63,9 +62,7 @@ class TestWyscoutV2:
             data_version="V2",
         )
         assert dataset.dataset_type == DatasetType.EVENT
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         return dataset
 
     def test_metadata(self, dataset: EventDataset):
@@ -173,9 +170,7 @@ class TestWyscoutV3:
             data_version="V3",
         )
         assert dataset.dataset_type == DatasetType.EVENT
-        assert (
-            dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
-        )
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
         return dataset
 
     def test_metadata(self, dataset: EventDataset):
@@ -212,9 +207,7 @@ class TestWyscoutV3:
             timestamp=timedelta(seconds=2818),
         )
         assert (
-            dataset.metadata.teams[1]
-            .formations.items.keys()[0]
-            .period.end_time
+            dataset.metadata.teams[1].formations.items.keys()[0].period.end_time
             == second_period_end_time
         )
 
@@ -298,9 +291,7 @@ class TestWyscoutV3:
         off_target_shot = dataset.get_event_by_id(1927028562)
         assert off_target_shot.event_type == EventType.SHOT
         assert off_target_shot.result == ShotResult.OFF_TARGET
-        assert off_target_shot.result_coordinates == Point3D(
-            x=100, y=40, z=3.5
-        )
+        assert off_target_shot.result_coordinates == Point3D(x=100, y=40, z=3.5)
         # on target shot
         on_target_shot = dataset.get_event_by_id(1927028637)
         assert on_target_shot.event_type == EventType.SHOT

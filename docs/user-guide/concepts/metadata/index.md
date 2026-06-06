@@ -22,8 +22,6 @@ Match sheet metadata refers to official match-related information. This typicall
 | [`teams`][kloppy.domain.Metadata.teams]           | [`Team`][kloppy.domain.Team]     | No  | List containing home team and away team metadata. |
 | [`officials`][kloppy.domain.Metadata.officials]   | [`Official`][kloppy.domain.Official]   | Yes | List of match officials (i.e., referees). |
 | [`score`][kloppy.domain.Metadata.score]           | [`Score`][kloppy.domain.Score]   | Yes | Final score of the match. |
-| [`home_coach`][kloppy.domain.Metadata.home_coach] | str                              | Yes | Name of the home team's coach. |
-| [`away_coach`][kloppy.domain.Metadata.away_coach] | str                              | Yes | Name of the away team's coach. |
 | [`attributes`][kloppy.domain.Metadata.attributes] | Dict                             | Yes | Additional metadata such as stadium, weather, or attendance (if available). |
 
 

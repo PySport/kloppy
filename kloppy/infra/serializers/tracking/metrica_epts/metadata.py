@@ -1,6 +1,6 @@
-import warnings
 from datetime import timedelta
-from typing import IO, Dict, List, Optional, Tuple, Union
+from typing import IO, Optional, Union
+import warnings
 
 from lxml import objectify
 
@@ -28,7 +28,7 @@ from .models import (
     Sensor,
 )
 
-position_types_mapping: Dict[int, PositionType] = {
+position_types_mapping: dict[int, PositionType] = {
     -1: PositionType.Unknown,
     0: PositionType.Goalkeeper,
 }
@@ -38,7 +38,7 @@ def noop(x):
     return x
 
 
-def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
+def _load_provider_parameters(parent_elm, value_mapper=None) -> dict:
     if parent_elm is None:
         return {}
 
@@ -54,7 +54,7 @@ def _load_provider_parameters(parent_elm, value_mapper=None) -> Dict:
 
 def _load_periods(
     metadata_elm, team_map: dict, frame_rate: int
-) -> Tuple[List[Period], AttackingDirection]:
+) -> tuple[list[Period], AttackingDirection]:
     global_config_elm = metadata_elm.find("GlobalConfig")
     provider_params = _load_provider_parameters(
         global_config_elm.find("ProviderGlobalParameters")
@@ -117,7 +117,7 @@ def _load_periods(
     return periods, start_attacking_direction
 
 
-def _load_players(players_elm, team: Team) -> List[Player]:
+def _load_players(players_elm, team: Team) -> list[Player]:
     return [
         Player(
             team=team,
@@ -155,7 +155,7 @@ def _load_position_data(parent_elm) -> PositionType:
 
 def _load_data_format_specifications(
     data_format_specifications_elm,
-) -> List[DataFormatSpecification]:
+) -> list[DataFormatSpecification]:
     return [
         DataFormatSpecification.from_xml_element(data_format_specification_elm)
         for data_format_specification_elm in data_format_specifications_elm.iterchildren(
@@ -164,7 +164,7 @@ def _load_data_format_specifications(
     ]
 
 
-def _load_sensors(sensors_elm) -> List[Sensor]:
+def _load_sensors(sensors_elm) -> list[Sensor]:
     return [
         Sensor.from_xml_element(sensor_elm)
         for sensor_elm in sensors_elm.iterchildren(tag="Sensor")
@@ -172,7 +172,7 @@ def _load_sensors(sensors_elm) -> List[Sensor]:
 
 
 def _load_pitch_dimensions(
-    metadata_elm, sensors: List[Sensor]
+    metadata_elm, sensors: list[Sensor]
 ) -> Union[None, PitchDimensions]:
     normalized = False
     for sensor in sensors:

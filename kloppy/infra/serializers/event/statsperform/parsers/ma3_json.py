@@ -1,7 +1,6 @@
 """JSON parser for Stats Perform MA3 feeds."""
 
 from datetime import datetime, timezone
-from typing import List
 
 from .base import OptaEvent, OptaJSONParser
 
@@ -21,7 +20,7 @@ def _parse_ma3_datetime(dt_str: str) -> datetime:
 class MA3JSONParser(OptaJSONParser):
     """Extract data from a Stats Perform MA3 data stream."""
 
-    def extract_events(self) -> List[OptaEvent]:
+    def extract_events(self) -> list[OptaEvent]:
         live_data = self.root["liveData"]
         return [
             OptaEvent(

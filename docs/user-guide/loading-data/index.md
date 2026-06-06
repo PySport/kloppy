@@ -1,6 +1,6 @@
 # Loading data
 
-The first step in any data processing workflow is acquiring the data itself. Kloppy supports loading event data, tracking data, and manually tagged code data from the most common data providers. The parsing might work slightly different depending on the provider but in essence, each provider has its own submodule, and each datatype has a corresponding loading function. Below is a quick example of how to load locally-stored event data from StatsBomb to illustrate the general approach.
+The first step in any data processing workflow is acquiring the data itself. Kloppy supports loading event data, tracking data, and manually tagged code data from the most common data providers. The parsing might work slightly differently depending on the provider but in essence, each provider has its own submodule, and each datatype has a corresponding loading function. Below is a quick example of how to load locally-stored event data from StatsBomb to illustrate the general approach.
 
 ```python
 from kloppy import statsbomb
@@ -20,10 +20,11 @@ Below is an overview of all currently supported providers, along with links to d
 | Provider                                   |                                Event Data                                |  Tracking Data   |    Code Data     |                                          Public Data                                           |
 | :----------------------------------------- | :----------------------------------------------------------------------: | :--------------: | :--------------: | :--------------------------------------------------------------------------------------------: |
 | [DataFactory](datafactory.ipynb)           |                             :material-check:                             | :material-minus: | :material-minus: |                                                                                                |
-| [HawkEye (2D)](hawkeye.ipynb)              |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
+| [HawkEye (2D)](hawkeye.ipynb)              |                             :material-check:                             | :material-minus: | :material-minus: |                                                                                                |
+| [Impect](impect.ipynb)                     |                             :material-minus:                             | :material-check: | :material-minus: |                   [:material-eye:](https://github.com/ImpectAPI/open-data)                     |
 | [Metrica](metrica.ipynb)                   |                             :material-minus:                             | :material-check: | :material-minus: |                [:material-eye:](https://github.com/metrica-sports/sample-data)                 |
 | [PFF FC](pff.ipynb)                        |                             :material-minus:                             | :material-check: | :material-minus: | [:material-eye:](https://drive.google.com/drive/u/0/folders/1_a_q1e9CXeEPJ3GdCv_3-rNO3gPqacfa) |
-| [SecondSpectrum](secondspectrum.ipynb)     | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus: |
+| [SecondSpectrum](secondspectrum.ipynb)     | [:material-progress-wrench:](https://github.com/PySport/kloppy/pull/437) | :material-check: | :material-minus: |                                                                                                |
 | [Signality](signality.ipynb)               |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
 | [SkillCorner](skillcorner.ipynb)           |                             :material-minus:                             | :material-check: | :material-minus: |                   [:material-eye:](https://github.com/SkillCorner/opendata)                    |
 | [Sportec](sportec.ipynb)                   |                             :material-check:                             | :material-check: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-025-04505-y)              |
@@ -39,7 +40,7 @@ With kloppy, it doesn't really matter where and how the data is stored. Kloppy c
 
 ### Local input data
 
-The most straightforward option is load the data from files that are stored on your local filesystem. To do so, you must pass a string or `pathlib.Path` object representing a local file path.
+The most straightforward option is to load the data from files that are stored on your local filesystem. To do so, you must pass a string or `pathlib.Path` object representing a local file path.
 
 ```python
 from pathlib import Path
@@ -93,26 +94,27 @@ To load data from a web server, you must provide a string representing a URL. It
 from kloppy import statsbomb
 
 dataset = statsbomb.load(
-    event_data=Path("http://someurl.com/match_3788741/events.json"),
-    lineup_data=Path("htpps://someurl.com/match_3788741/lineups.json"),
+    event_data="http://someurl.com/match_3788741/events.json",
+    lineup_data="https://someurl.com/match_3788741/lineups.json",
 )
 ```
 
-You can pass credentials for authentication via [`set_config`][kloppy.config.set_config].
+To fetch data from an API protected with [HTTP Basic Auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication), you can provide your credentials by setting the `adapters.http.basic_authentication` configuration variable.
 
 ```python
-from kloppy import statsbomb
-from kloppy.config import set_config
+from kloppy import wyscout
+from kloppy.config import config_context
 
-set_config(
-    'adapters.http.basic_authentication',
-    { 'user': 'JohnDoe', 'pass': 'asecretkey' }
-)
+# Use a dictionary or tuple/list: ("JohnDoe", "asecretkey")
+with config_context(
+    "adapters.http.basic_authentication",
+    {"login": "JohnDoe", "password": "asecretkey"}
+):
+    dataset = wyscout.load(
+        event_data="https://apirest.wyscout.com/v3/matches/3788741/events",
+        data_version="V3"
+    )
 
-dataset = statsbomb.load(
-    event_data="http://someurl.com/match_3788741/events.json",
-    lineup_data="htpps://someurl.com/match_3788741/lineups.json",
-)
 ```
 
 #### S3
@@ -189,7 +191,7 @@ dataset = statsbomb.load(
 
 #### `additional_metadata`
 
-You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadat trough the `additional_metadat` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the [`Metadata`][kloppy.domain.Metadata] entity.
+You might have additional metadata about a match that is not included in the raw data. You can still add this data to the loaded dataset's metadata through the `additional_metadata` parameter. This parameter accepts a dictionary with additional data. The dictionary's keys must correspond to attributes of the [`Metadata`][kloppy.domain.Metadata] entity.
 
 ```python
 from kloppy import statsbomb
@@ -289,7 +291,7 @@ dataset = statsperform.load_tracking(
 
 #### `limit`
 
-With the `limit` parameter, you can limit the number of frames to load to the first `n` frames. This is mainly useful to testing a parser as loading a full game of tracking data can take some time.
+With the `limit` parameter, you can limit the number of frames to load to the first `n` frames. This is mainly useful for testing a parser as loading a full game of tracking data can take some time.
 
 ```python
 from kloppy import statsperform
@@ -303,7 +305,7 @@ dataset = statsperform.load_tracking(
 
 #### `only_alive`
 
-By setting the `only_alive` parameter to `True`, only frames in which the game is not paused will be included.
+By setting the `only_alive` parameter to `True`, only frames in which the game is not paused will be included. This parameter defaults to `False`.
 
 ```python
 from kloppy import statsperform

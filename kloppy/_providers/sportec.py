@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
@@ -17,7 +17,7 @@ from kloppy.utils import deprecated
 def load_event(
     event_data: FileLike,
     meta_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -39,9 +39,10 @@ def load_event(
         coordinate_system=coordinates,
         event_factory=event_factory or get_config("event_factory"),
     )
-    with open_as_file(event_data) as event_data_fp, open_as_file(
-        meta_data
-    ) as meta_data_fp:
+    with (
+        open_as_file(event_data) as event_data_fp,
+        open_as_file(meta_data) as meta_data_fp,
+    ):
         return serializer.deserialize(
             SportecEventDataInputs(
                 event_data=event_data_fp, meta_data=meta_data_fp
@@ -55,7 +56,7 @@ def load_tracking(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load Sportec Solutions tracking data.
@@ -77,9 +78,10 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        raw_data
-    ) as raw_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=SportecTrackingDataInputs(
                 meta_data=meta_data_fp, raw_data=raw_data_fp
@@ -91,7 +93,7 @@ def load_tracking(
 def load(
     event_data: FileLike,
     meta_data: FileLike,
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
@@ -101,46 +103,49 @@ def load(
 
 
 def get_IDSSE_url(match_id: str, data_type: str) -> str:
-    """Returns the URL for the meta, event or tracking data for a match in the IDDSE dataset."""
-    # match_id -> file_id
-    DATA_MAP = {
-        "J03WPY": {"meta": 51643487, "event": 51643505, "tracking": 51643526},
-        "J03WN1": {"meta": 51643472, "event": 51643496, "tracking": 51643517},
-        "J03WMX": {"meta": 51643475, "event": 51643493, "tracking": 51643514},
-        "J03WOH": {"meta": 51643478, "event": 51643499, "tracking": 51643520},
-        "J03WQQ": {"meta": 51643484, "event": 51643508, "tracking": 51643529},
-        "J03WOY": {"meta": 51643481, "event": 51643502, "tracking": 51643523},
-        "J03WR9": {"meta": 51643490, "event": 51643511, "tracking": 51643532},
+    """Returns the URL for the meta, event or tracking data for a match in the IDSSE dataset."""
+    COMPETITION = {
+        "J03WMX": "DFL-COM-000001",
+        "J03WN1": "DFL-COM-000001",
+        "J03WOH": "DFL-COM-000002",
+        "J03WOY": "DFL-COM-000002",
+        "J03WPY": "DFL-COM-000002",
+        "J03WQQ": "DFL-COM-000002",
+        "J03WR9": "DFL-COM-000002",
     }
-    # URL constant
-    DATA_URL = (
-        "https://springernature.figshare.com/ndownloader/files/{file_id}"
-    )
+    FILENAME_TEMPLATE = {
+        "meta": "DFL_02_01_matchinformation_{competition}_DFL-MAT-{match_id}.xml",
+        "event": "DFL_03_02_events_raw_{competition}_DFL-MAT-{match_id}.xml",
+        "tracking": "DFL_04_03_positions_raw_observed_{competition}_DFL-MAT-{match_id}.xml",
+    }
+    BASE_URL = "https://huggingface.co/datasets/pysport/idsse-data/resolve/main/{filename}"
 
-    if data_type not in ["meta", "event", "tracking"]:
+    if data_type not in FILENAME_TEMPLATE:
         raise ValueError(
-            f"Data type should be one of ['meta', 'event', 'tracking'], but got {data_type}"
+            f"Data type should be one of {list(FILENAME_TEMPLATE.keys())}, but got {data_type}"
         )
-    if match_id not in DATA_MAP:
+    if match_id not in COMPETITION:
         raise ValueError(
-            f"This match_id is not available, please select from {list(DATA_MAP.keys())}"
+            f"This match_id is not available, please select from {list(COMPETITION.keys())}"
         )
-    return DATA_URL.format(file_id=str(DATA_MAP[match_id][data_type]))
+    filename = FILENAME_TEMPLATE[data_type].format(
+        competition=COMPETITION[match_id], match_id=match_id
+    )
+    return BASE_URL.format(filename=filename)
 
 
 def load_open_event_data(
     match_id: str = "J03WPY",
-    event_types: Optional[List[str]] = None,
+    event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
     event_factory: Optional[EventFactory] = None,
 ) -> EventDataset:
     """
     Load event data for a game from the IDSSE dataset.
 
-    The IDSSE dataset will be released with the publication of the *An integrated
-    dataset of synchronized spatiotemporal and event data in elite soccer*
-    paper [1]_ and is released under the Creative Commons Attribution 4.0
-    license.
+    The IDSSE dataset is published alongside the *An integrated dataset of
+    synchronized spatiotemporal and event data in elite soccer* paper [1]_
+    and is released under the Creative Commons Attribution 4.0 license.
 
     Args:
         match_id (str, optional):
@@ -188,15 +193,14 @@ def load_open_tracking_data(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load tracking data for a game from the IDSSE dataset.
 
-    The IDSSE dataset will be released with the publication of the *An integrated
-    dataset of synchronized spatiotemporal and event data in elite soccer*
-    paper [1]_ and is released under the Creative Commons Attribution 4.0
-    license.
+    The IDSSE dataset is published alongside the *An integrated dataset of
+    synchronized spatiotemporal and event data in elite soccer* paper [1]_
+    and is released under the Creative Commons Attribution 4.0 license.
 
     Args:
         match_id (str, optional):
@@ -227,9 +231,9 @@ def load_open_tracking_data(
         }
 
     References:
-        .. [1] Bassek, M., Weber, H., Rein, R., & Memmert, D. (2024). "An integrated
-               dataset of synchronized spatiotemporal and event data in elite soccer."
-               In Submission.
+        .. [1] Bassek, M., Rein, R., Weber, H. et al. "An integrated dataset of
+               spatiotemporal and event data in elite soccer." Sci Data 12, 195 (2025).
+               https://doi.org/10.1038/s41597-025-04505-y
     """
     return load_tracking(
         raw_data=get_IDSSE_url(match_id, "tracking"),

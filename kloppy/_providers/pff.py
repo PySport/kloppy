@@ -13,7 +13,7 @@ def load_tracking(
     sample_rate: Optional[float] = None,
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
-    only_alive: Optional[bool] = True,
+    only_alive: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load and deserialize tracking data from the provided metadata, roster metadata, and raw data files.
@@ -25,7 +25,7 @@ def load_tracking(
         sample_rate (Optional[float], optional): The sampling rate to downsample the data. If None, no downsampling is applied. Defaults to None.
         limit (Optional[int], optional): The maximum number of records to process. If None, all records are processed. Defaults to None.
         coordinates (Optional[str], optional): The coordinate system to use for the tracking data (e.g., "pff"). Defaults to None.
-        only_alive (Optional[bool], optional): Whether to include only sequences when the ball is in play. Defaults to True.
+        only_alive (Optional[bool], optional): Whether to include only sequences when the ball is in play. Defaults to False.
 
     Returns:
         TrackingDataset: A deserialized TrackingDataset object containing the processed tracking data.
@@ -36,9 +36,11 @@ def load_tracking(
         coordinate_system=coordinates,
         only_alive=only_alive,
     )
-    with open_as_file(meta_data) as meta_data_fp, open_as_file(
-        roster_meta_data
-    ) as roster_meta_data_fp, open_as_file(raw_data) as raw_data_fp:
+    with (
+        open_as_file(meta_data) as meta_data_fp,
+        open_as_file(roster_meta_data) as roster_meta_data_fp,
+        open_as_file(raw_data) as raw_data_fp,
+    ):
         return deserializer.deserialize(
             inputs=PFF_TrackingInputs(
                 meta_data=meta_data_fp,

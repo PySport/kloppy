@@ -1,8 +1,7 @@
-import logging
 from datetime import timedelta
-import warnings
+import logging
 from typing import IO, NamedTuple, Optional, Union
-
+import warnings
 
 from kloppy.domain import (
     AttackingDirection,
@@ -14,15 +13,15 @@ from kloppy.domain import (
     PlayerData,
     Point,
     Point3D,
+    PositionType,
     Provider,
     TrackingDataset,
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-from kloppy.domain import PositionType
 from kloppy.exceptions import DeserializationError
-from kloppy.utils import performance_logging
 from kloppy.infra.serializers.event.statsperform.parsers import get_parser
+from kloppy.utils import performance_logging
 
 from .deserializer import TrackingDataDeserializer
 
@@ -43,7 +42,7 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
-        only_alive: Optional[bool] = True,
+        only_alive: Optional[bool] = False,
     ):
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive

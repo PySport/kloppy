@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import io
 from pathlib import Path
 
 import pytest
@@ -9,7 +10,6 @@ from kloppy.domain import (
     EventDataset,
     OptaCoordinateSystem,
     Orientation,
-    PassResult,
     Point,
     Point3D,
     PositionType,
@@ -144,9 +144,7 @@ class TestStatsPerformMetadata:
     def test_periods(self, tracking_dataset: TrackingDataset):
         assert len(tracking_dataset.metadata.periods) == 2
         assert tracking_dataset.metadata.periods[0].id == 1
-        assert tracking_dataset.metadata.periods[
-            0
-        ].start_timestamp == datetime(
+        assert tracking_dataset.metadata.periods[0].start_timestamp == datetime(
             2020, 8, 23, 11, 0, 10, tzinfo=timezone.utc
         )
         assert tracking_dataset.metadata.periods[0].end_timestamp == datetime(
@@ -154,9 +152,7 @@ class TestStatsPerformMetadata:
         )
 
         assert tracking_dataset.metadata.periods[1].id == 2
-        assert tracking_dataset.metadata.periods[
-            1
-        ].start_timestamp == datetime(
+        assert tracking_dataset.metadata.periods[1].start_timestamp == datetime(
             2020, 8, 23, 12, 6, 22, tzinfo=timezone.utc
         )
         assert tracking_dataset.metadata.periods[1].end_timestamp == datetime(
@@ -285,7 +281,6 @@ class TestStatsPerformTracking:
     def test_correct_deserialization_limit_sample(
         self, tracking_data: Path, tracking_metadata_xml: Path
     ):
-
         tracking_dataset = statsperform.load_tracking(
             ma1_data=tracking_metadata_xml,
             ma25_data=tracking_data,
@@ -425,3 +420,33 @@ class TestStatsPerformTracking:
                 tracking_system="sportvu",
                 coordinates="kloppy",
             )
+
+
+class TestStatsPerformXMLWithBOM:
+    def test_event_xml_with_bom(
+        self, event_metadata_xml: Path, event_data_xml: Path
+    ):
+        with open(event_metadata_xml, "rb") as f:
+            ma1_data = f.read()
+        with open(event_data_xml, "rb") as f:
+            ma3_data = f.read()
+
+        dataset = statsperform.load_event(
+            ma1_data=io.BytesIO(b"\xef\xbb\xbf" + ma1_data),
+            ma3_data=io.BytesIO(b"\xef\xbb\xbf" + ma3_data),
+        )
+
+        assert len(dataset.records) > 0
+
+    def test_tracking_xml_with_bom(
+        self, tracking_metadata_xml: Path, tracking_data: Path
+    ):
+        with open(tracking_metadata_xml, "rb") as f:
+            ma1_data = f.read()
+
+        dataset = statsperform.load_tracking(
+            ma1_data=io.BytesIO(b"\xef\xbb\xbf" + ma1_data),
+            ma25_data=tracking_data,
+        )
+
+        assert len(dataset.records) > 0

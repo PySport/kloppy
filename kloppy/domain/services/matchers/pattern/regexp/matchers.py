@@ -1,17 +1,13 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     Generic,
-    Iterator,
-    Mapping,
-    Sequence,
-    Tuple,
     TypeVar,
     Union,
-    Dict,
 )
 
 if TYPE_CHECKING:
@@ -35,7 +31,7 @@ class _TrailItem(Generic[Out]):
     """
 
     item: Out
-    data: Dict[str, Sequence[str]]
+    data: dict[str, Sequence[str]]
 
     @property
     def _comparable(self):
@@ -59,7 +55,7 @@ class _TrailItem(Generic[Out]):
 class Matcher(Generic[Tok, Out], metaclass=ABCMeta):
     @abstractmethod
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         raise NotImplementedError
 
@@ -69,7 +65,7 @@ class Eq(Matcher):
         self.ref = ref
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if self.ref == token:
             yield token
@@ -83,7 +79,7 @@ class In(Matcher):
         self.ref = ref
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if token in self.ref:
             yield token
@@ -100,7 +96,7 @@ class OutOf(Matcher):
         return f"OutOf({self.ref!r})"
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if self.ref in token:
             yield self.ref
@@ -112,7 +108,7 @@ class AttributeHasValue(Matcher):
         self.value = value
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if (
             hasattr(token, self.attribute)
@@ -130,7 +126,7 @@ class KeyHasValue(Matcher):
         self.value = value
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if (
             isinstance(token, Mapping)
@@ -148,20 +144,20 @@ class Anything(Matcher):
         return "Anything()"
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         yield token
 
 
 class ChrRanges(Matcher[str, str]):
-    def __init__(self, *ranges: Tuple[str, str]):
+    def __init__(self, *ranges: tuple[str, str]):
         self.ranges = ranges
 
     def __repr__(self):
         return f"ChrRanges{self.ranges!r}"
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         for start, stop in self.ranges:
             if ord(start) <= ord(token) <= ord(stop):
@@ -180,7 +176,7 @@ class Test(Matcher[Tok, Out]):
         return f"Test({self.test!r}"
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         if self.test(token):
             yield token
@@ -206,7 +202,7 @@ class Not(Matcher[Tok, Out]):
         return f"Not({self.matcher!r})"
 
     def match(
-        self, token: Tok, trail: Tuple[_TrailItem[Out], ...]
+        self, token: Tok, trail: tuple[_TrailItem[Out], ...]
     ) -> Iterator[Out]:
         found = list(self.matcher.match(token, trail))
 

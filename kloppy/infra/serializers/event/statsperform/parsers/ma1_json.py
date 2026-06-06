@@ -1,23 +1,23 @@
 """JSON parser for Stats Perform MA1 feeds."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
-from kloppy.domain import Ground, Period, Player, Score, Team, PositionType
+from kloppy.domain import Ground, Period, Player, PositionType, Score, Team
 from kloppy.exceptions import DeserializationError
 
-from .base import OptaJSONParser
 from ..formation_mapping import (
+    FormationType,
     formation_name_mapping,
     formation_position_mapping,
-    FormationType,
 )
+from .base import OptaJSONParser
 
 
 class MA1JSONParser(OptaJSONParser):
     """Extract data from a Stats Perform MA1 data stream."""
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         live_data = self.root["liveData"]
         match_details = live_data["matchDetails"]
         parsed_periods = []
@@ -57,7 +57,7 @@ class MA1JSONParser(OptaJSONParser):
             return None
         return Score(home=home_score, away=away_score)
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         teams = {}
         for parsed_team in self._parse_teams():
             team_id = parsed_team["team_id"]
@@ -126,7 +126,7 @@ class MA1JSONParser(OptaJSONParser):
         else:
             return None
 
-    def _parse_teams(self) -> List[Dict[str, Any]]:
+    def _parse_teams(self) -> list[dict[str, Any]]:
         parsed_teams = []
         match_info = self.root["matchInfo"]
         teams = match_info["contestant"]
@@ -154,7 +154,7 @@ class MA1JSONParser(OptaJSONParser):
             )
         return parsed_teams
 
-    def _parse_players(self) -> List[Dict[str, Any]]:
+    def _parse_players(self) -> list[dict[str, Any]]:
         parsed_players = []
         live_data = self.root["liveData"]
         line_ups = live_data["lineUp"]

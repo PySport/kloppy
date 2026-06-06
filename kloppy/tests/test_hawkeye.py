@@ -1,7 +1,6 @@
-import math
 from datetime import datetime, timedelta, timezone
+import math
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -18,7 +17,7 @@ from kloppy.domain import (
 
 
 @pytest.fixture(scope="session")
-def ball_feeds(base_dir: Path) -> List[Path]:
+def ball_feeds(base_dir: Path) -> list[Path]:
     return [
         base_dir / "files" / "hawkeye_1_1.football.samples.ball",
         base_dir / "files" / "hawkeye_2_46.football.samples.ball",
@@ -26,7 +25,7 @@ def ball_feeds(base_dir: Path) -> List[Path]:
 
 
 @pytest.fixture(scope="session")
-def player_centroid_feeds(base_dir: Path) -> List[Path]:
+def player_centroid_feeds(base_dir: Path) -> list[Path]:
     return [
         base_dir / "files" / "hawkeye_1_1.football.samples.centroids",
         base_dir / "files" / "hawkeye_2_46.football.samples.centroids",
@@ -47,7 +46,7 @@ class TestsHawkEyeInputs:
     """Tests related to the various input options."""
 
     def test_deserialize_single_file(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+        self, ball_feeds: list[Path], player_centroid_feeds: list[Path]
     ):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds[0],
@@ -58,8 +57,8 @@ class TestsHawkEyeInputs:
 
     def test_deserialize_multiple_files(
         self,
-        ball_feeds: List[Path],
-        player_centroid_feeds: List[Path],
+        ball_feeds: list[Path],
+        player_centroid_feeds: list[Path],
     ):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
@@ -77,7 +76,7 @@ class TestsHawkEyeInputs:
         assert len(dataset) == 6000
 
     def test_limit(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+        self, ball_feeds: list[Path], player_centroid_feeds: list[Path]
     ):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
@@ -88,7 +87,7 @@ class TestsHawkEyeInputs:
         assert len(dataset) == 10
 
     def test_sample_rate(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+        self, ball_feeds: list[Path], player_centroid_feeds: list[Path]
     ):
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
@@ -104,8 +103,8 @@ class TestsHawkEyeInputs:
 
     def test_overwrite_metadata(
         self,
-        ball_feeds: List[Path],
-        player_centroid_feeds: List[Path],
+        ball_feeds: list[Path],
+        player_centroid_feeds: list[Path],
         meta_data_json: Path,
     ):
         dataset = hawkeye.load(
@@ -135,7 +134,7 @@ class TestHawkEyeDeserializer:
 
     @pytest.fixture(scope="class")
     def dataset(
-        self, ball_feeds: List[Path], player_centroid_feeds: List[Path]
+        self, ball_feeds: list[Path], player_centroid_feeds: list[Path]
     ) -> TrackingDataset:
         dataset = hawkeye.load(
             ball_feeds=ball_feeds,
@@ -178,18 +177,14 @@ class TestHawkEyeDeserializer:
         assert dataset.metadata.periods[0].id == 1
         assert len(dataset.metadata.periods) == 2
 
-        assert dataset.metadata.periods[
-            0
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[0].start_timestamp == datetime.strptime(
             "2024-09-22T21:00:49.383Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[0].end_timestamp == datetime.strptime(
             "2024-09-22T21:47:30.592Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
 
-        assert dataset.metadata.periods[
-            1
-        ].start_timestamp == datetime.strptime(
+        assert dataset.metadata.periods[1].start_timestamp == datetime.strptime(
             "2024-09-22T22:03:13.540Z", "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         assert dataset.metadata.periods[1].end_timestamp == datetime.strptime(
@@ -251,8 +246,8 @@ class TestHawkEyeDeserializer:
 
 
 def test_xml_metadata(
-    ball_feeds: List[Path],
-    player_centroid_feeds: List[Path],
+    ball_feeds: list[Path],
+    player_centroid_feeds: list[Path],
     meta_data_xml: Path,
 ):
     dataset = hawkeye.load(
@@ -288,8 +283,8 @@ def test_xml_metadata(
 
 
 def test_json_metadata(
-    ball_feeds: List[Path],
-    player_centroid_feeds: List[Path],
+    ball_feeds: list[Path],
+    player_centroid_feeds: list[Path],
     meta_data_json: Path,
 ):
     dataset = hawkeye.load(
@@ -325,8 +320,8 @@ def test_json_metadata(
 
 
 def test_correct_normalized_deserialization(
-    ball_feeds: List[Path],
-    player_centroid_feeds: List[Path],
+    ball_feeds: list[Path],
+    player_centroid_feeds: list[Path],
 ):
     dataset = hawkeye.load(
         ball_feeds=ball_feeds,

@@ -1,7 +1,7 @@
 import pytest
 
 from kloppy import statsbomb
-from kloppy.domain import EventDataset
+from kloppy.domain import EventDataset, FilteredDataset
 
 
 class TestEvent:
@@ -51,14 +51,25 @@ class TestEvent:
         """
         Test filtering allows simple 'css selector' (<event_type>.<result>)
         """
+        # Perform the filter
         goals_dataset = dataset.filter("shot.goal")
 
+        # Assert data correctness
         df = goals_dataset.to_df(engine="pandas")
         assert df["event_id"].to_list() == [
             "4c7c4ab1-6b9f-4504-a237-249c2e0c549f",
             "683c6752-13bc-4892-94ed-22e1c938f1f7",
             "55d71847-9511-4417-aea9-6f415e279011",
         ]
+
+        # Assert type correctness
+        assert isinstance(goals_dataset, FilteredDataset)
+        assert isinstance(goals_dataset, EventDataset)
+        assert type(goals_dataset).__name__ == "FilteredEventDataset"
+
+        # Filtering again should not break the class structure
+        subset = goals_dataset.filter(lambda x: True)
+        assert type(subset).__name__ == "FilteredEventDataset"
 
     def test_map(self, dataset: EventDataset):
         """

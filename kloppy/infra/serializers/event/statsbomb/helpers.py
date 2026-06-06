@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Dict, List, Optional
+from typing import Optional
 
 from kloppy.domain import (
     ActionValue,
@@ -10,7 +10,6 @@ from kloppy.domain import (
     PlayerData,
     Point,
     Point3D,
-    PositionType,
     Team,
 )
 from kloppy.domain.services.frame_factory import create_frame
@@ -42,7 +41,7 @@ def parse_obv_values(raw_event: dict) -> Optional[ActionValue]:
         return game_state_value
 
 
-def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
+def get_team_by_id(team_id: int, teams: list[Team]) -> Team:
     """Get a team by its id."""
     if str(team_id) == teams[0].team_id:
         return teams[0]
@@ -52,7 +51,7 @@ def get_team_by_id(team_id: int, teams: List[Team]) -> Team:
         raise DeserializationError(f"Unknown team_id {team_id}")
 
 
-def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
+def get_period_by_id(period_id: int, periods: list[Period]) -> Period:
     """Get a period by its id."""
     for period in periods:
         if period.id == period_id:
@@ -60,9 +59,7 @@ def get_period_by_id(period_id: int, periods: List[Period]) -> Period:
     raise DeserializationError(f"Unknown period_id {period_id}")
 
 
-def parse_coordinates(
-    coordinates: List[float], fidelity_version: int
-) -> Point:
+def parse_coordinates(coordinates: list[float], fidelity_version: int) -> Point:
     """Parse coordinates into a kloppy Point.
 
     Coordinates are cell-based, so 1,1 (low-granularity) or 0.1,0.1
@@ -93,36 +90,50 @@ def parse_coordinates(
             z=coordinates[2] - 0.05,
         )
     else:
-        raise DeserializationError(
-            f"Unknown coordinates format: {coordinates}"
-        )
+        raise DeserializationError(f"Unknown coordinates format: {coordinates}")
 
 
 def parse_freeze_frame(
-    freeze_frame: List[Dict],
+    freeze_frame: list[dict],
     fidelity_version: int,
     home_team: Team,
     away_team: Team,
     event: Event,
-    visible_area: Optional[List] = None,
+    visible_area: Optional[list] = None,
 ) -> Frame:
     """Parse a freeze frame into a kloppy Frame."""
     players_data = {}
 
     def get_player_from_freeze_frame(player_data, team, i):
         if "player" in player_data:
-            return team.get_player_by_id(player_data["player"]["id"])
-        elif player_data.get("actor"):
+            home_player = home_team.get_player_by_id(
+                player_data["player"]["id"]
+            )
+            if home_player:
+                return home_player
+            away_player = away_team.get_player_by_id(
+                player_data["player"]["id"]
+            )
+            if away_player:
+                return away_player
+
+        if player_data.get("actor"):
             return event.player
         elif player_data.get("keeper"):
-            return team.get_player_by_position(
-                position=PositionType.Goalkeeper, time=event.time
+            # We can later identify the goalkeeper by their position
+            # if we know the formation, but for now we just flag them
+            return Player(
+                player_id=f"T{team.team_id}-E{event.event_id}-{i}",
+                team=team,
+                jersey_no=None,
+                attributes={"goalkeeper": True},
             )
         else:
             return Player(
                 player_id=f"T{team.team_id}-E{event.event_id}-{i}",
                 team=team,
                 jersey_no=None,
+                attributes={"goalkeeper": False},
             )
 
     for i, freeze_frame_player in enumerate(freeze_frame):

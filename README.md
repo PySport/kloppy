@@ -23,26 +23,30 @@ Each data provider uses its own proprietary formats, event definitions, and coor
 ## Supported data providers
 Kloppy provides support for loading data from the following providers:
 
-| Provider            | Event Data | Tracking Data | Public Data  | Docs  | Notes |
-|---------------------|:----------:|:-------------:|:------------:|:-----:|:-----|
-| [DataFactory][datafactory]         | ✓          |               |               | [↗][datafactory-doc] |  |
-| [Hawkeye (2D)][hawkeye]        |            | ✓             |               | [↗][hawkeye-doc] | Joint tracking data is not yet supported |
-| [Metrica][metrica]             | ✓          | ✓             | [↗][metrica-data] | [↗][metrica-doc] | |
-| [PFF][pff]                 | ⧗          | ✓             | [↗][pff-data]     | [↗][pff-doc]     | |
-| [SecondSpectrum][ss]      | [⧗][ss-pr] | ✓      |               | [↗][ss-doc]       | |
-| [Signality][signality]           |            | ✓             |               | [↗][signality-doc] |  |
-| [SkillCorner][skillcorner]         |            | ✓             | [↗][skillcorner-data] | [↗][skillcorner-doc] | |
-| [Sportec][sportec]             | ✓          | ✓             | [↗][sportec-data] | [↗][sportec-doc] | |
-| [StatsBomb][statsbomb]           | ✓         |               | [↗][statsbomb-data] | [↗][statsbomb-doc] | Includes 360 freeze frame data support |
-| [Stats Perform][statsperform] | ✓          | ✓             |               | [↗][statsperform-doc] | Includes support for MA1, MA3, and MA25 data feeds |
-| [Opta][opta] | ✓          |               |               | [↗][opta-doc] | Includes support for F7, F24 and F73 XML data feeds |
-| [Tracab][tracab]              |            | ✓             |               | [↗][tracab-doc] |  |
-| [Wyscout][wyscout]             | ✓          |               | [↗][wyscout-data] | [↗][wyscout-doc] | Includes support for v2 and v3 data |
+| Provider                      | Event Data | Tracking Data | Public Data           |         Docs          | Notes |
+|-------------------------------|:----------:|:-------------:|:---------------------:|:---------------------:|:------|
+| [DataFactory][datafactory]    | ✓          |               |                       | [↗][datafactory-doc]  |       |
+| [Hawkeye (2D)][hawkeye]       |            | ✓             |                       | [↗][hawkeye-doc]      | Joint tracking data is not yet supported |
+| [Impect][impect]              | ✓          |               | [↗][impect-data]      | [↗][impect-doc]       |       |
+| [Metrica][metrica]            | ✓          | ✓             | [↗][metrica-data]     | [↗][metrica-doc]      |       |
+| [PFF][pff]                    | ⧗          | ✓             | [↗][pff-data]         | [↗][pff-doc]          |       |
+| [SecondSpectrum][ss]          | [⧗][ss-pr] | ✓             |                       | [↗][ss-doc]           |       |
+| [Signality][signality]        |            | ✓             |                       | [↗][signality-doc]    |       |
+| [SkillCorner][skillcorner]    |            | ✓             | [↗][skillcorner-data] | [↗][skillcorner-doc]  |       |
+| [Sportec][sportec]            | ✓          | ✓             | [↗][sportec-data]     | [↗][sportec-doc]      |       |
+| [StatsBomb][statsbomb]        | ✓          |               | [↗][statsbomb-data]   | [↗][statsbomb-doc]    | Includes 360 freeze frame data support |
+| [Stats Perform][statsperform] | ✓          | ✓             |                       | [↗][statsperform-doc] | Includes support for MA1, MA3, and MA25 data feeds |
+| [Opta][opta]                  | ✓          |               |                       | [↗][opta-doc]         | Includes support for F7, F24 and F73 XML data feeds |
+| [Tracab][tracab]              |            | ✓             |                       | [↗][tracab-doc]       |       |
+| [Wyscout][wyscout]            | ✓          |               | [↗][wyscout-data]     | [↗][wyscout-doc]      | Includes support for v2 and v3 data |
 
 [datafactory]: https://www.datafactory.la/en/
 [datafactory-doc]: https://kloppy.pysport.org/user-guide/loading-data/datafactory
 [hawkeye]: https://www.hawkeyeinnovations.com/data
 [hawkeye-doc]: https://kloppy.pysport.org/user-guide/loading-data/hawkeye
+[impect]: https://www.impect.com/en/
+[impect-doc]: https://kloppy.pysport.org/user-guide/loading-data/impect
+[impect-data]: https://github.com/ImpectAPI/open-data
 [metrica]: https://www.metrica-sports.com/
 [metrica-data]: https://github.com/metrica-sports/sample-data  
 [metrica-doc]: https://kloppy.pysport.org/user-guide/loading-data/metrica

@@ -1,7 +1,7 @@
+from abc import ABC, abstractmethod
 import math
 import sys
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Optional, Union
 
 from kloppy.domain import (
     BodyPartQualifier,
@@ -42,11 +42,11 @@ def _get_generic_type_arg(cls):
 
 
 class OneHotEncoder:
-    def __init__(self, name: str, options: List[str]):
+    def __init__(self, name: str, options: list[str]):
         self.options = options
         self.name = name
 
-    def encode(self, value: Union[Set, str]) -> Dict[str, bool]:
+    def encode(self, value: Union[set, str]) -> dict[str, bool]:
         if isinstance(value, str):
             value = [value]
 
@@ -58,12 +58,12 @@ class OneHotEncoder:
 
 class EventAttributeTransformer(ABC):
     @abstractmethod
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         pass
 
 
 class AngleToGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
         if metadata.orientation != Orientation.ACTION_EXECUTING_TEAM:
             raise OrientationError(
@@ -92,7 +92,7 @@ class AngleToGoalTransformer(EventAttributeTransformer):
 
 
 class DistanceToGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
         if not event.coordinates:
             return {"distance_to_goal": None}
@@ -113,7 +113,7 @@ class DistanceToGoalTransformer(EventAttributeTransformer):
 
 
 class DistanceToOwnGoalTransformer(EventAttributeTransformer):
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         metadata = event.dataset.metadata
 
         if not event.coordinates:
@@ -135,8 +135,8 @@ class DistanceToOwnGoalTransformer(EventAttributeTransformer):
 
 
 def create_transformer_from_qualifier(
-    qualifier_type: Type[EnumQualifier],
-) -> Type[EventAttributeTransformer]:
+    qualifier_type: type[EnumQualifier],
+) -> type[EventAttributeTransformer]:
     enum_ = _get_generic_type_arg(qualifier_type)
     name = camelcase_to_snakecase(enum_.__name__)
     options = [e.value for e in enum_]
@@ -148,7 +148,7 @@ def create_transformer_from_qualifier(
             else:
                 raise UnknownEncoderError(f"Don't know {encoding} encoding")
 
-        def __call__(self, event: Event) -> Dict[str, Any]:
+        def __call__(self, event: Event) -> dict[str, Any]:
             values = {
                 qualifier.value.value
                 for qualifier in event.qualifiers
@@ -163,17 +163,15 @@ class DefaultEventTransformer(EventAttributeTransformer):
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, event: Event) -> Dict[str, Any]:
+    def __call__(self, event: Event) -> dict[str, Any]:
         row = dict(
             event_id=event.event_id,
             event_type=(
@@ -287,17 +285,15 @@ class DefaultFrameTransformer:
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, frame: Frame) -> Dict[str, Any]:
+    def __call__(self, frame: Frame) -> dict[str, Any]:
         row = dict(
             period_id=frame.period.id if frame.period else None,
             timestamp=frame.timestamp,
@@ -367,17 +363,15 @@ class DefaultCodeTransformer:
     def __init__(
         self,
         *include: str,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
     ):
         if include and exclude:
-            raise KloppyParameterError(
-                "Cannot specify both include as exclude"
-            )
+            raise KloppyParameterError("Cannot specify both include as exclude")
 
         self.exclude = exclude or []
         self.include = include or []
 
-    def __call__(self, code: Code) -> Dict[str, Any]:
+    def __call__(self, code: Code) -> dict[str, Any]:
         row = dict(
             code_id=code.code_id,
             period_id=code.period.id if code.period else None,

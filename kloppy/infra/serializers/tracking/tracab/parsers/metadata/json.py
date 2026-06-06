@@ -1,6 +1,6 @@
-import json
 from datetime import datetime, timezone
-from typing import IO, List, Optional, Tuple
+import json
+from typing import IO, Optional
 
 from kloppy.domain import Ground, Orientation, Period, Team
 
@@ -21,9 +21,9 @@ class TracabJSONMetadataParser(TracabMetadataParser):
     def __init__(self, feed: IO[bytes]) -> None:
         self.root = json.load(feed)
 
-    def extract_periods(self) -> List[Period]:
+    def extract_periods(self) -> list[Period]:
         frame_rate = self.extract_frame_rate()
-        periods: List[Period] = []
+        periods: list[Period] = []
         for period_id in (1, 2, 3, 4):
             period_start_frame = self.root[f"Phase{period_id}StartFrame"]
             period_end_frame = self.root[f"Phase{period_id}EndFrame"]
@@ -49,7 +49,7 @@ class TracabJSONMetadataParser(TracabMetadataParser):
             return str(game_id)
         return None
 
-    def extract_lineups(self) -> Tuple[Team, Team]:
+    def extract_lineups(self) -> tuple[Team, Team]:
         start_frame_id = self.root["Phase1StartFrame"]
         home_team = create_team(
             self.root["HomeTeam"],
@@ -67,7 +67,7 @@ class TracabJSONMetadataParser(TracabMetadataParser):
         )
         return (home_team, away_team)
 
-    def extract_pitch_dimensions(self) -> Tuple[float, float]:
+    def extract_pitch_dimensions(self) -> tuple[float, float]:
         pitch_size_length = float(self.root["PitchLongSide"]) / 100
         pitch_size_width = float(self.root["PitchShortSide"]) / 100
         return pitch_size_length, pitch_size_width

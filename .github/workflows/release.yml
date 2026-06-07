@@ -29,5 +29,5 @@ jobs:
       - name: Build package
         run: uv build
       - name: Publish package
-        if: ${{ !github.event.inputs.dry-run }}
+        if: inputs.dry-run == false
         uses: pypa/gh-action-pypi-publish@release/v1

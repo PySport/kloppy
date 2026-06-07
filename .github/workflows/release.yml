@@ -14,14 +14,20 @@ on:
         default: false
 jobs:
   publish:
-    environment: release # needed for PyPI OIDC
+    environment: release-python # needed for PyPI OIDC
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.sha || github.ref }}
       - uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.14"
-      - run: uv build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Build package
+        run: uv build
+      - name: Publish package
+        if: ${{ !github.event.inputs.dry-run }}
+        uses: pypa/gh-action-pypi-publish@release/v1

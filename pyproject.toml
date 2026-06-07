@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kloppy"
-version = "3.17.0"
+version = "3.19.0"
 description = "Soccer Data Processing, Simplified"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { file = "LICENSE" }

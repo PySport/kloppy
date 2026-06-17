@@ -1,5 +1,5 @@
 """Functions for loading PFF FC data."""
 
-from ._providers.pff import load_tracking
+from ._providers.pff import load_tracking, load_event
 
-__all__ = ["load_tracking"]
+__all__ = ["load_tracking", "load_event"]

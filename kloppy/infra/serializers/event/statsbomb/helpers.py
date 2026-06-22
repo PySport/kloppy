@@ -171,7 +171,7 @@ def parse_freeze_frame(
         timestamp=event.timestamp,
         ball_state=event.ball_state,
         ball_owning_team=event.ball_owning_team,
-        other_data={"visible_area": visible_area},
+        other_data={"visible_area": visible_area, "event_id": event.event_id},
     )
 
     return frame

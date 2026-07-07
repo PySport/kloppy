@@ -29,6 +29,34 @@ $ python -m pip install kloppy
 
 You might have to install pip first. The easiest method is to use the [standalone pip installer](https://pip.pypa.io/en/latest/installing/#installing-with-get-pip-py).
 
+### Optional dependencies
+
+The default installation includes the core functionality for loading and working with supported event, tracking, and code data. Some workflows need optional packages:
+
+- `pandas`: export datasets to pandas DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `polars`: export datasets to Polars DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `networkx`: use the `event_pattern_matching` module for sequence and pattern queries.
+
+Kloppy defines extras for these dependencies, so you can install only what you need:
+
+```console
+$ python -m pip install "kloppy[pandas]"
+$ python -m pip install "kloppy[polars]"
+$ python -m pip install "kloppy[query]"
+```
+
+The `query` extra installs `networkx`. To install all three optional workflows at once, combine the extras:
+
+```console
+$ python -m pip install "kloppy[pandas,polars,query]"
+```
+
+When working from a local clone, use the same extras with the editable install:
+
+```console
+$ python -m pip install -e ".[pandas,polars,query]"
+```
+
 ### Installing the development version
 
 Kloppy is actively developed on GitHub, where the code is [always available](https://github.com/PySport/kloppy). You can easily install the development version with:

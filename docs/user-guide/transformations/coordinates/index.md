@@ -1,4 +1,4 @@
-# Dataset transformations
+# Changing coordinate systems
 
 Kloppy's [`.transform()`][kloppy.domain.Dataset.transform] method allows you to adapt the [spatial representation](../../concepts/coordinates/index.md) of a dataset. This can be useful if you need to align data from different providers or to run analyses that assume a standard pitch size or attacking direction.
 

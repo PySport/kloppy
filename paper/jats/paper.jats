@@ -1,0 +1,1087 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.2 20190208//EN"
+                  "JATS-publishing1.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.2" article-type="other">
+<front>
+<journal-meta>
+<journal-id></journal-id>
+<journal-title-group>
+<journal-title>Journal of Open Source Software</journal-title>
+<abbrev-journal-title>JOSS</abbrev-journal-title>
+</journal-title-group>
+<issn publication-format="electronic">2475-9066</issn>
+<publisher>
+<publisher-name>Open Journals</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="publisher-id">0</article-id>
+<article-id pub-id-type="doi">N/A</article-id>
+<title-group>
+<article-title>Kloppy: A Python Package for Standardizing Soccer
+Tracking and Event Data</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author" equal-contrib="yes">
+<name>
+<surname>Vossen</surname>
+<given-names>Koen</given-names>
+</name>
+<xref ref-type="aff" rid="aff-1"/>
+<xref ref-type="aff" rid="aff-2"/>
+</contrib>
+<contrib contrib-type="author" equal-contrib="yes">
+<name>
+<surname>Bekkers</surname>
+<given-names>Joris</given-names>
+</name>
+<xref ref-type="aff" rid="aff-3"/>
+<xref ref-type="aff" rid="aff-2"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>Robberechts</surname>
+<given-names>Pieter</given-names>
+</name>
+<xref ref-type="aff" rid="aff-4"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>van Haaren</surname>
+<given-names>Jan</given-names>
+</name>
+<xref ref-type="aff" rid="aff-5"/>
+<xref ref-type="aff" rid="aff-4"/>
+</contrib>
+<aff id="aff-1">
+<institution-wrap>
+<institution>TeamTV, Netherlands</institution>
+</institution-wrap>
+</aff>
+<aff id="aff-2">
+<institution-wrap>
+<institution>PySport, Netherlands</institution>
+</institution-wrap>
+</aff>
+<aff id="aff-3">
+<institution-wrap>
+<institution>UnravelSports, Netherlands</institution>
+</institution-wrap>
+</aff>
+<aff id="aff-4">
+<institution-wrap>
+<institution>KU Leuven, Belgium</institution>
+</institution-wrap>
+</aff>
+<aff id="aff-5">
+<institution-wrap>
+<institution>Club Brugge, Belgium</institution>
+</institution-wrap>
+</aff>
+</contrib-group>
+<pub-date date-type="pub" publication-format="electronic" iso-8601-date="2025-06-11">
+<day>11</day>
+<month>6</month>
+<year>2025</year>
+</pub-date>
+<volume>¿VOL?</volume>
+<issue>¿ISSUE?</issue>
+<fpage>¿PAGE?</fpage>
+<permissions>
+<copyright-statement>Authors of papers retain copyright and release the
+work under a Creative Commons Attribution 4.0 International License (CC
+BY 4.0)</copyright-statement>
+<copyright-year>1970</copyright-year>
+<copyright-holder>The article authors</copyright-holder>
+<license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/">
+<license-p>Authors of papers retain copyright and release the work under
+a Creative Commons Attribution 4.0 International License (CC BY
+4.0)</license-p>
+</license>
+</permissions>
+<kwd-group kwd-group-type="author">
+<kwd>Python</kwd>
+<kwd>soccer</kwd>
+<kwd>football</kwd>
+<kwd>sports analytics</kwd>
+<kwd>data standardization</kwd>
+<kwd>tracking data</kwd>
+<kwd>event data</kwd>
+</kwd-group>
+</article-meta>
+</front>
+<body>
+<sec id="summary">
+  <title>Summary</title>
+  <p>Soccer (football) data analysis has become increasingly important
+  in modern sports, with teams, analysts, and researchers relying on
+  detailed tracking and event data to gain insights into player
+  performance, team tactics, and match dynamics. However, each data
+  vendor provides information in proprietary formats with different
+  coordinate systems, event definitions, and data structures, creating
+  significant barriers for analysts who want to work with data from
+  multiple sources or build vendor-agnostic analysis tools.</p>
+  <p>Kloppy is a Python package that addresses these standardization
+  challenges by providing a unified interface for loading, processing,
+  and transforming soccer tracking and event data from multiple vendors.
+  The package introduces a vendor-independent data model for both event
+  and tracking data, streamlining data preprocessing and ensuring
+  seamless integration into data analysis and video analysis workflows.
+  By standardizing access to soccer match data, Kloppy aims to be an
+  essential building block for anyone working in the field soccer
+  analytics.</p>
+</sec>
+<sec id="statement-of-need">
+  <title>Statement of Need</title>
+  <p>The soccer analytics ecosystem suffers from significant
+  fragmentation due to the variety of proprietary data formats used by
+  different vendors. Each vendor of soccer data uses its own unique
+  format to describe the course of a game, meaning software written to
+  analyze this data has to be tailored to a specific vendor and cannot
+  be used without modifications to analyze data from other vendors. This
+  creates several critical problems:</p>
+  <list list-type="order">
+    <list-item>
+      <p><bold>Development inefficiency</bold>: Analysts, researchers
+      and data scientists must write custom parsers for each data
+      provider, duplicating effort across the community</p>
+    </list-item>
+    <list-item>
+      <p><bold>Limited interoperability</bold>: Models and analysis
+      tools developed for one data format cannot easily be applied to
+      data from other providers</p>
+    </list-item>
+    <list-item>
+      <p><bold>High barrier to entry</bold>: New researchers and
+      analysts face steep learning curves when trying to work with
+      multiple data sources</p>
+    </list-item>
+    <list-item>
+      <p><bold>Reduced reproducibility</bold>: Research findings become
+      difficult to replicate across different datasets due to format
+      dependencies</p>
+    </list-item>
+  </list>
+  <p>These challenges significantly slow down research progress and
+  limit the practical application of soccer analytics methodologies
+  across different data sources and organizations.</p>
+</sec>
+<sec id="key-features">
+  <title>Key Features</title>
+  <p>Kloppy is implemented in Python and designed with modularity and
+  extensibility in mind. The architecture consists of several key
+  components:</p>
+  <list list-type="bullet">
+    <list-item>
+      <p><bold>Serializers/Deserializers</bold>: Vendor-specific modules
+      that handle the parsing and writing of different data formats</p>
+    </list-item>
+    <list-item>
+      <p><bold>Domain Models</bold>: Standardized data structures that
+      represent soccer-specific concepts like players, events, frames,
+      and coordinates</p>
+    </list-item>
+    <list-item>
+      <p><bold>Transformers</bold>: Tools for converting between
+      different coordinate systems and data orientations</p>
+    </list-item>
+    <list-item>
+      <p><bold>Filters</bold>: Utilities for selecting and manipulating
+      subsets of data based on various criteria</p>
+    </list-item>
+  </list>
+  <p>The package supports Python versions 3.9-3.12 and integrates well
+  with the broader Python data science ecosystem, including Pandas
+  (<xref alt="McKinney, 2010" rid="ref-mckinney2010pandas" ref-type="bibr">McKinney,
+  2010</xref>) and Polars
+  (<xref alt="Vink &amp; Polars Contributors, 2023" rid="ref-polars2023" ref-type="bibr">Vink
+  &amp; Polars Contributors, 2023</xref>) for data manipulation and
+  analysis.</p>
+  <sec id="data-loading-and-serialization">
+    <title>Data Loading and Serialization</title>
+    <p>Kloppy implements a standardized data model that can load event
+    and tracking data from the most common data providers, supporting
+    both public and proprietary data. The package provides
+    out-of-the-box deserializers for all soccer data vendors shown in
+    the table below. It handles compressed files and can load data
+    directly from the cloud, making it flexible for various deployment
+    scenarios.</p>
+    <table-wrap>
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th align="center">Event Data</th>
+            <th align="center">Tracking Data</th>
+            <th align="center">Public Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DataFactory</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Hawkeye (2D)</td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Metrica</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+          <tr>
+            <td>PFF</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\triangle]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>△</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+          <tr>
+            <td>SecondSpectrum</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\triangle]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>△</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Signality</td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>SkillCorner</td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+          <tr>
+            <td>Sportec</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+          <tr>
+            <td>StatsBomb</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+          <tr>
+            <td>Stats Perform</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Opta</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Tracab</td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+          </tr>
+          <tr>
+            <td>Wyscout</td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            <td align="center"></td>
+            <td align="center"><inline-formula><alternatives>
+            <tex-math><![CDATA[\checkmark]]></tex-math>
+            <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+  <sec id="coordinate-system-transformations">
+    <title>Coordinate System Transformations</title>
+    <p>Different data providers use varying coordinate systems and pitch
+    dimensions, which can make combining datasets challenging. Kloppy
+    flexibly transforms a dataset’s pitch dimensions from one format to
+    another (e.g., from Opta’s 100x100 to Tracab centimeters to
+    SecondSpectrum meters) and transforms the orientation of a dataset
+    (e.g., from the home team and away team direction of play each
+    period (<monospace>Orientation.HOME_AWAY</monospace>) to the home
+    team playing left to right the whole game
+    (<monospace>Orientation.STATIC_HOME_AWAY</monospace>), to every
+    attacking playing out from left to right
+    (<monospace>Orientation.BALL_OWNING_TEAM</monospace> and
+    <monospace>Orientation.ACTION_EXECUTING_TEAM</monospace>) ).
+    Additionally, Kloppy supports user-defined custom coordinate
+    systems. These transformations enable seamless data integration and
+    consistent analysis across multiple sources.</p>
+  </sec>
+  <sec id="pattern-matching-and-event-search">
+    <title>Pattern Matching and Event Search</title>
+    <p>Kloppy provides the ability to search for complex patterns in
+    event data, enabling users to identify specific tactical sequences
+    or game situations efficiently. The package implements a powerful
+    search mechanism that combines regular expressions with graph-based
+    pattern matching using NetworkX
+    (<xref alt="Hagberg et al., 2008" rid="ref-hagberg2008exploring" ref-type="bibr">Hagberg
+    et al., 2008</xref>), enabling users to find tactical moments more
+    quickly and easily.</p>
+  </sec>
+  <sec id="standardized-data-models">
+    <title>Standardized Data Models</title>
+    <p>The package implements comprehensive data models for both
+    tracking and event data that abstract away vendor-specific details
+    while preserving essential information. The core data structures
+    include:</p>
+    <sec id="event-data-model">
+      <title>Event Data Model</title>
+      <p>Each Event is associated with an
+      <monospace>EventType</monospace> which classifies the general
+      event type that has occurred. Furthermore, each
+      <monospace>Event</monospace> consists of general attributes
+      (e.g. player, team, timestamp, period) as well as event
+      type-specific attributes. Each event can also have a list of
+      <monospace>Qualifier</monospace> entities providing additional
+      information about the event (e.g. set piece type, card type, pass
+      type or body part).</p>
+      <p>The table below shows and overview of all event types, and
+      their provider specific support as provided by Kloppy.</p>
+      <table-wrap>
+        <table>
+          <colgroup>
+            <col width="12%" />
+            <col width="11%" />
+            <col width="15%" />
+            <col width="12%" />
+            <col width="12%" />
+            <col width="13%" />
+            <col width="9%" />
+            <col width="14%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Event Type</th>
+              <th align="center">StatsBomb</th>
+              <th align="center">Stats Perform</th>
+              <th align="center">Wyscout v2</th>
+              <th align="center">Wyscout v3</th>
+              <th align="center">DataFactory</th>
+              <th align="center">Sportec</th>
+              <th align="center">Metrica JSON</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><bold>Generic</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Pass</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Shot</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>TakeOn</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Carry</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Clearance</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Interception</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Duel</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Substitution</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Card</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>PlayerOn</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center">?</td>
+            </tr>
+            <tr>
+              <td><bold>PlayerOff</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center">?</td>
+            </tr>
+            <tr>
+              <td><bold>Recovery</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Miscontrol</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>BallOut</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\circ]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>∘</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>FoulCommitted</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Goalkeeper</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center">?</td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>Pressure</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+            <tr>
+              <td><bold>FormationChange</bold></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\checkmark]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+              <td align="center"><inline-formula><alternatives>
+              <tex-math><![CDATA[\times]]></tex-math>
+              <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula></td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p><italic>Legend: <inline-formula><alternatives>
+      <tex-math><![CDATA[\checkmark]]></tex-math>
+      <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>✓</mml:mi></mml:math></alternatives></inline-formula>
+      = Full support, <inline-formula><alternatives>
+      <tex-math><![CDATA[\circ]]></tex-math>
+      <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>∘</mml:mi></mml:math></alternatives></inline-formula>
+      = Partial support, <inline-formula><alternatives>
+      <tex-math><![CDATA[\times]]></tex-math>
+      <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>×</mml:mi></mml:math></alternatives></inline-formula>
+      = Not supported, ? = Unknown</italic></p>
+      <p>The table below shows and overview of all possible
+      qualifiers.</p>
+      <table-wrap>
+        <table>
+          <colgroup>
+            <col width="67%" />
+            <col width="33%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Qualifier Type</th>
+              <th>Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><bold>PassQualifier</bold></td>
+              <td>CROSS, HAND_PASS, HEAD_PASS, HIGH_PASS, LAUNCH,
+              SIMPLE_PASS, SMART_PASS, LONG_BALL, THROUGH_BALL,
+              CHIPPED_PASS, FLICK_ON, ASSIST, ASSIST_2ND,
+              SWITCH_OF_PLAY, BACK_PASS</td>
+            </tr>
+            <tr>
+              <td><bold>BodyPartQualifier</bold></td>
+              <td>RIGHT_FOOT, LEFT_FOOT, HEAD, OTHER, HEAD_OTHER,
+              BOTH_HANDS, CHEST, LEFT_HAND, RIGHT_HAND, DROP_KICK,
+              KEEPER_ARM, NO_TOUCH</td>
+            </tr>
+            <tr>
+              <td><bold>CardQualifier</bold></td>
+              <td>FIRST_YELLOW, SECOND_YELLOW, RED</td>
+            </tr>
+            <tr>
+              <td><bold>CounterAttackQualifier</bold></td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td><bold>DuelQualifier</bold></td>
+              <td>AERIAL, GROUND, LOOSE_BALL, SLIDING_TACKLE</td>
+            </tr>
+            <tr>
+              <td><bold>GoalkeeperQualifier</bold></td>
+              <td>SAVE, CLAIM, PUNCH, PICK_UP, SMOTHER, REFLEX,
+              SAVE_ATTEMPT</td>
+            </tr>
+            <tr>
+              <td><bold>SetPieceQualifier</bold></td>
+              <td>GOAL_KICK, FREE_KICK, THROW_IN, CORNER_KICK, PENALTY,
+              KICK_OFF</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </sec>
+    <sec id="tracking-data-model">
+      <title>Tracking Data Model</title>
+      <p>The tracking data architecture centers around the
+      <monospace>Frame</monospace> class, which serves as a temporal
+      snapshot containing all positional information for a single moment
+      in time. Each frame maintains a <monospace>frame_id</monospace>
+      for unique identification, <monospace>ball_coordinates</monospace>
+      (represented as 3D points), and a
+      <monospace>players_data</monospace> dictionary that maps
+      <monospace>Player</monospace> objects to
+      <monospace>PlayerData</monospace> instances. The
+      <monospace>PlayerData</monospace> class encapsulates not only
+      coordinate positions but also derived metrics like distance
+      traveled, instantaneous speed, and an
+      <monospace>other_data</monospace> dictionary. The
+      <monospace>TrackingDataset</monospace> class aggregates these
+      frames along with essential metadata including frame rate,
+      coordinate system information etc. This hierarchical structure
+      maintains player identity consistency across frames while
+      supporting efficient queries like
+      <monospace>players_coordinates</monospace> that provide quick
+      access to positional data.</p>
+    </sec>
+    <sec id="metadata">
+      <title>Metadata</title>
+      <p>The <monospace>Metadata</monospace> class serves as the central
+      repository for all contextual information associated with a
+      dataset, cleanly separating structural metadata from the actual
+      data records. This class encapsulates essential game-level
+      information including <monospace>home_team</monospace> and
+      <monospace>away_team</monospace> references, temporal structure
+      through <monospace>periods</monospace> (containing start/end
+      timestamps and period identifiers), and critically, the
+      <monospace>coordinate_system</monospace> that defines how spatial
+      data is represented. The coordinate system component tracks pitch
+      dimensions, orientation (e.g., fixed vs. team-relative), and
+      origin points, enabling seamless transformation between different
+      vendor coordinate spaces. Additionally, the metadata maintains
+      frame rate information for tracking data, data provider
+      information, etc.</p>
+    </sec>
+    <sec id="player-and-team">
+      <title>Player and Team</title>
+      <p>Kloppy implements comprehensive identity management through
+      standardized <monospace>Player</monospace> and
+      <monospace>Team</monospace> classes that maintain consistency
+      across different data providers. The <monospace>Player</monospace>
+      class encapsulates essential attributes including the provided
+      <monospace>player_id</monospace>,
+      <monospace>jersey_no</monospace>, player names
+      (<monospace>first_name</monospace>,
+      <monospace>last_name</monospace>), and crucially, a
+      <monospace>starting_position</monospace> field that uses Kloppy’s
+      standardized <monospace>PositionType</monospace> enumeration. This
+      position system provides a hierarchical classification (e.g.,
+      <monospace>LeftCenterBack</monospace> is a subtype of
+      <monospace>Defender</monospace>) that abstracts away
+      provider-specific position nomenclature. The
+      <monospace>Team</monospace> class maintains team identity through
+      <monospace>team_id</monospace>, official
+      <monospace>name</monospace>, <monospace>ground</monospace>
+      designation (home/away), and a <monospace>players</monospace> list
+      containing all team members. Teams also include formation
+      information through <monospace>starting_formation</monospace> and
+      a dynamic <monospace>formations</monospace> attribute that tracks
+      tactical changes throughout the match using a
+      <monospace>TimeContainer</monospace> structure.</p>
+    </sec>
+  </sec>
+</sec>
+<sec id="impact-and-applications">
+  <title>Impact and Applications</title>
+  <p>Since its initial release in 2020, Kloppy has been adopted by
+  researchers, analysts, and organizations working with soccer data. The
+  package has enabled:</p>
+  <list list-type="bullet">
+    <list-item>
+      <p><bold>Research reproducibility</bold>: Studies can now be more
+      easily replicated across different data sources</p>
+    </list-item>
+    <list-item>
+      <p><bold>Rapid prototyping</bold>: Analysts can quickly test ideas
+      across multiple datasets without rewriting data loading code</p>
+    </list-item>
+    <list-item>
+      <p><bold>Educational accessibility</bold>: Students and newcomers
+      to soccer analytics can focus on learning analytical techniques
+      rather than data parsing</p>
+    </list-item>
+    <list-item>
+      <p><bold>Industry adoption</bold>: Organizations can build more
+      flexible analysis pipelines that aren’t locked to specific data
+      vendors</p>
+    </list-item>
+  </list>
+  <p>The standardization provided by Kloppy has particular value for the
+  growing field of soccer analytics research, where the ability to
+  validate findings across multiple data sources is crucial for
+  scientific rigor.</p>
+</sec>
+<sec id="acknowledgments">
+  <title>Acknowledgments</title>
+  <p>Kloppy is supported by PySport, a non-profit organization (RSIN:
+  866294211) dedicated to advancing sports analytics through open-source
+  software. The project welcomes contributions from the community,
+  including bug reports, feature requests, and code contributions.</p>
+  <p>The authors thank the PySport community and all contributors who
+  have helped develop and improve Kloppy. We also acknowledge the
+  various data providers who have made public datasets available,
+  enabling the development and testing of standardization tools like
+  Kloppy.</p>
+</sec>
+</body>
+<back>
+<ref-list>
+  <title></title>
+  <ref id="ref-hagberg2008exploring">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Hagberg</surname><given-names>Aric</given-names></name>
+        <name><surname>Swart</surname><given-names>Pieter</given-names></name>
+        <name><surname>S Chult</surname><given-names>Daniel</given-names></name>
+      </person-group>
+      <article-title>Exploring network structure, dynamics, and function using NetworkX</article-title>
+      <source>Proceedings of the 7th python in science conference</source>
+      <year iso-8601-date="2008">2008</year>
+      <fpage>11</fpage>
+      <lpage>15</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-mckinney2010pandas">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>McKinney</surname><given-names>Wes</given-names></name>
+      </person-group>
+      <article-title>Data structures for statistical computing in python</article-title>
+      <source>Proceedings of the 9th python in science conference</source>
+      <publisher-name>Austin, TX</publisher-name>
+      <year iso-8601-date="2010">2010</year>
+      <volume>445</volume>
+      <fpage>51</fpage>
+      <lpage>56</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-polars2023">
+    <element-citation publication-type="software">
+      <person-group person-group-type="author">
+        <name><surname>Vink</surname><given-names>Ritchie</given-names></name>
+        <string-name>Polars Contributors</string-name>
+      </person-group>
+      <article-title>Polars: Lightning-fast DataFrame library for rust and python</article-title>
+      <year iso-8601-date="2023">2023</year>
+      <uri>https://github.com/pola-rs/polars</uri>
+    </element-citation>
+  </ref>
+</ref-list>
+</back>
+</article>

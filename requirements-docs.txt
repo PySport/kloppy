@@ -289,7 +289,7 @@ pillow==11.3.0 ; python_full_version < '3.10'
     # via
     #   matplotlib
     #   mplsoccer
-pillow==12.0.0 ; python_full_version >= '3.10'
+pillow==12.3.0 ; python_full_version >= '3.10'
     # via
     #   matplotlib
     #   mplsoccer

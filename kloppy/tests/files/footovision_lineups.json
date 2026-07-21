@@ -1,0 +1,285 @@
+[
+  [
+    {
+      "playerId": { "footovision": 10668 },
+      "usualName": "BART VERBRUGGEN",
+      "shirtNumber": 1,
+      "isStarter": true,
+      "position": "GOALKEEPER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8569 },
+      "usualName": "LEWIS DUNK",
+      "shirtNumber": 5,
+      "isStarter": true,
+      "position": "CENTRE_BACK_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 19815 },
+      "usualName": "JAN VAN HECKE",
+      "shirtNumber": 6,
+      "isStarter": true,
+      "position": "CENTRE_BACK_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 9329 },
+      "usualName": "GEORGINIO RUTTER",
+      "shirtNumber": 10,
+      "isStarter": false,
+      "position": "STRIKER",
+      "startTime": { "time": 2244000, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 21778 },
+      "usualName": "YANKUBA MINTEH",
+      "shirtNumber": 11,
+      "isStarter": true,
+      "position": "ATTACKING_MIDFIELDER_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 1822400, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 20182 },
+      "usualName": "JACK HINSHELWOOD",
+      "shirtNumber": 13,
+      "isStarter": true,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 2243960, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 14464 },
+      "usualName": "CARLOS BALEBA",
+      "shirtNumber": 17,
+      "isStarter": false,
+      "position": "DEFENSIVE_MIDFIELDER_RIGHT",
+      "startTime": { "time": 1822440, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 628 },
+      "usualName": "DANNY WELBECK",
+      "shirtNumber": 18,
+      "isStarter": true,
+      "position": "STRIKER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 2243960, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 687 },
+      "usualName": "JAMES MILNER",
+      "shirtNumber": 20,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 1822400, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 15848 },
+      "usualName": "KAORU MITOMA",
+      "shirtNumber": 22,
+      "isStarter": false,
+      "position": "ATTACKING_MIDFIELDER_LEFT",
+      "startTime": { "time": 1822440, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 14584 },
+      "usualName": "FERDI KADIOGLU",
+      "shirtNumber": 24,
+      "isStarter": true,
+      "position": "FULL_BACK_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 23676 },
+      "usualName": "DIEGO GOMEZ",
+      "shirtNumber": 25,
+      "isStarter": true,
+      "position": "ATTACKING_MIDFIELDER_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 2750640, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 16625 },
+      "usualName": "YASIN AYARI",
+      "shirtNumber": 26,
+      "isStarter": false,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": { "time": 2244000, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 21662 },
+      "usualName": "MATS WIEFFER",
+      "shirtNumber": 27,
+      "isStarter": true,
+      "position": "FULL_BACK_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8572 },
+      "usualName": "PASCAL GROSS",
+      "shirtNumber": 30,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 2015 },
+      "usualName": "JOEL VELTMAN",
+      "shirtNumber": 34,
+      "isStarter": false,
+      "position": "WINGBACK_RIGHT",
+      "startTime": { "time": 2750680, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    }
+  ],
+  [
+    {
+      "playerId": { "footovision": 1999 },
+      "usualName": "VIRGIL VAN DIJK",
+      "shirtNumber": 4,
+      "isStarter": true,
+      "position": "CENTRE_BACK_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 11284 },
+      "usualName": "IBRAHIMA KONATE",
+      "shirtNumber": 5,
+      "isStarter": true,
+      "position": "CENTRE_BACK_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 1857520, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 20601 },
+      "usualName": "MILOS KERKEZ",
+      "shirtNumber": 6,
+      "isStarter": true,
+      "position": "FULL_BACK_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 1857520, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 11573 },
+      "usualName": "FLORIAN WIRTZ",
+      "shirtNumber": 7,
+      "isStarter": true,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8102 },
+      "usualName": "DOMINIK SZOBOSZLAI",
+      "shirtNumber": 8,
+      "isStarter": true,
+      "position": "CENTRAL_MIDFIELDER_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8808 },
+      "usualName": "ALEXIS MAC ALLISTER",
+      "shirtNumber": 10,
+      "isStarter": true,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 4784 },
+      "usualName": "FEDERICO CHIESA",
+      "shirtNumber": 14,
+      "isStarter": false,
+      "position": "STRIKER",
+      "startTime": { "time": 1857560, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8300 },
+      "usualName": "CURTIS JONES",
+      "shirtNumber": 17,
+      "isStarter": false,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": { "time": 463160, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 6660 },
+      "usualName": "CODY GAKPO",
+      "shirtNumber": 18,
+      "isStarter": true,
+      "position": "STRIKER_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 9145 },
+      "usualName": "HUGO EKITIKE",
+      "shirtNumber": 22,
+      "isStarter": true,
+      "position": "STRIKER_LEFT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 463120, "halftime": 1 }
+    },
+    {
+      "playerId": { "footovision": 8681 },
+      "usualName": "GIORGI MAMARDASHVILI",
+      "shirtNumber": 25,
+      "isStarter": true,
+      "position": "GOALKEEPER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 1017 },
+      "usualName": "ANDREW ROBERTSON",
+      "shirtNumber": 26,
+      "isStarter": false,
+      "position": "FULL_BACK_LEFT",
+      "startTime": { "time": 1857560, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8225 },
+      "usualName": "JEREMIE FRIMPONG",
+      "shirtNumber": 30,
+      "isStarter": true,
+      "position": "FULL_BACK_RIGHT",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 1061640, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 8831 },
+      "usualName": "RYAN GRAVENBERCH",
+      "shirtNumber": 38,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER",
+      "startTime": { "time": 0, "halftime": 1 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    },
+    {
+      "playerId": { "footovision": 29222 },
+      "usualName": "RIO NGUMOHA",
+      "shirtNumber": 73,
+      "isStarter": false,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": { "time": 1061680, "halftime": 2 },
+      "endTime": { "time": 3135000, "halftime": 2 }
+    }
+  ]
+]

@@ -20,7 +20,7 @@ bleach==6.3.0 ; python_full_version >= '3.10'
     # via nbconvert
 certifi==2025.11.12
     # via requests
-cffi==2.0.0 ; implementation_name == 'pypy'
+cffi==2.1.0 ; implementation_name == 'pypy'
     # via pyzmq
 charset-normalizer==3.4.4
     # via requests

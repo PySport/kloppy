@@ -2,7 +2,7 @@
 #    uv export --no-hashes --only-group=docs --output-file=requirements-docs.txt
 appnope==0.1.4 ; sys_platform == 'darwin'
     # via ipykernel
-asttokens==3.0.2
+asttokens==3.0.1
     # via stack-data
 attrs==25.4.0
     # via

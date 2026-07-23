@@ -19,7 +19,7 @@ jobs:
       - name: Check out (Normal)
         if: github.actor != 'dependabot[bot]'
         uses: actions/checkout@v7
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{hashFiles('.pre-commit-config.yaml')}}

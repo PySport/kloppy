@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.9"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -2192,7 +2192,7 @@ wheels = [
 
 [[package]]
 name = "kloppy"
-version = "3.17.0"
+version = "3.19.0"
 source = { editable = "." }
 dependencies = [
     { name = "fsspec", version = "2025.10.0", source = { registry = "https://pypi.org/simple" }, extra = ["http"], marker = "python_full_version < '3.10'" },
@@ -2205,6 +2205,15 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "fsspec", version = "2025.10.0", source = { registry = "https://pypi.org/simple" }, extra = ["s3"], marker = "python_full_version < '3.10'" },
+    { name = "fsspec", version = "2025.12.0", source = { registry = "https://pypi.org/simple" }, extra = ["s3"], marker = "python_full_version >= '3.10'" },
+    { name = "networkx" },
+    { name = "pandas" },
+    { name = "polars" },
+    { name = "pyarrow", version = "21.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "pyarrow", version = "22.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
 pandas = [
     { name = "pandas" },
 ]
@@ -2255,18 +2264,23 @@ nb = [
 [package.metadata]
 requires-dist = [
     { name = "fsspec", extras = ["http"], specifier = ">=2024.12.0" },
+    { name = "fsspec", extras = ["s3"], marker = "extra == 'all'" },
     { name = "fsspec", extras = ["s3"], marker = "extra == 's3'" },
     { name = "lxml", specifier = ">=4.4.0" },
+    { name = "networkx", marker = "extra == 'all'", specifier = ">=2.4,<3" },
     { name = "networkx", marker = "extra == 'query'", specifier = ">=2.4,<3" },
+    { name = "pandas", marker = "extra == 'all'", specifier = ">=2.0.3" },
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=2.0.3" },
+    { name = "polars", marker = "extra == 'all'", specifier = ">=0.16.6" },
     { name = "polars", marker = "extra == 'polars'", specifier = ">=0.16.6" },
+    { name = "pyarrow", marker = "extra == 'all'", specifier = ">=17.0.0" },
     { name = "pyarrow", marker = "extra == 'pyarrow'", specifier = ">=17.0.0" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "pytz", specifier = ">=2025.2" },
     { name = "sortedcontainers", specifier = ">=2" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-provides-extras = ["query", "s3", "pandas", "polars", "pyarrow"]
+provides-extras = ["query", "s3", "pandas", "polars", "pyarrow", "all"]
 
 [package.metadata.requires-dev]
 dev = [

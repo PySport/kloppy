@@ -35,26 +35,30 @@ The default installation includes the core functionality for loading and working
 
 - `pandas`: export datasets to pandas DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
 - `polars`: export datasets to Polars DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `pyarrow`: export datasets to pandas DataFrames backed by PyArrow with [`to_df()`][kloppy.domain.Dataset.to_df].
 - `networkx`: use the `event_pattern_matching` module for sequence and pattern queries.
+- `s3fs`: load datasets directly from Amazon S3 buckets.
 
 Kloppy defines extras for these dependencies, so you can install only what you need:
 
 ```console
 $ python -m pip install "kloppy[pandas]"
 $ python -m pip install "kloppy[polars]"
+$ python -m pip install "kloppy[pyarrow]"
 $ python -m pip install "kloppy[query]"
+$ python -m pip install "kloppy[s3]"
 ```
 
-The `query` extra installs `networkx`. To install all three optional workflows at once, combine the extras:
+The `query` extra installs `networkx`, and `s3` installs `fsspec[s3]` which includes `s3fs`. To install all optional workflows at once, use the `all` extra:
 
 ```console
-$ python -m pip install "kloppy[pandas,polars,query]"
+$ python -m pip install "kloppy[all]"
 ```
 
-When working from a local clone, use the same extras with the editable install:
+When working from a local clone, use the same extra with the editable install:
 
 ```console
-$ python -m pip install -e ".[pandas,polars,query]"
+$ python -m pip install -e ".[all]"
 ```
 
 ### Installing the development version

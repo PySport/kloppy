@@ -47,6 +47,13 @@ s3 = [ "fsspec[s3]" ]
 pandas = [ "pandas>=2.0.3" ]
 polars = [ "polars>=0.16.6" ]
 pyarrow = [ "pyarrow>=17.0.0" ]
+all = [
+    "networkx>=2.4,<3",
+    "fsspec[s3]",
+    "pandas>=2.0.3",
+    "polars>=0.16.6",
+    "pyarrow>=17.0.0",
+]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Scripts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #
 

@@ -4,7 +4,7 @@ Before you can use kloppy, you'll need to get it installed. This guide will guid
 
 ## Install Python
 
-Being a Python library, kloppy requires Python. Currently, kloppy supports Python version 3.9 — 3.12. Get the latest version of Python at [python.org](https://www.python.org/downloads/) or with your operating system's package manager.
+Being a Python library, kloppy requires Python. Currently, kloppy supports Python version 3.9 — 3.13. Get the latest version of Python at [python.org](https://www.python.org/downloads/) or with your operating system's package manager.
 
 You can verify that Python is installed by typing `python` from your shell; you should see something like:
 
@@ -29,37 +29,6 @@ $ python -m pip install kloppy
 
 You might have to install pip first. The easiest method is to use the [standalone pip installer](https://pip.pypa.io/en/latest/installing/#installing-with-get-pip-py).
 
-### Optional dependencies
-
-The default installation includes the core functionality for loading and working with supported event, tracking, and code data. Some workflows need optional packages:
-
-- `pandas`: export datasets to pandas DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
-- `polars`: export datasets to Polars DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
-- `pyarrow`: export datasets to pandas DataFrames backed by PyArrow with [`to_df()`][kloppy.domain.Dataset.to_df].
-- `networkx`: use the `event_pattern_matching` module for sequence and pattern queries.
-- `s3fs`: load datasets directly from Amazon S3 buckets.
-
-Kloppy defines extras for these dependencies, so you can install only what you need:
-
-```console
-$ python -m pip install "kloppy[pandas]"
-$ python -m pip install "kloppy[polars]"
-$ python -m pip install "kloppy[pyarrow]"
-$ python -m pip install "kloppy[query]"
-$ python -m pip install "kloppy[s3]"
-```
-
-The `query` extra installs `networkx`, and `s3` installs `fsspec[s3]` which includes `s3fs`. To install all optional workflows at once, use the `all` extra:
-
-```console
-$ python -m pip install "kloppy[all]"
-```
-
-When working from a local clone, use the same extra with the editable install:
-
-```console
-$ python -m pip install -e ".[all]"
-```
 
 ### Installing the development version
 
@@ -96,3 +65,29 @@ To verify that kloppy can be seen by Python, type `python` from your shell. Then
 >>> import kloppy
 >>> print(kloppy.__version__)
 ```
+
+## Optional dependencies
+
+Kloppy has a few optional dependencies that are only required for specific functionality. For example, loading datasets directly from an S3 bucket requires `s3fs`. If an optional dependency is missing, kloppy raises an `ImportError` when the corresponding functionality is used.
+
+The available optional dependencies are:
+
+- `polars` (extra: `polars`): required to export datasets to Polars DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `pandas` (extra: `pandas`): required to export datasets to pandas DataFrames with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `pyarrow` (extra: `pyarrow`): required to export datasets to pandas DataFrames backed by PyArrow with [`to_df()`][kloppy.domain.Dataset.to_df].
+- `networkx` (extra: `query`): used by the `event_pattern_matching` module for sequence and pattern queries.
+- `s3fs` (extra: `s3`): required to load datasets directly from Amazon S3 buckets.
+
+With pip, you can install a subset of these dependencies with:
+
+```console
+$ python -m pip install "kloppy[pandas,s3]"
+```
+
+Or, alternatively, to install all optional dependencies:
+
+```console
+$ python -m pip install "kloppy[all]"
+```
+
+

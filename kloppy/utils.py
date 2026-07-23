@@ -247,6 +247,17 @@ INSTALL_MAPPING = {
 
 
 def _get_version(module: types.ModuleType) -> str:
+    """Get the version string from a module.
+
+    Args:
+        module (types.ModuleType): The module to check for a version.
+
+    Returns:
+        str: The version string of the module.
+
+    Raises:
+        ImportError: If the version cannot be determined.
+    """
     version = getattr(module, "__version__", None)
     if version is None:
         # xlrd uses a capitalized attribute name
@@ -264,38 +275,32 @@ def import_optional_dependency(
     on_version: str = "raise",
     min_version: Optional[str] = None,
 ):
-    """
-    Import an optional dependency.
+    """Import an optional dependency.
 
     By default, if a dependency is missing an ImportError with a nice
     message will be raised. If a dependency is present, but too old,
     we raise.
 
-    Parameters
-    ----------
-    name : str
-        The module name.
-    extra : str
-        Additional text to include in the ImportError message.
-    raise_on_missing : bool, default True
-        Whether to raise if the optional dependency is not found.
-        When False and the module is not present, None is returned.
-    on_version : str {'raise', 'warn'}
-        What to do when a dependency's version is too old.
+    Args:
+        name (str): The module name.
+        extra (str, optional): Additional text to include in the ImportError message.
+            Defaults to "".
+        raise_on_missing (bool, optional): Whether to raise if the optional dependency
+            is not found. When False and the module is not present, None is returned.
+            Defaults to True.
+        on_version (str, optional): What to do when a dependency's version is too old.
+            - 'raise': Raise an ImportError.
+            - 'warn': Warn that the version is too old. Returns None.
+            - 'ignore': Return the module, even if the version is too old.
+            Defaults to "raise".
+        min_version (str, optional): Specify a minimum version that is different from
+            the global kloppy minimum version required. Defaults to None.
 
-        * raise : Raise an ImportError
-        * warn : Warn that the version is too old. Returns None
-        * ignore: Return the module, even if the version is too old.
-    min_version : str, default None
-        Specify a minimum version that is different from the global kloppy
-        minimum version required.
-    Returns
-    -------
-    maybe_module : Optional[ModuleType]
-        The imported module, when found and the version is correct.
-        None is returned when the package is not found and `raise_on_missing`
-        is False, or when the package's version is too old and `on_version`
-        is ``'warn'``.
+    Returns:
+        Optional[types.ModuleType]: The imported module, when found and the version
+            is correct. None is returned when the package is not found and
+            `raise_on_missing` is False, or when the package's version is too old and
+            `on_version` is 'warn'.
     """
 
     package_name = INSTALL_MAPPING.get(name)

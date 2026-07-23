@@ -144,7 +144,7 @@ jupytext==1.18.1
     # via mkdocs-jupyter
 kiwisolver==1.4.7 ; python_full_version < '3.10'
     # via matplotlib
-kiwisolver==1.5.0 ; python_full_version >= '3.10'
+kiwisolver==1.4.9 ; python_full_version >= '3.10'
     # via matplotlib
 markdown==3.9 ; python_full_version < '3.10'
     # via

@@ -8,8 +8,16 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Check out
+      - name: Check out (Dependabot)
+        if: github.actor == 'dependabot[bot]'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Check out (Normal)
+        if: github.actor != 'dependabot[bot]'
         uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
@@ -18,7 +26,17 @@ jobs:
       - name: Set up the environment
         uses: ./.github/actions/setup-python-env
       - name: Run pre-commit
+        id: pre-commit
         run: uv run pre-commit run -a --show-diff-on-failure
+        continue-on-error: true
+      - name: Auto-commit changes (Dependabot)
+        if: always() && github.actor == 'dependabot[bot]' && steps.pre-commit.outcome == 'failure'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(deps): auto-update requirements files"
+      - name: Fail if pre-commit failed
+        if: steps.pre-commit.outcome == 'failure' && github.actor != 'dependabot[bot]'
+        run: exit 1
       - name: Check lock file consistency
         run: uv sync --locked
   tests:

@@ -26,7 +26,7 @@ botocore==1.41.5
     #   s3transfer
 certifi==2025.11.12
     # via requests
-cffi==2.1.0 ; platform_python_implementation != 'PyPy'
+cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
 cfgv==3.4.0 ; python_full_version < '3.10'
     # via pre-commit

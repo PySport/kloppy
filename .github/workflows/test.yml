@@ -11,10 +11,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out
+      - name: Check out (Dependabot)
+        if: github.actor == 'dependabot[bot]'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+      - name: Check out (Normal)
+        if: github.actor != 'dependabot[bot]'
+        uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit

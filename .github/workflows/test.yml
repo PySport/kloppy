@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
       - name: Auto-commit changes (Dependabot)
         if: always() && github.actor == 'dependabot[bot]' && steps.pre-commit.outcome == 'failure'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore(deps): auto-update requirements files"
       - name: Fail if pre-commit failed

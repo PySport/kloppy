@@ -242,6 +242,7 @@ INSTALL_MAPPING = {
     "pandas": "pandas",
     "polars": "polars",
     "pyarrow": "pyarrow",
+    "s3fs": "s3fs",
 }
 
 

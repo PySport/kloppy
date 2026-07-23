@@ -13,12 +13,12 @@ jobs:
     steps:
       - name: Check out (Dependabot)
         if: github.actor == 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref }}
       - name: Check out (Normal)
         if: github.actor != 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
@@ -51,7 +51,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up the environment
         uses: ./.github/actions/setup-python-env
         with:

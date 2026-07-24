@@ -8,7 +8,7 @@ attrs==25.4.0
     # via
     #   jsonschema
     #   referencing
-babel==2.18.0
+babel==2.17.0
     # via mkdocs-material
 backrefs==6.1
     # via mkdocs-material

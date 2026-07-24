@@ -121,7 +121,7 @@ nodeenv==1.9.1
     # via pre-commit
 openapi-schema-validator==0.6.3
     # via openapi-spec-validator
-openapi-spec-validator==0.7.2
+openapi-spec-validator==0.9.0
     # via moto
 packaging==25.0
     # via pytest

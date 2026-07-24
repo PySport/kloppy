@@ -5,6 +5,7 @@ import logging
 from typing import IO, NamedTuple
 import warnings
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
@@ -25,7 +26,6 @@ from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

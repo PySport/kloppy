@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from kloppy import skillcorner
+from kloppy._utils.testing import skip_if_no
 from kloppy.domain import (
     BallState,
     DatasetType,
@@ -203,6 +204,7 @@ class TestSkillCornerTracking:
         assert len(dataset.records) == 40069
         assert all([True for x in dataset if x.ball_state == BallState.ALIVE])
 
+    @skip_if_no("pandas")
     def test_correct_deserialization_v3(
         self, raw_data_v3: Path, meta_data_v3: Path
     ):

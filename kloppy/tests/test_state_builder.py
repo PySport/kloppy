@@ -2,9 +2,9 @@ from collections import defaultdict
 from itertools import groupby
 
 from kloppy import statsbomb, statsperform
+from kloppy._utils import performance_logging
 from kloppy.domain import Event, EventDataset, EventType, FormationType
 from kloppy.domain.services.state_builder.builder import StateBuilder
-from kloppy.utils import performance_logging
 
 
 class TestStateBuilder:

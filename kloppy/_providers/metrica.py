@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+from kloppy._utils import github_resolve_raw_data_url
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.exceptions import KloppyError
@@ -16,7 +17,6 @@ from kloppy.infra.serializers.tracking.metrica_epts import (
     MetricaEPTSTrackingDataInputs,
 )
 from kloppy.io import FileLike, open_as_file
-from kloppy.utils import github_resolve_raw_data_url
 
 
 def load_tracking_csv(

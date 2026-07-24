@@ -3,6 +3,7 @@ import math
 import sys
 from typing import Any, Optional, Union
 
+from kloppy._utils import to_snake_case
 from kloppy.domain import (
     BodyPartQualifier,
     Code,
@@ -26,7 +27,6 @@ from kloppy.exceptions import (
     OrientationError,
     UnknownEncoderError,
 )
-from kloppy.utils import camelcase_to_snakecase
 
 py_version = sys.version_info
 if py_version >= (3, 8):
@@ -138,7 +138,7 @@ def create_transformer_from_qualifier(
     qualifier_type: type[EnumQualifier],
 ) -> type[EventAttributeTransformer]:
     enum_ = _get_generic_type_arg(qualifier_type)
-    name = camelcase_to_snakecase(enum_.__name__)
+    name = to_snake_case(enum_.__name__)
     options = [e.value for e in enum_]
 
     class _Transformer(EventAttributeTransformer):

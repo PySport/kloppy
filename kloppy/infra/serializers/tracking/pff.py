@@ -6,6 +6,7 @@ from typing import IO, NamedTuple, Optional, Union
 
 from dateutil.parser import parse
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     AttackingDirection,
     BallState,
@@ -29,7 +30,6 @@ from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
-from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

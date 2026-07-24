@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 import warnings
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
@@ -42,7 +43,6 @@ from kloppy.domain import (
     Team,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
-from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs

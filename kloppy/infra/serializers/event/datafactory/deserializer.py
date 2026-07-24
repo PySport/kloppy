@@ -4,6 +4,7 @@ import json
 import logging
 from typing import IO, NamedTuple
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BallState,
     BodyPart,
@@ -29,7 +30,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

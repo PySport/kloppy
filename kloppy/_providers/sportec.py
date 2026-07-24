@@ -1,5 +1,6 @@
 from typing import Optional
 
+from kloppy._utils import deprecated
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.infra.serializers.event.sportec import (
@@ -11,7 +12,6 @@ from kloppy.infra.serializers.tracking.sportec import (
     SportecTrackingDataInputs,
 )
 from kloppy.io import FileLike, open_as_file
-from kloppy.utils import deprecated
 
 
 def load_event(

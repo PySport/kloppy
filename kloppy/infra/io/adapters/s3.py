@@ -12,7 +12,7 @@ class S3Adapter(FSSpecAdapter):
     def _get_filesystem(
         self, url: str, no_cache: bool = False
     ) -> fsspec.AbstractFileSystem:
-        from kloppy.utils import import_optional_dependency
+        from kloppy._utils.optional import import_optional_dependency
 
         s3fs = import_optional_dependency("s3fs")
 

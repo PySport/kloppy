@@ -6,6 +6,7 @@ from pandas import DataFrame
 import pytest
 
 from kloppy import metrica
+from kloppy._utils import performance_logging
 from kloppy.domain import Orientation, Point, Provider, Score
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
@@ -15,7 +16,6 @@ from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
-from kloppy.utils import performance_logging
 
 
 class TestMetricaEPTSTracking:

@@ -5,6 +5,7 @@ from typing import IO, NamedTuple, Optional
 
 import pytz
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BallState,
     BodyPart,
@@ -41,7 +42,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import performance_logging
 
 from .formation_mapping import formation_id_mapping, formation_position_mapping
 from .parsers import OptaEvent, get_parser

@@ -17,7 +17,7 @@ from typing import (
     overload,
 )
 
-from kloppy.utils import deprecated, snake_case
+from kloppy._utils import deprecated, to_snake_case
 
 if TYPE_CHECKING:
     from ..services.transformers.data_record import (
@@ -172,7 +172,7 @@ class Official:
         if self.last_name:
             return self.last_name
         if self.role:
-            return f"{snake_case(str(self.role))}_{self.official_id}"
+            return f"{to_snake_case(str(self.role))}_{self.official_id}"
         return f"official_{self.official_id}"
 
 
@@ -1930,7 +1930,7 @@ class Dataset(ABC, Generic[T]):
             engine = get_config("dataframe.engine")
 
         if engine == "pandas[pyarrow]":
-            from kloppy.utils import import_optional_dependency
+            from kloppy._utils.optional import import_optional_dependency
 
             pd = import_optional_dependency("pandas")
             pa = import_optional_dependency("pyarrow")
@@ -1943,7 +1943,7 @@ class Dataset(ABC, Generic[T]):
             return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":
-            from kloppy.utils import import_optional_dependency
+            from kloppy._utils.optional import import_optional_dependency
 
             pd = import_optional_dependency("pandas")
 
@@ -1951,7 +1951,7 @@ class Dataset(ABC, Generic[T]):
                 self.to_dict(*columns, orient="list", **named_columns)
             )
         elif engine == "polars":
-            from kloppy.utils import import_optional_dependency
+            from kloppy._utils.optional import import_optional_dependency
 
             pl = import_optional_dependency("polars")
 

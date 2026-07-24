@@ -180,11 +180,11 @@ release notes.
 
 ### Optional dependencies
 
-Optional dependencies (e.g. `polars`) should be imported with the helper `kloppy.utils.import_optional_dependency`. This ensures a consistent error message when the dependency is not met.
+Optional dependencies (e.g. `polars`) should be imported with the helper `kloppy._utils.optional.import_optional_dependency`. This ensures a consistent error message when the dependency is not met.
 
 All methods using an optional dependency should include a test asserting that an `ImportError` is raised when the optional dependency is not found. This test should be skipped if the library is present.
 
-All optional dependencies should be documented in the [Optional dependencies](../user-guide/installation/index.md#optional-dependencies) section of the user guide and the minimum required version should be set in the `kloppy.utils.VERSIONS` dict.
+All optional dependencies should be documented in the [Optional dependencies](../user-guide/installation/index.md#optional-dependencies) section of the user guide and the minimum required version should be set in the `kloppy._utils.VERSIONS` dict.
 
 ## Documentation contributions
 

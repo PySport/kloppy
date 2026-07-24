@@ -14,6 +14,12 @@ from typing import (
 )
 import warnings
 
+from kloppy._utils import (
+    DeprecatedEnumValue,
+    docstring_inherit_attributes,
+    remove_suffix,
+    to_snake_case,
+)
 from kloppy.domain.models.common import (
     AttackingDirection,
     DatasetType,
@@ -21,12 +27,6 @@ from kloppy.domain.models.common import (
     PositionType,
 )
 from kloppy.domain.models.time import Time
-from kloppy.utils import (
-    DeprecatedEnumValue,
-    camelcase_to_snakecase,
-    docstring_inherit_attributes,
-    removes_suffix,
-)
 
 from ...exceptions import InvalidFilterError, KloppyError, OrphanedRecordError
 from .common import DataRecord, Dataset, Player, Team
@@ -349,9 +349,7 @@ class Qualifier(Generic[QualifierValueType], ABC):
 
     @property
     def name(self):
-        return camelcase_to_snakecase(
-            removes_suffix(type(self).__name__, "Qualifier")
-        )
+        return to_snake_case(remove_suffix(type(self).__name__, "Qualifier"))
 
 
 @dataclass

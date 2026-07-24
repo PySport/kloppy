@@ -6,7 +6,7 @@ from typing import (
     Generic,
 )
 
-from kloppy.utils import import_optional_dependency
+from kloppy._utils.optional import import_optional_dependency
 
 # noinspection PyProtectedMember
 from .ast import (

@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from kloppy.domain.models.common import DatasetType
-from kloppy.utils import (
+from kloppy._utils import (
     docstring_inherit_attributes,
 )
+from kloppy.domain.models.common import DatasetType
 
 from .common import DataRecord, Dataset, Player
 from .pitch import Point, Point3D

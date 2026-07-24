@@ -12,6 +12,7 @@ from kloppy.domain import (
     Point3D,
     Provider,
 )
+from kloppy.tests.testing import skip_if_no
 
 
 class TestSkillCornerTracking:
@@ -203,6 +204,7 @@ class TestSkillCornerTracking:
         assert len(dataset.records) == 40069
         assert all([True for x in dataset if x.ball_state == BallState.ALIVE])
 
+    @skip_if_no("pandas")
     def test_correct_deserialization_v3(
         self, raw_data_v3: Path, meta_data_v3: Path
     ):

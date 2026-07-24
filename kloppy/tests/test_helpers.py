@@ -25,6 +25,7 @@ from kloppy.domain import (
     TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.tests.testing import skip_if_no
 
 
 class TestHelpers:
@@ -411,6 +412,7 @@ class TestHelpers:
         assert coordinates.x == 1 - coordinates_transformed.x
         assert coordinates.y == 1 - coordinates_transformed.y
 
+    @skip_if_no("pandas")
     def test_to_pandas(self):
         tracking_data = self._get_tracking_dataset()
 
@@ -437,6 +439,7 @@ class TestHelpers:
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
+    @skip_if_no("pandas")
     def test_to_pandas_generic_events(self, base_dir):
         dataset = opta.load(
             f7_data=base_dir / "files/opta_f7.xml",
@@ -447,6 +450,7 @@ class TestHelpers:
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
+    @skip_if_no("pandas")
     def test_to_pandas_incomplete_pass(self, base_dir):
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",
@@ -463,6 +467,7 @@ class TestHelpers:
             0.70945, 1e-4
         )
 
+    @skip_if_no("pandas")
     def test_to_pandas_additional_columns(self):
         tracking_data = self._get_tracking_dataset()
 
@@ -497,6 +502,7 @@ class TestHelpers:
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
+    @skip_if_no("polars")
     def test_event_dataset_to_polars(self, base_dir):
         """
         Make sure an event dataset can be exported as a Polars DataFrame
@@ -512,6 +518,7 @@ class TestHelpers:
         c = df.select(pl.col("event_id").count())[0, 0]
         assert c == 4061
 
+    @skip_if_no("polars")
     def test_tracking_dataset_to_polars(self):
         """
         Make sure a tracking dataset can be exported as a Polars DataFrame

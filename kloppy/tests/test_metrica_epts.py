@@ -16,6 +16,7 @@ from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
+from kloppy.tests.testing import skip_if_no
 
 
 class TestMetricaEPTSTracking:
@@ -63,6 +64,7 @@ class TestMetricaEPTSTracking:
             with performance_logging("load"):
                 assert list(iterator)
 
+    @skip_if_no("pandas")
     def test_read_to_pandas(self, base_dir):
         with (
             open(

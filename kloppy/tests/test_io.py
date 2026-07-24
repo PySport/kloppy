@@ -20,6 +20,7 @@ from kloppy.infra.io import adapters
 from kloppy.infra.io.adapters import Adapter
 from kloppy.infra.io.buffered_stream import BufferedStream
 from kloppy.io import expand_inputs, get_file_extension, open_as_file
+from kloppy.tests.testing import skip_if_no
 
 # --- Shared Helpers ---
 
@@ -557,6 +558,7 @@ class TestZipAdapter:
 @pytest.mark.skipif(
     sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
 )
+@skip_if_no("s3fs")
 class TestS3Adapter:
     """Tests for S3Adapter using moto."""
 

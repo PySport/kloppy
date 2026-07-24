@@ -14,7 +14,7 @@ def skip_if_no(
 
     This function returns a pytest mark with a skip condition that will be
     evaluated during test collection. An attempt will be made to import the
-    specified ``package`` and optionally ensure it meets the ``min_version``
+    specified ``package`` and optionally ensure it meets the ``min_version``.
 
     The mark can be used as either a decorator for a test class or to be
     applied to parameters in pytest.mark.parametrize calls or parametrized
@@ -25,18 +25,13 @@ def skip_if_no(
     (or test case when used in conjunction with parametrization) will be
     skipped.
 
-    Parameters
-    ----------
-    package: str
-        The name of the required package.
-    min_version: str or None, default None
-        Optional minimum version of the package.
+    Args:
+        package (str): The name of the required package.
+        min_version (Optional[str]): Optional minimum version of the package. Defaults to None.
 
-    Returns
-    -------
-    pytest.MarkDecorator
-        a pytest.mark.skipif to use as either a test decorator or a
-        parametrization mark.
+    Returns:
+        pytest.MarkDecorator: A pytest.mark.skipif to use as either a test
+            decorator or a parametrization mark.
     """
     msg = f"Could not import '{package}'"
     if min_version:

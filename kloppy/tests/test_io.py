@@ -14,13 +14,13 @@ from botocore.session import Session
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pytest
 
+from kloppy._utils.testing import skip_if_no
 from kloppy.config import config_context
 from kloppy.exceptions import InputNotFoundError, KloppyError
 from kloppy.infra.io import adapters
 from kloppy.infra.io.adapters import Adapter
 from kloppy.infra.io.buffered_stream import BufferedStream
 from kloppy.io import expand_inputs, get_file_extension, open_as_file
-from kloppy.tests.testing import skip_if_no
 
 # --- Shared Helpers ---
 

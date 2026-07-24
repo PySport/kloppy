@@ -5,6 +5,7 @@ from pandas.testing import assert_frame_equal
 import pytest
 
 from kloppy import opta, statsbomb, tracab
+from kloppy._utils.testing import skip_if_no
 from kloppy.config import config_context
 from kloppy.domain import (
     AttackingDirection,
@@ -25,7 +26,6 @@ from kloppy.domain import (
     TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
-from kloppy.tests.testing import skip_if_no
 
 
 class TestHelpers:

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from kloppy import skillcorner
+from kloppy._utils.testing import skip_if_no
 from kloppy.domain import (
     BallState,
     DatasetType,
@@ -12,7 +13,6 @@ from kloppy.domain import (
     Point3D,
     Provider,
 )
-from kloppy.tests.testing import skip_if_no
 
 
 class TestSkillCornerTracking:

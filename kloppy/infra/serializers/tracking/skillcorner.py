@@ -138,31 +138,37 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 group_name = "referee"
                 continue  # Skip Referee Coords
 
-            if group_name is None:
+            player = None
+            if trackable_object is not None:
                 group_name = teamdict.get(
-                    player_id_to_team_dict.get(trackable_object)
+                    player_id_to_team_dict.get(trackable_object), group_name
                 )
 
                 if group_name == "home_team":
-                    player = players["HOME"][trackable_object]
+                    player = players["HOME"].get(trackable_object)
                 elif group_name == "away_team":
-                    player = players["AWAY"][trackable_object]
+                    player = players["AWAY"].get(trackable_object)
 
-            if trackable_object is None:
+            else:
                 player_id = str(track_id)
                 if group_name == "home team":
-                    if f"anon_{player_id}" not in anon_players["HOME"].keys():
+                    player_key = f"anon_home_{player_id}"
+                    if player_key not in anon_players["HOME"].keys():
                         player = cls.__create_anon_player(teams, frame_record)
-                        anon_players["HOME"][f"anon_home_{player_id}"] = player
+                        anon_players["HOME"][player_key] = player
                     else:
-                        player = anon_players["HOME"][f"anon_home_{player_id}"]
+                        player = anon_players["HOME"][player_key]
 
                 elif group_name == "away team":
-                    if f"anon_{player_id}" not in anon_players["AWAY"].keys():
+                    player_key = f"anon_away_{player_id}"
+                    if player_key not in anon_players["AWAY"].keys():
                         player = cls.__create_anon_player(teams, frame_record)
-                        anon_players["AWAY"][f"anon_away_{player_id}"] = player
+                        anon_players["AWAY"][player_key] = player
                     else:
-                        player = anon_players["AWAY"][f"anon_away_{player_id}"]
+                        player = anon_players["AWAY"][player_key]
+
+            if player is None:
+                continue
 
             players_data[player] = PlayerData(coordinates=Point(x, y))
 

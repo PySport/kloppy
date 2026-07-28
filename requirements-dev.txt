@@ -21,21 +21,11 @@ aws-xray-sdk==2.15.0
     # via moto
 blinker==1.9.0
     # via flask
-boto3==1.41.5 ; python_full_version < '3.10'
+boto3==1.37.1
     # via
     #   aws-sam-translator
     #   moto
-boto3==1.43.46 ; python_full_version >= '3.10'
-    # via
-    #   aws-sam-translator
-    #   moto
-botocore==1.41.5 ; python_full_version < '3.10'
-    # via
-    #   aws-xray-sdk
-    #   boto3
-    #   moto
-    #   s3transfer
-botocore==1.43.46 ; python_full_version >= '3.10'
+botocore==1.37.1
     # via
     #   aws-xray-sdk
     #   boto3
@@ -279,9 +269,7 @@ rpds-py==2026.6.3 ; python_full_version >= '3.11'
     #   jsonschema
     #   referencing
 ruff==0.16.0
-s3transfer==0.15.0 ; python_full_version < '3.10'
-    # via boto3
-s3transfer==0.19.2 ; python_full_version >= '3.10'
+s3transfer==0.11.3
     # via boto3
 setuptools==82.0.1 ; python_full_version < '3.10'
     # via moto
@@ -332,9 +320,7 @@ werkzeug==3.1.8
     #   flask-cors
     #   moto
     #   pytest-httpserver
-wrapt==1.17.3 ; python_full_version < '3.10'
-    # via aws-xray-sdk
-wrapt==2.3.0 ; python_full_version >= '3.10'
+wrapt==1.17.3
     # via aws-xray-sdk
 xmltodict==1.0.4
     # via moto

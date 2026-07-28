@@ -80,7 +80,7 @@ docs = [
     "markdown-exec[ansi]>=1.10.3",       # Run and render code blocks in Markdown
     "mkdocs-autorefs==1.2.0",            # Automatic cross-referencing for MkDocs
     "mkdocs-exclude==1.0.2",             # Exclude files/folders from MkDocs builds
-    "mkdocs-jupyter==0.24.7",            # Embed Jupyter notebooks in MkDocs
+    "mkdocs-jupyter>=0.26.0",            # Embed Jupyter notebooks in MkDocs
     "mkdocs-macros-plugin>=1.0.7",       # Template macros for MkDocs
     "mplsoccer==1.3.0",                  # Soccer plotting package (used in docs)
     "pandas[output-formatting]>=2.2.3",  # Output formatting for dataframes

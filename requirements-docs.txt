@@ -73,7 +73,11 @@ fonttools==4.63.0 ; python_full_version >= '3.10'
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.49.0
+griffe==1.14.0 ; python_full_version < '3.10'
+    # via
+    #   griffe-generics
+    #   mkdocstrings-python
+griffe==1.15.0 ; python_full_version >= '3.10'
     # via
     #   griffe-generics
     #   mkdocstrings-python
@@ -94,7 +98,9 @@ importlib-metadata==8.7.1 ; python_full_version < '3.10'
     #   nbconvert
 importlib-resources==6.5.2 ; python_full_version < '3.10'
     # via matplotlib
-ipykernel==6.31.0
+ipykernel==6.31.0 ; python_full_version < '3.10'
+    # via mkdocs-jupyter
+ipykernel==7.3.0 ; python_full_version >= '3.10'
     # via mkdocs-jupyter
 ipython==8.18.1 ; python_full_version < '3.10'
     # via ipykernel
@@ -226,7 +232,7 @@ mkdocs-autorefs==1.2.0
 mkdocs-exclude==1.0.2
 mkdocs-get-deps==0.2.2
     # via mkdocs
-mkdocs-jupyter==0.24.7
+mkdocs-jupyter==0.26.3
 mkdocs-macros-plugin==1.5.0
 mkdocs-material==9.7.7
     # via mkdocs-jupyter
@@ -247,7 +253,9 @@ nbformat==5.10.4
     #   jupytext
     #   nbclient
     #   nbconvert
-nest-asyncio==1.6.0
+nest-asyncio==1.6.0 ; python_full_version < '3.10'
+    # via ipykernel
+nest-asyncio2==1.7.2 ; python_full_version >= '3.10'
     # via ipykernel
 numpy==2.0.2 ; python_full_version < '3.10'
     # via

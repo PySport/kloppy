@@ -40,7 +40,6 @@ colorama==0.4.6
     # via
     #   click
     #   griffe
-    #   griffecli
     #   ipython
     #   mkdocs
     #   mkdocs-material
@@ -74,21 +73,11 @@ fonttools==4.63.0 ; python_full_version >= '3.10'
     # via matplotlib
 ghp-import==2.1.0
     # via mkdocs
-griffe==1.14.0 ; python_full_version < '3.10'
-    # via
-    #   griffe-generics
-    #   mkdocstrings-python
-griffe==2.1.0 ; python_full_version >= '3.10'
+griffe==0.49.0
     # via
     #   griffe-generics
     #   mkdocstrings-python
 griffe-generics==1.0.13
-griffecli==2.1.0 ; python_full_version >= '3.10'
-    # via griffe
-griffelib==2.1.0 ; python_full_version >= '3.10'
-    # via
-    #   griffe
-    #   griffecli
 hjson==3.1.0
     # via
     #   mkdocs-macros-plugin

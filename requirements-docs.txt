@@ -225,7 +225,7 @@ mkdocs==1.6.1
     #   mkdocs-macros-plugin
     #   mkdocs-material
     #   mkdocstrings
-mkdocs-autorefs==1.2.0
+mkdocs-autorefs==1.4.4
     # via
     #   mkdocstrings
     #   mkdocstrings-python

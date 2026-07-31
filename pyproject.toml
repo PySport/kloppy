@@ -78,7 +78,7 @@ docs = [
     "mkdocstrings-python==1.12.2",       # Auto-generate API docs from Python docstrings
     "griffe-generics==1.0.13",           # Extension for parsing types in docs
     "markdown-exec[ansi]>=1.10.3",       # Run and render code blocks in Markdown
-    "mkdocs-autorefs==1.2.0",            # Automatic cross-referencing for MkDocs
+    "mkdocs-autorefs==1.4.4",            # Automatic cross-referencing for MkDocs
     "mkdocs-exclude==1.0.2",             # Exclude files/folders from MkDocs builds
     "mkdocs-jupyter>=0.26.0",            # Embed Jupyter notebooks in MkDocs
     "mkdocs-macros-plugin>=1.0.7",       # Template macros for MkDocs

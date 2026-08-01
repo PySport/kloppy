@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import io
 import json
 import logging
 from typing import IO, NamedTuple, Optional, Union
@@ -61,9 +62,35 @@ position_types_mapping: dict[int, PositionType] = {
 }
 
 
+class _NonClosingRawReader(io.RawIOBase):
+    """Adapt a read()-capable binary stream without taking ownership."""
+
+    def __init__(self, stream):
+        super().__init__()
+        self._stream = stream
+
+    def readable(self) -> bool:
+        return True
+
+    def readinto(self, buffer) -> int:
+        chunk = self._stream.read(len(buffer))
+        size = len(chunk)
+        buffer[:size] = chunk
+        return size
+
+
 class SkillCornerInputs(NamedTuple):
     meta_data: IO[bytes]
     raw_data: IO[bytes]
+
+
+def _infer_data_version(first_record: dict) -> str:
+    if "data" in first_record:
+        return "V2"
+    elif "player_data" in first_record:
+        return "V3"
+
+    raise ValueError("Unexpected SkillCorner raw data format")
 
 
 class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
@@ -309,33 +336,31 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         return obj
 
     def __load_json_raw(self, file):
-        # Extract the first few bytes
-        start_byte = file.read(1)
-        file.seek(0)
+        raw_adapter = _NonClosingRawReader(file)
 
-        # Check if it starts with '{' or '['
-        if start_byte == b"[":
-            # It's a JSON array
-            try:
-                data = json.load(file)
-                for line in data:
-                    line = self.__replace_timestamp(line)
-                return data
-            except json.JSONDecodeError:
-                raise DeserializationError("Could not parse JSON data")
+        with io.BufferedReader(raw_adapter) as stream:
+            start_byte = stream.peek(1)[:1]
 
-        elif start_byte == b"{":
-            # It's a JSONL file
-            try:
-                data = []
-                for line in file:
-                    obj = json.loads(line)
-                    data.append(self.__replace_timestamp(obj))
-                return data
-            except json.JSONDecodeError:
-                raise DeserializationError("Could not parse JSONL data")
+            if start_byte == b"[":
+                try:
+                    data = json.load(stream)
+                    for line in data:
+                        line = self.__replace_timestamp(line)
+                    return data
+                except json.JSONDecodeError:
+                    raise DeserializationError("Could not parse JSON data")
 
-        raise DeserializationError("Could not determine raw data format")
+            if start_byte == b"{":
+                try:
+                    data = []
+                    for line in stream:
+                        obj = json.loads(line)
+                        data.append(self.__replace_timestamp(obj))
+                    return data
+                except json.JSONDecodeError:
+                    raise DeserializationError("Could not parse JSONL data")
+
+            raise DeserializationError("Could not determine raw data format")
 
     @classmethod
     def __get_periods(cls, tracking):
@@ -408,6 +433,17 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
     def deserialize(self, inputs: SkillCornerInputs) -> TrackingDataset:
         metadata = json.load(inputs.meta_data)
         raw_data = self.__load_json_raw(inputs.raw_data)
+
+        resolved_data_version = self.data_version
+        if not resolved_data_version:
+            resolved_data_version = _infer_data_version(raw_data[0])
+
+        if resolved_data_version == "V2":
+            get_frame_data = self._get_frame_data_v2
+            frame_data_key = "data"
+        else:
+            get_frame_data = self._get_frame_data_v3
+            frame_data_key = "player_data"
 
         with performance_logging("Loading metadata", logger=logger):
             periods = self.__get_periods(raw_data)
@@ -533,21 +569,11 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
 
         frames = []
 
-        get_frame_data = (
-            self._get_frame_data_v2
-            if self.data_version == "V2"
-            else self._get_frame_data_v3
-        )
-
         n_frames = 0
         for _frame in _iter():
             # include frame if there is any tracking data, players or ball.
             # or if include_empty_frames == True
-            not_empty_frame = (
-                len(_frame["data"]) > 0
-                if self.data_version == "V2"
-                else len(_frame["player_data"]) > 0
-            )
+            not_empty_frame = len(_frame[frame_data_key]) > 0
             if self.include_empty_frames or not_empty_frame:
                 frame = get_frame_data(
                     teams,

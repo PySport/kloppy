@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta, timezone
+import io
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,9 +15,68 @@ from kloppy.domain import (
     Point3D,
     Provider,
 )
+from kloppy.exceptions import DeserializationError
+from kloppy.infra.serializers.tracking import (
+    skillcorner as skillcorner_serializer,
+)
+
+V2_RAW_DATA = (
+    b'[{"possession":{"trackable_object":null,"group":null},'
+    b'"frame":10,"data":[],"period":1,"time":"00:01.00"}]'
+)
+
+
+class NonSeekableBytesIO(io.RawIOBase):
+    def __init__(self, data: bytes):
+        super().__init__()
+        self._data = memoryview(data)
+        self._position = 0
+        self._bytes_read = 0
+
+    def readinto(self, buffer):
+        size = min(len(buffer), len(self._data) - self._position)
+        if size:
+            buffer[:size] = self._data[self._position : self._position + size]
+            self._position += size
+            self._bytes_read += size
+        return size
+
+    @property
+    def bytes_read(self) -> int:
+        return self._bytes_read
+
+    def readable(self):
+        return True
+
+    def seekable(self):
+        return False
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        raise io.UnsupportedOperation("stream is not seekable")
+
+    def tell(self):
+        raise io.UnsupportedOperation("stream is not seekable")
 
 
 class TestSkillCornerTracking:
+    @pytest.fixture
+    def temporary_wrapper_capture(self, monkeypatch):
+        real_buffered_reader = io.BufferedReader
+        captured = {}
+
+        def recording_buffered_reader(raw_adapter):
+            buffered = real_buffered_reader(raw_adapter)
+            captured["buffered"] = buffered
+            captured["raw_adapter"] = raw_adapter
+            return buffered
+
+        monkeypatch.setattr(
+            skillcorner_serializer,
+            "io",
+            SimpleNamespace(BufferedReader=recording_buffered_reader),
+        )
+        return captured
+
     @pytest.fixture
     def meta_data(self, base_dir) -> str:
         return base_dir / "files/skillcorner_match_data.json"
@@ -30,6 +92,14 @@ class TestSkillCornerTracking:
     @pytest.fixture
     def raw_data_v3(self, base_dir) -> str:
         return base_dir / "files/skillcorner_v3_raw_data.jsonl"
+
+    @pytest.fixture
+    def raw_data_v3_one_line(self, raw_data_v3: Path) -> bytes:
+        return next(
+            line
+            for line in raw_data_v3.read_bytes().splitlines(keepends=True)
+            if json.loads(line).get("period") == 1
+        )
 
     @pytest.fixture
     def raw_data_timestamp(self, base_dir) -> str:
@@ -252,3 +322,181 @@ class TestSkillCornerTracking:
 
         assert dataset.records[-1].ball_state == BallState.ALIVE
         assert dataset.records[-2].ball_state == BallState.DEAD
+
+    @staticmethod
+    def assert_single_frame_dataset(dataset, frame_id, timestamp):
+        assert dataset.metadata.provider == Provider.SKILLCORNER
+        assert dataset.dataset_type == DatasetType.TRACKING
+        assert len(dataset.records) == 1
+        assert dataset.records[0].frame_id == frame_id
+        assert dataset.records[0].timestamp == timestamp
+
+    @pytest.mark.parametrize(
+        ("seekable", "raw_kind", "data_version", "frame_id", "timestamp"),
+        [
+            pytest.param(
+                True,
+                "v2",
+                None,
+                10,
+                timedelta(seconds=1),
+                id="seekable-v2-automatic",
+            ),
+            pytest.param(
+                True,
+                "v2",
+                "V2",
+                10,
+                timedelta(seconds=1),
+                id="seekable-v2-explicit",
+            ),
+            pytest.param(
+                True,
+                "v3",
+                None,
+                10,
+                timedelta(0),
+                id="seekable-v3-one-line-automatic",
+            ),
+            pytest.param(
+                True,
+                "v3",
+                "V3",
+                10,
+                timedelta(0),
+                id="seekable-v3-one-line-explicit",
+            ),
+            pytest.param(
+                False,
+                "v2",
+                None,
+                10,
+                timedelta(seconds=1),
+                id="nonseekable-v2-automatic",
+            ),
+            pytest.param(
+                False,
+                "v2",
+                "V2",
+                10,
+                timedelta(seconds=1),
+                id="nonseekable-v2-explicit",
+            ),
+            pytest.param(
+                False,
+                "v3",
+                None,
+                10,
+                timedelta(0),
+                id="nonseekable-v3-automatic",
+            ),
+            pytest.param(
+                False,
+                "v3",
+                "V3",
+                10,
+                timedelta(0),
+                id="nonseekable-v3-explicit",
+            ),
+        ],
+    )
+    def test_direct_stream_loading(
+        self,
+        seekable,
+        raw_kind,
+        data_version,
+        frame_id,
+        timestamp,
+        meta_data: Path,
+        meta_data_v3: Path,
+        raw_data_v3_one_line: bytes,
+    ):
+        raw_data = V2_RAW_DATA if raw_kind == "v2" else raw_data_v3_one_line
+        stream = (
+            io.BytesIO(raw_data) if seekable else NonSeekableBytesIO(raw_data)
+        )
+
+        dataset = skillcorner.load(
+            meta_data=meta_data if raw_kind == "v2" else meta_data_v3,
+            raw_data=stream,
+            data_version=data_version,
+            include_empty_frames=True,
+        )
+
+        self.assert_single_frame_dataset(dataset, frame_id, timestamp)
+        if not seekable:
+            assert stream.bytes_read == len(raw_data)
+        assert not stream.closed
+
+    @pytest.mark.parametrize(
+        ("raw_data", "message"),
+        [
+            pytest.param(
+                b'[{"frame": 10',
+                "Could not parse JSON data",
+                id="malformed-json-array",
+            ),
+            pytest.param(
+                b'{"period": 1, "time": "00:01.00", "data": []}\n'
+                b'{"period": broken}\n',
+                "Could not parse JSONL data",
+                id="malformed-jsonl",
+            ),
+            pytest.param(
+                b"not skillcorner data",
+                "Could not determine raw data format",
+                id="unknown-raw-format",
+            ),
+        ],
+    )
+    def test_failure_path_closes_temporary_wrappers(
+        self,
+        meta_data: Path,
+        temporary_wrapper_capture,
+        raw_data,
+        message,
+    ):
+        raw_stream = NonSeekableBytesIO(raw_data)
+        meta_stream = open(meta_data, "rb")
+        no_dataset = object()
+        dataset = no_dataset
+        try:
+            with pytest.raises(DeserializationError) as exc_info:
+                dataset = skillcorner.load(
+                    meta_data=meta_stream,
+                    raw_data=raw_stream,
+                )
+
+            assert type(exc_info.value) is DeserializationError
+            assert str(exc_info.value) == message
+            assert dataset is no_dataset
+            assert temporary_wrapper_capture["buffered"].closed
+            assert temporary_wrapper_capture["raw_adapter"].closed
+            assert not raw_stream.closed
+            assert not meta_stream.closed
+        finally:
+            meta_stream.close()
+            raw_stream.close()
+
+    def test_success_path_closes_temporary_wrappers(
+        self, meta_data: Path, temporary_wrapper_capture
+    ):
+        underlying = io.BytesIO(V2_RAW_DATA)
+        meta_stream = open(meta_data, "rb")
+        try:
+            dataset = skillcorner.load(
+                meta_data=meta_stream,
+                raw_data=underlying,
+                include_empty_frames=True,
+            )
+
+            self.assert_single_frame_dataset(
+                dataset, frame_id=10, timestamp=timedelta(seconds=1)
+            )
+            assert temporary_wrapper_capture["buffered"].closed
+            assert temporary_wrapper_capture["raw_adapter"].closed
+            assert not underlying.closed
+            assert not meta_stream.closed
+        finally:
+            meta_stream.close()
+            underlying.close()

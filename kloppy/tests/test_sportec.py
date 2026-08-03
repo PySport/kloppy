@@ -140,6 +140,19 @@ class TestSportecTrackingData:
             only_alive=False,
         )
 
+    def test_exclude_missing_ball_frames(self, raw_data: Path, meta_data: Path):
+        dataset = sportec.load_tracking(
+            raw_data=raw_data,
+            meta_data=meta_data,
+            coordinates="sportec",
+            limit=None,
+            only_alive=False,
+            exclude_missing_ball_frames=True,
+        )
+        assert all(
+            frame.ball_coordinates is not None for frame in dataset.records
+        )
+
     def test_load_metadata(self, dataset: TrackingDataset):
         assert dataset.metadata.provider == Provider.SPORTEC
         assert dataset.dataset_type == DatasetType.TRACKING

@@ -45,6 +45,20 @@ class TestSkillCornerTracking:
             include_empty_frames=True,
         )
 
+    def test_exclude_missing_ball_frames(self, raw_data: Path, meta_data: Path):
+        dataset = skillcorner.load(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="skillcorner",
+            include_empty_frames=True,
+            only_alive=False,
+            exclude_missing_ball_frames=True,
+        )
+
+        assert all(
+            frame.ball_coordinates is not None for frame in dataset.records
+        )
+
     def test_correct_deserialization(self, raw_data: Path, meta_data: Path):
         dataset = skillcorner.load(
             meta_data=meta_data,

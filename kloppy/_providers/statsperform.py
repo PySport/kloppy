@@ -105,6 +105,7 @@ def load_tracking(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load Stats Perform tracking data.
@@ -119,6 +120,8 @@ def load_tracking(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         only_alive: Only include frames in which the game is not paused.
+        exclude_missing_ball_frames: Exclude frames in which the ball
+            coordinates are missing (e.g. not tracked).
 
     Returns:
         The parsed tracking data.
@@ -129,6 +132,7 @@ def load_tracking(
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(ma1_data) as ma1_data_fp,

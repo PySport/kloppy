@@ -20,6 +20,7 @@ def load(
     include_empty_frames: Optional[bool] = False,
     data_version: Optional[str] = None,
     only_alive: Optional[bool] = False,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load SkillCorner broadcast tracking data.
@@ -33,6 +34,8 @@ def load(
         include_empty_frames: Include frames in which no objects were tracked.
         only_alive: Only include frames in which the game is not paused.
         data_version: Specify the input data version.
+        exclude_missing_ball_frames: Exclude frames in which the ball
+            coordinates are missing (e.g. not tracked).
 
     Returns:
         The parsed tracking data.
@@ -50,6 +53,7 @@ def load(
         include_empty_frames=include_empty_frames,
         data_version=data_version,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(meta_data) as meta_data_fp,

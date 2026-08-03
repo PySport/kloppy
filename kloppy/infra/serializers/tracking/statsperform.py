@@ -43,8 +43,11 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.only_alive = only_alive
         self._provider = provider
 
@@ -188,6 +191,11 @@ class StatsPerformDeserializer(TrackingDataDeserializer[StatsPerformInputs]):
                 frame = transformer.transform_frame(frame)
                 if not frame.players_data or (
                     self.only_alive and frame.ball_state == BallState.DEAD
+                ):
+                    continue
+                if (
+                    self.exclude_missing_ball_frames
+                    and frame.ball_coordinates is None
                 ):
                     continue
                 frames.append(frame)

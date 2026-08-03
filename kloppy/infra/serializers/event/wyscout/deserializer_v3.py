@@ -1,7 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-import json
 import logging
 from typing import Optional
 import warnings
@@ -763,7 +762,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
         transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs.event_data)
+            raw_events = inputs.event_data
             for event in raw_events["events"]:
                 if "id" not in event:
                     event["id"] = event["type"]["primary"]

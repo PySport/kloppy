@@ -1,9 +1,13 @@
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+from io import BytesIO, UnsupportedOperation
+import json
 from pathlib import Path
 
 import pytest
 
 from kloppy import wyscout
+import kloppy._providers.wyscout as wyscout_provider
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
@@ -13,6 +17,7 @@ from kloppy.domain import (
     DuelQualifier,
     DuelType,
     EventDataset,
+    EventFactory,
     EventType,
     FormationType,
     GoalkeeperActionType,
@@ -29,6 +34,11 @@ from kloppy.domain import (
     ShotResult,
     Time,
 )
+from kloppy.infra.serializers.event.wyscout import (
+    WyscoutDeserializerV2,
+    WyscoutDeserializerV3,
+    WyscoutInputs,
+)
 
 
 @pytest.fixture(scope="session")
@@ -39,6 +49,220 @@ def event_v2_data(base_dir: Path) -> Path:
 @pytest.fixture(scope="session")
 def event_v3_data(base_dir: Path) -> Path:
     return base_dir / "files" / "wyscout_events_v3.json"
+
+
+class NonSeekableStream(BytesIO):
+    def seekable(self) -> bool:
+        return False
+
+    def seek(self, *args, **kwargs):
+        raise UnsupportedOperation("seek")
+
+    def tell(self):
+        raise UnsupportedOperation("tell")
+
+
+class CountingEventFactory(EventFactory):
+    def __init__(self):
+        self.pass_calls = 0
+
+    def build_pass(self, **kwargs):
+        self.pass_calls += 1
+        return super().build_pass(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("version", "fixture_name", "record_count"),
+    [
+        ("V2", "event_v2_data", 1835),
+        ("V3", "event_v3_data", 1896),
+    ],
+)
+@pytest.mark.parametrize("source_kind", ["path", "seekable", "nonseekable"])
+@pytest.mark.parametrize("automatic", [True, False])
+def test_parse_once_public_matrix(
+    monkeypatch,
+    request,
+    version,
+    fixture_name,
+    record_count,
+    source_kind,
+    automatic,
+):
+    path = request.getfixturevalue(fixture_name)
+    if source_kind == "path":
+        source = path
+    elif source_kind == "seekable":
+        source = BytesIO(path.read_bytes())
+    else:
+        source = NonSeekableStream(path.read_bytes())
+
+    opened_inputs = []
+    opened_streams = []
+    parsed_streams = []
+    original_open = wyscout_provider.open_as_file
+    original_json_load = wyscout_provider.json.load
+
+    @contextmanager
+    def counted_open(input_, mode="rb"):
+        opened_inputs.append(input_)
+        with original_open(input_, mode=mode) as stream:
+            opened_streams.append(stream)
+            yield stream
+
+    def counted_json_load(stream):
+        parsed_streams.append(stream)
+        return original_json_load(stream)
+
+    monkeypatch.setattr(wyscout_provider, "open_as_file", counted_open)
+    monkeypatch.setattr(wyscout_provider.json, "load", counted_json_load)
+
+    dataset = wyscout.load(
+        event_data=source,
+        data_version=None if automatic else version,
+    )
+
+    assert len(dataset.records) == record_count
+    assert opened_inputs == [source]
+    assert len(opened_streams) == 1
+    assert parsed_streams == opened_streams
+
+    if source_kind != "path":
+        assert opened_streams[0] is source
+        assert not source.closed
+        assert source.read() == b""
+        if source_kind == "seekable":
+            assert source.tell() == path.stat().st_size
+
+
+@pytest.mark.parametrize(
+    ("version", "fixture_name", "record_count", "coordinates"),
+    [
+        ("V2", "event_v2_data", 1835, Point(29.0, 6.0)),
+        ("V3", "event_v3_data", 1896, Point(32.0, 56.0)),
+    ],
+)
+def test_automatic_and_explicit_semantics_match(
+    request, version, fixture_name, record_count, coordinates
+):
+    path = request.getfixturevalue(fixture_name)
+
+    automatic = wyscout.load(event_data=path, coordinates="wyscout")
+    explicit = wyscout.load(
+        event_data=path,
+        coordinates="wyscout",
+        data_version=version,
+    )
+
+    assert len(automatic.records) == len(explicit.records) == record_count
+    assert automatic.metadata == explicit.metadata
+    assert automatic.metadata.periods == explicit.metadata.periods
+    assert automatic.to_records() == explicit.to_records()
+    assert automatic.records[2].coordinates == coordinates
+    assert explicit.records[2].coordinates == coordinates
+
+    automatic_factory = CountingEventFactory()
+    explicit_factory = CountingEventFactory()
+    automatic_passes = wyscout.load(
+        event_data=path,
+        event_types=["PASS"],
+        event_factory=automatic_factory,
+    )
+    explicit_passes = wyscout.load(
+        event_data=path,
+        event_types=["PASS"],
+        event_factory=explicit_factory,
+        data_version=version,
+    )
+
+    assert automatic_passes.to_records() == explicit_passes.to_records()
+    assert automatic_factory.pass_calls == explicit_factory.pass_calls
+    assert automatic_factory.pass_calls == len(automatic_passes.records)
+
+
+@pytest.mark.parametrize("data_version", [None, "V2", "V3"])
+def test_malformed_json_preserves_error(data_version):
+    with pytest.raises(json.JSONDecodeError):
+        wyscout.load(BytesIO(b'{"events": invalid}'), data_version=data_version)
+
+
+@pytest.mark.parametrize(
+    ("data_version", "exception", "message"),
+    [
+        (None, IndexError, "list index out of range"),
+        ("V2", ValueError, "not enough values to unpack"),
+        ("V3", ValueError, "not enough values to unpack"),
+    ],
+)
+def test_empty_events_preserve_error(data_version, exception, message):
+    with pytest.raises(exception, match=message):
+        wyscout.load(
+            BytesIO(b'{"events": [], "teams": {}}'), data_version=data_version
+        )
+
+
+@pytest.mark.parametrize(
+    ("data_version", "exception", "message"),
+    [
+        (
+            None,
+            ValueError,
+            "Wyscout data version could not be recognized, please specify",
+        ),
+        ("V2", KeyError, "eventName"),
+        ("V3", KeyError, "primary"),
+    ],
+)
+def test_unknown_schema_preserves_error(data_version, exception, message):
+    data = b'{"events": [{"type": {}}], "teams": {}}'
+    with pytest.raises(exception, match=message):
+        wyscout.load(BytesIO(data), data_version=data_version)
+
+
+@pytest.mark.parametrize("data_version", ["v2", "V4", "", "unexpected"])
+def test_nonstandard_version_uses_automatic_fallback(
+    event_v2_data, data_version
+):
+    dataset = wyscout.load(event_v2_data, data_version=data_version)
+    assert len(dataset.records) == 1835
+
+
+@pytest.mark.parametrize(
+    ("version", "fixture_name"),
+    [("V2", "event_v2_data"), ("V3", "event_v3_data")],
+)
+def test_reusing_consumed_stream_preserves_error(
+    request, version, fixture_name
+):
+    stream = BytesIO(request.getfixturevalue(fixture_name).read_bytes())
+
+    wyscout.load(stream, data_version=version)
+
+    with pytest.raises(json.JSONDecodeError):
+        wyscout.load(stream, data_version=version)
+    assert not stream.closed
+
+
+@pytest.mark.parametrize(
+    ("deserializer_class", "fixture_name"),
+    [
+        (WyscoutDeserializerV2, "event_v2_data"),
+        (WyscoutDeserializerV3, "event_v3_data"),
+    ],
+)
+def test_parsed_inputs_keep_base_metadata_merge(
+    request, deserializer_class, fixture_name
+):
+    parsed_event_data = json.loads(
+        request.getfixturevalue(fixture_name).read_bytes()
+    )
+
+    dataset = deserializer_class().deserialize(
+        WyscoutInputs(event_data=parsed_event_data),
+        additional_metadata={"game_id": "override"},
+    )
+
+    assert dataset.metadata.game_id == "override"
 
 
 def test_correct_auto_recognize_deserialization(

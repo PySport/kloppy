@@ -32,12 +32,15 @@ def load(
     Returns:
         The parsed event data.
     """
+    with open_as_file(event_data) as event_data_fp:
+        parsed_event_data = json.load(event_data_fp)
+
     if data_version == "V2":
         deserializer_class = WyscoutDeserializerV2
     elif data_version == "V3":
         deserializer_class = WyscoutDeserializerV3
     else:
-        deserializer_class = identify_deserializer(event_data)
+        deserializer_class = identify_deserializer(parsed_event_data)
 
     deserializer = deserializer_class(
         event_types=event_types,
@@ -45,10 +48,9 @@ def load(
         event_factory=event_factory or get_config("event_factory"),
     )
 
-    with open_as_file(event_data) as event_data_fp:
-        return deserializer.deserialize(
-            inputs=WyscoutInputs(event_data=event_data_fp),
-        )
+    return deserializer.deserialize(
+        inputs=WyscoutInputs(event_data=parsed_event_data),
+    )
 
 
 def load_open_data(
@@ -91,12 +93,9 @@ def load_open_data(
 
 
 def identify_deserializer(
-    event_data: FileLike,
+    event_data: dict,
 ) -> Union[type[WyscoutDeserializerV3], type[WyscoutDeserializerV2]]:
-    with open_as_file(event_data) as event_data_fp:
-        events_with_meta = json.load(event_data_fp)
-
-    events = events_with_meta["events"]
+    events = event_data["events"]
     first_event = events[0]
 
     deserializer = None

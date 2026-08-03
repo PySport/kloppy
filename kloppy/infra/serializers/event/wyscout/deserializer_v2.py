@@ -1,8 +1,7 @@
 from dataclasses import replace
 from datetime import timedelta
-import json
 import logging
-from typing import IO, NamedTuple, Optional
+from typing import NamedTuple, Optional
 
 from kloppy.domain import (
     BodyPart,
@@ -457,7 +456,7 @@ def _players_to_dict(players: list[Player]):
 
 
 class WyscoutInputs(NamedTuple):
-    event_data: IO[bytes]
+    event_data: dict
 
 
 class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
@@ -469,7 +468,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
         transformer = self.get_transformer()
 
         with performance_logging("load data", logger=logger):
-            raw_events = json.load(inputs.event_data)
+            raw_events = inputs.event_data
             for event in raw_events["events"]:
                 if "eventId" not in event:
                     event["eventId"] = event["eventName"]

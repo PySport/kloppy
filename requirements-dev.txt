@@ -59,7 +59,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   pytest
 cookies==2.2.1 ; python_full_version <= '3.9'
     # via moto
-cryptography==48.0.1 ; python_full_version > '3.9'
+cryptography==50.0.0 ; python_full_version > '3.9'
     # via
     #   joserfc
     #   moto

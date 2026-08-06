@@ -1,10 +1,9 @@
 import sys
 
-from pandas import DataFrame
-from pandas.testing import assert_frame_equal
 import pytest
 
 from kloppy import opta, statsbomb, tracab
+from kloppy._utils.testing import skip_if_no
 from kloppy.config import config_context
 from kloppy.domain import (
     AttackingDirection,
@@ -411,7 +410,11 @@ class TestHelpers:
         assert coordinates.x == 1 - coordinates_transformed.x
         assert coordinates.y == 1 - coordinates_transformed.y
 
+    @skip_if_no("pandas")
     def test_to_pandas(self):
+        from pandas import DataFrame
+        from pandas.testing import assert_frame_equal
+
         tracking_data = self._get_tracking_dataset()
 
         data_frame = tracking_data.to_df(engine="pandas")
@@ -437,6 +440,7 @@ class TestHelpers:
         )
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
+    @skip_if_no("pandas")
     def test_to_pandas_generic_events(self, base_dir):
         dataset = opta.load(
             f7_data=base_dir / "files/opta_f7.xml",
@@ -447,6 +451,7 @@ class TestHelpers:
         dataframe = dataframe[dataframe.event_type == "BALL_OUT"]
         assert dataframe.shape[0] == 2
 
+    @skip_if_no("pandas")
     def test_to_pandas_incomplete_pass(self, base_dir):
         dataset = statsbomb.load(
             lineup_data=base_dir / "files/statsbomb_lineup.json",
@@ -463,7 +468,11 @@ class TestHelpers:
             0.70945, 1e-4
         )
 
+    @skip_if_no("pandas")
     def test_to_pandas_additional_columns(self):
+        from pandas import DataFrame
+        from pandas.testing import assert_frame_equal
+
         tracking_data = self._get_tracking_dataset()
 
         data_frame = tracking_data.to_df(
@@ -497,6 +506,7 @@ class TestHelpers:
 
         assert_frame_equal(data_frame, expected_data_frame, check_like=True)
 
+    @skip_if_no("polars")
     def test_event_dataset_to_polars(self, base_dir):
         """
         Make sure an event dataset can be exported as a Polars DataFrame
@@ -512,6 +522,7 @@ class TestHelpers:
         c = df.select(pl.col("event_id").count())[0, 0]
         assert c == 4061
 
+    @skip_if_no("polars")
     def test_tracking_dataset_to_polars(self):
         """
         Make sure a tracking dataset can be exported as a Polars DataFrame
@@ -525,6 +536,8 @@ class TestHelpers:
         c = df.select(pl.col("frame_id").count())[0, 0]
         assert c == 2
 
+    @skip_if_no("pandas")
+    @skip_if_no("polars")
     def test_to_df_config(self):
         """
         Make sure to_df get engine from config. By default, pandas, otherwise polars
@@ -541,6 +554,8 @@ class TestHelpers:
             df = dataset.to_df()
             assert isinstance(df, pl.DataFrame)
 
+    @skip_if_no("pandas")
+    @skip_if_no("pyarrow")
     @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8")
     def test_to_df_pyarrow(self):
         """

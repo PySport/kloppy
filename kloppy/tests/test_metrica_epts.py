@@ -2,10 +2,11 @@ from datetime import timedelta
 import re
 
 from lxml import objectify
-from pandas import DataFrame
 import pytest
 
 from kloppy import metrica
+from kloppy._utils import performance_logging
+from kloppy._utils.testing import skip_if_no
 from kloppy.domain import Orientation, Point, Provider, Score
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     _load_provider,
@@ -15,7 +16,6 @@ from kloppy.infra.serializers.tracking.metrica_epts.reader import (
     build_regex,
     read_raw_data,
 )
-from kloppy.utils import performance_logging
 
 
 class TestMetricaEPTSTracking:
@@ -63,7 +63,10 @@ class TestMetricaEPTSTracking:
             with performance_logging("load"):
                 assert list(iterator)
 
+    @skip_if_no("pandas")
     def test_read_to_pandas(self, base_dir):
+        from pandas import DataFrame
+
         with (
             open(
                 base_dir / "files/epts_metrica_metadata.xml", "rb"
@@ -78,7 +81,10 @@ class TestMetricaEPTSTracking:
 
         assert "player_Track_1_x" in data_frame.columns
 
+    @skip_if_no("pandas")
     def test_skip_sensors(self, base_dir):
+        from pandas import DataFrame
+
         with (
             open(
                 base_dir / "files/epts_metrica_metadata.xml", "rb"

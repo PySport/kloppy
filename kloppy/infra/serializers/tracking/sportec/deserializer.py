@@ -5,6 +5,7 @@ from typing import IO, Callable, NamedTuple, Optional, Union
 
 from lxml import etree, objectify
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     AttackingDirection,
     BallState,
@@ -22,7 +23,6 @@ from kloppy.domain.services.frame_factory import create_frame
 from kloppy.infra.serializers.event.sportec.deserializer import (
     sportec_metadata_from_xml_elm,
 )
-from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
 

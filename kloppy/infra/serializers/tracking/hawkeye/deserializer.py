@@ -15,6 +15,7 @@ import warnings
 from dateutil.parser import parse
 from lxml import objectify
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     AttackingDirection,
     Frame,
@@ -33,7 +34,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.io import FileLike, get_file_extension, open_as_file
-from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
 

@@ -14,6 +14,7 @@ from botocore.session import Session
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pytest
 
+from kloppy._utils.testing import skip_if_no
 from kloppy.config import config_context
 from kloppy.exceptions import InputNotFoundError, KloppyError
 from kloppy.infra.io import adapters
@@ -557,6 +558,7 @@ class TestZipAdapter:
 @pytest.mark.skipif(
     sys.version_info < (3, 9), reason="Patch requires Python 3.9 or higher"
 )
+@skip_if_no("s3fs")
 class TestS3Adapter:
     """Tests for S3Adapter using moto."""
 

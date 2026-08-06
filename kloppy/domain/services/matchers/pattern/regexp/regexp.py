@@ -6,7 +6,7 @@ from typing import (
     Generic,
 )
 
-import networkx as nx
+from kloppy._utils.optional import import_optional_dependency
 
 # noinspection PyProtectedMember
 from .ast import (
@@ -21,6 +21,8 @@ from .ast import (
     _Terminal,
 )
 from .matchers import Out, Tok, _TrailItem
+
+nx = import_optional_dependency("networkx")
 
 
 def ast_to_graph(root: Node) -> nx.DiGraph:

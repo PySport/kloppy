@@ -6,6 +6,7 @@ import re
 from typing import IO, NamedTuple, Optional, Union
 import warnings
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BallState,
     CardEvent,
@@ -38,7 +39,6 @@ from kloppy.infra.serializers.event.impect.helpers import (
 from kloppy.infra.serializers.event.impect.specification import (
     create_impect_events,
 )
-from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

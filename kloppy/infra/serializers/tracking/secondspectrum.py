@@ -6,6 +6,7 @@ import warnings
 
 from lxml import objectify
 
+from kloppy._utils import Readable, performance_logging
 from kloppy.domain import (
     AttackingDirection,
     BallState,
@@ -26,7 +27,6 @@ from kloppy.domain import (
     attacking_direction_from_frame,
 )
 from kloppy.domain.services.frame_factory import create_frame
-from kloppy.utils import Readable, performance_logging
 
 from .deserializer import TrackingDataDeserializer
 

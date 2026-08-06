@@ -1,5 +1,6 @@
 from typing import Optional
 
+from kloppy._utils import deprecated
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory, Provider, TrackingDataset
 from kloppy.infra.serializers.event.statsperform import (
@@ -15,7 +16,6 @@ from kloppy.infra.serializers.tracking.statsperform import (
     StatsPerformInputs as StatsPerformTrackingInputs,
 )
 from kloppy.io import FileLike, open_as_file
-from kloppy.utils import deprecated
 
 
 @deprecated("statsperform.load_tracking should be used")

@@ -2,6 +2,7 @@ import logging
 from typing import IO, NamedTuple, Optional, Union
 import warnings
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
@@ -11,7 +12,6 @@ from kloppy.domain import (
     TrackingDataset,
     attacking_direction_from_frame,
 )
-from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
 from .parsers import get_metadata_parser, get_raw_data_parser

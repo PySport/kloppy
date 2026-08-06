@@ -1,6 +1,7 @@
 import pytest
 
 from kloppy import statsbomb
+from kloppy._utils.testing import skip_if_no
 from kloppy.domain import EventDataset, FilteredDataset
 
 
@@ -47,6 +48,7 @@ class TestEvent:
         assert first_goal.next(".goal").next(".goal") == goals[2]
         assert first_goal.next(".goal").next(".goal").next(".goal") is None
 
+    @skip_if_no("pandas")
     def test_filter(self, dataset: EventDataset):
         """
         Test filtering allows simple 'css selector' (<event_type>.<result>)

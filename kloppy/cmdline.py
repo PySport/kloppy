@@ -6,8 +6,8 @@ import textwrap
 
 from kloppy import datafactory, opta, sportscode, statsbomb, wyscout
 from kloppy import event_pattern_matching as pm
+from kloppy._utils import performance_logging
 from kloppy.domain import Code, CodeDataset
-from kloppy.utils import performance_logging
 
 sys.path.append(".")
 

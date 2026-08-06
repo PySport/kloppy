@@ -1,6 +1,7 @@
 import json
 from typing import Optional, Union
 
+from kloppy._utils import github_resolve_raw_data_url
 from kloppy.domain import TrackingDataset
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.tracking.skillcorner import (
@@ -8,7 +9,6 @@ from kloppy.infra.serializers.tracking.skillcorner import (
     SkillCornerInputs,
 )
 from kloppy.io import FileLike, open_as_file
-from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(

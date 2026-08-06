@@ -4,6 +4,7 @@ import json
 import logging
 from typing import IO, NamedTuple, Optional
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BallState,
     BodyPart,
@@ -27,7 +28,6 @@ from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
 from kloppy.infra.serializers.tracking.metrica_epts.metadata import (
     load_metadata,
 )
-from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 

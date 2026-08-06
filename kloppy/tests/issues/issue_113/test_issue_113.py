@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from kloppy import opta
+from kloppy._utils.testing import skip_if_no
 from kloppy.domain import Orientation
 
 
@@ -37,6 +38,7 @@ def kloppy_load_data(f7, f24):
 
 
 class TestIssue113:
+    @skip_if_no("pandas")
     def test_parse_opta(self):
         dir_path = Path(__file__).parent
         kloppy_load_data(

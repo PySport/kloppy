@@ -4,6 +4,7 @@ import json
 import logging
 from typing import IO, NamedTuple, Optional
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
@@ -34,7 +35,6 @@ from kloppy.domain import (
     ShotResult,
     Team,
 )
-from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from . import wyscout_events, wyscout_tags

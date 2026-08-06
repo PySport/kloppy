@@ -1,9 +1,11 @@
 import os
 
 from kloppy import opta
+from kloppy._utils.testing import skip_if_no
 
 
 class TestIssue60:
+    @skip_if_no("pandas")
     def test_deleted_event_opta(self):
         dir_path = os.path.dirname(__file__)
         deleted_event_id = "2087733359"

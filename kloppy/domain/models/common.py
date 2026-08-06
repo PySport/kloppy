@@ -17,7 +17,7 @@ from typing import (
     overload,
 )
 
-from kloppy.utils import deprecated, snake_case
+from kloppy._utils import deprecated, to_snake_case
 
 if TYPE_CHECKING:
     from ..services.transformers.data_record import (
@@ -172,7 +172,7 @@ class Official:
         if self.last_name:
             return self.last_name
         if self.role:
-            return f"{snake_case(str(self.role))}_{self.official_id}"
+            return f"{to_snake_case(str(self.role))}_{self.official_id}"
         return f"official_{self.official_id}"
 
 
@@ -1930,28 +1930,12 @@ class Dataset(ABC, Generic[T]):
             engine = get_config("dataframe.engine")
 
         if engine == "pandas[pyarrow]":
-            try:
-                import pandas as pd
+            from kloppy._utils.optional import import_optional_dependency
 
-                types_mapper = pd.ArrowDtype
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
-                )
-            except AttributeError:
-                raise AttributeError(
-                    "Seems like you have an older version of pandas installed. Please"
-                    " upgrade to at least 1.5 using: pip install pandas>=1.5"
-                )
+            pd = import_optional_dependency("pandas")
+            pa = import_optional_dependency("pyarrow")
 
-            try:
-                import pyarrow as pa
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pyarrow installed. Please"
-                    " install it using: pip install pyarrow"
-                )
+            types_mapper = pd.ArrowDtype
 
             table = pa.Table.from_pydict(
                 self.to_dict(*columns, orient="list", **named_columns)
@@ -1959,27 +1943,19 @@ class Dataset(ABC, Generic[T]):
             return table.to_pandas(types_mapper=types_mapper)
 
         elif engine == "pandas":
-            try:
-                from pandas import DataFrame
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have pandas installed. Please"
-                    " install it using: pip install pandas"
-                )
+            from kloppy._utils.optional import import_optional_dependency
 
-            return DataFrame.from_dict(
+            pd = import_optional_dependency("pandas")
+
+            return pd.DataFrame.from_dict(
                 self.to_dict(*columns, orient="list", **named_columns)
             )
         elif engine == "polars":
-            try:
-                from polars import from_dict
-            except ImportError:
-                raise ImportError(
-                    "Seems like you don't have polars installed. Please"
-                    " install it using: pip install polars"
-                )
+            from kloppy._utils.optional import import_optional_dependency
 
-            return from_dict(
+            pl = import_optional_dependency("polars")
+
+            return pl.from_dict(
                 self.to_dict(*columns, orient="list", **named_columns)
             )
         else:

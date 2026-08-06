@@ -2,6 +2,7 @@ from dataclasses import replace
 import logging
 from typing import IO, NamedTuple
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     DatasetTransformer,
     Frame,
@@ -12,7 +13,6 @@ from kloppy.domain import (
     TrackingDataset,
 )
 from kloppy.domain.services.frame_factory import create_frame
-from kloppy.utils import performance_logging
 
 from ..deserializer import TrackingDataDeserializer
 from .metadata import EPTSMetadata, load_metadata

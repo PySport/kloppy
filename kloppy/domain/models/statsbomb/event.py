@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from kloppy.utils import docstring_inherit_attributes
+from kloppy._utils import docstring_inherit_attributes
 
 from ... import EventFactory, create_event
 from ..event import PassEvent, ShotEvent

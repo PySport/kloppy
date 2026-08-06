@@ -1,6 +1,7 @@
 from typing import Optional, Union
 import warnings
 
+from kloppy._utils import github_resolve_raw_data_url
 from kloppy.config import get_config
 from kloppy.domain import EventDataset, EventFactory
 from kloppy.domain.models.statsbomb.event import StatsBombEventFactory
@@ -9,7 +10,6 @@ from kloppy.infra.serializers.event.statsbomb import (
     StatsBombInputs,
 )
 from kloppy.io import FileLike, Source, open_as_file
-from kloppy.utils import github_resolve_raw_data_url
 
 
 def load(

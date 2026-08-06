@@ -1,14 +1,14 @@
 import abc
 import inspect
 
-from kloppy.utils import camelcase_to_snakecase
+from kloppy._utils import to_snake_case
 
 _STATE_BUILDER_REGISTRY: dict[str, type["StateBuilder"]] = {}  # noqa: F821
 
 
 class RegisteredStateBuilder(abc.ABCMeta):
     def __new__(mcs, cls_name, bases, class_dict):
-        name = camelcase_to_snakecase(cls_name)
+        name = to_snake_case(cls_name)
         class_dict["name"] = name
         builder_cls = super().__new__(mcs, cls_name, bases, class_dict)
         if not inspect.isabstract(builder_cls):

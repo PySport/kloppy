@@ -3,6 +3,7 @@ import json
 import logging
 from typing import IO, NamedTuple, Optional
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     DatasetFlag,
     EventDataset,
@@ -18,7 +19,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import performance_logging
 
 from . import specification as SB
 from .helpers import parse_freeze_frame, parse_str_ts

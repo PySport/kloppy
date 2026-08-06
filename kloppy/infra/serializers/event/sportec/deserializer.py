@@ -5,6 +5,7 @@ from typing import IO, NamedTuple
 
 from lxml import objectify
 
+from kloppy._utils import performance_logging
 from kloppy.domain import (
     BallState,
     BodyPart,
@@ -33,7 +34,6 @@ from kloppy.domain import (
 )
 from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
-from kloppy.utils import performance_logging
 
 position_types_mapping: dict[str, PositionType] = {
     "TW": PositionType.Goalkeeper,

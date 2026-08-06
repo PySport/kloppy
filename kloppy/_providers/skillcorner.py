@@ -41,20 +41,22 @@ def load(
         raise ValueError(
             f"data_version must be either 'V2', 'V3'. Provided: {data_version}"
         )
-    if not data_version:
-        data_version = identify_data_version(raw_data)
-    deserializer = SkillCornerDeserializer(
-        sample_rate=sample_rate,
-        limit=limit,
-        coordinate_system=coordinates,
-        include_empty_frames=include_empty_frames,
-        data_version=data_version,
-        only_alive=only_alive,
-    )
     with (
         open_as_file(meta_data) as meta_data_fp,
         open_as_file(raw_data) as raw_data_fp,
     ):
+        if not data_version:
+            data_version = identify_data_version(raw_data_fp)
+            raw_data_fp.seek(0)
+
+        deserializer = SkillCornerDeserializer(
+            sample_rate=sample_rate,
+            limit=limit,
+            coordinate_system=coordinates,
+            include_empty_frames=include_empty_frames,
+            data_version=data_version,
+            only_alive=only_alive,
+        )
         return deserializer.deserialize(
             inputs=SkillCornerInputs(
                 meta_data=meta_data_fp, raw_data=raw_data_fp

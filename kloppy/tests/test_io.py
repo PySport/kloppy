@@ -104,6 +104,33 @@ class TestOpenAsFile:
         with open_as_file(BytesIO(data)) as fp:
             assert fp.read() == data
 
+    def test_read_non_seekable_stream(self):
+        """It should automatically wrap non-seekable streams in a BufferedStream."""
+
+        class NonSeekableStream:
+            def __init__(self, data: bytes):
+                self._data = BytesIO(data)
+
+            def read(self, *args, **kwargs):
+                return self._data.read(*args, **kwargs)
+
+            def readinto(self, *args, **kwargs):
+                return self._data.readinto(*args, **kwargs)
+
+            def seekable(self):
+                return False
+
+            def readable(self):
+                return True
+
+        data = b"Hello, non-seekable world!"
+        stream = NonSeekableStream(data)
+        with open_as_file(stream) as fp:
+            assert getattr(fp, "seekable", lambda: False)() is True
+            assert fp.read() == data
+            fp.seek(0)
+            assert fp.read() == data
+
     @pytest.mark.parametrize(
         "compress_func",
         [gzip.compress, bz2.compress, lzma.compress],

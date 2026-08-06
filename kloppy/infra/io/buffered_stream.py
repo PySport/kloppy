@@ -25,6 +25,15 @@ class BufferedStream(tempfile.SpooledTemporaryFile):
     def __init__(self, max_size: int = DEFAULT_BUFFER_SIZE, mode: str = "w+b"):
         super().__init__(max_size=max_size, mode=mode)
 
+    def readable(self) -> bool:
+        return True
+
+    def writable(self) -> bool:
+        return True
+
+    def seekable(self) -> bool:
+        return True
+
     def write(self, data: bytes) -> int:  # make it clearly bytes-only
         return super().write(data)
 

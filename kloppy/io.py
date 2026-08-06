@@ -453,9 +453,20 @@ def open_as_file(
         if not isinstance(input_, (str, os.PathLike)):
             input_mode = getattr(input_, "mode", None)
             if input_mode and input_mode != mode:
-                raise ValueError(
-                    f"File opened in mode '{input_mode}' but '{mode}' requested"
+                is_readable_requested = "r" in mode
+                is_writable_requested = "w" in mode or "a" in mode
+
+                is_readable_actual = "r" in input_mode or "+" in input_mode
+                is_writable_actual = (
+                    "w" in input_mode or "a" in input_mode or "+" in input_mode
                 )
+
+                if (is_readable_requested and not is_readable_actual) or (
+                    is_writable_requested and not is_writable_actual
+                ):
+                    raise ValueError(
+                        f"File opened in mode '{input_mode}' but '{mode}' requested"
+                    )
 
         # --- Processing: Open or wrap the input ---
         # _open handles:
@@ -473,6 +484,12 @@ def open_as_file(
         is_transformed = opened is not input_
         if hasattr(input_, "buffer"):
             is_transformed = is_transformed and opened is not input_.buffer
+
+        if mode == "rb":
+            is_seekable = getattr(opened, "seekable", lambda: False)()
+            if not is_seekable:
+                opened = BufferedStream.from_stream(opened)
+                is_transformed = True
 
         if is_transformed:
             # Exception: If the original input was a file object, and _open returned a

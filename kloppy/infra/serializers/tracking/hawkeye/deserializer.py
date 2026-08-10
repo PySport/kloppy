@@ -17,6 +17,7 @@ from lxml import objectify
 
 from kloppy.domain import (
     AttackingDirection,
+    DatasetFlag,
     Frame,
     Ground,
     Metadata,
@@ -435,7 +436,7 @@ class HawkEyeDeserializer(TrackingDataDeserializer[HawkEyeInputs]):
             frame_rate=frame_rate,
             orientation=orientation,
             provider=Provider.HAWKEYE,
-            flags=None,
+            flags=DatasetFlag(0),
             coordinate_system=transformer.get_to_coordinate_system(),
             game_id=self._game_id,
             date=self._game_date,

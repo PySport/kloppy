@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import total_ordering
 from typing import (
     Generic,
     Literal,
@@ -14,6 +15,7 @@ from sortedcontainers import SortedDict
 from kloppy.exceptions import KloppyError
 
 
+@total_ordering
 @dataclass
 class Period:
     """
@@ -82,9 +84,6 @@ class Period:
     def __lt__(self, other: "Period"):
         return self.id < other.id
 
-    def __ge__(self, other):
-        return self == other or other < self
-
     def __hash__(self):
         return id(self.id)
 
@@ -104,6 +103,7 @@ class Period:
         self.next_period = next_
 
 
+@total_ordering
 @dataclass
 class Time:
     """

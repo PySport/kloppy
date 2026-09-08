@@ -1,0 +1,88 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "playerId": 100,
+      "teamId": 1,
+      "matchId": 1694426,
+      "matchPeriod": "2H",
+      "eventSec": 5400.0,
+      "eventName": 8,
+      "subEventName": 85,
+      "positions": [
+        {
+          "x": 50.0,
+          "y": 50.0
+        },
+        {
+          "x": 60.0,
+          "y": 60.0
+        }
+      ],
+      "tags": [
+        {
+          "id": 1801
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "playerId": 101,
+      "teamId": 2,
+      "matchId": 1694426,
+      "matchPeriod": "E1",
+      "eventSec": 5420.0,
+      "eventName": 8,
+      "subEventName": 85,
+      "positions": [
+        {
+          "x": 60.0,
+          "y": 60.0
+        },
+        {
+          "x": 70.0,
+          "y": 70.0
+        }
+      ],
+      "tags": [
+        {
+          "id": 1801
+        }
+      ]
+    }
+  ],
+  "teams": {
+    "1": {
+      "team": {
+        "wyId": 1,
+        "officialName": "Team A"
+      }
+    },
+    "2": {
+      "team": {
+        "wyId": 2,
+        "officialName": "Team B"
+      }
+    }
+  },
+  "players": {
+    "1": [
+      {
+        "player": {
+          "wyId": 100,
+          "firstName": "Player",
+          "lastName": "One"
+        }
+      }
+    ],
+    "2": [
+      {
+        "player": {
+          "wyId": 101,
+          "firstName": "Player",
+          "lastName": "Two"
+        }
+      }
+    ]
+  }
+}

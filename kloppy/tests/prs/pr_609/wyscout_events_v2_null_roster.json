@@ -1,0 +1,64 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "playerId": 100,
+      "teamId": 1,
+      "matchId": 2499738,
+      "matchPeriod": "1H",
+      "eventSec": 10.0,
+      "eventName": 8,
+      "subEventName": 85,
+      "positions": [
+        {
+          "x": 50.0,
+          "y": 50.0
+        },
+        {
+          "x": 60.0,
+          "y": 60.0
+        }
+      ],
+      "tags": [
+        {
+          "id": 1801
+        }
+      ]
+    }
+  ],
+  "teams": {
+    "1": {
+      "team": {
+        "wyId": 1,
+        "officialName": "Team A"
+      }
+    },
+    "2": {
+      "team": {
+        "wyId": 2,
+        "officialName": "Team B"
+      }
+    }
+  },
+  "players": {
+    "1": [
+      null,
+      {
+        "player": {
+          "wyId": 100,
+          "firstName": "Real",
+          "lastName": "Player"
+        }
+      }
+    ],
+    "2": [
+      {
+        "player": {
+          "wyId": 101,
+          "firstName": "Other",
+          "lastName": "Player"
+        }
+      }
+    ]
+  }
+}

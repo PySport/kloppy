@@ -31,6 +31,8 @@ from kloppy.domain.models.pitch import Point
 from kloppy.domain.models.time import Period
 from kloppy.domain.services.event_factory import EventFactory
 
+from .mappings import formation_ids_mapping
+
 
 def create_footovision_events(
     raw_events: list[dict], meta_data
@@ -119,7 +121,7 @@ PRESSURE_EVENT_TYPE = 4
 OFFSIDE_EVENT_TYPE = 408
 OWN_GOAL_EVENT_TYPE = 44
 GOAL_EVENT_TYPE = 18
-
+SUBSTITUTION_EVENT_TYPE = 734
 
 ON_BALL_EVENT_TYPE_IDS = {
     PASS_EVENT_TYPE,
@@ -227,6 +229,10 @@ def footovision_event_decoder(
         return FootovisionPressureEvent(
             raw_event, prev_raw_event, next_raw_event
         )
+    elif SUBSTITUTION_EVENT_TYPE in event_type_ids:
+        return FootovisionSubstitutionEvent(
+            raw_event, prev_raw_event, next_raw_event
+        )
 
     return FootovisionGenericEvent(raw_event)
 
@@ -312,7 +318,6 @@ def link_footovision_event_pair(
 ) -> None:
     first.add_related_event_id(str(second.raw_event["id"]))
     second.add_related_event_id(str(first.raw_event["id"]))
-
 
 
 class FootovisionEvent:
@@ -782,6 +787,7 @@ class FootovisionInterceptionEvent(FootovisionOnBallEvent):
 
         return qualifiers
 
+
 class FootovisionCardEvent(FootovisionEvent):
     def deserialize(self, event_factory: EventFactory):
         card_type = self.get_card_type()
@@ -811,6 +817,7 @@ class FootovisionCardEvent(FootovisionEvent):
             return CardType.SECOND_YELLOW
 
         return CardType.FIRST_YELLOW
+
 
 class FootovisionRecoveryEvent(FootovisionOnBallEvent):
     def deserialize(self, event_factory: EventFactory):
@@ -959,6 +966,76 @@ class FootovisionPressureEvent(FootovisionEvent):
 
         return qualifiers
 
+class FootovisionSubstitutionEvent(FootovisionEvent):
+    def deserialize(self, event_factory: EventFactory):
+        replacement_player = self.get_replacement_player()
+
+        if replacement_player is None:
+            raise RuntimeError(
+                f"Could not find replacement player for substitution event {self.raw_event}"
+            )
+
+        return [
+            event_factory.build_substitution(
+                **self.get_generic_event_kwargs(),
+                replacement_player=replacement_player,
+            )
+        ]
+
+    def get_replacement_player(self) -> Optional[Player]:
+        if self.team is None:
+            return None
+
+        replacement_player_id = self.raw_event.get("playerId")
+        if replacement_player_id is None:
+            return None
+
+        return self.team.get_player_by_id(str(replacement_player_id))
+
+
+class FootovisionPlayerOnEvent(FootovisionEvent):
+    def deserialize(self, event_factory: EventFactory):
+        return [
+            event_factory.build_player_on(
+                **self.get_generic_event_kwargs(), result=None, qualifiers=None
+            )
+        ]
+
+
+class FootovisionPlayerOffEvent(FootovisionEvent):
+    def deserialize(self, event_factory: EventFactory):
+        return [
+            event_factory.build_player_off(
+                **self.get_generic_event_kwargs(), result=None, qualifiers=None
+            )
+        ]
+
+
+class FootovisionFormationChangeEvent(FootovisionEvent):
+    def deserialize(self, event_factory: EventFactory):
+        formation_type = self.get_formation_type()
+        if formation_type is None:
+            return []
+        return [
+            event_factory.build_formation_change(
+                **self.get_generic_event_kwargs(),
+                formation_type=formation_type,
+                player_positions=self.get_player_positions(),
+                result=None,
+                qualifiers=None,
+            )
+        ]
+
+    def get_formation_type(self) -> Optional[FormationType]:
+        return formation_ids_mapping.get(
+            self.formation.get("system"),
+            FormationType.UNKNOWN,
+        )
+
+    def get_player_positions(self) -> Optional[dict[Player, PositionType]]:
+
+        return None
+
 class FootovisionSubClass:
     def __init__(
         self,
@@ -984,7 +1061,7 @@ class FootovisionSubClass:
         self,
         periods: Sequence[Period],
         teams: Sequence[Team],
-    ) :
+    ):
         period_id = int(self.formation["halftime"])
         team_id = str(self.team_id)
 
@@ -1029,67 +1106,10 @@ class FootovisionSubClass:
             return None
 
         return self.team.get_player_by_id(str(self.reason["playerIn"]))
-    
-class FootovisionSubstitutionEvent(FootovisionSubClass):
-    def deserialize(self, event_factory: EventFactory):
-        replacement_player = self.get_replacement_player()
-
-        if replacement_player is None:
-            raise RuntimeError(
-                f"Could not find replacement player {self.reason['playerIn']!r}"
-            )
-
-        return [
-            event_factory.build_substitution(
-                **self.get_generic_event_kwargs(),
-                replacement_player=replacement_player,
-            )
-        ]
-
-class FootovisionPlayerOnEvent(FootovisionSubClass):
-    def deserialize(self, event_factory: EventFactory):
-        return [
-            event_factory.build_player_on(
-                **self.get_generic_event_kwargs(), result=None, qualifiers=None
-            )
-        ]
 
 
-class FootovisionPlayerOffEvent(FootovisionSubClass):
-    def deserialize(self, event_factory: EventFactory):
-        return [
-            event_factory.build_player_off(
-                **self.get_generic_event_kwargs(), result=None, qualifiers=None
-            )
-        ]
 
 
-class FootovisionFormationChangeEvent(FootovisionSubClass):
-    def deserialize(self, event_factory: EventFactory):
-        formation_type = self.get_formation_type()
-        if formation_type is None:
-            return []
-        return [
-            event_factory.build_formation_change(
-                **self.get_generic_event_kwargs(),
-                formation_type=formation_type,
-                player_positions=self.get_player_positions(),
-                result=None,
-                qualifiers=None,
-            )
-        ]
-
-    def get_formation_type(self) -> Optional[FormationType]:
-        formation = formation_ids_mapping.get(
-                self.formation.get("system"),
-                FormationType.UNKNOWN,
-            ),
-        return formation
-
-    def get_player_positions(self) -> Optional[dict[Player, PositionType]]:
-
-        return None
-    
 def parse_substitution_events(
     meta_data: dict[str, Any],
 ) -> list[FootovisionSubstitutionEvent]:
@@ -1139,10 +1159,3 @@ def parse_team_substitution_events(
             )
 
     return substitution_events
-
-
-
-
-
-
-

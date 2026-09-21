@@ -856,36 +856,7 @@ class FootovisionCoordinateSystem(KloppyCoordinateSystem):
     def provider(self) -> Provider:
         return Provider.FOOTOVISION
 
-    @property
-    def origin(self) -> Origin:
-        return Origin.TOP_LEFT
 
-    @property
-    def vertical_orientation(self) -> VerticalOrientation:
-        return VerticalOrientation.TOP_TO_BOTTOM
-
-    @property
-    def pitch_dimensions(self) -> PitchDimensions:
-        if self._pitch_length is not None and self._pitch_width is not None:
-            return MetricPitchDimensions(
-                x_dim=Dimension(
-                    0, self._pitch_length
-                ),
-                y_dim=Dimension(
-                    0, self._pitch_width
-                ),
-                pitch_length=self._pitch_length,
-                pitch_width=self._pitch_width,
-                standardized=False,
-            ).convert(to_unit=Unit.CENTIMETERS)
-        else:
-            return MetricPitchDimensions(
-                x_dim=Dimension(None, None),
-                y_dim=Dimension(None, None),
-                pitch_length=None,
-                pitch_width=None,
-                standardized=False,
-            ).convert(to_unit=Unit.CENTIMETERS)
 class TracabCoordinateSystem(ProviderCoordinateSystem):
     """
     Tracab coordinate system.

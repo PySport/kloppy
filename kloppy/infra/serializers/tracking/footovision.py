@@ -1,9 +1,18 @@
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import IO, NamedTuple, Optional, Union
-
-import pandas as pd
+import math
+from typing import (
+    IO,
+    Any,
+    NamedTuple,
+    Optional,
+    TypedDict,
+    Union,
+    cast,
+)
 
 from kloppy.domain import (
     BallState,
@@ -21,7 +30,6 @@ from kloppy.domain import (
     TrackingDataset,
 )
 from kloppy.domain.models.common import (
-    KloppyCoordinateSystem,
     Official,
     OfficialType,
     Score,
@@ -29,59 +37,14 @@ from kloppy.domain.models.common import (
 from kloppy.domain.models.formation import FormationType
 from kloppy.domain.models.time import Time, TimeContainer
 from kloppy.domain.services.frame_factory import create_frame
+from kloppy.infra.serializers.event.footovision.mappings import (
+    formation_ids_mapping,
+    position_types_mapping,
+)
 from kloppy.infra.serializers.tracking.deserializer import (
     TrackingDataDeserializer,
 )
 from kloppy.utils import performance_logging
-
-position_types_mapping: dict[str, PositionType] = {
-    "GOALKEEPER": PositionType.Goalkeeper,
-    "CENTRE_BACK_RIGHT": PositionType.RightCenterBack,
-    "CENTRE_BACK_LEFT": PositionType.LeftCenterBack,
-    "FULL_BACK_LEFT": PositionType.LeftBack,
-    "FULL_BACK_RIGHT": PositionType.RightBack,
-    "DEFENSIVE_MIDFIELDER": PositionType.DefensiveMidfield,
-    "DEFENSIVE_MIDFIELDER_RIGHT": PositionType.RightDefensiveMidfield,
-    "DEFENSIVE_MIDFIELDER_LEFT": PositionType.LeftDefensiveMidfield,
-    "CENTRAL_MIDFIELDER_LEFT": PositionType.LeftCentralMidfield,
-    "CENTRAL_MIDFIELDER_RIGHT": PositionType.RightCentralMidfield,
-    "ATTACKING_MIDFIELDER_LEFT": PositionType.LeftAttackingMidfield,
-    "ATTACKING_MIDFIELDER_RIGHT": PositionType.RightAttackingMidfield,
-    "OFFENSIVE_MIDFIELDER": PositionType.AttackingMidfield,
-    "WINGBACK_RIGHT": PositionType.RightWingBack,
-    "WINGBACK_LEFT": PositionType.LeftWingBack,
-    "STRIKER": PositionType.Striker,
-    "STRIKER_RIGHT": PositionType.RightForward,
-    "STRIKER_LEFT": PositionType.LeftForward,
-}
-
-formation_ids_mapping: dict[str, FormationType] = {
-    # Footovision formation IDs
-    "3-1-4-2": FormationType.THREE_ONE_FOUR_TWO,
-    "3-2-4-1": FormationType.THREE_TWO_FOUR_ONE,
-    "3-3-3-1": FormationType.THREE_THREE_THREE_ONE,
-    "3-4-1-2": FormationType.THREE_FOUR_ONE_TWO,
-    "3-4-2-1": FormationType.THREE_FOUR_TWO_ONE,
-    "3-4-3": FormationType.THREE_FOUR_THREE,
-    "3-4-3d": FormationType.THREE_FOUR_THREE_DIAMOND,
-    "3-5-1-1": FormationType.THREE_FIVE_ONE_ONE,
-    "3-5-2": FormationType.THREE_FIVE_TWO,
-    "4-1-2-1-2": FormationType.FOUR_ONE_TWO_ONE_TWO,
-    "4-1-3-2": FormationType.FOUR_ONE_THREE_TWO,
-    "4-1-4-1": FormationType.FOUR_ONE_FOUR_ONE,
-    "4-2-1-3": FormationType.FOUR_TWO_ONE_THREE,
-    "4-2-2-2": FormationType.FOUR_TWO_TWO_TWO,
-    "4-2-3-1": FormationType.FOUR_TWO_THREE_ONE,
-    "4-2-4-0": FormationType.FOUR_TWO_FOUR_ZERO,
-    "4-3-1-2": FormationType.FOUR_THREE_ONE_TWO,
-    "4-3-2-1": FormationType.FOUR_THREE_TWO_ONE,
-    "4-3-3": FormationType.FOUR_THREE_THREE,
-    "4-4-1-1": FormationType.FOUR_FOUR_ONE_ONE,
-    "4-4-2": FormationType.FOUR_FOUR_TWO,
-    "4-5-1": FormationType.FOUR_FIVE_ONE,
-    "5-3-2": FormationType.FIVE_THREE_TWO,
-    "5-4-1": FormationType.FIVE_FOUR_ONE,
-}
 
 logger = logging.getLogger(__name__)
 
@@ -89,11 +52,173 @@ METERS_PER_YARD = 0.9144
 FOOTOVISION_FPS = 25
 
 
+class _FootovisionPlayerRecordRequired(TypedDict):
+    playerId: int
+    teamId: int
+    halftime: int
+    time: int
+    x: float
+    y: float
+    speed: float
+
+
+class FootovisionPlayerRecord(_FootovisionPlayerRecordRequired, total=False):
+    accel: float
+    line: str
+    isObs: bool
+
+
+class FootovisionBallRecord(TypedDict):
+    halftime: int
+    time: int
+    x: float
+    y: float
+    speed: float
+    teamIdWithBall: Optional[int]
+
+
+class FootovisionTrackingRawData(TypedDict):
+    players: list[FootovisionPlayerRecord]
+    ball: list[FootovisionBallRecord]
+
+
 def _provider_id(value) -> str:
     """Return provider identifiers in the format used by metadata."""
     if isinstance(value, float) and value.is_integer():
         return str(int(value))
     return str(value)
+
+
+def _require_mapping(value: Any, context: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"Expected {context} to be an object.")
+    return value
+
+
+def _require_list(value: Any, context: str) -> list[Any]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected {context} to be a list.")
+    return value
+
+
+def _require_value(record: Mapping[str, Any], field: str, context: str) -> Any:
+    if field not in record or record[field] is None:
+        raise ValueError(f"Missing required field '{field}' in {context}.")
+    return record[field]
+
+
+def _require_number(
+    record: Mapping[str, Any], field: str, context: str
+) -> None:
+    value = _require_value(record, field, context)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"Expected '{field}' in {context} to be numeric.")
+    if not math.isfinite(value):
+        raise ValueError(f"Expected '{field}' in {context} to be finite.")
+
+
+def _require_non_negative_integer(
+    record: Mapping[str, Any], field: str, context: str
+) -> None:
+    value = _require_value(record, field, context)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"Expected '{field}' in {context} to be an integer.")
+    if value < 0:
+        raise ValueError(f"Expected '{field}' in {context} to be non-negative.")
+
+
+def _validate_team(team_data: Any, context: str) -> None:
+    team = _require_mapping(team_data, context)
+    _require_value(team, "fullName", context)
+    identifiers = _require_mapping(
+        _require_value(team, "id", context), f"{context}.id"
+    )
+    _require_value(identifiers, "footovision", f"{context}.id")
+
+
+def _validate_lineup(lineup_data: Any, context: str) -> None:
+    for index, raw_player in enumerate(_require_list(lineup_data, context)):
+        player_context = f"{context}[{index}]"
+        player = _require_mapping(raw_player, player_context)
+        _require_value(player, "usualName", player_context)
+        _require_number(player, "shirtNumber", player_context)
+        _require_value(player, "isStarter", player_context)
+        identifiers = _require_mapping(
+            _require_value(player, "playerId", player_context),
+            f"{player_context}.playerId",
+        )
+        _require_value(identifiers, "footovision", f"{player_context}.playerId")
+
+
+def _validate_formations(formations_data: Any, context: str) -> None:
+    for index, raw_formation in enumerate(
+        _require_list(formations_data, context)
+    ):
+        formation_context = f"{context}[{index}]"
+        formation = _require_mapping(raw_formation, formation_context)
+        _require_non_negative_integer(formation, "halftime", formation_context)
+        _require_non_negative_integer(formation, "time", formation_context)
+        _require_value(formation, "system", formation_context)
+
+
+def _validate_tracking_inputs(
+    raw_data: Any, meta_data: Any
+) -> FootovisionTrackingRawData:
+    raw_tracking = _require_mapping(raw_data, "tracking data")
+    metadata = _require_mapping(meta_data, "match metadata")
+
+    for field in (
+        "id",
+        "pitchLength",
+        "pitchWidth",
+        "isAttackingLeftToRightTeamId",
+        "homeScore",
+        "awayScore",
+    ):
+        _require_value(metadata, field, "match metadata")
+    for field in ("pitchLength", "pitchWidth", "homeScore", "awayScore"):
+        _require_number(metadata, field, "match metadata")
+
+    for side in ("home", "away"):
+        _validate_team(metadata.get(f"{side}Team"), f"{side}Team")
+        _validate_lineup(
+            metadata.get(f"{side}TeamLineups"), f"{side}TeamLineups"
+        )
+        _validate_formations(
+            metadata.get(f"{side}TeamFormations"),
+            f"{side}TeamFormations",
+        )
+
+    player_records = _require_list(raw_tracking.get("players"), "players")
+    ball_records = _require_list(raw_tracking.get("ball"), "ball")
+    for records, context, fields in (
+        (
+            player_records,
+            "players",
+            ("playerId", "teamId", "halftime", "time", "x", "y", "speed"),
+        ),
+        (
+            ball_records,
+            "ball",
+            ("halftime", "time", "x", "y", "speed"),
+        ),
+    ):
+        for index, raw_record in enumerate(records):
+            record_context = f"{context}[{index}]"
+            record = _require_mapping(raw_record, record_context)
+            for field in fields:
+                _require_number(record, field, record_context)
+            for field in ("halftime", "time"):
+                _require_non_negative_integer(record, field, record_context)
+
+    for index, raw_ball in enumerate(ball_records):
+        ball = _require_mapping(raw_ball, f"ball[{index}]")
+        if "teamIdWithBall" not in ball:
+            raise ValueError(
+                f"Missing required field 'teamIdWithBall' in ball[{index}]."
+            )
+
+    return cast(FootovisionTrackingRawData, raw_tracking)
 
 
 class FootovisionTrackingInputs(NamedTuple):
@@ -111,6 +236,10 @@ class FootovisionTrackingDeserializer(
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: bool = False,
     ):
+        if sample_rate is not None and not 0 < sample_rate <= 1:
+            raise ValueError(
+                "sample_rate must be greater than 0 and at most 1."
+            )
         super().__init__(limit, sample_rate, coordinate_system)
         self.only_alive = only_alive
 
@@ -118,21 +247,39 @@ class FootovisionTrackingDeserializer(
     def provider(self) -> Provider:
         return Provider.FOOTOVISION
 
+    @staticmethod
+    def _should_sample_frame(source_frame_id: int, sample_rate: float) -> bool:
+        """Select frames at an approximately constant rate, including the first."""
+        if source_frame_id == 0:
+            return True
+        return math.floor(source_frame_id * sample_rate) > math.floor(
+            (source_frame_id - 1) * sample_rate
+        )
+
     def deserialize(self, inputs: FootovisionTrackingInputs) -> TrackingDataset:
         with performance_logging("load data", logger=logger):
             raw_frames = json.load(inputs.raw_frames)
             meta_data = json.load(inputs.meta_data)
-
-            df_frames_players = pd.DataFrame(raw_frames["players"])
-            df_frames_ball = pd.DataFrame(raw_frames["ball"])
+            raw_frames = _validate_tracking_inputs(raw_frames, meta_data)
+            raw_players = raw_frames["players"]
+            raw_ball = raw_frames["ball"]
 
         with performance_logging("parse periods", logger=logger):
-            periods = self.create_periods(df_frames_players)
+            periods = self.create_periods(raw_players, raw_ball)
 
         with performance_logging("parse teams ans players", logger=logger):
             teams = self.create_teams_and_players(meta_data, periods)
 
-        transformer = self.get_transformer(pitch_length=meta_data["pitchLength"], pitch_width=meta_data["pitchWidth"], provider=self.provider)
+        # Footovision coordinates are normalized, but its pitch dimensions are
+        # provided in yards. Supply their metric equivalents as physical pitch
+        # context without changing the normalized 0..1 coordinate bounds.
+        pitch_length_m = meta_data["pitchLength"] * METERS_PER_YARD
+        pitch_width_m = meta_data["pitchWidth"] * METERS_PER_YARD
+        transformer = self.get_transformer(
+            pitch_length=pitch_length_m,
+            pitch_width=pitch_width_m,
+            provider=self.provider,
+        )
 
         with performance_logging("parse tracking data", logger=logger):
             frames = []
@@ -142,32 +289,67 @@ class FootovisionTrackingDeserializer(
                 for player in team.players
             }
             teams_by_id = {team.team_id: team for team in teams}
-            ball_by_period_and_time = {
-                (int(ball["halftime"]), float(ball["time"])): ball
-                for ball in df_frames_ball.to_dict("records")
-            }
+            ball_by_period_and_time: dict[
+                tuple[int, int], FootovisionBallRecord
+            ] = {}
+            for ball in raw_ball:
+                key = (ball["halftime"], ball["time"])
+                if key in ball_by_period_and_time:
+                    raise ValueError(
+                        "Multiple ball records found for "
+                        f"halftime={key[0]}, time={key[1]}."
+                    )
+                ball_by_period_and_time[key] = ball
+
+            players_by_period_and_time: defaultdict[
+                tuple[int, int], list[FootovisionPlayerRecord]
+            ] = defaultdict(list)
+            player_ids_by_period_and_time: set[tuple[int, int, str]] = set()
+            for raw_player in raw_players:
+                key = (raw_player["halftime"], raw_player["time"])
+                player_key = (
+                    *key,
+                    str(raw_player["playerId"]),
+                )
+                if player_key in player_ids_by_period_and_time:
+                    raise ValueError(
+                        "Multiple player records found for "
+                        f"player={player_key[2]}, halftime={key[0]}, time={key[1]}."
+                    )
+                player_ids_by_period_and_time.add(player_key)
+                players_by_period_and_time[key].append(raw_player)
 
             periods_by_id = {period.id: period for period in periods}
-            sample = 1.0 / self.sample_rate
 
-            # A provider frame is represented by one row per player. Group the
-            # rows by halftime and timestamp to create Kloppy frames.
-            grouped_players = df_frames_players.groupby(
-                ["halftime", "time"], sort=True
+            # Consider every timestamp represented in either feed so that
+            # incomplete frames can be logged and skipped explicitly.
+            frame_keys = sorted(
+                set(players_by_period_and_time) | set(ball_by_period_and_time)
             )
-            for source_frame_id, ((period_id, time), player_rows) in enumerate(
-                grouped_players
-            ):
-                if source_frame_id % sample != 0:
+            for source_frame_id, (period_id, time) in enumerate(frame_keys):
+                if not self._should_sample_frame(
+                    source_frame_id, self.sample_rate
+                ):
                     continue
 
-                period_id = int(str(period_id))
                 period = periods_by_id.get(period_id)
                 if period is None:
                     continue
 
+                player_rows = players_by_period_and_time.get(
+                    (period_id, time), []
+                )
+                if not player_rows:
+                    logger.warning(
+                        "Skipping frame with no player tracking data for "
+                        "halftime=%s, time=%s.",
+                        period_id,
+                        time,
+                    )
+                    continue
+
                 players_data = {}
-                for raw_player in player_rows.to_dict("records"):
+                for raw_player in player_rows:
                     player = players_by_id.get(str(raw_player["playerId"]))
                     if player is None:
                         logger.warning(
@@ -188,7 +370,24 @@ class FootovisionTrackingDeserializer(
                         },
                     )
 
-                ball = ball_by_period_and_time.get((period_id, float(str(time))))
+                if not players_data:
+                    logger.warning(
+                        "Skipping frame with no recognized player tracking "
+                        "data for halftime=%s, time=%s.",
+                        period_id,
+                        time,
+                    )
+                    continue
+
+                ball = ball_by_period_and_time.get((period_id, time))
+                if ball is None:
+                    logger.warning(
+                        "Skipping frame with no ball tracking data for "
+                        "halftime=%s, time=%s.",
+                        period_id,
+                        time,
+                    )
+                    continue
                 ball_owning_team = (
                     teams_by_id.get(_provider_id(ball["teamIdWithBall"]))
                     if ball and ball.get("teamIdWithBall") is not None
@@ -210,7 +409,7 @@ class FootovisionTrackingDeserializer(
 
                 frame = create_frame(
                     frame_id=source_frame_id,
-                    timestamp=timedelta(milliseconds=float(str(time))),
+                    timestamp=timedelta(milliseconds=time),
                     ball_coordinates=ball_coordinates,
                     ball_speed=(
                         float(ball["speed"])
@@ -240,14 +439,7 @@ class FootovisionTrackingDeserializer(
             raise ValueError(
                 "isAttackingLeftToRightTeamId does not match either match team."
             )
-        
-        pitch_length_m = meta_data["pitchLength"] * METERS_PER_YARD
-        pitch_width_m = meta_data["pitchWidth"] * METERS_PER_YARD
 
-        coordinate_system = KloppyCoordinateSystem(
-            pitch_length_m,
-            pitch_width_m,
-        )
         referee = meta_data.get("referee")
         officials = []
         if referee and referee.get("id", {}).get("footovision") is not None:
@@ -259,12 +451,18 @@ class FootovisionTrackingDeserializer(
                 )
             )
 
+        coordinate_system = transformer.get_to_coordinate_system()
+        if coordinate_system is None:
+            raise RuntimeError(
+                "Footovision tracking transformer has no target coordinate system."
+            )
+
         metadata = Metadata(
             teams=teams,
             periods=periods,
             coordinate_system=coordinate_system,
             pitch_dimensions=coordinate_system.pitch_dimensions,
-            flags=DatasetFlag(0),
+            flags=DatasetFlag.BALL_STATE | DatasetFlag.BALL_OWNING_TEAM,
             provider=Provider.FOOTOVISION,
             orientation=orientation,
             game_id=str(meta_data["id"]),
@@ -282,6 +480,7 @@ class FootovisionTrackingDeserializer(
                 home=int(meta_data["homeScore"]),
                 away=int(meta_data["awayScore"]),
             ),
+            frame_rate=FOOTOVISION_FPS,
             officials=officials,
             attributes={
                 "title": meta_data.get("title"),
@@ -294,6 +493,32 @@ class FootovisionTrackingDeserializer(
                     "length": meta_data.get("pitchLength"),
                     "width": meta_data.get("pitchWidth"),
                     "unit": "yards",
+                },
+                "formation_changes": {
+                    "home": [
+                        {
+                            "halftime": formation["halftime"],
+                            "time": formation["time"],
+                            "system": formation["system"],
+                            "reason": formation.get("reasonForFormationChange"),
+                            "on_field_player_positions": formation.get(
+                                "onFieldPlayersPositions"
+                            ),
+                        }
+                        for formation in meta_data["homeTeamFormations"]
+                    ],
+                    "away": [
+                        {
+                            "halftime": formation["halftime"],
+                            "time": formation["time"],
+                            "system": formation["system"],
+                            "reason": formation.get("reasonForFormationChange"),
+                            "on_field_player_positions": formation.get(
+                                "onFieldPlayersPositions"
+                            ),
+                        }
+                        for formation in meta_data["awayTeamFormations"]
+                    ],
                 },
                 "teams": {
                     "home": {
@@ -317,20 +542,26 @@ class FootovisionTrackingDeserializer(
         )
         return TrackingDataset(records=frames, metadata=metadata)
 
-    def create_periods(self, df_tracking):
-        period_ids = sorted(df_tracking["halftime"].unique())
+    def create_periods(
+        self,
+        raw_players: Sequence[FootovisionPlayerRecord],
+        raw_ball: Sequence[FootovisionBallRecord],
+    ) -> list[Period]:
+        timestamps_by_period: defaultdict[int, list[int]] = defaultdict(list)
+        for records in (raw_players, raw_ball):
+            for record in records:
+                timestamps_by_period[record["halftime"]].append(record["time"])
+
         periods = []
 
-        for period_id in period_ids:
-            frames = df_tracking[df_tracking["halftime"] == period_id]
-
-            start_time = frames["time"].min()
-            end_time = frames["time"].max()
+        for period_id, timestamps in sorted(timestamps_by_period.items()):
+            start_time = min(timestamps)
+            end_time = max(timestamps)
 
             period = Period(
-                id=int(period_id),
-                start_timestamp=timedelta(milliseconds=float(start_time)),
-                end_timestamp=timedelta(milliseconds=float(end_time)),
+                id=period_id,
+                start_timestamp=timedelta(milliseconds=start_time),
+                end_timestamp=timedelta(milliseconds=end_time),
             )
             periods.append(period)
 
@@ -360,9 +591,7 @@ class FootovisionTrackingDeserializer(
 
             return Time(
                 period=period,
-                timestamp=timedelta(
-                    milliseconds=formation["time"]
-                ),
+                timestamp=timedelta(milliseconds=formation["time"]),
             )
 
         def create_player(team, raw_player, formations):
@@ -397,6 +626,12 @@ class FootovisionTrackingDeserializer(
                     PositionType.Unknown,
                 ),
                 positions=positions,
+                attributes={
+                    "start_time": raw_player.get("startTime"),
+                    "end_time": raw_player.get("endTime"),
+                    "playing_time": raw_player.get("playingTime"),
+                    "source_position": raw_player.get("position"),
+                },
             )
 
         def create_team(team_data, lineup, ground, formations):

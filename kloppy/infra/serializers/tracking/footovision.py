@@ -48,7 +48,6 @@ from kloppy.utils import performance_logging
 
 logger = logging.getLogger(__name__)
 
-METERS_PER_YARD = 0.9144
 FOOTOVISION_FPS = 25
 
 
@@ -226,6 +225,22 @@ class FootovisionTrackingInputs(NamedTuple):
     raw_frames: IO[bytes]
 
 
+class _FootovisionTrackingDataset(TrackingDataset):
+    """Preserve position histories supplied by Footovision."""
+
+    def _init_player_positions(self):
+        for team in self.metadata.teams:
+            for player in team.players:
+                if player.positions.items:
+                    continue
+
+                if player.starting:
+                    player.set_position(
+                        self.metadata.periods[0].start_time,
+                        player.starting_position or PositionType.unknown(),
+                    )
+
+
 class FootovisionTrackingDeserializer(
     TrackingDataDeserializer[FootovisionTrackingInputs]
 ):
@@ -270,14 +285,10 @@ class FootovisionTrackingDeserializer(
         with performance_logging("parse teams ans players", logger=logger):
             teams = self.create_teams_and_players(meta_data, periods)
 
-        # Footovision coordinates are normalized, but its pitch dimensions are
-        # provided in yards. Supply their metric equivalents as physical pitch
-        # context without changing the normalized 0..1 coordinate bounds.
-        pitch_length_m = meta_data["pitchLength"] * METERS_PER_YARD
-        pitch_width_m = meta_data["pitchWidth"] * METERS_PER_YARD
+        # Pitch dimensions are already metres; coordinates stay normalized 0..1.
         transformer = self.get_transformer(
-            pitch_length=pitch_length_m,
-            pitch_width=pitch_width_m,
+            pitch_length=meta_data["pitchLength"],
+            pitch_width=meta_data["pitchWidth"],
             provider=self.provider,
         )
 
@@ -492,7 +503,7 @@ class FootovisionTrackingDeserializer(
                 "source_pitch_dimensions": {
                     "length": meta_data.get("pitchLength"),
                     "width": meta_data.get("pitchWidth"),
-                    "unit": "yards",
+                    "unit": "meters",
                 },
                 "formation_changes": {
                     "home": [
@@ -540,7 +551,7 @@ class FootovisionTrackingDeserializer(
                 },
             },
         )
-        return TrackingDataset(records=frames, metadata=metadata)
+        return _FootovisionTrackingDataset(records=frames, metadata=metadata)
 
     def create_periods(
         self,
@@ -556,11 +567,16 @@ class FootovisionTrackingDeserializer(
 
         for period_id, timestamps in sorted(timestamps_by_period.items()):
             start_time = min(timestamps)
+            if start_time != 0:
+                raise ValueError(
+                    f"Footovision period {period_id} must start at 0 ms; "
+                    f"first timestamp is {start_time} ms."
+                )
             end_time = max(timestamps)
 
             period = Period(
                 id=period_id,
-                start_timestamp=timedelta(milliseconds=start_time),
+                start_timestamp=timedelta(0),
                 end_timestamp=timedelta(milliseconds=end_time),
             )
             periods.append(period)

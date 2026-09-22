@@ -21,13 +21,33 @@ def load_event(
     event_factory: Optional[EventFactory] = None,
     additional_metadata: dict = {},
 ) -> EventDataset:
-    """
-    Load Footovision event data.
+    """Load Footovision events and match metadata.
+
+    Source coordinates are normalized from 0 to 1 with a top-left origin.
+    Pitch dimensions are read from the match metadata in metres.
+    Each period must start at timestamp zero; otherwise, a ValueError is raised.
 
     Args:
+        event_data: Footovision events JSON, supplied as a path, URL or
+            file-like object.
+        meta_data: Corresponding game JSON containing match metadata,
+            teams, lineups and formation history, supplied as a path, URL
+            or file-like object.
+        event_types: Event types to include, as names such as "pass" and
+            "shot", or EventType values. None or an empty list includes all.
+        coordinates: Target coordinate system, such as "footovision",
+            "secondspectrum" or "statsbomb". None uses Kloppy's configured
+            default, falling back to normalized Kloppy coordinates.
+        event_factory: Custom EventFactory used to construct event objects.
+            None uses the standard EventFactory.
+        additional_metadata: Metadata overrides applied after parsing.
+            Recognized fields replace the parsed values; unrecognized keys
+            are added to metadata.attributes with a warning. These overrides
+            do not transform event coordinates; use coordinates for that.
 
     Returns:
-        The parsed event data.
+        An EventDataset containing chronologically ordered events and
+        match metadata, filtered by event_types when specified.
     """
     deserializer = FootovisionEventDataDeserializer(
         event_types=event_types,
@@ -64,8 +84,9 @@ def load_tracking(
 
     Footovision tracking coordinates are normalized with a top-left origin:
     ``(0, 0)`` is the top-left corner of the pitch. The feed's pitch dimensions
-    are expressed in yards and are converted to metres for dataset metadata.
+    are expressed in metres and retained in dataset metadata.
     The source feed is sampled at 25 Hz.
+    Each period must start at timestamp zero; otherwise, a ValueError is raised.
 
     Args:
         meta_data: JSON feed containing match and lineup metadata.

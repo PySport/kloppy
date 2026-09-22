@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
+import json
 from pathlib import Path
 
 import pytest
@@ -11,19 +13,57 @@ from kloppy.domain import (
     DatasetFlag,
     DatasetType,
     EventDataset,
+    EventType,
     Orientation,
+    PassResult,
     Point,
     PositionType,
     Provider,
+    SetPieceQualifier,
+    SetPieceType,
     ShotResult,
     TrackingDataset,
 )
 from kloppy.domain.models.common import ProviderCoordinateSystem
 from kloppy.domain.services.event_factory import EventFactory
+from kloppy.infra.serializers.event.footovision import (
+    FootovisionEventDataDeserializer,
+)
+from kloppy.infra.serializers.event.footovision.specification import (
+    FootovisionPassEvent,
+    FootovisionShotEvent,
+)
+from kloppy.infra.serializers.tracking.footovision import (
+    FootovisionTrackingDeserializer,
+)
 
 
 class TestFootovisionEventData:
     """"""
+
+    @pytest.mark.parametrize(
+        "tags, expected",
+        [
+            ([14, 12], [SetPieceType.PENALTY]),
+            ([14, 12, 9], [SetPieceType.PENALTY]),
+            ([14, 9], [SetPieceType.FREE_KICK]),
+            ([14], []),
+        ],
+    )
+    def test_shot_set_piece_qualifiers(self, tags, expected):
+        shot = FootovisionShotEvent({"eventTypeIds": tags})
+        assert [
+            qualifier.value
+            for qualifier in shot.get_shot_qualifiers()
+            if isinstance(qualifier, SetPieceQualifier)
+        ] == expected
+
+    def test_penalty_tag_does_not_qualify_pass(self):
+        event = FootovisionPassEvent({"eventTypeIds": [11, 12]})
+        assert (
+            SetPieceQualifier(SetPieceType.PENALTY)
+            not in event.get_pass_qualifiers()
+        )
 
     @pytest.fixture
     def event_data(self, base_dir) -> str:
@@ -47,11 +87,19 @@ class TestFootovisionEventData:
         assert dataset.metadata.provider == Provider.FOOTOVISION
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.metadata.periods) == 2
+        assert dataset.metadata.pitch_dimensions.pitch_length == 105.0
+        assert dataset.metadata.pitch_dimensions.pitch_width == 68.0
+        assert dataset.metadata.attributes["source_pitch_dimensions"] == {
+            "length": 105.0,
+            "width": 68.0,
+            "unit": "meters",
+        }
 
         # raw_event must be flattened dict
         assert isinstance(dataset.events[0].raw_event, dict)
 
-        assert len(dataset.events) == 1464
+        # Every raw record is retained, plus 9 substitutions and 4 tactical updates.
+        assert len(dataset.events) == 12743 + 9 + 4
         own_goal = next(
             event
             for event in dataset.events
@@ -73,24 +121,24 @@ class TestFootovisionEventData:
 
         # Check the timestamps
         assert dataset.events[0].timestamp == timedelta(seconds=0)
-        assert dataset.events[1].timestamp == timedelta(seconds=26.6)
+        assert dataset.events[1].timestamp == timedelta(0)
+        assert dataset.events[0].event_type == EventType.GENERIC
+        assert dataset.events[0].player is None
 
         player = dataset.metadata.teams[0].players[0]
-        assert player.player_id == "DFL-OBJ-00001D"
+        assert player.player_id == "10668"
         assert player.jersey_no == 1
-        assert str(player) == "A. Schwolow"
+        assert str(player) == "BART VERBRUGGEN"
         assert player.starting_position == PositionType.Goalkeeper
 
         # Check the qualifiers
-        left_foot_pass = next(
+        completed_pass = next(
             event
             for event in dataset.events
             if event.raw_event["id"] == 6742527227
         )
-        assert (
-            left_foot_pass.get_qualifier_value(BodyPartQualifier)
-            == BodyPart.LEFT_FOOT
-        )
+        assert completed_pass.result == PassResult.COMPLETE
+        assert completed_pass.receiver_player.player_id == "21662"
 
         header_pass = next(
             event
@@ -101,7 +149,149 @@ class TestFootovisionEventData:
             header_pass.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
         )
 
-        assert dataset.events[0].coordinates == Point(56.41, 68.0)
+        assert dataset.events[0].coordinates == Point(0.5, 0)
+
+        offside_passes = [
+            e
+            for e in dataset.events
+            if e.event_type == EventType.PASS and e.result == PassResult.OFFSIDE
+        ]
+        assert {e.event_id for e in offside_passes} == {
+            "6742528421",
+            "6742529169",
+            "6742529200",
+        }
+        assert (
+            sum(e.event_type == EventType.PASS for e in dataset.events) == 906
+        )
+        for event in offside_passes:
+            assert 11 not in event.raw_event["eventTypeIds"]
+            assert len(event.related_event_ids) == 1
+            offside = dataset.get_event_by_id(event.related_event_ids[0])
+            assert 408 in offside.raw_event["eventTypeIds"]
+            assert offside.team == event.team
+            assert event.event_id in offside.related_event_ids
+
+        substitutions = [
+            e for e in dataset.events if e.event_type == EventType.SUBSTITUTION
+        ]
+        changes = [
+            e
+            for e in dataset.events
+            if e.event_type == EventType.FORMATION_CHANGE
+        ]
+        assert len(substitutions) == 9
+        assert len(changes) == 4
+        assert sum(e.state["formation_system_changed"] for e in changes) == 2
+        for event in changes:
+            assert len(event.player_positions) == 11
+            assert event.player is None
+            assert event.coordinates is None
+        for event in substitutions:
+            assert event.player != event.replacement_player
+            assert event.replacement_player.team == event.team
+            assert event.coordinates is None
+            assert event.raw_event["reason"]["playerOut"] == int(
+                event.player.player_id
+            )
+            assert event.raw_event["reason"]["playerIn"] == int(
+                event.replacement_player.player_id
+            )
+            assert len(event.related_event_ids) <= 1
+            if event.related_event_ids:
+                change = dataset.get_event_by_id(event.related_event_ids[0])
+                assert change.event_type == EventType.FORMATION_CHANGE
+                assert event.event_id in change.related_event_ids
+        assert sum(bool(e.related_event_ids) for e in substitutions) == 5
+        assert len({e.event_id for e in dataset.events}) == len(dataset.events)
+        times = [(e.period.id, e.timestamp) for e in dataset.events]
+        assert times == sorted(times)
+
+    def test_out_of_order_events(self, event_data, meta_data, dataset):
+        raw_events = json.loads(event_data.read_text())
+        # Reverse timestamp groups, preserving source order within each group.
+        raw_events.sort(
+            key=lambda event: (event["halftime"], event["startTime"]),
+            reverse=True,
+        )
+        actual = footovision.load_event(
+            event_data=BytesIO(json.dumps(raw_events).encode()),
+            meta_data=meta_data,
+        )
+        assert len(actual.events) == len(dataset.events)
+        for event, expected in zip(actual.events, dataset.events):
+            assert event.event_id == expected.event_id
+            assert event.event_type == expected.event_type
+            assert event.result == expected.result
+            assert event.related_event_ids == expected.related_event_ids
+        assert len(actual.metadata.periods) == len(dataset.metadata.periods)
+        for period, expected in zip(
+            actual.metadata.periods, dataset.metadata.periods
+        ):
+            assert period.start_timestamp == expected.start_timestamp
+            assert period.end_timestamp == expected.end_timestamp
+
+        # Tied kickoff records retain their source order, not an ID-based order.
+        kickoff_ids = [
+            str(event["id"])
+            for event in raw_events
+            if event["halftime"] == 1 and event["startTime"] == 0
+        ]
+        assert [
+            event.event_id
+            for event in actual.events
+            if event.event_id in kickoff_ids
+        ] == kickoff_ids
+
+    def test_period_bounds_include_overlapping_events(self):
+        raw_events = [
+            {"halftime": 2, "startTime": 200, "endTime": 300},
+            {"halftime": 1, "startTime": 100, "endTime": 200},
+            {"halftime": 1, "startTime": 0, "endTime": 500},
+            {"halftime": 2, "startTime": 0, "endTime": 400},
+        ]
+        periods = FootovisionEventDataDeserializer().create_periods(raw_events)
+        assert [period.id for period in periods] == [1, 2]
+        assert all(period.start_timestamp == timedelta(0) for period in periods)
+        assert periods[0].end_timestamp == timedelta(milliseconds=500)
+        assert periods[1].end_timestamp == timedelta(milliseconds=400)
+
+    @pytest.mark.parametrize("period_id", [1, 2])
+    def test_rejects_nonzero_period_start(self, period_id):
+        raw_events = [
+            {"halftime": 1, "startTime": 0, "endTime": 1000},
+            {"halftime": 2, "startTime": 0, "endTime": 1000},
+        ]
+        raw_events[period_id - 1]["startTime"] = 40
+
+        with pytest.raises(
+            ValueError,
+            match=f"Footovision period {period_id} must start at 0 ms; first timestamp is 40 ms",
+        ):
+            FootovisionEventDataDeserializer().create_periods(raw_events)
+
+    def test_metric_coordinates(self, event_data: Path, meta_data: Path):
+        dataset = footovision.load_event(
+            event_data=event_data,
+            meta_data=meta_data,
+            coordinates="secondspectrum",
+        )
+        assert (
+            dataset.metadata.coordinate_system.provider
+            == Provider.SECONDSPECTRUM
+        )
+        assert dataset.metadata.pitch_dimensions.pitch_length == 105.0
+        assert dataset.metadata.pitch_dimensions.pitch_width == 68.0
+        # The normalized position (0.5, 0) is the upper touchline midpoint.
+        assert dataset.events[0].coordinates.x == pytest.approx(0.0)
+        assert dataset.events[0].coordinates.y == pytest.approx(34.0)
+
+        for point, expected in (
+            (dataset.find("pass").receiver_coordinates, (-41.685, 34.0)),
+            (dataset.find("shot").result_coordinates, (-52.5, 3.332)),
+            (dataset.find("carry").end_coordinates, (-11.235, 32.232)),
+        ):
+            assert (point.x, point.y) == pytest.approx(expected)
 
     # def test_correct_normalized_event_data_deserialization(
     #     self, event_data: Path, meta_data: Path
@@ -118,6 +308,17 @@ class TestFootovisionEventData:
 
 
 class TestFootovisionTrackingData:
+    @pytest.mark.parametrize("period_id", [1, 2])
+    def test_rejects_nonzero_period_start(self, period_id):
+        records = [{"halftime": 1, "time": 0}, {"halftime": 2, "time": 0}]
+        records[period_id - 1]["time"] = 40
+
+        with pytest.raises(
+            ValueError,
+            match=f"Footovision period {period_id} must start at 0 ms; first timestamp is 40 ms",
+        ):
+            FootovisionTrackingDeserializer().create_periods(records, records)
+
     @pytest.fixture(scope="class")
     def tracking_paths(self) -> tuple[Path, Path]:
         base_dir = Path(__file__).parent / "files"
@@ -162,13 +363,13 @@ class TestFootovisionTrackingData:
         assert pitch_dimensions.y_dim.max == 1
         assert pitch_dimensions.pitch_length is not None
         assert pitch_dimensions.pitch_width is not None
-        assert pitch_dimensions.pitch_length == pytest.approx(96.012)
-        assert pitch_dimensions.pitch_width == pytest.approx(62.1792)
+        assert pitch_dimensions.pitch_length == pytest.approx(105.0)
+        assert pitch_dimensions.pitch_width == pytest.approx(68.0)
         assert metadata.attributes is not None
         assert metadata.attributes["source_pitch_dimensions"] == {
             "length": 105.0,
             "width": 68.0,
-            "unit": "yards",
+            "unit": "meters",
         }
         assert metadata.officials is not None
         assert len(metadata.officials) == 1
@@ -213,11 +414,63 @@ class TestFootovisionTrackingData:
         assert player.starting_position == PositionType.LeftBack
         assert player.attributes["source_position"] == "FULL_BACK_LEFT"
         assert player.attributes["playing_time"] == 6156320
-        assert len(player.positions.items) == 1
+        assert len(player.positions.items) == 4
+        assert player.positions.last() == PositionType.LeftWingBack
         assert metadata.attributes is not None
         assert metadata.attributes["formation_changes"]["home"][0][
             "reason"
         ] == [{"type": "starting XI"}]
+
+    def test_position_history_survives_dataset_operations(self, tracking_paths):
+        meta_data, raw_data = tracking_paths
+        dataset = footovision.load_tracking(
+            meta_data=meta_data, raw_data=raw_data, limit=1
+        )
+        expected = [
+            (1, timedelta(0), PositionType.LeftCentralMidfield),
+            (1, timedelta(milliseconds=463160), PositionType.RightForward),
+            (2, timedelta(milliseconds=1061680), PositionType.RightForward),
+            (
+                2,
+                timedelta(milliseconds=1857560),
+                PositionType.AttackingMidfield,
+            ),
+        ]
+
+        for result in (
+            dataset,
+            dataset.transform(to_orientation=Orientation.AWAY_HOME),
+            dataset.filter(lambda frame: True),
+            dataset.map(lambda frame: frame),
+        ):
+            player = result.metadata.teams[1].get_player_by_id("11573")
+            assert [
+                (time.period.id, time.timestamp, position)
+                for time, position in player.positions.items.items()
+            ] == expected
+
+    def test_missing_position_history_initializes_starters(
+        self, tracking_paths
+    ):
+        meta_data, raw_data = tracking_paths
+        metadata = json.loads(meta_data.read_text())
+        metadata["homeTeamFormations"] = []
+        dataset = footovision.load_tracking(
+            meta_data=BytesIO(json.dumps(metadata).encode()),
+            raw_data=raw_data,
+            limit=1,
+        )
+
+        for player in dataset.metadata.teams[0].players:
+            if player.starting:
+                assert list(player.positions.items.items()) == [
+                    (
+                        dataset.metadata.periods[0].start_time,
+                        player.starting_position,
+                    )
+                ]
+            else:
+                assert not player.positions.items
 
     def test_frames_and_player_data(self, dataset: TrackingDataset):
         assert len(dataset.frames) == 5002
@@ -250,6 +503,20 @@ class TestFootovisionTrackingData:
         assert final_frame.timestamp == timedelta(seconds=100)
         assert final_frame.ball_coordinates == Point(0.43, 0.945)
         assert len(final_frame.players_data) == 22
+
+    def test_metric_coordinates(self, tracking_paths: tuple[Path, Path]):
+        meta_data, raw_data = tracking_paths
+        dataset = footovision.load_tracking(
+            meta_data=meta_data,
+            raw_data=raw_data,
+            coordinates="secondspectrum",
+            limit=1,
+        )
+        player = dataset.metadata.teams[0].get_player_by_id("14584")
+        point = dataset.frames[0].players_data[player].coordinates
+        # Source (0.37, 0.307), on a 105 by 68 metre pitch with centred axes.
+        assert point.x == pytest.approx(-13.65)
+        assert point.y == pytest.approx(13.124)
 
     def test_loading_options(self, tracking_paths: tuple[Path, Path]):
         meta_data, raw_data = tracking_paths

@@ -18,7 +18,6 @@ from kloppy.domain import (
     Score,
     Team,
 )
-from kloppy.domain.models.common import KloppyCoordinateSystem
 from kloppy.domain.models.formation import FormationType
 from kloppy.domain.models.time import Time, TimeContainer
 from kloppy.infra.serializers.event.deserializer import EventDataDeserializer
@@ -31,7 +30,6 @@ from kloppy.infra.serializers.event.footovision.specification import (
 )
 from kloppy.utils import performance_logging
 
-METERS_PER_YARD = 0.9144
 FOOTOVISION_FPS = 25
 
 logger = logging.getLogger(__name__)
@@ -64,11 +62,20 @@ class FootovisionEventDataDeserializer(
             raw_events = json.load(inputs.event_data)
             meta_data = json.load(inputs.meta_data)
 
+        raw_events.sort(
+            key=lambda event: (event["halftime"], event["startTime"])
+        )
+
         with performance_logging("parse periods", logger=logger):
             periods = self.create_periods(raw_events)
 
         with performance_logging("parse teams ans players", logger=logger):
             teams = self.create_teams_and_players(meta_data, periods)
+
+        transformer = self.get_transformer(
+            pitch_length=meta_data["pitchLength"],
+            pitch_width=meta_data["pitchWidth"],
+        )
 
         with performance_logging("parse events", logger=logger):
             events = []
@@ -78,7 +85,10 @@ class FootovisionEventDataDeserializer(
             ):
                 footovision_event.set_refs(periods, teams)
 
-                events.extend(footovision_event.deserialize(self.event_factory))
+                for event in footovision_event.deserialize(self.event_factory):
+                    events.append(transformer.transform_event(event))
+
+            events.sort(key=lambda event: (event.period.id, event.timestamp))
 
         home_team_id = str(meta_data["homeTeam"]["id"]["footovision"])
         away_team_id = str(meta_data["awayTeam"]["id"]["footovision"])
@@ -93,13 +103,12 @@ class FootovisionEventDataDeserializer(
                 "isAttackingLeftToRightTeamId does not match either match team."
             )
 
-        pitch_length_m = meta_data["pitchLength"] * METERS_PER_YARD
-        pitch_width_m = meta_data["pitchWidth"] * METERS_PER_YARD
+        coordinate_system = transformer.get_to_coordinate_system()
+        if coordinate_system is None:
+            raise RuntimeError(
+                "Footovision event transformer has no target coordinate system."
+            )
 
-        coordinate_system = KloppyCoordinateSystem(
-            pitch_length_m,
-            pitch_width_m,
-        )
         referee = meta_data.get("referee")
         officials = []
         if referee and referee.get("id", {}).get("footovision") is not None:
@@ -145,7 +154,7 @@ class FootovisionEventDataDeserializer(
                 "source_pitch_dimensions": {
                     "length": meta_data.get("pitchLength"),
                     "width": meta_data.get("pitchWidth"),
-                    "unit": "yards",
+                    "unit": "meters",
                 },
                 "teams": {
                     "home": {
@@ -183,15 +192,21 @@ class FootovisionEventDataDeserializer(
             if not events_halftime:
                 continue
 
-            start_event = events_halftime[0]
-            end_event = events_halftime[-1]
+            start_time = min(event["startTime"] for event in events_halftime)
+            if start_time != 0:
+                raise ValueError(
+                    f"Footovision period {period_id} must start at 0 ms; "
+                    f"first timestamp is {start_time} ms."
+                )
 
             period = Period(
                 id=int(period_id),
-                start_timestamp=timedelta(
-                    milliseconds=start_event["startTime"]
+                start_timestamp=timedelta(0),
+                end_timestamp=timedelta(
+                    milliseconds=max(
+                        event["endTime"] for event in events_halftime
+                    )
                 ),
-                end_timestamp=timedelta(milliseconds=end_event["endTime"]),
             )
 
             periods.append(period)
@@ -260,6 +275,9 @@ class FootovisionEventDataDeserializer(
             )
 
         def create_team(team_data, lineup, ground, formations):
+            formations = sorted(
+                formations, key=lambda f: (int(f["halftime"]), int(f["time"]))
+            )
             formation_history: TimeContainer[FormationType] = TimeContainer()
 
             for formation in formations:

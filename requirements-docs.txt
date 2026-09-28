@@ -14,7 +14,9 @@ backrefs==6.2 ; python_full_version < '3.10'
     # via mkdocs-material
 backrefs==8.0 ; python_full_version >= '3.10'
     # via mkdocs-material
-beautifulsoup4==4.15.0
+beautifulsoup4==4.6.3 ; python_full_version < '3.10'
+    # via nbconvert
+beautifulsoup4==4.15.0 ; python_full_version >= '3.10'
     # via nbconvert
 bleach==6.2.0 ; python_full_version < '3.10'
     # via nbconvert
@@ -440,9 +442,7 @@ seaborn==0.13.2
     # via mplsoccer
 six==1.17.0
     # via python-dateutil
-soupsieve==2.8.4 ; python_full_version < '3.10'
-    # via beautifulsoup4
-soupsieve==2.9.1 ; python_full_version >= '3.10'
+soupsieve==2.9 ; python_full_version >= '3.10'
     # via beautifulsoup4
 stack-data==0.6.3
     # via ipython

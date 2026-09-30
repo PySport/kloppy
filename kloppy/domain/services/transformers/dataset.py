@@ -221,6 +221,12 @@ class DatasetTransformer:
                 for key, player_data in frame.players_data.items()
             },
             other_data=frame.other_data,
+            visible_area=[
+                self.__change_point_coordinate_system(p)
+                for p in frame.visible_area
+            ]
+            if frame.visible_area
+            else None,
             statistics=frame.statistics,
         )
 
@@ -248,6 +254,11 @@ class DatasetTransformer:
                 for key, player_data in frame.players_data.items()
             },
             other_data=frame.other_data,
+            visible_area=[
+                self.change_point_dimensions(p) for p in frame.visible_area
+            ]
+            if frame.visible_area
+            else None,
             statistics=frame.statistics,
         )
 
@@ -306,6 +317,9 @@ class DatasetTransformer:
             ball_coordinates=self.flip_point(frame.ball_coordinates),
             players_data=players_data,
             other_data=frame.other_data,
+            visible_area=[self.flip_point(p) for p in frame.visible_area]
+            if frame.visible_area
+            else None,
             statistics=frame.statistics,
         )
 

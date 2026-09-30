@@ -50,7 +50,10 @@ from kloppy.domain.models.event import (
     UnderPressureQualifier,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
-from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
+from kloppy.infra.serializers.event.statsbomb.helpers import (
+    parse_str_ts,
+    parse_visible_area,
+)
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -479,27 +482,22 @@ class TestStatsBombEvent:
             ],
         }
 
-        # The visible area should be stored in "other_data"
-        visible_area = pass_event.freeze_frame.other_data["visible_area"]
-        assert visible_area == pytest.approx(
-            [
-                120.0,
-                28.02,
-                87.93,
-                80.0,
-                32.71,
-                80.0,
-                0.0,
-                26.78,
-                0.0,
-                0.0,
-                120.0,
-                0.0,
-                120.0,
-                28.02,
-            ],
-            abs=1e-2,
-        )
+        # The visible area should be parsed into a polygon of points
+        visible_area = pass_event.freeze_frame.visible_area
+        expected_visible_area = [
+            Point(x=120.0, y=28.02),
+            Point(x=87.93, y=80.0),
+            Point(x=32.71, y=80.0),
+            Point(x=0.0, y=26.78),
+            Point(x=0.0, y=0.0),
+            Point(x=120.0, y=0.0),
+            Point(x=120.0, y=28.02),
+        ]
+        assert len(visible_area) == len(expected_visible_area)
+        for point, expected in zip(visible_area, expected_visible_area):
+            assert point.x == pytest.approx(expected.x, abs=1e-2)
+            assert point.y == pytest.approx(expected.y, abs=1e-2)
+        assert "visible_area" not in pass_event.freeze_frame.other_data
 
         if with_visualization:
             import matplotlib.pyplot as plt
@@ -550,9 +548,11 @@ class TestStatsBombEvent:
             )
 
             # plot the visible area
-            visible_area = iter(visible_area)
-            visible_area = list(zip(visible_area, visible_area))
-            pitch.polygon([visible_area], color=(1, 0, 0, 0.1), ax=ax)
+            pitch.polygon(
+                [[(p.x, p.y) for p in visible_area]],
+                color=(1, 0, 0, 0.1),
+                ax=ax,
+            )
 
             plt.savefig(
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
@@ -650,9 +650,70 @@ class TestStatsBombEvent:
             ],
         }
 
-        # Note: the visible area is not standardized
-        visible_area = pass_event.freeze_frame.other_data["visible_area"]
-        assert visible_area[0] == pytest.approx(120.0)
+        # The visible area should be standardized along with the players
+        visible_area = pass_event.freeze_frame.visible_area
+        assert visible_area[0].x == pytest.approx(1.0)
+        assert "visible_area" not in pass_event.freeze_frame.other_data
+
+    def test_parse_visible_area(self):
+        """It should turn a flat list of coordinates into polygon points"""
+        assert parse_visible_area([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]) == [
+            Point(x=1.0, y=2.0),
+            Point(x=3.0, y=4.0),
+            Point(x=5.0, y=6.0),
+        ]
+        assert parse_visible_area(None) is None
+        assert parse_visible_area([]) is None
+
+    def test_visible_area_is_transformed_with_orientation(self, base_dir):
+        """It should flip the visible area the same way as the ball"""
+        dataset = statsbomb.load(
+            event_data=base_dir / "files/statsbomb_3788741_event.json",
+            lineup_data=base_dir / "files/statsbomb_3788741_lineup.json",
+            three_sixty_data=base_dir / "files/statsbomb_3788741_360.json",
+            coordinates="statsbomb",
+        )
+
+        # Keep a copy of the original coordinates, since the transform
+        # may reuse event objects that don't need to be flipped
+        original_frames = {
+            event.event_id: (
+                event.freeze_frame.ball_coordinates,
+                list(event.freeze_frame.visible_area),
+            )
+            for event in dataset.events
+            if event.freeze_frame and event.freeze_frame.visible_area
+        }
+        assert original_frames
+
+        transformed = dataset.transform(to_orientation="AWAY_HOME")
+
+        pitch_length, pitch_width = 120, 80
+        n_flipped = 0
+        for event in transformed.events:
+            if event.event_id not in original_frames:
+                continue
+            original_ball, original_area = original_frames[event.event_id]
+            frame = event.freeze_frame
+            assert len(frame.visible_area) == len(original_area)
+
+            ball_was_flipped = frame.ball_coordinates.x == pytest.approx(
+                pitch_length - original_ball.x
+            ) and frame.ball_coordinates.y == pytest.approx(
+                pitch_width - original_ball.y
+            )
+            if ball_was_flipped:
+                n_flipped += 1
+
+            for point, original in zip(frame.visible_area, original_area):
+                if ball_was_flipped:
+                    assert point.x == pytest.approx(pitch_length - original.x)
+                    assert point.y == pytest.approx(pitch_width - original.y)
+                else:
+                    assert point == original
+
+        # Make sure the test actually covered some flipped frames
+        assert n_flipped > 0
 
 
 class TestStatsBombPassEvent:

@@ -118,13 +118,11 @@ def deprecated(reason):
 
             @functools.wraps(func1)
             def new_func1(*args, **kwargs):
-                warnings.simplefilter("always", DeprecationWarning)
                 warnings.warn(
                     fmt1.format(name=func1.__name__, reason=reason),
                     category=DeprecationWarning,
                     stacklevel=2,
                 )
-                warnings.simplefilter("default", DeprecationWarning)
                 return func1(*args, **kwargs)
 
             return new_func1
@@ -149,13 +147,11 @@ def deprecated(reason):
 
         @functools.wraps(func2)
         def new_func2(*args, **kwargs):
-            warnings.simplefilter("always", DeprecationWarning)
             warnings.warn(
                 fmt2.format(name=func2.__name__),
                 category=DeprecationWarning,
                 stacklevel=2,
             )
-            warnings.simplefilter("default", DeprecationWarning)
             return func2(*args, **kwargs)
 
         return new_func2

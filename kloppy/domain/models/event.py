@@ -28,7 +28,12 @@ from kloppy.utils import (
     removes_suffix,
 )
 
-from ...exceptions import InvalidFilterError, KloppyError, OrphanedRecordError
+from ...exceptions import (
+    DeserializationWarning,
+    InvalidFilterError,
+    KloppyError,
+    OrphanedRecordError,
+)
 from .common import DataRecord, Dataset, Player, Team
 from .formation import FormationType
 from .pitch import Point
@@ -1416,20 +1421,7 @@ class EventDataset(Dataset[Event]):
         for event in self.events:
             if isinstance(event, SubstitutionEvent):
                 if event.replacement_player:
-                    # Prefer explicit position on the substitution event when available.
-                    if event.position is not None:
-                        replacement_player_position = event.position
-                    else:
-                        replacement_player_position = (
-                            event.player.positions.last(
-                                default=PositionType.Unknown
-                            )
-                        )
-                    event.replacement_player.set_position(
-                        event.time,
-                        replacement_player_position,
-                    )
-                    event.player.set_position(event.time, None)
+                    self._update_positions_for_substitution(event)
                 else:
                     warnings.warn(
                         f"No replacement player for substitution event: {event}"
@@ -1438,6 +1430,15 @@ class EventDataset(Dataset[Event]):
             elif isinstance(event, FormationChangeEvent):
                 if event.player_positions:
                     for player, position in event.player_positions.items():
+                        if player is None:
+                            # The provider references a player that is not
+                            # part of the team's lineup.
+                            warnings.warn(
+                                "Unknown player in formation change event: "
+                                f"{event}",
+                                DeserializationWarning,
+                            )
+                            continue
                         if len(player.positions.items):
                             last_time, last_position = player.positions.last(
                                 include_time=True
@@ -1468,6 +1469,80 @@ class EventDataset(Dataset[Event]):
 
                 else:
                     event.team.formations.set(event.time, event.formation_type)
+
+    @staticmethod
+    def _update_positions_for_substitution(event: "SubstitutionEvent"):
+        """Take the player off and bring the replacement on.
+
+        Provider feeds are not always consistent with who is on the pitch, so
+        this tolerates a replacement who is already on it, a player who is
+        not on it or not in the lineup, and a player replacing themselves.
+        Each case emits a DeserializationWarning instead of raising.
+        """
+        player = event.player
+        replacement_player = event.replacement_player
+
+        if player is not None and player == replacement_player:
+            warnings.warn(
+                f"Player {player} replaces themselves at substitution event: "
+                f"{event}",
+                DeserializationWarning,
+            )
+            return
+
+        player_position = (
+            player.positions.last(default=None) if player is not None else None
+        )
+
+        if replacement_player.positions.last(default=None) is None:
+            # Prefer explicit position on the substitution event when available.
+            if event.position is not None:
+                replacement_player_position = event.position
+            elif player_position is not None:
+                replacement_player_position = player_position
+            else:
+                replacement_player_position = PositionType.Unknown
+            replacement_player.set_position(
+                event.time, replacement_player_position
+            )
+        elif event.position is not None:
+            # The replacement is already on the pitch; the explicit position
+            # is the only new information, so treat it as a position change.
+            warnings.warn(
+                f"Replacement player {replacement_player} is already on the "
+                f"pitch at substitution event: {event}; applying its position "
+                "as a position change",
+                DeserializationWarning,
+            )
+            replacement_player.set_position(event.time, event.position)
+        else:
+            # The replacement is already on the pitch, typically because the
+            # substitution was recorded twice. Keeping the first recording
+            # is a heuristic: it is the one that set their position.
+            warnings.warn(
+                f"Replacement player {replacement_player} is already on the "
+                f"pitch at substitution event: {event}; keeping their position",
+                DeserializationWarning,
+            )
+
+        if player is None:
+            warnings.warn(
+                "Unknown player substituted off at substitution event: "
+                f"{event}; the team may have an extra player on the pitch "
+                "until the next change",
+                DeserializationWarning,
+            )
+        elif player_position is None:
+            # Setting the player off would give them a timeline that starts
+            # off the pitch.
+            warnings.warn(
+                f"Player {player} is not on the pitch at substitution event: "
+                f"{event}; the team may have an extra player on the pitch "
+                "until the next change",
+                DeserializationWarning,
+            )
+        else:
+            player.set_position(event.time, None)
 
     @property
     def events(self):

@@ -243,6 +243,11 @@ class TimeContainer(Generic[T]):
 
     def ranges(self) -> list[tuple[Time, Time, T]]:
         items = list(self.items)
+        # A timeline can start off the pitch (None), e.g. when two
+        # changes share a timestamp and the later one overwrites the
+        # earlier. Nothing before the first value is a range.
+        while items and self.items[items[0]] is None:
+            items.pop(0)
         if not items:
             return []
 

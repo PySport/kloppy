@@ -208,6 +208,27 @@ class TestImpectMetadata:
         )
         assert away_starting_gk.player_id == "26"
 
+    def test_substitution_of_player_on_pitch(self, dataset):
+        """It should apply the position of a substitution whose replacement is already on the pitch as a position change"""
+        # substitution-2-11 brings on starter 11 as center back for 2, who
+        # never played
+        player = dataset.metadata.teams[0].get_player_by_id("11")
+        period_1, period_2 = dataset.metadata.periods[:2]
+
+        assert (
+            player.positions.value_at(
+                Time(period=period_1, timestamp=timedelta(0))
+            )
+            == PositionType.LeftWing
+        )
+        assert (
+            player.positions.value_at(
+                Time(period=period_2, timestamp=timedelta(minutes=16))
+            )
+            == PositionType.CenterBack
+        )
+        dataset.aggregate("minutes_played", include_position=True)
+
     def test_periods(self, dataset):
         """It should create the periods with correct cumulative timestamps"""
         assert len(dataset.metadata.periods) == 2

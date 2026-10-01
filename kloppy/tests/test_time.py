@@ -252,3 +252,19 @@ class TestAbsTimeContainer:
             print(f"{start} - {end} = {end - start} -> {position}")
 
         assert container.last() is None
+
+    def test_ranges_start_off_pitch(self, periods):
+        """It should skip entries before the first value, and return no ranges when there are none"""
+        period1, period2, _ = periods
+        start = Time(period=period1, timestamp=timedelta(seconds=15 * 60))
+
+        container = TimeContainer()
+        container.set(start, None)
+        assert container.ranges() == []
+
+        container.set(start + timedelta(seconds=10 * 60), "LB")
+        end = Time(period=period2, timestamp=timedelta(seconds=20 * 60))
+        container.set(end, None)
+        assert container.ranges() == [
+            (start + timedelta(seconds=10 * 60), end, "LB")
+        ]

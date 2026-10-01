@@ -1,5 +1,8 @@
 from collections import defaultdict
+import copy
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
+import json
 from pathlib import Path
 from typing import cast
 
@@ -46,7 +49,7 @@ from kloppy.domain.models.event import (
     PassType,
     UnderPressureQualifier,
 )
-from kloppy.exceptions import DeserializationError
+from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
@@ -1262,3 +1265,66 @@ class TestStatsBombTacticalShiftEvent:
                 PositionType.LeftMidfield,
             )
         ]
+
+
+class TestStatsBombRepeatedSubstitution:
+    """Regression test for a substitution StatsBomb recorded twice"""
+
+    def test_repeated_substitution(self, base_dir: Path):
+        """It should keep the first recording's positions when substitutions are repeated with swapped players"""
+        with open(base_dir / "files" / "statsbomb_event.json") as f:
+            events = json.load(f)
+        lineup_data = base_dir / "files" / "statsbomb_lineup.json"
+
+        # 6839 -> 6935 and 6581 -> 6566 at P2 22:42, recorded again at P2
+        # 24:00 with the outgoing players swapped
+        index = next(
+            i
+            for i, e in enumerate(events)
+            if e["type"]["id"] == 19 and e["player"]["id"] == 6839
+        )
+        repeats = []
+        for n, (player_id, replacement_id) in enumerate(
+            [(6581, 6935), (6839, 6566)]
+        ):
+            repeat = copy.deepcopy(events[index])
+            repeat["id"] = f"repeated-substitution-{n}"
+            repeat["timestamp"] = f"00:24:00.{n}00"
+            repeat["minute"], repeat["second"] = 69, 0
+            repeat["player"] = {"id": player_id, "name": ""}
+            repeat["substitution"]["replacement"] = {
+                "id": replacement_id,
+                "name": "",
+            }
+            repeat.pop("related_events", None)
+            repeats.append(repeat)
+        insert_at = next(
+            i
+            for i, e in enumerate(events)
+            if e["period"] == 2 and e["timestamp"] > "00:24:00.100"
+        )
+        corrupt = events[:insert_at] + repeats + events[insert_at:]
+
+        clean = statsbomb.load(
+            event_data=base_dir / "files" / "statsbomb_event.json",
+            lineup_data=lineup_data,
+            coordinates="statsbomb",
+        )
+        with pytest.warns(DeserializationWarning, match="already on the pitch"):
+            dataset = statsbomb.load(
+                event_data=BytesIO(json.dumps(corrupt).encode()),
+                lineup_data=lineup_data,
+                coordinates="statsbomb",
+            )
+
+        for player_id in ("6839", "6581", "6935", "6566"):
+            player = dataset.metadata.teams[1].get_player_by_id(player_id)
+            clean_player = clean.metadata.teams[1].get_player_by_id(player_id)
+            assert [
+                (str(start), str(end), position)
+                for start, end, position in player.positions.ranges()
+            ] == [
+                (str(start), str(end), position)
+                for start, end, position in clean_player.positions.ranges()
+            ]
+        dataset.aggregate("minutes_played", include_position=True)

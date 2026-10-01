@@ -1,6 +1,7 @@
 from datetime import timedelta
 from enum import Enum, EnumMeta
 from typing import NamedTuple, Optional, Union
+import warnings
 
 from kloppy.domain import (
     BallState,
@@ -31,7 +32,7 @@ from kloppy.domain import (
     TakeOnResult,
 )
 from kloppy.domain.models.event import UnderPressureQualifier
-from kloppy.exceptions import DeserializationError
+from kloppy.exceptions import DeserializationError, DeserializationWarning
 from kloppy.infra.serializers.event.statsbomb.helpers import (
     get_period_by_id,
     get_team_by_id,
@@ -400,6 +401,12 @@ class EVENT:
         return [generic_event]
 
 
+def _has_location(location: Optional[list]) -> bool:
+    """Whether a location can be parsed; StatsBomb occasionally publishes
+    one as [null, null]."""
+    return bool(location) and all(c is not None for c in location)
+
+
 class PASS(EVENT):
     """StatsBomb 30/Pass event."""
 
@@ -440,10 +447,17 @@ class PASS(EVENT):
 
         result = None
         receiver_player = None
-        receiver_coordinates = parse_coordinates(
-            pass_dict["end_location"],
-            self.fidelity_version,
-        )
+        receiver_coordinates = None
+        if _has_location(pass_dict.get("end_location")):
+            receiver_coordinates = parse_coordinates(
+                pass_dict["end_location"],
+                self.fidelity_version,
+            )
+        else:
+            warnings.warn(
+                f"Pass {self.raw_event['id']} has no end location",
+                DeserializationWarning,
+            )
         receive_timestamp = timestamp + timedelta(
             seconds=self.raw_event.get("duration", 0.0)
         )
@@ -458,10 +472,18 @@ class PASS(EVENT):
                 PASS.OUTCOME.UNKNOWN: None,
             }
             result = outcome_mapping.get(PASS.OUTCOME(outcome_id))
-        else:
+        elif "recipient" in pass_dict:
             result = PassResult.COMPLETE
             receiver_player = team.get_player_by_id(
                 pass_dict["recipient"]["id"]
+            )
+        else:
+            # A pass with neither an outcome nor a recipient is only partly
+            # collected, so whether it was completed is unknown.
+            warnings.warn(
+                f"Pass {self.raw_event['id']} has neither an outcome nor a "
+                "recipient; its result is unknown",
+                DeserializationWarning,
             )
 
         qualifiers = (
@@ -511,6 +533,9 @@ class PASS(EVENT):
                 for related_event in self.related_events
             ):
                 return []
+            # Without an end location there is nowhere to put the ball out.
+            if not _has_location(pass_dict.get("end_location")):
+                return []
             generic_event_kwargs["event_id"] = (
                 f"out-{generic_event_kwargs['event_id']}"
             )
@@ -543,6 +568,10 @@ class BALL_RECEIPT(EVENT):
                     or "outcome" in pass_dict
                     and PASS.OUTCOME(pass_dict["outcome"]) == PASS.OUTCOME.OUT
                 ):
+                    # Without an end location there is nowhere to put the
+                    # ball out.
+                    if not _has_location(pass_dict.get("end_location")):
+                        return []
                     generic_event_kwargs["event_id"] = (
                         f"out-{generic_event_kwargs['event_id']}"
                     )

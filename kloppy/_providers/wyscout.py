@@ -32,20 +32,21 @@ def load(
     Returns:
         The parsed event data.
     """
-    if data_version == "V2":
-        deserializer_class = WyscoutDeserializerV2
-    elif data_version == "V3":
-        deserializer_class = WyscoutDeserializerV3
-    else:
-        deserializer_class = identify_deserializer(event_data)
-
-    deserializer = deserializer_class(
-        event_types=event_types,
-        coordinate_system=coordinates,
-        event_factory=event_factory or get_config("event_factory"),
-    )
-
     with open_as_file(event_data) as event_data_fp:
+        if data_version == "V2":
+            deserializer_class = WyscoutDeserializerV2
+        elif data_version == "V3":
+            deserializer_class = WyscoutDeserializerV3
+        else:
+            deserializer_class = identify_deserializer(event_data_fp)
+            event_data_fp.seek(0)
+
+        deserializer = deserializer_class(
+            event_types=event_types,
+            coordinate_system=coordinates,
+            event_factory=event_factory or get_config("event_factory"),
+        )
+
         return deserializer.deserialize(
             inputs=WyscoutInputs(event_data=event_data_fp),
         )

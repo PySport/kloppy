@@ -50,7 +50,9 @@ from kloppy.domain.models.event import (
     UnderPressureQualifier,
 )
 from kloppy.exceptions import DeserializationError, DeserializationWarning
-from kloppy.infra.serializers.event.statsbomb.helpers import parse_str_ts
+from kloppy.infra.serializers.event.statsbomb.helpers import (
+    parse_str_ts,
+)
 import kloppy.infra.serializers.event.statsbomb.specification as SB
 
 API_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data/"
@@ -479,27 +481,22 @@ class TestStatsBombEvent:
             ],
         }
 
-        # The visible area should be stored in "other_data"
-        visible_area = pass_event.freeze_frame.other_data["visible_area"]
-        assert visible_area == pytest.approx(
-            [
-                120.0,
-                28.02,
-                87.93,
-                80.0,
-                32.71,
-                80.0,
-                0.0,
-                26.78,
-                0.0,
-                0.0,
-                120.0,
-                0.0,
-                120.0,
-                28.02,
-            ],
-            abs=1e-2,
-        )
+        # The visible area should be parsed into a polygon of points
+        visible_area = pass_event.freeze_frame.visible_area
+        expected_visible_area = [
+            Point(x=120.0, y=28.02),
+            Point(x=87.93, y=80.0),
+            Point(x=32.71, y=80.0),
+            Point(x=0.0, y=26.78),
+            Point(x=0.0, y=0.0),
+            Point(x=120.0, y=0.0),
+            Point(x=120.0, y=28.02),
+        ]
+        assert len(visible_area) == len(expected_visible_area)
+        for point, expected in zip(visible_area, expected_visible_area):
+            assert point.x == pytest.approx(expected.x, abs=1e-2)
+            assert point.y == pytest.approx(expected.y, abs=1e-2)
+        assert "visible_area" not in pass_event.freeze_frame.other_data
 
         if with_visualization:
             import matplotlib.pyplot as plt
@@ -550,12 +547,130 @@ class TestStatsBombEvent:
             )
 
             # plot the visible area
-            visible_area = iter(visible_area)
-            visible_area = list(zip(visible_area, visible_area))
-            pitch.polygon([visible_area], color=(1, 0, 0, 0.1), ax=ax)
+            pitch.polygon(
+                [[(p.x, p.y) for p in visible_area]],
+                color=(1, 0, 0, 0.1),
+                ax=ax,
+            )
 
             plt.savefig(
                 base_dir / "outputs" / "test_statsbomb_freeze_frame_360.png"
+            )
+
+    def test_freeze_frame_360_transformed(
+        self, dataset: EventDataset, base_dir: Path, with_visualization: bool
+    ):
+        """Test if 360 freeze-frame coordinates and visible are correctly updated when changing the coordinate system"""
+
+        transformed_dataset = dataset.transform(
+            to_coordinate_system=Provider.OPTA,
+            to_orientation="AWAY_HOME",
+        )
+
+        pass_event = transformed_dataset.get_event_by_id(
+            "2cd43fa6-252a-4c00-b5b3-9ba0196bfdf5"
+        )
+        original_pass = dataset.get_event_by_id(
+            "2cd43fa6-252a-4c00-b5b3-9ba0196bfdf5"
+        )
+
+        freeze_frame = pass_event.freeze_frame
+        assert freeze_frame is not None
+
+        # Test locations of the ball
+        assert pass_event.coordinates.x == pytest.approx(
+            freeze_frame.ball_coordinates.x
+        )
+        assert pass_event.coordinates.y == pytest.approx(
+            freeze_frame.ball_coordinates.y
+        )
+        # Verify the specific expected Opta coordinates
+        assert freeze_frame.ball_coordinates.x == pytest.approx(50.045)
+        assert freeze_frame.ball_coordinates.y == pytest.approx(49.94)
+
+        # Test locations of the players (verify the first two from Belgium as an example)
+        player_iterator = iter(freeze_frame.players_coordinates.items())
+        player1, coordinates1 = next(player_iterator)
+        player2, coordinates2 = next(player_iterator)
+
+        assert player1.team.name == "Belgium"
+        assert coordinates1.x == pytest.approx(69.30691)
+        assert coordinates1.y == pytest.approx(51.99830)
+
+        assert player2.team.name == "Belgium"
+        assert coordinates2.x == pytest.approx(68.73169)
+        assert coordinates2.y == pytest.approx(71.32490)
+
+        # Test visible area
+        visible_area = freeze_frame.visible_area
+        assert len(visible_area) == len(original_pass.freeze_frame.visible_area)
+
+        # Check specific expected Opta coordinates for the first two points of visible area
+        assert visible_area[0].x == pytest.approx(0.0)
+        assert visible_area[0].y == pytest.approx(34.20950)
+
+        assert visible_area[1].x == pytest.approx(27.80767)
+        assert visible_area[1].y == pytest.approx(100.0)
+
+        if with_visualization:
+            import matplotlib.pyplot as plt
+            from mplsoccer import Pitch
+
+            pitch = Pitch(
+                pitch_type="opta",
+                pitch_color="white",
+                line_color="#c7d5cc",
+                half=False,
+            )
+            _, ax = pitch.draw()
+
+            def get_color(player):
+                if player.team == pass_event.player.team:
+                    return "#b94b75"
+                else:
+                    return "#7f63b8"
+
+            x, y, color = zip(
+                *[
+                    (coordinates.x, coordinates.y, get_color(player))
+                    for player, coordinates in pass_event.freeze_frame.players_coordinates.items()
+                ]
+            )
+
+            # plot the players
+            _ = pitch.scatter(x, y, color=color, s=100, ax=ax)
+
+            # plot the pass
+            _ = pitch.scatter(
+                pass_event.coordinates.x,
+                pass_event.coordinates.y,
+                marker="football",
+                s=200,
+                ax=ax,
+                zorder=1.2,
+            )
+            _ = pitch.lines(
+                pass_event.coordinates.x,
+                pass_event.coordinates.y,
+                pass_event.receiver_coordinates.x,
+                pass_event.receiver_coordinates.y,
+                comet=True,
+                label="pass",
+                color="#cb5a4c",
+                ax=ax,
+            )
+
+            # plot the visible area
+            pitch.polygon(
+                [[(p.x, p.y) for p in visible_area]],
+                color=(1, 0, 0, 0.1),
+                ax=ax,
+            )
+
+            plt.savefig(
+                base_dir
+                / "outputs"
+                / "test_statsbomb_freeze_frame_360_transformed.png"
             )
 
     def test_freeze_frame_player_identities(self, dataset: EventDataset):
@@ -650,9 +765,9 @@ class TestStatsBombEvent:
             ],
         }
 
-        # Note: the visible area is not standardized
-        visible_area = pass_event.freeze_frame.other_data["visible_area"]
-        assert visible_area[0] == pytest.approx(120.0)
+        # The visible area should be standardized along with the players
+        visible_area = pass_event.freeze_frame.visible_area
+        assert visible_area[0].x == pytest.approx(1.0)
 
 
 class TestStatsBombPassEvent:

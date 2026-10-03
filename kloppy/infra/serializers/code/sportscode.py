@@ -37,7 +37,15 @@ def parse_labels(instance):
         if group is None:
             ret[text] = True
         else:
-            ret[str(group)] = text
+            group_str = str(group)
+            if group_str in ret:
+                existing = ret[group_str]
+                if isinstance(existing, list):
+                    existing.append(text)
+                else:
+                    ret[group_str] = [existing, text]
+            else:
+                ret[group_str] = text
     return ret
 
 

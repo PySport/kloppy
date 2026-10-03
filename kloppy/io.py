@@ -453,17 +453,35 @@ def open_as_file(
         if not isinstance(input_, (str, os.PathLike)):
             input_mode = getattr(input_, "mode", None)
             if input_mode and input_mode != mode:
-                is_readable_requested = "r" in mode
-                is_writable_requested = "w" in mode or "a" in mode
+                is_readable_requested = "r" in mode or "+" in mode
+                is_writable_requested = (
+                    "w" in mode or "a" in mode or "x" in mode or "+" in mode
+                )
 
                 is_readable_actual = "r" in input_mode or "+" in input_mode
                 is_writable_actual = (
-                    "w" in input_mode or "a" in input_mode or "+" in input_mode
+                    "w" in input_mode
+                    or "a" in input_mode
+                    or "x" in input_mode
+                    or "+" in input_mode
                 )
 
                 if (is_readable_requested and not is_readable_actual) or (
                     is_writable_requested and not is_writable_actual
                 ):
+                    raise ValueError(
+                        f"File opened in mode '{input_mode}' but '{mode}' requested"
+                    )
+
+                if "w" in mode and "w" not in input_mode:
+                    raise ValueError(
+                        f"File opened in mode '{input_mode}' but '{mode}' requested"
+                    )
+                if "a" in mode and "a" not in input_mode:
+                    raise ValueError(
+                        f"File opened in mode '{input_mode}' but '{mode}' requested"
+                    )
+                if "x" in mode and "x" not in input_mode:
                     raise ValueError(
                         f"File opened in mode '{input_mode}' but '{mode}' requested"
                     )

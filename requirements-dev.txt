@@ -172,13 +172,9 @@ pathable==0.4.4 ; python_full_version > '3.9' and python_full_version < '3.10'
 pathable==0.6.0 ; python_full_version >= '3.10'
     # via jsonschema-path
 platformdirs==4.4.0 ; python_full_version < '3.10'
-    # via
-    #   python-discovery
-    #   virtualenv
+    # via virtualenv
 platformdirs==4.11.0 ; python_full_version >= '3.10'
-    # via
-    #   python-discovery
-    #   virtualenv
+    # via virtualenv
 pluggy==1.6.0
     # via pytest
 pre-commit==4.3.0 ; python_full_version < '3.10'
@@ -224,7 +220,7 @@ python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   moto
-python-discovery==1.5.0
+python-discovery==1.6.1
     # via virtualenv
 python-dotenv==1.2.2 ; python_full_version >= '3.10'
     # via pydantic-settings
@@ -327,7 +323,7 @@ urllib3==2.7.0 ; python_full_version >= '3.10'
     #   docker
     #   requests
     #   responses
-virtualenv==21.7.0
+virtualenv==21.7.13
     # via pre-commit
 werkzeug==3.1.8
     # via

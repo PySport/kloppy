@@ -224,7 +224,7 @@ python-discovery==1.6.1
     # via virtualenv
 python-dotenv==1.2.2 ; python_full_version >= '3.10'
     # via pydantic-settings
-pytz==2026.3.post1 ; python_full_version <= '3.9'
+pytz==2026.4 ; python_full_version <= '3.9'
     # via moto
 pywin32==312 ; python_full_version > '3.9' and sys_platform == 'win32'
     # via docker

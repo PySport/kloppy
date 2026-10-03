@@ -46,6 +46,7 @@ from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from .deserializer_v2 import WyscoutInputs
+from .wyscout_periods import parse_period_id
 
 logger = logging.getLogger(__name__)
 
@@ -455,12 +456,12 @@ def _parse_carry(raw_event: dict, next_event: dict, start_ts: dict) -> dict:
     )
 
     if next_event is not None:
-        period_id = _parse_period_id(next_event["matchPeriod"])
+        period_id = parse_period_id(next_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             next_event, start_ts, period_id
         )
     else:
-        period_id = _parse_period_id(raw_event["matchPeriod"])
+        period_id = parse_period_id(raw_event["matchPeriod"])
         end_timestamp = _create_timestamp_timedelta(
             raw_event, start_ts, period_id
         )
@@ -699,19 +700,6 @@ def _players_to_dict(players: list[Player]):
     return {player.player_id: player for player in players}
 
 
-def _parse_period_id(raw_period: str) -> int:
-    if "H" in raw_period:
-        period_id = int(raw_period.replace("H", ""))
-    elif "E" in raw_period:
-        period_id = 2 + int(raw_period.replace("E", ""))
-    elif raw_period == "P":
-        period_id = 5
-    else:
-        raise DeserializationError(f"Unknown period {raw_period}")
-
-    return period_id
-
-
 def create_periods(raw_events, period_minutes_offset_mapping):
     periods = []
 
@@ -719,9 +707,9 @@ def create_periods(raw_events, period_minutes_offset_mapping):
         next_period_id = None
         if (idx + 1) < len(raw_events["events"]):
             next_event = raw_events["events"][idx + 1]
-            next_period_id = _parse_period_id(next_event["matchPeriod"])
+            next_period_id = parse_period_id(next_event["matchPeriod"])
 
-        period_id = _parse_period_id(raw_event["matchPeriod"])
+        period_id = parse_period_id(raw_event["matchPeriod"])
 
         if len(periods) == 0 or periods[-1].id != period_id:
             periods.append(
@@ -836,7 +824,7 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
                 team_id = str(raw_event["team"]["id"])
                 team = teams[team_id]
                 player_id = str(raw_event["player"]["id"])
-                period_id = _parse_period_id(raw_event["matchPeriod"])
+                period_id = parse_period_id(raw_event["matchPeriod"])
 
                 if player_id == INVALID_PLAYER:
                     player = None

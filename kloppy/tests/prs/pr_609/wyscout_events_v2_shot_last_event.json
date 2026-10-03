@@ -1,0 +1,59 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "playerId": 100,
+      "teamId": 1,
+      "matchId": 1694433,
+      "matchPeriod": "2H",
+      "eventSec": 5400.0,
+      "eventName": 10,
+      "subEventName": 100,
+      "positions": [
+        {
+          "x": 90.0,
+          "y": 50.0
+        }
+      ],
+      "tags": [
+        {
+          "id": 1801
+        }
+      ]
+    }
+  ],
+  "teams": {
+    "1": {
+      "team": {
+        "wyId": 1,
+        "officialName": "Team A"
+      }
+    },
+    "2": {
+      "team": {
+        "wyId": 2,
+        "officialName": "Team B"
+      }
+    }
+  },
+  "players": {
+    "1": [
+      {
+        "player": {
+          "wyId": 100,
+          "firstName": "Shooter",
+          "lastName": "One"
+        }
+      }
+    ],
+    "2": [
+      {
+        "player": {
+          "wyId": 101,
+          "firstName": "Goalie",
+          "lastName": "Two"
+        }
+      }
+    ]
+  }
+}

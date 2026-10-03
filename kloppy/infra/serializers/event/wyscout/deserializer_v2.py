@@ -38,6 +38,7 @@ from kloppy.utils import performance_logging
 
 from ..deserializer import EventDataDeserializer
 from . import wyscout_events, wyscout_tags
+from .wyscout_periods import parse_period_id
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
             last_name=player["player"]["lastName"],
         )
         for player in raw_events["players"][wyId]
+        if player is not None
     ]
     return team
 
@@ -184,13 +186,16 @@ def _parse_shot(raw_event: dict, next_event: dict) -> dict:
     elif any(_has_tag(raw_event, tag) for tag in wyscout_tags.SHOT_ON_GOAL):
         result = ShotResult.SAVED
 
-    if next_event["eventId"] == wyscout_events.SAVE.EVENT:
-        if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
-            qualifiers.append(GoalkeeperQualifier(GoalkeeperActionType.REFLEX))
-        if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
-            qualifiers.append(
-                GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
-            )
+    if next_event:
+        if next_event["eventId"] == wyscout_events.SAVE.EVENT:
+            if next_event["subEventId"] == wyscout_events.SAVE.REFLEXES:
+                qualifiers.append(
+                    GoalkeeperQualifier(GoalkeeperActionType.REFLEX)
+                )
+            if next_event["subEventId"] == wyscout_events.SAVE.SAVE_ATTEMPT:
+                qualifiers.append(
+                    GoalkeeperQualifier(GoalkeeperActionType.SAVE_ATTEMPT)
+                )
 
     return {
         "result": result,
@@ -498,13 +503,11 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 next_period_id = None
                 if (idx + 1) < len(raw_events["events"]):
                     next_event = raw_events["events"][idx + 1]
-                    next_period_id = int(
-                        next_event["matchPeriod"].replace("H", "")
-                    )
+                    next_period_id = parse_period_id(next_event["matchPeriod"])
 
                 team_id = str(raw_event["teamId"])
                 player_id = str(raw_event["playerId"])
-                period_id = int(raw_event["matchPeriod"].replace("H", ""))
+                period_id = parse_period_id(raw_event["matchPeriod"])
 
                 if len(periods) == 0 or periods[-1].id != period_id:
                     periods.append(

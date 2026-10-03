@@ -18,6 +18,14 @@
                 <group>Receiver</group>
                 <text>Klaas N&#xF8;me</text>
             </label>
+            <label>
+                <group>Qualifiers</group>
+                <text>Long ball</text>
+            </label>
+            <label>
+                <group>Qualifiers</group>
+                <text>Completed</text>
+            </label>
         </instance>
         <instance>
             <ID>P2</ID>

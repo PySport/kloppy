@@ -26,7 +26,9 @@ class Code(DataRecord):
     code_id: str
     code: str
     end_timestamp: timedelta
-    labels: dict[str, Union[bool, str, list[str]]] = field(default_factory=dict)
+    labels: dict[
+        str, Union[bool, str, float, int, list[Union[str, float, int]]]
+    ] = field(default_factory=dict)
 
     @property
     def record_id(self) -> str:

@@ -304,6 +304,23 @@ class TestStatsPerformTracking:
         )
         assert len(tracking_dataset.records) == 25
 
+    def test_exclude_missing_ball_frames(
+        self, tracking_data: Path, tracking_metadata_xml: Path
+    ):
+        tracking_dataset = statsperform.load_tracking(
+            ma1_data=tracking_metadata_xml,
+            ma25_data=tracking_data,
+            tracking_system="sportvu",
+            coordinates="sportvu",
+            pitch_length=105,
+            pitch_width=68,
+            exclude_missing_ball_frames=True,
+        )
+        assert all(
+            frame.ball_coordinates is not None
+            for frame in tracking_dataset.records
+        )
+
     def test_coordinate_system_without_pitch_dimensions(
         self, tracking_data: Path, tracking_metadata_xml: Path
     ):

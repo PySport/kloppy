@@ -18,6 +18,7 @@ class TrackingDataDeserializer(ABC, Generic[T]):
         limit: Optional[int] = None,
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
         if not limit:
             limit = 0
@@ -28,6 +29,10 @@ class TrackingDataDeserializer(ABC, Generic[T]):
         self.sample_rate = sample_rate
 
         self.transformer_builder = DatasetTransformerBuilder(coordinate_system)
+
+        if not exclude_missing_ball_frames:
+            exclude_missing_ball_frames = False
+        self.exclude_missing_ball_frames = exclude_missing_ball_frames
 
     def get_transformer(
         self,

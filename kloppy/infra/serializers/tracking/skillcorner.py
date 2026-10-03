@@ -75,8 +75,11 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
         include_empty_frames: Optional[bool] = False,
         data_version: Optional[str] = None,
         only_alive: bool = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.include_empty_frames = include_empty_frames
         self.data_version = data_version
         self.only_alive = only_alive
@@ -565,6 +568,12 @@ class SkillCornerDeserializer(TrackingDataDeserializer[SkillCornerInputs]):
                 if frame is None:
                     continue
                 frame = transformer.transform_frame(frame)
+
+                if (
+                    self.exclude_missing_ball_frames
+                    and frame.ball_coordinates is None
+                ):
+                    continue
 
                 frames.append(frame)
                 n_frames += 1

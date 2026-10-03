@@ -14,6 +14,7 @@ def load_tracking(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load and deserialize tracking data from the provided metadata, roster metadata, and raw data files.
@@ -26,6 +27,9 @@ def load_tracking(
         limit (Optional[int], optional): The maximum number of records to process. If None, all records are processed. Defaults to None.
         coordinates (Optional[str], optional): The coordinate system to use for the tracking data (e.g., "pff"). Defaults to None.
         only_alive (Optional[bool], optional): Whether to include only sequences when the ball is in play. Defaults to False.
+        exclude_missing_ball_frames (Optional[bool], optional): Whether to
+            exclude frames in which the ball coordinates are missing (e.g.
+            not tracked). Defaults to False.
 
     Returns:
         TrackingDataset: A deserialized TrackingDataset object containing the processed tracking data.
@@ -35,6 +39,7 @@ def load_tracking(
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(meta_data) as meta_data_fp,

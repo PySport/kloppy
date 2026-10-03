@@ -146,6 +146,20 @@ class TestTracabJSONTracking:
             player_home_1
         ].coordinates == Point(x=1.0019047619047619, y=0.49602941176470583)
 
+    def test_exclude_missing_ball_frames(
+        self, json_meta_data: Path, json_raw_data: Path
+    ):
+        dataset = tracab.load(
+            meta_data=json_meta_data,
+            raw_data=json_raw_data,
+            coordinates="tracab",
+            only_alive=False,
+            exclude_missing_ball_frames=True,
+        )
+        assert all(
+            frame.ball_coordinates is not None for frame in dataset.records
+        )
+
 
 class TestTracabDATTracking:
     def test_correct_deserialization(

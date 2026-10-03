@@ -89,6 +89,24 @@ class TestPFFTracking:
         )
         assert len(dataset.records) == 100
 
+    def test_exclude_missing_ball_frames(
+        self,
+        raw_data_home_starts_left: Path,
+        meta_data_home_starts_left: Path,
+        rosters_meta_data_home_starts_left: Path,
+    ):
+        dataset = pff.load_tracking(
+            meta_data=meta_data_home_starts_left,
+            roster_meta_data=rosters_meta_data_home_starts_left,
+            raw_data=raw_data_home_starts_left,
+            coordinates="pff",
+            only_alive=False,
+            exclude_missing_ball_frames=True,
+        )
+        assert all(
+            frame.ball_coordinates is not None for frame in dataset.records
+        )
+
     def test_correct_deserialization(
         self,
         raw_data_home_starts_left: Path,

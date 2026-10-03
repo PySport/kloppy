@@ -101,8 +101,11 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.only_alive = only_alive
 
         self._ball_owning_team = None
@@ -368,6 +371,12 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     _frame,
                 )
             )
+
+            if (
+                self.exclude_missing_ball_frames
+                and frame.ball_coordinates is None
+            ):
+                continue
 
             # if Regular Time
             if _frame_period in {1, 2}:

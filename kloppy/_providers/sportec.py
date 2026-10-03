@@ -57,6 +57,7 @@ def load_tracking(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load Sportec Solutions tracking data.
@@ -68,6 +69,8 @@ def load_tracking(
         limit: Limit the number of frames to load to the first `limit` frames.
         coordinates: The coordinate system to use.
         only_alive: Only include frames in which the game is not paused.
+        exclude_missing_ball_frames: Exclude frames in which the ball
+            coordinates are missing (e.g. not tracked).
 
     Returns:
         The parsed tracking data.
@@ -77,6 +80,7 @@ def load_tracking(
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(meta_data) as meta_data_fp,
@@ -194,6 +198,7 @@ def load_open_tracking_data(
     limit: Optional[int] = None,
     coordinates: Optional[str] = None,
     only_alive: Optional[bool] = False,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load tracking data for a game from the IDSSE dataset.
@@ -210,6 +215,7 @@ def load_open_tracking_data(
         limit:
         coordinates:
         only_alive:
+        exclude_missing_ball_frames:
 
     Notes:
         The dataset contains seven full matches of raw event and position data
@@ -242,4 +248,5 @@ def load_open_tracking_data(
         limit=limit,
         coordinates=coordinates,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )

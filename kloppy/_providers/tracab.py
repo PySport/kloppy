@@ -17,6 +17,7 @@ def load(
     coordinates: Optional[str] = None,
     only_alive: bool = False,
     file_format: Optional[str] = None,
+    exclude_missing_ball_frames: Optional[bool] = False,
 ) -> TrackingDataset:
     """
     Load TRACAB tracking data.
@@ -29,6 +30,8 @@ def load(
         coordinates: The coordinate system to use.
         only_alive: Only include frames in which the game is not paused.
         file_format: Deprecated. The format will be inferred based on the file extensions.
+        exclude_missing_ball_frames: Exclude frames in which the ball
+            coordinates are missing (e.g. not tracked).
 
     Returns:
         The parsed tracking data.
@@ -79,6 +82,7 @@ def load(
         limit=limit,
         coordinate_system=coordinates,
         only_alive=only_alive,
+        exclude_missing_ball_frames=exclude_missing_ball_frames,
     )
     with (
         open_as_file(meta_data) as meta_data_fp,

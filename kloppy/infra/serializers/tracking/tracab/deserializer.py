@@ -31,8 +31,11 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: bool = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.only_alive = only_alive
 
     @property
@@ -68,6 +71,13 @@ class TRACABDeserializer(TrackingDataDeserializer[TRACABInputs]):
                 )
             ):
                 frame = transformer.transform_frame(frame)
+
+                if (
+                    self.exclude_missing_ball_frames
+                    and frame.ball_coordinates is None
+                ):
+                    continue
+
                 frames.append(frame)
 
                 if self.limit and n + 1 >= (self.limit / self.sample_rate):

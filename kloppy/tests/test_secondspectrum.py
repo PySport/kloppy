@@ -27,6 +27,10 @@ class TestSecondSpectrumTracking:
         return base_dir / "files/second_spectrum_fake_data_utf8sig.jsonl"
 
     @pytest.fixture
+    def raw_data_missing_ball(self, base_dir) -> str:
+        return base_dir / "files/second_spectrum_fake_data_missing_ball.jsonl"
+
+    @pytest.fixture
     def additional_meta_data(self, base_dir) -> str:
         return base_dir / "files/second_spectrum_fake_metadata.json"
 
@@ -182,6 +186,47 @@ class TestSecondSpectrumTracking:
         )
 
         assert len(dataset.records) == 13
+
+    def test_missing_ball_sentinel_parsed_as_none(
+        self,
+        meta_data: Path,
+        raw_data_missing_ball: Path,
+        additional_meta_data: Path,
+    ):
+        # A z-coordinate of -10 is Second Spectrum's sentinel value for an
+        # untracked ball. By default it should be parsed as
+        # `ball_coordinates=None` rather than a literal Point3D(..., -10).
+        dataset = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data_missing_ball,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+        )
+
+        assert len(dataset.records) == 2
+        assert dataset.records[0].ball_coordinates is not None
+        assert dataset.records[1].ball_coordinates is None
+
+    def test_exclude_missing_ball_frames(
+        self,
+        meta_data: Path,
+        raw_data_missing_ball: Path,
+        additional_meta_data: Path,
+    ):
+        dataset = secondspectrum.load(
+            meta_data=meta_data,
+            raw_data=raw_data_missing_ball,
+            additional_meta_data=additional_meta_data,
+            only_alive=False,
+            coordinates="secondspectrum",
+            exclude_missing_ball_frames=True,
+        )
+
+        assert len(dataset.records) == 1
+        assert all(
+            frame.ball_coordinates is not None for frame in dataset.records
+        )
 
     def test_utf8_fails_with_bom_but_utf8sig_works(self, raw_data_utf8sig):
         import json

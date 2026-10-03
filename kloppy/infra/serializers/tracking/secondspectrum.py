@@ -73,8 +73,11 @@ class SecondSpectrumDeserializer(
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: Optional[bool] = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.only_alive = only_alive
 
     @property
@@ -88,10 +91,17 @@ class SecondSpectrumDeserializer(
 
         if frame_data["ball"]["xyz"]:
             ball_x, ball_y, ball_z = frame_data["ball"]["xyz"]
-            ball_coordinates = Point3D(
-                float(ball_x), float(ball_y), float(ball_z)
-            )
-            ball_speed = frame_data["ball"]["speed"]
+            if float(ball_z) == -10:
+                # Second Spectrum uses a z-coordinate of -10 as a sentinel
+                # value to indicate that the ball position is unknown (e.g.
+                # dead ball frames where the ball is not tracked).
+                ball_coordinates = None
+                ball_speed = None
+            else:
+                ball_coordinates = Point3D(
+                    float(ball_x), float(ball_y), float(ball_z)
+                )
+                ball_speed = frame_data["ball"]["speed"]
         else:
             ball_coordinates = None
             ball_speed = None
@@ -302,6 +312,13 @@ class SecondSpectrumDeserializer(
 
                 frame = self._frame_from_framedata(teams, period, frame_data)
                 frame = transformer.transform_frame(frame)
+
+                if (
+                    self.exclude_missing_ball_frames
+                    and frame.ball_coordinates is None
+                ):
+                    continue
+
                 frames.append(frame)
 
                 n_frames += 1

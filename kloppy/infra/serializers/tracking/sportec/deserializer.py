@@ -308,8 +308,11 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
         sample_rate: Optional[float] = None,
         coordinate_system: Optional[Union[str, Provider]] = None,
         only_alive: bool = False,
+        exclude_missing_ball_frames: Optional[bool] = False,
     ):
-        super().__init__(limit, sample_rate, coordinate_system)
+        super().__init__(
+            limit, sample_rate, coordinate_system, exclude_missing_ball_frames
+        )
         self.only_alive = only_alive
 
     def deserialize(self, inputs: SportecTrackingDataInputs) -> TrackingDataset:
@@ -423,7 +426,15 @@ class SportecTrackingDataDeserializer(TrackingDataDeserializer):
                             ball_speed=float(ball_data.get("S", 0)),
                             other_data={},
                         )
-                        frames.append(transformer.transform_frame(frame))
+                        frame = transformer.transform_frame(frame)
+
+                        if (
+                            self.exclude_missing_ball_frames
+                            and frame.ball_coordinates is None
+                        ):
+                            continue
+
+                        frames.append(frame)
                         frame_count += 1
                     except KeyError as e:
                         logger.warning(

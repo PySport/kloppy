@@ -308,6 +308,14 @@ def get_file_extension(file_or_path: FileLike) -> str:
     )
 
 
+def _normalize_mode(mode: Any) -> Any:
+    # gzip.GzipFile.mode was an integer (1/2) before Python 3.13.
+    # https://docs.python.org/3/library/gzip.html#gzip.GzipFile.mode
+    if isinstance(mode, int):
+        return {1: "rb", 2: "wb"}.get(mode)
+    return mode
+
+
 @contextlib.contextmanager
 def _write_context_manager(
     uri: str, mode: str
@@ -451,7 +459,7 @@ def open_as_file(
     ):
         # --- Validation: Check mode compatibility for existing file objects ---
         if not isinstance(input_, (str, os.PathLike)):
-            input_mode = getattr(input_, "mode", None)
+            input_mode = _normalize_mode(getattr(input_, "mode", None))
             if input_mode and input_mode != mode:
                 is_readable_requested = "r" in mode or "+" in mode
                 is_writable_requested = (

@@ -232,6 +232,25 @@ class TestOpenAsFile:
         with pytest.raises(ValueError):
             open_as_file(path.open("rb"), mode="wb")
 
+    def test_open_gzip_file_object(self):
+        """It should accept a GzipFile, whose mode is an int before Python 3.13."""
+        buffer = BytesIO()
+        with gzip.GzipFile(fileobj=buffer, mode="wb") as gz:
+            with open_as_file(gz, mode="wb") as fp:
+                fp.write(b"Hello, gzip!")
+            with pytest.raises(ValueError):
+                open_as_file(gz, mode="rb")
+            with pytest.raises(ValueError):
+                open_as_file(gz, mode="ab")
+
+        buffer.seek(0)
+        with gzip.GzipFile(fileobj=buffer, mode="rb") as gz:
+            with open_as_file(gz, mode="rb") as fp:
+                assert fp.read() == b"Hello, gzip!"
+            assert not gz.closed
+            with pytest.raises(ValueError):
+                open_as_file(gz, mode="wb")
+
 
 class TestExpandInputs:
     @pytest.fixture

@@ -278,7 +278,7 @@ rpds-py==2026.6.3 ; python_full_version >= '3.11'
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.9
+ruff==0.16.10
 s3transfer==0.15.0
     # via boto3
 setuptools==82.0.1 ; python_full_version > '3.9' and python_full_version < '3.10'

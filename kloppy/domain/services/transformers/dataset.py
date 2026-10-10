@@ -232,6 +232,7 @@ class DatasetTransformer:
             ball_owning_team=frame.ball_owning_team,
             ball_state=frame.ball_state,
             period=frame.period,
+            ball_speed=frame.ball_speed,
             # changes
             ball_coordinates=self.change_point_dimensions(
                 frame.ball_coordinates
@@ -302,6 +303,7 @@ class DatasetTransformer:
             ball_owning_team=frame.ball_owning_team,
             ball_state=frame.ball_state,
             period=frame.period,
+            ball_speed=frame.ball_speed,
             # changes
             ball_coordinates=self.flip_point(frame.ball_coordinates),
             players_data=players_data,

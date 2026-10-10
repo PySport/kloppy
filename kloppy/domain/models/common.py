@@ -1725,8 +1725,11 @@ class Dataset(ABC, Generic[T]):
                 ),
             )
 
-        self._init_player_positions()
-        self._update_formations_and_positions()
+        # Filtered datasets share the original match metadata and may omit
+        # events needed to reconstruct its player and formation timelines.
+        if not isinstance(self, FilteredDataset):
+            self._init_player_positions()
+            self._update_formations_and_positions()
 
     def _init_player_positions(self):
         start_of_match = self.metadata.periods[0].start_time

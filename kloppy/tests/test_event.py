@@ -4,6 +4,13 @@ from kloppy import statsbomb
 from kloppy.domain import EventDataset, FilteredDataset
 
 
+def minutes_played(dataset):
+    return {
+        row.player.player_id: row.duration
+        for row in dataset.aggregate("minutes_played")
+    }
+
+
 class TestEvent:
     """"""
 
@@ -70,6 +77,24 @@ class TestEvent:
         # Filtering again should not break the class structure
         subset = goals_dataset.filter(lambda x: True)
         assert type(subset).__name__ == "FilteredEventDataset"
+
+    def test_filter_does_not_change_source_player_timelines(
+        self, dataset: EventDataset
+    ):
+        before = minutes_played(dataset)
+
+        dataset.filter("pass")
+
+        assert minutes_played(dataset) == before
+
+    def test_transforming_filtered_dataset_does_not_change_source_minutes_played(
+        self, dataset: EventDataset
+    ):
+        before = minutes_played(dataset)
+
+        dataset.filter("pass").transform(to_coordinate_system="kloppy")
+
+        assert minutes_played(dataset) == before
 
     def test_map(self, dataset: EventDataset):
         """

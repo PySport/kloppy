@@ -466,19 +466,13 @@ class DatasetTransformer:
                 for record in dataset.records
             ]
 
-            return TrackingDataset(
-                metadata=metadata,
-                records=frames,
-            )
+            return replace(dataset, metadata=metadata, records=frames)
         elif isinstance(dataset, EventDataset):
             events = [
                 transformer.transform_event(event) for event in dataset.records
             ]
 
-            return EventDataset(
-                metadata=metadata,
-                records=events,
-            )
+            return replace(dataset, metadata=metadata, records=events)
         else:
             raise KloppyError("Unknown Dataset type")
 

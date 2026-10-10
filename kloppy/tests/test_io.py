@@ -167,11 +167,28 @@ class TestOpenAsFile:
         with pytest.raises(InputNotFoundError):
             open_as_file(tmp_path / "missing.txt")
 
-    def test_read_opened_file(self, populated_dir):
-        """It should return the same file object if already opened."""
-        path = populated_dir / "testfile.txt"
-        with open_as_file(path.open("rb")) as fp:
-            assert fp.read() == b"Hello, world!"
+    @pytest.mark.parametrize(
+        "opener, filename",
+        [
+            pytest.param(open, "testfile.txt", id="plain"),
+            pytest.param(gzip.open, "testfile.txt.gz", id="gzip"),
+            pytest.param(bz2.open, "testfile.txt.bz2", id="bz2"),
+            pytest.param(lzma.open, "testfile.txt.xz", id="xz"),
+        ],
+    )
+    def test_read_opened_file(self, populated_dir, opener, filename):
+        """It should be able to read from an already-opened file object and validate its mode."""
+        path = populated_dir / filename
+        with opener(path, "rb") as f:
+            with open_as_file(f, mode="rb") as fp:
+                assert fp.read() == b"Hello, world!"
+
+            # Closing the wrapper must not close the underlying file object.
+            assert not f.closed
+
+            # A read-mode file object must reject write modes.
+            with pytest.raises(ValueError):
+                open_as_file(f, "wb")
 
     # --- Write Tests ---
 
@@ -212,25 +229,29 @@ class TestOpenAsFile:
         with opener(output_path, "rb") as f:
             assert f.read() == content
 
-    def test_write_opened_file(self, tmp_path):
-        """It should write to the same file object if already opened."""
-        output_path = tmp_path / "output.txt"
-        output_file = output_path.open("wb")
-        with open_as_file(output_file, mode="wb") as fp:
-            fp.write(b"Hello, opened write!")
-        output_file.close()
+    @pytest.mark.parametrize(
+        "opener, ext",
+        [
+            pytest.param(open, ".bin", id="plain"),
+            pytest.param(gzip.open, ".gz", id="gzip"),
+        ],
+    )
+    def test_write_opened_file(self, tmp_path, opener, ext):
+        """It should be able to write to an already-opened file object and validate its mode."""
+        output_path = tmp_path / f"output{ext}"
+        contents = b"Hello, opened write!"
 
-        assert output_path.read_bytes() == b"Hello, opened write!"
+        with opener(output_path, "wb") as f:
+            with open_as_file(f, mode="wb") as fp:
+                fp.write(contents)
 
-    def test_mode_conflict(self, populated_dir):
-        """It should raise an error if mode conflicts with opened file."""
-        path = populated_dir / "testfile.txt"
-        with pytest.raises(ValueError):
-            open_as_file(path.open("r"), mode="wb")
-        with pytest.raises(ValueError):
-            open_as_file(path.open("wb"), mode="rb")
-        with pytest.raises(ValueError):
-            open_as_file(path.open("rb"), mode="wb")
+            # A write-mode file object must reject non-write modes.
+            for other_mode in ("rb", "ab"):
+                with pytest.raises(ValueError):
+                    open_as_file(f, other_mode)
+
+        with opener(output_path, "rb") as f:
+            assert f.read() == contents
 
     def test_open_gzip_file_object(self):
         """It should accept a GzipFile, whose mode is an int before Python 3.13."""

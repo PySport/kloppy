@@ -195,6 +195,9 @@ def _open(
         extension. Possible values are "gz", "xz", "bz2" and "raw". In case of
         "raw", no compression is used.
     """
+    if isinstance(filename, (gzip.GzipFile, bz2.BZ2File, lzma.LZMAFile)):
+        return filename  # type: ignore
+
     if mode not in ("rb", "wb", "ab"):
         raise ValueError(f"Mode '{mode}' not supported")
     filepath = _filepath_from_path_or_filelike(filename)
@@ -308,11 +311,19 @@ def get_file_extension(file_or_path: FileLike) -> str:
     )
 
 
-def _normalize_mode(mode: Any) -> Any:
-    # gzip.GzipFile.mode was an integer (1/2) before Python 3.13.
-    # https://docs.python.org/3/library/gzip.html#gzip.GzipFile.mode
+def _normalize_mode(file_obj: Any) -> Optional[str]:
+    """
+    Extract and normalize the mode of a file-like object.
+    """
+    mode = getattr(file_obj, "mode", getattr(file_obj, "_mode", None))
     if isinstance(mode, int):
-        return {1: "rb", 2: "wb"}.get(mode)
+        if isinstance(file_obj, gzip.GzipFile):
+            # gzip used 1 (read) and 2 (write) before Python 3.13
+            return {1: "rb", 2: "wb"}.get(mode)
+        if isinstance(file_obj, (bz2.BZ2File, lzma.LZMAFile)):
+            # bz2 and lzma store 1 (read) and 3 (write) in _mode.
+            # In older Python versions, 2 was used for _MODE_READ_EOF.
+            return {1: "rb", 2: "rb", 3: "wb"}.get(mode)
     return mode
 
 
@@ -459,7 +470,7 @@ def open_as_file(
     ):
         # --- Validation: Check mode compatibility for existing file objects ---
         if not isinstance(input_, (str, os.PathLike)):
-            input_mode = _normalize_mode(getattr(input_, "mode", None))
+            input_mode = _normalize_mode(input_)
             if input_mode and input_mode != mode:
                 is_readable_requested = "r" in mode or "+" in mode
                 is_writable_requested = (

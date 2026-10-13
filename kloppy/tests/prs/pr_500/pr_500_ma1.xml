@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<match>
+  <matchInfo id="71pif9hi2vwzp6q0xzilyxst0" coverageLevel="15" date="2021-09-11Z" time="18:30:00Z" localDate="2021-09-11" localTime="20:30:00" week="6" attendanceInfoId="2" attendanceInfo="Limited Audience" numberOfPeriods="2" periodLength="45" lastUpdated="2024-03-14T21:27:20Z">
+    <description>Hamburger SV vs Sandhausen</description>
+    <sport id="289u5typ3vp4ifwh5thalohmq">Soccer</sport>
+    <ruleset id="79plas4983031idr6vw83nuel">Men</ruleset>
+    <competition id="722fdbecxzcq9788l6jqclzlw" name="2. Bundesliga" knownName="German Bundesliga Zwei" competitionCode="2.B" competitionFormat="Domestic league">
+      <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+    </competition>
+    <tournamentCalendar id="93wcwtf25153hracvqva88aac" startDate="2021-07-23Z" endDate="2022-05-15Z">2021/2022</tournamentCalendar>
+    <stage id="9443wbz12vfz0f7ewmg8xhes4" formatId="e2q01r9o9jwiq1fls93d1sslx" startDate="2021-07-23Z" endDate="2022-05-15Z">Regular Season</stage>
+    <contestants>
+      <contestant id="75xi6hloabmnjn2kzgj1g8h1s" name="Hamburger SV" shortName="Hamburg" officialName="Hamburger SV" code="HSV" position="home">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+      <contestant id="884uzyf1wosc7ykji6e18gifp" name="Sandhausen" shortName="Sandhausen" officialName="SV Sandhausen" code="SVS" position="away">
+        <country id="36min0qztu8eydwvpv8t1is0m">Germany</country>
+      </contestant>
+    </contestants>
+    <venue id="8gaqzo8y471bfkkc3tq7ra7o" neutral="no" longName="Volksparkstadion">Volksparkstadion</venue>
+  </matchInfo>
+  <liveData>
+    <matchDetails periodId="14" matchStatus="Played" winner="home" matchLengthMin="97" matchLengthSec="41">
+      <periods>
+        <period id="1" start="2021-09-11T18:30:06Z" end="2021-09-11T19:15:08Z" lengthMin="45" lengthSec="2"/>
+        <period id="2" start="2021-09-11T19:34:13Z" end="2021-09-11T20:26:52Z" lengthMin="52" lengthSec="39"/>
+      </periods>
+      <scores>
+        <ht home="0" away="0"/>
+        <ft home="2" away="1"/>
+        <total home="2" away="1"/>
+      </scores>
+    </matchDetails>
+    <lineUp contestantId="75xi6hloabmnjn2kzgj1g8h1s" formationUsed="433">
+      <player playerId="2nrmndj0uq3f46c2cb1fbf85" firstName="Moritz" lastName="Heyer" shortFirstName="Moritz" shortLastName="Heyer" matchName="M. Heyer" shirtNumber="3" position="Midfielder" positionSide="Left/Centre" formationPlace="8"/>
+      <player playerId="aksjicf4keobpav3tuujngell" firstName="Manuel Paul" lastName="Wintzheimer" shortFirstName="Manuel" shortLastName="Wintzheimer" matchName="M. Wintzheimer" shirtNumber="19" position="Striker" positionSide="Centre/Right" formationPlace="10"/>
+    </lineUp>
+    <lineUp contestantId="884uzyf1wosc7ykji6e18gifp" formationUsed="451">
+      <player playerId="test_player_away" firstName="Test" lastName="Player" shortFirstName="Test" shortLastName="Player" matchName="T. Player" shirtNumber="99" position="Midfielder" positionSide="Centre" formationPlace="10"/>
+    </lineUp>
+  </liveData>
+</match>

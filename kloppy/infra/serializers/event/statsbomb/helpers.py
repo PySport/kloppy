@@ -93,6 +93,18 @@ def parse_coordinates(coordinates: list[float], fidelity_version: int) -> Point:
         raise DeserializationError(f"Unknown coordinates format: {coordinates}")
 
 
+def parse_visible_area(
+    visible_area: Optional[list[float]],
+) -> Optional[list[Point]]:
+    """Parse a flat StatsBomb visible area list into polygon points."""
+    if not visible_area:
+        return None
+    return [
+        Point(x=visible_area[i], y=visible_area[i + 1])
+        for i in range(0, len(visible_area) - 1, 2)
+    ]
+
+
 def parse_freeze_frame(
     freeze_frame: list[dict],
     fidelity_version: int,
@@ -171,7 +183,8 @@ def parse_freeze_frame(
         timestamp=event.timestamp,
         ball_state=event.ball_state,
         ball_owning_team=event.ball_owning_team,
-        other_data={"visible_area": visible_area},
+        other_data={},
+        visible_area=parse_visible_area(visible_area),
     )
 
     return frame

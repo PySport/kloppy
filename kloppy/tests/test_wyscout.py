@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
 
 import pytest
@@ -112,6 +113,48 @@ class TestWyscoutV2:
         assert clearance_event.event_type == EventType.CLEARANCE
         interception_event = dataset.get_event_by_id("interception-190079171")
         assert interception_event.event_type == EventType.INTERCEPTION
+
+    def test_interception_by_first_duel_of_pair(
+        self, event_v2_data: Path, tmp_path: Path
+    ):
+        # The interception tag can sit on the first duel of a pair. Then the
+        # paired duel is the next event and the pass before must be kept.
+        # Sequence taken from https://github.com/PySport/kloppy/issues/268
+        with open(event_v2_data) as f:
+            raw = json.load(f)
+
+        def raw_event(event_id, event, sub_event, team, player, sec, tags):
+            return {
+                "id": event_id,
+                "playerId": player,
+                "teamId": team,
+                "matchId": 2499773,
+                "matchPeriod": "2H",
+                "eventSec": sec,
+                "eventName": event,
+                "subEventName": sub_event,
+                "positions": [{"x": 50, "y": 50}, {"x": 55, "y": 50}],
+                "tags": [{"id": tag} for tag in tags],
+            }
+
+        raw["events"] = [
+            raw_event(1, 8, 85, 1612, 15808, 1787.2, [1802]),
+            raw_event(2, 1, 11, 1631, 26150, 1789.1, [1401, 501, 703, 1801]),
+            raw_event(3, 1, 12, 1612, 18550, 1789.6, [502, 701, 1802]),
+            raw_event(4, 8, 85, 1631, 26150, 1791.0, [1801]),
+        ]
+        event_data = tmp_path / "wyscout_events_v2_interception.json"
+        event_data.write_text(json.dumps(raw))
+
+        dataset = wyscout.load(
+            event_data=event_data,
+            coordinates="wyscout",
+            data_version="V2",
+        )
+
+        assert [e.event_id for e in dataset.events] == ["1", "2", "4"]
+        assert dataset.get_event_by_id("1").event_type == EventType.PASS
+        assert dataset.get_event_by_id("2").event_type == EventType.INTERCEPTION
 
     def test_duel_event(self, dataset: EventDataset):
         ground_duel_event = dataset.get_event_by_id("190078379")

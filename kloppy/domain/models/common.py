@@ -1564,6 +1564,8 @@ class DataRecord(ABC):
                     self.dataset.metadata.orientation,
                     period=self.period,
                     ball_owning_team=self.ball_owning_team,
+                    # Without an event team, use possession as in transformations.
+                    action_executing_team=self.ball_owning_team,
                 )
             except OrientationError:
                 return AttackingDirection.NOT_SET

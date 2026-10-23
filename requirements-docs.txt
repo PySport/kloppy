@@ -248,7 +248,7 @@ nbclient==0.10.2 ; python_full_version < '3.10'
     # via nbconvert
 nbclient==0.11.0 ; python_full_version >= '3.10'
     # via nbconvert
-nbconvert==7.17.1
+nbconvert==7.17.2
     # via mkdocs-jupyter
 nbformat==5.10.4
     # via

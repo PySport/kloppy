@@ -1,0 +1,847 @@
+{
+  "id": 28116,
+  "title": "BRIGHTON VS LIVERPOOL PREMIER LEAGUE W31 ON 3/21/2026",
+  "date": "2026-03-21T12:45:00.000Z",
+  "matchday": 31,
+  "pitchLength": 105.0,
+  "pitchWidth": 68.0,
+  "isAttackingLeftToRightTeamId": 414,
+  "homeScore": 2,
+  "awayScore": 1,
+  "seasonId": {
+    "footovision": 12
+  },
+  "competitionId": {
+    "footovision": 3
+  },
+  "homeTeamId": {
+    "footovision": 414
+  },
+  "awayTeamId": {
+    "footovision": 78
+  },
+  "refereeId": {
+    "footovision": 17341
+  },
+  "lastUpdate": {
+    "events": "2026-06-22T21:34:27.026Z",
+    "metrics": "2026-06-22T21:55:46.111Z",
+    "tracking": "2026-04-20T20:12:03.657Z"
+  },
+  "season": {
+    "id": {
+      "footovision": 12
+    },
+    "name": "2025-2026"
+  },
+  "competition": {
+    "id": {
+      "footovision": 3
+    },
+    "name": "PREMIER LEAGUE",
+    "countryId": 895
+  },
+  "homeTeam": {
+    "id": {
+      "footovision": 414
+    },
+    "fullName": "BRIGHTON",
+    "shortName": "BHA",
+    "countryId": 895,
+    "isNationalTeam": false,
+    "category": "Men"
+  },
+  "awayTeam": {
+    "id": {
+      "footovision": 78
+    },
+    "fullName": "LIVERPOOL",
+    "shortName": "LIV",
+    "countryId": 895,
+    "isNationalTeam": false,
+    "category": "Men"
+  },
+  "referee": {
+    "id": {
+      "footovision": 17341
+    },
+    "usualName": "DARREN ENGLAND"
+  },
+  "homeTeamLineups": [
+    {
+      "playerId": {
+        "footovision": 10668
+      },
+      "usualName": "BART VERBRUGGEN",
+      "shirtNumber": 1,
+      "isStarter": true,
+      "position": "GOALKEEPER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 8569
+      },
+      "usualName": "LEWIS DUNK",
+      "shirtNumber": 5,
+      "isStarter": true,
+      "position": "CENTRE_BACK_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 19815
+      },
+      "usualName": "JAN VAN HECKE",
+      "shirtNumber": 6,
+      "isStarter": true,
+      "position": "CENTRE_BACK_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 9329
+      },
+      "usualName": "GEORGINIO RUTTER",
+      "shirtNumber": 10,
+      "isStarter": false,
+      "position": "STRIKER",
+      "startTime": {
+        "time": 2244000,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 891000
+    },
+    {
+      "playerId": {
+        "footovision": 21778
+      },
+      "usualName": "YANKUBA MINTEH",
+      "shirtNumber": 11,
+      "isStarter": true,
+      "position": "ATTACKING_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 1822400,
+        "halftime": 2
+      },
+      "playingTime": 4843720
+    },
+    {
+      "playerId": {
+        "footovision": 20182
+      },
+      "usualName": "JACK HINSHELWOOD",
+      "shirtNumber": 13,
+      "isStarter": true,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 2243960,
+        "halftime": 2
+      },
+      "playingTime": 5265280
+    },
+    {
+      "playerId": {
+        "footovision": 14464
+      },
+      "usualName": "CARLOS BALEBA",
+      "shirtNumber": 17,
+      "isStarter": false,
+      "position": "DEFENSIVE_MIDFIELDER_RIGHT",
+      "startTime": {
+        "time": 1822440,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 1312560
+    },
+    {
+      "playerId": {
+        "footovision": 628
+      },
+      "usualName": "DANNY WELBECK",
+      "shirtNumber": 18,
+      "isStarter": true,
+      "position": "STRIKER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 2243960,
+        "halftime": 2
+      },
+      "playingTime": 5265280
+    },
+    {
+      "playerId": {
+        "footovision": 687
+      },
+      "usualName": "JAMES MILNER",
+      "shirtNumber": 20,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 1822400,
+        "halftime": 2
+      },
+      "playingTime": 4843720
+    },
+    {
+      "playerId": {
+        "footovision": 15848
+      },
+      "usualName": "KAORU MITOMA",
+      "shirtNumber": 22,
+      "isStarter": false,
+      "position": "ATTACKING_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 1822440,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 1312560
+    },
+    {
+      "playerId": {
+        "footovision": 14584
+      },
+      "usualName": "FERDI KADIOGLU",
+      "shirtNumber": 24,
+      "isStarter": true,
+      "position": "FULL_BACK_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 23676
+      },
+      "usualName": "DIEGO GOMEZ",
+      "shirtNumber": 25,
+      "isStarter": true,
+      "position": "ATTACKING_MIDFIELDER_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 2750640,
+        "halftime": 2
+      },
+      "playingTime": 5771960
+    },
+    {
+      "playerId": {
+        "footovision": 16625
+      },
+      "usualName": "YASIN AYARI",
+      "shirtNumber": 26,
+      "isStarter": false,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": {
+        "time": 2244000,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 891000
+    },
+    {
+      "playerId": {
+        "footovision": 21662
+      },
+      "usualName": "MATS WIEFFER",
+      "shirtNumber": 27,
+      "isStarter": true,
+      "position": "FULL_BACK_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 8572
+      },
+      "usualName": "PASCAL GROSS",
+      "shirtNumber": 30,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 2015
+      },
+      "usualName": "JOEL VELTMAN",
+      "shirtNumber": 34,
+      "isStarter": false,
+      "position": "WINGBACK_RIGHT",
+      "startTime": {
+        "time": 2750680,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 384320
+    }
+  ],
+  "awayTeamLineups": [
+    {
+      "playerId": {
+        "footovision": 1999
+      },
+      "usualName": "VIRGIL VAN DIJK",
+      "shirtNumber": 4,
+      "isStarter": true,
+      "position": "CENTRE_BACK_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 11284
+      },
+      "usualName": "IBRAHIMA KONATE",
+      "shirtNumber": 5,
+      "isStarter": true,
+      "position": "CENTRE_BACK_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 1857520,
+        "halftime": 2
+      },
+      "playingTime": 4878840
+    },
+    {
+      "playerId": {
+        "footovision": 20601
+      },
+      "usualName": "MILOS KERKEZ",
+      "shirtNumber": 6,
+      "isStarter": true,
+      "position": "FULL_BACK_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 1857520,
+        "halftime": 2
+      },
+      "playingTime": 4878840
+    },
+    {
+      "playerId": {
+        "footovision": 11573
+      },
+      "usualName": "FLORIAN WIRTZ",
+      "shirtNumber": 7,
+      "isStarter": true,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 8102
+      },
+      "usualName": "DOMINIK SZOBOSZLAI",
+      "shirtNumber": 8,
+      "isStarter": true,
+      "position": "CENTRAL_MIDFIELDER_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 8808
+      },
+      "usualName": "ALEXIS MAC ALLISTER",
+      "shirtNumber": 10,
+      "isStarter": true,
+      "position": "OFFENSIVE_MIDFIELDER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 4784
+      },
+      "usualName": "FEDERICO CHIESA",
+      "shirtNumber": 14,
+      "isStarter": false,
+      "position": "STRIKER",
+      "startTime": {
+        "time": 1857560,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 1277440
+    },
+    {
+      "playerId": {
+        "footovision": 8300
+      },
+      "usualName": "CURTIS JONES",
+      "shirtNumber": 17,
+      "isStarter": false,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 463160,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 5693160
+    },
+    {
+      "playerId": {
+        "footovision": 6660
+      },
+      "usualName": "CODY GAKPO",
+      "shirtNumber": 18,
+      "isStarter": true,
+      "position": "STRIKER_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 9145
+      },
+      "usualName": "HUGO EKITIKE",
+      "shirtNumber": 22,
+      "isStarter": true,
+      "position": "STRIKER_LEFT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 463120,
+        "halftime": 1
+      },
+      "playingTime": 463120
+    },
+    {
+      "playerId": {
+        "footovision": 8681
+      },
+      "usualName": "GIORGI MAMARDASHVILI",
+      "shirtNumber": 25,
+      "isStarter": true,
+      "position": "GOALKEEPER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 1017
+      },
+      "usualName": "ANDREW ROBERTSON",
+      "shirtNumber": 26,
+      "isStarter": false,
+      "position": "FULL_BACK_LEFT",
+      "startTime": {
+        "time": 1857560,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 1277440
+    },
+    {
+      "playerId": {
+        "footovision": 8225
+      },
+      "usualName": "JEREMIE FRIMPONG",
+      "shirtNumber": 30,
+      "isStarter": true,
+      "position": "FULL_BACK_RIGHT",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 1061640,
+        "halftime": 2
+      },
+      "playingTime": 4082960
+    },
+    {
+      "playerId": {
+        "footovision": 8831
+      },
+      "usualName": "RYAN GRAVENBERCH",
+      "shirtNumber": 38,
+      "isStarter": true,
+      "position": "DEFENSIVE_MIDFIELDER",
+      "startTime": {
+        "time": 0,
+        "halftime": 1
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 6156320
+    },
+    {
+      "playerId": {
+        "footovision": 29222
+      },
+      "usualName": "RIO NGUMOHA",
+      "shirtNumber": 73,
+      "isStarter": false,
+      "position": "CENTRAL_MIDFIELDER_LEFT",
+      "startTime": {
+        "time": 1061680,
+        "halftime": 2
+      },
+      "endTime": {
+        "time": 3135000,
+        "halftime": 2
+      },
+      "playingTime": 2073320
+    }
+  ],
+  "homeTeamFormations": [
+    {
+      "halftime": 1,
+      "time": 0,
+      "system": "4-2-3-1",
+      "onFieldPlayersPositions": {
+        "628": "STRIKER",
+        "687": "DEFENSIVE_MIDFIELDER_RIGHT",
+        "8569": "CENTRE_BACK_LEFT",
+        "8572": "DEFENSIVE_MIDFIELDER_LEFT",
+        "10668": "GOALKEEPER",
+        "14584": "FULL_BACK_LEFT",
+        "19815": "CENTRE_BACK_RIGHT",
+        "20182": "OFFENSIVE_MIDFIELDER",
+        "21662": "FULL_BACK_RIGHT",
+        "21778": "ATTACKING_MIDFIELDER_LEFT",
+        "23676": "ATTACKING_MIDFIELDER_RIGHT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "starting XI"
+        }
+      ]
+    },
+    {
+      "halftime": 2,
+      "time": 1822440,
+      "system": "4-2-3-1",
+      "onFieldPlayersPositions": {
+        "628": "STRIKER",
+        "8569": "CENTRE_BACK_LEFT",
+        "8572": "DEFENSIVE_MIDFIELDER_LEFT",
+        "10668": "GOALKEEPER",
+        "14464": "DEFENSIVE_MIDFIELDER_RIGHT",
+        "14584": "FULL_BACK_LEFT",
+        "15848": "ATTACKING_MIDFIELDER_LEFT",
+        "19815": "CENTRE_BACK_RIGHT",
+        "20182": "OFFENSIVE_MIDFIELDER",
+        "21662": "FULL_BACK_RIGHT",
+        "23676": "ATTACKING_MIDFIELDER_RIGHT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 15848,
+          "playerOut": 21778
+        },
+        {
+          "type": "substitution",
+          "playerIn": 14464,
+          "playerOut": 687
+        }
+      ]
+    },
+    {
+      "halftime": 2,
+      "time": 2244000,
+      "system": "4-2-3-1",
+      "onFieldPlayersPositions": {
+        "8569": "CENTRE_BACK_LEFT",
+        "8572": "DEFENSIVE_MIDFIELDER_LEFT",
+        "9329": "STRIKER",
+        "10668": "GOALKEEPER",
+        "14464": "DEFENSIVE_MIDFIELDER_RIGHT",
+        "14584": "FULL_BACK_LEFT",
+        "15848": "ATTACKING_MIDFIELDER_LEFT",
+        "16625": "OFFENSIVE_MIDFIELDER",
+        "19815": "CENTRE_BACK_RIGHT",
+        "21662": "FULL_BACK_RIGHT",
+        "23676": "ATTACKING_MIDFIELDER_RIGHT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 9329,
+          "playerOut": 628
+        },
+        {
+          "type": "substitution",
+          "playerIn": 16625,
+          "playerOut": 20182
+        }
+      ]
+    },
+    {
+      "halftime": 2,
+      "time": 2750680,
+      "system": "5-4-1",
+      "onFieldPlayersPositions": {
+        "2015": "WINGBACK_RIGHT",
+        "8569": "CENTRE_BACK_LEFT",
+        "8572": "DEFENSIVE_MIDFIELDER_LEFT",
+        "9329": "STRIKER",
+        "10668": "GOALKEEPER",
+        "14464": "DEFENSIVE_MIDFIELDER_RIGHT",
+        "14584": "WINGBACK_LEFT",
+        "15848": "ATTACKING_MIDFIELDER_LEFT",
+        "16625": "ATTACKING_MIDFIELDER_RIGHT",
+        "19815": "CENTRE_BACK",
+        "21662": "CENTRE_BACK_RIGHT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 2015,
+          "playerOut": 23676
+        }
+      ]
+    }
+  ],
+  "awayTeamFormations": [
+    {
+      "halftime": 1,
+      "time": 0,
+      "system": "4-1-2-1-2",
+      "onFieldPlayersPositions": {
+        "1999": "CENTRE_BACK_LEFT",
+        "6660": "STRIKER_RIGHT",
+        "8102": "CENTRAL_MIDFIELDER_RIGHT",
+        "8225": "FULL_BACK_RIGHT",
+        "8681": "GOALKEEPER",
+        "8808": "OFFENSIVE_MIDFIELDER",
+        "8831": "DEFENSIVE_MIDFIELDER",
+        "9145": "STRIKER_LEFT",
+        "11284": "CENTRE_BACK_RIGHT",
+        "11573": "CENTRAL_MIDFIELDER_LEFT",
+        "20601": "FULL_BACK_LEFT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "starting XI"
+        }
+      ]
+    },
+    {
+      "halftime": 1,
+      "time": 463160,
+      "system": "4-1-2-1-2",
+      "onFieldPlayersPositions": {
+        "1999": "CENTRE_BACK_LEFT",
+        "6660": "STRIKER_LEFT",
+        "8102": "CENTRAL_MIDFIELDER_RIGHT",
+        "8225": "FULL_BACK_RIGHT",
+        "8300": "CENTRAL_MIDFIELDER_LEFT",
+        "8681": "GOALKEEPER",
+        "8808": "OFFENSIVE_MIDFIELDER",
+        "8831": "DEFENSIVE_MIDFIELDER",
+        "11284": "CENTRE_BACK_RIGHT",
+        "11573": "STRIKER_RIGHT",
+        "20601": "FULL_BACK_LEFT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 8300,
+          "playerOut": 9145
+        }
+      ]
+    },
+    {
+      "halftime": 2,
+      "time": 1061680,
+      "system": "4-1-2-1-2",
+      "onFieldPlayersPositions": {
+        "1999": "CENTRE_BACK_LEFT",
+        "6660": "STRIKER_LEFT",
+        "8102": "CENTRAL_MIDFIELDER_RIGHT",
+        "8300": "FULL_BACK_RIGHT",
+        "8681": "GOALKEEPER",
+        "8808": "OFFENSIVE_MIDFIELDER",
+        "8831": "DEFENSIVE_MIDFIELDER",
+        "11284": "CENTRE_BACK_RIGHT",
+        "11573": "STRIKER_RIGHT",
+        "20601": "FULL_BACK_LEFT",
+        "29222": "CENTRAL_MIDFIELDER_LEFT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 29222,
+          "playerOut": 8225
+        }
+      ]
+    },
+    {
+      "halftime": 2,
+      "time": 1857560,
+      "system": "4-2-3-1",
+      "onFieldPlayersPositions": {
+        "1017": "FULL_BACK_LEFT",
+        "1999": "CENTRE_BACK_LEFT",
+        "4784": "STRIKER",
+        "6660": "ATTACKING_MIDFIELDER_LEFT",
+        "8102": "DEFENSIVE_MIDFIELDER_RIGHT",
+        "8300": "FULL_BACK_RIGHT",
+        "8681": "GOALKEEPER",
+        "8808": "DEFENSIVE_MIDFIELDER_LEFT",
+        "8831": "CENTRE_BACK_RIGHT",
+        "11573": "OFFENSIVE_MIDFIELDER",
+        "29222": "ATTACKING_MIDFIELDER_RIGHT"
+      },
+      "reasonForFormationChange": [
+        {
+          "type": "substitution",
+          "playerIn": 1017,
+          "playerOut": 20601
+        },
+        {
+          "type": "substitution",
+          "playerIn": 4784,
+          "playerOut": 11284
+        }
+      ]
+    }
+  ]
+}

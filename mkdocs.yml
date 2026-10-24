@@ -42,6 +42,7 @@ nav:
       - Loading data:
           - user-guide/loading-data/index.md
           - Datafactory: user-guide/loading-data/datafactory.ipynb
+          - Footovision: user-guide/loading-data/footovision.ipynb
           - HawkEye: user-guide/loading-data/hawkeye.ipynb
           - Impect: user-guide/loading-data/impect.ipynb
           - Hudl SportsCode: user-guide/loading-data/sportscode.ipynb
@@ -81,6 +82,7 @@ nav:
       - reference/index.md
       - Data Loaders:
           - DataFactory: reference/providers/datafactory.md
+          - Footovision: reference/providers/footovision.md
           - HawkEye: reference/providers/hawkeye.md
           - Impect: reference/providers/impect.md
           - Hudl Sportscode: reference/providers/sportscode.md

@@ -41,7 +41,9 @@ def create_event(event_cls: type[T], **kwargs) -> T:
        Normally this would break because of an 'Unexpected argument' exception,
        but we filter those arguments out.
     """
-    extra_kwargs = {"state": {}}
+    extra_kwargs = {}
+    if "state" not in kwargs:
+        extra_kwargs["state"] = {}
     if "related_event_ids" not in kwargs:
         extra_kwargs["related_event_ids"] = []
 

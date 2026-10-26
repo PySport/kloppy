@@ -3,8 +3,43 @@ from kloppy.infra.serializers.tracking.pff import (
     PFF_TrackingDeserializer,
     PFF_TrackingInputs,
 )
+from kloppy.domain import EventDataset
 from kloppy.io import FileLike, open_as_file
+from kloppy.infra.serializers.event.pff import (
+    PFFEventDeserializer,
+    PFFEventDataInput
+)
 
+def load_event(
+    event_data: FileLike,
+    meta_data: FileLike,
+    roster_data: FileLike,
+    coordinates: Optional[str] = None,
+) -> EventDataset:
+    """
+    Load and deserialize event data from the provided event data, lineup data, and optional three-sixty data files.
+
+    Args:
+        event_data (FileLike): A file-like object containing the event data.
+        meta_data (FileLike): A file-like object containing metadata about the tracking data.
+        roster_data (FileLike): A file-like object containing roster metadata, such as player details.
+        coordinates (Optional[str], optional): The coordinate system to use for the tracking data (e.g., "pff"). Defaults to None.
+    Returns:
+        EventDataset: A deserialized EventDataset object containing the processed event data.
+    """
+    deserializer = PFFEventDeserializer(
+        coordinate_system=coordinates
+    )
+    with open_as_file(event_data) as event_data_fp, open_as_file(
+        roster_data
+    ) as roster_data_fp, open_as_file(meta_data) as meta_data_fp:
+        return deserializer.deserialize(
+            inputs=PFFEventDataInput(
+                event_data=event_data_fp,
+                meta_data=meta_data_fp,
+                roster_data=roster_data_fp,
+            )
+        )
 
 def load_tracking(
     meta_data: FileLike,

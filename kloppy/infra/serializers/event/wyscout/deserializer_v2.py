@@ -589,7 +589,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     goalkeeper_save_args = _parse_goalkeeper_save(raw_event)
                     goalkeeper_save_event = (
                         self.event_factory.build_goalkeeper_event(
-                            **{**goalkeeper_save_args, **generic_event_args}
+                            **{**generic_event_args, **goalkeeper_save_args}
                         )
                     )
                     new_events.append(goalkeeper_save_event)

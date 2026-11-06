@@ -136,6 +136,7 @@ class TestWyscoutV2:
     def test_goalkeeper_event(self, dataset: EventDataset):
         goalkeeper_event = dataset.get_event_by_id("190079010")
         assert goalkeeper_event.event_type == EventType.GOALKEEPER
+        assert goalkeeper_event.coordinates == Point(x=86.0, y=73.0)
         assert (
             goalkeeper_event.get_qualifier_value(GoalkeeperQualifier)
             == GoalkeeperActionType.SAVE

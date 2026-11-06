@@ -10,6 +10,8 @@ from kloppy.domain import (
     AttackingDirection,
     DatasetFlag,
     Dimension,
+    EventDataset,
+    GenericEvent,
     Ground,
     Metadata,
     MetricaCoordinateSystem,
@@ -24,6 +26,7 @@ from kloppy.domain import (
     Team,
     TrackingDataset,
 )
+from kloppy.domain.services.event_factory import create_event
 from kloppy.domain.services.frame_factory import create_frame
 
 
@@ -254,6 +257,67 @@ class TestHelpers:
         for frame1, frame2 in zip(original.frames, transform5.frames):
             assert frame1.ball_coordinates == frame2.ball_coordinates
             assert frame1.attacking_direction == frame2.attacking_direction
+
+    @pytest.mark.parametrize(
+        "dataset_type,coordinates_attr",
+        [(TrackingDataset, "ball_coordinates"), (EventDataset, "coordinates")],
+    )
+    def test_transform_preserves_record_navigation(
+        self, dataset_type, coordinates_attr
+    ):
+        source = self._get_tracking_dataset()
+        source.metadata.orientation = Orientation.STATIC_HOME_AWAY
+        if dataset_type is EventDataset:
+            source = EventDataset(
+                metadata=source.metadata,
+                records=[
+                    create_event(
+                        GenericEvent,
+                        event_id=str(frame.frame_id),
+                        period=frame.period,
+                        timestamp=frame.timestamp,
+                        team=frame.ball_owning_team,
+                        ball_owning_team=frame.ball_owning_team,
+                        ball_state=frame.ball_state,
+                        player=None,
+                        coordinates=Point(
+                            frame.ball_coordinates.x, frame.ball_coordinates.y
+                        ),
+                        raw_event={},
+                        result=None,
+                        qualifiers=[],
+                        related_event_ids=["2"] if frame.frame_id == 1 else [],
+                    )
+                    for frame in source
+                ],
+            )
+        original_coordinates = [
+            getattr(record, coordinates_attr) for record in source
+        ]
+
+        # The home record stays in place; only the away record is flipped.
+        transformed = source.transform(to_orientation="BALL_OWNING_TEAM")
+        first, second = transformed
+        assert getattr(first, coordinates_attr) == original_coordinates[0]
+        assert getattr(second, coordinates_attr).x == 100
+        assert getattr(first.next(), coordinates_attr).x == 100
+        assert first.next() is second
+        assert second.prev() is first
+        assert first.prev() is None
+        assert second.next() is None
+        assert all(record.dataset is transformed for record in transformed)
+
+        assert source[0].next() is source[1]
+        assert source[1].prev() is source[0]
+        assert all(record.dataset is source for record in source)
+        assert [
+            getattr(record, coordinates_attr) for record in source
+        ] == original_coordinates
+        assert source.metadata.orientation == Orientation.STATIC_HOME_AWAY
+        assert source.transform() is source
+        if dataset_type is EventDataset:
+            assert first.get_related_events()[0] is second
+            assert source[0].get_related_events()[0] is source[1]
 
     def test_transform_to_coordinate_system(self, base_dir):
         dataset = tracab.load(

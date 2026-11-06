@@ -462,16 +462,19 @@ class DatasetTransformer:
                 orientation=to_orientation,
             )
 
+        # Copy records so the new dataset can rebuild their navigation references,
+        # including records whose coordinates do not change.
         if isinstance(dataset, TrackingDataset):
             frames = [
-                transformer.transform_frame(record)
+                transformer.transform_frame(replace(record))
                 for record in dataset.records
             ]
 
             return replace(dataset, metadata=metadata, records=frames)
         elif isinstance(dataset, EventDataset):
             events = [
-                transformer.transform_event(event) for event in dataset.records
+                transformer.transform_event(replace(event))
+                for event in dataset.records
             ]
 
             return replace(dataset, metadata=metadata, records=events)

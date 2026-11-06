@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from kloppy import wyscout
+from kloppy._providers.wyscout import identify_deserializer
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
@@ -29,6 +30,14 @@ from kloppy.domain import (
     ShotResult,
     Time,
 )
+from kloppy.infra.serializers.event.wyscout import (
+    WyscoutDeserializerV2,
+    WyscoutDeserializerV3,
+    WyscoutDeserializerV4,
+)
+from kloppy.infra.serializers.event.wyscout.deserializer_v4 import (
+    _parse_starting_formation as _parse_starting_formation_v4,
+)
 
 
 @pytest.fixture(scope="session")
@@ -41,13 +50,28 @@ def event_v3_data(base_dir: Path) -> Path:
     return base_dir / "files" / "wyscout_events_v3.json"
 
 
+@pytest.fixture(scope="session")
+def event_v4_data(base_dir: Path) -> Path:
+    return base_dir / "files" / "wyscout_events_v4.json"
+
+
 def test_correct_auto_recognize_deserialization(
-    event_v2_data: Path, event_v3_data: Path
+    event_v2_data: Path, event_v3_data: Path, event_v4_data: Path
 ):
     dataset = wyscout.load(event_data=event_v2_data, coordinates="wyscout")
     assert dataset.records[2].coordinates == Point(29.0, 6.0)
     dataset = wyscout.load(event_data=event_v3_data, coordinates="wyscout")
     assert dataset.records[2].coordinates == Point(32.0, 56.0)
+    dataset = wyscout.load(event_data=event_v4_data, coordinates="wyscout")
+    assert dataset.records[2].coordinates == Point(32.0, 56.0)
+
+
+def test_identify_deserializer(
+    event_v2_data: Path, event_v3_data: Path, event_v4_data: Path
+):
+    assert identify_deserializer(event_v2_data) is WyscoutDeserializerV2
+    assert identify_deserializer(event_v3_data) is WyscoutDeserializerV3
+    assert identify_deserializer(event_v4_data) is WyscoutDeserializerV4
 
 
 class TestWyscoutV2:
@@ -394,4 +418,111 @@ class TestWyscoutV3:
         assert pass_event.event_type == EventType.PASS
         assert PassType.HIGH_PASS in pass_event.get_qualifier_values(
             PassQualifier
+        )
+
+
+class TestWyscoutV4:
+    """Tests related to deserialization of Wyscout V4 data.
+
+    The V4 test file is a subset of the events in the V3 test file. The
+    formations are converted to the V4 shape.
+    """
+
+    @pytest.fixture(scope="class")
+    def dataset(self, event_v4_data: Path) -> EventDataset:
+        """Load Wyscout V4 event dataset"""
+        dataset = wyscout.load(
+            event_data=event_v4_data,
+            coordinates="wyscout",
+            data_version="V4",
+        )
+        assert dataset.dataset_type == DatasetType.EVENT
+        assert dataset.metadata.orientation == Orientation.ACTION_EXECUTING_TEAM
+        return dataset
+
+    def test_metadata(self, dataset: EventDataset):
+        assert dataset.metadata.periods[0].id == 1
+        assert dataset.metadata.periods[0].end_timestamp == timedelta(
+            minutes=45, seconds=5
+        )
+        assert dataset.metadata.periods[1].id == 2
+        assert dataset.metadata.periods[1].end_timestamp == timedelta(
+            minutes=45, seconds=5
+        ) + timedelta(minutes=46, seconds=58)
+
+        home_team, away_team = dataset.metadata.teams
+        assert home_team.team_id == "3159"
+        assert home_team.starting_formation == FormationType.THREE_FOUR_TWO_ONE
+        assert away_team.team_id == "3164"
+        assert away_team.starting_formation == FormationType.FOUR_FIVE_ONE
+
+        cr7 = home_team.get_player_by_id("3322")
+        assert cr7.full_name == "Cristiano Ronaldo dos Santos Aveiro"
+        assert cr7.starting is True
+        assert cr7.starting_position == PositionType.Striker
+        assert cr7.jersey_no == 7
+
+        substitute = home_team.get_player_by_id("20395")
+        assert substitute.starting is False
+        assert substitute.starting_position is None
+
+    def test_events_same_as_v3(
+        self, dataset: EventDataset, event_v3_data: Path
+    ):
+        dataset_v3 = wyscout.load(
+            event_data=event_v3_data,
+            coordinates="wyscout",
+            data_version="V3",
+        )
+        for event in dataset.events:
+            if event.event_type == EventType.FORMATION_CHANGE:
+                continue
+            event_v3 = dataset_v3.get_event_by_id(event.event_id)
+            assert event.event_type == event_v3.event_type
+            assert event.time == event_v3.time
+            assert event.coordinates == event_v3.coordinates
+            assert event.player == event_v3.player
+            assert event.result == event_v3.result
+
+    def test_starting_formation(self):
+        def formation(
+            formation_id, team_id, scheme, start, period_start, players
+        ):
+            return {
+                "id": formation_id,
+                "teamId": team_id,
+                "scheme": scheme,
+                "startSec": start,
+                "endSec": start + 100,
+                "matchPeriodStart": period_start,
+                "matchPeriodEnd": period_start,
+                "playersOnField": len(players),
+                "players": [
+                    {"playerId": player_id, "position": position}
+                    for player_id, position in players
+                ],
+            }
+
+        raw_events = {
+            "formations": {
+                "home": [
+                    formation(3, 1, "4-4-2", 3000, "2H", [(10, "cf")]),
+                    formation(2, 1, "4-3-3", 1200, "1H", [(10, "lwf")]),
+                    formation(1, 1, "4-2-3-1", 1, "1H", [(10, "amf")]),
+                ],
+                "away": [
+                    # The tagged video is not available
+                    formation(5, 2, "4-4-2", 0, None, [(20, "gk")]),
+                    formation(4, 2, "3-5-2", 1, "1H", [(21, "gk")]),
+                ],
+            }
+        }
+
+        assert _parse_starting_formation_v4(raw_events, "1") == (
+            "4-2-3-1",
+            {"10": "amf"},
+        )
+        assert _parse_starting_formation_v4(raw_events, "2") == (
+            "3-5-2",
+            {"21": "gk"},
         )

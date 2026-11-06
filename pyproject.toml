@@ -12,7 +12,7 @@ exclude = ["kloppy/tests"]
 
 [project]
 name = "kloppy"
-version = "3.19.1"
+version = "3.20.0"
 description = "Soccer Data Processing, Simplified"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { file = "LICENSE" }

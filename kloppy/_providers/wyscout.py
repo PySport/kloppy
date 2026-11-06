@@ -6,6 +6,7 @@ from kloppy.domain import EventDataset, EventFactory
 from kloppy.infra.serializers.event.wyscout import (
     WyscoutDeserializerV2,
     WyscoutDeserializerV3,
+    WyscoutDeserializerV4,
     WyscoutInputs,
 )
 from kloppy.io import FileLike, open_as_file
@@ -27,7 +28,8 @@ def load(
         event_types: A list of event types to load.
         coordinates: The coordinate system to use.
         event_factory: A custom event factory.
-        data_version: The version of the Wyscout data. Supported versions are "V2" and "V3".
+        data_version: The version of the Wyscout data. Supported versions are "V2", "V3"
+            and "V4". If not given, the version is detected from the data.
 
     Returns:
         The parsed event data.
@@ -37,6 +39,8 @@ def load(
             deserializer_class = WyscoutDeserializerV2
         elif data_version == "V3":
             deserializer_class = WyscoutDeserializerV3
+        elif data_version == "V4":
+            deserializer_class = WyscoutDeserializerV4
         else:
             deserializer_class = identify_deserializer(event_data_fp)
             event_data_fp.seek(0)
@@ -93,7 +97,11 @@ def load_open_data(
 
 def identify_deserializer(
     event_data: FileLike,
-) -> Union[type[WyscoutDeserializerV3], type[WyscoutDeserializerV2]]:
+) -> Union[
+    type[WyscoutDeserializerV4],
+    type[WyscoutDeserializerV3],
+    type[WyscoutDeserializerV2],
+]:
     with open_as_file(event_data) as event_data_fp:
         events_with_meta = json.load(event_data_fp)
 
@@ -104,7 +112,13 @@ def identify_deserializer(
     if "eventName" in first_event:
         deserializer = WyscoutDeserializerV2
     elif "primary" in first_event.get("type", {}):
-        deserializer = WyscoutDeserializerV3
+        # v3 and v4 events have the same structure. Only the "formations"
+        # object is different: v4 groups formations by "home" / "away".
+        formations = events_with_meta.get("formations", {})
+        if "home" in formations or "away" in formations:
+            deserializer = WyscoutDeserializerV4
+        else:
+            deserializer = WyscoutDeserializerV3
 
     if deserializer is None:
         raise ValueError(

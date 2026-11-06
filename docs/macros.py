@@ -25,7 +25,7 @@ _EVENT_DATA_PROVIDERS = {
     "statsbomb": "Hudl StatsBomb",
     "statsperform": "Stats Perform / Opta",
     "wyscout_v2": "Wyscout (v2)",
-    "wyscout_v3": "Wyscout (v3)",
+    "wyscout_v3": "Wyscout (v3/v4)",
     "datafactory": "DataFactory",
     "sportec": "Sportec Solutions",
     "metrica_json": "Metrica (JSON)",

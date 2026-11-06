@@ -176,20 +176,37 @@ class ShotZoneResults(Enum):
         warnings.warn(f"Invalid shot zone code: {code}")
 
 
-def _parse_team(raw_events, wyId: str, ground: Ground) -> Team:
+def _parse_starting_formation(
+    raw_events, wyId: str
+) -> tuple[str, dict[str, str]]:
+    """Return the starting scheme and the position code of each starting player."""
     # Get the first formation description
     first_period_formation_info = raw_events["formations"][wyId]["1H"]
     first_formation_descr = next(iter(first_period_formation_info.values()))
     formation_str, formation_info = next(iter(first_formation_descr.items()))
 
+    starting_positions = {
+        player_id: player_info["position"]
+        for player_descr in formation_info["players"]
+        for player_id, player_info in player_descr.items()
+    }
+    return formation_str, starting_positions
+
+
+def _parse_team(
+    raw_events,
+    wyId: str,
+    ground: Ground,
+    starting_formation_info: tuple[str, dict[str, str]],
+) -> Team:
     # Extract the formation and players' positions
+    formation_str, starting_positions = starting_formation_info
     starting_formation = formations.get(formation_str)
     starting_players_positions = {
         player_id: position_types_mapping.get(
-            player_info["position"].upper(), PositionType.Unknown
+            position.upper(), PositionType.Unknown
         )
-        for player_descr in formation_info["players"]
-        for player_id, player_info in player_descr.items()
+        for player_id, position in starting_positions.items()
     }
 
     team = Team(
@@ -747,6 +764,12 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
     def provider(self) -> Provider:
         return Provider.WYSCOUT
 
+    @staticmethod
+    def _parse_starting_formation(
+        raw_events, wyId: str
+    ) -> tuple[str, dict[str, str]]:
+        return _parse_starting_formation(raw_events, wyId)
+
     def _deserialize(self, inputs: WyscoutInputs) -> EventDataset:
         transformer = self.get_transformer()
 
@@ -767,8 +790,18 @@ class WyscoutDeserializerV3(EventDataDeserializer[WyscoutInputs]):
 
         with performance_logging("parse data", logger=logger):
             home_team_id, away_team_id = raw_events["teams"].keys()
-            home_team = _parse_team(raw_events, home_team_id, Ground.HOME)
-            away_team = _parse_team(raw_events, away_team_id, Ground.AWAY)
+            home_team = _parse_team(
+                raw_events,
+                home_team_id,
+                Ground.HOME,
+                self._parse_starting_formation(raw_events, home_team_id),
+            )
+            away_team = _parse_team(
+                raw_events,
+                away_team_id,
+                Ground.AWAY,
+                self._parse_starting_formation(raw_events, away_team_id),
+            )
             teams = {home_team_id: home_team, away_team_id: away_team}
             players = {
                 wyId: _players_to_dict(team.players)

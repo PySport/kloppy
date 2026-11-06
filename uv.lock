@@ -3012,7 +3012,7 @@ wheels = [
 
 [[package]]
 name = "kloppy"
-version = "3.19.1"
+version = "3.20.0"
 source = { editable = "." }
 default-groups = ["dev", "docs", "nb"]
 dependencies = [

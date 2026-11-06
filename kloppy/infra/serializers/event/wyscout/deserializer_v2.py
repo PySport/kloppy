@@ -497,6 +497,7 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                 game_id = str(game_id)
 
             events = []
+            paired_duel_ids = set()
 
             for idx, raw_event in enumerate(raw_events["events"]):
                 next_event = None
@@ -527,6 +528,10 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                         end_timestamp=periods[-1].start_timestamp
                         + timedelta(seconds=raw_event["eventSec"]),
                     )
+
+                if raw_event["id"] in paired_duel_ids:
+                    # already merged into the interception of its pair
+                    continue
 
                 generic_event_args = {
                     "event_id": str(raw_event["id"]),
@@ -677,8 +682,21 @@ class WyscoutDeserializerV2(EventDataDeserializer[WyscoutInputs]):
                     for i, new_event in enumerate(list(new_events)):
                         if new_event.event_type == EventType.DUEL:
                             # when DuelEvent is interception, we need to
-                            # overwrite this and the previous DuelEvent
-                            events = events[:-1]
+                            # overwrite this and the opponent's DuelEvent of
+                            # the same pair, which comes before or after it
+                            if (
+                                events
+                                and events[-1].event_type == EventType.DUEL
+                                and events[-1].team != new_event.team
+                            ):
+                                events = events[:-1]
+                            elif (
+                                next_event is not None
+                                and next_event["eventId"]
+                                == wyscout_events.DUEL.EVENT
+                                and str(next_event["teamId"]) != team_id
+                            ):
+                                paired_duel_ids.add(next_event["id"])
                             new_events[i] = (
                                 self.event_factory.build_interception(
                                     **interception_event_args,

@@ -109,6 +109,7 @@ class Provider(Enum):
         HAWEKEYE (Provider):
         SPORTVU (Provider):
         IMPECT (Provider):
+        FOOTOVISION (Provider):
         OTHER (Provider):
     """
 
@@ -129,6 +130,7 @@ class Provider(Enum):
     SIGNALITY = "signality"
     IMPECT = "impect"
     OTHER = "other"
+    FOOTOVISION = "footovision"
 
     def __str__(self):
         return self.value
@@ -847,6 +849,14 @@ class MetricaCoordinateSystem(KloppyCoordinateSystem):
         return Provider.METRICA
 
 
+class FootovisionCoordinateSystem(KloppyCoordinateSystem):
+    """Footovision's normalized, top-left-origin coordinate system."""
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.FOOTOVISION
+
+
 class TracabCoordinateSystem(ProviderCoordinateSystem):
     """
     Tracab coordinate system.
@@ -1399,6 +1409,7 @@ def build_coordinate_system(
         Provider.TRACAB: TracabCoordinateSystem,
         Provider.KLOPPY: KloppyCoordinateSystem,
         Provider.METRICA: MetricaCoordinateSystem,
+        Provider.FOOTOVISION: FootovisionCoordinateSystem,
         Provider.OPTA: OptaCoordinateSystem,
         Provider.SPORTEC: {
             DatasetType.EVENT: SportecEventDataCoordinateSystem,

@@ -29,6 +29,7 @@ _EVENT_DATA_PROVIDERS = {
     "datafactory": "DataFactory",
     "sportec": "Sportec Solutions",
     "metrica_json": "Metrica (JSON)",
+    "footovision": "Footovision",
 }
 _DEFAULT_EVENT_ATTRIBUTE_SPEC = {
     "providers": {

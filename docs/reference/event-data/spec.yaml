@@ -17,51 +17,95 @@ event_types:
         status: parsed
       impect:
         status: parsed
+      footovision:
+        status: parsed
+        implementation: Fallback for records not classified as a supported event; includes standalone tag 734 substitution markers without an incoming/outgoing pair.
     attributes:
       time:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'timestamp' field
+          footovision:
+            status: parsed
+            implementation: startTime in milliseconds within the period; game.json events use formation.time.
       coordinates:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'location' field
+          footovision:
+            status: parsed
+            implementation: startX/startY in normalized pitch coordinates, transformed if requested; absent for game.json events.
       team:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'team' field
+          footovision:
+            status: parsed
+            implementation: teamId resolved against game.json teams; metadata events use the corresponding home/away team.
       player:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'player' field
+          footovision:
+            status: parsed
+            implementation: playerId resolved against the team roster; metadata events use playerOut or playerIn where applicable.
       ball_owning_team:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'possession_team' field
+          footovision:
+            status: inferred
+            implementation: Acting team for passes, shots, take-ons, carries, clearances and recoveries; otherwise None.
       ball_state:
         providers:
           statsbomb:
             status: parsed
             implementation: BallState.DEAD for synthetic ball out events; otherwise BallState.ALIVE
+          footovision:
+            status: inferred
+            implementation: ALIVE for passes, shots, take-ons, carries, clearances and recoveries; DEAD for substitutions; otherwise None, including ball-out events.
       raw_event:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Original event record; game.json events retain source, formation and applicable reason.
       related_event_ids:
         providers:
           statsbomb:
             status: parsed
             implementation: value of the 'related_events' field
+          footovision:
+            status: inferred
+            implementation: Links passes to subsequent ball-out/offside context, fouls to a same-player card before play resumes, exactly two tag-3 records sharing halftime/startTime, injury exits to returns, and lineup changes to simultaneous tactical changes.
       freeze_frame:
         providers:
           statsbomb:
             status: parsed
             implementation: tracking data frame created from the 'freeze_frame' field for shots or from a 360 data file for other events
+          footovision:
+            status: not implemented
+      timestamp:
+        providers:
+          footovision:
+            status: parsed
+            implementation: startTime converted from milliseconds to timedelta; game.json events use formation.time.
+      period:
+        providers:
+          footovision:
+            status: parsed
+            implementation: Period matched by halftime; game.json events use formation.halftime.
+      state:
+        providers:
+          footovision:
+            status: parsed
+            implementation: Preserves teamPhaseId, opponentPhaseId and sequenceId as team_phase_id, opponent_phase_id and sequence_id. Duels and pressures add target-player details; goalkeeper events preserve subtype flags; metadata events identify game.json as source.
   kloppy.domain.PassEvent:
     providers:
       statsbomb:
@@ -85,6 +129,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'PASS', 'KICK_OFF', 'THROW_IN', 'FREE_KICK', 'PENALTY_KICK', 'GOAL_KICK', or 'CORNER'
+      footovision:
+        status: parsed
+        implementation: Tag 11, 429 (goalkeeper throw), or 438 (goalkeeper kick). Also infers untagged offside passes with valid playerId, targetPlayerId, teamId, xP, timing and coordinates, followed by a same-team offside marker (408) in the same period within 1000 ms of endTime, ignoring intervening annotations.
     attributes:
       receive_timestamp:
         providers:
@@ -97,6 +144,9 @@ event_types:
           metrica_json:
             status: parsed
             implementation: time difference between event's end time and start of period
+          footovision:
+            status: parsed
+            implementation: endTime converted from milliseconds to timedelta within the period.
       receiver_coordinates:
         providers:
           statsbomb:
@@ -108,6 +158,9 @@ event_types:
           metrica_json:
             status: parsed
             implementation: value of 'event.end' field
+          footovision:
+            status: parsed
+            implementation: endX/endY, transformed to the requested coordinate system.
       receiver_player:
         providers:
           statsbomb:
@@ -119,6 +172,9 @@ event_types:
           metrica_json:
             status: parsed
             implementation: value of 'event.to' field
+          footovision:
+            status: parsed
+            implementation: targetPlayerId resolved within the acting team; None if missing or not found.
       result:
         providers:
           statsbomb:
@@ -126,6 +182,8 @@ event_types:
           sportec:
             status: parsed
           metrica_json:
+            status: parsed
+          footovision:
             status: parsed
         values:
           COMPLETE:
@@ -139,6 +197,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 1/'COMPLETE'
+              footovision:
+                status: parsed
+                implementation: Tag 80, after checking the untagged offside-pass fallback.
           INCOMPLETE:
             providers:
               statsbomb:
@@ -150,6 +211,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 7/'INCOMPLETE'
+              footovision:
+                status: inferred
+                implementation: No tag 80 and no following ball-out/offside context or untagged offside fallback.
           OUT:
             providers:
               statsbomb:
@@ -161,6 +225,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 6/'OUT'
+              footovision:
+                status: inferred
+                implementation: No tag 80 and the next relevant ball-context record in the same period has tag 82.
           OFFSIDE:
             providers:
               statsbomb:
@@ -172,6 +239,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 16/'OFFSIDE'
+              footovision:
+                status: inferred
+                implementation: Untagged offside-pass fallback, or no tag 80 and the next relevant ball-context record in the same period has tag 408.
   kloppy.domain.ShotEvent:
     providers:
       statsbomb:
@@ -195,6 +265,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'SHOT'
+      footovision:
+        status: parsed
+        implementation: Tag 14; shot result tags alone do not create a shot.
     attributes:
       result_coordinates:
         providers:
@@ -207,6 +280,9 @@ event_types:
           metrica_json:
             status: not implemented
             implementation: null
+          footovision:
+            status: parsed
+            implementation: endX/endY, transformed to the requested coordinate system.
       result:
         providers:
           statsbomb:
@@ -214,6 +290,8 @@ event_types:
           sportec:
             status: parsed
           metrica_json:
+            status: parsed
+          footovision:
             status: parsed
         values:
           GOAL:
@@ -227,6 +305,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 30/'GOAL'
+              footovision:
+                status: parsed
+                implementation: Tag 83, unless tag 44 is present.
           OFF_TARGET:
             providers:
               statsbomb:
@@ -238,6 +319,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 29/'OFF TARGET'
+              footovision:
+                status: inferred
+                implementation: Fallback when tags 44, 83 and 32 are absent.
           POST:
             providers:
               statsbomb:
@@ -249,6 +333,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 27/'POST'
+              footovision:
+                status: not implemented
+                implementation: No distinct woodwork outcome is mapped.
           BLOCKED:
             providers:
               statsbomb:
@@ -260,6 +347,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 25/'BLOCKED'
+              footovision:
+                status: parsed
+                implementation: Tags 32 and 745, unless an own-goal/goal outcome applies.
           SAVED:
             providers:
               statsbomb:
@@ -271,6 +361,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 26/'SAVED'
+              footovision:
+                status: parsed
+                implementation: Tag 32 without tag 745, unless an own-goal/goal outcome applies.
           OWN_GOAL:
             providers:
               statsbomb:
@@ -282,6 +375,9 @@ event_types:
               metrica_json:
                 status: not implemented
                 implementation: null
+              footovision:
+                status: parsed
+                implementation: Tag 44 on a shot; checked before other outcomes.
   kloppy.domain.TakeOnEvent:
     providers:
       statsbomb:
@@ -301,12 +397,17 @@ event_types:
       metrica_json:
         status: parsed
         implementation: event type 45/'DRIBBLE'
+      footovision:
+        status: parsed
+        implementation: Tag 34; takes precedence over carry, clearance and duel tags.
     attributes:
       result:
         providers:
           statsbomb:
             status: parsed
           metrica_json:
+            status: parsed
+          footovision:
             status: parsed
         values:
           COMPLETE:
@@ -317,6 +418,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 48/'WON'
+              footovision:
+                status: parsed
+                implementation: Tag 450.
           INCOMPLETE:
             providers:
               statsbomb:
@@ -325,6 +429,9 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: outcome 49/'LOST'
+              footovision:
+                status: inferred
+                implementation: No tag 450 and no following ball-out context.
           OUT:
             providers:
               statsbomb:
@@ -333,6 +440,9 @@ event_types:
               metrica_json:
                 status: not supported
                 implementation: null
+              footovision:
+                status: inferred
+                implementation: No tag 450 and the next relevant ball-context record in the same period has tag 82.
   kloppy.domain.CarryEvent:
     providers:
       statsbomb:
@@ -350,6 +460,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'DRIBBLE'
+      footovision:
+        status: parsed
+        implementation: Tag 2.
     attributes:
       end_timestamp:
         providers:
@@ -359,6 +472,9 @@ event_types:
           metrica_json:
             status: parsed
             implementation: time difference between event's end time and start of period
+          footovision:
+            status: parsed
+            implementation: endTime converted from milliseconds to timedelta within the period.
       end_coordinates:
         providers:
           statsbomb:
@@ -367,12 +483,17 @@ event_types:
           metrica_json:
             status: parsed
             implementation: value of 'event.end' field
+          footovision:
+            status: parsed
+            implementation: endX/endY, transformed to the requested coordinate system.
       result:
         providers:
           statsbomb:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: inferred
         values:
           COMPLETE:
             providers:
@@ -382,12 +503,18 @@ event_types:
               metrica_json:
                 status: parsed
                 implementation: all events of type 10/'CARRY'
+              footovision:
+                status: inferred
+                implementation: The next relevant ball-context record belongs to the same team, or no next record exists.
           INCOMPLETE:
             providers:
               statsbomb:
                 status: not supported
               metrica_json:
                 status: not supported
+              footovision:
+                status: inferred
+                implementation: The next relevant ball-context record in the same period has a different teamId.
   kloppy.domain.ClearanceEvent:
     providers:
       statsbomb:
@@ -411,6 +538,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'CLEARANCE'
+      footovision:
+        status: parsed
+        implementation: Tag 35.
   kloppy.domain.InterceptionEvent:
     providers:
       statsbomb:
@@ -434,27 +564,38 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'INTERCEPTION'
+      footovision:
+        status: not implemented
+        implementation: The event decoder does not select this event type.
     attributes:
       result:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: not implemented
         values:
           SUCCESS:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+              footovision:
+                status: not implemented
           LOST:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 1/'Lost' or 13/'Lost in play'
+              footovision:
+                status: not implemented
           OUT:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 14/'Lost out' or 17/'Success out'
+              footovision:
+                status: not implemented
   kloppy.domain.DuelEvent:
     providers:
       statsbomb:
@@ -478,26 +619,40 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'GROUND_DUEL' or 'AERIAL_DUEL'
+      footovision:
+        status: parsed
+        implementation: Tag 3, unless classified earlier as a pass, shot, take-on, carry or clearance. One event per raw record; no synthetic opponent duel is added.
     attributes:
       result:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: inferred
         values:
           WON:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 4/'Duel' with outcome 4/'Won', 15/'Success', 16/'Success in play' or 17/'Success out', or synthetic event from event with field 'aerial_won', or event type 33/'Fifty-fifty' with outcome 4/'Won' or 3/'Success to team'
+              footovision:
+                status: inferred
+                implementation: The next relevant ball-context record in the same period has the same playerId.
           LOST:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 4/'Duel' with outcome 13/'Lost in play' or 14/'Lost out', or type 11/'Aerial lost', or event type 33/'Fifty-fifty' with outcome 1/'Lost' or 2/'Success to opponent', or event type 2/'Ball recovery' with field 'ball_recovery.recovery_failure'
+              footovision:
+                status: inferred
+                implementation: The next relevant ball-context record has a different playerId, or no next record exists.
           NEUTRAL:
             providers:
               statsbomb:
                 status: not supported
+              footovision:
+                status: not implemented
+                implementation: No neutral outcome is emitted.
   kloppy.domain.SubstitutionEvent:
     providers:
       statsbomb:
@@ -521,12 +676,18 @@ event_types:
       impect:
         status: parsed
         implementation: parsed from metadata
+      footovision:
+        status: parsed
+        implementation: Explicit substitution reasons in game.json homeTeamFormations/awayTeamFormations, with distinct nonzero playerOut and playerIn IDs; tag 734 alone is insufficient.
     attributes:
       replacement_player:
         providers:
           statsbomb:
             status: parsed
             value: value of 'substitution.replacement' field
+          footovision:
+            status: parsed
+            implementation: playerIn from an explicit substitution reason, resolved within the team roster.
   kloppy.domain.CardEvent:
     providers:
       statsbomb:
@@ -550,11 +711,17 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'YELLOW_CARD', 'SECOND_YELLOW_CARD', or 'RED_CARD'
+      footovision:
+        status: parsed
+        implementation: Tag 78 (red) or 79 (yellow, including second yellow).
     attributes:
       card_type:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 78 maps to red; tag 79 uses the number of previously encountered yellow cards for the player.
         values:
           FIRST_YELLOW:
             providers:
@@ -562,18 +729,27 @@ event_types:
                 status: parsed
               sportec:
                 status: not implemented
+              footovision:
+                status: inferred
+                implementation: Tag 79 with no previously encountered yellow card for the player.
           SECOND_YELLOW:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              footovision:
+                status: inferred
+                implementation: Tag 79 after at least one previously encountered yellow card for the player.
           RED:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              footovision:
+                status: parsed
+                implementation: Tag 78; takes precedence over tag 79.
   kloppy.domain.PlayerOnEvent:
     providers:
       statsbomb:
@@ -590,6 +766,9 @@ event_types:
         status: unknown
       metrica_json:
         status: unknown
+      footovision:
+        status: parsed
+        implementation: Explicit injury or temporary injury reason in game.json formation snapshots with playerIn only; substitutions do not emit separate player-on events.
   kloppy.domain.PlayerOffEvent:
     providers:
       statsbomb:
@@ -605,6 +784,9 @@ event_types:
         status: unknown
       metrica_json:
         status: unknown
+      footovision:
+        status: parsed
+        implementation: Explicit injury or temporary injury reason in game.json formation snapshots with playerOut only; substitutions do not emit separate player-off events.
   kloppy.domain.RecoveryEvent:
     providers:
       statsbomb:
@@ -626,6 +808,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'LOOSE_BALL_REGAIN'
+      footovision:
+        status: parsed
+        implementation: Tag 455.
   kloppy.domain.MiscontrolEvent:
     providers:
       statsbomb:
@@ -644,6 +829,9 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      footovision:
+        status: not implemented
+        implementation: The event decoder does not select this event type.
   kloppy.domain.BallOutEvent:
     providers:
       statsbomb:
@@ -663,6 +851,9 @@ event_types:
       metrica_json:
         status: inferred
         implementation: checks if the event ended out of the field and adds a synthetic out event
+      footovision:
+        status: parsed
+        implementation: Tag 82; one event per raw record.
   kloppy.domain.FoulCommittedEvent:
     providers:
       statsbomb:
@@ -686,6 +877,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'FOUL'
+      footovision:
+        status: parsed
+        implementation: Tag 8.
   kloppy.domain.GoalkeeperEvent:
     providers:
       statsbomb:
@@ -709,6 +903,9 @@ event_types:
       impect:
         status: parsed
         implementation: event type 'GK_SAVE' or 'GK_CATCH'
+      footovision:
+        status: parsed
+        implementation: Any of tags 33, 301, 302, 303, 304, 306 or 307, unless an earlier classification applies. Distribution tags 429 and 438 create passes.
   kloppy.domain.PressureEvent:
     providers:
       statsbomb:
@@ -720,6 +917,15 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      footovision:
+        status: parsed
+        implementation: Tag 4.
+    attributes:
+      end_timestamp:
+        providers:
+          footovision:
+            status: parsed
+            implementation: endTime converted from milliseconds to timedelta within the period.
   kloppy.domain.FormationChangeEvent:
     providers:
       statsbomb:
@@ -740,17 +946,26 @@ event_types:
       metrica_json:
         status: not supported
         implementation: null
+      footovision:
+        status: inferred
+        implementation: 'Compare successive game.json formation snapshots: emit when system changes or a player present in both snapshots changes position. Excludes the initial lineup and personnel-only changes.'
     attributes:
       formation_type:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'tactics.formation' field
+          footovision:
+            status: parsed
+            implementation: formation.system mapped to FormationType; UNKNOWN for unmapped values.
       player_positions:
         providers:
           statsbomb:
             status: parsed
             implementation: value of 'tactics.lineup' field
+          footovision:
+            status: parsed
+            implementation: formation.onFieldPlayersPositions resolved to players and PositionType; Unknown for unmapped positions, None if absent.
 qualifiers:
   kloppy.domain.PassQualifier:
     providers:
@@ -760,6 +975,9 @@ qualifiers:
         status: parsed
       metrica_json:
         status: parsed
+      footovision:
+        status: parsed
+        implementation: Only the values documented below are mapped.
     values:
       CROSS:
         providers:
@@ -769,6 +987,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: not implemented
+          footovision:
+            status: parsed
+            implementation: Tag 7.
       HAND_PASS:
         providers:
           statsbomb:
@@ -777,6 +998,9 @@ qualifiers:
             status: not supported
           metrica_json:
             status: unknown
+          footovision:
+            status: parsed
+            implementation: Tag 429 (goalkeeper throw).
       HEAD_PASS:
         providers:
           statsbomb:
@@ -785,6 +1009,9 @@ qualifiers:
             status: not supported
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 10.
       HIGH_PASS:
         providers:
           statsbomb:
@@ -793,6 +1020,9 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: parsed
+            implementation: Tag 743.
       LAUNCH:
         providers:
           statsbomb:
@@ -801,6 +1031,8 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: not implemented
       SIMPLE_PASS:
         providers:
           statsbomb:
@@ -809,6 +1041,9 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: inferred
+            implementation: No tags 10, 7, 743, 25, 27, 52 or 429; assist and set-piece tags can still apply.
       SMART_PASS:
         providers:
           statsbomb:
@@ -817,6 +1052,8 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: not implemented
       LONG_BALL:
         providers:
           statsbomb:
@@ -825,6 +1062,9 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: parsed
+            implementation: Tag 25.
       THROUGH_BALL:
         providers:
           statsbomb:
@@ -833,6 +1073,9 @@ qualifiers:
             status: not implemented
           metrica_json:
             status: not supported
+          footovision:
+            status: parsed
+            implementation: Tag 27.
       CHIPPED_PASS:
         providers:
           statsbomb:
@@ -841,30 +1084,50 @@ qualifiers:
             status: not supported
           metrica_json:
             status: not supported
+          footovision:
+            status: not implemented
       FLICK_ON:
         providers:
           statsbomb:
             status: parsed
           metrica_json:
             status: not supported
+          footovision:
+            status: not implemented
       ASSIST:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 23.
       ASSIST_2ND:
         providers:
           statsbomb:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 848.
       SWITCH_OF_PLAY:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: not implemented
+          footovision:
+            status: parsed
+            implementation: Tag 52.
       BACK_PASS:
         providers:
           sportec:
             status: not implemented
+          footovision:
+            status: not implemented
+      SHOT_ASSIST:
+        providers:
+          footovision:
+            status: parsed
+            implementation: Tag 51.
   kloppy.domain.BodyPartQualifier:
     providers:
       statsbomb:
@@ -873,6 +1136,9 @@ qualifiers:
         status: parsed
       metrica_json:
         status: parsed
+      footovision:
+        status: parsed
+        implementation: Only the values documented below are mapped.
     values:
       RIGHT_FOOT:
         providers:
@@ -883,6 +1149,8 @@ qualifiers:
             implementation: leftLeg
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       LEFT_FOOT:
         providers:
           statsbomb:
@@ -892,6 +1160,8 @@ qualifiers:
             implementation: rightLeg
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       HEAD:
         providers:
           statsbomb:
@@ -900,6 +1170,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 10 on passes and shots; no other body parts are mapped.
       OTHER:
         providers:
           statsbomb:
@@ -908,6 +1181,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       HEAD_OTHER:
         providers:
           statsbomb:
@@ -916,6 +1191,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       BOTH_HANDS:
         providers:
           statsbomb:
@@ -924,6 +1201,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       CHEST:
         providers:
           statsbomb:
@@ -932,6 +1211,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       LEFT_HAND:
         providers:
           statsbomb:
@@ -940,6 +1221,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       RIGHT_HAND:
         providers:
           statsbomb:
@@ -948,6 +1231,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       DROP_KICK:
         providers:
           statsbomb:
@@ -956,6 +1241,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       KEEPER_ARM:
         providers:
           statsbomb:
@@ -964,6 +1251,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       NO_TOUCH:
         providers:
           statsbomb:
@@ -972,6 +1261,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
   kloppy.domain.CardQualifier:
     providers:
       statsbomb:
@@ -980,6 +1271,9 @@ qualifiers:
         status: not supported
       metrica_json:
           status: not implemented
+      footovision:
+        status: not implemented
+        implementation: Cards are separate CardEvent records with card_type; foul events do not receive CardQualifier values.
     values:
       FIRST_YELLOW:
         providers:
@@ -990,6 +1284,8 @@ qualifiers:
           metrica_json:
             status: inferred
             implementation: subtype 40/'YELLOW'
+          footovision:
+            status: not implemented
       SECOND_YELLOW:
         providers:
           statsbomb:
@@ -998,6 +1294,8 @@ qualifiers:
             status: not supported
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       RED:
         providers:
           statsbomb:
@@ -1006,6 +1304,8 @@ qualifiers:
             status: not supported
           metrica_json:
             status: parsed
+          footovision:
+            status: not implemented
   kloppy.domain.CounterAttackQualifier:
     providers:
       statsbomb:
@@ -1014,6 +1314,9 @@ qualifiers:
         status: not implemented
       metrica_json:
         status: not supported
+      footovision:
+        status: not implemented
+        implementation: Counterattack detection currently always returns False.
     values: []
   kloppy.domain.DuelQualifier:
     providers:
@@ -1023,6 +1326,9 @@ qualifiers:
         status: unknown
       metrica_json:
         status: unknown
+      footovision:
+        status: parsed
+        implementation: Only the values documented below are mapped.
     values:
       AERIAL:
         providers:
@@ -1032,6 +1338,9 @@ qualifiers:
             status: unknown
           metrica_json:
             status: not implemented
+          footovision:
+            status: parsed
+            implementation: Tag 31 on a record classified as a duel.
       GROUND:
         providers:
           statsbomb:
@@ -1040,6 +1349,9 @@ qualifiers:
             status: unknown
           metrica_json:
             status: not implemented
+          footovision:
+            status: inferred
+            implementation: A record classified as a duel without tag 31.
       LOOSE_BALL:
         providers:
           statsbomb:
@@ -1048,6 +1360,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
       SLIDING_TACKLE:
         providers:
           statsbomb:
@@ -1056,6 +1370,8 @@ qualifiers:
             status: unknown
           metrica_json:
             status: unknown
+          footovision:
+            status: not implemented
   kloppy.domain.GoalkeeperQualifier:
     providers:
       statsbomb:
@@ -1064,6 +1380,9 @@ qualifiers:
         status: parsed
       metrica_json:
         status: unknown
+      footovision:
+        status: parsed
+        implementation: Only the values documented below are mapped.
     values:
       SAVE:
         providers:
@@ -1071,42 +1390,57 @@ qualifiers:
             status: parsed
           sportec:
             status: not implemented
+          footovision:
+            status: parsed
+            implementation: Tag 303, 306 or 307 on a goalkeeper event; air blocks and covering do not imply CLAIM, PUNCH or SMOTHER.
       CLAIM:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
       PUNCH:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
       PICK_UP:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
       SMOTHER:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
       REFLEX:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
       SAVE_ATTEMPT:
         providers:
           statsbomb:
             status: parsed
           sportec:
             status: unknown
+          footovision:
+            status: not implemented
   kloppy.domain.SetPieceQualifier:
     providers:
       statsbomb:
@@ -1115,6 +1449,9 @@ qualifiers:
         status: parsed
       metrica_json:
         status: parsed
+      footovision:
+        status: parsed
+        implementation: Only the values documented below are mapped.
     values:
       GOAL_KICK:
         providers:
@@ -1124,6 +1461,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 86 on passes.
       FREE_KICK:
         providers:
           statsbomb:
@@ -1132,6 +1472,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 9 on passes and shots.
       THROW_IN:
         providers:
           statsbomb:
@@ -1140,6 +1483,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 17 on passes.
       CORNER_KICK:
         providers:
           statsbomb:
@@ -1148,6 +1494,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 6 on passes.
       PENALTY:
         providers:
           statsbomb:
@@ -1156,6 +1505,9 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 12 on shots only; takes precedence over the free-kick qualifier when tag 9 is also present.
       KICK_OFF:
         providers:
           statsbomb:
@@ -1164,3 +1516,6 @@ qualifiers:
             status: parsed
           metrica_json:
             status: parsed
+          footovision:
+            status: parsed
+            implementation: Tag 449 on passes.

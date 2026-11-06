@@ -165,8 +165,10 @@ openapi-spec-validator==0.7.2 ; python_full_version > '3.9' and python_full_vers
     # via moto
 openapi-spec-validator==0.9.0 ; python_full_version >= '3.10'
     # via moto
-packaging==26.2
-    # via pytest
+packaging==26.3
+    # via
+    #   pytest
+    #   virtualenv
 pathable==0.4.4 ; python_full_version > '3.9' and python_full_version < '3.10'
     # via jsonschema-path
 pathable==0.6.0 ; python_full_version >= '3.10'
@@ -323,7 +325,7 @@ urllib3==2.7.0 ; python_full_version >= '3.10'
     #   docker
     #   requests
     #   responses
-virtualenv==21.7.13
+virtualenv==21.14.9
     # via pre-commit
 werkzeug==3.1.9
     # via

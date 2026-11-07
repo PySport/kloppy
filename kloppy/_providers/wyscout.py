@@ -2,17 +2,21 @@ import json
 from typing import Optional, Union
 
 from kloppy.config import get_config
-from kloppy.domain import EventDataset, EventFactory
+from kloppy.domain import EventDataset, EventFactory, TrackingDataset
 from kloppy.infra.serializers.event.wyscout import (
     WyscoutDeserializerV2,
     WyscoutDeserializerV3,
     WyscoutInputs,
 )
-from kloppy.io import FileLike, open_as_file
-from kloppy.utils import github_resolve_raw_data_url
+from kloppy.infra.serializers.tracking.wyscout import (
+    WyscoutTrackingDeserializer,
+    WyscoutTrackingInputs,
+)
+from kloppy.io import FileLike, Source, open_as_file
+from kloppy.utils import deprecated, github_resolve_raw_data_url
 
 
-def load(
+def load_event(
     event_data: FileLike,
     event_types: Optional[list[str]] = None,
     coordinates: Optional[str] = None,
@@ -52,6 +56,85 @@ def load(
         )
 
 
+def load_tracking(
+    raw_data: FileLike,
+    players_data: Optional[FileLike] = None,
+    directions_data: Optional[FileLike] = None,
+    sample_rate: Optional[float] = None,
+    limit: Optional[int] = None,
+    coordinates: Optional[str] = None,
+    pitch_length: float = 105.0,
+    pitch_width: float = 68.0,
+) -> TrackingDataset:
+    """
+    Load Wyscout tracking data.
+
+    The file is a JSONL feed: the first line contains the match metadata and
+    every following line contains one tracking frame. As the feed does not
+    contain lineups, teams and players are derived from the tracking data
+    (players are identified by their jersey number only).
+
+    Args:
+        raw_data: JSONL feed with the raw tracking data of a game.
+        players_data: Optional JSON with the match data from the Wyscout API
+            (`/matches/{wyId}?details=players`). If provided, the teams and
+            players get their Wyscout ids, names and starting status, and the
+            score is set. Otherwise, players are identified by jersey number.
+        directions_data: Optional JSON with the attacking direction of each
+            team per period (`1H`, `2H`, ...), as `leftToRightTeamId` and
+            `rightToLeftTeamId`. Requires `players_data`. If provided, it
+            determines the orientation of the dataset instead of inferring it
+            from the tracking data.
+        sample_rate: Sampling rate to be applied during deserialization.
+        limit: Limit on the number of frames to process.
+        coordinates: The coordinate system to use.
+        pitch_length: The length of the pitch in meters. The feed does not
+            contain the pitch dimensions, so this defaults to 105.
+        pitch_width: The width of the pitch in meters. Defaults to 68.
+
+    Returns:
+        The parsed tracking data.
+    """
+    deserializer = WyscoutTrackingDeserializer(
+        sample_rate=sample_rate,
+        limit=limit,
+        coordinate_system=coordinates,
+        pitch_length=pitch_length,
+        pitch_width=pitch_width,
+    )
+    with (
+        open_as_file(raw_data) as raw_data_fp,
+        open_as_file(Source.create(players_data, optional=True)) as players_fp,
+        open_as_file(
+            Source.create(directions_data, optional=True)
+        ) as directions_fp,
+    ):
+        return deserializer.deserialize(
+            inputs=WyscoutTrackingInputs(
+                raw_data=raw_data_fp,
+                players_data=players_fp,
+                directions_data=directions_fp,
+            )
+        )
+
+
+@deprecated("wyscout.load_event should be used")
+def load(
+    event_data: FileLike,
+    event_types: Optional[list[str]] = None,
+    coordinates: Optional[str] = None,
+    event_factory: Optional[EventFactory] = None,
+    data_version: Optional[str] = None,
+) -> EventDataset:
+    return load_event(
+        event_data,
+        event_types,
+        coordinates,
+        event_factory,
+        data_version,
+    )
+
+
 def load_open_data(
     match_id: Union[str, int] = "2499841",
     event_types: Optional[list[str]] = None,
@@ -79,7 +162,7 @@ def load_open_data(
     References:
         [1] Pappalardo, L., Cintia, P., Rossi, A. et al. A public data set of spatio-temporal match events in soccer competitions. Sci Data 6, 236 (2019). https://doi.org/10.1038/s41597-019-0247-7
     """
-    return load(
+    return load_event(
         event_data=github_resolve_raw_data_url(
             repository="koenvo/wyscout-soccer-match-event-dataset",
             branch="main",

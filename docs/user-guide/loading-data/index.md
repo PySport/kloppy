@@ -32,7 +32,7 @@ Below is an overview of all currently supported providers, along with links to d
 | [Hudl StatsBomb](statsbomb.ipynb)          |                             :material-check:                             | :material-minus: | :material-minus: |                    [:material-eye:](https://github.com/statsbomb/open-data)                    |
 | [Stats Perform / Opta](statsperform.ipynb) |                             :material-check:                             | :material-check: | :material-minus: |                                                                                                |
 | [TRACAB (CyronHego)](tracab.ipynb)         |                             :material-minus:                             | :material-check: | :material-minus: |                                                                                                |
-| [WyScout](wyscout.ipynb)                   |                             :material-check:                             | :material-minus: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-019-0247-7)               |
+| [WyScout](wyscout.ipynb)                   |                             :material-check:                             | :material-check: | :material-minus: |              [:material-eye:](https://www.nature.com/articles/s41597-019-0247-7)               |
 
 ## Supported data storage
 

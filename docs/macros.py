@@ -625,7 +625,14 @@ def define_env(env):
                     "provider": Provider.SPORTEC,
                     "dataset_type": DatasetType.TRACKING,
                 },
-                {"provider": Provider.WYSCOUT},
+                {
+                    "provider": Provider.WYSCOUT,
+                    "dataset_type": DatasetType.EVENT,
+                },
+                {
+                    "provider": Provider.WYSCOUT,
+                    "dataset_type": DatasetType.TRACKING,
+                },
                 {"provider": Provider.DATAFACTORY},
                 # {"provider": Provider.STATSPERFORM},
                 {"provider": Provider.HAWKEYE},

@@ -20,3 +20,4 @@
 ::: kloppy.domain.StatsBombCoordinateSystem
 ::: kloppy.domain.TracabCoordinateSystem
 ::: kloppy.domain.WyscoutCoordinateSystem
+::: kloppy.domain.WyscoutTrackingCoordinateSystem

@@ -38,7 +38,7 @@ Kloppy provides support for loading data from the following providers:
 | [Stats Perform][statsperform] | ✓          | ✓             |                       | [↗][statsperform-doc] | Includes support for MA1, MA3, and MA25 data feeds |
 | [Opta][opta]                  | ✓          |               |                       | [↗][opta-doc]         | Includes support for F7, F24 and F73 XML data feeds |
 | [Tracab][tracab]              |            | ✓             |                       | [↗][tracab-doc]       |       |
-| [Wyscout][wyscout]            | ✓          |               | [↗][wyscout-data]     | [↗][wyscout-doc]      | Includes support for v2 and v3 data |
+| [Wyscout][wyscout]            | ✓          | ✓             | [↗][wyscout-data]     | [↗][wyscout-doc]      | Includes support for v2 and v3 event data and JSONL tracking data |
 
 [datafactory]: https://www.datafactory.la/en/
 [datafactory-doc]: https://kloppy.pysport.org/user-guide/loading-data/datafactory

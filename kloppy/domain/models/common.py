@@ -1140,6 +1140,50 @@ class WyscoutCoordinateSystem(ProviderCoordinateSystem):
         )
 
 
+class WyscoutTrackingCoordinateSystem(ProviderCoordinateSystem):
+    """
+    Wyscout tracking data coordinate system.
+
+    Uses a pitch with the origin at the center and the y-axis oriented
+    from bottom to top. The coordinates are in meters.
+    """
+
+    @property
+    def provider(self) -> Provider:
+        return Provider.WYSCOUT
+
+    @property
+    def origin(self) -> Origin:
+        return Origin.CENTER
+
+    @property
+    def vertical_orientation(self) -> VerticalOrientation:
+        return VerticalOrientation.BOTTOM_TO_TOP
+
+    @property
+    def pitch_dimensions(self) -> PitchDimensions:
+        if self._pitch_length is not None and self._pitch_width is not None:
+            return MetricPitchDimensions(
+                x_dim=Dimension(
+                    -1 * self._pitch_length / 2, self._pitch_length / 2
+                ),
+                y_dim=Dimension(
+                    -1 * self._pitch_width / 2, self._pitch_width / 2
+                ),
+                pitch_length=self._pitch_length,
+                pitch_width=self._pitch_width,
+                standardized=False,
+            )
+        else:
+            return MetricPitchDimensions(
+                x_dim=Dimension(None, None),
+                y_dim=Dimension(None, None),
+                pitch_length=None,
+                pitch_width=None,
+                standardized=False,
+            )
+
+
 class SkillCornerCoordinateSystem(ProviderCoordinateSystem):
     """
     SkillCorner coordinate system.
@@ -1406,7 +1450,10 @@ def build_coordinate_system(
         },
         Provider.STATSBOMB: StatsBombCoordinateSystem,
         Provider.PFF: PFFCoordinateSystem,
-        Provider.WYSCOUT: WyscoutCoordinateSystem,
+        Provider.WYSCOUT: {
+            DatasetType.EVENT: WyscoutCoordinateSystem,
+            DatasetType.TRACKING: WyscoutTrackingCoordinateSystem,
+        },
         Provider.SKILLCORNER: SkillCornerCoordinateSystem,
         Provider.DATAFACTORY: DatafactoryCoordinateSystem,
         Provider.SECONDSPECTRUM: SecondSpectrumCoordinateSystem,

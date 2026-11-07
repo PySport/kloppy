@@ -122,7 +122,7 @@ def run_query(argv=sys.argv[1:]):
     if opts.input_wyscout:
         with performance_logging("load dataset", logger=logger):
             events_filename = opts.input_wyscout
-            dataset = wyscout.load(
+            dataset = wyscout.load_event(
                 event_data=events_filename,
                 event_types=query.event_types,
             )

@@ -11,7 +11,9 @@ from kloppy.domain import (
     BodyPartQualifier,
     EventDataset,
     EventType,
+    InterceptionResult,
     Orientation,
+    PassResult,
     Point,
     Provider,
     SetPieceQualifier,
@@ -172,3 +174,51 @@ class TestMetricaEvents:
             clearance.get_qualifier_value(SetPieceQualifier)
             == SetPieceType.KICK_OFF
         )
+
+    def test_interception(self, dataset: EventDataset):
+        """It should deserialize RECOVERY events with the INTERCEPTION subtype
+        as interceptions."""
+        interceptions = dataset.find_all("interception")
+        assert len(interceptions) == 127
+
+        # The intercepted pass is a BALL LOST event with the INTERCEPTION
+        # subtype. It describes how the passer lost the ball, so it should
+        # remain an incomplete pass of the team that lost the ball.
+        intercepted_pass = dataset.get_event_by_id("66")
+        assert intercepted_pass.event_type == EventType.PASS
+        assert intercepted_pass.result == PassResult.INCOMPLETE
+        assert intercepted_pass.team.team_id == "TEAM_B"
+
+        # The interception is the RECOVERY event of the opponent
+        interception = dataset.get_event_by_id("67")
+        assert interception.event_type == EventType.INTERCEPTION
+        assert interception.team.team_id == "TEAM_A"
+        assert interception.ball_owning_team.team_id == "TEAM_A"
+
+        # RECOVERY events without the INTERCEPTION subtype remain recoveries
+        assert len(dataset.find_all("recovery")) == 294 - 127
+
+    @pytest.mark.parametrize(
+        "event_id, next_event_type, expected_result",
+        [
+            # followed by a carry of the intercepting player
+            ("67", EventType.CARRY, InterceptionResult.SUCCESS),
+            # the intercepting player's touch goes to an opponent (BALL LOST)
+            ("105", EventType.PASS, InterceptionResult.LOST),
+            # the intercepting player's touch goes out of bounds (BALL OUT)
+            ("209", EventType.PASS, InterceptionResult.OUT),
+        ],
+    )
+    def test_interception_result(
+        self,
+        dataset: EventDataset,
+        event_id: str,
+        next_event_type: EventType,
+        expected_result: InterceptionResult,
+    ):
+        """It should infer the result of an interception from the next
+        event of the intercepting player."""
+        interception = dataset.get_event_by_id(event_id)
+        assert interception.event_type == EventType.INTERCEPTION
+        assert interception.next().event_type == next_event_type
+        assert interception.result == expected_result

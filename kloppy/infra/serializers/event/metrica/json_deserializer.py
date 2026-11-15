@@ -10,6 +10,7 @@ from kloppy.domain import (
     BodyPartQualifier,
     CarryResult,
     EventDataset,
+    InterceptionResult,
     PassResult,
     Period,
     Point,
@@ -61,6 +62,9 @@ MS_BODY_PART_HEAD = 11
 # Attempts
 MS_ATTEMPT_CLEARANCE = 12
 
+# Interference
+MS_INTERFERENCE_INTERCEPTION = 23
+
 # Shots
 MS_EVENT_TYPE_SHOT = 2
 MS_SHOT_OUTCOME_BLOCKED = 25
@@ -86,6 +90,7 @@ MS_EVENT_TYPE_RECOVERY = 3
 MS_EVENT_TYPE_FOUL_COMMITTED = 4
 MS_EVENT_TYPE_CARD = 8
 MS_EVENT_TYPE_BALL_OUT = 6
+MS_EVENT_TYPE_BALL_LOST = 7
 
 
 def _parse_coordinates(event_start_or_end: dict) -> Optional[Point]:
@@ -231,6 +236,30 @@ def _parse_take_on(subtypes: list) -> dict:
     return dict(result=result)
 
 
+def _parse_interception(
+    event: dict, next_event: Optional[dict], subtypes: list
+) -> dict:
+    # The touch of the intercepting player is recorded as their next event.
+    # If that touch sends the ball out of bounds or to an opponent, it is a
+    # BALL OUT or BALL LOST event of the same player.
+    result = InterceptionResult.SUCCESS
+    if (
+        next_event is not None
+        and next_event["from"] is not None
+        and event["from"] is not None
+        and next_event["from"]["id"] == event["from"]["id"]
+    ):
+        if next_event["type"]["id"] == MS_EVENT_TYPE_BALL_OUT:
+            result = InterceptionResult.OUT
+        elif next_event["type"]["id"] == MS_EVENT_TYPE_BALL_LOST:
+            result = InterceptionResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=_get_event_bodypart_qualifiers(subtypes),
+    )
+
+
 def _parse_ball_owning_team(event_type: int, team: Team) -> Optional[Team]:
     if event_type not in [
         MS_EVENT_TYPE_CHALLENGE,
@@ -267,8 +296,10 @@ class MetricaJsonEventDataDeserializer(
 
         with performance_logging("parse data", logger=logger):
             events = []
-            for previous_event, raw_event in zip(
-                [None] + raw_events["data"], raw_events["data"]
+            for previous_event, raw_event, next_event in zip(
+                [None] + raw_events["data"],
+                raw_events["data"],
+                raw_events["data"][1:] + [None],
             ):
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
@@ -357,6 +388,20 @@ class MetricaJsonEventDataDeserializer(
                     event = self.event_factory.build_carry(
                         qualifiers=None,
                         **carry_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+
+                elif (
+                    event_type == MS_EVENT_TYPE_RECOVERY
+                    and MS_INTERFERENCE_INTERCEPTION in subtypes
+                ):
+                    interception_event_kwargs = _parse_interception(
+                        event=raw_event,
+                        next_event=next_event,
+                        subtypes=subtypes,
+                    )
+                    event = self.event_factory.build_interception(
+                        **interception_event_kwargs,
                         **generic_event_kwargs,
                     )
 

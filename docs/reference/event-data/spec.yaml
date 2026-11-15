@@ -429,8 +429,8 @@ event_types:
         status: not implemented
         implementation: null
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 3/'RECOVERY' with subtype 23/'INTERCEPTION'
       impect:
         status: parsed
         implementation: event type 'INTERCEPTION'
@@ -439,22 +439,33 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+          metrica_json:
+            status: inferred
         values:
           SUCCESS:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is not a 6/'BALL OUT' or 7/'BALL LOST' event
           LOST:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 1/'Lost' or 13/'Lost in play'
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is a 7/'BALL LOST' event
           OUT:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 14/'Lost out' or 17/'Success out'
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is a 6/'BALL OUT' event
   kloppy.domain.DuelEvent:
     providers:
       statsbomb:
@@ -622,7 +633,7 @@ event_types:
         status: unknown
       metrica_json:
         status: parsed
-        implementation: event type 3/'RECOVERY'
+        implementation: event type 3/'RECOVERY' without subtype 23/'INTERCEPTION'
       impect:
         status: parsed
         implementation: event type 'LOOSE_BALL_REGAIN'

@@ -406,8 +406,8 @@ event_types:
         status: not implemented
         implementation: null
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 1/'PASS', 6/'BALL OUT' or 7/'BALL LOST' with subtype 12/'CLEARANCE'
       impect:
         status: parsed
         implementation: event type 'CLEARANCE'
@@ -662,7 +662,7 @@ event_types:
         implementation: null
       metrica_json:
         status: inferred
-        implementation: checks if the event ended out of the field and adds a synthetic out event
+        implementation: synthetic event at the end location of an event type 6/'BALL OUT'
   kloppy.domain.FoulCommittedEvent:
     providers:
       statsbomb:

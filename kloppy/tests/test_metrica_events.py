@@ -1,4 +1,6 @@
+import copy
 from datetime import timedelta
+import json
 from pathlib import Path
 
 import pytest
@@ -8,6 +10,7 @@ from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
     EventDataset,
+    EventType,
     Orientation,
     Point,
     Provider,
@@ -31,6 +34,29 @@ class TestMetricaEvents:
         assert dataset.dataset_type == DatasetType.EVENT
         assert len(dataset.events) == 3594
         return dataset
+
+    @pytest.fixture(scope="class")
+    def raw_events(self, base_dir: Path) -> dict[int, dict]:
+        """The raw Metrica events, keyed by their index."""
+        with open(base_dir / "files" / "metrica_events.json") as f:
+            return {event["index"]: event for event in json.load(f)["data"]}
+
+    @pytest.fixture
+    def load_events(self, base_dir: Path, tmp_path: Path):
+        """Load a dataset from a custom list of raw Metrica events.
+
+        This is used to test event types that do not occur in the sample data.
+        """
+
+        def _load(events: list[dict]) -> EventDataset:
+            event_data = tmp_path / "events.json"
+            event_data.write_text(json.dumps({"data": events}))
+            return metrica.load_event(
+                event_data=event_data,
+                meta_data=base_dir / "files" / "epts_metrica_metadata.xml",
+            )
+
+        return _load
 
     def test_metadata(self, dataset: EventDataset):
         """It should parse the metadata correctly."""
@@ -101,4 +127,48 @@ class TestMetricaEvents:
         assert (
             shot_after_free_kick.get_qualifier_value(SetPieceQualifier)
             == SetPieceType.FREE_KICK
+        )
+
+    def test_clearance(self, dataset: EventDataset):
+        """It should deserialize events with the CLEARANCE subtype as clearances."""
+        clearances = dataset.find_all("clearance")
+        # 11 BALL LOST and 11 BALL OUT events have the CLEARANCE subtype
+        assert len(clearances) == 22
+        assert all(clearance.result is None for clearance in clearances)
+
+        # A clearance that does not go out of bounds (BALL LOST)
+        clearance = dataset.get_event_by_id("142")
+        assert clearance.event_type == EventType.CLEARANCE
+        assert clearance.next().event_type != EventType.BALL_OUT
+
+        # A clearance that goes out of bounds (BALL OUT) is followed by
+        # a synthetic ball out event at the end location of the clearance
+        clearance_out = dataset.get_event_by_id("588")
+        assert clearance_out.event_type == EventType.CLEARANCE
+        ball_out = clearance_out.next()
+        assert ball_out.event_type == EventType.BALL_OUT
+        assert ball_out.coordinates == Point(x=-0.02, y=0.86)
+
+        # It should keep the body part qualifier
+        header = dataset.get_event_by_id("597")
+        assert header.event_type == EventType.CLEARANCE
+        assert header.get_qualifier_value(BodyPartQualifier) == BodyPart.HEAD
+
+    def test_clearance_from_pass(self, raw_events: dict, load_events):
+        """It should deserialize a PASS with the CLEARANCE subtype as a clearance.
+
+        The sample data has no such event, so one is created by adding the
+        CLEARANCE subtype to the pass that follows the kick-off.
+        """
+        kick_off, kick_off_pass = copy.deepcopy([raw_events[1], raw_events[2]])
+        kick_off_pass["subtypes"] = {"name": "CLEARANCE", "id": 12}
+
+        dataset = load_events([kick_off, kick_off_pass])
+
+        clearance = dataset.get_event_by_id("2")
+        assert clearance.event_type == EventType.CLEARANCE
+        # set piece qualifiers should not get lost
+        assert (
+            clearance.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.KICK_OFF
         )

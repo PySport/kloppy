@@ -15,7 +15,6 @@ from kloppy.domain import (
     Point,
     Provider,
     Qualifier,
-    ResultMixin,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
@@ -59,6 +58,9 @@ MS_SET_PIECE_KICK_OFF = 35
 # Body Parts
 MS_BODY_PART_HEAD = 11
 
+# Attempts
+MS_ATTEMPT_CLEARANCE = 12
+
 # Shots
 MS_EVENT_TYPE_SHOT = 2
 MS_SHOT_OUTCOME_BLOCKED = 25
@@ -83,8 +85,7 @@ MS_EVENT_TYPE_CHALLENGE = 9
 MS_EVENT_TYPE_RECOVERY = 3
 MS_EVENT_TYPE_FOUL_COMMITTED = 4
 MS_EVENT_TYPE_CARD = 8
-
-OUT_EVENT_RESULTS = [PassResult.OUT]
+MS_EVENT_TYPE_BALL_OUT = 6
 
 
 def _parse_coordinates(event_start_or_end: dict) -> Optional[Point]:
@@ -305,6 +306,17 @@ class MetricaJsonEventDataDeserializer(
                 if event_type == MS_SET_PIECE:
                     # set-piece events are integrated in the next pass or shot event
                     continue
+                elif (
+                    event_type in MS_PASS_TYPES
+                    and MS_ATTEMPT_CLEARANCE in subtypes
+                ):
+                    event = self.event_factory.build_clearance(
+                        result=None,
+                        qualifiers=_get_event_qualifiers(
+                            raw_event, previous_event, subtypes
+                        ),
+                        **generic_event_kwargs,
+                    )
                 elif event_type in MS_PASS_TYPES:
                     pass_event_kwargs = _parse_pass(
                         period=period,
@@ -372,11 +384,9 @@ class MetricaJsonEventDataDeserializer(
 
                 events.append(transformer.transform_event(event))
 
-                # Checks if the event ended out of the field and adds a synthetic out event
-                if (
-                    isinstance(event, ResultMixin)
-                    and event.result in OUT_EVENT_RESULTS
-                ):
+                # A BALL OUT event means the player was the last to touch the
+                # ball before it went out of bounds, so add a synthetic out event
+                if event_type == MS_EVENT_TYPE_BALL_OUT:
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
                         generic_event_kwargs["coordinates"] = (

@@ -9,6 +9,7 @@ from kloppy import metrica
 from kloppy.domain import (
     BodyPart,
     BodyPartQualifier,
+    CardType,
     EventDataset,
     EventType,
     InterceptionResult,
@@ -222,3 +223,46 @@ class TestMetricaEvents:
         assert interception.event_type == EventType.INTERCEPTION
         assert interception.next().event_type == next_event_type
         assert interception.result == expected_result
+
+    def test_card(self, dataset: EventDataset):
+        """It should deserialize CARD events as cards."""
+        cards = dataset.find_all("card")
+        assert len(cards) == 1
+
+        yellow_card = dataset.get_event_by_id("2660")
+        assert yellow_card.event_type == EventType.CARD
+        assert yellow_card.card_type == CardType.FIRST_YELLOW
+        assert yellow_card.team.team_id == "TEAM_B"
+        assert yellow_card.ball_owning_team is None
+
+    @pytest.mark.parametrize(
+        "subtype_name, expected_event_type, expected_card_type",
+        [
+            ("RED", EventType.CARD, CardType.RED),
+            # kloppy has no card type for the dismissal of technical area
+            # personnel, so it should remain a generic event
+            ("DISMISSAL", EventType.GENERIC, None),
+        ],
+    )
+    def test_card_type(
+        self,
+        raw_events: dict,
+        load_events,
+        subtype_name: str,
+        expected_event_type: EventType,
+        expected_card_type: CardType,
+    ):
+        """It should parse the card type from the subtype of the CARD event.
+
+        The sample data only contains a yellow card, so the other subtypes
+        are created by renaming its subtype. Their ids are not known, so the
+        card type is matched on the subtype name.
+        """
+        card = copy.deepcopy(raw_events[2660])
+        card["subtypes"] = {"name": subtype_name, "id": -1}
+
+        dataset = load_events([card])
+
+        event = dataset.get_event_by_id("2660")
+        assert event.event_type == expected_event_type
+        assert getattr(event, "card_type", None) == expected_card_type

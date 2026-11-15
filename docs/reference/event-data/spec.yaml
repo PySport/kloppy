@@ -556,8 +556,8 @@ event_types:
         status: parsed
         implementation: event type 'Caution'
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 8/'CARD' with subtype 'YELLOW' or 'RED'
       impect:
         status: parsed
         implementation: event type 'YELLOW_CARD', 'SECOND_YELLOW_CARD', or 'RED_CARD'
@@ -573,18 +573,27 @@ event_types:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: parsed
+                implementation: subtype 40/'YELLOW'
           SECOND_YELLOW:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: not supported
+                implementation: null
           RED:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: parsed
+                implementation: subtype 'RED'
   kloppy.domain.PlayerOnEvent:
     providers:
       statsbomb:

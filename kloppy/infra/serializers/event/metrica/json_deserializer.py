@@ -8,6 +8,7 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
+    CardType,
     CarryResult,
     EventDataset,
     InterceptionResult,
@@ -260,6 +261,24 @@ def _parse_interception(
     )
 
 
+def _parse_card_type(event: dict) -> Optional[CardType]:
+    # Card subtypes are matched by name. The Metrica event definitions list
+    # YELLOW, RED and DISMISSAL (of technical area personnel), but only the
+    # id of YELLOW (40) can be confirmed from the available sample data.
+    subtypes = event["subtypes"]
+    if subtypes is None:
+        return None
+    if isinstance(subtypes, dict):
+        subtypes = [subtypes]
+    subtype_names = {subtype["name"] for subtype in subtypes}
+
+    if "RED" in subtype_names:
+        return CardType.RED
+    elif "YELLOW" in subtype_names:
+        return CardType.FIRST_YELLOW
+    return None
+
+
 def _parse_ball_owning_team(event_type: int, team: Team) -> Optional[Team]:
     if event_type not in [
         MS_EVENT_TYPE_CHALLENGE,
@@ -409,6 +428,17 @@ class MetricaJsonEventDataDeserializer(
                     event = self.event_factory.build_recovery(
                         result=None,
                         qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+
+                elif (
+                    event_type == MS_EVENT_TYPE_CARD
+                    and (card_type := _parse_card_type(raw_event)) is not None
+                ):
+                    event = self.event_factory.build_card(
+                        result=None,
+                        qualifiers=None,
+                        card_type=card_type,
                         **generic_event_kwargs,
                     )
 

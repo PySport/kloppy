@@ -19,6 +19,7 @@ from kloppy.domain import (
     Provider,
     SetPieceQualifier,
     SetPieceType,
+    ShotResult,
 )
 from kloppy.domain.models.common import DatasetType
 
@@ -266,3 +267,34 @@ class TestMetricaEvents:
         event = dataset.get_event_by_id("2660")
         assert event.event_type == expected_event_type
         assert getattr(event, "card_type", None) == expected_card_type
+
+    @pytest.mark.parametrize(
+        "subtypes",
+        [
+            {"name": "GOAL", "id": 30},
+            # an own goal from a clearance should not be a clearance
+            [{"name": "CLEARANCE", "id": 12}, {"name": "GOAL", "id": 30}],
+        ],
+    )
+    def test_own_goal(self, raw_events: dict, load_events, subtypes):
+        """It should deserialize a BALL OUT event with the GOAL subtype as
+        an own goal.
+
+        The sample data has no own goal, so one is created from a ball out
+        event of a defender close to their own goal.
+        """
+        previous_event, own_goal = copy.deepcopy(
+            [raw_events[587], raw_events[588]]
+        )
+        own_goal["subtypes"] = subtypes
+        own_goal["end"]["y"] = 0.5
+
+        dataset = load_events([previous_event, own_goal])
+
+        shot = dataset.get_event_by_id("588")
+        assert shot.event_type == EventType.SHOT
+        assert shot.result == ShotResult.OWN_GOAL
+        # the team of the player that scored the own goal
+        assert shot.team.team_id == "TEAM_B"
+        # like for other goals, no synthetic ball out event is added
+        assert shot.next() is None

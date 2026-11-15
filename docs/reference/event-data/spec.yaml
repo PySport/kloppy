@@ -191,7 +191,7 @@ event_types:
         implementation: event type 'ShotWide' or 'SavedShot' or 'BlockedShot' or 'ShotWoodWork' or 'OtherShot' or 'SuccessfulShot' or 'OwnGoal'
       metrica_json:
         status: parsed
-        implementation: event type 2/'SHOT'
+        implementation: event type 2/'SHOT', or 6/'BALL OUT' with subtype 30/'GOAL' (own goal)
       impect:
         status: parsed
         implementation: event type 'SHOT'
@@ -280,8 +280,8 @@ event_types:
                 status: parsed
                 implementation: outcome OwnGoal
               metrica_json:
-                status: not implemented
-                implementation: null
+                status: parsed
+                implementation: event type 6/'BALL OUT' with subtype 30/'GOAL'
   kloppy.domain.TakeOnEvent:
     providers:
       statsbomb:

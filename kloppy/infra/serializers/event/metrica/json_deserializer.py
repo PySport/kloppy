@@ -74,6 +74,11 @@ MS_SHOT_OUTCOME_OFF_TARGET = 29
 MS_SHOT_OUTCOME_POST = 27
 MS_SHOT_OUTCOME_SAVED = 26
 
+# Own goal: the GOAL subtype on a BALL OUT event. Metrica's event
+# definitions do not list subtype ids, but GOAL has id 30 on both SHOT and
+# RECOVERY events in the sample data.
+MS_OWN_GOAL = MS_SHOT_OUTCOME_GOAL
+
 MS_SHOT_TYPES = [
     MS_EVENT_TYPE_SHOT,
     MS_SHOT_OUTCOME_BLOCKED,
@@ -357,6 +362,17 @@ class MetricaJsonEventDataDeserializer(
                     # set-piece events are integrated in the next pass or shot event
                     continue
                 elif (
+                    event_type == MS_EVENT_TYPE_BALL_OUT
+                    and MS_OWN_GOAL in subtypes
+                ):
+                    event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=_get_event_qualifiers(
+                            raw_event, previous_event, subtypes
+                        ),
+                        **generic_event_kwargs,
+                    )
+                elif (
                     event_type in MS_PASS_TYPES
                     and MS_ATTEMPT_CLEARANCE in subtypes
                 ):
@@ -460,8 +476,12 @@ class MetricaJsonEventDataDeserializer(
                 events.append(transformer.transform_event(event))
 
                 # A BALL OUT event means the player was the last to touch the
-                # ball before it went out of bounds, so add a synthetic out event
-                if event_type == MS_EVENT_TYPE_BALL_OUT:
+                # ball before it went out of bounds, so add a synthetic out event.
+                # Like for other goals, this is not done for own goals.
+                if (
+                    event_type == MS_EVENT_TYPE_BALL_OUT
+                    and MS_OWN_GOAL not in subtypes
+                ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:
                         generic_event_kwargs["coordinates"] = (

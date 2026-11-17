@@ -191,7 +191,7 @@ event_types:
         implementation: event type 'ShotWide' or 'SavedShot' or 'BlockedShot' or 'ShotWoodWork' or 'OtherShot' or 'SuccessfulShot' or 'OwnGoal'
       metrica_json:
         status: parsed
-        implementation: event type 2/'SHOT'
+        implementation: event type 2/'SHOT', or 6/'BALL OUT' with subtype 30/'GOAL' (own goal)
       impect:
         status: parsed
         implementation: event type 'SHOT'
@@ -280,8 +280,8 @@ event_types:
                 status: parsed
                 implementation: outcome OwnGoal
               metrica_json:
-                status: not implemented
-                implementation: null
+                status: parsed
+                implementation: event type 6/'BALL OUT' with subtype 30/'GOAL'
   kloppy.domain.TakeOnEvent:
     providers:
       statsbomb:
@@ -406,8 +406,8 @@ event_types:
         status: not implemented
         implementation: null
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 1/'PASS', 6/'BALL OUT' or 7/'BALL LOST' with subtype 12/'CLEARANCE'
       impect:
         status: parsed
         implementation: event type 'CLEARANCE'
@@ -429,8 +429,8 @@ event_types:
         status: not implemented
         implementation: null
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 3/'RECOVERY' with subtype 23/'INTERCEPTION'
       impect:
         status: parsed
         implementation: event type 'INTERCEPTION'
@@ -439,22 +439,33 @@ event_types:
         providers:
           statsbomb:
             status: parsed
+          metrica_json:
+            status: inferred
         values:
           SUCCESS:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 4/'Won', 15/'Success' or 16/'Success in play', or event type 30/'Pass' with type 64/'One touch interception' 
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is not a 6/'BALL OUT' or 7/'BALL LOST' event
           LOST:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 1/'Lost' or 13/'Lost in play'
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is a 7/'BALL LOST' event
           OUT:
             providers:
               statsbomb:
                 status: parsed
                 implementation: event type 10/'Interception' with outcome 14/'Lost out' or 17/'Success out'
+              metrica_json:
+                status: inferred
+                implementation: next event of the intercepting player is a 6/'BALL OUT' event
   kloppy.domain.DuelEvent:
     providers:
       statsbomb:
@@ -545,8 +556,8 @@ event_types:
         status: parsed
         implementation: event type 'Caution'
       metrica_json:
-        status: not implemented
-        implementation: null
+        status: parsed
+        implementation: event type 8/'CARD' with subtype 'YELLOW' or 'RED'
       impect:
         status: parsed
         implementation: event type 'YELLOW_CARD', 'SECOND_YELLOW_CARD', or 'RED_CARD'
@@ -562,18 +573,27 @@ event_types:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: parsed
+                implementation: subtype 'YELLOW'
           SECOND_YELLOW:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: not supported
+                implementation: null
           RED:
             providers:
               statsbomb:
                 status: parsed
               sportec:
                 status: not implemented
+              metrica_json:
+                status: parsed
+                implementation: subtype 'RED'
   kloppy.domain.PlayerOnEvent:
     providers:
       statsbomb:
@@ -622,7 +642,7 @@ event_types:
         status: unknown
       metrica_json:
         status: parsed
-        implementation: event type 3/'RECOVERY'
+        implementation: event type 3/'RECOVERY' without subtype 23/'INTERCEPTION'
       impect:
         status: parsed
         implementation: event type 'LOOSE_BALL_REGAIN'
@@ -662,7 +682,7 @@ event_types:
         implementation: null
       metrica_json:
         status: inferred
-        implementation: checks if the event ended out of the field and adds a synthetic out event
+        implementation: synthetic event at the end location of an event type 6/'BALL OUT'
   kloppy.domain.FoulCommittedEvent:
     providers:
       statsbomb:

@@ -8,14 +8,15 @@ from kloppy.domain import (
     BallState,
     BodyPart,
     BodyPartQualifier,
+    CardType,
     CarryResult,
     EventDataset,
+    InterceptionResult,
     PassResult,
     Period,
     Point,
     Provider,
     Qualifier,
-    ResultMixin,
     SetPieceQualifier,
     SetPieceType,
     ShotResult,
@@ -59,6 +60,12 @@ MS_SET_PIECE_KICK_OFF = 35
 # Body Parts
 MS_BODY_PART_HEAD = 11
 
+# Attempts
+MS_ATTEMPT_CLEARANCE = 12
+
+# Interference
+MS_INTERFERENCE_INTERCEPTION = 23
+
 # Shots
 MS_EVENT_TYPE_SHOT = 2
 MS_SHOT_OUTCOME_BLOCKED = 25
@@ -66,6 +73,11 @@ MS_SHOT_OUTCOME_GOAL = 30
 MS_SHOT_OUTCOME_OFF_TARGET = 29
 MS_SHOT_OUTCOME_POST = 27
 MS_SHOT_OUTCOME_SAVED = 26
+
+# Own goal: the GOAL subtype on a BALL OUT event. Metrica's event
+# definitions do not list subtype ids, but GOAL has id 30 on both SHOT and
+# RECOVERY events in the sample data.
+MS_OWN_GOAL = MS_SHOT_OUTCOME_GOAL
 
 MS_SHOT_TYPES = [
     MS_EVENT_TYPE_SHOT,
@@ -83,8 +95,8 @@ MS_EVENT_TYPE_CHALLENGE = 9
 MS_EVENT_TYPE_RECOVERY = 3
 MS_EVENT_TYPE_FOUL_COMMITTED = 4
 MS_EVENT_TYPE_CARD = 8
-
-OUT_EVENT_RESULTS = [PassResult.OUT]
+MS_EVENT_TYPE_BALL_OUT = 6
+MS_EVENT_TYPE_BALL_LOST = 7
 
 
 def _parse_coordinates(event_start_or_end: dict) -> Optional[Point]:
@@ -230,6 +242,48 @@ def _parse_take_on(subtypes: list) -> dict:
     return dict(result=result)
 
 
+def _parse_interception(
+    event: dict, next_event: Optional[dict], subtypes: list
+) -> dict:
+    # The touch of the intercepting player is recorded as their next event.
+    # If that touch sends the ball out of bounds or to an opponent, it is a
+    # BALL OUT or BALL LOST event of the same player.
+    result = InterceptionResult.SUCCESS
+    if (
+        next_event is not None
+        and next_event["from"] is not None
+        and event["from"] is not None
+        and next_event["from"]["id"] == event["from"]["id"]
+    ):
+        if next_event["type"]["id"] == MS_EVENT_TYPE_BALL_OUT:
+            result = InterceptionResult.OUT
+        elif next_event["type"]["id"] == MS_EVENT_TYPE_BALL_LOST:
+            result = InterceptionResult.LOST
+
+    return dict(
+        result=result,
+        qualifiers=_get_event_bodypart_qualifiers(subtypes),
+    )
+
+
+def _parse_card_type(event: dict) -> Optional[CardType]:
+    # Card subtypes are matched by name. The Metrica event definitions list
+    # YELLOW, RED and DISMISSAL (of technical area personnel), but only the
+    # id of YELLOW (40) can be confirmed from the available sample data.
+    subtypes = event["subtypes"]
+    if subtypes is None:
+        return None
+    if isinstance(subtypes, dict):
+        subtypes = [subtypes]
+    subtype_names = {subtype["name"] for subtype in subtypes}
+
+    if "RED" in subtype_names:
+        return CardType.RED
+    elif "YELLOW" in subtype_names:
+        return CardType.FIRST_YELLOW
+    return None
+
+
 def _parse_ball_owning_team(event_type: int, team: Team) -> Optional[Team]:
     if event_type not in [
         MS_EVENT_TYPE_CHALLENGE,
@@ -266,8 +320,10 @@ class MetricaJsonEventDataDeserializer(
 
         with performance_logging("parse data", logger=logger):
             events = []
-            for previous_event, raw_event in zip(
-                [None] + raw_events["data"], raw_events["data"]
+            for previous_event, raw_event, next_event in zip(
+                [None] + raw_events["data"],
+                raw_events["data"],
+                raw_events["data"][1:] + [None],
             ):
                 if raw_event["team"]["id"] == metadata.teams[0].team_id:
                     team = metadata.teams[0]
@@ -278,7 +334,12 @@ class MetricaJsonEventDataDeserializer(
                         f"Unknown team_id {raw_event['team']['id']}"
                     )
 
-                player = team.get_player_by_id(raw_event["from"]["id"])
+                # e.g. a DISMISSAL card of technical area personnel has no player
+                player = (
+                    team.get_player_by_id(raw_event["from"]["id"])
+                    if raw_event["from"] is not None
+                    else None
+                )
                 event_type = raw_event["type"]["id"]
                 subtypes = _parse_subtypes(raw_event)
                 period = [
@@ -305,6 +366,28 @@ class MetricaJsonEventDataDeserializer(
                 if event_type == MS_SET_PIECE:
                     # set-piece events are integrated in the next pass or shot event
                     continue
+                elif (
+                    event_type == MS_EVENT_TYPE_BALL_OUT
+                    and MS_OWN_GOAL in subtypes
+                ):
+                    event = self.event_factory.build_shot(
+                        result=ShotResult.OWN_GOAL,
+                        qualifiers=_get_event_qualifiers(
+                            raw_event, previous_event, subtypes
+                        ),
+                        **generic_event_kwargs,
+                    )
+                elif (
+                    event_type in MS_PASS_TYPES
+                    and MS_ATTEMPT_CLEARANCE in subtypes
+                ):
+                    event = self.event_factory.build_clearance(
+                        result=None,
+                        qualifiers=_get_event_qualifiers(
+                            raw_event, previous_event, subtypes
+                        ),
+                        **generic_event_kwargs,
+                    )
                 elif event_type in MS_PASS_TYPES:
                     pass_event_kwargs = _parse_pass(
                         period=period,
@@ -348,10 +431,35 @@ class MetricaJsonEventDataDeserializer(
                         **generic_event_kwargs,
                     )
 
+                elif (
+                    event_type == MS_EVENT_TYPE_RECOVERY
+                    and MS_INTERFERENCE_INTERCEPTION in subtypes
+                ):
+                    interception_event_kwargs = _parse_interception(
+                        event=raw_event,
+                        next_event=next_event,
+                        subtypes=subtypes,
+                    )
+                    event = self.event_factory.build_interception(
+                        **interception_event_kwargs,
+                        **generic_event_kwargs,
+                    )
+
                 elif event_type == MS_EVENT_TYPE_RECOVERY:
                     event = self.event_factory.build_recovery(
                         result=None,
                         qualifiers=None,
+                        **generic_event_kwargs,
+                    )
+
+                elif (
+                    event_type == MS_EVENT_TYPE_CARD
+                    and (card_type := _parse_card_type(raw_event)) is not None
+                ):
+                    event = self.event_factory.build_card(
+                        result=None,
+                        qualifiers=None,
+                        card_type=card_type,
                         **generic_event_kwargs,
                     )
 
@@ -372,10 +480,12 @@ class MetricaJsonEventDataDeserializer(
 
                 events.append(transformer.transform_event(event))
 
-                # Checks if the event ended out of the field and adds a synthetic out event
+                # A BALL OUT event means the player was the last to touch the
+                # ball before it went out of bounds, so add a synthetic out event.
+                # Like for other goals, this is not done for own goals.
                 if (
-                    isinstance(event, ResultMixin)
-                    and event.result in OUT_EVENT_RESULTS
+                    event_type == MS_EVENT_TYPE_BALL_OUT
+                    and MS_OWN_GOAL not in subtypes
                 ):
                     generic_event_kwargs["ball_state"] = BallState.DEAD
                     if raw_event["end"]["x"]:

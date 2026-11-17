@@ -575,7 +575,7 @@ event_types:
                 status: not implemented
               metrica_json:
                 status: parsed
-                implementation: subtype 40/'YELLOW'
+                implementation: subtype 'YELLOW'
           SECOND_YELLOW:
             providers:
               statsbomb:

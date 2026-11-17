@@ -268,6 +268,23 @@ class TestMetricaEvents:
         assert event.event_type == expected_event_type
         assert getattr(event, "card_type", None) == expected_card_type
 
+    def test_event_without_player(self, raw_events: dict, load_events):
+        """It should not fail on events without a player.
+
+        A DISMISSAL is given to technical area personnel, so there is no
+        player to assign it to.
+        """
+        card = copy.deepcopy(raw_events[2660])
+        card["subtypes"] = {"name": "DISMISSAL", "id": -1}
+        card["from"] = None
+
+        dataset = load_events([card])
+
+        event = dataset.get_event_by_id("2660")
+        assert event.event_type == EventType.GENERIC
+        assert event.player is None
+        assert event.team.team_id == "TEAM_B"
+
     @pytest.mark.parametrize(
         "subtypes",
         [

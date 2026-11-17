@@ -334,7 +334,12 @@ class MetricaJsonEventDataDeserializer(
                         f"Unknown team_id {raw_event['team']['id']}"
                     )
 
-                player = team.get_player_by_id(raw_event["from"]["id"])
+                # e.g. a DISMISSAL card of technical area personnel has no player
+                player = (
+                    team.get_player_by_id(raw_event["from"]["id"])
+                    if raw_event["from"] is not None
+                    else None
+                )
                 event_type = raw_event["type"]["id"]
                 subtypes = _parse_subtypes(raw_event)
                 period = [

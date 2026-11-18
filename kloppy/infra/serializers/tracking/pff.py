@@ -298,7 +298,7 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
                     starting_position=position_types_mapping.get(
                         player_position, PositionType.Unknown
                     ),
-                    starting=None,
+                    starting=player.get("started"),
                 )
 
             home_team.players = list(players["HOME"].values())

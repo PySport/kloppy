@@ -169,6 +169,19 @@ class TestPFFTracking:
         assert dataset.metadata.teams[0].players[0].team.team_id == "364"
         assert dataset.metadata.teams[0].players[0].jersey_no == 26
 
+        # Check starting players are read from the roster's "started" flag
+        # Nahuel Molina started the final, Kingsley Coman came off the bench
+        assert dataset.metadata.teams[0].players[0].starting is True
+        assert dataset.metadata.teams[1].players[0].starting is False
+        assert (
+            sum(
+                player.starting
+                for team in dataset.metadata.teams
+                for player in team.players
+            )
+            == 22
+        )
+
         # make sure PFF ID is used as player ID for Away Player
         assert dataset.metadata.teams[1].players[0].player_id == "4622"
         assert dataset.metadata.teams[1].players[0].name == "Kingsley Coman"

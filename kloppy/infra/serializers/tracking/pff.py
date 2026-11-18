@@ -403,30 +403,13 @@ class PFF_TrackingDeserializer(TrackingDataDeserializer[PFF_TrackingInputs]):
             # If first period and third period attacking direction for home team is inconsistent, flip the direction of the extra time frames
             if is_home_team_left != is_home_team_extra_time_left:
                 for et_frame in et_frames:
-                    # Loop through each PlayerData in the players_data dictionary
-                    for _, player_data in et_frame.players_data.items():
-                        if (
+                    for player_data in et_frame.players_data.values():
+                        player_data.coordinates = transformer.flip_point(
                             player_data.coordinates
-                            and player_data.coordinates.x is not None
-                            and player_data.coordinates.y is not None
-                        ):
-                            # Create a new Point with multiplied coordinates for each player
-                            player_data.coordinates = Point(
-                                -player_data.coordinates.x,
-                                -player_data.coordinates.y,
-                            )
-
-                    # Multiply the x and y coordinates of the ball by -1
-                    if (
-                        et_frame.ball_coordinates
-                        and et_frame.ball_coordinates.x is not None
-                        and et_frame.ball_coordinates.y is not None
-                    ):
-                        et_frame.ball_coordinates = Point3D(
-                            -et_frame.ball_coordinates.x,
-                            -et_frame.ball_coordinates.y,
-                            et_frame.ball_coordinates.z,
                         )
+                    et_frame.ball_coordinates = transformer.flip_point(
+                        et_frame.ball_coordinates
+                    )
 
         orientation = (
             Orientation.HOME_AWAY

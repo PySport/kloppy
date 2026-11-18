@@ -247,3 +247,8 @@ class TestPFFTracking:
         assert dataset.records[0].ball_coordinates == Point3D(
             x=0.504, y=0.4766176470588235, z=0.39
         )
+
+        # Extra time is flipped around the pitch center
+        first_frame_p3 = next(f for f in dataset.records if f.period.id == 3)
+        assert first_frame_p3.ball_coordinates.x == pytest.approx(0.568)
+        assert first_frame_p3.ball_coordinates.y == pytest.approx(0.43132353)

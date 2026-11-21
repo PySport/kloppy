@@ -29,6 +29,7 @@ class Frame(DataRecord):
         ball_coordinates: The coordinates of the ball
         players_data: A dictionary containing the tracking data for each player.
         ball_speed: The speed of the ball
+        visible_area: The part of the pitch the camera can see, given as a list of polygon points
         other_data: A dictionary containing additional data
     """
 
@@ -37,6 +38,7 @@ class Frame(DataRecord):
     other_data: dict[str, Any]
     ball_coordinates: Point3D
     ball_speed: Optional[float] = None
+    visible_area: Optional[list[Point]] = None
 
     @property
     def record_id(self) -> int:

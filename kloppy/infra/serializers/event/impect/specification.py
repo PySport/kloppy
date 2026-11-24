@@ -25,7 +25,6 @@ from kloppy.domain import (
     Team,
     UnderPressureQualifier,
 )
-from kloppy.exceptions import DeserializationError
 from kloppy.infra.serializers.event.impect.helpers import (
     get_period_by_id,
     get_team_by_id,
@@ -580,7 +579,9 @@ class FREE_KICK(EVENT):
         teams: list[Team],
         **generic_event_kwargs,
     ) -> list[Event]:
-        if self.raw_event["pass"]:
+        # A free kick without a shot object is a pass. The pass object itself
+        # may be null when the pass has no end location.
+        if self.raw_event["pass"] or not self.raw_event["shot"]:
             (
                 qualifiers,
                 receive_timestamp,
@@ -599,7 +600,7 @@ class FREE_KICK(EVENT):
                 **generic_event_kwargs,
             )
             return [pass_event]
-        elif self.raw_event["shot"]:
+        else:
             shot_dict = self.raw_event["shot"]
             result = self.RESULT(self.raw_event["result"])
             shot_end_coordinates, shot_result = parse_shot_end_coordinates(
@@ -617,10 +618,6 @@ class FREE_KICK(EVENT):
                 **generic_event_kwargs,
             )
             return [shot_event]
-        else:
-            raise DeserializationError(
-                "Free kick event must have either a pass or a shot."
-            )
 
 
 class GOAL_KICK(EVENT):
@@ -862,7 +859,9 @@ def create_pass_props(
         if event.raw_event["result"] == "SUCCESS"
         else PassResult.INCOMPLETE
     )
-    receiver_info = pass_dict["receiver"]
+    # The pass object is null when the pass has no end location
+    # (e.g. no video follows, or the pass is interrupted by a foul/offside)
+    receiver_info = pass_dict["receiver"] if pass_dict else None
     if receiver_info and receiver_info["type"] == "TEAMMATE":
         receiver_player = team.get_player_by_id(receiver_info["playerId"])
     else:

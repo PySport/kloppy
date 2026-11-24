@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta
+import json
 from typing import cast
 
 import pytest
@@ -391,6 +392,43 @@ class TestImpectPassEvent:
             and PassType.ASSIST in e.get_qualifier_values(PassQualifier)
         ]
         assert len(goal_assists) == 3
+
+    def test_pass_without_pass_object(self, base_dir, tmp_path):
+        """It should deserialize passes whose pass object is null.
+
+        Impect sets the pass object (and end location) to null when a pass
+        has no end location, e.g. when it is followed by no video, a foul
+        or an offside.
+        """
+        with open(base_dir / "files" / "impect_events.json") as f:
+            raw_events = json.load(f)
+        for raw_event in raw_events:
+            # an open play pass and a free kick pass
+            if raw_event["id"] in (4, 98):
+                raw_event["pass"] = None
+                raw_event["end"] = None
+        event_file = tmp_path / "impect_events_null_pass.json"
+        with open(event_file, "w") as f:
+            json.dump(raw_events, f)
+
+        dataset = impect.load(
+            event_data=event_file,
+            lineup_data=base_dir / "files" / "impect_lineups.json",
+            coordinates="impect",
+        )
+
+        assert len(dataset.find_all("pass")) == 1110
+        open_play_pass = dataset.get_event_by_id("4")
+        assert open_play_pass.event_type == EventType.PASS
+        assert open_play_pass.receiver_player is None
+        assert open_play_pass.receiver_coordinates is None
+        free_kick_pass = dataset.get_event_by_id("98")
+        assert free_kick_pass.event_type == EventType.PASS
+        assert free_kick_pass.receiver_player is None
+        assert (
+            free_kick_pass.get_qualifier_value(SetPieceQualifier)
+            == SetPieceType.FREE_KICK
+        )
 
 
 class TestImpectInterceptionEvent:
